@@ -6,8 +6,8 @@ import { normalizeTodoProjects } from "../todo-projects/prefix.ts";
 import { DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT, normalizePageCycleShortcut, normalizePageDigitModifiers } from "./pageShortcuts.ts";
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
-  MAX_AUTO_TUCK_RETRACT_DELAY_MS, MAX_HOVER_COLLAPSE_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS, MAX_IDLE_DIM_OPACITY, MAX_SHELF_ITEMS,
-  MIN_AUTO_TUCK_RETRACT_DELAY_MS, MIN_HOVER_COLLAPSE_DELAY_MS, MIN_HOVER_EXPAND_DELAY_MS, MIN_HOVER_SWITCH_DELAY_MS, MIN_IDLE_DIM_OPACITY, MIN_SHELF_ITEMS,
+  MAX_AUTO_TUCK_RETRACT_DELAY_MS, MAX_HOVER_COLLAPSE_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS, MAX_IDLE_DIM_OPACITY, MAX_SHELF_ITEMS, MAX_SIDE_HEIGHT,
+  MIN_AUTO_TUCK_RETRACT_DELAY_MS, MIN_HOVER_COLLAPSE_DELAY_MS, MIN_HOVER_EXPAND_DELAY_MS, MIN_HOVER_SWITCH_DELAY_MS, MIN_IDLE_DIM_OPACITY, MIN_SHELF_ITEMS, MIN_SIDE_HEIGHT,
   MESSAGE_NOTICES, MESSAGE_PANEL_SECONDS, SHELF_CLEANUP_DAYS, TUCK_HINT_COLORS, TUCK_HINT_STYLES, TUCK_STYLES, oneOf,
 } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
@@ -103,6 +103,10 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     shelfDoubleClick: settings?.shelfDoubleClick === "reveal" ? "reveal" : "open",
     shelfShowCount: settings?.shelfShowCount === true,
     sideMusicCover: settings?.sideMusicCover === true,
+    sideHeightMode: settings?.sideHeightMode === "content" || settings?.sideHeightMode === "custom" ? settings.sideHeightMode : "panel",
+    sideHeight: typeof settings?.sideHeight === "number" && Number.isFinite(settings.sideHeight)
+      ? clamp(Math.round(settings.sideHeight), MIN_SIDE_HEIGHT, MAX_SIDE_HEIGHT)
+      : DEFAULT_SETTINGS.sideHeight,
     deviceUseIndicator: settings?.deviceUseIndicator !== false,
     levelPopup: settings?.levelPopup !== false,
     deviceAlerts: settings?.deviceAlerts !== false,

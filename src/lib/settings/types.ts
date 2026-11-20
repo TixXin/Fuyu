@@ -21,6 +21,7 @@ export type ExpandTrigger = "click" | "hover";
 export type MinimizeAction = "tray" | "tuck";
 export type TuckedHoverAction = "reveal" | "expand";
 export type TuckStyle = "edge" | "line" | "hidden";
+export type SideHeightMode = "panel" | "content" | "custom";
 export type TuckHintStyle = "none" | "dot" | "glow";
 export type TuckHintColor = "contrast" | "island" | "custom";
 
@@ -126,6 +127,8 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   shelfDoubleClick: ShelfDoubleClick;
   shelfShowCount: boolean;
   sideMusicCover: boolean;
+  sideHeightMode: SideHeightMode;
+  sideHeight: number;
   deviceUseIndicator: boolean;
   levelPopup: boolean;
   deviceAlerts: boolean;

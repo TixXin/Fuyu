@@ -29,6 +29,7 @@ const MEDIA: MediaState = {
   sessions: [], updatedAt: 0,
 };
 const PLAYING: MediaState = { ...MEDIA, available: true, playbackStatus: "playing", title: "晴天", thumbnail: "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" };
+const LYRIC = { text: "故事的小黄花 从出生那年就飘着", index: 0, longest: "故事的小黄花 从出生那年就飘着" };
 const PREVIEW: MessagePreview = { source: "qq", title: "张三", body: "下午三点的会改到四点了，记得带上周报", receivedAt: 1 };
 const reported: number[] = [];
 const bubbleRects: unknown[] = [];
@@ -48,20 +49,22 @@ type State = {
   cover: boolean;
   preview: MessagePreview | null;
   level: LevelChange | null;
+  height: number | null;
+  lyric: boolean;
 };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ side: "left", expanded: false, tucked: false, full: false, gauges: 0, cover: false, preview: null, level: null });
+  const [state, setState] = useState<State>({ side: "left", expanded: false, tucked: false, full: false, gauges: 0, cover: false, preview: null, level: null, height: null, lyric: false });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const gauges = Array.from({ length: state.gauges }, (_, index) => ({ id: `gauge-${index}`, node: <span className="gauge-dot">{index}</span> }));
-  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: state.preview }, agents: state.full ? 3 : 0, status: { state: state.full ? "running" : "idle", label: "AI Agent" }, todoCount: state.full ? 5 : null, levelPopup: state.level, deviceUse: state.full ? FULL_DEVICES : NO_DEVICES, media: state.full ? PLAYING : MEDIA, sideCover: state.cover, shelfCount: state.full ? 2 : null });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: state.preview }, agents: state.full ? 3 : 0, status: { state: state.full ? "running" : "idle", label: "AI Agent" }, todoCount: state.full ? 5 : null, levelPopup: state.level, deviceUse: state.full ? FULL_DEVICES : NO_DEVICES, media: state.full ? PLAYING : MEDIA, sideCover: state.cover, lyricLine: state.lyric ? LYRIC : null, sideLyric: state.lyric, shelfCount: state.full ? 2 : null });
   return <div className="stage" style={{ "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8 } as CSSProperties}>
     <IslandShell
-      mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached side={state.side} showTitle={false}
+      mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached side={state.side} sideHeight={state.height} showTitle={false}
       showCollapsedText appearanceMode="classic" nativeGlassState="disabled"
       collapsedSlots={{ gauges }}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
@@ -122,6 +125,21 @@ async function runChecks() {
     check(more && /^\+\d+$/.test(more.textContent ?? ""), "放不下时最后一行是 +N");
     check(island().getBoundingClientRect().height <= 300, "竖向岛不超过 300 高");
     await set({ gauges: 0 });
+
+    await set({ height: 320 });
+    await settleTransitions();
+    shell = island().getBoundingClientRect();
+    check(near(shell.height, 320) && last(reported) === 320, "定了高度时竖向岛就是这么高");
+    check(box('[data-side-item="agent"]').top - shell.top > 20, "没有歌词时图标在竖向岛中间");
+    await set({ lyric: true });
+    await settleTransitions();
+    shell = island().getBoundingClientRect();
+    const lyric = document.querySelector(".media-side-lyric");
+    check(lyric && getComputedStyle(lyric).writingMode === "vertical-rl", "侧边歌词竖排");
+    check(box('[data-side-item="music"]').height > 100, "多出的高度给了音乐那行");
+    check(near(box('[data-side-item="shelf"]').bottom, shell.bottom - 10), "音乐后面的图标排到底部");
+    await set({ height: null, lyric: false });
+    await settleTransitions();
 
     await set({ preview: PREVIEW });
     await settleTransitions();

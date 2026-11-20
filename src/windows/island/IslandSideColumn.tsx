@@ -4,13 +4,13 @@ import { useIslandContributed } from "../../features/plugin-kernel/useIslandCont
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { useTranslation } from "../../i18n";
-import { layoutSideColumn, SIDE_ROW_HEIGHT, type SideColumnLayout } from "./sideColumn";
+import { layoutSideColumn, SIDE_COLUMN_MAX_HEIGHT, SIDE_ROW_HEIGHT, type SideColumnLayout } from "./sideColumn";
 import { setIslandSideColumn } from "./api";
 import { SIDE_GAUGES_ORDER, sideSlot, type SideRowContext } from "./slots/side";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import "./IslandSideColumn.css";
 
-export type SideColumnRow = { id: string; height: number; node: ReactNode };
+export type SideColumnRow = { id: string; height: number; grow?: boolean; node: ReactNode };
 
 type IslandSideColumnProps = {
   label: string;
@@ -25,7 +25,7 @@ function stop(event: { stopPropagation: () => void }, action: () => void) {
   action();
 }
 
-export function useSideColumnRows(context: SideRowContext, gauges: readonly { id: string; node: ReactNode }[]) {
+export function useSideColumnRows(context: SideRowContext, gauges: readonly { id: string; node: ReactNode }[], target: number | null) {
   const entries = useSlotEntries(sideSlot);
   const { side } = useIslandContributed();
   const rows: SideColumnRow[] = [];
@@ -37,10 +37,10 @@ export function useSideColumnRows(context: SideRowContext, gauges: readonly { id
   for (const entry of entries) {
     if (!gaugesPlaced && entry.order >= SIDE_GAUGES_ORDER) placeGauges();
     const row = side.get(entry.id);
-    if (row) rows.push({ id: entry.id, height: row.height, node: <SlotView slot={sideSlot} props={context} select={() => [entry]} /> });
+    if (row) rows.push({ id: entry.id, height: row.height, grow: row.grow, node: <SlotView slot={sideSlot} props={context} select={() => [entry]} /> });
   }
   if (!gaugesPlaced) placeGauges();
-  return layoutSideColumn(rows);
+  return layoutSideColumn(rows, target ?? SIDE_COLUMN_MAX_HEIGHT, target !== null);
 }
 
 export function IslandSideColumn({ label, hot, layout, onOpen, onWindowDragStart }: IslandSideColumnProps) {

@@ -146,6 +146,8 @@
         "shelfDoubleClick": "sync",
         "shelfShowCount": "sync",
         "sideMusicCover": "sync",
+        "sideHeightMode": "sync",
+        "sideHeight": "local",
         "deviceUseIndicator": "firstMergeOnly",
         "levelPopup": "firstMergeOnly",
         "deviceAlerts": "firstMergeOnly",

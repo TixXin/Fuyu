@@ -38,7 +38,7 @@ pub(super) const SIDE_HANDLE_HEIGHT: f64 = 72.0;
 pub(super) const SIDE_HANDLE_RADIUS: f64 = 6.0;
 pub(super) const SIDE_COLUMN_WIDTH: f64 = 44.0;
 pub(super) const SIDE_COLUMN_MIN_HEIGHT: f64 = 48.0;
-pub(super) const SIDE_COLUMN_MAX_HEIGHT: f64 = 300.0;
+pub(super) const SIDE_COLUMN_MAX_HEIGHT: f64 = 1200.0;
 
 const MAX_TOP_FILLET_RADIUS: f64 = 12.0;
 
@@ -179,8 +179,14 @@ pub(super) fn stage_geometry_synced() -> bool {
 }
 
 pub(super) fn stage_height_for(state: IslandWindowState) -> f64 {
+    let side_column = if state.side().is_some() {
+        (state.side_column_height * state.collapsed_scale).ceil() + STAGE_WINDOW_PADDING_Y
+    } else {
+        0.0
+    };
     STAGE_WINDOW_HEIGHT
         .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y)
+        .max(side_column)
 }
 
 fn side_stage_height_key(state: IslandWindowState) -> Option<(Edge, u64)> {

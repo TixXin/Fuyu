@@ -48,8 +48,9 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   const glassCover = settings.appearanceMode === "liquidGlass" && settings.musicEnabled && settings.glassColorSource === "cover";
   const coverColor = useCoverColor(mediaState.thumbnail, coverOn || glassCover);
   const sideCover = settings.sideMusicCover;
+  const sideLyric = settings.sideHeightMode !== "content" && Boolean(lyricLine?.text);
   usePublishTrackArt(live.mediaState, settings.musicEnabled);
-  mediaIsland.useProvide(useMemo(() => ({ media, lyrics, lyricLine, sideCover }), [media, lyrics, lyricLine, sideCover]));
+  mediaIsland.useProvide(useMemo(() => ({ media, lyrics, lyricLine, sideCover, sideLyric }), [media, lyrics, lyricLine, sideCover, sideLyric]));
   useIslandAction("media.previous", () => void runMediaCommand("media_previous"));
   useIslandAction("media.play-pause", () => void runMediaCommand("media_play_pause"));
   useIslandAction("media.next", () => void runMediaCommand("media_next"));
@@ -59,7 +60,7 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   if (line) list.push(line);
   if (settings.autoTuckHoldMusic && settings.musicEnabled && playing) list.push({ kind: "hold", reason: "media.playing" });
   if (features.music && (mediaState.available || mediaState.audioActive)) {
-    list.push({ kind: "side", item: "music", height: sideCover && mediaState.thumbnail ? ISLAND_SIDE_COVER_HEIGHT : ISLAND_SIDE_ROW_HEIGHT });
+    list.push({ kind: "side", item: "music", height: sideCover && mediaState.thumbnail ? ISLAND_SIDE_COVER_HEIGHT : ISLAND_SIDE_ROW_HEIGHT, grow: sideLyric });
   }
   if (features.music && audible) list.push({ kind: "hint", key: "media.audible" });
   if (playing) list.push({ kind: "hint", key: "media.playing" });
