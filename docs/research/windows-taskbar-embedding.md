@@ -1,6 +1,6 @@
 # 把窗口放进 Windows 11 任务栏
 
-> 日期：2026-11-20。问题：汽水音乐那样把歌词组件放进 Win11 任务栏是怎么做的，岛屿的「吸附到」能不能加一个「任务栏」。范围：本机实测正在运行的汽水音乐 3.7.0（枚举窗口树和窗口样式）；联网搜索「Windows 11 taskbar SetParent Shell_TrayWnd」「汽水音乐 任务栏歌词」「TrafficMonitor Win11 任务栏窗口」「BetterNCM TaskbarLyrics」「Windhawk taskbar」，读了 Deskband11Lib、ComposeWindowsTaskBar 的 README。相关任务：暂无。
+> 日期：2026-11-20。问题：汽水音乐那样把歌词组件放进 Win11 任务栏是怎么做的，岛屿的「吸附到」能不能加一个「任务栏」。范围：本机实测正在运行的汽水音乐 3.7.0（枚举窗口树和窗口样式）；联网搜索「Windows 11 taskbar SetParent Shell_TrayWnd」「汽水音乐 任务栏歌词」「TrafficMonitor Win11 任务栏窗口」「BetterNCM TaskbarLyrics」「Windhawk taskbar」，读了 Deskband11Lib、ComposeWindowsTaskBar 的 README。相关任务：[C154](/docs/tasks/C/C154.md)（岛屿和音乐歌词组件吸附到任务栏，子任务 C154.1 宿主、C154.2 岛屿、C154.3 歌词组件）。
 
 ## 结论
 
@@ -8,7 +8,7 @@
 - 这一招的关键是 **owner = `Shell_TrayWnd`**：Windows 保证被拥有的窗口永远在所有者上面，点任务栏、任务栏抢到前台时也不会把歌词条盖住，不用自己定时抢置顶。
 - 其他公开做法（TrafficMonitor、Deskband11Lib、ComposeWindowsTaskBar）是 `SetParent` 把窗口变成任务栏的子窗口。跨进程子窗口在 Win11 上有模糊、输入队列互相卡住、Explorer 重启时窗口被一起销毁这些坑，对 WebView2 的岛更不友好。
 - **建议**：岛屿加「吸附到 → 任务栏」时照汽水音乐的做法：岛的窗口保持顶层、透明、置顶，加 `WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW`，用 `SetWindowLongPtrW(GWLP_HWNDPARENT, Shell_TrayWnd)` 把所有者设成任务栏；折叠态高度贴合任务栏，放在空白区域里，展开时向上开（复用底边吸附的逻辑）。不用 `SetParent`，不注入 Explorer。
-- 动手前要先实测的一件事：**Explorer 重启 / 崩溃时被拥有的跨进程窗口会怎样**（被一起销毁，还是所有者被清空）。岛是主窗口，不能跟着没了。见下文「风险」。
+- **Explorer 重启不会带走我们的窗口**（2026-11-20 实测，见下文「Explorer 重启实测」）：正常退出和强杀两种情况，被任务栏拥有的跨进程窗口都还在、照常显示，只是所有者被清成 0。新任务栏出现后要重新设所有者；汽水音乐不做这一步，重启后它的歌词条一直没有所有者。
 
 ## 详细
 
@@ -61,11 +61,26 @@
    - 空间不够时缩窄岛（只放歌词一行），再不够就退回底边吸附并提示。
 4. **展开**：向上展开，复用 `bottom_edge.rs` 的舞台定位；展开时窗口超出任务栏是允许的（顶层窗口不会被裁）。
 5. **要跟随的变化**：任务栏自动隐藏（任务栏移出屏幕时岛也藏起来或跟着走）；任务栏位置、对齐、图标数量变化；DPI 和显示器变化；全屏应用（任务栏退到下面时岛也要让开，岛现在有没有全屏检测要查一下）。可以用 `SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE)` 盯 `Shell_TrayWnd`，再加一个慢的轮询兜底。
-6. **Explorer 重启**：监听 `RegisterWindowMessage("TaskbarCreated")`（托盘图标那边可能已经有），重新找任务栏、重新设 owner、重新算位置。
+6. **Explorer 重启**：不靠 `TaskbarCreated` 消息，每次刷新比对窗口的所有者和当前任务栏句柄，不一样就重新设（见下文实测）。
+
+C154.1 做出来的宿主（`src-tauri/src/taskbar_host/`）和上面几点的差别：不读 `TaskbarAl`，靠 UI Automation 量出任务栏上所有按钮和托盘，按空当排位，靠左、居中、竖着的任务栏都是同一套算法；跟随任务栏用 500ms 轮询，没有用 `SetWinEventHook`；宿主只移动窗口、报告状态（`taskbar-dock-changed`），隐藏不隐藏由窗口自己决定，免得和岛自己的显示隐藏规则打架。
+
+### Explorer 重启实测（2026-11-20）
+
+本机 Win11（26300），一个 PowerShell 起的 WinForms 窗口（置顶、无边框、不进任务栏），`SetWindowLongPtrW(GWLP_HWNDPARENT, Shell_TrayWnd)` 后每 300ms 记一次 `IsWindow`、`IsWindowVisible`、`GetWindow(GW_OWNER)` 和当前的 `Shell_TrayWnd`：
+
+| 做法 | 任务栏没了以后 | 新任务栏出来以后 |
+|---|---|---|
+| 正常退出（给 `Shell_TrayWnd` 发 `0x5B4`，即「退出资源管理器」），再启动 explorer.exe | 窗口还在、可见，所有者变成 0 | 所有者仍是 0，要自己重新设 |
+| `taskkill /f /im explorer.exe`，再启动 explorer.exe | 同上 | 同上 |
+
+同时看了汽水音乐：重启后它的两个窗口所有者都是 0，过了二十多秒也没有挂回新任务栏，歌词条只靠 `TOPMOST` 还在任务栏上面。
+
+结论：做法 A 安全，不用准备退路；任务栏宿主在每次刷新时比对窗口的所有者和当前任务栏句柄，不一样就重新设（C154.1 就是这样做的），不依赖 `TaskbarCreated` 消息。
 
 ### 风险
 
-- **owner 被销毁时会发生什么（未核实，必须先测）**：同进程里所有者销毁时被拥有的窗口会被一起销毁；跨进程的情况文档没写清楚。要在虚拟机或测试机上 `taskkill /f /im explorer.exe` 和正常重启 Explorer 各试一次，看岛的窗口还在不在。如果会被带走，就在 Explorer 要退出前（`TaskbarCreated` 之前收不到信号）想别的办法，比如退回做法 D：只置顶、不设 owner，定时把自己放到任务栏上面。
+- **owner 被销毁时会发生什么（已实测，不会被带走）**：见下一节。
 - **跨进程 owner 的输入问题**：设 owner 不会像 `SetParent` 那样连输入队列（这是推测，汽水音乐用着没问题可以佐证，但要自己测：岛卡住时任务栏还能不能点）。
 - **和任务栏抢点击**：岛盖住的地方点不到任务栏。岛只占空白区域，空白区域本来没有按钮；但「任务栏右键菜单」在那块会点不到。
 - **Windows 10**：任务栏结构不同（没有 XAML），对齐也只有靠左；可以先只做 Win11，Win10 上不显示这个选项。

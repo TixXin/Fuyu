@@ -29,7 +29,7 @@
 │           mail · qq_notifications · wechat_reminders · im_sources（其他聊天软件）    │
 │           toast_notifications（系统通知的共享轮询）· translation · settings_window  │
 │           tray_menu · onboarding_window · device_use · system_levels · device_events │
-│           system · rename_migration                                                  │
+│           system · rename_migration · taskbar_host（把窗口挂到 Win11 任务栏上）      │
 │  后台服务：IMAP IDLE 收信、剪贴板监听、通知监听、微信窗口闪烁检测、鼠标穿透循环        │
 └────────────┬─────────────────────────────────────────────────────────────────────────┘
              ▼
@@ -76,7 +76,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
   - `v3/official/` 第 3 版的官方插件。
   - 冻结的第 2 版市场，只给切换到 `TixXin/fuyu-plugins` 之前发布的旧岛屿读，内容不再改（E36.6.6）：`index.json` 与 `index.json.sig` 索引，`revoked.json` 与 `revoked.json.sig` 撤销名单，`packages/` 已签名的 zip；`signing-keys.json`（旧岛屿编译进去的可信公钥）、`legacy-index-key.json`（给索引签名的旧密钥）、`author-key.json`（官方作者公钥）。紧急撤销时用 `pnpm plugins:resign` 重签，见 [market-ops.md](plugins/market-ops.md)。第 2 版的示例插件、草稿、单文件 SDK 和协议描述已删除。
 - `scripts/`：
-  - `release/` 发布、签名与 `latest.json` 生成；`readme/` 生成仓库首页 README 用的 SVG；`plugins/` 冻结的第 2 版市场的重签；`plugins-v3/` 第 3 版的内置插件构建、宿主打包和 npm SDK 打包。
+  - `release/` 发布、签名与 `latest.json` 生成；`msix/` 打 Microsoft Store 的 MSIX 包（`pnpm msix`，清单模板和商店身份在 `src-tauri/msix/`，D116）；`readme/` 生成仓库首页 README 用的 SVG；`plugins/` 冻结的第 2 版市场的重签；`plugins-v3/` 第 3 版的内置插件构建、宿主打包和 npm SDK 打包。
   - `mq/` 攒批开 PR 合入（`pnpm mq:*` 和 pre-push 检查）；`island-lab/` 岛屿实验台（`pnpm lab`）；`progress/` 进度汇总（`pnpm progress`）。
   - 根目录放开发流程脚本：合并队列的检查（`land-check.mjs`）、门禁钩子（`gate/`，Claude Code 的 PreToolUse 钩子，登记在 `.claude/settings.json`：第一次改 `src/`、`src-tauri/`、各家 AI 代理的接入点等之前拦一次，要求先读规则文件或加载 skill，见 [workflow.md](workflow.md)「门禁钩子」）、行数检查、浏览器回归页运行器（`run-regression.mjs`）、dev 前停止运行中的岛屿。
 - `video/`：宣传视频。真的前端加假后端在浏览器里跑，按时间表逐帧渲染成 MP4；自带 `package.json`，不在 workspace 里（用法见 [video/README.md](../../video/README.md)）；成片不进仓库。

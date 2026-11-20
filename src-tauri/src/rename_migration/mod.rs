@@ -36,6 +36,9 @@ fn now_ms() -> u64 {
 }
 
 pub(crate) fn before_start() {
+    if crate::system::msix::is_packaged() {
+        return;
+    }
     let identifier = NEW_IDENTIFIER;
     let (Some(roaming), Some(local)) = (roaming_dir(), local_dir()) else {
         return;
@@ -55,6 +58,9 @@ pub(crate) fn before_start() {
 }
 
 pub(crate) fn after_start(app: tauri::AppHandle) {
+    if crate::system::msix::is_packaged() {
+        return;
+    }
     let Some(dir) = roaming_dir().map(|roaming| roaming.join(NEW_IDENTIFIER)) else {
         return;
     };

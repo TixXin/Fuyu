@@ -44,6 +44,8 @@ mod sync;
 mod system;
 mod system_levels;
 mod theme_market;
+#[cfg_attr(not(windows), path = "taskbar_host/unsupported.rs")]
+mod taskbar_host;
 mod timer;
 #[cfg(any(windows, test))]
 mod toast_notifications;
@@ -295,6 +297,7 @@ pub fn run() {
             tray;
             tray_menu;
             tray_visibility;
+            taskbar_host;
             wallpaper
         ))
         .build(context)

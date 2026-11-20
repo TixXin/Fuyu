@@ -86,7 +86,7 @@ fn system_proxy() -> Option<String> {
 
 #[tauri::command]
 pub fn updater_configured(app: AppHandle) -> bool {
-    if crate::dev_lane::lane().is_some() {
+    if crate::dev_lane::lane().is_some() || super::msix::is_packaged() {
         return false;
     }
     app.config()

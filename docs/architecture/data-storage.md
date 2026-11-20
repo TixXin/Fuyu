@@ -4,6 +4,8 @@
 
 macOS 上（G1.4，2026-11-13 起）：家目录同样是 `FUYU_HOME`、指针文件或默认的 `~/.fuyu`；应用数据目录（指针文件 `home.json` 所在处）是 `~/Library/Application Support/com.tixxin.fuyu`；锁文件 `fuyu.lock` 的 `computer` 取 `scutil --get ComputerName`。WebView 的数据（含 `localStorage`）在 `~/Library/WebKit/com.tixxin.fuyu`；没打包的调试版按进程名存在 `~/Library/WebKit/fuyu`，lane 预览在 `~/Library/WebKit/fuyu-lane-<N>`。凭据在登录钥匙串里，服务名和用户名与 Windows 相同。
 
+Microsoft Store 商店版（D116，2026-11-20 起）：家目录和安装版一样（MSIX 不重定向 `%USERPROFILE%\.fuyu`），两个版本共用同一份待办、设置文件和 AI 钩子文件，家目录的锁让它们不能同时运行。应用数据目录 `%APPDATA%\com.tixxin.fuyu`（`home.json` 所在处）和 WebView2 的数据（含 `localStorage`）被重定向到 `%LOCALAPPDATA%\Packages\<包族名>\LocalCache\`，和安装版不是一份；凭据管理器两个版本共用。见 [microsoft-store.md](../features/microsoft-store.md)。
+
 | 数据 | 位置 | 负责方 |
 |---|---|---|
 | 设置、预设、各功能开关、语言 | WebView2 的 `localStorage`（页面读写的地方）；2026-11-12 起（D30.2）`BACKUP_KEYS` 里的设置还整份写到应用数据目录的 `settings.json`，格式同设置备份，手动改了它下次启动生效；读它和恢复设置备份时不在 `BACKUP_KEYS` 里的键都跳过，第 2 版插件留下的 `fuyu-plugin-pages`、`fuyu-plugin-market-favorites` 在 E71（2026-11-19）删出 `BACKUP_KEYS`，旧文件里有也不报错 | 前端各 feature 的 `storage.ts`；`settings_file`（Rust）、`lib/settings-backup/settingsFile.ts` |

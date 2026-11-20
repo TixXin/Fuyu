@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
-import { useDevBuild } from "../../lib/platform";
+import { useDevBuild, useStorePackage } from "../../lib/platform";
 import { websitePage } from "./projectLinks";
 import { useOpenInBrowser } from "./useOpenInBrowser";
 import { useRestartStalled } from "./useRestartStalled";
@@ -43,6 +43,7 @@ export function UpdatePanel() {
   const t = useTranslation();
   const text = t.settings.project.update;
   const devBuild = useDevBuild();
+  const storePackage = useStorePackage();
   const hero = t.settings.project.hero;
   const errorText = useErrorText();
   const { stage, version, channel, nextVersion, downloaded, total, detail, errorKind, skippedVersion, commandError, autoUpdate } = useSyncExternalStore(
@@ -58,6 +59,20 @@ export function UpdatePanel() {
 
   const restartStalled = useRestartStalled(stage);
   const installFailed = stage === "error" && errorKind === "install";
+
+  if (stage === "disabled" && storePackage) {
+    return (
+      <div className="update-status update-status--muted">
+        <div className="update-status__row update-status__row--solo">
+          <span className="update-status__dot" aria-hidden="true" />
+          <strong className="update-status__headline" role="status">{text.storeUpdates}</strong>
+        </div>
+        <p className="update-status__sub">
+          <span>{text.storeUpdatesHint}</span>
+        </p>
+      </div>
+    );
+  }
 
   if (stage === "disabled") {
     return (
