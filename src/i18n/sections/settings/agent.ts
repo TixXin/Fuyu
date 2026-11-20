@@ -1,16 +1,7 @@
 export type SettingsAgentText = {
-  title: string;
-  install: string;
-  installing: string;
-  installed: string;
-  uninstall: string;
-  uninstalling: string;
-  uninstalled: string;
   hooksRemoved: string;
-  currentStatus: string;
   clearing: string;
   clearStatus: string;
-  scriptsDir: string;
   sessionTitleSection: string;
   sessionTitle: string;
   sessionTitleHint: string;
@@ -70,11 +61,44 @@ export type SettingsAgentText = {
   remotePort: string;
   remoteSave: string;
   remoteCancel: string;
+  hooks: {
+    summaryFix: (count: number, names: string) => string;
+    summaryScripts: string;
+    summaryMissing: string;
+    fixAll: string;
+    installAll: string;
+    working: string;
+    install: string;
+    fix: string;
+    connected: string;
+    connectedTitle: string;
+    failed: (name: string, error: string) => string;
+    done: (names: string) => string;
+    menu: (name: string) => string;
+    menuInstall: string;
+    menuReinstall: string;
+    turnOff: (name: string) => string;
+    turnOffKeep: string;
+    turnOffRemove: string;
+    tips: Partial<Record<"codex" | "dsh" | "trae" | "traeCn", string>>;
+    optionsSection: string;
+    autoInstall: string;
+    autoInstallHint: string;
+    autoUpdate: string;
+    autoUpdateHint: string;
+    reinstallAll: string;
+    reinstallAllHint: string;
+    reinstallAllButton: string;
+    reinstalledAll: string;
+    listJoin: string;
+    removeAll: string;
+    removeAllHint: string;
+    removeAllButton: string;
+  };
   agentsSection: string;
   agentsEnabledCount: (enabled: number, total: number) => string;
   moreAgents: (count: number) => string;
   showAgentsHint: string;
-  hooksReady: string;
   hookBadgeOutdated: string;
   hookBadgeNotInstalled: string;
   notDetectedBadge: string;
@@ -208,26 +232,15 @@ export type SettingsAgentText = {
     noCli: string;
     done: (editor: string) => string;
   };
-  hooksOutdated: string;
-  hooksMissing: string;
   hooksDevBuild: string;
   dshBridge: string;
   remoteResult: (host: string, error: string | null) => string;
 };
 
 export const zhCN: SettingsAgentText = {
-  title: "AI Agent 状态灯",
-  install: "安装/修复",
-  installing: "安装中",
-  installed: "已安装",
-  uninstall: "移除钩子",
-  uninstalling: "移除中",
-  uninstalled: "已移除",
   hooksRemoved: "已从各家 AI Agent 配置中移除浮屿钩子与脚本；正在运行的 AI Agent 重启后生效。",
-  currentStatus: "当前状态",
   clearing: "清除中",
   clearStatus: "清除状态",
-  scriptsDir: "脚本目录",
   sessionTitleSection: "小岛显示",
   sessionTitle: "在小岛显示会话标题",
   sessionTitleHint: "在待办的位置显示 Agent 图标和会话标题。标题直接读取 Claude Code 和 Codex 的会话记录，不需要安装钩子。",
@@ -262,7 +275,7 @@ export const zhCN: SettingsAgentText = {
   sessionHoursHint: "最后一次活动在这段时间内的会话才会列出。",
   sessionCardSection: "会话卡片",
   remoteIntro: "在 Agent 页列出其他电脑上的 Claude Code、Codex、DSH 和 Antigravity CLI 会话：打开的主机，岛屿和它保持一条 ssh 连接，每 3 秒读一次它最近的会话记录，服务器上不用安装任何东西。",
-  remoteRequirements: "只能用密钥登录，不会弹出密码框，先确认终端里 ssh 能直接登上去。点上面的「安装/修复」后，远程的 Claude Code 和 Antigravity CLI 能在岛上审批；远程会话不能切到它的窗口。",
+  remoteRequirements: "只能用密钥登录，不会弹出密码框，先确认终端里 ssh 能直接登上去。点「钩子与代理」底部的「全部重装」后，远程的 Claude Code 和 Antigravity CLI 能在岛上审批；远程会话不能切到它的窗口。",
   remoteHostsSection: "主机",
   remoteHostsFooter: "~/.ssh/config 里的 Host 和在这里添加的主机都列在上面，最多同时打开 8 台。",
   remoteRefresh: "立即刷新",
@@ -287,11 +300,49 @@ export const zhCN: SettingsAgentText = {
   remotePort: "端口",
   remoteSave: "添加",
   remoteCancel: "取消",
-  agentsSection: "显示哪些 Agent",
+  hooks: {
+    summaryFix: (count, names) => `${count} 个 Agent 的钩子是旧版本：${names}。修复后重启它们，“等待确认”这类新功能才会生效。`,
+    summaryScripts: "浮屿的钩子脚本是旧版本，状态灯可能不准。",
+    summaryMissing: "还没有给任何 Agent 装钩子，状态灯和会话标题不会工作。",
+    fixAll: "全部修复",
+    installAll: "全部安装",
+    working: "处理中",
+    install: "安装",
+    fix: "修复",
+    connected: "已接入",
+    connectedTitle: "钩子已是最新",
+    failed: (name, error) => `${name} 没装上：${error}`,
+    done: (names) => `已处理 ${names} 的钩子，重启后生效。`,
+    menu: (name) => `${name} 的更多操作`,
+    menuInstall: "安装钩子",
+    menuReinstall: "重新安装钩子",
+    turnOff: (name) => `关闭 ${name}？`,
+    turnOffKeep: "只关闭",
+    turnOffRemove: "关闭并移除钩子",
+    tips: {
+      codex: "装好后要在 Codex 的 /hooks 里信任新钩子。",
+      dsh: "DSH 家目录里已有自定义 cordis.patch.yml 时不会直接覆盖，装完会给出要加的几行。",
+      trae: "建议在 TRAE 里设成“自动执行”，岛上点允许就能直接执行。",
+      traeCn: "建议在 TRAE CN 里设成“自动执行”，岛上点允许就能直接执行。",
+    },
+    optionsSection: "钩子设置",
+    autoInstall: "自动配置新 Agent",
+    autoInstallHint: "装了一家支持的 Agent 后，自动给它装钩子，并在岛上提示。只在已经装过钩子的电脑上生效，开关关掉的 Agent 不动。",
+    autoUpdate: "自动更新旧版钩子",
+    autoUpdateHint: "浮屿升级后，已接入的 Agent 的钩子自动换成新版。",
+    reinstallAll: "重新安装全部钩子",
+    reinstallAllHint: "一家一家重装，也会装上 SSH 远程主机里的钩子；某一家失败不影响其他家。",
+    reinstallAllButton: "全部重装",
+    reinstalledAll: "已重新安装全部钩子，重启正在用的 Agent 后生效。",
+    listJoin: "、",
+    removeAll: "移除全部钩子",
+    removeAllHint: "从各家 Agent 的配置里删掉浮屿加的钩子和脚本，正在运行的 Agent 重启后生效。",
+    removeAllButton: "全部移除",
+  },
+  agentsSection: "接入哪些 Agent",
   agentsEnabledCount: (enabled, total) => `已启用 ${enabled} / ${total}`,
   moreAgents: (count) => `更多支持的 Agent（${count}）`,
-  showAgentsHint: "关掉的 Agent 不出现在 Agent 页，也不算进岛上的运行数量。",
-  hooksReady: "钩子已就绪，状态灯与岛上审批可正常工作。",
+  showAgentsHint: "关掉的 Agent 不出现在 Agent 页，也不算进岛上的运行数量；关掉时可以顺带移除它的钩子。",
   hookBadgeOutdated: "钩子待更新",
   hookBadgeNotInstalled: "未装钩子",
   notDetectedBadge: "未检测到",
@@ -381,8 +432,8 @@ export const zhCN: SettingsAgentText = {
     onIsland: "在岛上允许或拒绝 Agent 的操作",
     whenInFront: "终端在前台时也在岛上弹出",
     whenInFrontHint: "关闭时，会话所在的终端或编辑器窗口在前台，就直接在终端里审批。",
-    hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
-    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
+    hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先在「钩子与代理」里给它装上钩子。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
+    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先在「钩子与代理」里给它装上钩子。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
   },
   filters: {
     title: "隐藏会话",
@@ -412,7 +463,7 @@ export const zhCN: SettingsAgentText = {
     fileError: "异常",
     linked: (target) => `软链，写在 ${target}`,
     noFiles: "本机没有找到这几家 AI 代理。",
-    outdated: "说明是旧版本，或者还在旧的规则文件 rules/fuyu-reply-marker.md 里，或者有一家还没写上；关掉再打开，或点上面的“安装/修复”即可更新。",
+    outdated: "说明是旧版本，或者还在旧的规则文件 rules/fuyu-reply-marker.md 里，或者有一家还没写上；关掉再打开，或在「钩子与代理」里点「全部重装」即可更新。",
     preview: "查看将写入的内容",
   },
   editorExtension: {
@@ -425,26 +476,15 @@ export const zhCN: SettingsAgentText = {
     noCli: "找不到命令行，先打开这个编辑器",
     done: (editor) => `已装进 ${editor}。已经打开的 ${editor} 窗口要重新加载（命令面板 → Reload Window）后才生效。`,
   },
-  hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启正在用的 AI Agent。",
-  hooksMissing: "还没有安装钩子。点“安装/修复”后重启正在用的 AI Agent，状态灯和会话标题才会工作。",
-  dshBridge: "DeepSeek Harness 已有自定义 cordis.patch.yml，岛屿没有直接覆盖。把下面几行加到 DSH 家目录（或 profiles/<名字>）下的 cordis.patch.yml 末尾，重启 DSH 后再点一次“安装/修复”：",
-  hooksDevBuild: "开发版读的是正式版的 Agent 状态。在这里点“安装/修复”装的是正式版的钩子：脚本放在正式版的数据目录，审批走正式版的端口，开发版关掉后照样能用。",
+  dshBridge: "DeepSeek Harness 已有自定义 cordis.patch.yml，岛屿没有直接覆盖。把下面几行加到 DSH 家目录（或 profiles/<名字>）下的 cordis.patch.yml 末尾，重启 DSH 后在它的卡片上再点一次“修复”：",
+  hooksDevBuild: "开发版读的是正式版的 Agent 状态。在这里装的是正式版的钩子：脚本放在正式版的数据目录，审批走正式版的端口，开发版关掉后照样能用。",
   remoteResult: (host, error) => (error ? `SSH 远程 ${host}：失败，${error}` : `SSH 远程 ${host}：已完成`),
 };
 
 export const en: SettingsAgentText = {
-  title: "AI Agent status light",
-  install: "Install/repair",
-  installing: "Installing",
-  installed: "Installed",
-  uninstall: "Remove hooks",
-  uninstalling: "Removing",
-  uninstalled: "Removed",
   hooksRemoved: "Removed Fuyu's hooks and scripts from the AI agent configs; restart running AI agents to finish.",
-  currentStatus: "Status",
   clearing: "Clearing",
   clearStatus: "Clear status",
-  scriptsDir: "Scripts folder",
   sessionTitleSection: "On the island",
   sessionTitle: "Show the session title on the island",
   sessionTitleHint: "Shows the agent icon and session title where the todo goes. Titles are read from the Claude Code and Codex session files, so no hooks are needed.",
@@ -479,7 +519,7 @@ export const en: SettingsAgentText = {
   sessionHoursHint: "Only sessions active within this time are listed.",
   sessionCardSection: "Session cards",
   remoteIntro: "Lists Claude Code, Codex, DSH and Antigravity CLI sessions on other computers on the Agent page: for each host that is on, the island keeps an ssh connection open and reads its recent sessions every 3 seconds. Nothing is installed on the server.",
-  remoteRequirements: "Key login only, with no password prompt: check that ssh logs in by itself in a terminal first. After Install/repair above, remote Claude Code and Antigravity CLI can be approved on the island; the windows of remote sessions cannot be brought up.",
+  remoteRequirements: "Key login only, with no password prompt: check that ssh logs in by itself in a terminal first. After Reinstall all at the bottom of Hooks and agents, remote Claude Code and Antigravity CLI can be approved on the island; the windows of remote sessions cannot be brought up.",
   remoteHostsSection: "Hosts",
   remoteHostsFooter: "The Hosts in ~/.ssh/config and the ones added here are listed above; at most 8 can be on.",
   remoteRefresh: "Refresh now",
@@ -504,11 +544,49 @@ export const en: SettingsAgentText = {
   remotePort: "Port",
   remoteSave: "Add",
   remoteCancel: "Cancel",
-  agentsSection: "Agents shown",
+  hooks: {
+    summaryFix: (count, names) => `${count === 1 ? "1 agent has" : `${count} agents have`} outdated hooks: ${names}. Repair and restart them so newer features such as "waiting for you" work.`,
+    summaryScripts: "Fuyu's hook scripts are outdated, so the status light may be off.",
+    summaryMissing: "No agent has Fuyu's hooks yet, so the status light and session titles stay off.",
+    fixAll: "Repair all",
+    installAll: "Install all",
+    working: "Working",
+    install: "Install",
+    fix: "Repair",
+    connected: "Connected",
+    connectedTitle: "Hooks are up to date",
+    failed: (name, error) => `${name} was not set up: ${error}`,
+    done: (names) => `Updated the hooks for ${names}. Restart to apply.`,
+    menu: (name) => `More for ${name}`,
+    menuInstall: "Install hooks",
+    menuReinstall: "Reinstall hooks",
+    turnOff: (name) => `Turn off ${name}?`,
+    turnOffKeep: "Turn off",
+    turnOffRemove: "Turn off and remove hooks",
+    tips: {
+      codex: "Trust the new hooks in Codex's /hooks afterwards.",
+      dsh: "If the DSH home already has its own cordis.patch.yml, it is left alone and you get the lines to add.",
+      trae: "Set TRAE to auto-run so Allow on the island runs the step right away.",
+      traeCn: "Set TRAE CN to auto-run so Allow on the island runs the step right away.",
+    },
+    optionsSection: "Hook settings",
+    autoInstall: "Set up new agents",
+    autoInstallHint: "When a supported agent is installed, give it hooks and say so on the island. Only on a computer that already has hooks, and never for agents switched off.",
+    autoUpdate: "Update outdated hooks",
+    autoUpdateHint: "After Fuyu updates, connected agents get the new hooks.",
+    reinstallAll: "Reinstall all hooks",
+    reinstallAllHint: "Agent by agent, including the SSH remote hosts; one failing does not stop the rest.",
+    reinstallAllButton: "Reinstall all",
+    reinstalledAll: "Reinstalled all hooks; restart the agents you use to apply.",
+    listJoin: ", ",
+    removeAll: "Remove all hooks",
+    removeAllHint: "Takes Fuyu's hooks and scripts out of every agent's config; running agents pick it up after a restart.",
+    removeAllButton: "Remove all",
+  },
+  agentsSection: "Agents connected",
   agentsEnabledCount: (enabled, total) => `${enabled} / ${total} on`,
   moreAgents: (count) => `${count} more supported agents`,
-  showAgentsHint: "Agents switched off are left out of the Agent page and the island's running count.",
-  hooksReady: "Hooks are ready for the status light and approvals on the island.",
+  showAgentsHint: "Agents switched off are left out of the Agent page and the island's running count; turning one off can also remove its hooks.",
   hookBadgeOutdated: "Hooks outdated",
   hookBadgeNotInstalled: "No hooks yet",
   notDetectedBadge: "Not detected",
@@ -598,8 +676,8 @@ export const en: SettingsAgentText = {
     onIsland: "Allow or deny agent actions on the island",
     whenInFront: "Also while the terminal is in front",
     whenInFrontHint: "Off, a request from a session whose terminal or editor window is in front is approved in that terminal.",
-    hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
-    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
+    hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Give the agent hooks in Hooks and agents first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
+    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Give the agent hooks in Hooks and agents first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
   },
   filters: {
     title: "Hide sessions",
@@ -629,7 +707,7 @@ export const en: SettingsAgentText = {
     fileError: "Error",
     linked: (target) => `a link; written in ${target}`,
     noFiles: "None of these AI agents was found on this computer.",
-    outdated: "The instruction is an older version, still in the old rules file rules/fuyu-reply-marker.md, or missing for one of the agents; switch off and on again, or click Install/repair above, to update it.",
+    outdated: "The instruction is an older version, still in the old rules file rules/fuyu-reply-marker.md, or missing for one of the agents; switch off and on again, or click Reinstall all in Hooks and agents, to update it.",
     preview: "See what will be written",
   },
   editorExtension: {
@@ -642,9 +720,7 @@ export const en: SettingsAgentText = {
     noCli: "Command line not found; open this editor first",
     done: (editor) => `Installed in ${editor}. ${editor} windows already open need a reload (Command Palette → Reload Window) first.`,
   },
-  hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart the AI agents you use.",
-  hooksMissing: "No hooks installed yet. Click Install/repair, then restart the AI agents you use, for the status light and session titles to work.",
-  dshBridge: "DeepSeek Harness already has a custom cordis.patch.yml, so Fuyu kept it as is. Add these lines to the end of cordis.patch.yml in the DSH home (or under profiles/<name>), restart DSH, then click Install/repair again:",
-  hooksDevBuild: "The development build reads the installed Fuyu's agent status. Install/repair here sets up the installed Fuyu's hooks: the scripts go to its data folder and approvals go to its port, so they keep working after the development build closes.",
+  dshBridge: "DeepSeek Harness already has a custom cordis.patch.yml, so Fuyu kept it as is. Add these lines to the end of cordis.patch.yml in the DSH home (or under profiles/<name>), restart DSH, then click Repair on its card again:",
+  hooksDevBuild: "The development build reads the installed Fuyu's agent status. Hooks set up here are the installed Fuyu's: the scripts go to its data folder and approvals go to its port, so they keep working after the development build closes.",
   remoteResult: (host, error) => (error ? `SSH remote ${host}: failed, ${error}` : `SSH remote ${host}: done`),
 };

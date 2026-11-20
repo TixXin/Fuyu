@@ -182,41 +182,20 @@
         </div>
       </div>
       <div id="hooks">
-        <section class="settings-group">
-          <div class="settings-group__header">
-            <h2 class="settings-group__title">
-              AI Agent 状态灯
-            </h2>
+        <div class="agent-hooks-summary-stack">
+          <div class="agent-hooks-summary agent-hooks-summary--warn" role="status">
+            <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            <span class="agent-hooks-summary__text">
+              还没有给任何 Agent 装钩子，状态灯和会话标题不会工作。
+            </span>
+            <button class="agent-hook-action agent-hook-action--fix" type="button">
+              全部安装
+            </button>
           </div>
-          <div class="settings-group__card">
-            <div class="agent-hooks-card agent-hooks-card--warn">
-              <div class="agent-hooks-card__row">
-                <span class="agent-hooks-card__icon">
-                  <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"></svg>
-                </span>
-                <div class="agent-hooks-card__copy">
-                  <div class="agent-hooks-card__headline">
-                    <span class="agent-hooks-card__label">
-                      当前状态
-                    </span>
-                    <strong class="agent-hooks-value">
-                      AI Agent 空闲或已完成
-                    </strong>
-                  </div>
-                  <span class="agent-hooks-message agent-hooks-message--attention" role="status">
-                    <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                    还没有安装钩子。点“安装/修复”后重启正在用的 AI Agent，状态灯和会话标题才会工作。
-                  </span>
-                </div>
-                <div class="agent-hooks-card__actions">
-                  <button class="settings-link-button agent-hooks-card__button agent-hooks-card__button--primary" type="button">
-                    安装/修复
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+          <span class="agent-hooks-message">
+            开发版读的是正式版的 Agent 状态。在这里装的是正式版的钩子：脚本放在正式版的数据目录，审批走正式版的端口，开发版关掉后照样能用。
+          </span>
+        </div>
       </div>
     </div>
   </main>

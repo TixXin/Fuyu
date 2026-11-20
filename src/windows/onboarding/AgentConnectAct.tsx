@@ -1,4 +1,3 @@
-import { AgentHooksSettingsSection } from "../../features/agent-status/AgentHooksSettingsSection";
 import { AgentProviderSwitches } from "../../features/agent-status/AgentProviderSwitches";
 import { AgentRemoteHostsSettings } from "../../features/agent-status/AgentRemoteHostsSettings";
 import { AgentReplyMarkerSettings } from "../../features/agent-status/AgentReplyMarkerSettings";
@@ -17,7 +16,6 @@ export function AgentConnectAct({ settings, onSettingsChange }: { settings: Isla
       <h2 className="onboarding__step">{text.remote}</h2>
       <AgentRemoteHostsSettings />
       <h2 className="onboarding__step">{text.agents}</h2>
-      <AgentHooksSettingsSection {...agentStatus} />
       <AgentProviderSwitches settings={settings} onSettingsChange={onSettingsChange} {...agentStatus} />
       <h2 className="onboarding__step">{text.marker}</h2>
       <AgentReplyMarkerSettings />

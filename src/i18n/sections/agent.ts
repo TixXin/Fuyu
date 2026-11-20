@@ -3,6 +3,7 @@ export type AgentText = {
   failed: (provider: string) => string;
   stale: (provider: string) => string;
   idleOrDone: string;
+  autoHooks: { connected: (names: string) => string; updated: (names: string) => string; body: string; join: string };
   phase: {
     running: string;
     completed: string;
@@ -121,6 +122,7 @@ export const zhCN: AgentText = {
   failed: (provider) => `${provider} 运行失败`,
   stale: (provider) => `${provider} 可能已中断`,
   idleOrDone: "AI Agent 空闲或已完成",
+  autoHooks: { connected: (names) => `已接入 ${names}`, updated: (names) => `已更新 ${names} 的钩子`, body: "重启后生效。", join: "、" },
   phase: {
     running: "正在运行",
     completed: "已完成",
@@ -249,6 +251,7 @@ export const en: AgentText = {
   failed: (provider) => `${provider} failed`,
   stale: (provider) => `${provider} may have stalled`,
   idleOrDone: "AI Agent idle or finished",
+  autoHooks: { connected: (names) => `Connected ${names}`, updated: (names) => `Updated the hooks for ${names}`, body: "Restart to apply.", join: ", " },
   phase: {
     running: "Running",
     completed: "Done",

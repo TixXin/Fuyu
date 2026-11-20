@@ -9,6 +9,7 @@ import { useIslandContributed, useIslandContributions } from "../../plugin-kerne
 import type { AgentSessionSummary } from "../api";
 import { AGENT_POPUP_LIST_SAVING, getAgentAlertExpandedHeight } from "../islandLayout";
 import { listAgentStatuses } from "../status";
+import { useAgentHooksAutoSetup } from "../useAgentHooksAutoSetup";
 import { useAgentHostEvent } from "../useAgentHostEvent";
 import { useAgentIndicator } from "../useAgentIndicator";
 import { useIslandAgentAlerts } from "../useIslandAgentAlerts";
@@ -58,6 +59,12 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
     host,
   });
   const { agentVisualState, agentStatusLabel } = useAgentIndicator(agentStatus, settings, activeAgentSessionCount, t);
+  useAgentHooksAutoSetup(features.agents && !demo.active, {
+    hidden: settings.agentHiddenProviders,
+    install: settings.agentHooksAutoInstall,
+    update: settings.agentHooksAutoUpdate,
+    t,
+  });
   useAgentHostEvent([agentStatus], () => ({
     agents: listAgentStatuses(agentStatus).map(({ key, label, status }) => ({
       id: key,

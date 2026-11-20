@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent 钩子逐项安装预览</title>
+<style>
+:root{
+  --bg:#141416;--panel:#1c1c1f;--card:#222226;--card-hover:#28282d;--line:#2f2f35;
+  --text:#ececf0;--sub:#9a9aa3;--dim:#6b6b73;--accent:#5ec8f8;--accent-ink:#0b2a3a;
+  --ok:#3ecf6e;--warn:#f5a524;--warn-bg:rgba(245,165,36,.12);--danger:#ff6b6b;
+  --run:#3ecf6e;--done:#f5a524;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.intro{max-width:1080px;margin:24px auto 0;padding:0 20px;color:var(--sub);font-size:13px}
+.intro b{color:var(--text)}
+.intro .demo{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.intro button{background:#2a2a30;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit;cursor:pointer}
+.intro button:hover{background:#33333a}
+.win{max-width:1080px;margin:16px auto 40px;padding:0 20px}
+.page{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.head{padding:22px 28px 0}
+.head h1{margin:0 0 14px;font-size:24px}
+.tabs{display:flex;gap:28px;border-bottom:1px solid var(--line)}
+.tabs span{padding:10px 2px;color:var(--sub)}
+.tabs span.on{color:var(--text);border-bottom:2px solid var(--accent)}
+.body{padding:20px 28px 28px}
+h2{font-size:15px;margin:22px 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+h2 small{font-weight:400;color:var(--sub);font-size:13px}
+.summary{display:flex;align-items:center;gap:12px;background:var(--warn-bg);border:1px solid rgba(245,165,36,.35);border-radius:12px;padding:10px 14px;margin-bottom:6px}
+.summary .t{flex:1;color:#f7c66b}
+.summary .t em{font-style:normal;color:var(--sub)}
+.summary.ok{background:rgba(62,207,110,.08);border-color:rgba(62,207,110,.3)}
+.summary.ok .t{color:#8be3a8}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.grid{grid-template-columns:1fr}.head,.body{padding-left:16px;padding-right:16px}}
+.card{position:relative;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 12px 12px 14px;min-height:72px;transition:background .15s,border-color .15s}
+.card:hover{background:var(--card-hover)}
+.card.warn{border-color:rgba(245,165,36,.55)}
+.card.off{opacity:.55}
+.icon{width:34px;height:34px;border-radius:9px;background:#fff;color:#111;display:grid;place-items:center;font-weight:700;font-size:15px;flex:none}
+.meta{flex:1;min-width:0}
+.name{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.run{color:var(--sub);font-size:13px;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.dot.run{background:var(--run)}.dot.done{background:var(--done)}
+.right{display:flex;align-items:center;gap:6px;flex:none}
+.hook{display:inline-flex;align-items:center;gap:4px;font-size:12px;border-radius:7px;padding:3px 9px;border:0;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.hook.ok{background:none;color:var(--ok);cursor:default;padding:3px 4px}
+.hook.fix{background:var(--warn);color:#2a1a00;font-weight:600}
+.hook.install{background:#33333b;color:var(--text)}
+.hook.install:hover{background:#3d3d46}
+.hook.busy{background:#33333b;color:var(--sub);cursor:default}
+.spin{width:11px;height:11px;border:2px solid var(--sub);border-top-color:transparent;border-radius:50%;animation:s .7s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+.more{width:26px;height:26px;border-radius:7px;border:0;background:none;color:var(--sub);cursor:pointer;font-size:18px;line-height:1}
+.more:hover{background:#34343b;color:var(--text)}
+.sw{width:42px;height:24px;border-radius:12px;background:#45454d;border:0;position:relative;cursor:pointer;flex:none;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#ddd;transition:left .15s}
+.sw.on{background:var(--accent)}
+.sw.on::after{left:21px;background:#fff}
+.note{grid-column:1/-1;margin-top:-4px;font-size:12px;color:var(--warn)}
+.cnote{position:absolute;left:60px;right:12px;bottom:-1px;transform:translateY(100%);font-size:12px;color:#f7c66b;padding-top:4px}
+.menu{position:absolute;z-index:20;min-width:200px;background:#2b2b31;border:1px solid #3a3a42;border-radius:10px;padding:5px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--text);font:inherit;font-size:13px;padding:7px 10px;border-radius:6px;cursor:pointer}
+.menu button:hover{background:#3a3a42}
+.menu button.danger{color:var(--danger)}
+.menu hr{border:0;border-top:1px solid #3a3a42;margin:4px 0}
+.menu .tip{font-size:12px;color:var(--sub);padding:6px 10px;max-width:260px}
+.expand{width:100%;margin:12px 0;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px;font:inherit;cursor:pointer}
+.expand:hover{background:var(--card-hover)}
+.foot{color:var(--sub);font-size:13px;margin-top:10px}
+.group{background:var(--card);border:1px solid var(--line);border-radius:12px}
+.row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .l{flex:1}
+.row .d{color:var(--sub);font-size:12px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;place-items:center;z-index:50}
+.modal{width:min(380px,calc(100vw - 32px));background:#26262b;border:1px solid #3a3a42;border-radius:14px;padding:18px}
+.modal h3{margin:0 0 6px;font-size:16px}
+.modal p{margin:0 0 12px;color:var(--sub);font-size:13px}
+.modal label{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:16px}
+.modal .btns{display:flex;justify-content:flex-end;gap:8px}
+.btn{border:0;border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer;background:#3a3a42;color:var(--text)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#2e2e35;border:1px solid #444;border-radius:10px;padding:9px 14px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:60;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1}
+.island{position:fixed;top:14px;left:50%;transform:translate(-50%,-80px);background:#000;color:#fff;border-radius:22px;padding:9px 18px;font-size:13px;transition:transform .3s;z-index:70;display:flex;gap:8px;align-items:center}
+.island.show{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="intro">
+  <b>预览：Agent →「钩子与代理」改成每一家单独安装、修复。</b>每张卡片右侧从左到右是钩子状态、⋯ 菜单、开关。开关表示接不接这一家：关掉时会问要不要同时移除钩子；打开一家还没装钩子的，会顺手装上。顶部的大横幅换成了一行汇总，只在有问题时出现。
+  <div class="demo">
+    <button onclick="simulateNew()">模拟：检测到新装的 Qoder</button>
+    <button onclick="simulateUpgrade()">模拟：岛屿升级后钩子变旧</button>
+    <button onclick="reset()">重置</button>
+  </div>
+</div>
+<div class="win"><div class="page">
+  <div class="head"><h1>Agent</h1><div class="tabs"><span class="on">钩子与代理</span><span>连接与扩展</span><span>审批</span></div></div>
+  <div class="body">
+    <div id="summary"></div>
+    <h2>已接入的 Agent <small id="count"></small></h2>
+    <div class="grid" id="main"></div>
+    <button class="expand" id="expand" onclick="toggleMore()"></button>
+    <div class="grid" id="more" style="display:none"></div>
+    <div class="foot">关掉的 Agent 不再接收它的状态，也不算进岛上的运行数量。没检测到的 Agent 装好后会自动出现在上面。</div>
+
+    <h2>设置</h2>
+    <div class="group" id="settings"></div>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="mbg"><div class="modal">
+  <h3 id="mt"></h3><p id="mp"></p>
+  <label><input type="checkbox" id="mchk" checked> 同时移除它的钩子</label>
+  <div class="btns"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" id="mok">关闭</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+<div class="island" id="island"></div>
+
+<script>
+const BASE=[
+ {id:"codex",n:"Codex",i:"◎",run:"done",rl:"已完成",hook:"current",on:true,tip:"装完后要在 Codex 的 /hooks 里信任新钩子。"},
+ {id:"claude",n:"Claude Code",i:"✳",run:"done",rl:"已完成",hook:"current",on:true},
+ {id:"workbuddy",n:"WorkBuddy",i:"W",run:"done",rl:"已完成",hook:"current",on:true},
+ {id:"antigravity",n:"Antigravity",i:"A",run:"",rl:"已完成",hook:"current",on:true},
+ {id:"dsh",n:"DeepSeek Harness",i:"D",run:"done",rl:"可能已中断",hook:"outdated",on:true,tip:"已有自定义 cordis.patch.yml 时不会直接覆盖，这里给出要加的几行。"},
+ {id:"codebuddy",n:"CodeBuddy",i:"C",run:"",rl:"空闲",hook:"current",on:true},
+ {id:"grok",n:"Grok CLI",i:"G",run:"",rl:"空闲",hook:"notInstalled",on:false},
+ {id:"copilot",n:"GitHub Copilot CLI",i:"⌘",run:"",rl:"空闲",hook:"current",on:true},
+ {id:"cursor",n:"Cursor",i:"▲",run:"run",rl:"正在运行",hook:"current",on:true},
+ {id:"opencode",n:"opencode",i:"O",run:"",rl:"会话记录",hook:"notInstalled",on:true},
+ {id:"qoder",n:"Qoder",i:"Q",run:"",rl:"未检测到",hook:"absent",on:true},
+ {id:"qwen",n:"Qwen Code",i:"Q",run:"",rl:"未检测到",hook:"absent",on:true},
+ {id:"trae",n:"TRAE",i:"T",run:"",rl:"未检测到",hook:"absent",on:true,tip:"建议在 TRAE 里设为「自动执行」，岛上点允许就能直接执行。"},
+ {id:"traecn",n:"TRAE CN",i:"T",run:"",rl:"未检测到",hook:"absent",on:true},
+ {id:"zcode",n:"ZCode",i:"Z",run:"",rl:"未检测到",hook:"absent",on:true},
+ {id:"kimi",n:"Kimi Code",i:"K",run:"",rl:"未检测到",hook:"absent",on:true},
+ {id:"mimo",n:"MiMo Code",i:"M",run:"",rl:"会话记录",hook:"notInstalled",on:true},
+ {id:"droid",n:"Droid",i:"✲",run:"",rl:"未检测到",hook:"absent",on:true},
+ {id:"pi",n:"pi",i:"π",run:"",rl:"未检测到",hook:"absent",on:true},
+];
+let A,S,showMore=false,busy=new Set(),openMenu=null;
+function reset(){A=BASE.map(a=>({...a}));S={autoNew:true,autoFix:true,notify:true};busy.clear();render();}
+const $=id=>document.getElementById(id);
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2600);}
+function island(t){if(!S.notify)return;const e=$("island");e.innerHTML="<span>🔌</span>"+t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2800);}
+function hookEl(a){
+  if(busy.has(a.id))return `<span class="hook busy"><span class="spin"></span>${a.hook==="outdated"?"修复中":"安装中"}</span>`;
+  if(!a.on||a.hook==="absent")return "";
+  if(a.hook==="current")return `<span class="hook ok" title="钩子已是最新">✓ 已接入</span>`;
+  if(a.hook==="outdated")return `<button class="hook fix" onclick="install('${a.id}')">修复</button>`;
+  return `<button class="hook install" onclick="install('${a.id}')">安装</button>`;
+}
+function card(a){
+  const warn=a.on&&a.hook==="outdated";
+  const off=!a.on||a.hook==="absent";
+  const runCls=warn?"done":a.run;
+  const rl=warn?"钩子是旧版本":a.rl;
+  return `<div class="card ${warn?"warn":""} ${off?"off":""}">
+    <div class="icon">${a.i}</div>
+    <div class="meta"><div class="name">${a.n}</div><div class="run" style="${warn?"color:var(--warn)":""}"><span class="dot ${runCls}"></span>${rl}</div></div>
+    <div class="right">${hookEl(a)}<button class="more" onclick="menu(event,'${a.id}')">⋯</button><button class="sw ${a.on?"on":""}" onclick="toggle('${a.id}')" aria-label="接入 ${a.n}"></button></div>
+  </div>`;
+}
+function render(){
+  const main=A.filter(a=>a.hook!=="absent"),more=A.filter(a=>a.hook==="absent");
+  $("main").innerHTML=main.map(card).join("");
+  $("more").innerHTML=more.map(card).join("");
+  $("more").style.display=showMore&&more.length?"grid":"none";
+  $("expand").style.display=more.length?"block":"none";
+  $("expand").textContent=(showMore?"⌃ ":"⌄ ")+`没检测到的 Agent（${more.length}）`;
+  $("count").textContent=`已接入 ${main.filter(a=>a.on&&a.hook==="current").length} / ${main.length}`;
+  const bad=main.filter(a=>a.on&&(a.hook==="outdated"||a.hook==="notInstalled"));
+  if(bad.length){
+    const names=bad.map(a=>a.n).join("、");
+    $("summary").innerHTML=`<div class="summary"><span>⚠️</span><div class="t">${bad.length} 个 Agent 需要安装或修复 <em>· ${names}</em></div><button class="hook fix" onclick="fixAll()">全部修复</button></div>`;
+  }else $("summary").innerHTML="";
+  $("settings").innerHTML=[
+    ["autoNew","自动配置新 Agent","装了一家支持的 Agent 后自动安装它的钩子，只动开关开着的那几家。"],
+    ["autoFix","自动更新旧版钩子","岛屿升级后，已接入的 Agent 的钩子自动换成新版。"],
+    ["notify","接入或修复后在岛上提示","提示里写清要重启哪一家才生效。"],
+  ].map(([k,t,d])=>`<div class="row"><div class="l"><div>${t}</div><div class="d">${d}</div></div><button class="sw ${S[k]?"on":""}" onclick="S.${k}=!S.${k};render()"></button></div>`).join("")+
+  `<div class="row"><div class="l"><div>重新安装全部钩子</div><div class="d">一家一家地装，某一家失败不影响其他家，失败的会标在它的卡片上。</div></div><button class="btn" onclick="reinstallAll()">全部重装</button></div>`;
+}
+function find(id){return A.find(a=>a.id===id)}
+function install(id,quiet){
+  const a=find(id);const was=a.hook;busy.add(id);render();
+  return new Promise(r=>setTimeout(()=>{busy.delete(id);a.hook="current";a.on=true;if(a.rl==="可能已中断")a.rl="空闲";render();
+    if(!quiet){toast(`${was==="outdated"?"已修复":"已安装"} ${a.n} 的钩子，重启 ${a.n} 后生效`);}
+    r();},800));
+}
+async function fixAll(){
+  const bad=A.filter(a=>a.on&&(a.hook==="outdated"||a.hook==="notInstalled"));
+  await Promise.all(bad.map(a=>install(a.id,true)));
+  toast(`已处理 ${bad.length} 个：重启 ${bad.map(a=>a.n).join("、")} 后生效`);
+}
+async function reinstallAll(){
+  const list=A.filter(a=>a.on&&a.hook!=="absent");
+  list.forEach(a=>busy.add(a.id));render();
+  setTimeout(()=>{list.forEach(a=>{busy.delete(a.id);a.hook="current"});render();toast(`已重装 ${list.length} 家的钩子`);},900);
+}
+let pending=null;
+function toggle(id){
+  const a=find(id);
+  if(a.on){
+    if(a.hook==="current"||a.hook==="outdated"){
+      pending=id;$("mt").textContent=`关闭 ${a.n}？`;
+      $("mp").textContent="岛上不再显示它的状态。移除钩子会把它配置文件里浮屿加的那几行删掉，以后再打开会重新装。";
+      $("mchk").checked=true;$("mbg").style.display="grid";
+      $("mok").onclick=()=>{a.on=false;if($("mchk").checked){a.hook="notInstalled";toast(`已关闭 ${a.n}，并移除了它的钩子`)}else toast(`已关闭 ${a.n}，钩子保留`);closeModal();render();};
+      return;
+    }
+    a.on=false;render();return;
+  }
+  a.on=true;
+  if(a.hook==="notInstalled"||a.hook==="outdated")install(id);else render();
+}
+function closeModal(){$("mbg").style.display="none";pending=null}
+function menu(e,id){
+  e.stopPropagation();closeMenu();
+  const a=find(id);const m=document.createElement("div");m.className="menu";
+  const items=[];
+  if(a.hook!=="absent"){
+    items.push(`<button onclick="closeMenu();install('${id}')">${a.hook==="current"?"重新安装钩子":"安装钩子"}</button>`);
+    if(a.hook==="current"||a.hook==="outdated")items.push(`<button class="danger" onclick="closeMenu();removeHook('${id}')">移除钩子</button>`);
+    items.push(`<button onclick="closeMenu();toast('在访达中显示 ${a.n} 的配置文件')">打开配置文件位置</button>`);
+  }else items.push(`<button onclick="closeMenu();toast('打开 ${a.n} 的官网')">去安装 ${a.n}…</button>`);
+  items.push(`<button onclick="closeMenu();toast('${a.n} 在岛上隐藏，状态照常接收')">在岛上隐藏</button>`);
+  if(a.tip)items.push(`<hr><div class="tip">${a.tip}</div>`);
+  m.innerHTML=items.join("");document.body.appendChild(m);
+  const r=e.currentTarget.getBoundingClientRect();
+  const left=Math.min(r.right-200+window.scrollX,window.innerWidth-216);
+  m.style.left=Math.max(8,left)+"px";m.style.top=(r.bottom+6+window.scrollY)+"px";openMenu=m;
+}
+function closeMenu(){if(openMenu){openMenu.remove();openMenu=null}}
+document.addEventListener("click",closeMenu);
+function removeHook(id){const a=find(id);a.hook="notInstalled";render();toast(`已移除 ${a.n} 的钩子`)}
+function toggleMore(){showMore=!showMore;render()}
+function simulateNew(){
+  const q=find("qoder");if(q.hook!=="absent"){toast("Qoder 已经在上面了，先点重置");return}
+  q.hook="notInstalled";q.rl="空闲";render();
+  if(S.autoNew&&q.on){install("qoder",true).then(()=>{island("已接入 Qoder · 重启 Qoder 后生效");toast("自动配置：已为 Qoder 安装钩子")})}
+  else toast("检测到 Qoder，点它卡片上的「安装」接入");
+}
+function simulateUpgrade(){
+  A.filter(a=>a.on&&a.hook==="current").slice(0,3).forEach(a=>a.hook="outdated");render();
+  if(S.autoFix){setTimeout(()=>{const list=A.filter(a=>a.on&&a.hook==="outdated"&&a.id!=="dsh");Promise.all(list.map(a=>install(a.id,true))).then(()=>{island(`已更新 ${list.length} 家的钩子`);toast("自动更新：已换成新版钩子（DSH 需要手动处理，仍显示修复）")})},600)}
+  else toast("钩子变旧了，顶部出现汇总，卡片上出现「修复」");
+}
+reset();
+</script>
+</body>
+</html>

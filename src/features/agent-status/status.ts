@@ -6,8 +6,6 @@ import type { SessionFilter } from "./sessionList";
 export { AGENT_PROVIDERS } from "./agents.ts";
 
 export type AgentVisualState = "idle" | "running" | "attention";
-export type AgentHooksInstallState = "idle" | "installing" | "installed" | "error";
-export type AgentHooksUninstallState = "idle" | "uninstalling" | "uninstalled" | "error";
 
 export const DEFAULT_AGENT_TASK_STATUS: AgentTaskStatus = {
   phase: "idle",
@@ -97,24 +95,6 @@ export function getAgentVisualState(snapshot: AgentStatusSnapshot, activeSession
   }
 
   return "idle";
-}
-
-export type AgentHooksNotice = "update" | "install";
-
-export function hasInstalledAgentHooks(state: AgentHooksState | null): boolean {
-  if (!state) return false;
-  return Object.entries(state).some(
-    ([key, value]) => key !== "scriptsOutdated" && (value === "current" || value === "outdated"),
-  );
-}
-
-export function getAgentHooksNotice(state: AgentHooksState | null): AgentHooksNotice | null {
-  if (!state) return null;
-  const present = AGENT_PROVIDERS.filter((provider) => state[provider] !== undefined && state[provider] !== "absent");
-  if (state.scriptsOutdated || present.some((provider) => state[provider] === "outdated")) {
-    return "update";
-  }
-  return present.length > 0 && present.every((provider) => state[provider] === "notInstalled") ? "install" : null;
 }
 
 export function getAgentStatusLabel(snapshot: AgentStatusSnapshot, t: Translations, activeSessions = 0) {

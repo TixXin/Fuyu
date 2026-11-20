@@ -41,8 +41,7 @@ const { DevWatermark } = await import("../../src/components/DevWatermark");
 const { BehaviorSettingsSection } = await import("../../src/windows/settings/sections/BehaviorSettingsSection");
 const { UpdatePanel } = await import("../../src/features/updater/UpdatePanel");
 const { DevBar } = await import("../../src/windows/settings/DevBar");
-const { AgentHooksSettingsSection } = await import("../../src/features/agent-status/AgentHooksSettingsSection");
-const { DEFAULT_AGENT_STATUS } = await import("../../src/features/agent-status/status");
+const { AgentHooksSummary } = await import("../../src/features/agent-status/AgentHooksSummary");
 let hookInstalls = 0;
 
 const text = TRANSLATIONS["zh-CN"].settings.devBuild;
@@ -64,8 +63,8 @@ try {
         <BehaviorSettingsSection launchAtStartup={false} trayIconVisible locale="zh-CN" onLaunchAtStartupChange={(enabled) => startupWrites.push(enabled)} onTrayIconVisibleChange={() => {}} onLocaleChange={() => {}} />
         <UpdatePanel />
         <div id="bar" style={{ position: "relative", height: 40 }}><DevBar /></div>
-        <div id="hooks"><AgentHooksSettingsSection agentStatus={DEFAULT_AGENT_STATUS} clearingAgentProvider={null} agentHooksInstallState="idle" agentHooksInstallResult={null} agentHooksInstallError=""
-          agentHooksState={{ codex: "notInstalled", claudeCode: "notInstalled", scriptsOutdated: false }} onClearAgentStatus={() => {}} onInstallAgentHooks={() => { hookInstalls += 1; }} /></div>
+        <div id="hooks"><AgentHooksSummary providers={["codex", "claudeCode"]} hidden={[]} agentHooksState={{ codex: "notInstalled", claudeCode: "notInstalled", scriptsOutdated: false }}
+          hookBusy={new Set()} hookErrors={{}} hookDone={[]} dshBridge={null} busy={false} onInstallHooks={() => {}} onInstallAll={() => { hookInstalls += 1; }} /></div>
       </I18nProvider></StrictMode>,
     );
   });
@@ -103,8 +102,8 @@ try {
   check(bar.querySelector(".dev-bar__status")?.textContent === text.status.releaseYields, "Once the installed app has stepped back it says approvals come here");
 
   const hooks = document.getElementById("hooks")!;
-  const install = [...hooks.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((button) => button.textContent === "安装/修复");
-  check(install && !install.disabled && hooks.querySelector(".agent-hooks-message--attention"), "A development build offers Install/repair and says when hooks are missing");
+  const install = hooks.querySelector<HTMLButtonElement>(".agent-hook-action--fix");
+  check(install?.textContent === "全部安装" && !install.disabled && hooks.textContent?.includes(TRANSLATIONS["zh-CN"].settings.agent.hooksDevBuild), "A development build offers Install all and says the hooks belong to the installed app");
   install?.click();
   check(hookInstalls === 1, "Install/repair in a development build installs the hooks");
 
