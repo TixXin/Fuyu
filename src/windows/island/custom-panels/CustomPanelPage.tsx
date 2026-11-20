@@ -6,7 +6,7 @@ import { useTranslation } from "../../../i18n";
 import { addPanelItem, boardHeightPx, defaultWidgetSize, dropNewPanelItem, fuyuPanel, fuyuPanels, gridWidthPx, PANEL_MODES, removePanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
-import { PanelBoard, type HeldWidget, type IncomingWidget } from "./PanelBoard";
+import { PanelBoard, type DragArea, type HeldWidget, type IncomingWidget } from "./PanelBoard";
 import { editingPanel, startPanelEditing, stopPanelEditing, usePanelEditing } from "./panelEditing";
 import { useIslandWidgets } from "./useIslandWidgets";
 import { useLongPress, type LongPressStart } from "./useLongPress";
@@ -16,6 +16,7 @@ import "./CustomPanelEdit.css";
 
 const UNDO_MS = 4000;
 const BOARD_MARGIN_PX = 10;
+const GRID_TOP_PX = 2;
 
 function useFitScale(contentHeight: number) {
   const ref = useRef<HTMLDivElement>(null);
@@ -31,7 +32,9 @@ function useFitScale(contentHeight: number) {
   }, []);
   const scale = room ? Math.min(1, room.width / gridWidthPx, room.height / (contentHeight + BOARD_MARGIN_PX)) : 1;
   const fit = scale > 0 ? scale : 1;
-  return { ref, scale: fit, roomHeight: room ? room.height / fit - BOARD_MARGIN_PX : Infinity };
+  const side = room ? (room.width / fit - gridWidthPx) / 2 : 0;
+  const area: DragArea | null = room ? { left: -side, top: -GRID_TOP_PX, right: gridWidthPx + side, bottom: room.height / fit - GRID_TOP_PX } : null;
+  return { ref, scale: fit, area };
 }
 
 function boardPoint(grid: HTMLElement | null, area: HTMLElement | null, drag: PickerDrag): { x: number; y: number } | null {
@@ -78,7 +81,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const editing = usePanelEditing() === panelId;
   const panel = fuyuPanel(panels);
   const empty = panel.items.length === 0;
-  const { ref, scale, roomHeight } = useFitScale(boardHeightPx(panel));
+  const { ref, scale, area } = useFitScale(boardHeightPx(panel));
   const gridRef = useRef<HTMLDivElement>(null);
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
   const { removed, remember, forget } = useUndoableRemoval();
@@ -143,7 +146,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
           </div>
         ) : (
           <div className="custom-panel__zoom" style={{ zoom: scale }}>
-            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} roomHeight={roomHeight} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
+            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} area={area} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
           </div>
         )}
       </div>

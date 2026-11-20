@@ -51,14 +51,21 @@ function draggedTo(panel: CustomPanel, drag: Pick<BoxDrag, "widget" | "kind" | "
   return movePanelItemTo(panel, drag.widget, index);
 }
 
-function keptInside(panel: CustomPanel, drag: BoxDrag, roomHeight: number): BoxDrag {
+export type DragArea = { left: number; top: number; right: number; bottom: number };
+
+function keptInside(panel: CustomPanel, drag: BoxDrag, area: DragArea | null): BoxDrag {
   const item = panel.items.find((candidate) => candidate.widget === drag.widget);
   if (!item) return drag;
   const box = itemBoxPx(panel, item);
-  const bottom = Math.max(roomHeight, boardHeightPx(panel));
+  const bounds = area ?? { left: 0, top: 0, right: gridWidthPx, bottom: boardHeightPx(panel) };
+  const bottom = Math.max(bounds.bottom, boardHeightPx(panel));
   const within = (value: number, low: number, high: number) => Math.min(Math.max(value, low), Math.max(low, high));
   if (drag.kind === "stretch") return { ...drag, dx: Math.min(drag.dx, gridWidthPx - box.left - box.width), dy: Math.min(drag.dy, bottom - box.top - box.height) };
-  return { ...drag, dx: within(drag.dx, -box.left, gridWidthPx - box.left - box.width), dy: within(drag.dy, -box.top, bottom - box.top - box.height) };
+  return {
+    ...drag,
+    dx: within(drag.dx, Math.min(0, bounds.left) - box.left, Math.max(gridWidthPx, bounds.right) - box.left - box.width),
+    dy: within(drag.dy, Math.min(0, bounds.top) - box.top, bottom - box.top - box.height),
+  };
 }
 
 function previewOf(panel: CustomPanel, drag: BoxDrag | null, incoming: IncomingWidget | null): CustomPanel {
@@ -88,7 +95,7 @@ type PanelBoardProps = {
   library: WidgetLibrary;
   editing: boolean;
   scale: number;
-  roomHeight: number;
+  area: DragArea | null;
   incoming: IncomingWidget | null;
   held: HeldWidget | null;
   onHeldTaken: () => void;
@@ -97,7 +104,7 @@ type PanelBoardProps = {
   onRemove: (widget: string, name: string) => void;
 };
 
-export function PanelBoard({ panel, library, editing, scale, roomHeight, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
+export function PanelBoard({ panel, library, editing, scale, area, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
   const t = useTranslation().islandWidgets.panel;
   const free = panel.mode === "free";
   const [settle, setSettle] = useSettle();
@@ -109,7 +116,7 @@ export function PanelBoard({ panel, library, editing, scale, roomHeight, incomin
   const { drag: rawDrag, begin, beginAt } = useBoxDrag({
     scale,
     onDrop: (released) => {
-      const drop = { ...released, ...keptInside(panel, released, roomHeight) };
+      const drop = { ...released, ...keptInside(panel, released, area) };
       const item = panel.items.find((candidate) => candidate.widget === drop.widget);
       if (!item) return;
       const next = draggedTo(panel, drop);
@@ -141,7 +148,7 @@ export function PanelBoard({ panel, library, editing, scale, roomHeight, incomin
     const before = delta < 0 ? (panel.items[index - 1]?.widget ?? null) : (panel.items[index + 2]?.widget ?? null);
     onChange(reorderPanelItem(panel, item.widget, before));
   };
-  const drag = rawDrag && keptInside(panel, rawDrag, roomHeight);
+  const drag = rawDrag && keptInside(panel, rawDrag, area);
   const shown = previewOf(panel, drag, incoming);
   const last = panel.items.length - 1;
 
