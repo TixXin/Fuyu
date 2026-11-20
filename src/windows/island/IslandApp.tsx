@@ -20,6 +20,7 @@ import { useIslandTucking } from "./useIslandTucking";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
 import { editGrowWidth, PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
+import { fuyuIslandSize, useFuyuBoardHeight } from "./custom-panels/panelSize";
 import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
@@ -123,17 +124,20 @@ export function IslandApp() {
   const openPopup = [...popups.values()].find((entry) => entry.open === true);
   const hasOpenPopup = openPopup !== undefined;
   const panelEditing = usePanelEditing() !== null && !hasOpenPopup;
-  const editGrow = panelEditing ? editGrowWidth(panelIslandWidth(settings.panelWidth, settings.expandedScale), settings.expandedScale) : 0;
+  const fuyuPage = page === FUYU_PAGE_ID && !hasOpenPopup;
+  const fuyuSize = fuyuIslandSize(useFuyuBoardHeight(), settings.maxPanelHeight);
+  const panelWidth = fuyuPage ? fuyuSize.width : settings.panelWidth;
+  const editGrow = panelEditing ? editGrowWidth(panelIslandWidth(panelWidth, settings.expandedScale), settings.expandedScale) : 0;
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
     hasOpenPopup,
     null,
-    panelIslandWidth(settings.panelWidth + editGrow, settings.expandedScale),
+    panelIslandWidth(panelWidth + editGrow, settings.expandedScale),
     openPopup?.wide === true,
   );
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
   const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
-  const pageIslandHeight = getExpandedIslandHeight({ maxPanelHeight: settings.maxPanelHeight, panel: popups.get(page), popup });
+  const pageIslandHeight = fuyuPage && !popup ? fuyuSize.height : getExpandedIslandHeight({ maxPanelHeight: settings.maxPanelHeight, panel: popups.get(page), popup });
   const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
   const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight + editGrowHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
   const islandNotice = useIslandNotice({ firstHints, v2Upgrade, layer: layerNotice });

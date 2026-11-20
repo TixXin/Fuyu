@@ -8,6 +8,7 @@ import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import { dropIncoming, type DragArea, type IncomingWidget } from "./boardDrag";
 import { PanelBoard, type HeldWidget } from "./PanelBoard";
+import { FUYU_BOARD_TOP_PX, reportFuyuBoardHeight } from "./panelSize";
 import { editingPanel, startPanelEditing, stopPanelEditing, usePanelEditing } from "./panelEditing";
 import { useIslandWidgets } from "./useIslandWidgets";
 import { useLongPress, type LongPressStart } from "./useLongPress";
@@ -16,8 +17,8 @@ import "./CustomPanelPage.css";
 import "./CustomPanelEdit.css";
 
 const UNDO_MS = 4000;
-const BOARD_MARGIN_PX = 10;
-const GRID_TOP_PX = 2;
+const BOARD_MARGIN_PX = FUYU_BOARD_TOP_PX;
+const GRID_TOP_PX = FUYU_BOARD_TOP_PX;
 
 type Room = { width: number; height: number; rest: number };
 
@@ -95,6 +96,8 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const editing = usePanelEditing() === panelId;
   const { ref, scale, width, columns, area, panel } = useFitScale(fuyuPanel(panels), editing);
   const empty = panel.items.length === 0;
+  const contentHeight = boardHeightPx(panel);
+  useEffect(() => reportFuyuBoardHeight(contentHeight), [contentHeight]);
   const gridRef = useRef<HTMLDivElement>(null);
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
   const { removed, remember, forget } = useUndoableRemoval();

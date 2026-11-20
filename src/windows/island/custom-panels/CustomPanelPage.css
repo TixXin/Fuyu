@@ -23,7 +23,7 @@
 
 .custom-panel__grid {
   position: relative;
-  margin: 2px 0 8px;
+  margin: 2px 0 0;
 }
 
 .custom-panel__cell {
