@@ -1,6 +1,6 @@
 import { CenterPattern } from "./CenterPattern";
 import type { CenterPatternChoice } from "./centerSettings";
-import { JELLY_VIEW_HEIGHT, JELLY_VIEW_WIDTH } from "./JellyfishMark";
+import { JELLY_VIEW_HEIGHT, JELLY_VIEW_WIDTH } from "../jellyfish/JellyfishMark";
 import type { PetMood } from "./patterns";
 import { PetSprite } from "./PetSprite";
 

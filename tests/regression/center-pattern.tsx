@@ -76,7 +76,7 @@ const { PetSprite } = await import("../../src/features/center-pattern/PetSprite"
 const { ISLAND_CURSOR_MOVED_EVENT } = await import("../../src/lib/island-cursor/api");
 const { CENTER_PATTERNS } = await import("../../src/features/center-pattern/patterns");
 const { useCenterDecor } = await import("../../src/features/center-pattern/useCenterDecor");
-const { useStatusLightDecor } = await import("../../src/features/center-pattern/useStatusLightDecor");
+const { useStatusLightDecor } = await import("../../src/features/jellyfish/useStatusLightDecor");
 await import("../../src/features/center-pattern/plugin/island");
 await import("../../src/features/center-pattern/plugin/runners");
 const { defineSlot } = await import("../../src/features/plugin-kernel/slots");

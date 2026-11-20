@@ -10,7 +10,7 @@ import { centerPatternChoice, centerPatternSize, type AgentActivity } from "./ce
 import { PetSprite } from "./PetSprite";
 import { usePetMood } from "./usePetMood";
 import { usePetSheet } from "./usePetSheet";
-import { useMarkLightShown } from "./useStatusLightDecor";
+import { useMarkLightShown } from "../jellyfish/useStatusLightDecor";
 
 type CenterContext = ComponentProps<typeof CollapsedCenter> & { enabled: boolean };
 

@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { PetMood } from "./patterns";
+import type { PetMood } from "../center-pattern/patterns";
 import "./JellyfishMark.css";
 
 export const JELLY_VIEW_WIDTH = 58;

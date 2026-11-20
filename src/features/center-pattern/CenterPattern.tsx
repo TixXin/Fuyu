@@ -1,6 +1,6 @@
 import { useId, type CSSProperties } from "react";
 import type { CenterPatternId, PetMood } from "./patterns";
-import { JellyfishMark } from "./JellyfishMark";
+import { JellyfishMark } from "../jellyfish/JellyfishMark";
 import { PatternEyes } from "./PatternEyes";
 import "./CenterPattern.css";
 
