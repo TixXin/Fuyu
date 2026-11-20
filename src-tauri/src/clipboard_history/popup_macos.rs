@@ -221,7 +221,9 @@ fn paste_into(target: Option<i32>, auto_paste: bool, enter: bool) -> Outcome {
     match result {
         Outcome::NoTarget => eprintln!("clipboard paste: no app was recorded when the window opened, so it was only copied"),
         Outcome::NoAccess => {
-            eprintln!("clipboard paste: Fuyu may not send keys (Privacy & Security > Accessibility), so it was only copied");
+            let own = i32::try_from(std::process::id()).unwrap_or_default();
+            let owner = apps::display_name(apps::responsible_pid(own)).unwrap_or_else(|| "Fuyu".to_string());
+            eprintln!("clipboard paste: {owner} may not send keys (Privacy & Security > Accessibility), so it was only copied");
             thread::spawn(input::ask_to_post_keys);
         }
         Outcome::Sent | Outcome::Off => {}
