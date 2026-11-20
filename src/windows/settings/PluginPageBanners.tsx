@@ -65,12 +65,14 @@ export function RuntimeBanner({ node, onRetry }: { node: HostNodeStatus | null; 
     );
   }
   if (node?.state === "failed") {
+    const disk = node.cause === "disk";
+    const body = disk ? text.runtimeDiskFailedBody : node.cause === "other" ? text.runtimeOtherFailedBody : text.runtimeFailedBody;
     return (
       <PluginBanner
         name="runtime-failed"
         tone="bad"
         icon={<AlertCircle size={16} strokeWidth={2.2} />}
-        title={text.runtimeFailed}
+        title={disk ? text.runtimeDiskFailed : text.runtimeFailed}
         actions={
           <button className="plugin-btn plugin-btn--primary" type="button" data-action="runtime-retry" onClick={onRetry}>
             <RefreshCw size={13} strokeWidth={2.2} aria-hidden="true" />
@@ -78,7 +80,7 @@ export function RuntimeBanner({ node, onRetry }: { node: HostNodeStatus | null; 
           </button>
         }
       >
-        <span className="plugin-banner__error">{node.error}</span> {text.runtimeFailedBody}
+        {body} <span className="plugin-banner__error">{node.error}</span>
       </PluginBanner>
     );
   }

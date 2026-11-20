@@ -200,7 +200,7 @@ fn progress_reporter() -> impl FnMut(Progress) {
     }
 }
 
-fn choose_node(data_dir: &std::path::Path) -> Result<ChosenNode, String> {
+fn choose_node(data_dir: &std::path::Path) -> Result<ChosenNode, plugin_base::NodeFailure> {
     node_status::gate().set(node_status::NodeStatus::Checking);
     let download = official_download(crate::system::updater::get_updater_proxy());
     let chosen = node_for_host(&NodeSearch::from_env(), MINIMUM_NODE, data_dir, download, &mut progress_reporter())?;
@@ -353,7 +353,7 @@ fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, de
             Ok(node) => break node,
             Err(error) => {
                 eprintln!("[plugins-v3] no Node for the plugin host: {error}");
-                node_status::gate().set(node_status::NodeStatus::Failed { error });
+                node_status::gate().set(node_status::NodeStatus::Failed { error: error.message, cause: error.cause.into() });
                 if !node_status::gate().wait_for_retry() {
                     return Ok(());
                 }

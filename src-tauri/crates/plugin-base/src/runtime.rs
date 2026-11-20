@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    download::{prepare_node, ArchiveKind, DownloadError, NodeArchive, NodeDownload, Progress},
+    download::{prepare_node, ArchiveKind, DownloadError, FailureCause, NodeArchive, NodeDownload, Progress},
     node::{describe_failure, find_node, FoundNode, NodeSearch, NodeVersion},
 };
 
@@ -57,7 +57,19 @@ pub struct ChosenNode {
     pub source: NodeSource,
 }
 
-pub fn node_for_host(search: &NodeSearch, minimum: NodeVersion, data_dir: &Path, download: Result<NodeDownload, DownloadError>, progress: &mut dyn FnMut(Progress)) -> Result<ChosenNode, String> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NodeFailure {
+    pub message: String,
+    pub cause: FailureCause,
+}
+
+impl std::fmt::Display for NodeFailure {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.message)
+    }
+}
+
+pub fn node_for_host(search: &NodeSearch, minimum: NodeVersion, data_dir: &Path, download: Result<NodeDownload, DownloadError>, progress: &mut dyn FnMut(Progress)) -> Result<ChosenNode, NodeFailure> {
     choose(find_node(search, minimum), minimum, data_dir, download, progress)
 }
 
@@ -67,12 +79,12 @@ pub fn choose(
     data_dir: &Path,
     download: Result<NodeDownload, DownloadError>,
     progress: &mut dyn FnMut(Progress),
-) -> Result<ChosenNode, String> {
+) -> Result<ChosenNode, NodeFailure> {
     let tried = match found {
         Ok(found) => return Ok(ChosenNode { path: found.path, version: found.version, source: NodeSource::System }),
         Err(tried) => tried,
     };
-    let fail = |error: DownloadError| format!("{}; {error}", describe_failure(&tried, minimum));
+    let fail = |error: DownloadError| NodeFailure { message: format!("{}; {error}", describe_failure(&tried, minimum)), cause: error.cause() };
     let download = download.map_err(fail)?;
     if download.version < minimum {
         return Err(fail(DownloadError::Unpack(format!("the bundled Node {} is older than {minimum}", download.version))));

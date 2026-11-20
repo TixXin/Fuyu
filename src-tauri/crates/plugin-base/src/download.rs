@@ -2,12 +2,16 @@ use std::{
     fmt, fs,
     io::{Read, Write},
     path::{Path, PathBuf},
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    thread,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
 use sha2::{Digest, Sha256};
 
-use crate::{node::NodeVersion, unpack::unpack};
+use crate::{
+    node::NodeVersion,
+    unpack::{extract_one, UnpackFailure},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArchiveKind {
@@ -88,6 +92,23 @@ impl fmt::Display for DownloadError {
 
 impl std::error::Error for DownloadError {}
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FailureCause {
+    Network,
+    Disk,
+    Other,
+}
+
+impl DownloadError {
+    pub fn cause(&self) -> FailureCause {
+        match self {
+            Self::Sources(_) => FailureCause::Network,
+            Self::Disk { .. } => FailureCause::Disk,
+            Self::Unsupported { .. } | Self::Unpack(_) => FailureCause::Other,
+        }
+    }
+}
+
 const MARKER: &str = ".fuyu-sha256";
 const STAGING: &str = ".download-";
 
@@ -121,7 +142,10 @@ pub fn prepare_node(data_dir: &Path, download: &NodeDownload, progress: &mut dyn
                 fetched = true;
                 break;
             }
-            Err(reason) => {
+            Err(Fetch::Disk(reason)) => {
+                return Err(DownloadError::Disk { action: "write", path: archive.clone(), error: reason });
+            }
+            Err(Fetch::Source(reason)) => {
                 let _ = fs::remove_file(&archive);
                 attempts.push(Attempt { url, reason });
             }
@@ -132,22 +156,53 @@ pub fn prepare_node(data_dir: &Path, download: &NodeDownload, progress: &mut dyn
     }
     let unpacked = staging.path.join("unpacked");
     fs::create_dir_all(&unpacked).map_err(|error| disk("create", &unpacked, error))?;
-    unpack(&archive, download.archive.kind, &unpacked).map_err(DownloadError::Unpack)?;
-    let tree = unpacked.join(download.archive.folder());
-    if !tree.join(&download.archive.exe).is_file() {
-        return Err(DownloadError::Unpack(format!("{} has no {}/{}", download.archive.file, download.archive.folder(), download.archive.exe)));
-    }
-    let marker = tree.join(MARKER);
-    fs::write(&marker, &download.archive.sha256).map_err(|error| disk("write", &marker, error))?;
+    let entry = format!("{}/{}", download.archive.folder(), download.archive.exe);
+    let extracted = extract_one(&archive, download.archive.kind, &entry, &unpacked).map_err(|failure| match failure {
+        UnpackFailure::Missing => DownloadError::Unpack(format!("{} has no {entry}", download.archive.file)),
+        UnpackFailure::Disk(error) => disk("unpack into", &unpacked, error),
+        UnpackFailure::Broken(reason) => DownloadError::Unpack(reason),
+    })?;
     let target = download.install_dir(data_dir);
-    if target.exists() {
-        let old = staging.path.join("old");
-        fs::rename(&target, &old).map_err(|error| disk("move away", &target, error))?;
-    }
-    fs::rename(&tree, &target).map_err(|error| disk("move into place", &target, error))?;
+    let marker = target.join(MARKER);
+    patiently(|| remove_if_present(&marker)).map_err(|error| disk("reset", &marker, error))?;
+    let exe = target.join(&download.archive.exe);
+    let parent = exe.parent().unwrap_or(&target);
+    patiently(|| fs::create_dir_all(parent)).map_err(|error| disk("create", parent, error))?;
+    patiently(|| fs::rename(&extracted, &exe)).map_err(|error| disk("move into place", &exe, error))?;
+    patiently(|| fs::write(&marker, &download.archive.sha256)).map_err(|error| disk("write", &marker, error))?;
     drop(staging);
     remove_other_versions(&runtime, &target);
-    installed_node(data_dir, download).ok_or_else(|| DownloadError::Unpack(format!("{} is missing after unpacking", target.join(&download.archive.exe).display())))
+    installed_node(data_dir, download).ok_or_else(|| DownloadError::Unpack(format!("{} is missing after unpacking", exe.display())))
+}
+
+fn remove_if_present(path: &Path) -> std::io::Result<()> {
+    match fs::remove_file(path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        other => other,
+    }
+}
+
+fn patiently<T>(mut step: impl FnMut() -> std::io::Result<T>) -> std::io::Result<T> {
+    let deadline = Instant::now() + Duration::from_secs(15);
+    let mut wait = Duration::from_millis(100);
+    loop {
+        match step() {
+            Err(error) if held_by_another_program(&error) && Instant::now() + wait < deadline => {
+                thread::sleep(wait);
+                wait = (wait * 2).min(Duration::from_secs(2));
+            }
+            other => return other,
+        }
+    }
+}
+
+fn held_by_another_program(error: &std::io::Error) -> bool {
+    cfg!(windows) && (error.kind() == std::io::ErrorKind::PermissionDenied || matches!(error.raw_os_error(), Some(32 | 33)))
+}
+
+enum Fetch {
+    Source(String),
+    Disk(String),
 }
 
 fn client(download: &NodeDownload) -> Result<reqwest::blocking::Client, DownloadError> {
@@ -190,41 +245,41 @@ fn scrub(text: &str, proxy: Option<&str>) -> String {
     scrubbed
 }
 
-fn fetch(client: &reqwest::blocking::Client, url: &str, archive: &Path, download: &NodeDownload, progress: &mut dyn FnMut(Progress)) -> Result<(), String> {
-    let mut response = client.get(url).send().map_err(|error| scrub(&describe_http(&error), download.proxy.as_deref()))?;
+fn fetch(client: &reqwest::blocking::Client, url: &str, archive: &Path, download: &NodeDownload, progress: &mut dyn FnMut(Progress)) -> Result<(), Fetch> {
+    let mut response = client.get(url).send().map_err(|error| Fetch::Source(scrub(&describe_http(&error), download.proxy.as_deref())))?;
     if !response.status().is_success() {
-        return Err(format!("answered HTTP {}", response.status().as_u16()));
+        return Err(Fetch::Source(format!("answered HTTP {}", response.status().as_u16())));
     }
     let total = response.content_length();
     if total.is_some_and(|total| total > download.max_bytes) {
-        return Err(format!("is larger than {} bytes", download.max_bytes));
+        return Err(Fetch::Source(format!("is larger than {} bytes", download.max_bytes)));
     }
-    let mut file = fs::File::create(archive).map_err(|error| format!("could not write {}: {error}", archive.display()))?;
+    let mut file = fs::File::create(archive).map_err(|error| Fetch::Disk(error.to_string()))?;
     let mut hasher = Sha256::new();
     let mut downloaded = 0u64;
     let mut buffer = vec![0u8; 64 * 1024];
     progress(Progress { url, downloaded, total });
     loop {
-        let read = response.read(&mut buffer).map_err(|error| format!("broke off after {downloaded} bytes: {error}"))?;
+        let read = response.read(&mut buffer).map_err(|error| Fetch::Source(format!("broke off after {downloaded} bytes: {error}")))?;
         if read == 0 {
             break;
         }
         let chunk = &buffer[..read];
         downloaded += read as u64;
         if downloaded > download.max_bytes {
-            return Err(format!("is larger than {} bytes", download.max_bytes));
+            return Err(Fetch::Source(format!("is larger than {} bytes", download.max_bytes)));
         }
         hasher.update(chunk);
-        file.write_all(chunk).map_err(|error| format!("could not write {}: {error}", archive.display()))?;
+        file.write_all(chunk).map_err(|error| Fetch::Disk(error.to_string()))?;
         progress(Progress { url, downloaded, total });
     }
     if let Some(total) = total.filter(|total| *total != downloaded) {
-        return Err(format!("ended after {downloaded} of {total} bytes"));
+        return Err(Fetch::Source(format!("ended after {downloaded} of {total} bytes")));
     }
-    file.sync_all().map_err(|error| format!("could not write {}: {error}", archive.display()))?;
+    file.sync_all().map_err(|error| Fetch::Disk(error.to_string()))?;
     let actual: String = hasher.finalize().iter().map(|byte| format!("{byte:02x}")).collect();
     if !actual.eq_ignore_ascii_case(&download.archive.sha256) {
-        return Err(format!("SHA-256 is {actual}, expected {}", download.archive.sha256.to_ascii_lowercase()));
+        return Err(Fetch::Source(format!("SHA-256 is {actual}, expected {}", download.archive.sha256.to_ascii_lowercase())));
     }
     Ok(())
 }

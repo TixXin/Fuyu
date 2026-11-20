@@ -23,7 +23,7 @@ export interface HostConnection {
 export type HostNodeStatus =
   | { state: "checking" }
   | { state: "downloading"; downloaded: number; total: number | null }
-  | { state: "failed"; error: string }
+  | { state: "failed"; error: string; cause?: "network" | "disk" | "other" }
   | { state: "ready" };
 
 export interface HostSafeMode {

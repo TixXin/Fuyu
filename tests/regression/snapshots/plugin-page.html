@@ -3623,10 +3623,50 @@
               没能下载插件运行环境
             </div>
             <div class="plugin-banner__body">
+              下载走系统代理；网络好了点「重试」，不用重启浮屿。
               <span class="plugin-banner__error">
                 Node 22.15 or newer was not found; all 3 download sources failed
               </span>
-              下载走系统代理；网络好了点「重试」，不用重启浮屿。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn plugin-btn--primary" data-action="runtime-retry" type="button">
+                <svg aria-hidden="true" class="lucide lucide-refresh-cw" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                重试
+              </button>
+            </div>
+          </section>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+            <button class="plugin-link" data-action="open-about-plugins" type="button">
+              了解插件系统
+            </button>
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage" data-stage="nodeDisk">
+      <h2 class="gallery__title">
+        运行环境写不进去 / Runtime blocked
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="connecting">
+          <section class="plugin-banner plugin-banner--bad" data-banner="runtime-failed">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              插件运行环境没能存进数据文件夹
+            </div>
+            <div class="plugin-banner__body">
+              常见原因是杀毒软件正在扫描刚下载的文件，或拦下了写入。稍等一会儿点「重试」；一直不行就把浮屿的数据文件夹（默认是用户目录下的 .fuyu）加进安全软件的信任列表。不需要用管理员身份运行浮屿。
+              <span class="plugin-banner__error">
+                Node 22.15 or newer was not found; could not move into place C:\Users\me\.fuyu\runtime\node-v26.13.1\node.exe: Access is denied. (os error 5)
+              </span>
             </div>
             <div class="plugin-banner__actions">
               <button class="plugin-btn plugin-btn--primary" data-action="runtime-retry" type="button">

@@ -109,6 +109,9 @@ export type SettingsPluginPageText = {
     runtimeSizeUnknown: (downloaded: string) => string;
     runtimeFailed: string;
     runtimeFailedBody: string;
+    runtimeDiskFailed: string;
+    runtimeDiskFailedBody: string;
+    runtimeOtherFailedBody: string;
     retry: string;
     safe: string;
     safeFailures: (count: number) => string;
@@ -375,6 +378,9 @@ export const zhCN: SettingsPluginPageText = {
     runtimeSizeUnknown: (downloaded) => `${downloaded} MB`,
     runtimeFailed: "没能下载插件运行环境",
     runtimeFailedBody: "下载走系统代理；网络好了点「重试」，不用重启浮屿。",
+    runtimeDiskFailed: "插件运行环境没能存进数据文件夹",
+    runtimeDiskFailedBody: "常见原因是杀毒软件正在扫描刚下载的文件，或拦下了写入。稍等一会儿点「重试」；一直不行就把浮屿的数据文件夹（默认是用户目录下的 .fuyu）加进安全软件的信任列表。不需要用管理员身份运行浮屿。",
+    runtimeOtherFailedBody: "也可以自己安装 Node.js 22.15 或更新的版本，装好后点「重试」。",
     retry: "重试",
     safe: "安全模式：你装的插件这次没有启动",
     safeFailures: (count) => `插件连续 ${count} 次没能正常跑满 1 分钟，浮屿这次先不启动你装的插件。安全模式下正常运行 1 分钟后，下次启动就恢复。`,
@@ -641,6 +647,9 @@ export const en: SettingsPluginPageText = {
     runtimeSizeUnknown: (downloaded) => `${downloaded} MB`,
     runtimeFailed: "Couldn't download the plugin runtime",
     runtimeFailedBody: "Downloads use the system proxy; retry once you're online, no restart needed.",
+    runtimeDiskFailed: "Couldn't save the plugin runtime to the data folder",
+    runtimeDiskFailedBody: "Usually an antivirus is still scanning the downloaded file or blocked the write. Wait a moment and retry; if it keeps failing, add Fuyu's data folder (.fuyu in your user folder by default) to your security software's trusted list. There's no need to run Fuyu as administrator.",
+    runtimeOtherFailedBody: "You can also install Node.js 22.15 or newer yourself, then retry.",
     retry: "Retry",
     safe: "Safe mode: your plugins didn't start this time",
     safeFailures: (count) => `Plugins failed to run for a full minute ${count} times in a row, so Fuyu didn't start your plugins this time. After a minute of normal running in safe mode, the next launch is back to normal.`,

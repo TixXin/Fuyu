@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{bisect, containment, node_status::{NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, on_by_default, host_env, host_files, host_origins, host_script, memory_of, window_origins, without_verbatim_prefix, HostFiles, HostMode, MEMORY_MEASURE};
+use super::{bisect, containment, node_status::{FailureCause, NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, on_by_default, host_env, host_files, host_origins, host_script, memory_of, window_origins, without_verbatim_prefix, HostFiles, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn node_gets_the_installed_host_path_without_the_verbatim_prefix_it_cannot_resolve() {
@@ -80,8 +80,8 @@ fn tauri_config_enforces_a_csp_without_eval_or_remote_scripts() {
 fn node_status_serializes_with_a_state_tag_for_the_window() {
     let downloading = serde_json::to_value(NodeStatus::Downloading { downloaded: 5, total: Some(9) }).unwrap();
     assert_eq!(downloading, serde_json::json!({ "state": "downloading", "downloaded": 5, "total": 9 }));
-    let failed = serde_json::to_value(NodeStatus::Failed { error: "offline".into() }).unwrap();
-    assert_eq!(failed, serde_json::json!({ "state": "failed", "error": "offline" }));
+    let failed = serde_json::to_value(NodeStatus::Failed { error: "offline".into(), cause: FailureCause::Network }).unwrap();
+    assert_eq!(failed, serde_json::json!({ "state": "failed", "error": "offline", "cause": "network" }));
     assert_eq!(serde_json::to_value(NodeStatus::Checking).unwrap(), serde_json::json!({ "state": "checking" }));
 }
 
@@ -89,7 +89,7 @@ fn node_status_serializes_with_a_state_tag_for_the_window() {
 fn a_retry_only_counts_after_a_failure_and_wakes_the_waiting_start() {
     let gate = std::sync::Arc::new(NodeGate::default());
     assert!(!gate.retry(), "nothing to retry while Node is still being looked for");
-    gate.set(NodeStatus::Failed { error: "offline".into() });
+    gate.set(NodeStatus::Failed { error: "offline".into(), cause: FailureCause::Network });
     let waiting = {
         let gate = gate.clone();
         std::thread::spawn(move || gate.wait_for_retry())
@@ -104,7 +104,7 @@ fn a_retry_only_counts_after_a_failure_and_wakes_the_waiting_start() {
 #[test]
 fn stopping_releases_a_start_that_waits_for_a_retry() {
     let gate = std::sync::Arc::new(NodeGate::default());
-    gate.set(NodeStatus::Failed { error: "offline".into() });
+    gate.set(NodeStatus::Failed { error: "offline".into(), cause: FailureCause::Network });
     let waiting = {
         let gate = gate.clone();
         std::thread::spawn(move || gate.wait_for_retry())

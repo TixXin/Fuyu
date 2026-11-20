@@ -3623,10 +3623,50 @@
               Couldn't download the plugin runtime
             </div>
             <div class="plugin-banner__body">
+              Downloads use the system proxy; retry once you're online, no restart needed.
               <span class="plugin-banner__error">
                 Node 22.15 or newer was not found; all 3 download sources failed
               </span>
-              Downloads use the system proxy; retry once you're online, no restart needed.
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn plugin-btn--primary" data-action="runtime-retry" type="button">
+                <svg aria-hidden="true" class="lucide lucide-refresh-cw" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                Retry
+              </button>
+            </div>
+          </section>
+          <p class="plugin-foot" data-footnote="true">
+            Built-in features (to-dos, music, clipboard…) aren't plugins; turn them on or off in
+            <button class="plugin-link" data-action="open-overview" type="button">
+              Overview
+            </button>
+            .
+            <button class="plugin-link" data-action="open-about-plugins" type="button">
+              About the plugin system
+            </button>
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage" data-stage="nodeDisk">
+      <h2 class="gallery__title">
+        运行环境写不进去 / Runtime blocked
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="connecting">
+          <section class="plugin-banner plugin-banner--bad" data-banner="runtime-failed">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              Couldn't save the plugin runtime to the data folder
+            </div>
+            <div class="plugin-banner__body">
+              Usually an antivirus is still scanning the downloaded file or blocked the write. Wait a moment and retry; if it keeps failing, add Fuyu's data folder (.fuyu in your user folder by default) to your security software's trusted list. There's no need to run Fuyu as administrator.
+              <span class="plugin-banner__error">
+                Node 22.15 or newer was not found; could not move into place C:\Users\me\.fuyu\runtime\node-v26.13.1\node.exe: Access is denied. (os error 5)
+              </span>
             </div>
             <div class="plugin-banner__actions">
               <button class="plugin-btn plugin-btn--primary" data-action="runtime-retry" type="button">
