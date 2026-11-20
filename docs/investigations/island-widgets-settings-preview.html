@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>岛屿布局 · 简化版预览</title>
+<style>
+  :root {
+    --bg: #0f1012; --win: #17181b; --side: #131416; --card: #1e1f23; --card-2: #25262b; --line: #2c2d33;
+    --ink: #ecebef; --ink-2: #a9a9b0; --ink-3: #6f7078; --accent: #74d6ff; --on-accent: #06202c;
+    --chip: #2a2b31; --chip-hover: #33343b; --shadow: 0 18px 50px #0007;
+    --stage: radial-gradient(120% 140% at 20% 0%, #31446c 0%, #1b2133 55%, #0d0e13 100%);
+  }
+  :root[data-theme="light"] {
+    --bg: #e9eaee; --win: #f6f6f8; --side: #eeeff2; --card: #ffffff; --card-2: #f2f3f6; --line: #e1e2e7;
+    --ink: #1c1d21; --ink-2: #5d5e66; --ink-3: #9a9ba3; --accent: #0a7fd1; --on-accent: #fff;
+    --chip: #ffffff; --chip-hover: #f4f6fa; --shadow: 0 18px 50px #0001;
+    --stage: radial-gradient(120% 140% at 20% 0%, #c9d8f2 0%, #a7b6d3 50%, #7d8aa6 100%);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 80px; background: var(--bg); color: var(--ink); font: 14px/1.55 -apple-system, "PingFang SC", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .page { max-width: 1120px; margin: 0 auto; }
+  .intro h1 { font-size: 22px; margin: 0 0 4px; }
+  .intro p { color: var(--ink-2); margin: 0 0 6px; max-width: 900px; }
+  .intro .row { display: flex; gap: 8px; align-items: center; margin: 10px 0 18px; flex-wrap: wrap; }
+  .pill-btn { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+  .pill-btn.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+
+  .win { display: flex; background: var(--win); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .side { flex: 0 0 172px; background: var(--side); padding: 16px 8px; border-right: 1px solid var(--line); }
+  .side div { padding: 6px 12px; border-radius: 8px; color: var(--ink-2); font-size: 13px; }
+  .side div.on { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); font-weight: 600; }
+  .side small { display: block; color: var(--ink-3); font-size: 11px; padding: 12px 12px 4px; }
+  .main { flex: 1; min-width: 0; padding: 20px 24px 28px; }
+  .main h2 { margin: 0 0 14px; font-size: 20px; }
+  @media (max-width: 760px) { .side { display: none; } .main { padding: 16px; } }
+
+  .stage { position: relative; background: var(--stage); border-radius: 18px; padding: 26px 16px 70px; overflow: hidden; }
+  .stage-fit { display: flex; justify-content: center; }
+  .island { background: #000; color: #f1f0f6; border-radius: 28px; box-shadow: 0 12px 40px #0009; transform-origin: top center; transition: border-radius .28s cubic-bezier(.2,.8,.2,1); }
+  .island.expanded { width: 556px; padding: 12px 14px 14px; }
+  .island.bar { height: 40px; border-radius: 20px; display: flex; align-items: center; gap: 10px; padding: 0 14px; min-width: 240px; }
+  .ihead { display: flex; align-items: center; gap: 6px; height: 30px; margin-bottom: 10px; }
+  .ihead .tab { height: 26px; min-width: 26px; padding: 0 8px; border-radius: 13px; border: 0; background: transparent; color: #ffffff99; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; }
+  .ihead .tab.on { background: #ffffff1f; color: #fff; }
+  .ihead .tab .ic { width: 16px; height: 16px; border-radius: 5px; }
+  .ihead .sp { flex: 1; }
+  .ihead .gear { width: 26px; height: 26px; border-radius: 50%; background: #ffffff14; display: grid; place-items: center; color: #ffffff99; font-size: 13px; }
+  .grid { position: relative; width: 528px; max-height: 504px; overflow: auto; }
+  .cell { position: absolute; background: #ffffff10; border-radius: 18px; padding: 10px; overflow: hidden; transition: left .25s, top .25s, width .25s, height .25s; cursor: pointer; }
+  .cell.sel { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .cell.flash { animation: flash .6s; }
+  @keyframes flash { 0% { outline: 2px solid var(--accent); outline-offset: 6px; } 100% { outline-offset: 2px; } }
+  .builtin-page { height: 248px; border-radius: 18px; background: #ffffff0a; display: grid; place-items: center; text-align: center; color: #ffffff8c; font-size: 13px; padding: 20px; }
+  .builtin-page b { display: block; color: #fff; font-size: 15px; margin-bottom: 4px; }
+  .empty-panel { height: 248px; border-radius: 18px; border: 1.5px dashed #ffffff33; display: grid; place-items: center; color: #ffffff8c; font-size: 13px; text-align: center; }
+
+  .seg { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #ffffff2e; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px #ffffff40; }
+  .seg button { border: 0; background: transparent; color: #fff; padding: 7px 22px; border-radius: 999px; font-weight: 600; font-size: 14px; text-shadow: 0 1px 2px #0005; }
+  .seg button.on { background: #fff; color: #111; text-shadow: none; box-shadow: 0 2px 8px #0003; }
+
+  .sec { margin-top: 22px; }
+  .sec-h { display: flex; align-items: center; gap: 10px; margin: 0 4px 10px; flex-wrap: wrap; }
+  .sec-h h3 { margin: 0; font-size: 16px; }
+  .sec-h .hint { margin-left: auto; color: var(--ink-3); font-size: 12.5px; }
+  .pages { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 8px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line); font-size: 14px; user-select: none; transition: background .15s, transform .15s, box-shadow .15s; }
+  .chip:hover { background: var(--chip-hover); }
+  .chip[draggable="true"] { cursor: grab; }
+  .chip.dragging { opacity: .35; }
+  .chip.over { box-shadow: -3px 0 0 var(--accent); }
+  .chip.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .chip.hidden-page { opacity: .5; }
+  .chip .ic { width: 26px; height: 26px; border-radius: 8px; flex: none; }
+  .chip .badge { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--card-2); color: var(--ink-2); }
+  .chip .act { width: 22px; height: 22px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-3); display: grid; place-items: center; font-size: 13px; margin-right: -6px; }
+  .chip .act:hover { background: var(--card-2); color: var(--ink); }
+  .chip.add { padding-left: 4px; }
+  .chip.add .plus { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); display: grid; place-items: center; font-size: 18px; background: transparent; flex: none; }
+  .chip.dashed { border-style: dashed; background: transparent; color: var(--ink-2); }
+  .buckets { display: grid; grid-template-columns: minmax(220px, 1fr) 2fr; gap: 12px; }
+  @media (max-width: 760px) { .buckets { grid-template-columns: 1fr; } }
+  .bucket { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 12px 14px; min-height: 120px; }
+  .bucket header { display: flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 14px; margin: 2px 4px 10px; }
+  .bucket header .n { color: var(--ink-3); }
+  .bucket header .shape { width: 34px; height: 12px; border-radius: 6px; background: var(--ink); }
+  .bucket header .shape.dash { background: transparent; border: 1.5px dashed var(--ink-3); }
+  .bucket .list { display: flex; gap: 8px; flex-wrap: wrap; align-content: flex-start; }
+  .bucket.in .list { flex-direction: column; align-items: flex-start; }
+  .bucket .none { color: var(--ink-3); font-size: 13px; padding: 4px; }
+  .group-label { width: 100%; color: var(--ink-3); font-size: 12px; margin: 4px 4px -2px; }
+
+  .styles { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .stabs { display: flex; gap: 2px; padding: 6px 6px 0; background: var(--card-2); overflow-x: auto; }
+  .stabs button { border: 0; background: transparent; padding: 10px 16px; border-radius: 12px 12px 0 0; display: inline-flex; gap: 8px; align-items: center; color: var(--ink-2); white-space: nowrap; font-size: 14px; }
+  .stabs button .ic { width: 22px; height: 22px; border-radius: 7px; }
+  .stabs button.on { background: var(--card); color: var(--ink); font-weight: 600; }
+  .scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; padding: 18px; }
+  .scard { border: 0; background: transparent; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .scard .thumb { position: relative; width: 100%; height: 132px; border-radius: 16px; background: #000; display: grid; place-items: center; box-shadow: inset 0 0 0 1px #ffffff14; transition: transform .15s; }
+  .scard:hover .thumb { transform: translateY(-2px); }
+  .scard.on .thumb { box-shadow: 0 0 0 2.5px var(--accent); }
+  .scard .thumb .star { position: absolute; top: -8px; right: -8px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: none; place-items: center; font-size: 13px; box-shadow: 0 2px 6px #0004; }
+  .scard.on .thumb .star { display: grid; }
+  .scard .mini { transform: scale(.5); transform-origin: center; position: absolute; }
+  .scard .mini .cell { position: relative; cursor: default; }
+  .scard span { color: var(--ink-2); font-size: 14px; }
+  .scard.on span { color: var(--ink); font-weight: 600; }
+  .styles .foot { color: var(--ink-3); font-size: 12.5px; padding: 0 18px 16px; }
+
+  .rename { display: flex; gap: 8px; align-items: center; margin: 12px 4px 0; flex-wrap: wrap; }
+  .rename input { height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 0 12px; font: inherit; width: 180px; }
+  .rename .icons { display: flex; gap: 4px; }
+  .rename .icons button { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); font-size: 15px; }
+  .rename .icons button.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .rename .danger { margin-left: auto; border: 0; background: transparent; color: #ff6b6b; font-size: 13px; }
+
+  .w { display: flex; flex-direction: column; height: 100%; gap: 6px; font-size: 12px; color: #ffffffd9; }
+  .w-h { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #fff; font-size: 12px; }
+  .w-h .ic { width: 16px; height: 16px; border-radius: 5px; }
+  .w-h em { margin-left: auto; font-style: normal; color: #ffffff80; font-weight: 500; font-size: 11px; }
+  .w-row { display: flex; align-items: center; gap: 7px; height: 20px; white-space: nowrap; overflow: hidden; }
+  .w-row .bx { width: 12px; height: 12px; border-radius: 4px; border: 1.5px solid #ffffff66; flex: none; }
+  .w-row .bx.ok { background: #34c759; border-color: #34c759; }
+  .w-row.done { color: #ffffff66; text-decoration: line-through; }
+  .w-row .dt { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .w-big { font-size: 26px; font-weight: 700; color: #fff; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .w-sub { color: #ffffff80; font-size: 11px; }
+  .w-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .ring { width: var(--s); height: var(--s); border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1%), #ffffff22 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5.5px)); }
+  .ringwrap { position: relative; display: grid; place-items: center; }
+  .ringwrap b { position: absolute; font-size: 13px; color: #fff; font-variant-numeric: tabular-nums; }
+  .art { border-radius: 10px; background: linear-gradient(135deg, #ff7ab6, #7a5cff); flex: none; }
+  .ctrl { display: flex; gap: 10px; align-items: center; color: #fff; font-size: 12px; }
+  .prog { height: 3px; border-radius: 2px; background: #ffffff26; overflow: hidden; }
+  .prog i { display: block; height: 100%; width: 38%; background: #fff; }
+  .lyric { font-size: 17px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lyric.next { font-size: 13px; color: #ffffff66; font-weight: 500; }
+  .bi { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bi .art { width: 20px; height: 20px; border-radius: 6px; }
+  .wave { display: inline-flex; gap: 2px; align-items: center; height: 14px; }
+  .wave i { width: 3px; border-radius: 2px; background: #ff7ab6; height: 6px; animation: wv 1s ease-in-out infinite alternate; }
+  .wave i:nth-child(2) { animation-delay: -.3s; } .wave i:nth-child(3) { animation-delay: -.6s; }
+  @keyframes wv { to { height: 13px; } }
+  .mark { width: 10px; height: 10px; border-radius: 50%; background: #34c759; box-shadow: 0 0 8px #34c759; }
+  @media (prefers-reduced-motion: reduce) { .wave i, .cell, .island { animation: none !important; transition: none !important; } }
+
+  .notes { margin-top: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; }
+  .notes h3 { margin: 0 0 8px; font-size: 16px; }
+  .notes h4 { margin: 16px 0 6px; font-size: 14px; }
+  .notes ul, .notes ol { margin: 0; padding-left: 20px; color: var(--ink-2); }
+  .notes li { margin: 4px 0; }
+  .notes b { color: var(--ink); }
+  .notes .rec { color: var(--accent); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; color: var(--ink-2); }
+  th { color: var(--ink); background: var(--card-2); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="intro">
+    <h1>岛屿布局 · 简化版预览</h1>
+    <p>这一版把「展开页面」和「自定义面板」改成：上面看着岛，下面点标签。不用拖格子，不用管坐标，组件按顺序自动排进面板。下面的窗口都能点：切收起条 / 展开、点 ＋ 加组件、点 × 拿掉、拖标签换顺序、在最下面选大小。</p>
+    <div class="row">
+      <button class="pill-btn on" data-theme-btn="dark">深色</button>
+      <button class="pill-btn" data-theme-btn="light">浅色</button>
+      <span style="color:var(--ink-3);font-size:12.5px">岛本身一直是黑色，和真岛默认一样；设置窗口跟着深浅色。</span>
+    </div>
+  </div>
+
+  <div class="win">
+    <nav class="side" aria-hidden="true">
+      <small>基础</small>
+      <div>通用</div><div>行为</div><div>外观</div><div class="on">岛屿布局</div><div>快捷键</div>
+      <small>功能</small>
+      <div>待办</div><div>日历</div><div>音乐</div><div>剪贴板</div>
+    </nav>
+    <main class="main">
+      <h2>岛屿布局</h2>
+      <section class="stage" aria-label="岛的预览">
+        <div class="stage-fit"><div id="island"></div></div>
+        <div class="seg" role="tablist" aria-label="看哪种样子">
+          <button role="tab" data-mode="bar">收起条</button>
+          <button role="tab" data-mode="expand" class="on">展开</button>
+        </div>
+      </section>
+      <div id="editor"></div>
+    </main>
+  </div>
+
+  <section class="notes">
+    <h3>和现在那版比，改了什么</h3>
+    <table>
+      <tr><th>现在（dd15a8f7a）</th><th>这一版</th></tr>
+      <tr><td>页面列表一行一行，旁边编辑按钮，点开才是面板编辑器</td><td>「顶部页面」一排标签，就是岛顶部那排按钮的顺序；点哪个，上面的岛就显示哪页。面板标签下面直接能改名字和图标</td></tr>
+      <tr><td>画布按格子拖，压到别的组件往下挪，方向键移动</td><td>没有画布。上面的岛就是成品；组件顺序在「面板里」那一栏拖标签换，系统自动从左上往右下排</td></tr>
+      <tr><td>组件库每行一排「条 / 小 / 中 / 大 / 宽」按钮</td><td>「可以添加」里每个组件一个标签，点 ＋ 用它最常用的大小加进来；想换大小在最下面点缩略图</td></tr>
+      <tr><td>收起条和展开页面是页面上分开的两大块</td><td>舞台下的「收起条 / 展开」切换，下面两栏跟着换成收起条的内容</td></tr>
+    </table>
+    <h4>要你定的几件事</h4>
+    <ol>
+      <li><b>收起条要不要并进同一个舞台？</b>现在岛屿布局页上半部分是收起条（C156.1 做的：预览 + 左中右三栏 + 样式）。这版把它做成舞台的「收起条」页签，下面两栏变成「在收起条上 / 可以放上去」。<span class="rec">建议并进来</span>，左中右位置收进标签的右键或长按，图标样式放到最下面那排缩略图（和面板的大小选择同一个位置）。</li>
+      <li><b>自由拖放还要不要？</b>自动排版在大部分情况下够用，但没法留空、没法把小组件放右下角。<span class="rec">建议这版不做</span>，C156.4 再加一个「自己摆」的高级开关。</li>
+      <li><b>一开始有没有面板？</b>现在默认没有，要点「新建面板」。<span class="rec">建议仍默认没有</span>，但「顶部页面」那排最后一直有一个虚线的「＋ 新建面板」，点了直接建好并选中，名字叫「我的面板」。</li>
+      <li><b>样式（皮肤）</b>：参考图里每个组件有好几种外观。我们现在只有大小，所以最下面那排缩略图先只放大小；以后组件有了不同外观，也放在这一排。</li>
+    </ol>
+    <h4>没变的</h4>
+    <ul>
+      <li>存储格式 <code>fuyu-custom-panels</code> 不变：自动排出来的坐标照样写进 <code>x / y / w / h</code>，以后加自由拖放时直接接得上。</li>
+      <li>顶部页面的顺序和隐藏仍记在 <code>fuyu-island-pages</code>，Alt+数字照这个顺序。</li>
+      <li>功能关着时组件不出现在「可以添加」里，面板里已有的那一格在岛上空着，标签变灰写「功能已关」。</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const W = {
+  todos:   { name: "今天的待办", color: "#30d158", glyph: "✓", sizes: ["m", "l"], def: "m" },
+  meeting: { name: "下一个会议", color: "#ff6b5b", glyph: "日", sizes: ["m", "l"], def: "m" },
+  music:   { name: "正在播放", color: "#ff5fa2", glyph: "♪", sizes: ["bar", "m"], def: "m" },
+  lyrics:  { name: "歌词", color: "#ff5fa2", glyph: "词", sizes: ["w"], def: "w" },
+  agents:  { name: "Agent 会话", color: "#ff9f0a", glyph: "A", sizes: ["bar", "m", "l"], def: "m" },
+  usage:   { name: "Claude 用量", color: "#bf5af2", glyph: "◔", sizes: ["bar", "s"], def: "s" },
+  clip:    { name: "最近剪贴板", color: "#ffb340", glyph: "⧉", sizes: ["m", "l"], def: "m" },
+  shelf:   { name: "文件中转", color: "#40c8e0", glyph: "⇪", sizes: ["bar", "s", "m"], def: "s" },
+  timer:   { name: "计时器", color: "#5e5ce6", glyph: "⏱", sizes: ["bar", "s"], def: "s" },
+};
+const GROUPS = [["待办与日历", ["todos", "meeting"]], ["音乐", ["music", "lyrics"]], ["AI Agent", ["agents", "usage"]], ["工具", ["clip", "shelf", "timer"]]];
+const SIZE = { s: [1, 1, "小"], m: [2, 1, "中"], l: [2, 2, "大"], w: [4, 1, "宽"], bar: [0, 0, "条"] };
+const CELL = 120, GAP = 8, STEP = CELL + GAP;
+const PAGE_ICONS = ["★", "☕", "♫", "⚡", "♥", "⌂", "✎", "◆"];
+
+const state = {
+  mode: "expand",
+  pages: [
+    { id: "agents", name: "AI Agent", color: "#ff9f0a", glyph: "A", builtin: true },
+    { id: "todo", name: "待办", color: "#30d158", glyph: "✓", builtin: true },
+    { id: "music", name: "音乐", color: "#ff5fa2", glyph: "♪", builtin: true },
+    { id: "calendar", name: "日历", color: "#ff6b5b", glyph: "日", builtin: true },
+    { id: "clipboard", name: "剪贴板", color: "#ffb340", glyph: "⧉", builtin: true, hidden: true },
+    { id: "p1", name: "我的面板", glyph: "★", color: "#74d6ff", items: [
+      { w: "todos", size: "m" }, { w: "usage", size: "s" }, { w: "timer", size: "s" }, { w: "music", size: "m" }, { w: "lyrics", size: "w" },
+    ] },
+  ],
+  current: "p1",
+  selected: "todos",
+  bar: ["music", "agents", "usage"],
+  flash: null,
+};
+
+const ic = (color, glyph, size = 26) => `<span class="ic" style="width:${size}px;height:${size}px;background:${color};display:inline-grid;place-items:center;color:#fff;font-size:${Math.round(size * .5)}px;font-weight:700">${glyph}</span>`;
+const page = () => state.pages.find((p) => p.id === state.current);
+
+function pack(items) {
+  const occ = [];
+  const free = (r, c, w, h) => { for (let y = r; y < r + h; y++) for (let x = c; x < c + w; x++) if (x > 3 || occ[y]?.[x]) return false; return true; };
+  return items.map((it) => {
+    const [w, h] = SIZE[it.size];
+    for (let r = 0; ; r++) for (let c = 0; c <= 4 - w; c++) if (free(r, c, w, h)) {
+      for (let y = r; y < r + h; y++) { occ[y] ??= []; for (let x = c; x < c + w; x++) occ[y][x] = 1; }
+      return { ...it, x: c, y: r, cw: w, ch: h };
+    }
+  });
+}
+
+function body(id, size) {
+  const m = W[id], head = (extra = "") => `<div class="w-h">${ic(m.color, m.glyph, 16)}${m.name}${extra}</div>`;
+  if (size === "bar") {
+    if (id === "music") return `<span class="bi"><span class="art"></span><span class="wave"><i></i><i></i><i></i></span></span>`;
+    if (id === "agents") return `<span class="bi"><span class="mark"></span>3</span>`;
+    if (id === "usage") return `<span class="bi"><span class="ringwrap"><span class="ring" style="--s:20px;--c:#bf5af2;--p:62;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px))"></span></span>62%</span>`;
+    if (id === "shelf") return `<span class="bi">⇪ 2</span>`;
+    if (id === "timer") return `<span class="bi" style="color:#a5a4ff">⏱ 24:12</span>`;
+  }
+  if (id === "todos") {
+    const rows = [["周报交给龙虾写", 0], ["回复设计稿评论", 0], ["买猫粮", 1], ["约牙医", 0], ["整理发票", 0], ["读完那篇论文", 1]];
+    return `<div class="w">${head("<em>剩 3 项</em>")}${rows.slice(0, size === "l" ? 6 : 2).map(([t, d]) => `<div class="w-row${d ? " done" : ""}"><span class="bx${d ? " ok" : ""}"></span>${t}</div>`).join("")}</div>`;
+  }
+  if (id === "meeting") {
+    const more = size === "l" ? `<div class="w-row"><span class="dt" style="background:#ff6b5b"></span>14:00 设计评审</div><div class="w-row"><span class="dt" style="background:#40c8e0"></span>16:30 一对一</div><div class="w-row"><span class="dt" style="background:#ffb340"></span>全天 · 发版日</div>` : "";
+    return `<div class="w">${head()}<div class="w-big" style="font-size:18px">周会</div><div class="w-sub">10:30 · 8 分钟后，班味预警</div>${more}</div>`;
+  }
+  if (id === "music") return `<div class="w" style="flex-direction:row;gap:10px"><span class="art" style="width:76px;height:76px"></span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center"><b style="color:#fff;font-size:13px">摸鱼专用 BGM</b><span class="w-sub">单曲循环中</span><div class="prog"><i></i></div><div class="ctrl">⏮ ⏸ ⏭</div></div></div>`;
+  if (id === "lyrics") return `<div class="w" style="justify-content:center;padding:0 8px"><div class="lyric">风吹过屿的边缘，灯一盏一盏亮起</div><div class="lyric next">下一句在这里淡淡地等着</div></div>`;
+  if (id === "agents") {
+    if (size === "m") return `<div class="w">${head("<em>3 个会话</em>")}<div class="w-row"><span class="dt" style="background:#ff453a"></span>重构设置页 · 等你确认</div><div class="w-row"><span class="dt" style="background:#ffd60a"></span>写测试 · 等你回复</div></div>`;
+    return `<div class="w">${head("<em>3 个会话</em>")}<div class="w-row"><span class="dt" style="background:#ff453a"></span>重构设置页 · 等你确认</div><div class="w-row"><span class="dt" style="background:#ffd60a"></span>写测试 · 等你回复</div><div class="w-row"><span class="dt" style="background:#8e8e93"></span>修 CI · 已完成</div><div class="w-center"><div class="w-big">3</div><div class="w-sub">个会话在跑</div></div></div>`;
+  }
+  if (id === "usage") return `<div class="w w-center"><span class="ringwrap"><span class="ring" style="--s:62px;--c:#bf5af2;--p:62"></span><b>62%</b></span><div class="w-sub">Claude · 5 小时</div></div>`;
+  if (id === "clip") {
+    const rows = ["投喂给 AI 的提示词", "https://fuyu.app/docs", "图片 · 截图 1280×720", "pnpm test:regression", "会议纪要第三段", "爱你老己"];
+    return `<div class="w">${head()}${rows.slice(0, size === "l" ? 6 : 2).map((t) => `<div class="w-row" style="color:#ffffffcc">${t}</div>`).join("")}</div>`;
+  }
+  if (id === "shelf") {
+    if (size === "s") return `<div class="w w-center"><div style="font-size:30px">⇪</div><div class="w-big" style="font-size:18px">2 个文件</div><div class="w-sub">拖出来就用</div></div>`;
+    return `<div class="w">${head("<em>2 个文件</em>")}<div class="w-row">📄 周报.docx</div><div class="w-row">🖼 封面.png</div></div>`;
+  }
+  if (id === "timer") return `<div class="w w-center"><span class="ringwrap"><span class="ring" style="--s:70px;--c:#5e5ce6;--p:72"></span><b>24:12</b></span><div class="w-sub">专注中</div></div>`;
+  return "";
+}
+
+function renderIsland() {
+  const host = document.getElementById("island");
+  if (state.mode === "bar") {
+    host.className = "island bar";
+    host.innerHTML = `<span class="mark"></span><span style="font-size:12.5px;color:#e8e6e0;white-space:nowrap">周报交给龙虾写</span><span style="flex:1"></span>${state.bar.map((id) => `<span title="${W[id].name}">${body(id, "bar")}</span>`).join("")}`;
+    fit();
+    return;
+  }
+  host.className = "island expanded";
+  const p = page();
+  const tabs = state.pages.filter((x) => !x.hidden).map((x) => `<button class="tab${x.id === state.current ? " on" : ""}" data-page="${x.id}" title="${x.name}">${ic(x.color, x.glyph, 16)}${x.id === state.current ? x.name : ""}</button>`).join("");
+  let content;
+  if (p.builtin) content = `<div class="builtin-page"><div><b>${p.name}</b>内置页面，内容不能改；可以在下面换顺序或隐藏。</div></div>`;
+  else if (!p.items.length) content = `<div class="empty-panel">这个面板还没有组件<br>在下面「可以添加」里点 ＋</div>`;
+  else {
+    const placed = pack(p.items);
+    const rows = Math.max(...placed.map((c) => c.y + c.ch));
+    content = `<div class="grid" style="height:${rows * STEP - GAP}px">${placed.map((c) => `<div class="cell${c.w === state.selected ? " sel" : ""}${c.w === state.flash ? " flash" : ""}" data-w="${c.w}" style="left:${c.x * STEP}px;top:${c.y * STEP}px;width:${c.cw * STEP - GAP}px;height:${c.ch * STEP - GAP}px">${body(c.w, c.size)}</div>`).join("")}</div>`;
+  }
+  host.innerHTML = `<div class="ihead">${tabs}<span class="sp"></span><span class="gear">⚙</span></div>${content}`;
+  fit();
+}
+
+function fit() {
+  const host = document.getElementById("island"), box = host.parentElement;
+  host.style.transform = "";
+  const scale = Math.min(1, (box.clientWidth - 8) / host.offsetWidth);
+  host.style.transform = `scale(${scale})`;
+  box.style.height = `${host.offsetHeight * scale}px`;
+}
+
+function chip({ id, color, glyph, name, badge = "", action = "", cls = "", drag = false, data = "" }) {
+  return `<span class="chip ${cls}" tabindex="0" ${drag ? 'draggable="true"' : ""} ${data}>${ic(color, glyph)}<span>${name}</span>${badge}${action}</span>`;
+}
+
+function renderEditor() {
+  const el = document.getElementById("editor");
+  if (state.mode === "bar") {
+    const on = state.bar, off = Object.keys(W).filter((id) => W[id].sizes.includes("bar") && !on.includes(id));
+    el.innerHTML = `
+      <div class="sec"><div class="sec-h"><h3>收起条上的组件</h3><span class="hint">点 ＋ 放上去，点 × 拿下来，拖动排顺序</span></div>
+      <div class="buckets">
+        <div class="bucket in"><header><span class="shape"></span>在收起条上 <span class="n">${on.length}</span></header><div class="list" data-list="bar">${on.map((id) => chip({ ...W[id], drag: true, data: `data-id="${id}"`, action: `<button class="act" data-bar-off="${id}" aria-label="拿下来：${W[id].name}">×</button>` })).join("") || '<span class="none">收起条上只有亮点和任务文字</span>'}</div></div>
+        <div class="bucket"><header><span class="shape dash"></span>可以放上去 <span class="n">${off.length}</span></header><div class="list">${off.map((id) => `<span class="chip add" tabindex="-1"><button class="plus" data-bar-on="${id}" aria-label="放上去：${W[id].name}">＋</button>${ic(W[id].color, W[id].glyph)}<span>${W[id].name}</span></span>`).join("") || '<span class="none">都放上去了</span>'}</div></div>
+      </div></div>
+      <div class="sec"><div class="styles"><div class="foot" style="padding-top:16px">收起条上每个组件的图标样式（环、数字、波形……）也放在这个位置，和面板的大小选择一样用缩略图挑；这份预览先不画。</div></div></div>`;
+    bindDrag(el.querySelector('[data-list="bar"]'), state.bar, (x) => x);
+    return;
+  }
+  const p = page();
+  const pages = state.pages.map((x) => chip({
+    ...x, cls: `${x.id === state.current ? "on" : ""}${x.hidden ? " hidden-page" : ""}`, drag: true, data: `data-id="${x.id}" data-select-page="${x.id}"`,
+    badge: x.builtin ? "" : '<span class="badge">我的</span>',
+    action: `<button class="act" data-toggle-hide="${x.id}" aria-label="${x.hidden ? "在顶部显示" : "从顶部隐藏"}：${x.name}" title="${x.hidden ? "已隐藏，点一下显示" : "从顶部隐藏"}">${x.hidden ? "◌" : "◉"}</button>`,
+  })).join("") + `<button class="chip dashed" data-new-panel>＋ 新建面板</button>`;
+  let lower = "";
+  if (p.builtin) {
+    lower = `<div class="sec"><div class="bucket"><span class="none">「${p.name}」是内置页面，里面的内容由功能自己决定。想放自己挑的组件，点上面的「＋ 新建面板」。</span></div></div>`;
+  } else {
+    const inIds = p.items.map((i) => i.w);
+    const groups = GROUPS.map(([g, ids]) => [g, ids.filter((id) => !inIds.includes(id))]).filter(([, ids]) => ids.length);
+    const tabs = p.items.map((i) => `<button class="${i.w === state.selected ? "on" : ""}" data-sel="${i.w}">${ic(W[i.w].color, W[i.w].glyph, 22)}${W[i.w].name}</button>`).join("");
+    const cur = p.items.find((i) => i.w === state.selected);
+    const cards = cur ? W[cur.w].sizes.filter((s) => s !== "bar").map((s) => {
+      const [cw, ch, label] = SIZE[s];
+      return `<button class="scard${s === cur.size ? " on" : ""}" data-size="${s}"><span class="thumb"><span class="mini"><span class="cell" style="display:block;width:${cw * STEP - GAP}px;height:${ch * STEP - GAP}px;background:#ffffff14">${body(cur.w, s)}</span></span><span class="star">✓</span></span><span>${label} · ${cw}×${ch} 格</span></button>`;
+    }).join("") : "";
+    lower = `
+      <div class="rename">
+        <input id="pname" value="${p.name}" aria-label="面板名字" maxlength="40" />
+        <span class="icons" role="radiogroup" aria-label="面板图标">${PAGE_ICONS.map((g) => `<button role="radio" aria-checked="${g === p.glyph}" class="${g === p.glyph ? "on" : ""}" data-icon="${g}">${g}</button>`).join("")}</span>
+        <button class="danger" data-del>删除这个面板</button>
+      </div>
+      <div class="sec"><div class="sec-h"><h3>面板里的组件</h3><span class="hint">点 ＋ 加进来，点 × 拿掉，拖动排顺序；岛上从左上往右下自动排</span></div>
+      <div class="buckets">
+        <div class="bucket in"><header><span class="shape" style="height:16px;width:22px;border-radius:5px"></span>面板里 <span class="n">${p.items.length}</span></header><div class="list" data-list="panel">${p.items.map((i) => chip({ ...W[i.w], cls: i.w === state.selected ? "on" : "", drag: true, data: `data-id="${i.w}" data-sel="${i.w}"`, badge: `<span class="badge">${SIZE[i.size][2]}</span>`, action: `<button class="act" data-remove="${i.w}" aria-label="拿掉：${W[i.w].name}">×</button>` })).join("") || '<span class="none">还没有组件</span>'}</div></div>
+        <div class="bucket"><header><span class="shape dash" style="height:16px;width:22px;border-radius:5px"></span>可以添加 <span class="n">${groups.reduce((n, [, ids]) => n + ids.length, 0)}</span></header><div class="list">${groups.map(([g, ids]) => `<div class="group-label">${g}</div>${ids.map((id) => `<span class="chip add" tabindex="-1"><button class="plus" data-add="${id}" aria-label="加进面板：${W[id].name}">＋</button>${ic(W[id].color, W[id].glyph)}<span>${W[id].name}</span></span>`).join("")}`).join("") || '<span class="none">都加进来了</span>'}</div></div>
+      </div></div>
+      ${p.items.length ? `<div class="sec"><div class="sec-h"><h3>大小</h3><span class="hint">点缩略图换大小，上面的岛跟着变</span></div><div class="styles"><div class="stabs" role="tablist">${tabs}</div><div class="scards">${cards}</div>${cur && W[cur.w].sizes.filter((s) => s !== "bar").length === 1 ? '<div class="foot">这个组件只有一种大小。</div>' : ""}</div></div>` : ""}`;
+  }
+  el.innerHTML = `<div class="sec"><div class="sec-h"><h3>顶部页面</h3><span class="hint">点一下在上面看，拖动换顺序（Alt+数字也按这个顺序），◉ 隐藏</span></div><div class="pages" data-list="pages">${pages}</div></div>${lower}`;
+  bindDrag(el.querySelector('[data-list="pages"]'), state.pages, (x) => x.id);
+  if (!p.builtin) bindDrag(el.querySelector('[data-list="panel"]'), p.items, (x) => x.w);
+}
+
+function bindDrag(list, arr, key) {
+  if (!list) return;
+  let from = null;
+  list.querySelectorAll('[draggable="true"]').forEach((c) => {
+    c.addEventListener("dragstart", (e) => { from = c.dataset.id; c.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    c.addEventListener("dragend", () => { c.classList.remove("dragging"); list.querySelectorAll(".over").forEach((o) => o.classList.remove("over")); });
+    c.addEventListener("dragover", (e) => { e.preventDefault(); list.querySelectorAll(".over").forEach((o) => o.classList.remove("over")); c.classList.add("over"); });
+    c.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const a = arr.findIndex((x) => key(x) === from), b = arr.findIndex((x) => key(x) === c.dataset.id);
+      if (a < 0 || b < 0 || a === b) return;
+      const [m] = arr.splice(a, 1); arr.splice(b, 0, m);
+      render();
+    });
+  });
+}
+
+function render() { renderIsland(); renderEditor(); }
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("button, [data-select-page], [data-sel], .cell, .tab");
+  if (!t) return;
+  const p = page();
+  if (t.dataset.themeBtn) {
+    document.documentElement.dataset.theme = t.dataset.themeBtn;
+    document.querySelectorAll("[data-theme-btn]").forEach((b) => b.classList.toggle("on", b === t));
+    return;
+  }
+  if (t.dataset.mode) { state.mode = t.dataset.mode; document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("on", b === t)); }
+  else if (t.dataset.toggleHide) { const x = state.pages.find((q) => q.id === t.dataset.toggleHide); x.hidden = !x.hidden; if (x.hidden && state.current === x.id) state.current = state.pages.find((q) => !q.hidden)?.id ?? x.id; }
+  else if (t.dataset.page) state.current = t.dataset.page;
+  else if (t.dataset.selectPage) state.current = t.dataset.selectPage;
+  else if (t.hasAttribute("data-new-panel")) {
+    const id = `p${Date.now()}`, n = state.pages.filter((x) => !x.builtin).length;
+    state.pages.push({ id, name: n ? `我的面板 ${n + 1}` : "我的面板", glyph: PAGE_ICONS[n % PAGE_ICONS.length], color: "#74d6ff", items: [] });
+    state.current = id;
+  }
+  else if (t.hasAttribute("data-del")) {
+    if (t.dataset.armed) { state.pages = state.pages.filter((x) => x !== p); state.current = state.pages[0].id; }
+    else { t.dataset.armed = "1"; t.textContent = "再点一次删除"; return; }
+  }
+  else if (t.dataset.icon) p.glyph = t.dataset.icon;
+  else if (t.dataset.add) { p.items.push({ w: t.dataset.add, size: W[t.dataset.add].def }); state.selected = t.dataset.add; state.flash = t.dataset.add; }
+  else if (t.dataset.remove) { p.items = p.items.filter((i) => i.w !== t.dataset.remove); if (state.selected === t.dataset.remove) state.selected = p.items[0]?.w; }
+  else if (t.dataset.barOn) state.bar.push(t.dataset.barOn);
+  else if (t.dataset.barOff) state.bar = state.bar.filter((x) => x !== t.dataset.barOff);
+  else if (t.dataset.size) { p.items.find((i) => i.w === state.selected).size = t.dataset.size; state.flash = state.selected; }
+  else if (t.dataset.sel) state.selected = t.dataset.sel;
+  else if (t.dataset.w) state.selected = t.dataset.w;
+  else return;
+  render();
+  state.flash = null;
+});
+document.addEventListener("change", (e) => { if (e.target.id === "pname") { page().name = e.target.value.trim() || "新面板"; render(); } });
+document.addEventListener("keydown", (e) => { if (e.target.id === "pname" && e.key === "Enter") e.target.blur(); });
+window.addEventListener("resize", fit);
+render();
+</script>
+</body>
+</html>
