@@ -274,3 +274,8 @@
   border: 1px solid var(--color-white-a08);
   border-radius: var(--radius-pill);
 }
+
+.panel-head__icons button:has(.panel-text-icon) {
+  width: auto;
+  padding: 0 8px;
+}

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { Puzzle, type LucideIcon } from "lucide-react";
-import { PANEL_ICON_COMPONENTS } from "../../../components/island-widget/panelIcons";
+import { Puzzle } from "lucide-react";
+import { PANEL_ICON_COMPONENTS, type PanelIconComponent } from "../../../components/island-widget/panelIcons";
 import { useTranslation } from "../../../i18n";
 import type { BarUsagePage } from "../../../features/plugin-kernel/barUsage";
 import { isBuiltinEnabled } from "../../../features/plugin-kernel/builtinSwitches";
@@ -13,7 +13,7 @@ import { useIslandPages } from "../../../lib/settings/useIslandPages";
 import { byShortcut } from "../../island/features";
 import { BUILTIN_PAGES } from "./builtinPages";
 
-export type IslandPageRow = { id: string; name: string; icon: LucideIcon; plugin: boolean; off: boolean; hidden: boolean; panel?: string };
+export type IslandPageRow = { id: string; name: string; icon: PanelIconComponent; plugin: boolean; off: boolean; hidden: boolean; panel?: string };
 
 export function useIslandPageRows(settings: IslandSettings, pluginPages: readonly BarUsagePage[] | null, panels: readonly CustomPanel[]) {
   const t = useTranslation();

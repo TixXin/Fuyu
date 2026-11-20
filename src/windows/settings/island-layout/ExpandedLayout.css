@@ -298,3 +298,8 @@
     transition: none;
   }
 }
+
+.layout-chip__icon:has(.panel-text-icon) {
+  width: auto;
+  padding: 0 7px;
+}

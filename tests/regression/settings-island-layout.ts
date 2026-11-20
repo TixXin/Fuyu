@@ -69,7 +69,8 @@ export async function checkCustomPanels(check: (condition: unknown, message: str
   check(savedPanels() === null && !document.querySelector(".panel-head"), "There are no custom panels until one is made");
   await act(async () => { document.querySelector<HTMLButtonElement>(".layout-chip--create")!.click(); });
   const created = savedPanels()?.panels[0];
-  check(created && created.name === "新面板" && created.icon === "layout-grid" && pageRow(`panel:${created.id}`)?.getAttribute("aria-selected") === "true"
+  check(created && created.name === "新面板" && created.icon === "fuyu" && pageIds()[0] === `panel:${created.id}` && previewTabs()[0] === `panel:${created.id}`
+    && document.querySelector(`.expanded-preview__tab[data-page='panel:${created.id}'] .panel-text-icon`)?.textContent === "Fuyu" && pageRow(`panel:${created.id}`)?.getAttribute("aria-selected") === "true"
     && document.querySelector(".panel-head") && document.querySelector(".expanded-preview__empty"), "A new panel is saved, listed and shown empty on the preview");
   check(document.querySelector(".expanded-preview__empty .panel-templates__button[data-template='workbench']") && document.querySelector(".panel-templates__button[data-template='fun']"),
     "The empty panel on the preview offers the workbench and leisure templates");

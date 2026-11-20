@@ -18,8 +18,10 @@ export type PanelSize = (typeof PANEL_SIZES)[number];
 export const PANEL_MODES = ["grid", "free"] as const;
 export type PanelMode = (typeof PANEL_MODES)[number];
 
-export const PANEL_ICONS = ["layout-grid", "star", "briefcase", "coffee", "music", "zap", "heart", "home", "gamepad", "book"] as const;
+export const PANEL_ICONS = ["fuyu", "layout-grid", "star", "briefcase", "coffee", "music", "zap", "heart", "home", "gamepad", "book"] as const;
 export type PanelIcon = (typeof PANEL_ICONS)[number];
+export const DEFAULT_PANEL_ICON: PanelIcon = "fuyu";
+const FALLBACK_PANEL_ICON: PanelIcon = "layout-grid";
 
 export type PanelItem = { widget: string; size: PanelSize; x: number; y: number; w: number; h: number };
 export type CustomPanel = { id: string; name: string; icon: PanelIcon; mode: PanelMode; items: PanelItem[] };
@@ -70,7 +72,7 @@ function readPanel(value: unknown): CustomPanel | null {
   const { id, name, icon, mode, items } = value as Record<string, unknown>;
   if (typeof id !== "string" || id === "") return null;
   const list = Array.isArray(items) ? items.map(readItem).filter((item): item is PanelItem => item !== null).slice(0, MAX_ITEMS) : [];
-  return { id, name: cleanPanelName(name), icon: isIcon(icon) ? icon : PANEL_ICONS[0], mode: mode === "free" ? "free" : "grid", items: list };
+  return { id, name: cleanPanelName(name), icon: isIcon(icon) ? icon : FALLBACK_PANEL_ICON, mode: mode === "free" ? "free" : "grid", items: list };
 }
 
 export function readCustomPanels(raw: string | null): CustomPanel[] {

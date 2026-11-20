@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import type { BarUsagePage, BarUsageWidget } from "../../../features/plugin-kernel/barUsage";
 import { useTranslation } from "../../../i18n";
-import { createPanel, newPanelId, panelPageId, removePanel, updatePanel, type CustomPanel } from "../../../lib/settings/customPanels";
+import { createPanel, DEFAULT_PANEL_ICON, newPanelId, panelPageId, removePanel, updatePanel, type CustomPanel } from "../../../lib/settings/customPanels";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import { ExpandedPreview } from "./ExpandedPreview";
@@ -33,8 +33,10 @@ export function ExpandedLayout({ settings, pluginPages, pluginWidgets, stage }: 
   const change = (next: CustomPanel) => savePanels(updatePanel(panels, next.id, () => next));
   const create = () => {
     const id = newPanelId(Date.now(), Math.random());
-    savePanels(createPanel(panels, id, t.islandWidgets.panel.defaultName, "layout-grid"));
-    setPageId(panelPageId(id));
+    const page = panelPageId(id);
+    savePanels(createPanel(panels, id, t.islandWidgets.panel.defaultName, DEFAULT_PANEL_ICON));
+    save({ order: [page, ...rows.map((row) => row.id).filter((other) => other !== page)], hidden: layout.hidden });
+    setPageId(page);
   };
   const remove = (id: string) => {
     const page = panelPageId(id);
