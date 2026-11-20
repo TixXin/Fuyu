@@ -14,6 +14,8 @@ import "./slots/builtins";
 import type { HeaderDotPage, IslandPage } from "./types";
 import { usePanelEditing } from "./custom-panels/panelEditing";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
+import { usePagePill } from "./usePagePill";
+import { FuyuTextIcon } from "../../components/island-widget/FuyuTextIcon";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
 import "./IslandHeader.css";
 
@@ -71,6 +73,8 @@ export function IslandHeader({
   });
   const trailing = dots.filter((item) => !leading.includes(item));
   const dotsRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${dots.map((item) => item.id).join(",")}`);
   useEffect(() => {
     const row = dotsRef.current;
     const active = row?.querySelector<HTMLElement>(".dot-button--active");
@@ -131,7 +135,7 @@ export function IslandHeader({
       >
         {item.external
           ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
-          : Icon && <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
+          : Icon && <Icon size={Icon === FuyuTextIcon ? 18 : 15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
       </button>
     );
   };
@@ -142,7 +146,8 @@ export function IslandHeader({
   ].join(" ");
 
   return (
-    <header className="island__header">
+    <header ref={headerRef} className="island__header">
+      <span ref={pillRef} className="island__page-pill" aria-hidden="true" />
       <div className="island__header-start">
       <div className="island__title">
         {leading.map(renderDot)}

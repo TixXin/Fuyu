@@ -79,7 +79,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   clickCollapseOnLeave: false,
   hoverExpandDelayMs: DEFAULT_HOVER_EXPAND_DELAY_MS,
   hoverCollapseDelayMs: DEFAULT_HOVER_COLLAPSE_DELAY_MS,
-  hoverSwitchPage: true,
+  hoverSwitchPage: false,
   hoverSwitchDelayMs: DEFAULT_HOVER_SWITCH_DELAY_MS,
   minimizeAction: "tuck",
   tuckedHoverAction: "reveal",

@@ -212,7 +212,7 @@ test("first launch takes the maintainer's settings of 0.3.5-beta.5; saved settin
     topFilletRadius: [8, 8], islandCornerRadius: [32, 30], maxPanelHeight: [360, 490], panelWidth: [800, 560],
     pulseBrightness: [160, 100], islandBackgroundColor: ["#030303", "#000000"], collapsedDark: [false, false],
     agentAlertSeconds: [3, 5], agentRemindSeconds: [0, 60], carryOverIncompleteTodos: [false, true],
-    autoTuck: [false, false], autoTuckSeconds: [120, 30], messageNotice: ["panel", "line"], hoverSwitchPage: [true, false],
+    autoTuck: [false, false], autoTuckSeconds: [120, 30], messageNotice: ["panel", "line"],
     agentLightStyle: ["dot", "mark"], lyricsOnline: [true, false], lyricsOnIsland: [true, false],
   };
   const older = normalizeSettings({ opacity: 95 });
