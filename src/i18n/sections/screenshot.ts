@@ -40,7 +40,8 @@ export type ScreenshotText = {
   redacting: string;
   redacted: (count: number) => string;
   nothingToRedact: string;
-  tools: Record<"rect" | "ellipse" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "number", string>;
+  tools: Record<"rect" | "ellipse" | "line" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "blur" | "spotlight" | "number", string>;
+  toolWithKey: (name: string, key: string) => string;
   undo: string;
   undoMac: string;
   redo: string;
@@ -167,13 +168,17 @@ export const zhCN: ScreenshotText = {
   tools: {
     rect: "矩形",
     ellipse: "椭圆",
+    line: "直线（按住 Shift 吸附角度）",
     arrow: "箭头",
     pen: "画笔",
     highlighter: "荧光笔",
     text: "文字",
     mosaic: "马赛克",
+    blur: "模糊",
+    spotlight: "聚光灯（框外压暗）",
     number: "序号",
   },
+  toolWithKey: (name, key) => `${name}（${key}）`,
   undo: "撤销（Ctrl+Z）",
   undoMac: "撤销（⌘Z）",
   redo: "重做（Ctrl+Y）",
@@ -300,13 +305,17 @@ export const en: ScreenshotText = {
   tools: {
     rect: "Rectangle",
     ellipse: "Ellipse",
+    line: "Line (hold Shift to snap the angle)",
     arrow: "Arrow",
     pen: "Pen",
     highlighter: "Highlighter",
     text: "Text",
     mosaic: "Mosaic",
+    blur: "Blur",
+    spotlight: "Spotlight (dims the rest)",
     number: "Number",
   },
+  toolWithKey: (name, key) => `${name} (${key})`,
   undo: "Undo (Ctrl+Z)",
   undoMac: "Undo (⌘Z)",
   redo: "Redo (Ctrl+Y)",

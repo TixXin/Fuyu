@@ -1,8 +1,31 @@
 import type { PixelRect, Point } from "./selection";
 
-export type AnnotationTool = "rect" | "ellipse" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "number";
+export type AnnotationTool = "rect" | "ellipse" | "line" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "blur" | "spotlight" | "number";
 
-export const ANNOTATION_TOOLS: readonly AnnotationTool[] = ["rect", "ellipse", "arrow", "pen", "highlighter", "text", "mosaic", "number"];
+export const ANNOTATION_TOOLS: readonly AnnotationTool[] = ["rect", "ellipse", "line", "arrow", "pen", "highlighter", "text", "mosaic", "blur", "spotlight", "number"];
+
+export const TOOL_KEYS: Record<AnnotationTool, string> = {
+  rect: "R",
+  ellipse: "E",
+  line: "L",
+  arrow: "A",
+  pen: "P",
+  highlighter: "H",
+  text: "I",
+  mosaic: "M",
+  blur: "B",
+  spotlight: "S",
+  number: "N",
+};
+
+export function toolStyles(kind: AnnotationTool): { color: boolean; level: boolean } {
+  return { color: kind !== "mosaic" && kind !== "blur" && kind !== "spotlight", level: kind !== "spotlight" };
+}
+
+export function toolForKey(key: string): AnnotationTool | null {
+  const upper = key.toUpperCase();
+  return ANNOTATION_TOOLS.find((tool) => TOOL_KEYS[tool] === upper) ?? null;
+}
 
 export const ANNOTATION_COLORS = ["#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#0A84FF", "#AF52DE", "#FFFFFF", "#000000"] as const;
 
@@ -15,7 +38,7 @@ const BADGE = [11, 14, 18];
 
 export type AnnotationStyle = { color: string; level: StrokeLevel };
 
-export type ShapeAnnotation = { kind: "rect" | "ellipse" | "arrow" | "mosaic"; color: string; width: number; from: Point; to: Point; auto?: boolean };
+export type ShapeAnnotation = { kind: "rect" | "ellipse" | "line" | "arrow" | "mosaic" | "blur" | "spotlight"; color: string; width: number; from: Point; to: Point; auto?: boolean };
 export type StrokeAnnotation = { kind: "pen" | "highlighter"; color: string; width: number; points: Point[] };
 export type TextAnnotation = { kind: "text"; color: string; size: number; at: Point; text: string };
 export type NumberAnnotation = { kind: "number"; color: string; size: number; at: Point; value: number };
@@ -27,6 +50,17 @@ export const badgeRadius = (level: StrokeLevel, scale: number) => BADGE[level] *
 export const TEXT_LINE_HEIGHT = 1.3;
 export const HIGHLIGHTER_FACTOR = 4;
 export const mosaicBlock = (width: number) => Math.max(6, Math.round(width * 3));
+export const blurRadius = (width: number) => Math.max(4, Math.round(width * 2));
+
+export function snapLine(from: Point, to: Point): Point {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const step = Math.PI / 4;
+  const angle = Math.round(Math.atan2(dy, dx) / step) * step;
+  const length = dx * Math.cos(angle) + dy * Math.sin(angle);
+  const round = (value: number) => Math.round(value * 1000) / 1000;
+  return { x: round(from.x + Math.cos(angle) * length), y: round(from.y + Math.sin(angle) * length) };
+}
 
 export function nextNumber(items: readonly Annotation[]): number {
   return items.reduce((top, item) => (item.kind === "number" ? Math.max(top, item.value) : top), 0) + 1;
@@ -37,8 +71,11 @@ export function startAnnotation(tool: AnnotationTool, at: Point, style: Annotati
   switch (tool) {
     case "rect":
     case "ellipse":
+    case "line":
     case "arrow":
     case "mosaic":
+    case "blur":
+    case "spotlight":
       return { kind: tool, color: style.color, width, from: at, to: at };
     case "pen":
       return { kind: "pen", color: style.color, width, points: [at] };
@@ -51,7 +88,7 @@ export function startAnnotation(tool: AnnotationTool, at: Point, style: Annotati
   }
 }
 
-export function extendAnnotation(annotation: Annotation, to: Point): Annotation {
+export function extendAnnotation(annotation: Annotation, to: Point, snap = false): Annotation {
   switch (annotation.kind) {
     case "pen":
     case "highlighter": {
@@ -62,6 +99,8 @@ export function extendAnnotation(annotation: Annotation, to: Point): Annotation 
     case "text":
     case "number":
       return annotation;
+    case "line":
+      return { ...annotation, to: snap ? snapLine(annotation.from, to) : to };
     default:
       return { ...annotation, to };
   }
@@ -71,10 +110,13 @@ export function isMeaningful(annotation: Annotation): boolean {
   switch (annotation.kind) {
     case "rect":
     case "ellipse":
-    case "mosaic": {
+    case "mosaic":
+    case "blur":
+    case "spotlight": {
       const rect = normalizedRect(annotation.from, annotation.to);
       return rect.width >= 3 && rect.height >= 3;
     }
+    case "line":
     case "arrow":
       return Math.hypot(annotation.to.x - annotation.from.x, annotation.to.y - annotation.from.y) >= 4;
     case "pen":
@@ -166,7 +208,11 @@ export function annotationBounds(item: Annotation): PixelRect {
     case "ellipse":
       return grow(normalizedRect(item.from, item.to), item.width);
     case "mosaic":
+    case "blur":
+    case "spotlight":
       return grow(normalizedRect(item.from, item.to), 1);
+    case "line":
+      return grow(normalizedRect(item.from, item.to), item.width);
     case "arrow":
       return grow(normalizedRect(item.from, item.to), Math.max(10, item.width * 4) + item.width);
     case "pen":
@@ -184,6 +230,7 @@ export function annotationBounds(item: Annotation): PixelRect {
 
 export function annotationArea(items: readonly Annotation[], selection: PixelRect): PixelRect | null {
   if (items.length === 0) return null;
+  if (items.some((item) => item.kind === "spotlight")) return selection;
   const boxes = items.map(annotationBounds);
   const left = Math.max(selection.x, Math.floor(Math.min(...boxes.map((box) => box.x))));
   const top = Math.max(selection.y, Math.floor(Math.min(...boxes.map((box) => box.y))));

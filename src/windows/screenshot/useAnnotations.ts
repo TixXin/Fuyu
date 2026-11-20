@@ -57,8 +57,8 @@ export function useAnnotations(sessionId: number | undefined, scale: number) {
     else setDraft(started);
   };
 
-  const extend = (point: Point) => {
-    if (draftRef.current) setDraft(extendAnnotation(draftRef.current, point));
+  const extend = (point: Point, snap = false) => {
+    if (draftRef.current) setDraft(extendAnnotation(draftRef.current, point, snap));
   };
 
   const finish = () => {

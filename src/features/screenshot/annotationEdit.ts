@@ -1,4 +1,4 @@
-import { HIGHLIGHTER_FACTOR, STROKE_LEVELS, annotationBounds, badgeRadius, lineWidth, normalizedRect, textSize, type Annotation, type StrokeLevel } from "./annotations.ts";
+import { HIGHLIGHTER_FACTOR, STROKE_LEVELS, annotationBounds, badgeRadius, lineWidth, normalizedRect, textSize, toolStyles, type Annotation, type StrokeLevel } from "./annotations.ts";
 import type { PixelRect, Point } from "./selection";
 
 export type AnnotationHandle = "start" | "end" | "nw" | "ne" | "sw" | "se";
@@ -25,9 +25,10 @@ function nearLine(points: readonly Point[], point: Point, reach: number): boolea
 
 export function hitsAnnotation(item: Annotation, point: Point, slack: number): boolean {
   switch (item.kind) {
-    case "rect": {
+    case "rect":
+    case "spotlight": {
       const rect = normalizedRect(item.from, item.to);
-      const reach = slack + item.width / 2;
+      const reach = slack + (item.kind === "rect" ? item.width / 2 : 2);
       const hollow = rect.width > reach * 2 && rect.height > reach * 2 && inside({ x: rect.x + reach, y: rect.y + reach, width: rect.width - reach * 2, height: rect.height - reach * 2 }, point);
       return inside(rect, point, reach) && !hollow;
     }
@@ -41,7 +42,10 @@ export function hitsAnnotation(item: Annotation, point: Point, slack: number): b
       return Math.abs(distance - 1) * Math.min(rx, ry) <= reach;
     }
     case "mosaic":
+    case "blur":
       return inside(normalizedRect(item.from, item.to), point, slack);
+    case "line":
+      return nearLine([item.from, item.to], point, slack + item.width / 2);
     case "arrow":
       return nearLine([item.from, item.to], point, slack + item.width);
     case "pen":
@@ -62,11 +66,14 @@ export function annotationAt(items: readonly Annotation[], point: Point, slack: 
 
 export function annotationHandles(item: Annotation): { handle: AnnotationHandle; at: Point }[] {
   switch (item.kind) {
+    case "line":
     case "arrow":
       return [{ handle: "start", at: item.from }, { handle: "end", at: item.to }];
     case "rect":
     case "ellipse":
-    case "mosaic": {
+    case "mosaic":
+    case "blur":
+    case "spotlight": {
       const rect = normalizedRect(item.from, item.to);
       const right = rect.x + rect.width;
       const bottom = rect.y + rect.height;
@@ -103,16 +110,16 @@ export function moveAnnotation(item: Annotation, dx: number, dy: number): Annota
 }
 
 export function dragHandle(item: Annotation, handle: AnnotationHandle, point: Point): Annotation {
-  if (item.kind === "arrow") return handle === "start" ? { ...item, from: point } : handle === "end" ? { ...item, to: point } : item;
-  if (item.kind !== "rect" && item.kind !== "ellipse" && item.kind !== "mosaic") return item;
+  if (item.kind === "arrow" || item.kind === "line") return handle === "start" ? { ...item, from: point } : handle === "end" ? { ...item, to: point } : item;
+  if (item.kind !== "rect" && item.kind !== "ellipse" && item.kind !== "mosaic" && item.kind !== "blur" && item.kind !== "spotlight") return item;
   if (handle === "start" || handle === "end") return item;
   const rect = normalizedRect(item.from, item.to);
   const opposite = { x: handle.includes("w") ? rect.x + rect.width : rect.x, y: handle.includes("n") ? rect.y + rect.height : rect.y };
   return { ...item, from: opposite, to: point };
 }
 
-export function canRecolor(item: Annotation): boolean {
-  return item.kind !== "mosaic";
+function canRecolor(item: Annotation): boolean {
+  return toolStyles(item.kind).color;
 }
 
 export function restyleAnnotation(item: Annotation, change: { color?: string; level?: StrokeLevel }, scale: number): Annotation {
