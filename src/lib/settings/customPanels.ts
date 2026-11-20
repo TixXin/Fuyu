@@ -116,14 +116,16 @@ export function flowPanelItems(items: readonly Pick<PanelItem, "widget" | "size"
   });
 }
 
-export function flowStrip(items: readonly Pick<PanelItem, "widget" | "size">[], rows: number): PanelItem[] {
+const crossesPage = (col: number, cols: number, page: number) => cols <= page && Math.floor(col / page) !== Math.floor((col + cols - 1) / page);
+
+export function flowStrip(items: readonly Pick<PanelItem, "widget" | "size">[], rows: number, page = Infinity): PanelItem[] {
   const taken: CellBox[] = [];
   return items.map((item) => {
     const { cols, rows: tall } = CELLS[item.size];
     for (let col = 0; ; col += 1) {
       for (let row = 0; row + tall <= Math.max(rows, tall); row += 1) {
         const box = { col, row, cols, rows: tall };
-        if (taken.some((other) => overlaps(box, other))) continue;
+        if (crossesPage(col, cols, page) || taken.some((other) => overlaps(box, other))) continue;
         taken.push(box);
         return placed(item.widget, item.size, col, row);
       }
@@ -241,8 +243,8 @@ export function boardHeightPx(panel: CustomPanel): number {
   return panel.mode === "free" ? Math.max(freeHeightPx(panel.items), GRID_CELL_PX) : cellsToPx(Math.max(1, gridRows(panel.items)));
 }
 
-export function layoutStrip(panel: CustomPanel, rows: number): CustomPanel {
-  return panel.mode === "grid" ? { ...panel, items: flowStrip(panel.items, rows) } : panel;
+export function layoutStrip(panel: CustomPanel, rows: number, page = Infinity): CustomPanel {
+  return panel.mode === "grid" ? { ...panel, items: flowStrip(panel.items, rows, page) } : panel;
 }
 
 export function stripRightPx(panel: CustomPanel): number {
@@ -304,25 +306,25 @@ export const FUYU_PAGE_ID = `${CUSTOM_PANEL_PAGE_PREFIX}${FUYU_PANEL_ID}`;
 
 export const DEFAULT_FUYU_ITEMS: readonly (readonly [string, PanelSize])[] = [
   ["today", "l"],
-  ["pomodoro", "s"],
-  ["focus-stats", "s"],
-  ["streak", "s"],
-  ["water", "s"],
-  ["next-meeting", "m"],
-  ["todos", "m"],
-  ["music", "m"],
-  ["session-count", "m"],
-  ["lyrics", "w"],
   ["system-status", "s"],
   ["battery", "s"],
+  ["countdown", "s"],
   ["network", "s"],
+  ["pomodoro", "s"],
+  ["streak", "s"],
+  ["year-progress", "s"],
+  ["water", "s"],
+  ["music", "m"],
+  ["next-meeting", "m"],
+  ["lyrics", "w"],
+  ["todos", "m"],
+  ["focus-stats", "s"],
   ["unread", "s"],
   ["month-calendar", "l"],
   ["note", "m"],
   ["habits", "m"],
-  ["countdown", "s"],
   ["world-clock", "s"],
-  ["year-progress", "s"],
+  ["session-count", "m"],
   ["sun", "s"],
   ["translate", "m"],
   ["clipboard-recent", "m"],

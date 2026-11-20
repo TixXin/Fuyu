@@ -78,7 +78,7 @@ export function PanelBoard({ panel, library, editing, scale, board, incoming, he
       const drop = keptInside(panel, released, board);
       const item = panel.items.find((candidate) => candidate.widget === drop.widget);
       if (!item) return;
-      const next = layoutStrip(draggedTo(panel, drop, board), FUYU_ROWS);
+      const next = layoutStrip(draggedTo(panel, drop, board), FUYU_ROWS, board.page);
       const placed = next.items.find((candidate) => candidate.widget === drop.widget);
       if (drop.kind === "move" && placed) {
         const from = itemBoxPx(panel, item);
@@ -107,7 +107,7 @@ export function PanelBoard({ panel, library, editing, scale, board, incoming, he
     onChange(reorderPanelItem(panel, item.widget, before));
   };
   const drag = rawDrag && keptInside(panel, rawDrag, board);
-  const shown = layoutStrip(previewOf(panel, drag, incoming, board), FUYU_ROWS);
+  const shown = layoutStrip(previewOf(panel, drag, incoming, board), FUYU_ROWS, board.page);
   const target = drag ? freeTarget(panel, drag, board) : null;
   const last = panel.items.length - 1;
 

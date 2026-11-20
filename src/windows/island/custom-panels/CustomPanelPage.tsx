@@ -32,13 +32,13 @@ function useStrip(stored: CustomPanel, editing: boolean) {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const panel = layoutStrip(stored, FUYU_ROWS);
   const height = cellsToPx(FUYU_ROWS);
   const scale = room ? Math.min(1, room.width / cellsToPx(FUYU_COLUMNS), room.height / (height + FUYU_BOARD_TOP_PX)) : 1;
   const fit = scale > 0 ? scale : 1;
   const visible = room ? room.width / fit : cellsToPx(FUYU_COLUMNS);
-  const right = stripRightPx(panel);
   const pageColumns = Math.max(1, Math.floor((visible + GRID_GAP_PX) / STEP_PX));
+  const panel = layoutStrip(stored, FUYU_ROWS, pageColumns);
+  const right = stripRightPx(panel);
   const paged = panel.mode === "grid" && !editing && panel.items.length > 0;
   const columns = Math.max(pageColumns, Math.ceil((right + GRID_GAP_PX) / STEP_PX) + (editing ? 1 : 0));
   const width =
@@ -47,7 +47,7 @@ function useStrip(stored: CustomPanel, editing: boolean) {
       : cellsToPx(paged ? Math.ceil(columns / pageColumns) * pageColumns : columns);
   const pages = paged ? Math.ceil(columns / pageColumns) : 0;
   useWheelScrollsSideways(ref, paged ? pageColumns * STEP_PX * fit : null);
-  const board: Board = { width, height };
+  const board: Board = { width, height, page: pageColumns };
   return { ref, scale: fit, board, panel, pages, pageStepPx: pageColumns * STEP_PX };
 }
 
