@@ -56,6 +56,14 @@
                     </button>
                   </li>
                   <li>
+                    <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="islandLayout" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-layout-dashboard" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        岛屿布局
+                      </span>
+                    </button>
+                  </li>
+                  <li>
                     <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="behavior" type="button">
                       <svg aria-hidden="true" class="lucide lucide-mouse-pointer-click" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
                       <span>
@@ -299,12 +307,29 @@
                 </h2>
               </div>
               <div class="settings-group__card">
+                <div class="settings-row island-placement-link" data-search="off">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        空闲时显示剩余待办数
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <button class="settings-link-button" type="button">
+                        文字位 · 调整 ›
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
                       <label class="settings-row__title" for="_id1_">
-                        空闲时显示剩余待办数
+                        显示进行中已用时长
                       </label>
+                      <span class="settings-row__description">
+                        在待办列表和收起的小岛上显示已开始时长，例如 18m。
+                      </span>
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
@@ -318,30 +343,12 @@
                   <div class="settings-row__main">
                     <div class="settings-row__text">
                       <label class="settings-row__title" for="_id2_">
-                        显示进行中已用时长
-                      </label>
-                      <span class="settings-row__description">
-                        在待办列表和收起的小岛上显示已开始时长，例如 18m。
-                      </span>
-                    </div>
-                    <div class="settings-row__control">
-                      <span class="settings-switch">
-                        <input checked="" id="_id2_" role="switch" type="checkbox">
-                        <span aria-hidden="true" class="settings-switch__track"></span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id3_">
                         多任务流动
                       </label>
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id3_" role="switch" type="checkbox">
+                        <input id="_id2_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -357,7 +364,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id4_" aria-expanded="false" aria-haspopup="listbox" aria-label="列表排序方式" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id3_" aria-expanded="false" aria-haspopup="listbox" aria-label="列表排序方式" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               手动顺序
                             </span>
@@ -371,13 +378,13 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id5_">
+                      <label class="settings-row__title" for="_id4_">
                         允许拖动调整任务顺序
                       </label>
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id5_" role="switch" type="checkbox">
+                        <input id="_id4_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -393,7 +400,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="已完成任务显示方式" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="已完成任务显示方式" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               收起在底部折叠栏
                             </span>
@@ -416,7 +423,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id7_">
+                      <label class="settings-row__title" for="_id6_">
                         行内快捷语法识别
                       </label>
                       <span class="settings-row__description">
@@ -425,7 +432,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input checked="" id="_id7_" role="switch" type="checkbox">
+                        <input checked="" id="_id6_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -463,7 +470,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="新待办默认进哪个项目" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="新待办默认进哪个项目" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               临时
                             </span>
@@ -514,7 +521,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id9_">
+                      <label class="settings-row__title" for="_id8_">
                         开始任务时启动专注倒计时
                       </label>
                       <span class="settings-row__description">
@@ -523,7 +530,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id9_" role="switch" type="checkbox">
+                        <input id="_id8_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -532,7 +539,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id10_">
+                      <label class="settings-row__title" for="_id9_">
                         子任务全部勾选后自动完成主待办
                       </label>
                       <span class="settings-row__description">
@@ -541,7 +548,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id10_" role="switch" type="checkbox">
+                        <input id="_id9_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>

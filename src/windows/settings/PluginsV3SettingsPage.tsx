@@ -57,11 +57,10 @@ function usePackageRedirect(onOpenPage?: (page: SettingsCategory) => void) {
   }, [errorText, onOpenPage]);
 }
 
-export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins: givenBuiltins, initialDetail = null, barUsage, onBarChanged, onOpenPage }: {
+export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins: givenBuiltins, initialDetail = null, barUsage, onOpenPage }: {
   view: PluginHostView;
   hostOff?: boolean;
   barUsage?: BarUsageView;
-  onBarChanged?: () => void;
   initialDetail?: PluginDetailRequest | null;
   node?: HostNodeStatus | null;
   builtins?: readonly BuiltinPlugin[] | null;
@@ -170,7 +169,7 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
           onAction={act}
           onSearchMarket={() => openMarket({ query })}
           />
-          <PluginBarUsage entries={entries} usage={stale ? undefined : barUsage} onOpenSettings={(id) => setDetail({ id, tab: "settings", uninstall: false })} onChanged={onBarChanged} />
+          <PluginBarUsage entries={entries} usage={stale ? undefined : barUsage} onOpenSettings={(id) => setDetail({ id, tab: "settings", uninstall: false })} />
           <InstalledPluginSuggestions snapshot={catalog.snapshot} onBrowse={() => openMarket()} onInstall={install.offer} />
         </>
       ) : null}
@@ -202,7 +201,7 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
 function HostConnectedPage({ connect, initialDetail, onOpenPage }: { connect?: PluginHostConnector; initialDetail: PluginDetailRequest | null; onOpenPage?: (page: SettingsCategory) => void }) {
   const view = usePluginHostStatus(connect);
   const bar = usePluginBarUsage(view.connection === "open");
-  return <PluginsV3View view={view} initialDetail={initialDetail} barUsage={bar.usage} onBarChanged={bar.refresh} onOpenPage={onOpenPage} />;
+  return <PluginsV3View view={view} initialDetail={initialDetail} barUsage={bar.usage} onOpenPage={onOpenPage} />;
 }
 
 export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {

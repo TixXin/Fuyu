@@ -2,12 +2,13 @@ import { SettingsFootnote } from "../../../components/settings/SettingsFootnote"
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { isBuiltinEnabled, switchBuiltinPlugin } from "../../../features/plugin-kernel/builtinSwitches";
+import { islandItemStyleId, islandItemStyles } from "../../../features/plugin-kernel/settingsSlots";
 import { useBuiltinPlugins } from "../../../features/plugin-kernel/useBuiltinPlugins";
 import { useTranslation } from "../../../i18n";
 import type { BuiltinPluginName } from "../../../i18n/sections/settings/pluginsV3";
 import { settingsSections } from "./sectionSlot";
 
-type ModuleCategory = "generalApi" | "appearanceCollapsed" | "agentRings" | "agentPush" | "agentRemote";
+type ModuleCategory = "generalApi" | "agentRings" | "agentPush" | "agentRemote";
 
 function ModuleOffCard({
   pluginId,
@@ -42,7 +43,17 @@ function LocalApiOff() {
 
 function CenterPatternOff() {
   const t = useTranslation().settings;
-  return <ModuleOffCard pluginId="center-pattern" title={t.plugins.centerPattern.group} description={t.pluginsV3.builtinSummaries["center-pattern"]} footer={t.plugins.centerPattern.groupHint} />;
+  const plugins = useBuiltinPlugins();
+  if (isBuiltinEnabled(plugins, "center-pattern")) return null;
+  return (
+    <SettingsToggleRow
+      searchable={false}
+      title={t.plugins.centerPattern.group}
+      description={t.pluginsV3.builtinSummaries["center-pattern"]}
+      checked={false}
+      onChange={(on) => void switchBuiltinPlugin("center-pattern", on).catch(() => undefined)}
+    />
+  );
 }
 
 function ClaudeUsageOff() {
@@ -68,8 +79,8 @@ function SshTunnelOff() {
 const sections = settingsSections<object, ModuleCategory>();
 
 sections.add({ id: "generalApi.localApi.off", category: "generalApi", order: 10, component: LocalApiOff });
-sections.add({ id: "appearance.center-pattern.off", category: "appearanceCollapsed", order: 35, component: CenterPatternOff });
 sections.add({ id: "agents.usage.off", category: "agentRings", order: 40, component: ClaudeUsageOff });
 sections.add({ id: "agents.session-ring.off", category: "agentRings", order: 45, component: SessionRingOff });
 sections.add({ id: "agentAlerts.ccConnect.off", category: "agentPush", order: 30, component: CcConnectOff });
 sections.add({ id: "agentRemote.ssh-tunnel.off", category: "agentRemote", order: 20, component: SshTunnelOff });
+islandItemStyles.add({ id: islandItemStyleId("center", "off"), category: "islandLayout", order: 10, component: CenterPatternOff });

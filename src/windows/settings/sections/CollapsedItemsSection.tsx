@@ -3,13 +3,9 @@ import { ArrowDown, ArrowLeftRight, ArrowUp, Ellipsis } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsSwitch } from "../../../components/settings/SettingsSwitch";
 import { useTranslation } from "../../../i18n";
-import { HOVER_ONLY_ITEM_ID, needsHoverOnlyGauge, shownUsageProviders, usageItemId } from "../../../features/claude-usage/usageRing";
-import { OWNER as CLAUDE_USAGE } from "../../../features/claude-usage/plugin/owner";
-import { builtinConfigBoolean, disabledBuiltinIds, isBuiltinEnabled } from "../../../features/plugin-kernel/builtinSwitches";
-import { useBuiltinConfig, useBuiltinPlugins } from "../../../features/plugin-kernel/useBuiltinPlugins";
+import { islandItemStyleMatches, islandItemStyles, type IslandItemStyleProps } from "../../../features/plugin-kernel/settingsSlots";
+import { useSlotEntries } from "../../../features/plugin-kernel/useSlotEntries";
 import {
-  arrangeCollapsedItems,
-  filterCollapsedItemEntries,
   moveCollapsedItem,
   setCollapsedItemHidden,
   setCollapsedItemShelf,
@@ -18,44 +14,24 @@ import {
   type CollapsedZone,
 } from "../../../lib/settings/collapsedItems";
 import { useCollapsedOverflowIds } from "../../../lib/settings/useCollapsedOverflowIds";
-import { useCollapsedPlacements } from "../../../lib/settings/useCollapsedPlacements";
-import { useCollapsedPluginItems } from "./useCollapsedPluginItems";
+import { CollapsedItemRow } from "../island-layout/CollapsedItemRow";
+import { CENTER_ITEMS } from "../island-layout/centerItems";
+import type { CollapsedLayout } from "../island-layout/useCollapsedLayout";
 import "./CollapsedItemsSection.css";
 
-export function CollapsedItemsSection() {
-  const t = useTranslation();
-  const text = t.settings.collapsedItems;
-  const hoverOnlyItemName = t.claudeUsage.hoverOnlyItemName;
-  const { placements: saved, save } = useCollapsedPlacements();
-  const plugins = useBuiltinPlugins();
-  const usageOn = isBuiltinEnabled(plugins, CLAUDE_USAGE);
-  const usageConfig = useBuiltinConfig(CLAUDE_USAGE);
-  const pluginItems = useCollapsedPluginItems();
+export function CollapsedItemsSection({ layout, openItem, onOpenItem, ...props }: IslandItemStyleProps & {
+  layout: CollapsedLayout;
+  openItem: string | null;
+  onOpenItem: (item: string | null) => void;
+}) {
+  const text = useTranslation().settings.collapsedItems;
+  const { names, listed, placements, saved, save } = layout;
   const noRoom = useCollapsedOverflowIds();
-  const timerName = t.island.timer;
-
-  const names = useMemo(() => {
-    const disabled = disabledBuiltinIds(plugins);
-    const mailOn = builtinConfigBoolean(plugins, "messages", "mail") !== false;
-    const entries: [string, string][] = [
-      ["status-light", text.item.statusLight],
-      ["mail", text.item.mail],
-      ["update", text.item.update],
-    ];
-    entries.push(["device-use", text.item.deviceUse], ["shelf", text.item.shelf], ["music", text.item.music]);
-    if (usageOn) {
-      for (const provider of shownUsageProviders(usageConfig)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
-      if (needsHoverOnlyGauge(usageConfig)) entries.push([HOVER_ONLY_ITEM_ID, text.item.usage(hoverOnlyItemName)]);
-    }
-    entries.push(["timer", timerName], ["session-count", text.item.sessionCount]);
-    const builtin = new Map(filterCollapsedItemEntries(entries, disabled, mailOn));
-    for (const [id, name] of pluginItems) if (!builtin.has(id)) builtin.set(id, name);
-    return builtin;
-  }, [hoverOnlyItemName, pluginItems, plugins, text, timerName, usageOn, usageConfig]);
-
-  const listed = useMemo(() => [...names.keys()], [names]);
-  const placements = useMemo(() => arrangeCollapsedItems(listed, saved), [listed, saved]);
+  const styles = useSlotEntries(islandItemStyles, "islandLayout");
+  const styled = (item: string) => styles.some((entry) => islandItemStyleMatches(entry.id, item));
+  const centers = useMemo(() => CENTER_ITEMS.filter((item) => styles.some((entry) => islandItemStyleMatches(entry.id, item))), [styles]);
   const change = (next: CollapsedPlacement[]) => save(next);
+  const opener = (item: string) => (open: boolean) => onOpenItem(open ? item : null);
 
   const zone = (name: CollapsedZone) => {
     const rows = placements.filter((placement) => placement.zone === name && names.has(placement.id));
@@ -66,41 +42,48 @@ export function CollapsedItemsSection() {
         <ul className="plugin-pages">
           {rows.map((placement, index) => {
             const label = names.get(placement.id) ?? placement.id;
-            const switchId = `collapsed-item-${placement.id}`;
             return (
-              <li className="plugin-pages__row collapsed-items__row" key={placement.id}>
-                <span className="collapsed-items__number" aria-hidden="true">{index + 1}</span>
-                <label className="plugin-pages__name" htmlFor={switchId}>
-                  <strong>{label}</strong>
-                  {!placement.hidden && (placement.shelf || noRoom.has(placement.id)) && (
-                    <small data-badge={placement.shelf ? "panel" : "no-room"}>{placement.shelf ? text.inPanel : text.noRoom}</small>
-                  )}
-                </label>
-                <button className="collapsed-items__button" type="button" disabled={index === 0} aria-label={text.moveUp(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, -1, listed))}>
-                  <ArrowUp size={12} strokeWidth={2.4} />
-                </button>
-                <button className="collapsed-items__button" type="button" disabled={index === rows.length - 1} aria-label={text.moveDown(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, 1, listed))}>
-                  <ArrowDown size={12} strokeWidth={2.4} />
-                </button>
-                <button
-                  className="collapsed-items__button"
-                  type="button"
-                  aria-label={name === "left" ? text.toRight(label) : text.toLeft(label)}
-                  onClick={() => change(setCollapsedItemZone(placements, placement.id, name === "left" ? "right" : "left"))}
-                >
-                  <ArrowLeftRight size={12} strokeWidth={2.4} />
-                </button>
-                <button
-                  className="collapsed-items__button"
-                  type="button"
-                  aria-pressed={placement.shelf === true}
-                  aria-label={placement.shelf ? text.fromPanel(label) : text.toPanel(label)}
-                  onClick={() => change(setCollapsedItemShelf(placements, placement.id, !placement.shelf))}
-                >
-                  <Ellipsis size={12} strokeWidth={2.4} />
-                </button>
-                <SettingsSwitch id={switchId} checked={!placement.hidden} onChange={(show) => change(setCollapsedItemHidden(placements, placement.id, !show))} />
-              </li>
+              <CollapsedItemRow
+                key={placement.id}
+                {...props}
+                item={placement.id}
+                name={label}
+                number={index + 1}
+                styled={styled(placement.id)}
+                open={openItem === placement.id}
+                onOpen={opener(placement.id)}
+                badge={!placement.hidden && (placement.shelf || noRoom.has(placement.id)) ? (
+                  <small data-badge={placement.shelf ? "panel" : "no-room"}>{placement.shelf ? text.inPanel : text.noRoom}</small>
+                ) : null}
+                actions={
+                  <>
+                    <button className="collapsed-items__button" type="button" disabled={index === 0} aria-label={text.moveUp(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, -1, listed))}>
+                      <ArrowUp size={12} strokeWidth={2.4} />
+                    </button>
+                    <button className="collapsed-items__button" type="button" disabled={index === rows.length - 1} aria-label={text.moveDown(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, 1, listed))}>
+                      <ArrowDown size={12} strokeWidth={2.4} />
+                    </button>
+                    <button
+                      className="collapsed-items__button"
+                      type="button"
+                      aria-label={name === "left" ? text.toRight(label) : text.toLeft(label)}
+                      onClick={() => change(setCollapsedItemZone(placements, placement.id, name === "left" ? "right" : "left"))}
+                    >
+                      <ArrowLeftRight size={12} strokeWidth={2.4} />
+                    </button>
+                    <button
+                      className="collapsed-items__button"
+                      type="button"
+                      aria-pressed={placement.shelf === true}
+                      aria-label={placement.shelf ? text.fromPanel(label) : text.toPanel(label)}
+                      onClick={() => change(setCollapsedItemShelf(placements, placement.id, !placement.shelf))}
+                    >
+                      <Ellipsis size={12} strokeWidth={2.4} />
+                    </button>
+                    <SettingsSwitch id={`collapsed-item-${placement.id}`} ariaLabel={text.showItem(label)} checked={!placement.hidden} onChange={(show) => change(setCollapsedItemHidden(placements, placement.id, !show))} />
+                  </>
+                }
+              />
             );
           })}
         </ul>
@@ -108,13 +91,24 @@ export function CollapsedItemsSection() {
     );
   };
 
+  const centerNames: Record<string, string> = { center: text.item.center, "todos-count": text.item.todoCount };
+
   return (
     <SettingsGroup title={text.title} footer={text.hint}>
       <div className="collapsed-items">
-        <div className="collapsed-items__zones">
-          {zone("left")}
-          {zone("right")}
-        </div>
+        {centers.length > 0 ? (
+          <div className="collapsed-items__zone" role="group" aria-label={text.center}>
+            <h4 className="collapsed-items__zone-title">{text.center}</h4>
+            <p className="settings-section__hint">{text.centerHint}</p>
+            <ul className="plugin-pages">
+              {centers.map((item) => (
+                <CollapsedItemRow key={item} {...props} item={item} name={centerNames[item] ?? item} styled open={openItem === item} onOpen={opener(item)} />
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {zone("left")}
+        {zone("right")}
         <button className="collapsed-items__button collapsed-items__reset" type="button" disabled={saved.length === 0} onClick={() => save([])}>
           {text.reset}
         </button>

@@ -12,6 +12,7 @@ import { checkGlassLooks } from "./settings-glass-looks";
 import { checkIdleDimSettings } from "./settings-idle-dim";
 import { checkLocalApiNotify } from "./settings-local-api";
 import { checkNotchPreview } from "./settings-notch-preview";
+import { checkIslandLayout } from "./settings-island-layout";
 import { checkAgentNoticeSettings } from "./settings-agent-notice";
 import { checkMessageNotice, checkMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
@@ -98,7 +99,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "generalData", "generalSync", "theme", "themeStyle", "appearance", "appearanceCollapsed", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "todosReminders", "todosArchive", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
+    const pages = [...categories(), "generalData", "generalSync", "theme", "themeStyle", "appearance", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "todosReminders", "todosArchive", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -179,7 +180,7 @@ if (!automated) {
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
     await openPage("themeStyle"); await checkIdleDimSettings(check); await checkGlassLooks(check); await checkNotchPreview(check);
     await openPage("agentAlerts"); await checkAgentNoticeSettings(check);
-    await openPage("appearanceCollapsed");
+    await openPage("islandLayout"); await checkIslandLayout(check);
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
     const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean; shelf?: boolean }[] } | null;
@@ -211,11 +212,11 @@ if (!automated) {
     await checkThemeMarket(check, () => openPage("overview"));
 
     await openPage("music");
-    const waveSwitch = () => settingRow("在收起的岛上显示音乐波形")?.querySelector<HTMLInputElement>("input");
-    check(waveSwitch()?.checked === true && savedItems() === null, "The music wave shows on the collapsed bar by default");
-    await act(async () => { waveSwitch()!.click(); });
-    check(waveSwitch()?.checked === false && savedItems()?.items.find((item) => item.id === "music")?.hidden === true, "Turning the music wave off hides the bar's music item");
-    await act(async () => { waveSwitch()!.click(); }); check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again"); localStorage.removeItem("fuyu-collapsed-items");
+    const waveLink = () => settingRow("在收起的岛上显示音乐波形")?.querySelector<HTMLButtonElement>(".settings-link-button");
+    check(waveLink()?.textContent === "右侧第 5 个 · 调整 ›" && !settingRow("在收起的岛上显示音乐波形")?.querySelector("input"), "The music page only links to where the wave sits on the island");
+    await act(async () => { waveLink()!.click(); await new Promise((resolve) => setTimeout(resolve, 50)); });
+    check(document.querySelector(".settings-sidebar__item[data-category='islandLayout']")?.getAttribute("aria-current") === "page"
+      && document.querySelector(".collapsed-items__item[data-item='music']")?.classList.contains("collapsed-items__item--found"), "Its link opens the island layout and points at the music row");
 
     await openPage("behaviorTuck");
     const holdRow = (title: string) => settingRow(title)?.querySelector<HTMLInputElement>("input");

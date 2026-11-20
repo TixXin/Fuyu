@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Activity, Bell, Blocks, Bot, Cable, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
+import { Activity, Bell, Blocks, Bot, Cable, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutDashboard, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { defineSlot, type SettingsCategoryMeta } from "./slots.ts";
 
@@ -19,10 +19,10 @@ export const BUILTIN_CATEGORIES = [
   { id: "general", icon: SlidersHorizontal, group: "basics", tabs: ["general", "generalData", "generalSync"] },
   { id: "generalData", icon: SlidersHorizontal },
   { id: "generalSync", icon: FolderSync, aliases: ["sync"] },
-  { id: "appearance", icon: LayoutTemplate, group: "basics", tabs: ["theme", "themeStyle", "appearance", "appearanceCollapsed"] },
+  { id: "appearance", icon: LayoutTemplate, group: "basics", tabs: ["theme", "themeStyle", "appearance"] },
   { id: "theme", icon: Palette, aliases: ["themePresets", "themeMarket"] },
   { id: "themeStyle", icon: Sparkles, aliases: ["themeGlass"] },
-  { id: "appearanceCollapsed", icon: LayoutTemplate },
+  { id: "islandLayout", icon: LayoutDashboard, group: "basics", aliases: ["appearanceCollapsed"] },
   { id: "behavior", icon: MousePointerClick, group: "basics", tabs: ["behavior", "behaviorTuck"], aliases: ["behaviorQuiet"] },
   { id: "behaviorTuck", icon: MousePointerClick },
   { id: "shortcuts", icon: Keyboard, group: "basics", tabs: ["shortcuts", "shortcutsIsland", "shortcutsReference"] },

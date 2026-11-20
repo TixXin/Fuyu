@@ -6,6 +6,7 @@ import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import type { IslandSettings } from "../../lib/settings/types";
+import { IslandPlacementRow } from "../plugin-kernel/IslandPlacementRow";
 import { TodoNewTaskSettingsRows } from "./TodoNewTaskSettingsRows";
 import type { TodoDoneDisplay, TodoInsertPosition, TodoSortBy } from "./todoPrefs.ts";
 import { useTodoPrefs } from "./useTodoPrefs";
@@ -38,11 +39,7 @@ export function TodoSettingsSection({ settings, onSettingsChange }: {
   return (
     <>
       <SettingsGroup title={text.displayGroup}>
-        <SettingsToggleRow
-          title={t.settings.layout.showIdleTodoCount}
-          checked={settings.showIdleTodoCount}
-          onChange={(showIdleTodoCount) => onSettingsChange({ ...settings, showIdleTodoCount })}
-        />
+        <IslandPlacementRow item="todos-count" title={t.settings.layout.showIdleTodoCount} />
         <SettingsToggleRow
           title={text.showElapsed}
           description={text.showElapsedHint}

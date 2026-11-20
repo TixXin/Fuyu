@@ -1,10 +1,8 @@
-import { useId, useMemo } from "react";
-import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
-import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { useMemo } from "react";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
-import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
+import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
 import { setBuiltinConfig, switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
@@ -30,7 +28,6 @@ export function CenterPatternSettingsGroup() {
   const config = useMemo(() => centerConfig(raw), [raw]);
   const pets = usePetChoices(true) ?? "loading";
   const choices = petChoices(pets, config.pet, text.pets);
-  const switchId = useId();
   const [failure, flashFailure] = useFlash<string>();
 
   const save = (key: CenterConfigKey, value: string | number) => {
@@ -38,11 +35,13 @@ export function CenterPatternSettingsGroup() {
   };
 
   return (
-    <SettingsGroup
-      title={text.group}
-      action={<SettingsSwitch id={switchId} ariaLabel={text.group} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch((reason: unknown) => flashFailure(errorText(reason)))} />}
-      footer={failure ? <span className="plugin-card__error">{failure}</span> : <SettingsFootnote text={text.groupHint} />}
-    >
+    <>
+      <SettingsToggleRow
+        title={text.group}
+        description={text.groupHint}
+        checked
+        onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch((reason: unknown) => flashFailure(errorText(reason)))}
+      />
       <SettingsRow
         title={text.pattern}
         control={
@@ -81,6 +80,7 @@ export function CenterPatternSettingsGroup() {
         max={CENTER_PATTERN_SIZE.max}
         onChange={(size) => save("size", size)}
       />
-    </SettingsGroup>
+      {failure ? <p className="plugin-card__error">{failure}</p> : null}
+    </>
   );
 }

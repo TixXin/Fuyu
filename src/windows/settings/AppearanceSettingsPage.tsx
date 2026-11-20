@@ -1,5 +1,3 @@
-import { CollapsedItemsSection } from "./sections/CollapsedItemsSection";
-import { DisplaySettingsSection } from "./sections/DisplaySettingsSection";
 import { StickyIslandPreview } from "./StickyIslandPreview";
 import { SizeSettingsSection } from "./sections/LayoutSettingsSection";
 import { PositionSettingsSection } from "./sections/PositionSettingsSection";
@@ -8,7 +6,7 @@ import { requestIslandPositionReset, requestPanelPreview } from "./storage";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
 
-export type AppearanceTab = "appearance" | "appearanceCollapsed";
+export type AppearanceTab = "appearance";
 
 type AppearanceSectionProps = {
   settings: IslandSettings;
@@ -39,13 +37,11 @@ const sections = settingsSections<AppearanceSectionProps, AppearanceTab>();
 
 sections.add({ id: "appearance.position", category: "appearance", order: 5, component: PositionSection });
 sections.add({ id: "appearance.size", category: "appearance", order: 10, component: SizeSection });
-sections.add({ id: "appearanceCollapsed.display", category: "appearanceCollapsed", order: 20, component: DisplaySettingsSection });
-sections.add({ id: "appearanceCollapsed.collapsed-items", category: "appearanceCollapsed", order: 30, component: CollapsedItemsSection });
 
 export function AppearanceSettingsPage({ tab, ...props }: AppearanceSectionProps & { tab: AppearanceTab }) {
   return (
     <>
-      <StickyIslandPreview settings={props.settings} compact={tab === "appearanceCollapsed"} />
+      <StickyIslandPreview settings={props.settings} />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );
