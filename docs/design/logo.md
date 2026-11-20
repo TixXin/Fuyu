@@ -1,6 +1,6 @@
 # 标志：水母
 
-更新：2026-11-20（矢量定稿）
+更新：2026-11-20（应用图标已换）
 
 浮屿的标志是一只宽头、四瓣触手、没有光环的小水母（issue #281）。它同时是应用图标、Mac 菜单栏图标，以及岛上 Agent 状态灯的角色。状态、动效和各种尺寸的预览在 `pnpm logo` 打开的 [jellyfish-set-preview.html](../investigations/jellyfish-set-preview.html)。
 
@@ -59,7 +59,7 @@ PNG 用无头 Chrome 从 SVG 导出（本机没有 rsvg / inkscape）：
 
 定稿只是文件，产品里还是旧的「极简悬岛」标志。要换的位置（每项落地时另开任务）：
 
-- **应用图标**：`src-tauri/icons/` 全部尺寸（`pnpm tauri icon docs/assets/logo/app-icon.png`，再用 macOS 版重出 `icon.icns`，16/24/32 的 ico 层换成小尺寸版），`src-tauri/icons/mark.svg`，`tauri.conf.json` 的安装包图标，MSIX 用到的 `Square44x44Logo`、`Square150x150Logo`、`StoreLogo`，`packages/vscode-extension/icon.png`
+- ~~**应用图标**~~：已换（C157）。`src-tauri/icons/` 的 PNG 和 MSIX 方块图从母版缩出，32 及以下（`32x32`、`Square30x30Logo`、`Square44x44Logo`、ico 的 16/24/32 层）用小尺寸版；`icon.icns` 用 macOS 版经 `iconutil` 生成；VS Code 扩展图标同步换了。`mark.svg` 还是旧的悬岛：菜单栏模板图和岛上的中心图案按它画，跟那两项一起换
 - **托盘 / 菜单栏**：`src-tauri/src/tray_mark.rs` 用 Rust 画的模板图和它的测试，托盘卡片头部的 `FuyuMark`（`src/windows/tray-menu/TrayCardHeader.tsx`）
 - **岛上**：状态灯（`agentLightStyle` 现有 `mark` / `dot`，加水母要新值并兼容老设置）、中心图案（`CENTER_PATTERNS` 的 `mark`）、`IslandCollapsedBar.tsx`、Agent 设置页的样式预览和文案、设置搜索索引
 - **对外**：关于页的「Logo 征集中」，`scripts/readme/assets.mjs` 生成的 README 图，各语言 README 的图片说明
