@@ -188,7 +188,7 @@ test("normalizing saved settings keeps the first-launch defaults", () => {
 test("first launch uses the maintainer's layout, while saved settings missing a field keep older behavior", () => {
   assert.equal(DEFAULT_SETTINGS.appearanceMode, "classic");
   assert.equal(DEFAULT_SETTINGS.islandBackgroundColor, "#030303");
-  assert.equal(DEFAULT_SETTINGS.islandCornerRadius, 32);
+  assert.equal(DEFAULT_SETTINGS.islandCornerRadius, 24);
   assert.equal(DEFAULT_SETTINGS.collapsedScale, 1);
   assert.equal(DEFAULT_SETTINGS.expandedScale, 1);
   assert.equal(normalizeSettings({ collapsedScale: 0.96, expandedScale: 1.05, islandCornerRadius: 16 }).expandedScale, 1.05);
@@ -209,7 +209,7 @@ test("first launch uses the maintainer's layout, while saved settings missing a 
 
 test("first launch takes the maintainer's settings of 0.3.5-beta.5; saved settings without a field keep the earlier default", () => {
   const changed = {
-    topFilletRadius: [8, 8], islandCornerRadius: [32, 30], maxPanelHeight: [360, 490], panelWidth: [800, 560],
+    topFilletRadius: [8, 8], islandCornerRadius: [24, 30], maxPanelHeight: [360, 490], panelWidth: [800, 560],
     pulseBrightness: [160, 100], islandBackgroundColor: ["#030303", "#000000"], collapsedDark: [false, false],
     agentAlertSeconds: [3, 5], agentRemindSeconds: [0, 60], carryOverIncompleteTodos: [false, true],
     autoTuck: [false, false], autoTuckSeconds: [120, 30], messageNotice: ["panel", "line"],
