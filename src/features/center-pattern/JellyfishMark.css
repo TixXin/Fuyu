@@ -2,8 +2,8 @@
   --center-jelly-fill: var(--center-jelly-idle, #f6e3d3);
   --center-jelly-ink: var(--center-jelly-eye-color, #1d1b22);
   display: block;
-  height: 100%;
-  aspect-ratio: 58 / 43;
+  height: var(--center-pattern-height, 22px);
+  width: calc(var(--center-pattern-height, 22px) * 58 / 43);
 }
 .center-jelly[data-mood="running"] { --center-jelly-fill: var(--center-jelly-running, #6db6f4); }
 .center-jelly[data-mood="waiting"] { --center-jelly-fill: var(--center-jelly-waiting, #ffcd3c); }

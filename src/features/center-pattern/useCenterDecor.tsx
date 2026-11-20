@@ -1,23 +1,21 @@
 import { useMemo, type ComponentProps } from "react";
-import { isCollapsedItemOffBar } from "../../lib/settings/collapsedItems";
-import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { usePageHidden } from "../../lib/usePageHidden";
 import type { IslandDecor } from "../plugin-kernel/islandDecor";
 import { defineSlot, type IslandCollapsedCenterMeta, type SlotWidth } from "../plugin-kernel/slots";
 import { SlotView } from "../plugin-kernel/SlotView";
 import { useSlotEntries } from "../plugin-kernel/useSlotEntries";
 import { CenterPattern } from "./CenterPattern";
-import { AGENT_ICON_PET_HEIGHT, CollapsedCenter, MARK_HEIGHT, MARK_WIDTH, agentIconMarkExtraWidth, centerHeight } from "./CollapsedCenter";
+import { AGENT_ICON_PET_HEIGHT, CollapsedCenter, agentIconMarkExtraWidth, centerHeight } from "./CollapsedCenter";
 import { centerPatternChoice, centerPatternSize, type AgentActivity } from "./centerSettings";
 import { PetSprite } from "./PetSprite";
 import { usePetMood } from "./usePetMood";
 import { usePetSheet } from "./usePetSheet";
+import { useMarkLightShown } from "./useStatusLightDecor";
 
 type CenterContext = ComponentProps<typeof CollapsedCenter> & { enabled: boolean };
 
 const centerSlot = defineSlot<CenterContext, IslandCollapsedCenterMeta<CenterContext>>("island.collapsed-center/v1");
 
-const MARK_LIGHT_EXTRA_WIDTH = MARK_WIDTH - 9;
 const NO_SETTINGS: Readonly<Record<string, unknown>> = {};
 
 type CenterDecorOptions = {
@@ -33,9 +31,8 @@ function slotWidth<Context>(width: SlotWidth<Context> | undefined, context: Cont
 }
 
 export function useCenterDecor({ paused, agents, markLight, enabled = false, settings = NO_SETTINGS }: CenterDecorOptions): IslandDecor {
-  const { placements } = useCollapsedPlacements();
-  const lightShown = markLight && !isCollapsedItemOffBar(placements, "status-light");
-  const mood = usePetMood(agents, enabled || lightShown);
+  const lightShown = useMarkLightShown(markLight);
+  const mood = usePetMood(agents, enabled);
   const choice = useMemo(() => centerPatternChoice(settings), [settings]);
   const size = centerPatternSize(settings);
   const sheet = usePetSheet(enabled ? choice.petId : null, settings);
@@ -59,10 +56,6 @@ export function useCenterDecor({ paused, agents, markLight, enabled = false, set
         decor.agentIcon = <CenterPattern pattern="mark" mood={mood} paused={still} height={centerHeight("mark", size)} />;
         decor.agentIconWidth = agentIconMarkExtraWidth(size);
       }
-    }
-    if (lightShown) {
-      decor.sideWidth = MARK_LIGHT_EXTRA_WIDTH;
-      decor.statusLight = <CenterPattern pattern="mark" mood={mood} paused={still} height={MARK_HEIGHT} />;
     }
     return decor;
   }, [centerEntry, centerContext, enabled, choice, size, sheet, mood, still, lightShown]);

@@ -76,7 +76,10 @@ const { PetSprite } = await import("../../src/features/center-pattern/PetSprite"
 const { ISLAND_CURSOR_MOVED_EVENT } = await import("../../src/lib/island-cursor/api");
 const { CENTER_PATTERNS } = await import("../../src/features/center-pattern/patterns");
 const { useCenterDecor } = await import("../../src/features/center-pattern/useCenterDecor");
+const { useStatusLightDecor } = await import("../../src/features/center-pattern/useStatusLightDecor");
 await import("../../src/features/center-pattern/plugin/island");
+await import("../../src/features/center-pattern/plugin/runners");
+const { defineSlot } = await import("../../src/features/plugin-kernel/slots");
 const { BUILTIN_PLUGINS_CHANGED } = await import("../../src/features/plugin-kernel/api");
 const { useBuiltinConfig, useBuiltinEnabled } = await import("../../src/features/plugin-kernel/useBuiltinPlugins");
 const { I18nProvider } = await import("../../src/i18n");
@@ -90,7 +93,9 @@ const root = createRoot(fixture);
 function Slot({ agents = [], paused = false, markLight = false }: { agents?: AgentActivity[]; paused?: boolean; markLight?: boolean }) {
   const enabled = useBuiltinEnabled(OWNER);
   const config = useBuiltinConfig(OWNER);
-  const slots = useCenterDecor({ paused, agents, markLight, enabled, settings: config });
+  const center = useCenterDecor({ paused, agents, markLight, enabled, settings: config });
+  const light = useStatusLightDecor({ paused, agents, markLight });
+  const slots = { ...center, ...light };
   return <div className="cp-island cp-slot">
     {slots.statusLight ? <span className="cp-light">{slots.statusLight}</span> : null}
     {slots.center ? <span className="island__center-slot">{slots.center}</span> : null}
@@ -228,6 +233,12 @@ async function runChecks() {
   await render(<Slot key="light-and-center" markLight />);
   expect(fixture.querySelector(".cp-slot .island__center-slot .center-jelly") !== null && !fixture.querySelector(".cp-agent-icon"),
     "状态灯已是水母时，标题前不再放第二只");
+  const runners = defineSlot<object>("island.runner/v1");
+  runners.registry.setDisabledOwners(["center-pattern"]);
+  const runnerIds = runners.items().map((item) => item.id);
+  runners.registry.setDisabledOwners([]);
+  expect(runnerIds.includes("status-light.runner") && !runnerIds.includes("center-pattern.runner"),
+    "中心图案插件关着时，水母状态灯的 runner 还在（不归中心图案插件）");
 
   configCalls.length = 0;
   await syncSwitch(true, {});
