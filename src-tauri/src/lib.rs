@@ -45,6 +45,7 @@ mod ssh_tunnel;
 mod sync;
 mod system;
 mod system_levels;
+mod system_widgets;
 mod theme_market;
 #[cfg_attr(not(windows), path = "taskbar_host/unsupported.rs")]
 mod taskbar_host;
@@ -305,6 +306,8 @@ pub fn run() {
             tray_menu;
             tray_visibility;
             taskbar_host;
+            system_levels;
+            system_widgets;
             wallpaper
         ))
         .build(context)

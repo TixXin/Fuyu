@@ -257,6 +257,9 @@ export type ErrorCode =
   | "notificationVerify.badId"
   | "notificationVerify.unisolated"
   | "notificationVerify.start"
+  | "quickLaunch.target"
+  | "quickLaunch.failed"
+  | "systemLevels.volume"
   | "messenger.notInteractive"
   | "messenger.foreground"
   | "remoteHosts.save"
@@ -637,6 +640,9 @@ export const zhCN: ErrorsText = {
     "notificationVerify.badId": "通知验收必须提供独立的 32 位十六进制运行标识。",
     "notificationVerify.unisolated": "通知验收未隔离应用数据目录。",
     "notificationVerify.start": "无法启动通知验收记录。",
+    "quickLaunch.target": "不认识这个快捷启动项。",
+    "quickLaunch.failed": "没能打开这个程序。",
+    "systemLevels.volume": "没能调整系统音量。",
     "messenger.notInteractive": ({ name }) => `${name}尚未恢复可交互的主窗口，请从系统托盘打开。`,
     "messenger.foreground": ({ name }) => `已找到${name}窗口，但未能切换到前台，请点击任务栏或托盘中的${name}。`,
     "remoteHosts.save": "没能保存远程电脑设置。",
@@ -1014,6 +1020,9 @@ export const en: ErrorsText = {
     "notificationVerify.badId": "Notification verification requires an isolated 32-digit hex run ID.",
     "notificationVerify.unisolated": "Notification verification did not isolate the app data folder.",
     "notificationVerify.start": "Could not start recording notification verification.",
+    "quickLaunch.target": "Unknown quick launch item.",
+    "quickLaunch.failed": "Could not open the program.",
+    "systemLevels.volume": "Could not change the system volume.",
     "messenger.notInteractive": ({ name }) => `${name} has not restored an interactive main window yet; open it from the system tray.`,
     "messenger.foreground": ({ name }) => `Found the ${name} window, but could not bring it to the front; click ${name} in the taskbar or tray.`,
     "remoteHosts.save": "Could not save the remote computers.",

@@ -2,7 +2,7 @@ import { en as dailyEn, zhCN as dailyZh, type DailyWidgetsText } from "./dailyWi
 
 export type IslandWidgetsText = {
   sizes: { bar: string; s: string; m: string; l: string; w: string };
-  groups: { todos: string; calendar: string; music: string; agents: string; usage: string; clipboard: string; shelf: string; timer: string; daily: string; messages: string; screenshot: string; translation: string };
+  groups: { todos: string; calendar: string; music: string; agents: string; usage: string; clipboard: string; shelf: string; timer: string; daily: string; messages: string; screenshot: string; translation: string; system: string };
   widgets: {
     todos: string;
     nextMeeting: string;
@@ -18,6 +18,11 @@ export type IslandWidgetsText = {
     unread: string;
     screenshot: string;
     translate: string;
+    systemStatus: string;
+    battery: string;
+    network: string;
+    launcher: string;
+    levels: string;
   };
   daily: DailyWidgetsText;
   panel: {
@@ -74,12 +79,22 @@ export type IslandWidgetsText = {
     translatePlaceholder: string;
     translating: string;
     copyResult: string;
+    cpu: string;
+    memory: string;
+    charging: string;
+    charged: string;
+    onBattery: string;
+    noBattery: string;
+    quickTargets: { files: string; terminal: string; calculator: string; settings: string };
+    volume: string;
+    brightness: string;
+    noBrightness: string;
   };
 };
 
 export const zhCN: IslandWidgetsText = {
   sizes: { bar: "条", s: "小", m: "中", l: "大", w: "宽" },
-  groups: { todos: "待办", calendar: "日历", music: "音乐", agents: "AI Agent", usage: "用量", clipboard: "剪贴板", shelf: "文件中转", timer: "计时器", daily: "日常", messages: "消息", screenshot: "截图", translation: "翻译" },
+  groups: { todos: "待办", calendar: "日历", music: "音乐", agents: "AI Agent", usage: "用量", clipboard: "剪贴板", shelf: "文件中转", timer: "计时器", daily: "日常", messages: "消息", screenshot: "截图", translation: "翻译", system: "系统" },
   widgets: {
     todos: "今天的待办",
     nextMeeting: "下一个会议",
@@ -95,6 +110,11 @@ export const zhCN: IslandWidgetsText = {
     unread: "未读消息",
     screenshot: "最近截图",
     translate: "翻译",
+    systemStatus: "系统状态",
+    battery: "电池",
+    network: "网速",
+    launcher: "快捷启动",
+    levels: "音量亮度",
   },
   daily: dailyZh,
   panel: {
@@ -151,12 +171,22 @@ export const zhCN: IslandWidgetsText = {
     translatePlaceholder: "输入文字，回车翻译",
     translating: "翻译中…",
     copyResult: "复制译文",
+    cpu: "CPU",
+    memory: "内存",
+    charging: "充电中",
+    charged: "已充满",
+    onBattery: "使用电池",
+    noBattery: "这台电脑没有电池",
+    quickTargets: { files: "文件", terminal: "终端", calculator: "计算器", settings: "系统设置" },
+    volume: "音量",
+    brightness: "亮度",
+    noBrightness: "这块屏幕读不到亮度",
   },
 };
 
 export const en: IslandWidgetsText = {
   sizes: { bar: "Bar", s: "S", m: "M", l: "L", w: "Wide" },
-  groups: { todos: "Todos", calendar: "Calendar", music: "Music", agents: "AI Agent", usage: "Usage", clipboard: "Clipboard", shelf: "File shelf", timer: "Timer", daily: "Daily", messages: "Messages", screenshot: "Screenshot", translation: "Translation" },
+  groups: { todos: "Todos", calendar: "Calendar", music: "Music", agents: "AI Agent", usage: "Usage", clipboard: "Clipboard", shelf: "File shelf", timer: "Timer", daily: "Daily", messages: "Messages", screenshot: "Screenshot", translation: "Translation", system: "System" },
   widgets: {
     todos: "Today's todos",
     nextMeeting: "Next meeting",
@@ -172,6 +202,11 @@ export const en: IslandWidgetsText = {
     unread: "Unread",
     screenshot: "Latest screenshot",
     translate: "Translate",
+    systemStatus: "System",
+    battery: "Battery",
+    network: "Network",
+    launcher: "Quick launch",
+    levels: "Volume & brightness",
   },
   daily: dailyEn,
   panel: {
@@ -228,5 +263,15 @@ export const en: IslandWidgetsText = {
     translatePlaceholder: "Type and press Enter",
     translating: "Translating…",
     copyResult: "Copy the translation",
+    cpu: "CPU",
+    memory: "Memory",
+    charging: "Charging",
+    charged: "Fully charged",
+    onBattery: "On battery",
+    noBattery: "No battery",
+    quickTargets: { files: "Files", terminal: "Terminal", calculator: "Calculator", settings: "System settings" },
+    volume: "Volume",
+    brightness: "Brightness",
+    noBrightness: "Brightness isn't readable on this screen",
   },
 };
