@@ -61,5 +61,5 @@ PNG 用无头 Chrome 从 SVG 导出（本机没有 rsvg / inkscape）：
 
 - ~~**应用图标**~~：已换（C157）。`src-tauri/icons/` 的 PNG 和 MSIX 方块图从母版缩出，32 及以下（`32x32`、`Square30x30Logo`、`Square44x44Logo`、ico 的 16/24/32 层）用小尺寸版；`icon.icns` 用 macOS 版经 `iconutil` 生成；VS Code 扩展图标同步换了。`mark.svg` 跟岛上那一项一起换了
 - ~~**托盘 / 菜单栏**~~：已换（C158）。Mac 菜单栏的模板图由 `src-tauri/src/tray_mark.rs` 按 `menubar-template.svg` 的几何（头的曲线、四个触手圆、两个眼睛椭圆）逐像素画，改造型要两边一起改；托盘卡片头部的 `FuyuMark` 用同一条路径。Windows 托盘直接用 `icon.ico`
-- ~~**岛上**~~：已换（C159）。状态灯样式和中心图案的取值仍是 `mark`（老设置不用迁移），画法在 `src/features/jellyfish/JellyfishMark.tsx` / `.css`；设置里的选项名、Agent 页的样式预览、文案和搜索索引一起改了；`src-tauri/icons/mark.svg` 换成了水母图标
+- ~~**岛上**~~：已换（C159）。状态灯样式和中心图案的取值仍是 `mark`（老设置不用迁移），画法在 `src/components/jellyfish/JellyfishMark.tsx` / `.css`；设置里的选项名、Agent 页的样式预览、文案和搜索索引一起改了；`src-tauri/icons/mark.svg` 换成了水母图标
 - ~~**对外**~~：已换。设置 → 关于的头图用 `app-icon.svg`（`AboutHero.tsx` 直接引用母版），页脚的「Logo 征集中」链接去掉了；`scripts/readme/assets.mjs` 生成的 README 小岛左边换成空闲色的水母，展开时写「开源 · 屏幕顶上的效率小岛」（英文版「Free · Your island up top」）；各语言 README 去掉了征集占位和「画一个 Logo」一条，顶图说明跟着改。官网 fuyu.ing 的征集页不在本仓库

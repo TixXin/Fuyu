@@ -3,10 +3,10 @@ import { isCollapsedItemOffBar } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { usePageHidden } from "../../lib/usePageHidden";
 import type { IslandDecor } from "../plugin-kernel/islandDecor";
-import type { AgentActivity } from "../center-pattern/centerSettings";
-import { MARK_HEIGHT, MARK_WIDTH } from "../center-pattern/CollapsedCenter";
-import { usePetMood } from "../center-pattern/usePetMood";
-import { JellyfishMark } from "./JellyfishMark";
+import type { AgentActivity } from "./centerSettings";
+import { MARK_HEIGHT, MARK_WIDTH } from "./CollapsedCenter";
+import { usePetMood } from "./usePetMood";
+import { JellyfishMark } from "../../components/jellyfish/JellyfishMark";
 
 const MARK_LIGHT_EXTRA_WIDTH = MARK_WIDTH - 9;
 const NONE: IslandDecor = {};

@@ -28,7 +28,6 @@ src/
 │   ├── file-shelf/          # 文件中转：拖到岛上的文件（只存路径）、拖出、复制、打开
 │   ├── screenshot/          # 截图（C41）：选区的纯计算（selection.ts，物理像素和 CSS 像素的换算）、放大镜、api.ts
 │   ├── center-pattern/      # 第 3 版内置插件 center-pattern（中心图案）：SVG 动画（眼睛跟随光标）、Codex Pets 宠物 sprite、宠物随 Agent 状态的 mood（经 agents/v1 读），配置在 plugins.yml，设置在 外观 的「中心图案」分组
-│   ├── jellyfish/           # 不是插件：浮屿水母（JellyfishMark，标志的 SVG 和各状态动作）和收起条左边常驻的水母状态灯（useStatusLightDecor，runner 拥有者 builtin，中心图案插件关着也在）；中心图案选「水母」时也用这里的 JellyfishMark
 │   ├── island-bridge/       # 不是插件：Rust 转给岛的请求（local-api-request）的桥，方法分发、待办经 todos/v1，本机接口弹的消息经 island-notices/v1（notice.ts，先查来源有没有被静音），开发版另有岛屿实验台的动作；runner 拥有者 builtin，本机接口和岛屿实验台共用，关掉本机接口不撤它
 │   ├── local-api/           # 第 3 版内置插件 local-api（本机接口）：设置是侧栏「扩展」组里单独的一页（页名 generalApi；LocalApiSettings.tsx 组装各组：地址、复制令牌、重新生成令牌，令牌只由 Rust 复制；LocalApiAccess.tsx 是「允许修改」「允许弹消息」和现在开放了哪些能力；LocalApiSenders.tsx 和 senders.ts 是弹过消息的来源和各自的静音开关；LocalApiExample.tsx 和 example.ts 是可复制的示例）。岛上接 Rust 转来的请求（local-api-request）的桥不在这里，在 island-bridge/
 │   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主默认启动，设 FUYU_PLUGINS_V3=0 关掉）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），宿主关着时内置功能也经它们注册和渲染
@@ -44,7 +43,7 @@ src/
 │   ├── voice-input/         # 第 3 版内置插件 voice-input：收起条上的录音和识别结果（存待办、追加笔记、复制）、设置页（下载语音模型、快捷键）
 │   ├── sync/                # 跨设备同步的设置：后端（文件夹、WebDAV）、同步哪些类别、端到端加密、设备列表和状态；页面入口是 windows/settings/SyncSettingsPage.tsx
 │   └── updater/             # 自动更新
-├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览；window-crash/ 是每个窗口根上的错误边界和兜底界面）
+├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览；window-crash/ 是每个窗口根上的错误边界和兜底界面；jellyfish/ 是浮屿水母的 SVG 和各状态动作，收起条的水母状态灯和中心图案的「水母」共用）
 ├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，日历、歌词、Agent 会话列表和提醒的设置字段与默认值在 calendarSettings.ts、lyricsSettings.ts、agentSettings.ts，待办项目列表在 lib/todo-projects/，新设置加在这几个文件里，settings.ts 只做入口；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key，并经 registerBackupSwitches 桥接内置插件开关）、升级前的备份；plugin-roster/ 是已装市场插件的名单（fuyu-market-plugins，进备份和同步）和它与本机状态的对账；system-permissions/ 是系统权限的查询；crash-report/ 是窗口出错时的上报（写数据目录的 frontend-errors.log）和「先重载一次还是显示兜底界面」的判断
 ├── utils/                   # 无副作用的纯函数（文本测量、颜色、日期、数值）
 ├── i18n/                    # 类型化多语言字典与 Provider；sections/ 按分区放文案（settings/ 再按设置页分），types.ts 与 locales/ 只做汇总

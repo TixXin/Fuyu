@@ -3,7 +3,7 @@ import { defineSlot } from "../../plugin-kernel/slots";
 import { useBuiltinConfig, useBuiltinEnabled } from "../../plugin-kernel/useBuiltinPlugins";
 import { useAgentActivity } from "../useAgentActivity";
 import { useCenterDecor } from "../useCenterDecor";
-import { useStatusLightDecor } from "../../jellyfish/useStatusLightDecor";
+import { useStatusLightDecor } from "../useStatusLightDecor";
 import { OWNER } from "./owner.ts";
 
 type RunnerProps = {

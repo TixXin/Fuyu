@@ -1,9 +1,10 @@
 import { useId, type CSSProperties } from "react";
-import type { PetMood } from "../center-pattern/patterns";
 import "./JellyfishMark.css";
 
 export const JELLY_VIEW_WIDTH = 58;
 export const JELLY_VIEW_HEIGHT = 43;
+export type JellyMood = "idle" | "running" | "waiting" | "failed" | "done";
+
 const VIEW_BOX = `3 4 ${JELLY_VIEW_WIDTH} ${JELLY_VIEW_HEIGHT}`;
 const BELL = "M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z";
 const LOBES = [18, 27.3, 36.7, 46];
@@ -30,7 +31,7 @@ function Eyes() {
   );
 }
 
-function Face({ mood }: { mood: PetMood }) {
+function Face({ mood }: { mood: JellyMood }) {
   if (mood === "done") {
     return (
       <g className="center-jelly-lids">
@@ -75,7 +76,7 @@ function star(cx: number, cy: number, r: number) {
   return `M${cx} ${cy - r}Q${cx} ${cy} ${cx + r} ${cy}Q${cx} ${cy} ${cx} ${cy + r}Q${cx} ${cy} ${cx - r} ${cy}Q${cx} ${cy} ${cx} ${cy - r}Z`;
 }
 
-function Effect({ mood }: { mood: PetMood }) {
+function Effect({ mood }: { mood: JellyMood }) {
   if (mood === "waiting") return <path className="center-jelly-fx center-jelly-tick" d="M55 6l1.4-5M59 9.5l4.2-3.4M61 15l5-1" />;
   if (mood === "failed") {
     return (
@@ -96,7 +97,7 @@ function Effect({ mood }: { mood: PetMood }) {
   return null;
 }
 
-export function JellyfishMark({ mood, paused = false, height }: { mood: PetMood; paused?: boolean; height?: number }) {
+export function JellyfishMark({ mood, paused = false, height }: { mood: JellyMood; paused?: boolean; height?: number }) {
   const shade = `center-jelly-shade-${useId().replace(/:/g, "")}`;
   const shadeFill = `url(#${shade})`;
   return (
