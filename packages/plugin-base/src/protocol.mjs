@@ -45,6 +45,7 @@ export const SLOTS = {
   "island.header/v1": { kind: "list", perPlugin: 1, meta: ["enabled"] },
   "island.collapsed/v1": { kind: "list", perPlugin: 2, meta: ["group", "width", "hideable", "shown", "opens", "label"] },
   "island.collapsed-center/v1": { kind: "single", perPlugin: 1, meta: ["width", "shown"] },
+  "island.widget/v1": { kind: "list", perPlugin: 8, meta: ["sizes", "label", "group"], builtinOnly: true },
   "island.alert/v1": { kind: "list", perPlugin: 1, meta: ["trailing", "popup"] },
   "island.notice/v1": { kind: "list", perPlugin: 1, meta: ["active", "actions"] },
   "island.line/v1": { kind: "list", perPlugin: 2, meta: [] },

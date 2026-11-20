@@ -61,7 +61,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
       <IslandBarPreview settings={settings} names={names} placements={placements} centers={centers} openItem={openItem} onPick={pick} />
       <CollapsedItemsSection layout={layout} settings={settings} onSettingsChange={onSettingsChange} openItem={openItem} onOpenItem={setOpenItem} />
       <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-      <IslandPagesSection settings={settings} pluginPages={layout.pluginPages} />
+      <IslandPagesSection settings={settings} pluginPages={layout.pluginPages} layout={layout} />
     </div>
   );
 }

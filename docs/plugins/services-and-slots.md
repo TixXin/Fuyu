@@ -67,6 +67,7 @@
 | `island.header/v1` | `island` | `list` | 1 | `enabled` | 悬浮岛展开态顶栏右侧操作按钮 |
 | `island.collapsed/v1` | `island` | `list` | 2 | `group`, `width`, `hideable`, `shown`, `opens`, `label` | 悬浮岛收起条左翼 / 右翼状态项；`label`（字符串或 `{ "zh-CN", en }`）是这一项在右键清单和 外观 →「收起条上的项目」里的名字，不写时用插件名，一个插件有两项时建议写 |
 | `island.collapsed-center/v1` | `island` | `single` | 1 | `width`, `shown` | 悬浮岛收起条正中央图案 / 宠物 |
+| `island.widget/v1` | `island` | `list` | 8 | `sizes`, `label`, `group` | 自定义面板里的组件（C156.3）：`sizes` 是 `"bar"`、`"s"`（1×1）、`"m"`（2×1）、`"l"`（2×2）、`"w"`（4×1）的子集，格子 120px、间距 8px，组件拿到 `{ size, width, height }`；`"bar"` 表示同 id 的 `island.collapsed/v1` 项就是它在收起条上的样子，没有组件的收起条项目宿主当成只有 `"bar"` 的组件。**暂时只收内置插件**，别的插件登记会以 `forbidden` 失败，C156.4 开放 |
 | `island.alert/v1` | `island` | `list` | 1 | `trailing`, `popup` | 刘海双翼提醒与收起态临时提示（音量、设备、额度等） |
 | `island.notice/v1` | `island` | `list` | 1 | `active`, `actions` | 收起态通知横条（计时到点、截图完成等） |
 | `island.line/v1` | `island` | `list` | 2 | 无 | 悬浮岛下方附加浮条（同步歌词行、选区翻译条等） |

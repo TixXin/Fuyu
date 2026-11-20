@@ -183,6 +183,12 @@ declare module "cordis" {
        * at most 520px wide; past that the island's own text gives way first, then the item is faded out at its
        * right edge. Do not stretch the item with `width: 100%` or `flex: 1`: it is measured at its max-content
        * width.
+       *
+       * `island.widget/v1` is a block for the panels users build on the island. An item lists the `sizes` it can
+       * draw (`"s"` 1×1, `"m"` 2×1, `"l"` 2×2, `"w"` 4×1 cells of 120px with 8px gaps, and `"bar"` when an
+       * `island.collapsed/v1` item with the same id is its collapsed bar look) and gets `{ size, width, height }`
+       * in pixels. Every `island.collapsed/v1` item without a widget counts as a widget that only has `"bar"`.
+       * For now only Fuyu's built-in plugins can add widgets; anything else fails with `forbidden`.
        */
       add(name: SlotName, item: { id: string; order?: number; component: unknown; [meta: string]: unknown }): () => Promise<void>;
     };

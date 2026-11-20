@@ -15,6 +15,7 @@ import { en as common } from "../sections/common.ts";
 import { en as errors } from "../sections/errors.ts";
 import { en as fileShelf } from "../sections/fileShelf.ts";
 import { en as island } from "../sections/island.ts";
+import { en as islandWidgets } from "../sections/islandWidgets.ts";
 import { en as mail } from "../sections/mail.ts";
 import { en as messages } from "../sections/messages.ts";
 import { en as music } from "../sections/music.ts";
@@ -54,6 +55,7 @@ export const coreEn: Translations = {
   mail,
   translator,
   island,
+  islandWidgets,
   agent,
   agentNotice,
   agentNoticeStack,

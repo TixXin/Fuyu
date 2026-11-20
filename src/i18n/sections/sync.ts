@@ -261,7 +261,7 @@ export const zhCN: SyncText = {
         description: "默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。",
       },
       collapsedItems: {
-        title: "收起条项目与展开页面的顺序",
+        title: "收起条项目、展开页面的顺序和自定义面板",
         description: "默认关闭：收起条和展开页面可能包含仅在某一台电脑安装的第三方插件或平台专属项。",
       },
       updateChannel: {
@@ -481,7 +481,7 @@ export const en: SyncText = {
         description: "Off by default: app passwords stay in each computer's keychain, so accounts still need sign-in there.",
       },
       collapsedItems: {
-        title: "Collapsed bar items and expanded page order",
+        title: "Collapsed bar items, page order and custom panels",
         description: "Off by default: the bar and the pages can include plugins or items only available on one computer.",
       },
       updateChannel: {
