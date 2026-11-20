@@ -58,6 +58,7 @@
 | 插件 | 主色 | lucide 图标 |
 |---|---|---|
 | `alarm` | `#f08a24` | `alarm-clock` |
+| `calculator` | `#d4569b` | `calculator` |
 | `countdown` | `#6f7dfa` | `calendar-clock` |
 | `ecdict` | `#3b94f5` | `book-a` |
 | `github-issues` | `#9575f5` | `circle-dot` |

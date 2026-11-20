@@ -13,7 +13,8 @@ import { dockIslandTo, type IslandDockEdge } from "../../../lib/settings/api";
 import { PositionDiagram } from "./PositionDiagram";
 import { useIslandDockEdge } from "./useIslandDockEdge";
 import { DEFAULT_SETTINGS } from "../../../lib/settings/settings";
-import type { IslandMonitor, IslandSettings, MenuBarPlacement } from "../../../lib/settings/types";
+import type { IslandMonitor, IslandSettings, MenuBarPlacement, SideHeightMode } from "../../../lib/settings/types";
+import { MAX_SIDE_HEIGHT, MIN_SIDE_HEIGHT } from "../../../lib/settings/settingsLimits";
 
 export function PositionSettingsSection({
   settings,
@@ -34,6 +35,7 @@ export function PositionSettingsSection({
     else void dockIslandTo(edge).catch((error) => console.error("Failed to dock the island", error));
   };
   const onSide = dockEdge === "left" || dockEdge === "right";
+  const sideHeightOptions = (["panel", "content", "custom"] as const).map((value) => ({ value, label: t.settings.position.sideHeightOptions[value] }));
   const menuBarOptions = (["notch", "below"] as const).map((value) => ({ value, label: t.settings.position.menuBarOptions[value] }));
 
   return (
@@ -52,6 +54,32 @@ export function PositionSettingsSection({
           />
         }
       />
+      {onSide && (
+        <SettingsRow
+          title={t.settings.position.sideHeight}
+          control={
+            <SettingsChoice<SideHeightMode>
+              value={settings.sideHeightMode}
+              options={sideHeightOptions}
+              ariaLabel={t.settings.position.sideHeight}
+              onChange={(sideHeightMode) => onSettingsChange({ ...settings, sideHeightMode })}
+            />
+          }
+        />
+      )}
+      {onSide && settings.sideHeightMode === "custom" && (
+        <SettingsSliderRow
+          title={t.settings.position.sideHeightCustom}
+          value={settings.sideHeight}
+          min={MIN_SIDE_HEIGHT}
+          max={MAX_SIDE_HEIGHT}
+          step={10}
+          format={(value) => `${Math.round(value)} px`}
+          defaultValue={DEFAULT_SETTINGS.sideHeight}
+          resetLabel={t.settings.layout.resetToDefault}
+          onChange={(sideHeight) => onSettingsChange({ ...settings, sideHeight })}
+        />
+      )}
       {onSide && (
         <SettingsToggleRow
           title={t.settings.position.sideMusicCover}

@@ -1,0 +1,90 @@
+{
+  "name": "@fuyu/calculator",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Expressions, exchange rates, units, dates, number bases, income tax, mortgages, kinship terms and BMI.",
+  "keywords": [
+    "计算器",
+    "汇率",
+    "单位换算",
+    "个税",
+    "房贷",
+    "亲戚称呼",
+    "大写数字",
+    "进制转换",
+    "calculator",
+    "currency",
+    "unit converter",
+    "mortgage",
+    "BMI"
+  ],
+  "author": "TixXin",
+  "license": "MIT",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev --official",
+    "build": "fuyu-plugin build --official",
+    "check": "fuyu-plugin check --official --market",
+    "package": "fuyu-plugin pack --official",
+    "typecheck": "tsc",
+    "lint": "eslint ."
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "全能计算器",
+      "en": "Calculator"
+    },
+    "description": {
+      "zh-CN": "岛上的全能计算器：算式、汇率、长度面积体积重量等单位换算、日期、进制、大写数字、个税、房贷、亲戚称呼和 BMI。",
+      "en": "Expressions, exchange rates, units, dates, number bases, income tax, mortgages, kinship terms and BMI."
+    },
+    "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：左边选分类，右边算",
+          "en": "Island page: pick a category on the left, work it out on the right"
+        }
+      }
+    ],
+    "categories": [
+      "utilities",
+      "productivity"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
+    },
+    "inject": {
+      "optional": [
+        "island"
+      ]
+    },
+    "slots": [
+      "island.page/v1",
+      "settings.section/v1"
+    ],
+    "commands": [
+      {
+        "id": "open",
+        "title": {
+          "zh-CN": "打开计算器",
+          "en": "Open Calculator"
+        }
+      }
+    ],
+    "network": [
+      "open.er-api.com"
+    ]
+  }
+}

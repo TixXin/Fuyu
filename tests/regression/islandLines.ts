@@ -42,6 +42,7 @@ type FixtureLines = {
   deviceUse?: DeviceUse;
   media?: MediaState | null;
   sideCover?: boolean;
+  sideLyric?: boolean;
   status?: { state: string; label: string };
   agents?: number | null;
   messages?: FixtureMessages | null;
@@ -51,7 +52,7 @@ type FixtureLines = {
 const NO_DEVICES: DeviceUse = { camera: [], microphone: [] };
 const IDLE = { state: "idle", label: "" };
 
-export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, status = IDLE, agents = null, messages = null, shelfCount = null }: FixtureLines) {
+export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, sideLyric = false, status = IDLE, agents = null, messages = null, shelfCount = null }: FixtureLines) {
   const t = useTranslation();
   useFixtureMessages(messages);
   quotaAlertState.useProvide(quotaAlert);
@@ -75,11 +76,11 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
   translationPeekState.useProvide(translationPeek);
   useIslandContributions("translation", "fixture.peek", translationPeek === null ? [] : [{ kind: "line", item: "translation.peek", priority: 70, always: true, bare: true, drop: true, action: "translation.open-peek", label: translationPeek }]);
   const lyric = agentSession ? null : lyricLine;
-  mediaIsland.useProvide(useMemo(() => ({ media: { mediaState: media ?? DEFAULT_MEDIA_STATE } as MediaController, lyricLine: lyric, sideCover }), [media, lyric, sideCover]));
+  mediaIsland.useProvide(useMemo(() => ({ media: { mediaState: media ?? DEFAULT_MEDIA_STATE } as MediaController, lyricLine: lyric, sideCover, sideLyric }), [media, lyric, sideCover, sideLyric]));
   const mediaList: IslandContribution[] = [];
   const line = lyricLineContribution(lyric, true, t);
   if (line) mediaList.push(line);
-  if (media && (media.available || media.audioActive)) mediaList.push({ kind: "side", item: "music", height: sideCover && media.thumbnail ? 40 : 28 });
+  if (media && (media.available || media.audioActive)) mediaList.push({ kind: "side", item: "music", height: sideCover && media.thumbnail ? 40 : 28, grow: sideLyric });
   if (media?.audioActive) mediaList.push({ kind: "hint", key: "media.audible" });
   if (media?.playbackStatus === "playing") mediaList.push({ kind: "hint", key: "media.playing" });
   useIslandContributions("builtin", "fixture.media", mediaList);

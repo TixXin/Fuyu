@@ -21,6 +21,18 @@ export function qqMessage(now, title = "张三", body = "下午三点的会改�
   };
 }
 
+export const MARKDOWN_MESSAGE = [
+  "**WebDev 前 20 有变动**",
+  "",
+  "| 排名 | 模型 | 分数 | 变化 |",
+  "|---:|---|---:|:---:|",
+  ...Array.from({ length: 14 }, (_, index) => `| ${index + 1} | Model-${String.fromCharCode(65 + index)}-Reasoning-Preview | ${1500 - index * 7} | ${index % 4 === 1 ? "↑1" : "—"} |`),
+  "",
+  "完整榜单：[WebDev Arena](https://example.com/leaderboard/webdev)",
+].join("\n");
+
+export const SYMBOL_CHAT = "周五 *下午* 3 点开会，#2 会议室\n文件 report_final_v2.docx 在 https://example.com/a_b。谢谢";
+
 export function wechatMessage(now, chat = "产品群", contact = "李四", preview = "新版设计稿放在共享盘了，大家看一下") {
   const message = { chat, contact, preview, unread: 3, at: now };
   return {
