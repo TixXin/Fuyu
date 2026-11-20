@@ -66,6 +66,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   accentColor: string;
   maxPanelHeight: number;
   panelWidth: number;
+  pageSizes: Record<string, PanelPageSize>;
   collapsedWidthExtra: number;
   dragGrid: boolean;
   taskTextColor: string;
@@ -165,6 +166,8 @@ export type IslandPreset = {
   createdAt: number;
   isDefault?: boolean;
 };
+
+export type PanelPageSize = { width: number; height: number };
 
 export type LegacyIslandSettings = Partial<IslandSettings> & {
   agentShowClaudeCode?: boolean;

@@ -147,6 +147,12 @@ test("expand trigger, hover delays and max panel height default for older settin
   assert.equal(normalizeSettings({ panelWidth: 100 }).panelWidth, 480);
   assert.equal(normalizeSettings({ panelWidth: 2000 }).panelWidth, 2000, "a wide screen keeps a panel wider than the old 800 cap");
   assert.equal(normalizeSettings({ panelWidth: 1e9 }).panelWidth, 7680);
+  assert.deepEqual(normalizeSettings({}).pageSizes, {}, "settings from before per-page sizes size every page from the defaults");
+  assert.deepEqual(
+    normalizeSettings({ pageSizes: { "panel:fuyu": { width: 1200.4, height: 500 }, todo: { width: 10, height: 1e9 }, bad: { width: "x", height: 300 }, "": { width: 600, height: 400 } } }).pageSizes,
+    { "panel:fuyu": { width: 1200, height: 500 }, todo: { width: 480, height: 4320 } },
+    "each page keeps its own size, clamped; broken entries are dropped",
+  );
   assert.equal(older.minimizeAction, "tray");
   assert.equal(older.tuckedHoverAction, "reveal", "settings saved before the option only slide out, as before");
   assert.equal(normalizeSettings({ tuckedHoverAction: "expand" }).tuckedHoverAction, "expand");

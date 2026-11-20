@@ -59,6 +59,7 @@ import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
 import { isPageShown } from "./features";
 import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
+import { pagePanelSize } from "../../lib/settings/pageSizes";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
@@ -125,7 +126,8 @@ export function IslandApp() {
   const hasOpenPopup = openPopup !== undefined;
   const panelEditing = usePanelEditing() !== null && !hasOpenPopup;
   const fuyuPage = page === FUYU_PAGE_ID && !hasOpenPopup;
-  const panelWidth = fuyuPage ? FUYU_ISLAND_SIZE.width : settings.panelWidth;
+  const pageSize = pagePanelSize(settings.pageSizes, page, page === FUYU_PAGE_ID ? FUYU_ISLAND_SIZE : { width: settings.panelWidth, height: settings.maxPanelHeight });
+  const panelWidth = pageSize.width;
   const editGrow = panelEditing ? editGrowWidth(panelIslandWidth(panelWidth, settings.expandedScale), settings.expandedScale) : 0;
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
@@ -135,12 +137,12 @@ export function IslandApp() {
     openPopup?.wide === true,
   );
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
-  const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
-  const pageIslandHeight = fuyuPage && !popup ? FUYU_ISLAND_SIZE.height : getExpandedIslandHeight({ maxPanelHeight: settings.maxPanelHeight, panel: popups.get(page), popup });
+  const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup, page, pageSize);
+  const pageIslandHeight = fuyuPage && !popup ? pageSize.height : getExpandedIslandHeight({ maxPanelHeight: pageSize.height, panel: popups.get(page), popup });
   const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
   const expandedIslandHeight = Math.min(
     maxExpandedIslandHeight(settings.expandedScale),
-    (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight + editGrowHeight) + notchExpandedExtra(notch, settings.expandedScale, popup),
+    (resizingHeight && !popup ? pageSize.height : pageIslandHeight + editGrowHeight) + notchExpandedExtra(notch, settings.expandedScale, popup),
   );
   const islandNotice = useIslandNotice({ firstHints, v2Upgrade, layer: layerNotice });
   const isDimmed = useIdleDim({

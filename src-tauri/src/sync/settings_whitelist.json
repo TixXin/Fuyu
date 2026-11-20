@@ -29,6 +29,7 @@
         "islandMotion": "sync",
         "maxPanelHeight": "local",
         "panelWidth": "local",
+        "pageSizes": "local",
         "collapsedOverflowMore": "sync",
         "notchWingMax": "local",
         "collapsedWidthExtra": "local",

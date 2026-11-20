@@ -12,6 +12,7 @@ import { ISLAND_MOTIONS } from "../theme/islandMotion.ts";
 import { normalizeGlassSettings } from "./glassSettings.ts";
 import { storedIslandForm } from "./islandFormMigration.ts";
 import { isMacOS } from "../platform.ts";
+import { normalizePageSizes } from "./pageSizes.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
 export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | undefined) {
@@ -73,6 +74,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     panelWidth: typeof settings?.panelWidth === "number" && Number.isFinite(settings.panelWidth)
       ? clamp(Math.round(settings.panelWidth), MIN_PANEL_WIDTH, MAX_PANEL_WIDTH)
       : LEGACY_FALLBACKS.panelWidth,
+    pageSizes: normalizePageSizes(settings?.pageSizes),
     collapsedWidthExtra: typeof settings?.collapsedWidthExtra === "number" && Number.isFinite(settings.collapsedWidthExtra)
       ? clamp(Math.round(settings.collapsedWidthExtra), MIN_COLLAPSED_WIDTH_EXTRA, MAX_COLLAPSED_WIDTH_EXTRA)
       : DEFAULT_SETTINGS.collapsedWidthExtra,
