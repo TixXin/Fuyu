@@ -14,7 +14,7 @@ description: >
 
 # 做一个任务：从认领到关 issue
 
-做完的标准，缺一样都不算：提交在 `origin/main` 上（PR 已合入）；任务文件在 `docs/tasks/0-archive/` 并记了提交；issue 有完成回复并已关闭；本机没测到的进了实测清单。最常丢的是合入之后的回复和关闭，所以提交完、land 完都还没结束。
+做完的标准，缺一样都不算：提交在本地 `main` 上，任务文件在 `docs/tasks/0-archive/` 并记了提交；本机没测到的进了实测清单。开发中不跑测试、检查和构建，也不自己 land，两样都等用户说要推 PR 时才做（根 `AGENTS.md`「验证」「Git 与协作」，用户定）。用户说推了、PR 合入之后，issue 还要有完成回复并关闭：这一步最常丢。
 
 规则本体在 `docs/tasks/README.md`（字段、状态、issue 和 PR 的回复格式、实测清单）和 `docs/architecture/workflow.md`（提交、land、排队、排障）。这里只排顺序和坑，细节去那两份查。
 
@@ -37,11 +37,11 @@ description: >
    - 只提交自己的文件：新文件先 `git add <文件>`，再 `git commit -m "<标题>" -- <文件…>`。
    - 同一个文件里有别人的改动：`pnpm mq:commit-part --list <文件>` 列出每一处，再 `pnpm mq:commit-part -m "<标题>" --take <文件>:<编号,…>` 只带自己的，先加 `--dry-run` 看一眼。不手写 `GIT_INDEX_FILE`，照旧 `HEAD` 搭的提交会把别人刚提交的改动冲回去。
    - 热点文件（`package.json`、`workflow.md` 这类，列表在 workflow.md「没提交的文件」）：改之前 `git status --short -- <文件>` 看有没有别人没提交的改动，改完马上单独提交，混着别人的改动就用上一条。挂着不提交会让本地 `main` 跟不上 `origin/main`。
-6. **按改动范围验证**：跑哪些看根 `AGENTS.md`「验证」的表，小修和纯搬迁也照表跑。
+6. **开发中不验证**：不跑 `pnpm check`、`pnpm test`、回归页、构建、`cargo test`、`mq:try`，汇报里写「没验证」。下面几条只在用户说要推、land 前按根 `AGENTS.md`「验证」的表跑时用：
    - `cargo`、`tauri build` 写成 `pnpm heavy -- <命令>`，用共用的 `src-tauri/target/agents`，不跑 `pnpm tauri dev`（workflow.md「Rust 构建」）；没排队的会被钩子拦下。
    - 构建、`cargo test` 这类长命令放后台跑，前台的工具结束前读不到别的会话发来的消息。
    - `pnpm check` 是一串 `&&`，一步失败后面的都不跑。失败的是别人没提交的文件时不去改它，记下文件和哪一步，再把后面的步骤单独跑完（顺序看 `package.json` 的 `check`，例如 `pnpm run check:colors`、`pnpm test`），汇报里写明哪些失败不是自己造成的。
-   - 改了 Rust 的，报验前先后台跑 `pnpm mq:try --wait`，Windows CI 的 `rust` 过了再报，报验附 run 链接；新加 `host_service`、命令、窗口的尤其要跑。Mac 本地测试和交叉 clippy 查不出 Windows 链接期、运行期的问题，漏到整批 PR 才暴露会卡住所有人（workflow.md「提前看 CI」）。
+   - 这一批改了 Rust 的，land 前先后台跑 `pnpm mq:try --wait`，Windows CI 的 `rust` 过了再 land，PR 正文附 run 链接；新加 `host_service`、命令、窗口的尤其要跑。Mac 本地测试和交叉 clippy 查不出 Windows 链接期、运行期的问题，漏到整批 PR 才暴露会卡住所有人（workflow.md「提前看 CI」）。
    - 本机测不了的（另一个平台、真机、要用户的账号）当场记：`pnpm tasks note <编号> "实测清单（为什么本机测不了）：1) … 2) …"`，随第 7 步的提交带上（README「实测清单」）。
 7. **标完成，进同一个提交**：对着任务文件的「验收」逐条核对过，先定好提交标题，`pnpm tasks done <编号> --commit "<标题>"`，再用一字不差的标题提交；差一个字，land 的检查就过不了。
    - 任务文件是挪进 `0-archive/` 的，新旧两个路径都要带：`git add docs/tasks/0-archive/<分组>/<编号>.md`，然后 `git commit -m "<标题>" -- <功能文件…> docs/tasks/<分组>/<编号>.md docs/tasks/0-archive/<分组>/<编号>.md`。
@@ -49,9 +49,8 @@ description: >
    - 功能已经分几次提交过的（接线、热点文件都要求改完马上提交）：`tasks done` 跟最后一个提交，`--commit "<标题 1>" --commit "<标题 2>"` 把每个都记上。
    - 功能提交之后才能做的（贴真实输出、补验证）：新开一个小提交，标题写清补的是哪个提交。`HEAD` 不是自己那个提交时不 amend，那会改到别的会话的提交；是自己的也先 `git branch -r --contains <提交>`，有输出（`origin/main` 或 `origin/land/…`）就是推过了，也新开提交：别的会话随时会把本地 `main` 整批 land 走，不会先告诉你。`pnpm mq:pending` 查不出来，land 的 PR 没合入前它照样列着。
    - 多行的记录（真实输出、回放数字）在 `tasks done` 之后直接改归档任务文件的 `## 备注`，再 `pnpm check:tasks`；`tasks note` 只写得了一行交接。
-8. **land**（被主 agent 派来的跳过，见最后一节）：PR 正文照 workflow.md「PR 的标题和正文」写进文件，`pnpm mq:land --yes --body <文件>`，然后后台 `pnpm mq:wait`。
+8. **停在这里，等用户说推**：汇报提交号、没验证、本地有几个提交没推。用户说「推一下」「提 PR」之后（被主 agent 派来的不做，见最后一节）：先照第 6 步跑完验证、修好，PR 正文照 workflow.md「PR 的标题和正文」写进文件，`pnpm mq:land --yes --body <文件>`，然后后台 `pnpm mq:wait`。
    - PR 合入才算数；CI 没过、冲突都要回来处理（workflow.md「排障」）。
-   - 手上只有认领、文档这类零碎提交时先攒着，`pnpm mq:pending` 会说到没到该提的时候。
 9. **合入后回复并关 issue**：`gh issue comment <N> --repo TixXin/fuyu --body-file <文件>` 写原因、改了什么、怎么拿到、验证结果和实测清单，引用任务文档（这时在 `docs/tasks/0-archive/<分组>/<编号>.md`），列出提交（短提交号加标题）；再 `gh issue close <N> --repo TixXin/fuyu`。
    - 不在提交说明里写 `Closes #N`，它会在完成回复之前把 issue 关掉。
    - 关完跑 `pnpm progress`，「任务已完成、issue 还开着」里不该再有你的编号。
@@ -65,7 +64,7 @@ description: >
 
 ## 被主 agent 派来时不一样的地方
 
-- 任务编号、`--scope`、怎样算做完、跑哪些验证听简报的；简报没写的照上面做。
+- 任务编号、`--scope`、怎样算做完听简报的；简报没写的照上面做。
 - 不自己 `pnpm mq:land`：整批由主 agent 发起，各自 land 会把别人没验完的提交一起推上去。
-- 第 7 步提交后向主 agent 汇报，第一句写提交号，再写验证结果（改了 Rust 的附 Windows CI 的 run 链接）、实测清单、不是自己造成的检查失败和还没提交的文件，然后停下。这时任务已归档而 issue 还开着，`pnpm progress` 把它列成「还没合入」是对的。
+- 第 7 步提交后向主 agent 汇报，第一句写提交号，再写「没验证」（简报点名要跑的除外）、实测清单、不是自己造成的检查失败和还没提交的文件，然后停下。这时任务已归档而 issue 还开着，`pnpm progress` 把它列成「还没合入」是对的。
 - 第 9 步等主 agent 通知已合入再做。回复和关闭仍是你的事，主 agent 只在收口时补漏。
