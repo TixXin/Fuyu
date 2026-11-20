@@ -5,7 +5,7 @@ use windows::Win32::{
         HiDpi::GetDpiForWindow,
         Shell::{SHAppBarMessage, ABM_GETSTATE, ABS_AUTOHIDE, APPBARDATA},
         WindowsAndMessaging::{
-            FindWindowW, GetWindow, GetWindowLongPtrW, SetWindowLongPtrW, SetWindowPos, GWLP_HWNDPARENT,
+            FindWindowW, GetWindow, HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, GetWindowLongPtrW, SetWindowLongPtrW, SetWindowPos, GWLP_HWNDPARENT,
             GWL_EXSTYLE, GW_OWNER, SWP_ASYNCWINDOWPOS, SWP_NOACTIVATE, SWP_NOOWNERZORDER, SWP_NOZORDER,
             WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
         },
@@ -106,6 +106,12 @@ pub(crate) fn set_extended_style_flags(handle: HWND, tool_window: bool, no_activ
         if next != style {
             let _ = SetWindowLongPtrW(handle, GWL_EXSTYLE, next);
         }
+    }
+}
+
+pub(crate) fn raise(handle: HWND) {
+    unsafe {
+        let _ = SetWindowPos(handle, Some(HWND_TOPMOST), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_ASYNCWINDOWPOS);
     }
 }
 

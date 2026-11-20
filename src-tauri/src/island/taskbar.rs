@@ -5,7 +5,7 @@ use tauri::{AppHandle, Emitter, Manager, Monitor, WebviewWindow};
 
 use super::geometry::apply_stage_geometry;
 use super::screen;
-use super::state::{read_window_state, Edge, IslandPosition, IslandWindowState};
+use super::state::{read_window_state, Edge, IslandMode, IslandPosition, IslandWindowState};
 use crate::taskbar_host::{self, BarEdge, DockState, DockStatus, Rect};
 
 pub(crate) const TASKBAR_CHANGED_EVENT: &str = "island-taskbar-changed";
@@ -113,6 +113,7 @@ pub(super) fn stage_position(
     let island = collapsed_size(state, screen::monitor_scale(monitor));
     sync(window, monitor, island.0);
     let placed = taskbar_host::current(window).and_then(|dock| stage_on_bar(dock, island, stage));
+    taskbar_host::set_raised(window, placed.is_some() && matches!(state.mode, IslandMode::Expanded));
     report(window, IslandTaskbar { docked: true, placed: placed.is_some() });
     placed
 }

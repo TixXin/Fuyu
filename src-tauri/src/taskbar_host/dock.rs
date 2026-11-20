@@ -50,6 +50,7 @@ struct Docked {
     order: u8,
     monitor: Option<Rect>,
     last: Option<DockState>,
+    raised: bool,
 }
 
 enum Changed {
@@ -94,7 +95,7 @@ fn insert(window: WebviewWindow, hwnd: HWND, kind: Kind, order: u8, monitor: Opt
     let label = window.label().to_string();
     let mut shared = shared();
     let _ = take(&mut shared.docked, &label);
-    shared.docked.push(Docked { window, label, hwnd: hwnd.0 as isize, kind, order, monitor, last: None });
+    shared.docked.push(Docked { window, label, hwnd: hwnd.0 as isize, kind, order, monitor, last: None, raised: false });
     shared.docked.sort_by_key(|item| item.order);
     shared.wake = true;
     if !shared.running {
@@ -132,6 +133,20 @@ pub(crate) fn resize_reserved(window: &WebviewWindow, width: i32) {
             shared.wake = true;
             WAKE.notify_all();
         }
+    }
+}
+
+pub(crate) fn set_raised(window: &WebviewWindow, raised: bool) {
+    let hwnd = {
+        let mut shared = shared();
+        let Some(item) = shared.docked.iter_mut().find(|item| item.label == window.label()) else {
+            return;
+        };
+        item.raised = raised;
+        HWND(item.hwnd as *mut _)
+    };
+    if raised {
+        taskbar_shell::raise(hwnd);
     }
 }
 
@@ -212,7 +227,9 @@ fn tick() {
         .enumerate()
         .filter_map(|(index, item)| apply(item, targets[index].map(|bar| bars[bar].handle), states[index]))
         .collect();
+    let raised: Vec<isize> = shared.docked.iter().filter(|item| item.raised).map(|item| item.hwnd).collect();
     drop(shared);
+    raised.into_iter().for_each(|hwnd| taskbar_shell::raise(HWND(hwnd as *mut _)));
     for change in changed {
         match change {
             Changed::Emit(emit) => {
