@@ -19,6 +19,7 @@ import { FuyuTextIcon } from "../../components/island-widget/FuyuTextIcon";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
 import "./IslandHeader.css";
 
+const SETTINGS_ID = "settings";
 const INTERACTIVE = "button, a, input, textarea, select, label, [role='button'], [contenteditable='true']";
 
 type IslandHeaderProps = {
@@ -189,6 +190,9 @@ export function IslandHeader({
       <div ref={dotsRef} className="editor-dots" aria-label={t.island.editor}>
         {trailing.map(renderDot)}
       </div>
+      <div className="window-actions window-actions--lead">
+        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.id !== SETTINGS_ID && (item.enabled?.(buttons) ?? true))} />
+      </div>
       </div>
 
       <button
@@ -204,7 +208,7 @@ export function IslandHeader({
       />
 
       <div className="window-actions">
-        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.enabled?.(buttons) ?? true)} />
+        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.id === SETTINGS_ID && (item.enabled?.(buttons) ?? true))} />
       </div>
     </header>
   );

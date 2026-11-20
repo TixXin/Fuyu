@@ -34,7 +34,7 @@
 .island__header {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(96px, auto) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(96px, auto) auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-md);
   min-height: 34px;
@@ -200,6 +200,10 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-md);
+}
+
+.window-actions--lead {
+  justify-content: flex-start;
 }
 
 .island__agent-button {
