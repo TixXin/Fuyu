@@ -1,12 +1,13 @@
 import { CenterPattern } from "./CenterPattern";
 import type { CenterPatternChoice } from "./centerSettings";
+import { JELLY_VIEW_HEIGHT, JELLY_VIEW_WIDTH } from "./JellyfishMark";
 import type { PetMood } from "./patterns";
 import { PetSprite } from "./PetSprite";
 
 export const AGENT_ICON_PET_HEIGHT = 18;
 
-const markHeight = (pill: number) => (pill * 17) / 16;
-const markWidth = (pill: number) => Math.ceil((pill * 36) / 16);
+const markHeight = (pill: number) => pill;
+const markWidth = (pill: number) => Math.ceil((pill * JELLY_VIEW_WIDTH) / JELLY_VIEW_HEIGHT);
 export const MARK_HEIGHT = markHeight(24);
 export const MARK_WIDTH = markWidth(24);
 

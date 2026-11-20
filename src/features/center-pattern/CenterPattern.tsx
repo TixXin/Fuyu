@@ -1,5 +1,6 @@
 import { useId, type CSSProperties } from "react";
 import type { CenterPatternId, PetMood } from "./patterns";
+import { JellyfishMark } from "./JellyfishMark";
 import { PatternEyes } from "./PatternEyes";
 import "./CenterPattern.css";
 
@@ -23,42 +24,7 @@ export function CenterPattern({ pattern, paused = false, height = 22, mood = "id
       {pattern === "bird" && <Bird />}
       {pattern === "orb" && <Orb />}
       {pattern === "cat" && <Cat />}
-      {pattern === "mark" && <Mark mood={mood} />}
-    </span>
-  );
-}
-
-const MARK_VIEW_BOX = "0 2.5 36 17";
-const MARK_TYPING_DOTS = [19.4, 22.4, 25.4];
-
-function Mark({ mood }: { mood: PetMood }) {
-  return (
-    <span className="center-mark" data-mood={mood}>
-      <span className="center-mark-pill">
-        <svg viewBox={MARK_VIEW_BOX}>
-          <rect x={2.75} y={3} width={30.5} height={16} rx={8} />
-        </svg>
-      </span>
-      <span className="center-mark-light">
-        <span className="center-mark-light-dot">
-          <svg viewBox={MARK_VIEW_BOX}>
-            <circle cx={10.75} cy={11} r={2.9} />
-          </svg>
-        </span>
-      </span>
-      <span className="center-mark-dash">
-        {mood === "running" ? (
-          MARK_TYPING_DOTS.map((cx) => (
-            <svg key={cx} className="center-mark-typing" viewBox={MARK_VIEW_BOX}>
-              <circle cx={cx} cy={11} r={1.45} />
-            </svg>
-          ))
-        ) : (
-          <svg viewBox={MARK_VIEW_BOX}>
-            {mood === "done" ? <path className="center-mark-check" d="m18.75 11.4 2.4 2.4 4.55-4.8" /> : <path d="M18.75 11H26" />}
-          </svg>
-        )}
-      </span>
+      {pattern === "mark" && <JellyfishMark mood={mood} />}
     </span>
   );
 }

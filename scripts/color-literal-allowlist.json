@@ -9,7 +9,6 @@
     "src/features/calendar/CalendarMonth.css": 1,
     "src/features/calendar/CalendarSourcesSection.css": 2,
     "src/features/cc-connect/CcConnectSetup.css": 3,
-    "src/features/center-pattern/CenterPattern.css": 1,
     "src/features/clipboard/ClipboardPopup.css": 1,
     "src/features/clipboard/ClipboardPopupPanels.css": 9,
     "src/features/device-use/DeviceUseIndicator.css": 6,

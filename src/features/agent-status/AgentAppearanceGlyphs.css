@@ -23,37 +23,25 @@
   border-color: var(--color-white-a16);
 }
 
-.agent-glyph__mark {
+.agent-glyph__jelly {
   flex: none;
-  height: 13px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 0 5px;
-  background: var(--color-white);
-  border-radius: var(--radius-pill);
+  height: 15px;
+  width: auto;
+  overflow: visible;
 }
 
-.island-light .agent-glyph__mark {
-  background: var(--color-ink);
+.agent-glyph__jelly-body {
+  fill: var(--center-jelly-idle, #f6e3d3);
 }
 
-.agent-glyph__mark-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: var(--radius-circle);
-  background: var(--color-light-working);
+.island-light .agent-glyph__jelly-body {
+  fill: var(--center-jelly-idle-light, #ecdcc8);
+  stroke: var(--center-jelly-outline-light, #b49d82);
+  stroke-width: 2.2;
 }
 
-.agent-glyph__mark-dots {
-  width: 9px;
-  height: 2.5px;
-  border-radius: var(--radius-pill);
-  background: var(--color-ink-muted);
-}
-
-.island-light .agent-glyph__mark-dots {
-  background: var(--color-white-a18);
+.agent-glyph__jelly-eye {
+  fill: var(--center-jelly-eye-color, #1d1b22);
 }
 
 .agent-glyph__dot {

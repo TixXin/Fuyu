@@ -122,7 +122,7 @@ function Gallery({ paused, mood }: { paused: boolean; mood?: PetMood }) {
         </div>
       </section>
       <section className="cp-section">
-        <h2>悬岛标志随 Agent 状态（放大 3 倍）：idle / running / waiting / failed / done</h2>
+        <h2>水母随 Agent 状态（放大 3 倍）：idle / running / waiting / failed / done</h2>
         <div className="cp-row cp-zoom">
           {(mood ? [mood] : MOODS).map((markMood) => (
             <div className="cp-island cp-small" key={markMood} data-mark={markMood}><CenterPattern pattern="mark" mood={markMood} paused={paused} /></div>
@@ -194,40 +194,40 @@ async function runChecks() {
   expect(fixture.querySelector(".cp-slot")!.childElementCount === 0, "插件关闭时不填槽位");
 
   const markIn = (agents: AgentActivity[]) => slotWith({ pattern: "mark", pet: "" }, agents)
-    .then(() => fixture.querySelector<HTMLElement>(".cp-slot .center-mark")!);
-  const lightFill = (mark: HTMLElement) => getComputedStyle(mark.querySelector(".center-mark-light circle")!).fill;
+    .then(() => fixture.querySelector<HTMLElement>(".cp-slot .center-jelly")!);
+  const bodyColor = (jelly: HTMLElement) => getComputedStyle(jelly).getPropertyValue("--center-jelly-fill").trim().toLowerCase();
   let mark = await markIn([]);
-  expect(mark.dataset.mood === "idle" && lightFill(mark) === "rgb(106, 191, 155)" && mark.querySelector(".center-mark-dash path") !== null,
-    "悬岛空闲：绿点、短横");
-  expect(getComputedStyle(mark.querySelector(".center-mark-pill")!).animationName === (reducedMotion ? "none" : "center-mark-open"),
-    reducedMotion ? "减弱动态时悬岛不弹开" : "悬岛空闲时胶囊定时弹开");
-  const pill = (selector: string) => fixture.querySelector(`${selector} .center-mark-pill rect`)?.getBoundingClientRect();
-  const centerPill = pill(".cp-slot .island__center-slot");
-  const iconPill = pill(".cp-agent-icon");
-  expect(centerPill !== undefined && Math.abs(centerPill.height - 24) < 0.6 && iconPill !== undefined && Math.abs(iconPill.height - 24) < 0.6,
-    `悬岛胶囊 24px 高（中心 ${centerPill?.height.toFixed(1)}px、标题前 ${iconPill?.height.toFixed(1)}px），和环一样`);
+  expect(mark.dataset.mood === "idle" && bodyColor(mark) === "#f6e3d3" && mark.querySelectorAll(".center-jelly-lobe").length === 4,
+    "水母空闲：米白身体、四瓣触手");
+  expect(getComputedStyle(mark.querySelector(".center-jelly-body")!).animationName === (reducedMotion ? "none" : "center-jelly-lift"),
+    reducedMotion ? "减弱动态时水母不动" : "水母空闲时定时游一下");
+  const jelly = (selector: string) => fixture.querySelector(`${selector} .center-jelly svg`)?.getBoundingClientRect();
+  const centerJelly = jelly(".cp-slot .island__center-slot");
+  const iconJelly = jelly(".cp-agent-icon");
+  expect(centerJelly !== undefined && Math.abs(centerJelly.height - 24) < 0.6 && iconJelly !== undefined && Math.abs(iconJelly.height - 24) < 0.6,
+    `水母 24px 高（中心 ${centerJelly?.height.toFixed(1)}px、标题前 ${iconJelly?.height.toFixed(1)}px），和环一样`);
   mark = await markIn([{ phase: "running", updatedAt: Date.now() }]);
-  expect(mark.querySelectorAll(".center-mark-typing circle").length === 3 && !mark.querySelector(".center-mark-dash path"), "悬岛运行时短横换成三个点");
+  expect(mark.dataset.mood === "running" && bodyColor(mark) === "#6db6f4", "水母运行时变蓝");
   mark = await markIn([{ phase: "waiting", updatedAt: Date.now() }]);
-  expect(lightFill(mark) === "rgb(255, 214, 10)", "悬岛等待确认时绿点变黄");
+  expect(bodyColor(mark) === "#ffcd3c" && mark.querySelector(".center-jelly-tick") !== null, "水母等待确认时变黄、冒感叹线");
   mark = await markIn([{ phase: "failed", updatedAt: Date.now() }]);
-  expect(lightFill(mark) === "rgb(255, 69, 58)", "悬岛失败时绿点变红");
+  expect(bodyColor(mark) === "#f2554c" && mark.querySelector(".center-jelly-anger") !== null, "水母失败时变红、冒怒气符号");
   mark = await markIn([{ phase: "completed", updatedAt: Date.now() }]);
-  expect(mark.dataset.mood === "done" && mark.querySelector(".center-mark-check") !== null, "悬岛刚完成时短横换成对勾");
+  expect(mark.dataset.mood === "done" && bodyColor(mark) === "#5ed69e" && mark.querySelectorAll(".center-jelly-spark").length === 2, "水母刚完成时变绿、冒星星");
   expect(!fixture.querySelector(".cp-light"), "状态灯样式是圆点时不给状态灯槽位");
   await slotWith({ pattern: "mark", pet: "", size: 18 });
-  const smaller = pill(".cp-slot .island__center-slot");
-  expect(smaller !== undefined && Math.abs(smaller.height - 18) < 0.6, `大小设成 18 时悬岛胶囊 18px 高（${smaller?.height.toFixed(1)}px）`);
+  const smaller = jelly(".cp-slot .island__center-slot");
+  expect(smaller !== undefined && Math.abs(smaller.height - 18) < 0.6, `大小设成 18 时水母 18px 高（${smaller?.height.toFixed(1)}px）`);
 
   await syncSwitch(false, { pattern: "cat", pet: "" });
   await render(<Slot key="light" markLight agents={[{ phase: "waiting", updatedAt: Date.now() }]} />);
-  const lightPill = fixture.querySelector(".cp-light .center-mark-pill rect")?.getBoundingClientRect();
-  expect(fixture.querySelector<HTMLElement>(".cp-light .center-mark")?.dataset.mood === "waiting" && lightPill !== undefined && Math.abs(lightPill.height - 24) < 0.6,
-    "悬岛状态灯：中心图案关着也跟随 Agent，胶囊 24px 高");
+  const lightJelly = jelly(".cp-light");
+  expect(fixture.querySelector<HTMLElement>(".cp-light .center-jelly")?.dataset.mood === "waiting" && lightJelly !== undefined && Math.abs(lightJelly.height - 24) < 0.6,
+    "水母状态灯：中心图案关着也跟随 Agent，24px 高");
   await syncSwitch(true, { pattern: "mark", pet: "" });
   await render(<Slot key="light-and-center" markLight />);
-  expect(fixture.querySelector(".cp-slot .island__center-slot .center-mark") !== null && !fixture.querySelector(".cp-agent-icon"),
-    "状态灯已是悬岛时，标题前不再放第二个悬岛");
+  expect(fixture.querySelector(".cp-slot .island__center-slot .center-jelly") !== null && !fixture.querySelector(".cp-agent-icon"),
+    "状态灯已是水母时，标题前不再放第二只");
 
   configCalls.length = 0;
   await syncSwitch(true, {});

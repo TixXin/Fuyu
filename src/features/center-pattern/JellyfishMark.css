@@ -1,0 +1,133 @@
+.center-jelly {
+  --center-jelly-fill: var(--center-jelly-idle, #f6e3d3);
+  --center-jelly-ink: var(--center-jelly-eye-color, #1d1b22);
+  display: block;
+  height: 100%;
+  aspect-ratio: 58 / 43;
+}
+.center-jelly[data-mood="running"] { --center-jelly-fill: var(--center-jelly-running, #6db6f4); }
+.center-jelly[data-mood="waiting"] { --center-jelly-fill: var(--center-jelly-waiting, #ffcd3c); }
+.center-jelly[data-mood="failed"] { --center-jelly-fill: var(--center-jelly-failed, #f2554c); }
+.center-jelly[data-mood="done"] { --center-jelly-fill: var(--center-jelly-done, #5ed69e); }
+.island-light .center-jelly[data-mood="idle"] { --center-jelly-fill: var(--center-jelly-idle-light, #ecdcc8); }
+
+.center-pattern .center-jelly svg {
+  width: 100%;
+  height: 100%;
+}
+
+.center-jelly-fill {
+  fill: var(--center-jelly-fill);
+  transition: fill var(--motion-medium) var(--motion-ease);
+}
+.center-jelly-outline { fill: none; }
+.island-light .center-jelly[data-mood="idle"] .center-jelly-outline {
+  stroke: var(--center-jelly-outline-light, #b49d82);
+  stroke-width: 2.2;
+}
+.center-jelly-highlight { fill: var(--center-jelly-glint, #ffffff); opacity: 0.6; }
+.center-jelly-cheek { fill: var(--center-jelly-cheek, #ff8fa0); opacity: 0.72; }
+.center-jelly-eye { fill: var(--center-jelly-ink); }
+.center-jelly-tongue { fill: var(--center-jelly-tongue, #ff6b7a); }
+.center-jelly-line {
+  fill: none;
+  stroke: var(--center-jelly-ink);
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.center-jelly-mouth { stroke-width: 2.2; }
+.center-jelly-fx { fill: none; stroke-linecap: round; transform-origin: 59px 6px; }
+.center-jelly-tick { stroke: var(--center-jelly-tick, #f5b800); stroke-width: 3.4; }
+.center-jelly-anger { stroke: var(--center-jelly-anger, #e5352b); stroke-width: 3; }
+.center-jelly-spark { fill: var(--center-jelly-spark, #ffd23f); stroke: none; }
+.center-jelly-spark + .center-jelly-spark { transform-origin: 62.5px 12px; }
+
+.center-jelly-pose,
+.center-jelly-body,
+.center-jelly-head { transform-origin: 32px 30px; }
+.center-jelly-lids { transform-origin: 32px 25px; }
+.center-jelly[data-mood="running"] .center-jelly-pose { transform: rotate(-5deg); }
+.center-jelly[data-mood="waiting"] .center-jelly-pose { transform: rotate(-6deg); }
+.center-jelly[data-mood="failed"] .center-jelly-pose { transform: scale(1.03, 0.94); }
+
+.center-jelly[data-mood="idle"] .center-jelly-body { animation: center-jelly-lift 10s var(--motion-ease-in-out) infinite; }
+.center-jelly[data-mood="idle"] .center-jelly-head { animation: center-jelly-squash 10s var(--motion-ease-in-out) infinite; }
+.center-jelly[data-mood="idle"] .center-jelly-lobe { animation: center-jelly-kick 10s var(--motion-ease-in-out) infinite; }
+.center-jelly:is([data-mood="idle"], [data-mood="waiting"], [data-mood="failed"]) .center-jelly-lids {
+  animation: center-jelly-blink 5.8s var(--motion-ease-in-out) infinite;
+}
+
+.center-jelly[data-mood="running"] .center-jelly-body { animation: center-jelly-bob 1.2s var(--motion-ease-in-out) infinite; }
+.center-jelly[data-mood="running"] .center-jelly-lobe { animation: center-jelly-paddle 1.2s var(--motion-ease-in-out) infinite; }
+.center-jelly[data-mood="running"] .center-jelly-lobe:nth-child(2) { animation-delay: 0.15s; }
+.center-jelly[data-mood="running"] .center-jelly-lobe:nth-child(3) { animation-delay: 0.3s; }
+.center-jelly[data-mood="running"] .center-jelly-lobe:nth-child(4) { animation-delay: 0.45s; }
+
+.center-jelly[data-mood="waiting"] .center-jelly-body { animation: center-jelly-hop 2.4s var(--motion-ease-in-out) infinite; }
+.center-jelly[data-mood="waiting"] .center-jelly-fx { animation: center-jelly-pop-loop 2.4s var(--motion-ease-in-out) infinite; }
+
+.center-jelly[data-mood="failed"] .center-jelly-body { animation: center-jelly-shake var(--motion-slow) var(--motion-ease) 1; }
+.center-jelly[data-mood="failed"] .center-jelly-fx { animation: center-jelly-throb var(--motion-slow) var(--motion-ease-in-out) 2; }
+
+.center-jelly[data-mood="done"] .center-jelly-body { animation: center-jelly-rise var(--motion-slow) var(--motion-ease-out) 1; }
+.center-jelly[data-mood="done"] .center-jelly-fx { animation: center-jelly-pop-in var(--motion-slow) var(--motion-ease-out) 1 backwards; }
+.center-jelly[data-mood="done"] .center-jelly-fx + .center-jelly-fx { animation-delay: var(--motion-fast); }
+
+@keyframes center-jelly-lift {
+  0%, 86%, 100% { transform: translateY(0); }
+  91% { transform: translateY(-1.6px); }
+}
+@keyframes center-jelly-squash {
+  0%, 86%, 96%, 100% { transform: scale(1, 1); }
+  89.5% { transform: scale(1.04, 0.93); }
+}
+@keyframes center-jelly-kick {
+  0%, 86%, 97%, 100% { transform: scaleY(1); }
+  90% { transform: scaleY(0.7); }
+}
+@keyframes center-jelly-blink {
+  0%, 93%, 97%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.08); }
+}
+@keyframes center-jelly-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.2px); }
+}
+@keyframes center-jelly-paddle {
+  0%, 60%, 100% { transform: scaleY(1); }
+  30% { transform: scaleY(0.6); }
+}
+@keyframes center-jelly-hop {
+  0%, 40%, 100% { transform: translateY(0); }
+  10%, 30% { transform: translateY(-3px); }
+  20% { transform: translateY(-0.3px); }
+}
+@keyframes center-jelly-pop-loop {
+  0%, 55%, 100% { opacity: 0; transform: scale(0.7); }
+  8%, 40% { opacity: 1; transform: scale(1); }
+}
+@keyframes center-jelly-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2.4px); }
+  45% { transform: translateX(2px); }
+  70% { transform: translateX(-1.2px); }
+}
+@keyframes center-jelly-throb {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+@keyframes center-jelly-rise {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-4px); }
+}
+@keyframes center-jelly-pop-in {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .center-jelly * {
+    animation: none !important;
+  }
+}
