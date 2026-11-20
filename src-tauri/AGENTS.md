@@ -15,7 +15,7 @@ src-tauri/src/
 ├── island/                  # 主窗口：命令、窗口状态、几何计算、毛玻璃、鼠标穿透（banner_hit.rs：新消息横幅的可点区域）、贴边动画
 ├── wallpaper/               # 读各显示器的桌面壁纸给岛的背景用（get_wallpapers，thumbnail.rs 缩成 JPEG），变了发 wallpaper-changed；Mac 上是 unsupported.rs
 ├── todos/                   # 待办与每日笔记：todos.json 持久化、从旧版 localStorage 迁移、命令与插件/本地接口读写
-├── agent_approval/          # 在岛上审批（B6 第 2 期）：127.0.0.1 上的审批端点（标准库 TcpListener，挂起时能发现 Agent 断开）、按会话排队、等待上限、agent-approval.json；监听可以停下再绑回（`pause` / `resume`），开发版可以在正式版的端口上用它的 token 多开一路（`serve_for_release`，F39.5）
+├── agent_approval/          # 在岛上审批（B6 第 2 期）：127.0.0.1 上的审批端点（标准库 TcpListener，挂起时能发现 Agent 断开）、按会话排队、等待上限、agent-approval.json；监听可以停下再绑回（`pause` / `resume`）；开发版只听自己的端口，在正式数据目录写 `agent-approval.lane-<编号>.json` 报地址、停下时删掉（lane_file.rs），不接手正式版的端口、不改正式版的文件，钩子脚本先试正式版再试 lane 文件
 ├── agent_status/            # AI 代理状态：快照、运行标记、Codex / Claude Code hook 安装；hooks/ 为编入二进制的 hook 脚本；sound_packs.rs 为导入的音效包（应用数据目录的 sound-packs/）
 │                            #   reply_marker.rs：可选的回复状态标记（B9），增删 CLAUDE.md 里岛屿自己的那段说明、识别回复末行的标记
 ├── phone_push/              # 手机推送（Bark）：设备 Key 凭据存取、发送推送、锁屏与空闲时间查询命令
@@ -28,7 +28,7 @@ src-tauri/src/
 ├── rename_migration/        # 改名迁移（D17）：首次启动时把改名前的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装；各处旧名兼容的清单见 docs/architecture/contracts.md「改名兼容（D17）」
 ├── uninstall_cleanup.rs     # 卸载前清理：带卸载参数启动时 lib.rs 先走这里（maybe_run_from_args），同步移除 Agent 钩子、凭据和受管的数据文件后直接退出，不建 WebView、不占单实例锁
 ├── clipboard_history/
-├── coexist/                 # 开发版和正式版抢系统资源时谁让谁（F39.4）：state.rs 纯判断，mod.rs 轮询对方在不在（开发版探测单实例互斥量，正式版探测开发版持有的 dev-first 互斥量，放手后持有 release-yielded；正式版只在本机有开发版数据目录时才起线程）、`yielding()`、命令 get_dev_priority / set_dev_priority、状态翻转时让五处快捷键重新注册、让审批服务停下或接管（F39.5）；让出时提醒不弹横幅（`banner_visible`）；Mac 上是 unsupported.rs
+├── coexist/                 # 开发版和正式版抢系统资源时谁让谁（F39.4）：state.rs 纯判断，mod.rs 轮询对方在不在（开发版探测单实例互斥量，正式版探测开发版持有的 dev-first 互斥量，放手后持有 release-yielded；正式版只在本机有开发版数据目录时才起线程）、`yielding()`、命令 get_dev_priority / set_dev_priority、状态翻转时让五处快捷键重新注册、正式版让出时停下审批监听（F39.5）；让出时提醒不弹横幅（`banner_visible`）；Mac 上是 unsupported.rs
 ├── file_shelf/              # 文件中转：路径列表（file-shelf.json）与命令；拖出调用 win32/ole.rs
 ├── screenshot/              # 截图（C41）：快捷键线程（hotkeys.rs，主键盘 RegisterHotKey、小键盘交给 win32/win_key_hook.rs），每个显示器先截图再给它一个常驻隐藏的选区窗口 screenshot-<n>（session.rs，截屏在 win32/screen_capture.rs），复制到剪贴板（output.rs、clipboard.rs）；系统调用经 capture.rs，Mac 上换成 `*_macos.rs`（ScreenCaptureKit、NSPanel、global-hotkey）
 ├── recording/               # 录屏（C41.11）：命令、倒计时、暂停计时和浮屿窗口排除在录像外（control.rs，状态在 state.rs，发 recording-state / recording-finished 给岛），录制线程（session.rs：WGC 帧经有界队列交给编码线程，满了丢帧计数）、帧节奏（pacing.rs，静止 3 个间隔才补重复帧，暂停扣时长）、尺寸码率和文件名（format.rs）、声音（audio.rs 接采集、按视频时间轴放；mixer.rs 混成 48 kHz 立体声）、GIF（gif.rs：每 1/15 秒挑一帧读回内存交给 gifski 线程）；声音采集在 win32/audio_capture.rs，画面采集在 win32/graphics_capture.rs，编码写 MP4 在 win32/video_writer.rs

@@ -675,3 +675,22 @@ mod hook_endpoint {
         assert_eq!(endpoint_for_hooks(None, true, release), None);
     }
 }
+
+#[test]
+fn a_development_build_announces_its_own_endpoint_beside_the_release_file_and_takes_it_back() {
+    let home = std::env::temp_dir().join(format!("fuyu-lane-file-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&home);
+    std::fs::create_dir_all(&home).unwrap();
+    let release = home.join(super::config::CONFIG_FILE_NAME);
+    std::fs::write(&release, r#"{"port":56439,"token":"release"}"#).unwrap();
+
+    super::lane_file::write(&home, 1, 47831, "lane-token").unwrap();
+    let written: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(home.join("agent-approval.lane-1.json")).unwrap()).unwrap();
+    assert_eq!((written["port"].as_u64(), written["token"].as_str()), (Some(47831), Some("lane-token")));
+    assert_eq!(written["pid"].as_u64(), Some(u64::from(std::process::id())));
+
+    super::lane_file::remove(&home, 1);
+    assert!(!home.join("agent-approval.lane-1.json").exists());
+    assert_eq!(std::fs::read_to_string(&release).unwrap(), r#"{"port":56439,"token":"release"}"#);
+    std::fs::remove_dir_all(&home).unwrap();
+}

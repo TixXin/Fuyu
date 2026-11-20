@@ -13,10 +13,10 @@
   -webkit-line-clamp: var(--notice-command-lines, 4);
   width: 100%;
   overflow: hidden;
-  padding: 4px 7px;
-  color: rgba(var(--agent-ink), 0.86);
+  padding: 6px 9px;
+  color: rgba(var(--agent-ink), 0.9);
   text-align: left;
-  background: rgba(var(--agent-ink), 0.1);
+  background: rgba(var(--agent-ink), 0.12);
   border: 0;
   border-radius: var(--radius-sm);
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;

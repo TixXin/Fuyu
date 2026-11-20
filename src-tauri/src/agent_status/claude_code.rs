@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::claude_hooks::{has_exec_form_hooks, install_claude_code_status_hooks, uninstall_claude_code_status_hooks, ApprovalHook};
+use super::claude_hooks::{has_exec_form_hooks, has_fixed_port_hooks, install_claude_code_status_hooks, uninstall_claude_code_status_hooks, ApprovalHook};
 use super::harness::{Harness, HookEnv, Hooks, RemoteFiles, StatusLight};
 use super::hooks_state::{claude_code_hooks_state, HookInstallState};
 use super::markers::{
@@ -66,7 +66,7 @@ pub(super) fn upgrade_exec_form_hooks(app_dir: &Path, home_dir: &Path) -> Result
     let Ok(config) = serde_json::from_str::<serde_json::Value>(text.trim_start_matches('\u{feff}')) else {
         return Ok(false);
     };
-    if !has_exec_form_hooks(&config["hooks"]) {
+    if !has_exec_form_hooks(&config["hooks"]) && !has_fixed_port_hooks(&config["hooks"]) {
         return Ok(false);
     }
     super::install_agent_hook_scripts(app_dir)?;
@@ -90,11 +90,5 @@ fn hooks_state(env: &HookEnv) -> HookInstallState {
 }
 
 fn approval_hook() -> Option<ApprovalHook> {
-    use crate::agent_approval::{activity_hook_url, hook_token, hook_url, question_hook_url, Agent};
-    Some(ApprovalHook {
-        url: hook_url(Agent::ClaudeCode)?,
-        question_url: question_hook_url(),
-        activity_url: activity_hook_url(),
-        token: hook_token()?,
-    })
+    crate::agent_approval::hook_token().map(|_| ApprovalHook)
 }

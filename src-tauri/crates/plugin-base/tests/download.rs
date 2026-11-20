@@ -12,7 +12,7 @@ use std::{
 use plugin_base::{
     installed_node, prepare_node,
     runtime::{choose, NodeSource},
-    ArchiveKind, DownloadError, FoundNode, NodeArchive, NodeDownload, NodeVersion, Progress,
+    ArchiveKind, DownloadError, FailureCause, FoundNode, NodeArchive, NodeDownload, NodeVersion, Progress,
 };
 use sha2::{Digest, Sha256};
 
@@ -144,7 +144,7 @@ fn a_verified_zip_lands_in_its_version_folder_and_is_not_downloaded_again() {
     let exe = prepare_node(&temp.0, &release, &mut |progress| seen.push((progress.url.to_string(), progress.downloaded, progress.total))).unwrap();
     assert_eq!(exe, temp.0.join("runtime").join("node-v1.2.3").join("node.exe"));
     assert_eq!(fs::read(&exe).unwrap(), b"MZ fake node");
-    assert_eq!(fs::read_to_string(temp.0.join("runtime/node-v1.2.3/README.md")).unwrap(), "readme");
+    assert!(!temp.0.join("runtime/node-v1.2.3/README.md").exists(), "only the executable is unpacked, so a virus scanner has one file to look at");
     assert_eq!(leftovers(&temp.0), ["node-v1.2.3"]);
     let total = body.len() as u64;
     assert_eq!(seen.first().map(|entry| entry.1), Some(0));
@@ -276,9 +276,18 @@ fn a_node_on_this_computer_wins_and_otherwise_the_download_is_used() {
     assert_eq!(chosen.version, VERSION);
     assert_eq!(chosen.path, temp.0.join("runtime/node-v1.2.3/node.exe"));
     let error = choose(Err(tried.clone()), NodeVersion(2, 0, 0), &temp.0, Ok(release), &mut quiet()).unwrap_err();
-    assert!(error.contains("/old/node") && error.contains("older than 2.0.0"), "{error}");
-    let error = choose(Err(tried), minimum, &temp.0, Err(DownloadError::Unsupported { os: "plan9".into(), arch: "mips".into() }), &mut quiet()).unwrap_err();
-    assert!(error.contains("/old/node") && error.contains("plan9"), "{error}");
+    assert!(error.message.contains("/old/node") && error.message.contains("older than 2.0.0"), "{error}");
+    let error = choose(Err(tried.clone()), minimum, &temp.0, Err(DownloadError::Unsupported { os: "plan9".into(), arch: "mips".into() }), &mut quiet()).unwrap_err();
+    assert!(error.message.contains("/old/node") && error.message.contains("plan9"), "{error}");
+    assert_eq!(error.cause, FailureCause::Other);
+    let other = Temp::new("choose-disk");
+    let offline = zip_download(&server, &["nowhere"], &body);
+    let error = choose(Err(tried.clone()), minimum, &other.0, Ok(offline), &mut quiet()).unwrap_err();
+    assert_eq!(error.cause, FailureCause::Network, "{error}");
+    fs::remove_dir_all(other.0.join("runtime")).unwrap();
+    fs::write(other.0.join("runtime"), b"a file where the runtime folder should be").unwrap();
+    let error = choose(Err(tried), minimum, &other.0, Ok(zip_download(&server, &["official"], &body)), &mut quiet()).unwrap_err();
+    assert_eq!(error.cause, FailureCause::Disk, "a folder Fuyu cannot write to is not reported as a network problem: {error}");
 }
 
 #[test]

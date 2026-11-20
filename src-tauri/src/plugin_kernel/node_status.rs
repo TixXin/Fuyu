@@ -7,8 +7,26 @@ use serde::Serialize;
 pub(crate) enum NodeStatus {
     Checking,
     Downloading { downloaded: u64, total: Option<u64> },
-    Failed { error: String },
+    Failed { error: String, cause: FailureCause },
     Ready,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) enum FailureCause {
+    Network,
+    Disk,
+    Other,
+}
+
+impl From<plugin_base::FailureCause> for FailureCause {
+    fn from(cause: plugin_base::FailureCause) -> Self {
+        match cause {
+            plugin_base::FailureCause::Network => Self::Network,
+            plugin_base::FailureCause::Disk => Self::Disk,
+            plugin_base::FailureCause::Other => Self::Other,
+        }
+    }
 }
 
 #[derive(Debug)]

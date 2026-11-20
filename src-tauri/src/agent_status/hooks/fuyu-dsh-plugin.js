@@ -1,5 +1,5 @@
 import { request as httpRequest } from "node:http";
-import { readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const FUYU_DIR = "__FUYU_DIR__";
@@ -70,9 +70,9 @@ async function markFinished(phase) {
   } catch {}
 }
 
-async function endpoint() {
+async function readEndpoint(file) {
   try {
-    const config = JSON.parse((await readFile(CONFIG_FILE, "utf8")).replace(/^\uFEFF/, ""));
+    const config = JSON.parse((await readFile(file, "utf8")).replace(/^﻿/, ""));
     if (!Number.isInteger(config.port) || typeof config.token !== "string" || !config.token) return null;
     return config;
   } catch {
@@ -80,7 +80,26 @@ async function endpoint() {
   }
 }
 
-function post(config, body, signal) {
+async function endpoint() {
+  const names = await readdir(FUYU_DIR).catch(() => []);
+  const lanes = names.filter((name) => /^agent-approval\.lane-\d+\.json$/.test(name)).sort();
+  const configs = [];
+  for (const file of [CONFIG_FILE, ...lanes.map((name) => join(FUYU_DIR, name))]) {
+    const config = await readEndpoint(file);
+    if (config) configs.push(config);
+  }
+  return configs.length ? configs : null;
+}
+
+async function post(configs, body, signal) {
+  for (const config of configs) {
+    const result = await postTo(config, body, signal);
+    if (result.reached || signal?.aborted) return result.answer;
+  }
+  return null;
+}
+
+function postTo(config, body, signal) {
   return new Promise((resolve) => {
     const req = httpRequest(
       {
@@ -97,21 +116,26 @@ function post(config, body, signal) {
         },
       },
       (res) => {
+        if (res.statusCode !== 200) {
+          res.resume();
+          resolve({ reached: false, answer: null });
+          return;
+        }
         let raw = "";
         res.setEncoding("utf8");
         res.on("data", (chunk) => (raw += chunk));
-        res.on("error", () => resolve(null));
+        res.on("error", () => resolve({ reached: true, answer: null }));
         res.on("end", () => {
           try {
-            resolve(res.statusCode === 200 ? JSON.parse(raw) : null);
+            resolve({ reached: true, answer: JSON.parse(raw) });
           } catch {
-            resolve(null);
+            resolve({ reached: true, answer: null });
           }
         });
       },
     );
     req.on("timeout", () => req.destroy());
-    req.on("error", () => resolve(null));
+    req.on("error", (error) => resolve({ reached: error?.code !== "ECONNREFUSED", answer: null }));
     req.end(body);
   });
 }

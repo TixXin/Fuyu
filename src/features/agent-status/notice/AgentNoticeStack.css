@@ -80,9 +80,12 @@ span.agent-notice-stack__pile {
   background: var(--stack-chip);
 }
 
-:is(:root[data-island-notch="on"], [data-notice-notch="on"]) .agent-notice-stack--notch-band .agent-notice__icon,
-:is(:root[data-island-notch="on"], [data-notice-notch="on"]) .agent-notice-stack--notch-band .agent-notice .agent-notice-stack__pile,
-:is(:root[data-island-notch="on"], [data-notice-notch="on"]) .agent-notice-stack--notch-band .agent-notice__state {
+:root[data-island-notch="on"] .island--popup .agent-notice-stack--notch-band .agent-notice__icon,
+:root[data-island-notch="on"] .island--popup .agent-notice-stack--notch-band .agent-notice .agent-notice-stack__pile,
+:root[data-island-notch="on"] .island--popup .agent-notice-stack--notch-band .agent-notice__state,
+[data-notice-notch="on"] .agent-notice-stack--notch-band .agent-notice__icon,
+[data-notice-notch="on"] .agent-notice-stack--notch-band .agent-notice .agent-notice-stack__pile,
+[data-notice-notch="on"] .agent-notice-stack--notch-band .agent-notice__state {
   display: none;
 }
 

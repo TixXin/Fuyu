@@ -89,7 +89,6 @@ fn evaluate() -> (bool, bool) {
     let seen = RELEASE_RUNNING.swap(release_running, Ordering::SeqCst) != release_running;
     let handed = RELEASE_YIELDS.swap(release_yields, Ordering::SeqCst) != release_yields;
     let flipped = YIELDING.swap(yields, Ordering::SeqCst) != yields;
-    crate::agent_approval::serve_for_release(state::takes_over(priority, release_yields));
     (flipped || handed, seen || flipped || handed)
 }
 

@@ -99,6 +99,7 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
   const mustHandle = alertedSession?.session.phase === "waiting";
   useOutsideClick(alertedSession !== null && !mustHandle && !waiting && isOpenOnAgents, collapseIsland, host);
   const agentCardHeight = shownApprovals.current ? shownApprovals.cardHeight : alertedSession?.rowHeight;
-  const alertPopup = alertedSession !== null && !shownApprovals.current && isOpenOnAgents;
-  return { alertedSession, alertedStack, approvals: shownApprovals, agentCardHeight, alertPopup };
+  const alertPopup = isOpenOnAgents && (shownApprovals.current !== null || alertedSession !== null);
+  const alertWide = shownApprovals.current !== null;
+  return { alertedSession, alertedStack, approvals: shownApprovals, agentCardHeight, alertPopup, alertWide };
 }

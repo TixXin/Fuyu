@@ -11,7 +11,7 @@ import {
   type AgentApprovalRequest,
 } from "./api";
 
-const DEFAULT_CARD_HEIGHT = 118;
+const DEFAULT_CARD_HEIGHT = 148;
 
 export type AgentApprovals = {
   current: AgentApprovalRequest | null;

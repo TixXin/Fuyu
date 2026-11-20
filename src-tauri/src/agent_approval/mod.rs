@@ -3,6 +3,7 @@ mod config;
 mod decision;
 mod external;
 mod http;
+mod lane_file;
 mod opencode;
 mod queue;
 mod server;
@@ -39,7 +40,6 @@ struct Service {
     token: String,
     path: PathBuf,
     own: Mutex<Option<server::Listener>>,
-    borrowed: Mutex<Option<server::Listener>>,
 }
 
 static SERVICE: OnceLock<Service> = OnceLock::new();
@@ -100,7 +100,6 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         token: saved.token,
         path,
         own: Mutex::new(None),
-        borrowed: Mutex::new(None),
     });
     if let Some(service) = SERVICE.get() {
         service.shared.set_enabled(WANTED.load(Ordering::SeqCst));
@@ -125,7 +124,21 @@ fn listen_on(service: &Service, listener: server::Listener) -> server::Listener 
             eprintln!("{error}");
         }
     }
+    announce(listener.port(), &service.token);
     listener
+}
+
+fn announce(port: u16, token: &str) {
+    let (Some(lane), Some(home)) = (crate::dev_lane::lane(), crate::home_dir::real_home()) else { return };
+    if let Err(error) = lane_file::write(&home, lane, port, token) {
+        eprintln!("{error}");
+    }
+}
+
+fn withdraw() {
+    if let (Some(lane), Some(home)) = (crate::dev_lane::lane(), crate::home_dir::real_home()) {
+        lane_file::remove(&home, lane);
+    }
 }
 
 fn start_serving() -> Result<(), String> {
@@ -146,15 +159,15 @@ fn stop_serving() {
     let Some(service) = SERVICE.get() else { return };
     service.shared.shut_down();
     let own = service.own.lock().unwrap_or_else(PoisonError::into_inner).take();
-    let borrowed = service.borrowed.lock().unwrap_or_else(PoisonError::into_inner).take();
-    for listener in own.into_iter().chain(borrowed) {
+    if let Some(listener) = own {
+        withdraw();
         listener.stop();
     }
 }
 
 fn serving() -> bool {
     SERVICE.get().is_some_and(|service| {
-        service.own.lock().unwrap_or_else(PoisonError::into_inner).is_some() || service.borrowed.lock().unwrap_or_else(PoisonError::into_inner).is_some()
+        service.own.lock().unwrap_or_else(PoisonError::into_inner).is_some()
     })
 }
 
@@ -163,6 +176,7 @@ pub(crate) fn pause() {
     let Some(service) = SERVICE.get() else { return };
     let listener = service.own.lock().unwrap_or_else(PoisonError::into_inner).take();
     if let Some(listener) = listener {
+        withdraw();
         listener.stop();
     }
 }
@@ -193,31 +207,11 @@ pub(crate) fn resume() {
     *own = Some(listen_on(service, listener));
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
-pub(crate) fn serve_for_release(wanted: bool) {
-    let Some(service) = SERVICE.get() else { return };
-    let mut borrowed = service.borrowed.lock().unwrap_or_else(PoisonError::into_inner);
-    if !wanted {
-        if let Some(listener) = borrowed.take() {
-            listener.stop();
-        }
-        return;
-    }
-    if borrowed.is_some() || !switched_on() {
-        return;
-    }
-    let Some(real) = crate::home_dir::real_home().and_then(|home| config::read_config(&home.join(config::CONFIG_FILE_NAME))) else {
-        return;
-    };
-    if let Ok(listener) = server::serve(&service.shared, real.port, false, &real.token) {
-        *borrowed = Some(listener);
-    }
-}
-
 pub fn shutdown() {
     if let Some(service) = SERVICE.get() {
         service.shared.shut_down();
     }
+    withdraw();
 }
 
 pub(crate) fn endpoint() -> Option<ApprovalEndpoint> {

@@ -20,11 +20,13 @@ export function AgentApprovalCard({
   sessions,
   options = DEFAULT_AGENT_NOTICE_OPTIONS,
   preview: inPreview = false,
+  statusInBand = false,
 }: {
   approvals: AgentApprovals;
   sessions: AgentSessionSummary[];
   options?: AgentNoticeOptions;
   preview?: boolean;
+  statusInBand?: boolean;
 }) {
   const t = useTranslation();
   const request = approvals.current;
@@ -73,7 +75,7 @@ export function AgentApprovalCard({
       noticeStyle={options.style}
       tone="needs"
       provider={request.agent}
-      headline={copy.headline.needs(request.toolName)}
+      headline={statusInBand ? request.toolName : copy.headline.needs(request.toolName)}
       state={copy.state.needs}
       title={title}
       titlePrefix={prefix}

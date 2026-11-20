@@ -45,7 +45,8 @@ const STAGES: Stage[] = [
   { key: "revocation", title: "撤销与等确认 / Revoked and held", view: open(REVOCATION) },
   { key: "migration", title: "旧插件迁移 / Migration", view: open(NORMAL), migration: true },
   { key: "nodeDl", title: "运行环境下载中 / Runtime downloading", view: { ...open(null), connection: "connecting", host: null }, node: { state: "downloading", downloaded: 12 * MB, total: 30 * MB } },
-  { key: "nodeFail", title: "运行环境下载失败 / Runtime failed", view: { ...open(null), connection: "connecting", host: null }, node: { state: "failed", error: "Node 22.15 or newer was not found; all 3 download sources failed" } },
+  { key: "nodeFail", title: "运行环境下载失败 / Runtime failed", view: { ...open(null), connection: "connecting", host: null }, node: { state: "failed", cause: "network", error: "Node 22.15 or newer was not found; all 3 download sources failed" } },
+  { key: "nodeDisk", title: "运行环境写不进去 / Runtime blocked", view: { ...open(null), connection: "connecting", host: null }, node: { state: "failed", cause: "disk", error: "Node 22.15 or newer was not found; could not move into place C:\\Users\\me\\.fuyu\\runtime\\node-v26.13.1\\node.exe: Access is denied. (os error 5)" } },
   { key: "safe", title: "安全模式 / Safe mode", view: open(NORMAL.map(held), { host: safeHost, safeMode: { mode: "third-party", cause: "failures", failures: 2 } }) },
   { key: "safeVar", title: "安全模式（启动参数）/ Safe mode (variable)", view: open(NORMAL.map(held), { host: safeHost, safeMode: { mode: "third-party", cause: "variable", failures: 0 } }) },
   { key: "offline", title: "插件进程连不上 / Offline", view: open(NORMAL, { connection: "reconnecting" }) },
@@ -329,6 +330,7 @@ try {
 
   check(within("nodeDl", "[data-banner='runtime-downloading'] [role='progressbar']")?.getAttribute("aria-valuenow") === "40" && within("nodeDl", ".plugin-row--skeleton"), "Runtime downloading: a banner shows the progress above the loading list");
   check(within("nodeFail", "[data-banner='runtime-failed']")?.textContent!.includes("all 3 download sources failed") && !within("nodeFail", ".plugin-row--skeleton"), "Runtime failed: the banner says why and the loading list is gone");
+  check(within("nodeDisk", "[data-banner='runtime-failed']")?.textContent!.includes("os error 5") && within("nodeDisk", "[data-banner='runtime-failed'] .plugin-banner__title")?.textContent !== within("nodeFail", "[data-banner='runtime-failed'] .plugin-banner__title")?.textContent, "Runtime blocked on disk: its own title, not the network one, and the system's words stay visible");
   await click(within("nodeFail", "[data-action='runtime-retry']"));
   await settle();
   check(ipc.calls.includes("retry-node"), "Retry asks Fuyu to look for the runtime again");
