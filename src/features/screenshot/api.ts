@@ -7,6 +7,7 @@ import type { OcrWord } from "./redact";
 import type { PixelRect } from "./selection";
 import { shortcutConfig, type RecordSettings, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import type { Target } from "./targets";
+import type { HistoryLines } from "./historySearch";
 
 export const SCREENSHOT_SESSION_EVENT = "screenshot-session";
 export const SCREENSHOT_ENDED_EVENT = "screenshot-ended";
@@ -32,7 +33,7 @@ export const SCREENSHOT_SHORTCUT_STATUS_EVENT = "screenshot-shortcut-status";
 export type ShortcutStatus = { action: ShortcutAction; problem: "invalid" | "duplicate" | "taken" };
 
 export function configureScreenshot(enabled: boolean, settings: ScreenshotSettings) {
-  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen, historyDays: settings.historyDays });
+  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen, historyDays: settings.historyDays, historyText: settings.historyText });
 }
 
 export function getScreenshotShortcutStatus() {
@@ -232,7 +233,7 @@ export function listenScreenshotTaken(handler: EventCallback<ScreenshotTaken>) {
 
 export const SCREENSHOT_HISTORY_EVENT = "screenshot-history-changed";
 
-export type HistoryItem = { path: string; takenAt: number; thumbnail: string | null };
+export type HistoryItem = { path: string; takenAt: number; thumbnail: string | null; width: number; height: number; words: HistoryLines | null };
 
 export function getScreenshotHistory() {
   return invoke<HistoryItem[]>("screenshot_history");

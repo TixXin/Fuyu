@@ -14,10 +14,11 @@ const DIR = "C:\Users\me\.fuyu\screenshots\\";
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 const recent = Math.max(today.getTime() + 60_000, Date.now() - 60_000 * 3);
+const word = (text: string, x: number, y: number) => ({ text, x, y, width: 0.2, height: 0.08 });
 let shots = [
-  { path: `${DIR}c.png`, takenAt: recent, thumbnail: THUMB },
-  { path: `${DIR}b.png`, takenAt: recent - 30_000, thumbnail: THUMB },
-  { path: `${DIR}a.png`, takenAt: today.getTime() - 86_400_000 * 3 + 3_600_000 * 9, thumbnail: null },
+  { path: `${DIR}c.png`, takenAt: recent, thumbnail: THUMB, width: 1600, height: 1000, words: [[word("Build", 0.1, 0.2), word("failed", 0.32, 0.2)]] },
+  { path: `${DIR}b.png`, takenAt: recent - 30_000, thumbnail: THUMB, width: 3200, height: 1000, words: [[word("会议", 0.5, 0.5), word("纪要", 0.7, 0.5)]] },
+  { path: `${DIR}a.png`, takenAt: today.getTime() - 86_400_000 * 3 + 3_600_000 * 9, thumbnail: null, width: 0, height: 0, words: null },
 ];
 const calls: { command: string; payload: unknown }[] = [];
 mockIPC((command, payload) => {
@@ -90,6 +91,26 @@ async function runChecks() {
     await act(async () => { tiles()[1].querySelector<HTMLButtonElement>('button[aria-label="复制"]')!.click(); });
     await wait(10);
     check(JSON.stringify(called("screenshot_history_copy").slice(-1)[0]?.payload) === JSON.stringify({ path: `${DIR}b.png` }), "The copy button copies that one");
+
+    const search = page.querySelector<HTMLInputElement>(".screenshot-history__search input")!;
+    const type = async (text: string) => {
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(search, text);
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      await wait(10);
+    };
+    check(search && search.placeholder === "搜图里的文字", "There is a box to search the text in the screenshots");
+    await type("FAILED");
+    check(tiles().length === 1 && tiles()[0].querySelectorAll(".screenshot-history__mark").length === 1, "Searching keeps only the screenshot with that text, ignoring case, and marks the word");
+    await type("会 议纪");
+    const marks = tiles()[0]?.querySelector<HTMLElement>(".screenshot-history__marks");
+    check(tiles().length === 1 && tiles()[0].querySelectorAll(".screenshot-history__mark").length === 2 && marks?.style.width === "200%" && marks.style.left === "-50%", "Chinese text matches across words, and the marks follow the cropped thumbnail");
+    await type("没有这个词");
+    check(tiles().length === 0 && page.querySelector(".screenshot-history__no-match")?.textContent?.includes("没有截图里有「没有这个词」"), "With no match, it says so");
+    await act(async () => { page.querySelector<HTMLButtonElement>('.screenshot-history__search button[aria-label="清除搜索"]')!.click(); });
+    await wait(10);
+    check(tiles().length === 3 && !page.querySelector(".screenshot-history__mark") && search.value === "", "Clearing the search brings every screenshot back without marks");
 
     const chips = () => [...clip.querySelectorAll<HTMLButtonElement>(".island-list-chip")];
     const shotChip = () => chips().find((chip) => chip.textContent === "截图")!;

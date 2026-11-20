@@ -4,6 +4,7 @@ import type { Point } from "../../features/screenshot/selection";
 
 export function AnnotationTextInput({
   at,
+  initial,
   color,
   size,
   placeholder,
@@ -11,18 +12,23 @@ export function AnnotationTextInput({
   onCancel,
 }: {
   at: Point;
+  initial?: string;
   color: string;
   size: number;
   placeholder: string;
   onCommit: (text: string) => void;
   onCancel: () => void;
 }) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initial ?? "");
   const box = useRef<HTMLTextAreaElement>(null);
   const done = useRef(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => box.current?.focus(), 0);
+    const timer = setTimeout(() => {
+      const element = box.current;
+      element?.focus();
+      element?.setSelectionRange(element.value.length, element.value.length);
+    }, 0);
     return () => clearTimeout(timer);
   }, []);
 
