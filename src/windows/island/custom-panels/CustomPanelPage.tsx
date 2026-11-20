@@ -3,10 +3,11 @@ import { CirclePlus } from "lucide-react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import type { LibraryWidget } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { addPanelItem, boardHeightPx, defaultWidgetSize, dropNewPanelItem, fuyuPanel, fuyuPanels, gridWidthPx, PANEL_MODES, removePanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
+import { addPanelItem, boardHeightPx, boardWidthPx, defaultWidgetSize, fuyuPanel, fuyuPanels, GRID_UNIT_PX, PANEL_MODES, removePanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
-import { PanelBoard, type DragArea, type HeldWidget, type IncomingWidget } from "./PanelBoard";
+import { dropIncoming, type DragArea, type IncomingWidget } from "./boardDrag";
+import { PanelBoard, type HeldWidget } from "./PanelBoard";
 import { editingPanel, startPanelEditing, stopPanelEditing, usePanelEditing } from "./panelEditing";
 import { useIslandWidgets } from "./useIslandWidgets";
 import { useLongPress, type LongPressStart } from "./useLongPress";
@@ -18,23 +19,33 @@ const UNDO_MS = 4000;
 const BOARD_MARGIN_PX = 10;
 const GRID_TOP_PX = 2;
 
-function useFitScale(contentHeight: number) {
+type Room = { width: number; height: number; rest: number };
+
+function useFitScale(panel: CustomPanel, editing: boolean) {
   const ref = useRef<HTMLDivElement>(null);
-  const [room, setRoom] = useState<{ width: number; height: number } | null>(null);
+  const editingRef = useRef(editing);
+  const [room, setRoom] = useState<Room | null>(null);
+  useLayoutEffect(() => {
+    editingRef.current = editing;
+  });
   useLayoutEffect(() => {
     const element = ref.current;
     if (!element) return;
-    const measure = () => setRoom({ width: element.clientWidth, height: element.clientHeight });
+    const measure = () => {
+      const { clientWidth: width, clientHeight: height } = element;
+      setRoom((previous) => ({ width, height, rest: editingRef.current && previous ? previous.rest : width }));
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const scale = room ? Math.min(1, room.width / gridWidthPx, room.height / (contentHeight + BOARD_MARGIN_PX)) : 1;
+  const width = boardWidthPx(panel, room ? Math.floor(room.rest / GRID_UNIT_PX) * GRID_UNIT_PX : 0);
+  const scale = room ? Math.min(1, room.width / width, room.height / (boardHeightPx(panel) + BOARD_MARGIN_PX)) : 1;
   const fit = scale > 0 ? scale : 1;
-  const side = room ? (room.width / fit - gridWidthPx) / 2 : 0;
-  const area: DragArea | null = room ? { left: -side, top: -GRID_TOP_PX, right: gridWidthPx + side, bottom: room.height / fit - GRID_TOP_PX } : null;
-  return { ref, scale: fit, area };
+  const side = room ? (room.width / fit - width) / 2 : 0;
+  const area: DragArea | null = room ? { left: -side, top: -GRID_TOP_PX, right: width + side, bottom: room.height / fit - BOARD_MARGIN_PX } : null;
+  return { ref, scale: fit, width, area };
 }
 
 function boardPoint(grid: HTMLElement | null, area: HTMLElement | null, drag: PickerDrag): { x: number; y: number } | null {
@@ -42,7 +53,7 @@ function boardPoint(grid: HTMLElement | null, area: HTMLElement | null, drag: Pi
   const bounds = area.getBoundingClientRect();
   if (drag.clientX < bounds.left || drag.clientX > bounds.right || drag.clientY < bounds.top || drag.clientY > bounds.bottom) return null;
   const rect = grid.getBoundingClientRect();
-  const factor = rect.width > 0 ? gridWidthPx / rect.width : 1;
+  const factor = rect.width > 0 ? grid.offsetWidth / rect.width : 1;
   return { x: (drag.clientX - rect.left) * factor, y: (drag.clientY - rect.top) * factor };
 }
 
@@ -81,7 +92,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const editing = usePanelEditing() === panelId;
   const panel = fuyuPanel(panels);
   const empty = panel.items.length === 0;
-  const { ref, scale, area } = useFitScale(boardHeightPx(panel));
+  const { ref, scale, width, area } = useFitScale(panel, editing);
   const gridRef = useRef<HTMLDivElement>(null);
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
   const { removed, remember, forget } = useUndoableRemoval();
@@ -115,7 +126,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   };
   const dropPicked = (drag: PickerDrag) => {
     const incoming = incomingOf(drag);
-    if (incoming) change(dropNewPanelItem(panel, incoming.widget, incoming.size, incoming.x, incoming.y));
+    if (incoming) change(dropIncoming(panel, incoming, width));
     else if (empty && boardPoint(ref.current, ref.current, drag)) add(drag.widget);
   };
   const undo = () => {
@@ -139,7 +150,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
           </div>
         ) : (
           <div className="custom-panel__zoom" style={{ zoom: scale }}>
-            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} area={area} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
+            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} width={width} area={area} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
           </div>
         )}
       </div>

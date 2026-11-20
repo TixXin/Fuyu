@@ -1,34 +1,18 @@
 import { useEffect, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type Ref } from "react";
 import { ChevronLeft, ChevronRight, MoveDiagonal2, X } from "lucide-react";
-import { snapPx, useBoxDrag, type BoxDrag, type BoxDragKind } from "../../../components/island-widget/useBoxDrag";
+import { useBoxDrag, type BoxDragKind } from "../../../components/island-widget/useBoxDrag";
 import { SlotView } from "../../../features/plugin-kernel/SlotView";
 import type { WidgetLibrary } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import {
-  boardHeightPx,
-  dropNewPanelItem,
-  GRID_UNIT_PX,
-  gridWidthPx,
-  insertIndexAt,
-  itemBoxPx,
-  movePanelItemTo,
-  nextPanelSize,
-  placeFreeItem,
-  reorderPanelItem,
-  resizePanelItem,
-  sizeCells,
-  stretchFreeItem,
-  type CustomPanel,
-  type PanelSize,
-} from "../../../lib/settings/customPanels";
+import { boardHeightPx, GRID_CELL_PX, GRID_COLUMNS, GRID_GAP_PX, itemBoxPx, nextPanelSize, reorderPanelItem, resizePanelItem, sizeCells, type CustomPanel, type PanelSize } from "../../../lib/settings/customPanels";
 import { MOTION_MEDIUM_MS } from "../../../lib/theme/motionTokens";
 import { widgetSlot } from "../slots/widget";
+import { draggedTo, freeTarget, keptInside, previewOf, type DragArea, type IncomingWidget } from "./boardDrag";
 import type { LongPressStart } from "./useLongPress";
 
 const CELL_PADDING = 10;
 const WIGGLE_PERIOD_MS = 135;
 
-export type IncomingWidget = { widget: string; name: string; size: PanelSize; x: number; y: number };
 export type HeldWidget = Omit<LongPressStart, "target"> & { widget: string };
 type Settle = { widget: string; x: number; y: number; go: boolean };
 
@@ -37,40 +21,12 @@ function sizeLabel(size: PanelSize) {
   return `${cols}×${rows}`;
 }
 
-function draggedTo(panel: CustomPanel, drag: Pick<BoxDrag, "widget" | "kind" | "dx" | "dy">): CustomPanel {
-  const item = panel.items.find((candidate) => candidate.widget === drag.widget);
-  if (!item) return panel;
-  if (panel.mode === "free") {
-    const dx = Math.round(drag.dx / GRID_UNIT_PX);
-    const dy = Math.round(drag.dy / GRID_UNIT_PX);
-    return drag.kind === "move" ? placeFreeItem(panel, drag.widget, item.x + dx, item.y + dy) : stretchFreeItem(panel, drag.widget, item.w + dx, item.h + dy);
-  }
-  if (drag.kind !== "move") return panel;
-  const box = itemBoxPx(panel, item);
-  const index = insertIndexAt(panel, box.left + box.width / 2 + drag.dx, box.top + box.height / 2 + drag.dy, drag.widget);
-  return movePanelItemTo(panel, drag.widget, index);
-}
-
-export type DragArea = { left: number; top: number; right: number; bottom: number };
-
-function keptInside(panel: CustomPanel, drag: BoxDrag, area: DragArea | null): BoxDrag {
-  const item = panel.items.find((candidate) => candidate.widget === drag.widget);
-  if (!item) return drag;
-  const box = itemBoxPx(panel, item);
-  const bounds = area ?? { left: 0, top: 0, right: gridWidthPx, bottom: boardHeightPx(panel) };
-  const bottom = Math.max(bounds.bottom, boardHeightPx(panel));
-  const within = (value: number, low: number, high: number) => Math.min(Math.max(value, low), Math.max(low, high));
-  if (drag.kind === "stretch") return { ...drag, dx: Math.min(drag.dx, gridWidthPx - box.left - box.width), dy: Math.min(drag.dy, bottom - box.top - box.height) };
-  return {
-    ...drag,
-    dx: within(drag.dx, Math.min(0, bounds.left) - box.left, Math.max(gridWidthPx, bounds.right) - box.left - box.width),
-    dy: within(drag.dy, Math.min(0, bounds.top) - box.top, bottom - box.top - box.height),
-  };
-}
-
-function previewOf(panel: CustomPanel, drag: BoxDrag | null, incoming: IncomingWidget | null): CustomPanel {
-  if (incoming) return dropNewPanelItem(panel, incoming.widget, incoming.size, incoming.x, incoming.y);
-  return drag ? draggedTo(panel, drag) : panel;
+function GridSlots({ height }: { height: number }) {
+  const step = GRID_CELL_PX + GRID_GAP_PX;
+  const rows = Math.max(1, Math.floor((height + GRID_GAP_PX) / step));
+  return Array.from({ length: rows * GRID_COLUMNS }, (_, at) => (
+    <span key={at} className="custom-panel__slot" style={{ left: (at % GRID_COLUMNS) * step, top: Math.floor(at / GRID_COLUMNS) * step, width: GRID_CELL_PX, height: GRID_CELL_PX }} aria-hidden="true" />
+  ));
 }
 
 function useSettle() {
@@ -95,6 +51,7 @@ type PanelBoardProps = {
   library: WidgetLibrary;
   editing: boolean;
   scale: number;
+  width: number;
   area: DragArea | null;
   incoming: IncomingWidget | null;
   held: HeldWidget | null;
@@ -104,7 +61,7 @@ type PanelBoardProps = {
   onRemove: (widget: string, name: string) => void;
 };
 
-export function PanelBoard({ panel, library, editing, scale, area, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
+export function PanelBoard({ panel, library, editing, scale, width, area, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
   const t = useTranslation().islandWidgets.panel;
   const free = panel.mode === "free";
   const [settle, setSettle] = useSettle();
@@ -116,17 +73,16 @@ export function PanelBoard({ panel, library, editing, scale, area, incoming, hel
   const { drag: rawDrag, begin, beginAt } = useBoxDrag({
     scale,
     onDrop: (released) => {
-      const drop = { ...released, ...keptInside(panel, released, area) };
+      const drop = keptInside(panel, released, area, width);
       const item = panel.items.find((candidate) => candidate.widget === drop.widget);
       if (!item) return;
-      const next = draggedTo(panel, drop);
+      const next = draggedTo(panel, drop, width);
       const placed = next.items.find((candidate) => candidate.widget === drop.widget);
       if (drop.kind === "move" && placed) {
         const from = itemBoxPx(panel, item);
+        const target = freeTarget(panel, drop, width);
         const to = itemBoxPx(next, placed);
-        const dx = free ? snapPx(drop.dx, GRID_UNIT_PX) : drop.dx;
-        const dy = free ? snapPx(drop.dy, GRID_UNIT_PX) : drop.dy;
-        setSettle({ widget: drop.widget, x: from.left + dx - to.left, y: from.top + dy - to.top, go: false });
+        setSettle({ widget: drop.widget, x: (target ? target.left : from.left + drop.dx) - to.left, y: (target ? target.top : from.top + drop.dy) - to.top, go: false });
       }
       onChange(next);
     },
@@ -148,22 +104,27 @@ export function PanelBoard({ panel, library, editing, scale, area, incoming, hel
     const before = delta < 0 ? (panel.items[index - 1]?.widget ?? null) : (panel.items[index + 2]?.widget ?? null);
     onChange(reorderPanelItem(panel, item.widget, before));
   };
-  const drag = rawDrag && keptInside(panel, rawDrag, area);
-  const shown = previewOf(panel, drag, incoming);
+  const drag = rawDrag && keptInside(panel, rawDrag, area, width);
+  const shown = previewOf(panel, drag, incoming, width);
+  const target = drag ? freeTarget(panel, drag, width) : null;
   const last = panel.items.length - 1;
+  const height = editing ? Math.max(boardHeightPx(shown), area?.bottom ?? 0) : boardHeightPx(shown);
 
   return (
-    <div className="custom-panel__grid" ref={gridRef} style={{ width: gridWidthPx, height: boardHeightPx(shown) }} data-mode={panel.mode}>
+    <div className="custom-panel__grid" ref={gridRef} style={{ width, height }} data-mode={panel.mode} data-editing={editing || undefined}>
+      {editing && !free ? <GridSlots height={height} /> : null}
+      {target?.guideX != null ? <span className="custom-panel__guide" data-axis="x" style={{ left: target.guideX }} aria-hidden="true" /> : null}
+      {target?.guideY != null ? <span className="custom-panel__guide" data-axis="y" style={{ top: target.guideY }} aria-hidden="true" /> : null}
       {shown.items.map((item, order) => {
         const index = panel.items.findIndex((candidate) => candidate.widget === item.widget);
         const moving = drag?.widget === item.widget ? drag : null;
         const original = panel.items[index];
         const box = itemBoxPx(shown, moving && original ? original : item);
         const style = { ...box, zIndex: moving ? shown.items.length + 1 : order + 1, "--wiggle-phase": `${(Math.max(0, index) * 53) % WIGGLE_PERIOD_MS}ms` } as CSSProperties;
-        if (moving?.kind === "move") style.transform = `translate(${free ? snapPx(moving.dx, GRID_UNIT_PX) : moving.dx}px, ${free ? snapPx(moving.dy, GRID_UNIT_PX) : moving.dy}px)`;
-        if (moving?.kind === "stretch") {
-          style.width = Math.max(box.width + snapPx(moving.dx, GRID_UNIT_PX), GRID_UNIT_PX * 4);
-          style.height = Math.max(box.height + snapPx(moving.dy, GRID_UNIT_PX), GRID_UNIT_PX * 4);
+        if (moving?.kind === "move") style.transform = target ? `translate(${target.left - box.left}px, ${target.top - box.top}px)` : `translate(${moving.dx}px, ${moving.dy}px)`;
+        if (moving?.kind === "stretch" && target) {
+          style.width = target.width;
+          style.height = target.height;
         }
         const settling = settle?.widget === item.widget ? settle : null;
         if (settling && !settling.go) style.transform = `translate(${settling.x}px, ${settling.y}px)`;

@@ -46,6 +46,39 @@
   font-size: 12px;
 }
 
+.custom-panel__grid[data-editing][data-mode="free"] {
+  background-image: radial-gradient(circle, rgba(var(--overlay-rgb, 255, 255, 255), 0.16) 1px, transparent 1.5px);
+  background-position: -8px -8px;
+  background-size: 16px 16px;
+}
+
+.custom-panel__slot {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1.5px dashed rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+  border-radius: 14px;
+  pointer-events: none;
+}
+
+.custom-panel__guide {
+  position: absolute;
+  z-index: 60;
+  background: var(--color-accent);
+  pointer-events: none;
+}
+
+.custom-panel__guide[data-axis="x"] {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.custom-panel__guide[data-axis="y"] {
+  right: 0;
+  left: 0;
+  height: 1px;
+}
+
 @keyframes custom-panel-wiggle {
   from {
     rotate: -0.9deg;

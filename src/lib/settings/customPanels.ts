@@ -133,7 +133,12 @@ const reflow = (panel: CustomPanel, items: readonly PanelItem[]): CustomPanel =>
 export const FREE_WIDTH_UNITS = GRID_COLUMNS * STEP - 1;
 export const freeBottom = (items: readonly PanelItem[]) => items.reduce((bottom, item) => Math.max(bottom, item.y + item.h + 1), 0);
 export const freeHeightPx = (items: readonly PanelItem[]) => Math.max(0, freeBottom(items) - 1) * GRID_UNIT_PX;
+export const freeRightPx = (items: readonly PanelItem[]) => items.reduce((right, item) => Math.max(right, (item.x + item.w) * GRID_UNIT_PX), 0);
 const minBox = (size: PanelSize) => placed("", size, 0, 0);
+export const freeLeastPx = (size: PanelSize) => {
+  const box = minBox(size);
+  return { width: box.w * GRID_UNIT_PX, height: box.h * GRID_UNIT_PX };
+};
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), Math.max(low, high));
 
 export function addPanelItem(panel: CustomPanel, widget: string, size: PanelSize): CustomPanel {
@@ -190,19 +195,19 @@ function pushedAway(items: readonly PanelItem[], widget: string): PanelItem[] {
   return placed.map((item, index) => (item.y === items[index].y ? items[index] : item));
 }
 
-export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: number): CustomPanel {
+export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: number, widthUnits = FREE_WIDTH_UNITS): CustomPanel {
   const item = panel.items.find((candidate) => candidate.widget === widget);
   if (!item || panel.mode !== "free") return panel;
-  const next = { ...item, x: clamp(Math.round(x), 0, FREE_WIDTH_UNITS - item.w), y: Math.max(0, Math.round(y)) };
+  const next = { ...item, x: clamp(Math.round(x), 0, widthUnits - item.w), y: Math.max(0, Math.round(y)) };
   if (next.x === item.x && next.y === item.y && panel.items[panel.items.length - 1] === item) return panel;
   return { ...panel, items: pushedAway([...panel.items.filter((candidate) => candidate !== item), next], widget) };
 }
 
-export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number): CustomPanel {
+export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number, widthUnits = FREE_WIDTH_UNITS): CustomPanel {
   const item = panel.items.find((candidate) => candidate.widget === widget);
   if (!item || panel.mode !== "free") return panel;
   const least = minBox(item.size);
-  const next = { ...item, w: clamp(Math.round(w), least.w, FREE_WIDTH_UNITS - item.x), h: Math.max(least.h, Math.round(h)) };
+  const next = { ...item, w: clamp(Math.round(w), least.w, widthUnits - item.x), h: Math.max(least.h, Math.round(h)) };
   if (next.w === item.w && next.h === item.h) return panel;
   return { ...panel, items: pushedAway(panel.items.map((candidate) => (candidate === item ? next : candidate)), widget) };
 }
@@ -218,6 +223,10 @@ export function itemBoxPx(panel: CustomPanel, item: PanelItem): PanelBox {
 
 export function boardHeightPx(panel: CustomPanel): number {
   return panel.mode === "free" ? Math.max(freeHeightPx(panel.items), GRID_CELL_PX) : cellsToPx(Math.max(1, gridRows(panel.items)));
+}
+
+export function boardWidthPx(panel: CustomPanel, freeWidthPx: number): number {
+  return panel.mode === "free" ? Math.max(gridWidthPx, freeWidthPx, freeRightPx(panel.items)) : gridWidthPx;
 }
 
 export function setPanelMode(panel: CustomPanel, mode: PanelMode): CustomPanel {
@@ -247,12 +256,12 @@ export function movePanelItemTo(panel: CustomPanel, widget: string, index: numbe
   return reflow(panel, [...rest.slice(0, at), moving, ...rest.slice(at)]);
 }
 
-export function dropNewPanelItem(panel: CustomPanel, widget: string, size: PanelSize, x: number, y: number): CustomPanel {
+export function dropNewPanelItem(panel: CustomPanel, widget: string, size: PanelSize, x: number, y: number, widthUnits = FREE_WIDTH_UNITS): CustomPanel {
   const added = addPanelItem(panel, widget, size);
   if (added === panel) return panel;
   if (panel.mode !== "grid") {
     const box = minBox(size);
-    return placeFreeItem(added, widget, x / GRID_UNIT_PX - box.w / 2, y / GRID_UNIT_PX - box.h / 2);
+    return placeFreeItem(added, widget, x / GRID_UNIT_PX - box.w / 2, y / GRID_UNIT_PX - box.h / 2, widthUnits);
   }
   return movePanelItemTo(added, widget, insertIndexAt(panel, x, y, null));
 }
