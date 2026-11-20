@@ -93,7 +93,8 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const { panels, save } = useCustomPanels();
   const library = useIslandWidgets();
   const editing = usePanelEditing() === panelId;
-  const { ref, scale, board, panel, pages, pageStepPx } = useStrip(fuyuPanel(panels), editing);
+  const sizesOf = (id: string) => library.find(id)?.sizes ?? null;
+  const { ref, scale, board, panel, pages, pageStepPx } = useStrip(fuyuPanel(panels, library.widgets.length > 0 ? sizesOf : undefined), editing);
   const empty = panel.items.length === 0;
   const gridRef = useRef<HTMLDivElement>(null);
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
@@ -135,7 +136,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   };
   const reset = () => {
     remember({ before: panel, text: t.resetDone });
-    change(applyPanelTemplate({ ...panel, mode: "grid", items: [] }, "fuyu", (id) => library.find(id)?.sizes ?? null));
+    change(applyPanelTemplate({ ...panel, mode: "grid", items: [] }, "fuyu", sizesOf));
   };
   const undo = () => {
     if (removed) change(removed.before);
@@ -153,7 +154,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
         {empty ? (
           <div className="custom-panel__empty">
             <p>{t.empty}</p>
-            {editing ? null : <PanelTemplateButtons onPick={(template) => change(applyPanelTemplate(panel, template, (id) => library.find(id)?.sizes ?? null))} />}
+            {editing ? null : <PanelTemplateButtons onPick={(template) => change(applyPanelTemplate(panel, template, sizesOf))} />}
             <span className="custom-panel__hint">{editing ? t.emptyEditing : t.templateHint}</span>
           </div>
         ) : (

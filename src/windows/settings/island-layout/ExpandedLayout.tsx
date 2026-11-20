@@ -25,7 +25,11 @@ export function ExpandedLayout({ settings, pluginPages, pluginWidgets, stage }: 
   const [pageId, setPageId] = useState<string | null>(null);
   const [widgetId, setWidgetId] = useState<string | null>(null);
   const current = rows.find((row) => row.id === pageId) ?? rows.find((row) => !row.hidden && !row.off) ?? rows[0];
-  const panel = current?.panel ? fuyuPanel(panels) : undefined;
+  const sizesOf = (id: string) => {
+    const widget = library.find(id);
+    return widget?.available ? widget.sizes : null;
+  };
+  const panel = current?.panel ? fuyuPanel(panels, library.widgets.length > 0 ? sizesOf : undefined) : undefined;
   const selected = (panel?.items.find((item) => item.widget === widgetId) ?? panel?.items[0])?.widget;
 
   const change = (next: CustomPanel) => savePanels(fuyuPanels(next));

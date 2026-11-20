@@ -336,16 +336,28 @@ export const DEFAULT_FUYU_ITEMS: readonly (readonly [string, PanelSize])[] = [
   ["timer", "s"],
 ];
 
+export type WidgetSizesOf = (widget: string) => readonly PanelSize[] | null;
+
+export function addAvailableItems(panel: CustomPanel, items: readonly (readonly [string, PanelSize])[], sizesOf: WidgetSizesOf): CustomPanel {
+  return items.reduce((next, [widget, size]) => {
+    const sizes = sizesOf(widget);
+    const chosen = sizes ? (sizes.includes(size) ? size : defaultWidgetSize(sizes)) : null;
+    return chosen ? addPanelItem(next, widget, chosen) : next;
+  }, panel);
+}
+
+const emptyFuyu = (): CustomPanel => ({ id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] });
 let defaultFuyu: CustomPanel | null = null;
 
-export function defaultFuyuPanel(): CustomPanel {
-  defaultFuyu ??= DEFAULT_FUYU_ITEMS.reduce<CustomPanel>((panel, [widget, size]) => addPanelItem(panel, widget, size), { id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] });
+export function defaultFuyuPanel(sizesOf?: WidgetSizesOf): CustomPanel {
+  if (sizesOf) return addAvailableItems(emptyFuyu(), DEFAULT_FUYU_ITEMS, sizesOf);
+  defaultFuyu ??= DEFAULT_FUYU_ITEMS.reduce<CustomPanel>((panel, [widget, size]) => addPanelItem(panel, widget, size), emptyFuyu());
   return defaultFuyu;
 }
 
-export function fuyuPanel(panels: readonly CustomPanel[]): CustomPanel {
+export function fuyuPanel(panels: readonly CustomPanel[], sizesOf?: WidgetSizesOf): CustomPanel {
   const found = panels.find((panel) => panel.id === FUYU_PANEL_ID) ?? panels[0];
-  return found ? { ...found, id: FUYU_PANEL_ID } : defaultFuyuPanel();
+  return found ? { ...found, id: FUYU_PANEL_ID } : defaultFuyuPanel(sizesOf);
 }
 
 export function fuyuPanels(panel: CustomPanel): CustomPanel[] {

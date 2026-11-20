@@ -86,6 +86,10 @@ test("there is one Fuyu panel: the stored one, else the first older panel, else 
   assert.equal(fresh.id, "fuyu");
   assert.equal(fresh.mode, "grid");
   assert.deepEqual(fresh.items.slice(0, 6).map((item) => `${item.widget}:${item.size}`), ["today:l", "system-status:s", "battery:s", "countdown:s", "network:s", "pomodoro:s"]);
+  const off = new Set(["system-status", "battery", "unread"]);
+  const onlyOn = fuyuPanel([], (widget) => (off.has(widget) ? null : ["s", "m", "l", "w"]));
+  assert.deepEqual(onlyOn.items.slice(0, 4).map((item) => item.widget), ["today", "countdown", "network", "pomodoro"]);
+  assert.ok(onlyOn.items.every((item) => !off.has(item.widget)));
   const older = [
     { id: "p1", name: "Desk", icon: "home", mode: "free", items: [] },
     { id: "p2", name: "Play", icon: "music", mode: "grid", items: [] },
