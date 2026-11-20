@@ -249,7 +249,10 @@ export function IslandApp() {
         minimizesToTray={settings.minimizeAction === "tray"}
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
         onOpenTranslator={features.translation ? openTranslator : null}
-        onOpenSettings={openSettingsWindow}
+        onOpenSettings={(section) => {
+          openSettingsWindow(section);
+          collapseIsland();
+        }}
         onTuck={tuckIsland}
         onReveal={hoverTucked}
         onPageChange={setPage}
