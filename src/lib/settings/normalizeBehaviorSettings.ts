@@ -12,6 +12,11 @@ import {
 } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
+function chosenIslandLayerShortcut(settings: LegacyIslandSettings | null | undefined) {
+  if (settings?.islandLayerShortcutChosen !== true || typeof settings.islandLayerShortcut !== "string") return "";
+  return settings.islandLayerShortcut.trim();
+}
+
 export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null | undefined) {
   return {
     idleDim: settings?.idleDim === true,
@@ -75,7 +80,8 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     pageDigitModifiers: normalizePageDigitModifiers(settings?.pageDigitModifiers),
     pageNextShortcut: normalizePageCycleShortcut(settings?.pageNextShortcut, DEFAULT_PAGE_NEXT_SHORTCUT),
     pagePreviousShortcut: normalizePageCycleShortcut(settings?.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT),
-    islandLayerShortcut: typeof settings?.islandLayerShortcut === "string" ? settings.islandLayerShortcut.trim() : DEFAULT_SETTINGS.islandLayerShortcut,
+    islandLayerShortcut: chosenIslandLayerShortcut(settings),
+    islandLayerShortcutChosen: settings?.islandLayerShortcutChosen === true,
     todoEnabled: settings?.todoEnabled !== false,
     musicEnabled: settings?.musicEnabled !== false,
     agentStatusEnabled: settings?.agentStatusEnabled !== false,

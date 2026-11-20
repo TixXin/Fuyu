@@ -124,6 +124,7 @@
         "pageNextShortcut": "local",
         "pagePreviousShortcut": "local",
         "islandLayerShortcut": "local",
+        "islandLayerShortcutChosen": "local",
         "todoEnabled": "firstMergeOnly",
         "musicEnabled": "firstMergeOnly",
         "agentStatusEnabled": "firstMergeOnly",

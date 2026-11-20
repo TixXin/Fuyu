@@ -10,6 +10,9 @@ export type TrayMenuText = {
   islandOff: string;
   islandOnShort: string;
   islandOffShort: string;
+  islandBehind: string;
+  islandBehindShort: string;
+  raiseIsland: string;
   showIsland: string;
   hideIsland: string;
   screenshot: string;
@@ -56,6 +59,9 @@ export const zhCN: TrayMenuText = {
   islandOff: "已隐藏，点一下显示",
   islandOnShort: "显示中",
   islandOffShort: "已隐藏",
+  islandBehind: "在窗口下面，点一下回到最前",
+  islandBehindShort: "在窗口下面",
+  raiseIsland: "让岛屿回到最前",
   showIsland: "显示岛屿",
   hideIsland: "隐藏岛屿",
   screenshot: "截图",
@@ -102,6 +108,9 @@ export const en: TrayMenuText = {
   islandOff: "Hidden, click to show",
   islandOnShort: "Showing",
   islandOffShort: "Hidden",
+  islandBehind: "Behind other windows, click to bring it to the front",
+  islandBehindShort: "Behind windows",
+  raiseIsland: "Bring the island to the front",
   showIsland: "Show island",
   hideIsland: "Hide island",
   screenshot: "Screenshot",

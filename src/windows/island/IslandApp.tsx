@@ -37,6 +37,7 @@ import { useSettingsFileSync } from "../../lib/settings-backup/useSettingsFileSy
 import { useOnboardingDemo } from "./useOnboardingDemo";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { useV2UpgradeNotice } from "./useV2UpgradeNotice";
+import { useIslandLayerNotice } from "./useIslandLayerNotice";
 import { useIslandNotice } from "./islandNotice";
 import { useIslandSide } from "./useIslandSide";
 import { IslandRunners } from "./IslandRunners";
@@ -87,6 +88,7 @@ export function IslandApp() {
     quiet: game.quiet,
     demoActive: demo.active,
   });
+  const layerNotice = useIslandLayerNotice({ mode, isTucked, shortcut: settings.islandLayerShortcut });
   const notch = useIslandNotch();
   const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
@@ -94,7 +96,7 @@ export function IslandApp() {
   const grow = mode === "collapsed" && !isTucked && notch === null && side === null ? summaryGrow : null;
   const textWidth = useCollapsedWidth({
     barText,
-    noticeText: v2Upgrade.text ?? (firstHints.current ? t.island.firstHint[firstHints.current] : null),
+    noticeText: layerNotice.text ?? v2Upgrade.text ?? (firstHints.current ? t.island.firstHint[firstHints.current] : null),
     showTitle: settings.showTitle,
     widthExtra: settings.collapsedWidthExtra,
     peeking: contributedPreview !== null || contributedLines.some((line) => line.drop === true),
@@ -124,7 +126,7 @@ export function IslandApp() {
   const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
   const pageIslandHeight = getExpandedIslandHeight({ maxPanelHeight: settings.maxPanelHeight, panel: popups.get(page), popup });
   const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
-  const islandNotice = useIslandNotice({ firstHints, v2Upgrade });
+  const islandNotice = useIslandNotice({ firstHints, v2Upgrade, layer: layerNotice });
   const isDimmed = useIdleDim({
     enabled: settings.idleDim,
     seconds: settings.idleDimSeconds,

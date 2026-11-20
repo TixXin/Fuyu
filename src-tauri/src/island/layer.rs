@@ -1,15 +1,21 @@
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Mutex, OnceLock, PoisonError,
+use std::{
+    sync::{
+        atomic::{AtomicBool, AtomicU64, Ordering},
+        Mutex, OnceLock, PoisonError,
+    },
+    thread,
+    time::Duration,
 };
 
 use tauri::{AppHandle, Emitter};
 
 const LAYER_EVENT: &str = "island-layer-changed";
 const SHORTCUT_STATUS_EVENT: &str = "island-layer-shortcut-status";
+const DROP_DELAY: Duration = Duration::from_millis(1200);
 
 static FRONT: AtomicBool = AtomicBool::new(true);
 static YIELDING: AtomicBool = AtomicBool::new(false);
+static CHANGES: AtomicU64 = AtomicU64::new(0);
 static APP: OnceLock<AppHandle> = OnceLock::new();
 static PROBLEM: Mutex<Option<&'static str>> = Mutex::new(None);
 
@@ -30,6 +36,14 @@ fn front() -> bool {
     FRONT.load(Ordering::SeqCst)
 }
 
+fn is_behind(visible: bool, front: bool) -> bool {
+    visible && !front
+}
+
+pub(crate) fn behind(app: &AppHandle) -> bool {
+    is_behind(crate::tray::island_visible(app), front())
+}
+
 #[cfg(target_os = "macos")]
 pub(super) fn app() -> Option<&'static AppHandle> {
     APP.get()
@@ -43,10 +57,39 @@ pub(super) fn pressed() {
 
 fn toggle(app: &AppHandle) -> bool {
     let front = !front();
-    set_front(front);
-    apply(app);
-    let _ = app.emit(LAYER_EVENT, front);
+    change(app, front);
     front
+}
+
+fn change(app: &AppHandle, front: bool) {
+    set_front(front);
+    let stamp = CHANGES.fetch_add(1, Ordering::SeqCst) + 1;
+    let _ = app.emit(LAYER_EVENT, front);
+    crate::tray::refresh_now(app);
+    if front {
+        apply(app);
+    } else {
+        drop_later(app, stamp);
+    }
+}
+
+fn drop_later(app: &AppHandle, stamp: u64) {
+    let handle = app.clone();
+    let spawned = thread::Builder::new().name("island-layer-drop".into()).spawn(move || {
+        thread::sleep(DROP_DELAY);
+        if CHANGES.load(Ordering::SeqCst) == stamp {
+            apply(&handle);
+        }
+    });
+    if spawned.is_err() {
+        apply(app);
+    }
+}
+
+pub(crate) fn bring_front(app: &AppHandle) {
+    if !front() {
+        change(app, true);
+    }
 }
 
 fn apply(app: &AppHandle) {
@@ -126,6 +169,14 @@ mod tests {
         assert!(!allows_raise());
         set_front(true);
         assert!(allows_raise());
+    }
+
+    #[test]
+    fn the_island_counts_as_behind_only_while_it_is_shown_and_sent_back() {
+        assert!(is_behind(true, false));
+        assert!(!is_behind(true, true));
+        assert!(!is_behind(false, false));
+        assert!(!is_behind(false, true));
     }
 
     #[test]

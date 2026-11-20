@@ -1,12 +1,10 @@
 import { useState, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
 import { ShortcutKeys } from "../../../components/controls/ShortcutKeys";
-import { ShortcutResetButton } from "../../../components/controls/ShortcutResetButton";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { useIslandLayerShortcutProblem } from "../../../lib/island-layer/useIslandLayerShortcutProblem";
 import { useTranslation } from "../../../i18n";
 import { isMacOS } from "../../../lib/platform";
-import { DEFAULT_ISLAND_LAYER_SHORTCUT } from "../../../lib/settings/settingsLimits";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { buildShortcutFromEvent, shortcutLabel } from "../../../lib/shortcut/shortcut";
 import { useShortcutCapture } from "../../../lib/shortcut/useShortcutCapture";
@@ -33,7 +31,7 @@ export function IslandLayerShortcutSection({ settings, onSettingsChange, takenBy
       return;
     }
     setConflict(null);
-    onSettingsChange({ ...settings, islandLayerShortcut: next });
+    onSettingsChange({ ...settings, islandLayerShortcut: next, islandLayerShortcutChosen: next !== "" });
   };
 
   useShortcutCapture(recording, (captured) => {
@@ -63,11 +61,6 @@ export function IslandLayerShortcutSection({ settings, onSettingsChange, takenBy
             <strong>{shortcut ? shortcutLabel(shortcut) : text.islandLayerOff}</strong>
           </div>
           <div className="shortcut-control__actions">
-            <ShortcutResetButton
-              label={text.reset(shortcutLabel(DEFAULT_ISLAND_LAYER_SHORTCUT))}
-              isDefault={shortcut === DEFAULT_ISLAND_LAYER_SHORTCUT}
-              onReset={() => apply(DEFAULT_ISLAND_LAYER_SHORTCUT)}
-            />
             {shortcut && (
               <button className="shortcut-reset-button" type="button" aria-label={text.islandLayerTurnOff} onClick={() => apply("")}>
                 <X size={14} strokeWidth={2.3} aria-hidden="true" />

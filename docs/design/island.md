@@ -208,7 +208,8 @@
 
 ### 快捷键切上下层（已做）
 
-- 全局快捷键「切换岛的上下层」，默认 `Ctrl+Alt+B`（Mac 上是 ⌃⌥B），在「设置 → 快捷键 → 全局 → 岛屿」里能改、恢复默认或关掉（存 `fuyu-settings` 的 `islandLayerShortcut`，空字符串是关掉）。挑这个键是因为浮屿现有的全局键（`Ctrl+Alt+K` 计时器、`Ctrl+Alt+T` 划词、`Ctrl+Alt+Y/N` 审批、`Ctrl+Shift+1–7` 截图、`Ctrl+Shift+F/W/Space`）都没占它，常见的 IDE 和输入法默认也不用；Fences 用的 `Ctrl+Space` 在中文系统上是切输入法，`Ctrl+Alt+Space` 在 Mac 上是切下一个输入源，都不能用。
+- 全局快捷键「切换岛的上下层」，**默认不设**（C144，2026-11-19 起，#1086），在「设置 → 快捷键 → 全局 → 岛屿」里自己设、改或关掉（存 `fuyu-settings` 的 `islandLayerShortcut`，空字符串是没设；`islandLayerShortcutChosen` 为 true 才算数）。0.3.11 默认是 `Ctrl+Alt+B`（Mac 上是 ⌃⌥B），当时以为常见的 IDE 默认不用它，这个判断不对：VS Code / Cursor 里它是开关右侧栏，JetBrains 里是「跳到实现」。用户在 IDE 里按到后岛退到所有窗口下面，没有提示，重启才回来，群里当成「岛莫名其妙消失」反馈。所以这类全局键不再带默认值；0.3.11 存下的默认键没有 `islandLayerShortcutChosen` 标记，升级后失效，当时特意选了键的用户要重新设一次。（用户确认）
+- 退到下层要让人看得见、叫得回（C144）：按键后岛上先显示一行「岛退到窗口下面，再按 <键> 回来」，约 1.2 秒后才真正退下去（`layer.rs` 的 `DROP_DELAY`），这期间再按一次就不退；回到最前不等。托盘卡片的岛按钮在岛退到下层时写「在窗口下面」，点一下回到最前（`tray_menu_action` 的 `raise_island`）；从托盘或别的入口显示岛（`show_island`、`show_island_without_focus`）也回到最前。（用户确认做提示和托盘入口；1.2 秒为 Agent 推断）
 - 按一次：Windows 上 `SetWindowPos(HWND_NOTOPMOST)` 再 `SetWindowPos(HWND_BOTTOM)`，都带 `SWP_NOACTIVATE`，岛不再置顶、排到所有普通窗口下面；Mac 上面板层级从「菜单栏之上」降到 normal 并 `orderBack`。再按一次：Windows `HWND_TOPMOST`，Mac 回到菜单栏之上并 `orderFrontRegardless`。岛藏在托盘里时只改层级、不让它出现。
 - 只改前后层：位置、贴边、露边几何、鼠标穿透都不动；全屏让位、截图选区、贴图这些现有规则各管各的，不进这个开关。上下层只在内存里，重启浮屿后回到最前。
 - 状态在 `src-tauri/src/island/layer.rs`：`front`（快捷键切的，默认 true）和 `yielding`（以后自动让位用，默认 false），`allows_raise() = front && !yielding`。C130（#882，别的置顶窗口出现时把岛拉回最前）的守护线程每次置顶前先问 `allows_raise()`，岛被切到下层时不会被它拉上来。

@@ -52,6 +52,7 @@ export type IslandText = {
     viewGuide: string;
     gotIt: string;
   };
+  layerNotice: (shortcut: string | null) => string;
 };
 
 export const zhCN: IslandText = {
@@ -114,6 +115,7 @@ export const zhCN: IslandText = {
     viewGuide: "查看迁移说明",
     gotIt: "知道了",
   },
+  layerNotice: (shortcut) => (shortcut ? `岛退到窗口下面，再按 ${shortcut} 回来` : "岛退到窗口下面，点托盘图标可以叫回来"),
 };
 
 export const en: IslandText = {
@@ -176,4 +178,5 @@ export const en: IslandText = {
     viewGuide: "View upgrade guide",
     gotIt: "Got it",
   },
+  layerNotice: (shortcut) => (shortcut ? `Going behind windows; press ${shortcut} to bring it back` : "Going behind windows; the tray icon brings it back"),
 };
