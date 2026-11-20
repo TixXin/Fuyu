@@ -230,6 +230,7 @@
         "cardSeconds": "sync",
         "historyDays": "sync",
         "historyText": "sync",
+        "agentSource": "sync",
         "record": "optional",
         "version": "local"
       }

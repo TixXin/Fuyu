@@ -125,6 +125,12 @@ function AfterSection({ screenshot, onScreenshotChange: setScreenshot, folderDra
         checked={screenshot.historyText}
         onChange={(historyText) => setScreenshot({ ...screenshot, historyText })}
       />
+      <SettingsToggleRow
+        title={text.agentSource}
+        description={text.agentSourceHint}
+        checked={screenshot.agentSource}
+        onChange={(agentSource) => setScreenshot({ ...screenshot, agentSource })}
+      />
     </SettingsGroup>
   );
 }

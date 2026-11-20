@@ -23,13 +23,14 @@ pub(super) fn put_on_clipboard(picture: &Picture, png: &[u8], file: Option<&Path
     Ok(())
 }
 
-pub(super) fn paste_path(path: &Path) -> Result<(), String> {
+pub(super) fn paste_path(path: &Path, text: Option<&str>) -> Result<(), String> {
     {
         let _open = clipboard_win::Clipboard::new_attempts(OPEN_ATTEMPTS).map_err(|error| format!("Failed to open the clipboard: {error}"))?;
         let failed = |error: clipboard_win::ErrorCode| format!("Failed to copy the screenshot: {error}");
         raw::empty().map_err(failed)?;
         raw::set_file_list_with(&[path.to_string_lossy()], NoClear).map_err(failed)?;
-        raw::set_string_with(&format!("\"{}\"", path.display()), NoClear).map_err(failed)?;
+        let quoted = format!("\"{}\"", path.display());
+        raw::set_string_with(text.unwrap_or(&quoted), NoClear).map_err(failed)?;
     }
     thread::sleep(PASTE_DELAY);
     win32::input::send_paste_shortcut();

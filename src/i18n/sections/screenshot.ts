@@ -83,6 +83,10 @@ export type ScreenshotText = {
     noAgent: string;
     agentNotFound: string;
     close: string;
+    instruction: string;
+    instructionHint: string;
+    sendNow: string;
+    source: string;
   };
   history: {
     title: string;
@@ -212,6 +216,10 @@ export const zhCN: ScreenshotText = {
     noAgent: "没有正在运行的 Agent 会话",
     agentNotFound: "找不到这个会话的窗口",
     close: "关闭",
+    instruction: "给 Agent 的一句话",
+    instructionHint: "写一句话，回车发送（可不写）",
+    sendNow: "发送",
+    source: "来源：",
   },
   history: {
     title: "截图历史",
@@ -341,6 +349,10 @@ export const en: ScreenshotText = {
     noAgent: "No agent session is running",
     agentNotFound: "Could not find this session's window",
     close: "Close",
+    instruction: "A note for the agent",
+    instructionHint: "Add a note, Enter to send (optional)",
+    sendNow: "Send",
+    source: "Source: ",
   },
   history: {
     title: "Screenshot history",

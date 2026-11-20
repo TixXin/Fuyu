@@ -59,3 +59,30 @@
   opacity: 0.4;
   cursor: default;
 }
+
+.screenshot-notice__input {
+  min-width: 0;
+  flex: 1;
+  height: 22px;
+  padding: 0 8px;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.95);
+  font: inherit;
+  font-size: 12.5px;
+  background: rgba(var(--island-ink-rgb, 241, 240, 246), 0.1);
+  border: 0;
+  border-radius: var(--radius-pill);
+  outline: 0;
+}
+
+.screenshot-notice__input::placeholder {
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.5);
+}
+
+.screenshot-notice__input:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.screenshot-notice__action[aria-pressed="true"] {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
