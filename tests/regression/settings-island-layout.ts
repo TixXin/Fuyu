@@ -1,4 +1,5 @@
 import { act } from "react";
+import { FUYU_PANEL_ID, PANEL_ICONS, saveCustomPanels } from "../../src/lib/settings/customPanels";
 
 const row = (item: string) => document.querySelector<HTMLElement>(`.collapsed-items__item[data-item='${item}']`);
 const style = (item: string) => row(item)?.querySelector<HTMLDetailsElement>("details.collapsed-items__style");
@@ -69,8 +70,14 @@ export async function checkCustomPanels(check: (condition: unknown, message: str
   localStorage.removeItem("fuyu-custom-panels");
   await act(async () => { pageRow("panel:fuyu")!.click(); });
   check(savedPanels() === null && pageRow("panel:fuyu")?.getAttribute("aria-selected") === "true" && pageRow("panel:fuyu")?.textContent?.includes("Fuyu")
-    && document.querySelector(".panel-head__modes") && !document.querySelector(".panel-head__name") && !document.querySelector(".panel-head__remove") && document.querySelector(".expanded-preview__empty"),
-    "The Fuyu page is there before anything is saved, shows empty and offers only the layout switch, no name or delete");
+    && document.querySelector(".panel-head__modes") && !document.querySelector(".panel-head__name") && !document.querySelector(".panel-head__remove")
+    && !document.querySelector(".expanded-preview__empty") && document.querySelectorAll(".expanded-preview__cell").length > 0,
+    "The Fuyu page is there before anything is saved, shows the default widgets and offers only the layout switch, no name or delete");
+  await act(async () => {
+    saveCustomPanels([{ id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] }]);
+    window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-custom-panels" }));
+  });
+  check(document.querySelector(".expanded-preview__empty") && document.querySelectorAll(".expanded-preview__cell").length === 0, "A Fuyu panel saved with no widgets shows empty");
   check(document.querySelector(".expanded-preview__empty .panel-templates__button[data-template='workbench']") && document.querySelector(".panel-templates__button[data-template='fun']"),
     "The empty panel on the preview offers the workbench and leisure templates");
   check(addChip("todos") && addChip("session-count") && addChip("lyrics") && !addChip("status-light"), "The add bucket lists the built-in widgets but not bar-only items");

@@ -144,7 +144,7 @@ async function checkPanelEditing() {
   const zoom = Number(expandedRoot.querySelector<HTMLElement>(".custom-panel__zoom")?.style.zoom) || 1;
   await act(async () => { pointer("pointerdown", free, 20, 20); pointer("pointermove", window, 20 + 40 * zoom, 20 + 24 * zoom); pointer("pointerup", window, 20 + 40 * zoom, 20 + 24 * zoom); });
   const moved = (JSON.parse(localStorage.getItem("fuyu-custom-panels")!) as { panels: { items: { widget: string; x: number; y: number }[] }[] }).panels[0].items.find((item) => item.widget === "todos");
-  check(moved && moved.x === 5 && moved.y === 3, `自由面板里拖动按 8px 吸附移位置（${moved?.x},${moved?.y}）`);
+  check(moved && moved.x === 6 && moved.y === 0, `自由面板里拖动吸附到 16px 点阵、不出两行（${moved?.x},${moved?.y}）`);
   await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__edit")!.click());
   check(!panel()?.classList.contains("custom-panel--editing") && !expandedRoot.querySelector(".custom-panel__remove") && !expandedRoot.querySelector(".custom-panel__dock"), "再点布局按钮（✓）退出编辑模式");
   check(JSON.parse(localStorage.getItem("fuyu-custom-panels")!).panels.map((item: { id: string }) => item.id).join() === "fuyu", "编辑后存成唯一的 fuyu 面板");

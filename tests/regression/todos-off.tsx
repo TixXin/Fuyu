@@ -58,7 +58,9 @@ try {
   await settle(120);
   check(pages().includes("todo") && islandContributions.snapshot().lines.some((line) => line.item.startsWith("todos.")), "With todos on, the island has the todo page and the todo lines on the collapsed bar");
   check(await until(() => !present(".island--preparing") && !present(".todo-island"), 2000), "Once collapsed preparation settles, the expanded page subtree is hibernated");
-  check(await expand() && activePage() === "todo" && present(".todo-island"), "With todos on, the expanded island opens on the todo page");
+  check(await expand() && activePage() !== "todo" && !present(".todo-island"), "With todos on, the expanded island still opens on the Fuyu page");
+  await act(async () => { document.querySelector<HTMLElement>("#root .dot-button--todo")?.click(); });
+  check(await until(() => activePage() === "todo" && present(".todo-island"), 2000), "Switching to the todo page mounts it");
   await act(async () => { document.querySelector<HTMLElement>(".island__collapse-target")?.click(); });
   if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     check(present(".todo-island"), "During the close transition, the expanded page stays mounted until the shell finishes closing");
