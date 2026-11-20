@@ -2,7 +2,7 @@ import { landingCurve, springCurve } from "./motionCurves.ts";
 import { MOTION_BASE_MS, MOTION_FAST_MS, MOTION_MEDIUM_MS } from "./motionTokens.ts";
 import type { IslandMotion } from "../settings/types";
 
-export const ISLAND_MOTIONS = ["spring", "smooth", "fast", "bouncy", "none"] as const satisfies readonly IslandMotion[];
+export const ISLAND_MOTIONS = ["spring", "snappy", "smooth", "fast", "bouncy", "none"] as const satisfies readonly IslandMotion[];
 
 type MotionTiming = {
   width: number;
@@ -51,12 +51,26 @@ const JELLY_CLOSE: MotionTiming = {
   fade: 120, fadeDelay: 0, layer: 200, collapsedDelay: 287, bloom: 360, bounces: true,
 };
 
+const SNAPPY_OPEN: MotionTiming = {
+  width: 340, widthEase: springCurve(0.7),
+  height: 380, heightEase: landingCurve(0.42, [{ depth: 0.03, length: 0.2 }]),
+  radius: 340, radiusEase: springCurve(0.75), ease: EASE_OUT,
+  fade: 180, fadeDelay: 60, layer: 100, collapsedDelay: 60, bloom: 300, bounces: true,
+};
+const SNAPPY_CLOSE: MotionTiming = {
+  width: 240, widthEase: springCurve(0.85),
+  height: 260, heightEase: EASE_OUT,
+  radius: 240, radiusEase: EASE_OUT, ease: EASE_OUT,
+  fade: 100, fadeDelay: 0, layer: 100, collapsedDelay: 140, bloom: 220,
+};
+
 type HoverTiming = { grow: number; growEase: string; shrink: number; shrinkEase: string };
 
 const HOVER_SPRING: HoverTiming = { grow: 420, growEase: springCurve(0.4), shrink: MOTION_BASE_MS, shrinkEase: EASE_OUT };
 
 const HOVER: Record<IslandMotion, HoverTiming> = {
   spring: HOVER_SPRING,
+  snappy: HOVER_SPRING,
   bouncy: HOVER_SPRING,
   smooth: { grow: MOTION_MEDIUM_MS, growEase: EASE_OUT_EXPO, shrink: MOTION_BASE_MS, shrinkEase: EASE_OUT_EXPO },
   fast: { grow: MOTION_BASE_MS, growEase: EASE_OUT, shrink: MOTION_FAST_MS, shrinkEase: EASE_OUT },
@@ -71,6 +85,7 @@ export function islandHoverTiming(motion: IslandMotion, reducedMotion = false): 
 
 const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }> = {
   spring: { open: WEBSITE_OPEN, close: WEBSITE_CLOSE },
+  snappy: { open: SNAPPY_OPEN, close: SNAPPY_CLOSE },
   smooth: {
     open: { width: 560, widthEase: EASE_OUT_EXPO, height: 560, heightEase: EASE_OUT_EXPO, radius: 560, radiusEase: EASE_OUT_EXPO, ease: EASE_OUT_EXPO, fade: 260, fadeDelay: 160, layer: 120, collapsedDelay: 140, bloom: 440 },
     close: { ...QUICK_CLOSE, widthEase: EASE_OUT_EXPO, heightEase: EASE_OUT_EXPO, radiusEase: EASE_OUT_EXPO, ease: EASE_OUT_EXPO },

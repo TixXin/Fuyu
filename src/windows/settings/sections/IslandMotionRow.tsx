@@ -24,6 +24,7 @@ export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onCh
   };
   const options = [
     { value: "spring", label: text.motionSpring },
+    { value: "snappy", label: text.motionSnappy },
     { value: "smooth", label: text.motionSmooth },
     { value: "fast", label: text.motionFast },
     { value: "bouncy", label: text.motionBouncy },
