@@ -12,6 +12,7 @@ src-tauri/src/
 ├── tray_menu/               # 托盘卡片（C99.2）：窗口 tray-menu 的创建、显示、失焦关闭（window.rs），弹出位置的纯函数（place.rs），命令 tray_menu_state / tray_menu_action / tray_menu_resize；Mac 上的面板在 macos/tray_panel.rs
 ├── tray_mark.rs             # 只在 macOS 上编译：菜单栏用的单色模板图，按 mark.svg 的胶囊在代码里画
 ├── tray_visibility.rs       # 托盘 / 菜单栏图标显示与否（tray-icon.json，建托盘时页面还没加载所以放原生侧）；隐藏后再次打开浮屿时显示岛并打开设置
+├── taskbar_host/            # 把窗口挂到 Win11 任务栏上（C154）：窗口所有者设成任务栏、加 NOACTIVATE | TOOLWINDOW（dock.rs，每 500ms 跟随任务栏位置、自动隐藏、全屏和 Explorer 重启，发 taskbar-dock-changed）；空白区域和排位的纯计算在 layout.rs，读任务栏在 snapshot.rs；命令 get_taskbar_layout / taskbar_dock / taskbar_undock；Mac 上是 unsupported.rs
 ├── island/                  # 主窗口：命令、窗口状态、几何计算、毛玻璃、鼠标穿透（banner_hit.rs：新消息横幅的可点区域）、贴边动画
 ├── wallpaper/               # 读各显示器的桌面壁纸给岛的背景用（get_wallpapers，thumbnail.rs 缩成 JPEG），变了发 wallpaper-changed；Mac 上是 unsupported.rs
 ├── todos/                   # 待办与每日笔记：todos.json 持久化、从旧版 localStorage 迁移、命令与插件/本地接口读写
@@ -22,7 +23,7 @@ src-tauri/src/
 ├── claude_usage/            # 用量环（内置插件 claude-usage）：可选的「直接向 Anthropic 查询」只读 Claude Code 凭据、经 http(s) 代理（插件配置 → HTTPS_PROXY → Windows 系统代理，从不直连）请求 oauth/usage，后台轮询与退避（background.rs 把轮询登记成插件的后台 poller，关掉插件就停）；结果由 agent_status 的 get_agent_usage 合并（source.rs 为取数与解析）；plan.rs 是 GLM、Kimi 的用量和 Key（命令 get_plan_usage、set_plan_key、has_plan_key）
 ├── ssh_tunnel/              # SSH 代理隧道（第 3 版内置插件 ssh-tunnel，background.rs 把本地代理探测和反向隧道登记成后台 tunnels，关掉插件就停）：ssh-tunnels.json（config.rs），每台主机一条常驻 ssh -R、作业对象、退避重连（tunnel.rs），服务器端口占用检查，本地代理端口自动检测（local_proxy.rs）
 ├── cc_connect/              # cc-connect 手机连接（第 3 版内置插件 cc-connect，background.rs 把看护线程登记成后台 runner，关掉插件就停）：找程序（插件设置 → 正在运行 → PATH → 岛下载的 → C/D 盘 Program Files，locate.rs）、下载并核对发布包（install.rs）、只读会话列表（chats.rs）、检查机器人 token（bots.rs）、往 config.toml 追加项目（config_file.rs）、飞书扫码（feishu.rs）、看护岛启动的 cc-connect（runner.rs）、经 cc-connect send 发消息
-├── system/                  # 开机自启（注册表）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
+├── system/                  # 开机自启（注册表；从 MSIX 包启动时改用 StartupTask，msix.rs 判断是不是商店版，D116）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
 ├── sync/                    # 跨设备同步：每台设备只写自己的远端目录、读全部再在本地逐条合并（engine.rs、merge.rs、clock.rs 的 HLC），后端是文件夹（backend_folder.rs）和 WebDAV（webdav/），端到端加密（crypto/），各类数据在 categories/（待办、设置、片段、链接、剪贴板收藏）；数据文件见 docs/architecture/data-storage.md
 ├── theme_market.rs          # 设置 → 主题市场：经下载镜像读 TixXin/fuyu-plugins 的 themes.json（命令 get_theme_market）
 ├── rename_migration/        # 改名迁移（D17）：首次启动时把改名前的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装；各处旧名兼容的清单见 docs/architecture/contracts.md「改名兼容（D17）」
@@ -72,7 +73,7 @@ src-tauri/src/
                              # message_window（隐藏消息窗口与安全的窗口过程）、named_mutex（探测、持有命名互斥量）、hotkey、win_key_hook、clipboard、shell_hook、input、
                              # com（COM / WinRT 初始化守卫）、audio、ole（文件拖出）、process / process_times / process_env /
                              # process_memory / process_tree、registry、credentials、dwm、icon、ocr、chinese、screen_capture、
-                             # capture_targets、taskbar、uia_list / uia_tabs、brightness、
+                             # capture_targets、taskbar、taskbar_shell / taskbar_uia（找任务栏、设所有者；UIA 读任务栏按钮和托盘的范围）、uia_list / uia_tabs、brightness、
                              # notification_state（前台是否有全屏程序）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、
                              # job（插件宿主进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
                              # session（是否锁屏与键鼠空闲时间，和 macos/session.rs 同签名）、audio_outputs（在用的音频输出及类型）、

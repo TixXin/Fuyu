@@ -38,6 +38,8 @@ pub(crate) mod session;
 pub(crate) mod shell_hook;
 pub(crate) mod sibling_island;
 pub(crate) mod taskbar;
+pub(crate) mod taskbar_shell;
+pub(crate) mod taskbar_uia;
 pub(crate) mod uia_list;
 pub(crate) mod wallpaper;
 pub(crate) mod uia_tabs;
