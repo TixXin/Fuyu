@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { pageCycleDirection, pageDigitFromEvent } from "../../lib/settings/pageShortcuts";
-import { isPrimaryKey } from "../../lib/shortcut/shortcut";
+import { isPrimaryKey, PRIMARY_KEY } from "../../lib/shortcut/shortcut";
 import { isMacOS } from "../../lib/platform";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 import { isPanelEditing, stopPanelEditing } from "./custom-panels/panelEditing";
+
+export const OPEN_SETTINGS_SHORTCUT = isMacOS ? `${PRIMARY_KEY},` : `${PRIMARY_KEY}+,`;
 
 export function isOpenSettingsShortcut(event: Pick<KeyboardEvent, "altKey" | "ctrlKey" | "key" | "metaKey" | "shiftKey">, mac = isMacOS) {
   return event.key === "," && !event.altKey && !event.shiftKey && isPrimaryKey(event, mac);

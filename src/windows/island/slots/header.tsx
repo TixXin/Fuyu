@@ -4,6 +4,7 @@ import { defineSlot, type IslandHeaderMeta } from "../../../features/plugin-kern
 import { runIslandAction, useIslandContributed } from "../../../features/plugin-kernel/useIslandContributions";
 import { useTranslation } from "../../../i18n";
 import { pageShortcutLabel, type IslandFeatures } from "../features";
+import { OPEN_SETTINGS_SHORTCUT } from "../useIslandKeyboard";
 import type { IslandPage } from "../types";
 
 export type IslandHeaderContext = {
@@ -36,7 +37,7 @@ function SettingsButton({ onOpenSettings }: IslandHeaderContext) {
     <button
       className="icon-button island-settings-button"
       type="button"
-      aria-label={badge?.label ?? t.settings.title}
+      aria-label={badge?.label ?? `${t.settings.title} (${OPEN_SETTINGS_SHORTCUT})`}
       onClick={(event) => {
         event.stopPropagation();
         if (!badge?.action || !runIslandAction(badge.action)) onOpenSettings();
