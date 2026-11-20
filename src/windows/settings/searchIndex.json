@@ -1055,7 +1055,226 @@
       }
     },
     {
-      "page": "appearanceCollapsed",
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "中心图案",
+        "description": "收起的岛上没有文字时，在中间显示一个小动画（只有剩余待办数时排在待办数前面）；显示 Agent 标题时，宠物或悬岛标志站在标题前代替 Agent 图标。关掉这一节的开关可停用。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Center pattern",
+        "description": "When the collapsed island shows no text, a small animation sits in its middle (ahead of an idle to-do count when that is all there is); while an agent title shows, the pet or the island mark stands before it in place of the agent icon. Switch this group off to turn it off."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "图案"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Pattern"
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "宠物",
+        "description": "图案选「宠物」时显示哪一只，默认小八（xiaoba）。宠物包（pet.json + spritesheet）放在 ~/.codex/pets 或应用数据目录的 pets 文件夹里；找不到时显示眼睛。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Pet",
+        "description": "Which pet the Pet pattern shows; xiaoba by default. Pet packs (pet.json + spritesheet) go in ~/.codex/pets or the pets folder of the app data directory; without one the eyes show."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "大小（像素）",
+        "description": "图案的高度，默认 24，和收起条上的环一样高；悬岛量的是胶囊，宠物比它高 4。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Size (px)",
+        "description": "How tall the pattern is; 24 by default, as tall as the rings on the collapsed bar. For the island mark it is the pill; a pet is 4 taller."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "空闲时显示剩余待办数"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Show todo count when idle"
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "状态灯样式",
+        "description": "收起条上 Agent 状态灯的样子。悬岛：应用图标的白胶囊，和条上的环一样高；绿点呼吸，运行时短横换成三个依次亮起的点，等你确认时变黄闪烁，失败或可能中断时变红，跑完打勾。圆点：原来的小圆点。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Status light",
+        "description": "How the Agent status light looks on the collapsed bar. Island mark: the app icon's white pill, as tall as the rings on the bar; its light breathes, three dots take the dash's place while running, it turns yellow and blinks while waiting for you, red when failed or possibly stopped, and shows a tick when done. Dot: the original small dot."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "Claude Code"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Claude Code"
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "Codex",
+        "description": "读本机 Codex 会话记录里的额度（CODEX_HOME 或 ~/.codex 下的 sessions），不联网。Codex 跑过一轮后才有数据。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Codex",
+        "description": "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "Antigravity",
+        "description": "优先查询本机运行中的 Antigravity 本地服务，未运行时只读 ~/.gemini 下的登录令牌向 Cloud Code 查询 Gemini 与 Claude / GPT 的 5 小时和每周额度。这是未公开的内部接口，随版本可能失效（失效时提示「接口失效」）。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Antigravity",
+        "description": "Queries the running local Antigravity server first, or falls back to ~/.gemini login tokens (read-only) to ask Cloud Code for Gemini and Claude / GPT 5-hour and weekly limits. Uses undocumented internal endpoints that may break across updates (reported as \"Endpoint changed\")."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "GLM",
+        "description": "每分钟最多一次直连 open.bigmodel.cn（z.ai 的 Key 查 api.z.ai）查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Claude Code 已配好 GLM（settings.json 里的 ANTHROPIC_BASE_URL 指向 bigmodel 或 z.ai）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给智谱，不回到界面。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "GLM",
+        "description": "Asks open.bigmodel.cn directly (api.z.ai for a z.ai key), at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits. If Claude Code already runs on GLM (ANTHROPIC_BASE_URL in its settings.json points to bigmodel or z.ai), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Zhipu only and never back to the window."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "Kimi",
+        "description": "每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Claude Code 已配好 Kimi（settings.json 里的 ANTHROPIC_BASE_URL 指向 kimi.com 或 moonshot.cn）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给 Kimi，不回到界面。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Kimi",
+        "description": "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits. If Claude Code already runs on Kimi (ANTHROPIC_BASE_URL in its settings.json points to kimi.com or moonshot.cn), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Kimi only and never back to the window."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "Cursor",
+        "description": "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写；macOS 上登录是加密的，第一次会弹窗请你允许读取钥匙串里的「Cursor Safe Storage」），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Cursor",
+        "description": "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten; on macOS the login is encrypted, so the first time macOS asks you to allow reading “Cursor Safe Storage” from the Keychain) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "WorkBuddy",
+        "description": "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "WorkBuddy",
+        "description": "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "DeepSeek Harness",
+        "description": "只读本机 DeepSeek Harness 的 .credentials.yaml（仅在官方默认路由下生效，凭据只在内存中使用，不进圆环），每分钟最多一次查询官方账户或 API 余额并在悬停卡片中显示。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "DeepSeek Harness",
+        "description": "Reads DeepSeek Harness's local .credentials.yaml (official default routes only; credentials stay in Rust memory, not shown as a ring) to query the official wallet balance at most once a minute for the hover card."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "环和悬停卡片显示",
+        "options": [
+          "已用",
+          "剩余"
+        ]
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Rings and card show",
+        "options": [
+          "Used",
+          "Left"
+        ]
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "样式"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Style"
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "收起条上的项目",
+        "title": "显示会话数",
+        "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
+      },
+      "en": {
+        "group": "Items on the collapsed bar",
+        "title": "Show the count",
+        "description": "The number in the segmented ring and before the state bar. Off, only the colours' shares show; the pixel grid and signal bars have no number anyway."
+      }
+    },
+    {
+      "page": "islandLayout",
       "zh-CN": {
         "group": "显示内容",
         "title": "显示折叠岛屿文字"
@@ -1066,7 +1285,7 @@
       }
     },
     {
-      "page": "appearanceCollapsed",
+      "page": "islandLayout",
       "zh-CN": {
         "group": "显示内容",
         "title": "显示岛屿名称"
@@ -1077,7 +1296,7 @@
       }
     },
     {
-      "page": "appearanceCollapsed",
+      "page": "islandLayout",
       "zh-CN": {
         "group": "显示内容",
         "title": "放不下的项目收进「+N」",
@@ -1087,43 +1306,6 @@
         "group": "Display",
         "title": "Put items that do not fit behind +N",
         "description": "Beside the notch there is little room: items are placed in the order of the list below, and the rest go behind +N. Hover or click it to see them. When off, items that do not fit are not shown."
-      }
-    },
-    {
-      "page": "appearanceCollapsed",
-      "zh-CN": {
-        "group": "中心图案",
-        "title": "图案"
-      },
-      "en": {
-        "group": "Center pattern",
-        "title": "Pattern"
-      }
-    },
-    {
-      "page": "appearanceCollapsed",
-      "zh-CN": {
-        "group": "中心图案",
-        "title": "宠物",
-        "description": "图案选「宠物」时显示哪一只，默认小八（xiaoba）。宠物包（pet.json + spritesheet）放在 ~/.codex/pets 或应用数据目录的 pets 文件夹里；找不到时显示眼睛。"
-      },
-      "en": {
-        "group": "Center pattern",
-        "title": "Pet",
-        "description": "Which pet the Pet pattern shows; xiaoba by default. Pet packs (pet.json + spritesheet) go in ~/.codex/pets or the pets folder of the app data directory; without one the eyes show."
-      }
-    },
-    {
-      "page": "appearanceCollapsed",
-      "zh-CN": {
-        "group": "中心图案",
-        "title": "大小（像素）",
-        "description": "图案的高度，默认 24，和收起条上的环一样高；悬岛量的是胶囊，宠物比它高 4。"
-      },
-      "en": {
-        "group": "Center pattern",
-        "title": "Size (px)",
-        "description": "How tall the pattern is; 24 by default, as tall as the rings on the collapsed bar. For the island mark it is the pill; a pet is 4 taller."
       }
     },
     {
@@ -1693,17 +1875,6 @@
       "en": {
         "group": "Agent approval card",
         "title": "Terminal"
-      }
-    },
-    {
-      "page": "todos",
-      "zh-CN": {
-        "group": "小岛显示与排序",
-        "title": "空闲时显示剩余待办数"
-      },
-      "en": {
-        "group": "Island display & sorting",
-        "title": "Show todo count when idle"
       }
     },
     {
@@ -2287,19 +2458,6 @@
       "en": {
         "group": "Your calendars",
         "title": "Service"
-      }
-    },
-    {
-      "page": "music",
-      "zh-CN": {
-        "group": "岛屿",
-        "title": "在收起的岛上显示音乐波形",
-        "description": "收起的岛右侧跳动的竖条，点它打开音乐页。和 外观 → 收起条 里「音乐」的显示开关是同一个，位置也在那里调。"
-      },
-      "en": {
-        "group": "Island",
-        "title": "Show the music wave on the collapsed island",
-        "description": "The moving bars on the collapsed island, which open the music page. The same switch as Music under Appearance → Collapsed bar, where it can also be moved."
       }
     },
     {
@@ -3211,6 +3369,32 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "截图时",
+        "title": "快捷键说明",
+        "description": "截图时在屏幕一角列出当前能用的快捷键，选区前后内容不同。截图时按 ? 收起或展开，碰到选区或鼠标时自动变淡；截出来的图里不会有它。"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Shortcut cheat sheet",
+        "description": "Lists the keys you can use in a corner of the screen while capturing; it changes once a region is chosen. Press ? to collapse or expand it; it fades when the selection or the pointer reaches it, and it never appears in the capture."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "截图时",
+        "title": "快捷键说明的位置",
+        "description": "截图时拖动说明的标题栏，松手后吸附到最近的角，这里会跟着变。"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Cheat sheet position",
+        "description": "While capturing, drag the cheat sheet by its title; it snaps to the nearest corner and this follows."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "截完之后",
         "title": "保存位置",
         "description": "Ctrl+S 和贴图的「保存」放到这里，文件名带时间。要写完整路径，例如 D:\\截图；留空就是「图片 › 浮屿截图」。"
@@ -3740,17 +3924,6 @@
     {
       "page": "agentAppearance",
       "zh-CN": {
-        "group": "状态灯",
-        "title": "状态灯样式"
-      },
-      "en": {
-        "group": "Status light",
-        "title": "Status light"
-      }
-    },
-    {
-      "page": "agentAppearance",
-      "zh-CN": {
         "group": "小岛显示",
         "title": "在小岛显示会话标题",
         "description": "在待办的位置显示 Agent 图标和会话标题。标题直接读取 Claude Code 和 Codex 的会话记录，不需要安装钩子。"
@@ -3966,127 +4139,6 @@
     {
       "page": "agentRings",
       "zh-CN": {
-        "group": "用量环",
-        "title": "Claude Code"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Claude Code"
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "Codex",
-        "description": "读本机 Codex 会话记录里的额度（CODEX_HOME 或 ~/.codex 下的 sessions），不联网。Codex 跑过一轮后才有数据。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Codex",
-        "description": "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn."
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "Antigravity",
-        "description": "优先查询本机运行中的 Antigravity 本地服务，未运行时只读 ~/.gemini 下的登录令牌向 Cloud Code 查询 Gemini 与 Claude / GPT 的 5 小时和每周额度。这是未公开的内部接口，随版本可能失效（失效时提示「接口失效」）。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Antigravity",
-        "description": "Queries the running local Antigravity server first, or falls back to ~/.gemini login tokens (read-only) to ask Cloud Code for Gemini and Claude / GPT 5-hour and weekly limits. Uses undocumented internal endpoints that may break across updates (reported as \"Endpoint changed\")."
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "GLM",
-        "description": "每分钟最多一次直连 open.bigmodel.cn（z.ai 的 Key 查 api.z.ai）查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Claude Code 已配好 GLM（settings.json 里的 ANTHROPIC_BASE_URL 指向 bigmodel 或 z.ai）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给智谱，不回到界面。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "GLM",
-        "description": "Asks open.bigmodel.cn directly (api.z.ai for a z.ai key), at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits. If Claude Code already runs on GLM (ANTHROPIC_BASE_URL in its settings.json points to bigmodel or z.ai), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Zhipu only and never back to the window."
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "Kimi",
-        "description": "每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Claude Code 已配好 Kimi（settings.json 里的 ANTHROPIC_BASE_URL 指向 kimi.com 或 moonshot.cn）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给 Kimi，不回到界面。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Kimi",
-        "description": "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits. If Claude Code already runs on Kimi (ANTHROPIC_BASE_URL in its settings.json points to kimi.com or moonshot.cn), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Kimi only and never back to the window."
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "Cursor",
-        "description": "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写；macOS 上登录是加密的，第一次会弹窗请你允许读取钥匙串里的「Cursor Safe Storage」），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Cursor",
-        "description": "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten; on macOS the login is encrypted, so the first time macOS asks you to allow reading “Cursor Safe Storage” from the Keychain) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage."
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "WorkBuddy",
-        "description": "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "WorkBuddy",
-        "description": "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card."
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "DeepSeek Harness",
-        "description": "只读本机 DeepSeek Harness 的 .credentials.yaml（仅在官方默认路由下生效，凭据只在内存中使用，不进圆环），每分钟最多一次查询官方账户或 API 余额并在悬停卡片中显示。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "DeepSeek Harness",
-        "description": "Reads DeepSeek Harness's local .credentials.yaml (official default routes only; credentials stay in Rust memory, not shown as a ring) to query the official wallet balance at most once a minute for the hover card."
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "显示口径与直连查询",
-        "title": "环和悬停卡片显示",
-        "options": [
-          "已用",
-          "剩余"
-        ]
-      },
-      "en": {
-        "group": "Display and direct query",
-        "title": "Rings and card show",
-        "options": [
-          "Used",
-          "Left"
-        ]
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
         "group": "显示口径与直连查询",
         "title": "Claude Code：直接向 Anthropic 查询",
         "description": "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。"
@@ -4095,30 +4147,6 @@
         "group": "Display and direct query",
         "title": "Claude Code: ask Anthropic directly",
         "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "会话环",
-        "title": "样式"
-      },
-      "en": {
-        "group": "Session ring",
-        "title": "Style"
-      }
-    },
-    {
-      "page": "agentRings",
-      "zh-CN": {
-        "group": "会话环",
-        "title": "显示会话数",
-        "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
-      },
-      "en": {
-        "group": "Session ring",
-        "title": "Show the count",
-        "description": "The number in the segmented ring and before the state bar. Off, only the colours' shares show; the pixel grid and signal bars have no number anyway."
       }
     },
     {

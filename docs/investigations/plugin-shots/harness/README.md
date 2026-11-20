@@ -1,6 +1,6 @@
 # 没有岛上页面的官方插件：截图脚本
 
-`fuyu-plugin shots` 只会截岛上页面和收起条。`ecdict`（离线词典）和 `todo-digest`（待办摘要）没有岛上页面，它们的截图用这里的脚本截：把浮屿自己的窗口组件在浏览器里渲染出来，数据由插件自己的宿主代码算出来，再用无头 Chrome 以 2 倍像素截元素。E77.6 用它截了 6 张图。
+`fuyu-plugin shots` 只会截岛上页面和收起条。`ecdict`（离线词典）、`todo-digest`（待办摘要）和 `image-host`（截图图床）没有岛上页面，它们的截图用这里的脚本截：把浮屿自己的窗口组件在浏览器里渲染出来，数据由插件自己的宿主代码算出来，再用无头 Chrome 以 2 倍像素截元素。E77.6 用它截了 6 张图，C150.12 加了截图图床的 1 张。
 
 ## 文件
 
@@ -10,6 +10,7 @@
 | `shot-ecdict.html` / `.tsx` | 快捷翻译窗口（`src/windows/translation/TranslationWindow.tsx`） |
 | `shot-todo-digest-settings.html` / `.tsx` | 插件详情对话框的「设置」页（`src/windows/settings/PluginDetailModal.tsx`），里面是插件自己的设置组件 `plugins/v3/official/todo-digest/src/settings.tsx` |
 | `shot-todo-digest-notice.html` / `.tsx` | 岛上的新消息弹层（`IslandShell` + `MessageArrivalsPanel`） |
+| `shot-image-host-settings.html` / `.tsx` | 插件详情对话框的「设置」页，里面是截图图床自己的设置组件 `plugins/v3/official/image-host/src/settings.tsx` |
 
 页面里的 `../../src/…`、`../../plugins/…` 是按 `tests/regression/` 的位置写的，放在这里不能直接打开；`shoot.mjs` 会自己复制过去。页面用到的 `./shot-data.json` 也是 `shoot.mjs` 每次现写的，不在仓库里。
 
@@ -61,6 +62,14 @@ node docs/investigations/plugin-shots/harness/shoot.mjs
 
 `preview.png` 和 `settings.png` 是同一个页面，前者只截对话框正文从顶部到第一行设置为止（下边界按页面里两行设置的位置算，不是写死的高度），后者截整个对话框。
 
+### image-host
+
+| 图 | 内容 | 视口 |
+|---|---|---|
+| `settings.png`（1440×1520，市场卡片封面） | 整个插件详情对话框：「设好了」、上次上传的链接、存储和密钥两组设置（下面的「链接」「试一下」要滚动才看得到） | 800×1000 |
+
+数据怎么来的：`shoot.mjs` 导入 `plugins/v3/official/image-host/src/host.ts`，执行插件的 `apply`，给它一个放在内存里的 `secrets/v1`、一个只记下文本的剪贴板服务、一个总是回 200 的 `ctx.http.fetch` 和一个记下登记动作的 `ctx.screenshotActions`。时钟固定在 18:02，`node:crypto` 的 `randomBytes` 换成固定的 `a1b2c3`（经 `syncBuiltinESMExports` 让插件的具名导入也拿到它，跑完换回去），所以文件名每次一样。然后调插件登记的 `setConfig`（示例的 R2 服务地址、桶 `shots`、公开访问地址）和 `saveKeys`（两把示例密钥），再用插件登记的截图动作「上传图床」传一张 1×1 的图，最后把 `state` 交给页面。服务地址和公开访问地址是编的，不是真的账号。
+
 ## 和真机截图的差别
 
 都是浮屿自己的组件渲染的，没有改组件，也没有手画。差别在组件外面那一圈：
@@ -73,7 +82,7 @@ node docs/investigations/plugin-shots/harness/shoot.mjs
 - **岛是默认外观**：深色、经典样式、不贴边、没有刘海；用户换了主题或在刘海屏上会不一样。提示那一行左边是拼图图标，真机也是：这个插件发提示时没有带自己的图标。
 - **`notice.png` 宽 832 物理像素**：岛的弹层本身只有 400 宽，2 倍就是这么大，没有为了凑 1000 像素去拉宽它。
 - **截图前把输入框的焦点去掉了**，所以原文框没有光标和聚焦描边。
-- **版本号会过期**：`settings.png` 的标题下面有 `v1.1.0`，插件升版本后要重拍。
+- **版本号会过期**：`settings.png` 的标题下面有版本号（待办摘要 `v1.1.0`、截图图床 `v1.0.0`），插件升版本后要重拍。
 
 ## 没验证的
 

@@ -6,7 +6,7 @@ export const BUILTIN_PAGES: Record<BuiltinPluginName, SettingsCategory> = {
   todos: "todos", calendar: "calendar", music: "music", clipboard: "clipboard", screenshot: "screenshot",
   "file-shelf": "shelf", translation: "translation", "voice-input": "voiceInput", timer: "timerAlerts", messages: "messages",
   agents: "agents", "session-ring": "agentRings", "claude-usage": "agentRings", "cc-connect": "agentPush",
-  "ssh-tunnel": "agentRemote", "local-api": "generalApi", "center-pattern": "appearanceCollapsed",
+  "ssh-tunnel": "agentRemote", "local-api": "generalApi", "center-pattern": "islandLayout",
   "device-events": "behaviorAlerts", "system-levels": "behaviorAlerts", "device-use": "behaviorAlerts",
   "theme-market": "theme", updater: "about",
 };

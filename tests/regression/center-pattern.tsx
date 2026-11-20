@@ -234,7 +234,7 @@ async function runChecks() {
   await render(<I18nProvider><CenterPatternSettingsGroup /></I18nProvider>);
   await waitFor(() => !fixture.querySelector<HTMLButtonElement>(".select-control__trigger[disabled]"), "宠物下拉列表加载完成");
   const triggers = fixture.querySelectorAll<HTMLButtonElement>(".select-control__trigger");
-  expect(triggers.length === 2 && fixture.querySelectorAll(".settings-row").length === 3, "第 3 版外观设置分节渲染图案、宠物、大小三行");
+  expect(triggers.length === 2 && fixture.querySelectorAll(".settings-row").length === 4, "岛屿布局里中心图案那一行展开后是开关、图案、宠物、大小四行");
   await act(async () => { triggers[0].click(); });
   await act(async () => { fixture.querySelector<HTMLElement>(".select-control__option[data-value='pet']")!.click(); });
   await act(async () => { triggers[1].click(); });
@@ -252,7 +252,7 @@ async function runChecks() {
       && configCalls[0].id === OWNER && configCalls[0].key === "pattern" && configCalls[0].value === "pet"
       && configCalls[1].key === "pet" && configCalls[1].value === "synthetic"
       && configCalls[2].key === "size" && configCalls[2].value === 20,
-    "外观设置分节把图案、宠物和大小写进内置插件 center-pattern 的配置",
+    "岛屿布局里的中心图案样式把图案、宠物和大小写进内置插件 center-pattern 的配置",
   );
 
   await render(<Gallery paused={false} />);

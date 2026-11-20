@@ -31,6 +31,7 @@ import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { LongShotBar } from "./LongShotBar";
 import { MeasureLayer } from "./MeasureLayer";
 import { ScreenshotToolbar } from "./ScreenshotToolbar";
+import { ShortcutPanel } from "./ShortcutPanel";
 import { useLongShot } from "./useLongShot";
 import { useAnnotations } from "./useAnnotations";
 import { useAnnotationSelect } from "./useAnnotationSelect";
@@ -380,6 +381,7 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
         </>
       )}
+      {ready && !leaving && !long.active && <ShortcutPanel sessionId={sessionId} phase={quickMode === "record" ? "record" : chosen && !quick ? "edit" : "pick"} pointer={cssPointer} startsHere={!!session?.underPointer} area={area} typing={!!annotations.editing} view={view} />}
       {measure.active && pixel && <MeasureLayer edges={measure.edges} from={measure.from} to={pixel} scale={scale} />}
       {drawn && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && !long.active && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />

@@ -66,7 +66,7 @@ export function useCollapsedContextMenu(enabled: boolean, save: (next: Collapsed
           action: () => save(toggleCollapsedMenuItem(entries, loadCollapsedPlacements(), row.id)),
         })),
         { item: "Separator" as const },
-        { id: "collapsed-items-arrange", text: t.island.arrangeItems, action: () => openSettingsWindow("appearanceCollapsed") },
+        { id: "collapsed-items-arrange", text: t.island.arrangeItems, action: () => openSettingsWindow("islandLayout") },
       ],
     })
       .then((menu) => menu.popup())

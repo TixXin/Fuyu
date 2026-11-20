@@ -7,7 +7,7 @@ import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../lib/settings/types";
 import { ScreenshotShortcutRows } from "./ScreenshotShortcutRows";
-import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays, type ScreenshotSettings } from "./settings";
+import { CARD_SECONDS, HISTORY_DAYS, SHORTCUT_PANEL_CORNERS, SHORTCUT_PANEL_STATES, type CardSeconds, type HistoryDays, type ScreenshotSettings, type ShortcutPanelCorner, type ShortcutPanelState } from "./settings";
 import { RecordSettingsGroup } from "./RecordSettingsGroup";
 import { useScreenshotSettings } from "./useScreenshotSettings";
 import { useTranslation } from "../../i18n";
@@ -56,7 +56,7 @@ function ShortcutsSection({ onOpenShortcuts, screenshot, onScreenshotChange: set
   );
 }
 
-function CapturingSection({ settings, onSettingsChange }: ScreenshotSectionProps) {
+function CapturingSection({ settings, onSettingsChange, screenshot, onScreenshotChange: setScreenshot }: ScreenshotSectionProps) {
   const text = useTranslation().settings.screenshot;
   return (
     <SettingsGroup title={text.whileCapturingTitle}>
@@ -66,6 +66,32 @@ function CapturingSection({ settings, onSettingsChange }: ScreenshotSectionProps
         checked={settings.screenshotGuides}
         onChange={(screenshotGuides) => onSettingsChange({ ...settings, screenshotGuides })}
       />
+      <SettingsRow
+        title={text.shortcutPanel}
+        description={text.shortcutPanelHint}
+        control={
+          <SettingsSelect
+            value={screenshot.shortcutPanel}
+            options={SHORTCUT_PANEL_STATES.map((state) => ({ value: state, label: text.shortcutPanelStates[state] }))}
+            ariaLabel={text.shortcutPanel}
+            onChange={(state) => setScreenshot({ ...screenshot, shortcutPanel: state as ShortcutPanelState })}
+          />
+        }
+      />
+      {screenshot.shortcutPanel !== "off" && (
+        <SettingsRow
+          title={text.shortcutCorner}
+          description={text.shortcutCornerHint}
+          control={
+            <SettingsSelect
+              value={screenshot.shortcutCorner}
+              options={SHORTCUT_PANEL_CORNERS.map((corner) => ({ value: corner, label: text.shortcutCorners[corner] }))}
+              ariaLabel={text.shortcutCorner}
+              onChange={(corner) => setScreenshot({ ...screenshot, shortcutCorner: corner as ShortcutPanelCorner })}
+            />
+          }
+        />
+      )}
     </SettingsGroup>
   );
 }

@@ -28,6 +28,7 @@ import { focusSection } from "../../lib/settings/sectionFocus";
 import { PluginMarketHeaderActions } from "./PluginMarketHeaderActions";
 import { PluginPageActions } from "./PluginPageActions";
 import { requestMarketView, requestPluginDetail } from "./pluginPageHandoff";
+import { onOpenIslandLayout } from "./island-layout/islandLayoutFocus";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -51,6 +52,7 @@ export function SettingsWindow() {
   useEffect(() => {
     rememberAboutPage(category);
   }, [category]);
+  useEffect(() => onOpenIslandLayout(() => setCategory("islandLayout")), []);
 
   const focusRequestedSection = useCallback(() => {
     const request = takeFocusRequest();
@@ -146,7 +148,7 @@ export function SettingsWindow() {
         titleAction={
           category === "theme" || category === "themeStyle"
             ? <ResetAppearanceButton onReset={resetAppearance} />
-            : category === "appearance" || category === "appearanceCollapsed"
+            : category === "appearance"
             ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
             : category === "pluginsV3"
             ? <PluginPageActions onOpenPage={setCategory} />

@@ -4,6 +4,7 @@ export const OFFICIAL_ICONS = Object.freeze({
   "@fuyu/countdown": { color: "#6f7dfa", glyph: "calendar-clock" },
   "@fuyu/ecdict": { color: "#3b94f5", glyph: "book-a" },
   "@fuyu/github-issues": { color: "#9575f5", glyph: "circle-dot" },
+  "@fuyu/image-host": { color: "#9cb52a", glyph: "image-up" },
   "@fuyu/launcher": { color: "#e0a020", glyph: "rocket" },
   "@fuyu/now-playing": { color: "#f0559a", glyph: "music-2" },
   "@fuyu/pomodoro": { color: "#f25a4c", glyph: null },
