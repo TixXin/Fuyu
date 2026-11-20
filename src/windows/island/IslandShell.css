@@ -68,8 +68,8 @@
   overflow: visible;
   isolation: isolate;
   --island-shell-edge: round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px));
-  --island-shell-left: calc(max(0px, var(--island-shell-edge) - var(--island-hover-grow-x) / 2 + var(--island-hover-shift, 0px)) + var(--island-pixel-nudge, 0.001px));
-  --island-shell-right: calc(max(0px, var(--island-shell-edge) - var(--island-hover-grow-x) / 2 - var(--island-hover-shift, 0px)) + var(--island-pixel-nudge, 0.001px));
+  --island-shell-left: calc(max(0px, var(--island-shell-edge) - var(--island-hover-grow-x) / 2) + var(--island-pixel-nudge, 0.001px));
+  --island-shell-right: calc(max(0px, var(--island-shell-edge) - var(--island-hover-grow-x) / 2) + var(--island-pixel-nudge, 0.001px));
   left: calc((var(--island-shell-left) - var(--island-shell-right)) / 2);
   width: calc(100cqw - var(--island-shell-left) - var(--island-shell-right));
   height: calc(var(--island-shell-height) + var(--island-hover-grow-y));
