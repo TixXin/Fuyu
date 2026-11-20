@@ -16,10 +16,12 @@ test("Shift snaps a line to the nearest 45° and keeps how far it reaches", () =
   assert.deepEqual(extendAnnotation(line, { x: 100, y: 7 }).to, { x: 100, y: 7 }, "without Shift the line follows the pointer");
 });
 
-test("every tool has its own single key, and none takes C (copy colour) or T (pin)", () => {
+test("every tool has its own single key, and none takes C (copy colour), T (pin) or M (held to measure)", () => {
   const keys = ANNOTATION_TOOLS.map((tool) => TOOL_KEYS[tool]);
   assert.equal(new Set(keys).size, ANNOTATION_TOOLS.length);
-  assert.ok(!keys.includes("C") && !keys.includes("T"));
+  assert.ok(!keys.includes("C") && !keys.includes("T") && !keys.includes("M"));
+  assert.equal(toolForKey("m"), null, "holding M measures; it must not also pick a tool");
+  assert.equal(toolForKey("x"), "mosaic");
   assert.equal(toolForKey("l"), "line");
   assert.equal(toolForKey("B"), "blur");
   assert.equal(toolForKey("s"), "spotlight");

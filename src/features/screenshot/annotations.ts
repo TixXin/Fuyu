@@ -12,7 +12,7 @@ export const TOOL_KEYS: Record<AnnotationTool, string> = {
   pen: "P",
   highlighter: "H",
   text: "I",
-  mosaic: "M",
+  mosaic: "X",
   blur: "B",
   spotlight: "S",
   number: "N",
