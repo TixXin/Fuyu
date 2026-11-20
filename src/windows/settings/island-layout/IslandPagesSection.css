@@ -7,3 +7,19 @@
 .island-pages__item[data-hidden] .plugin-pages__name strong {
   color: var(--color-text-muted);
 }
+
+.island-pages__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.island-pages__create {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.island-pages__item[data-editing] > .collapsed-items__row strong {
+  color: var(--color-accent);
+}

@@ -90,6 +90,7 @@ export function createSlots(definitions = {}) {
       const group = rule.groupBy === undefined ? undefined : item[rule.groupBy];
       if (rule.groupBy !== undefined && (typeof group !== "string" || !group)) throw new SlotError("bad-item", `${item.id} in ${name} needs a ${rule.groupBy}`);
       const bucket = stacks.get(name) ?? new Map();
+      if (external && rule.builtinOnly === true) throw new SlotError("forbidden", `${name} only takes Fuyu's built-in plugins for now`);
       if (external) {
         let mine = 0;
         for (const [id, stack] of bucket) {

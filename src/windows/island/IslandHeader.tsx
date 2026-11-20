@@ -139,13 +139,14 @@ export function IslandHeader({
           const target: IslandPage = item.id;
           const Icon = item.icon;
           const label = pageLabel(item);
-          const kind = item.external ? "dot-button--plugin" : `dot-button--${target}`;
+          const named = item.external || !(target in builtinLabels);
+          const kind = item.external ? "dot-button--plugin" : named ? "dot-button--custom" : `dot-button--${target}`;
           return (
             <button
               key={target}
               className={`dot-button ${kind}${page === target ? " dot-button--active" : ""}`}
               type="button"
-              data-page={item.external ? target : undefined}
+              data-page={named ? target : undefined}
               {...spotlightOf(item)}
               aria-label={withShortcut(buttons, label, target)}
               aria-pressed={page === target}

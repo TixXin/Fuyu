@@ -5,6 +5,7 @@ import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { IslandPages } from "../../src/windows/island/IslandPages";
+import { useCustomPanelPages } from "../../src/windows/island/custom-panels/useCustomPanelPages";
 import { useCollapsedGauges } from "../../src/windows/island/useCollapsedGauges";
 import { useCollapsedWidth } from "../../src/windows/island/useCollapsedWidth";
 import { pageForAltDigit, type IslandFeatures } from "../../src/windows/island/features";
@@ -59,10 +60,16 @@ console.warn = (...args: unknown[]) => {
   warn(...args);
 };
 
+function CustomPanelPages() {
+  useCustomPanelPages();
+  return null;
+}
+
 function Expanded() {
   const [page, setPage] = useState<IslandPage>("todo");
   goTo = setPage;
   return <div className="stage stage--expanded">
+    <CustomPanelPages />
     <IslandShell
       mode="expanded" page={page} isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled" features={FEATURES}
@@ -101,6 +108,39 @@ const collapsedRoot = document.getElementById("collapsed")!;
 
 async function frame() {
   await act(async () => { await new Promise(requestAnimationFrame); });
+}
+
+const setPanels = async (value: unknown) => {
+  await act(async () => {
+    if (value === null) localStorage.removeItem("fuyu-custom-panels");
+    else localStorage.setItem("fuyu-custom-panels", JSON.stringify(value));
+    window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-custom-panels" }));
+  });
+  await frame();
+};
+
+async function checkCustomPanel() {
+  const dotOf = () => expandedRoot.querySelector<HTMLButtonElement>('.dot-button[data-page="panel:desk"]');
+  check(!dotOf(), "没有 fuyu-custom-panels 时页头没有自定义面板");
+  await setPanels({ version: 1, panels: [{ id: "desk", name: "工作台", icon: "star", mode: "grid", items: [
+    { widget: "todos", size: "l", x: 0, y: 0, w: 31, h: 31 },
+    { widget: "next-meeting", size: "m", x: 32, y: 0, w: 31, h: 15 },
+    { widget: "gone", size: "s", x: 32, y: 16, w: 15, h: 15 },
+  ] }] });
+  const dot = dotOf();
+  const allDots = [...expandedRoot.querySelectorAll<HTMLElement>(".editor-dots .dot-button")];
+  const firstPlugin = allDots.findIndex((button) => button.classList.contains("dot-button--plugin"));
+  check(dot && /^工作台/.test(dot.getAttribute("aria-label") ?? "") && allDots.indexOf(dot) < firstPlugin, `自定义面板在页头有按钮，用面板的名字，排在插件页面前（${dot?.getAttribute("aria-label")}）`);
+  await act(async () => dot!.click());
+  await frame();
+  const cells = [...expandedRoot.querySelectorAll<HTMLElement>(".custom-panel__cell")];
+  const todos = cells.find((cell) => cell.dataset.widget === "todos");
+  check(cells.length === 3 && todos && todos.offsetWidth === 248 && todos.offsetHeight === 248 && todos.querySelector(".island-widget__empty")?.textContent === "今天没有待办",
+    "打开面板按网格画出组件：大尺寸 248×248，内置的待办组件在没有数据时显示空状态");
+  check(cells.find((cell) => cell.dataset.widget === "gone")?.childElementCount === 0, "找不到的组件留一个空格子，不报错");
+  await setPanels(null);
+  check(!dotOf(), "删掉面板后页头的按钮也没了");
+  await act(async () => goTo("todo"));
 }
 
 async function runChecks() {
@@ -204,6 +244,7 @@ async function runChecks() {
   check(cell().offsetWidth === cellWidth && getComputedStyle(cell()).outlineStyle === "solid", "亮的是一圈描边，那一格不变宽");
   for (let waited = 0; marked().length > 0 && waited < 180; waited += 1) await frame();
   check(marked().length === 0 && islandSpotlight.owner() === null, "亮完两下就结束，之后展开或收起都不再亮");
+  await checkCustomPanel();
   results.textContent = `${messages.join("\n")}\n\nALL PASS (${messages.length})`;
   results.dataset.result = "passed";
 }

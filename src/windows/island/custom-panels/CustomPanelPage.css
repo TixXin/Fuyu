@@ -1,0 +1,57 @@
+.custom-panel {
+  height: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.custom-panel__grid {
+  position: relative;
+  margin: 2px auto 8px;
+}
+
+.custom-panel__cell {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 10px;
+  overflow: hidden;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
+  border-radius: 14px;
+}
+
+.custom-panel--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.55);
+  font-size: 13px;
+}
+
+.custom-panel--empty p {
+  margin: 0;
+}
+
+.custom-panel__settings {
+  padding: 5px 12px;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.9);
+  font: inherit;
+  font-size: 12.5px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.custom-panel__settings:hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.14);
+}
+
+.custom-panel__settings:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

@@ -25,12 +25,14 @@ export interface SlotDefinition {
   readonly groupBy?: string;
   readonly meta: readonly string[];
   readonly experimental?: boolean;
+  readonly builtinOnly?: boolean;
 }
 export type SlotName =
   | "island.page/v1"
   | "island.header/v1"
   | "island.collapsed/v1"
   | "island.collapsed-center/v1"
+  | "island.widget/v1"
   | "island.alert/v1"
   | "island.notice/v1"
   | "island.line/v1"

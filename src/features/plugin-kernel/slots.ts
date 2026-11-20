@@ -62,6 +62,21 @@ export interface IslandCollapsedMeta<Context = unknown> {
   label?: SlotTitle | ((t: Translations) => string);
 }
 
+export type IslandWidgetSize = "bar" | "s" | "m" | "l" | "w";
+export type IslandWidgetPanelSize = Exclude<IslandWidgetSize, "bar">;
+
+export interface IslandWidgetProps {
+  size: IslandWidgetPanelSize;
+  width: number;
+  height: number;
+}
+
+export interface IslandWidgetMeta {
+  sizes: readonly IslandWidgetSize[];
+  label?: SlotTitle | ((t: Translations) => string);
+  group?: string;
+}
+
 export interface IslandCollapsedCenterMeta<Context = unknown> {
   width?: SlotWidth<Context>;
   shown?: (context: Context) => boolean;

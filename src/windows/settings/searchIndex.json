@@ -285,12 +285,12 @@
       "page": "generalSync",
       "zh-CN": {
         "group": "可选同步",
-        "title": "收起条项目与展开页面的顺序",
+        "title": "收起条项目、展开页面的顺序和自定义面板",
         "description": "默认关闭：收起条和展开页面可能包含仅在某一台电脑安装的第三方插件或平台专属项。"
       },
       "en": {
         "group": "Optional sync",
-        "title": "Collapsed bar items and expanded page order",
+        "title": "Collapsed bar items, page order and custom panels",
         "description": "Off by default: the bar and the pages can include plugins or items only available on one computer."
       }
     },

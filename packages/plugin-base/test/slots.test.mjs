@@ -290,3 +290,10 @@ test("switching off the owner of a replacement shows the item it replaced", () =
   assert.equal(item.label, undefined);
   assert.deepEqual(item.replaces, []);
 });
+
+test("island.widget/v1 takes built-in widgets and refuses other plugins", () => {
+  const slots = createSlots({ "island.widget/v1": SLOTS["island.widget/v1"] });
+  slots.add("island.widget/v1", { id: "todos", sizes: ["m", "l"], component: View });
+  assert.throws(() => slots.add("island.widget/v1", { id: "clock", sizes: ["s"], component: View }, "@someone/clock"), failsWith("forbidden", /island\.widget\/v1/));
+  assert.deepEqual(ids(slots.items("island.widget/v1")), ["todos"]);
+});

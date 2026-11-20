@@ -8,14 +8,15 @@ import { karaokeLook } from "./lyrics/lyricsSettings";
 type IslandLyricsOptions = {
   page: string;
   barShown: boolean;
+  widget?: boolean;
 };
 
-export function useIslandLyrics(settings: IslandSettings, mediaState: MediaState, { page, barShown }: IslandLyricsOptions): {
+export function useIslandLyrics(settings: IslandSettings, mediaState: MediaState, { page, barShown, widget = false }: IslandLyricsOptions): {
   lyrics: PlayingLyrics;
   lyricLine: CurrentLyric | null;
 } {
   const onIsland = settings.musicEnabled && settings.lyricsOnIsland;
-  const lyrics = usePlayingLyrics(mediaState, settings, onIsland || page === "music");
+  const lyrics = usePlayingLyrics(mediaState, settings, onIsland || page === "music" || widget);
   const karaoke = settings.lyricsKaraoke ? { even: settings.lyricsKaraokeFallback === "line", look: karaokeLook(settings) } : null;
   const current = useCurrentLyric(lyrics.lines, mediaState, lyrics.offsetMs, onIsland && barShown, karaoke);
   if (current.text) return { lyrics, lyricLine: current };

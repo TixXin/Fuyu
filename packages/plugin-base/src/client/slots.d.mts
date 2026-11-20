@@ -4,6 +4,7 @@ export interface SlotRule {
   perPlugin?: number;
   groupBy?: string;
   meta?: readonly string[];
+  builtinOnly?: boolean;
 }
 
 export interface SlotItemInput {
@@ -36,7 +37,7 @@ export interface SlotRegistry {
   subscribe(listener: (name: string) => void): () => void;
 }
 
-export type SlotErrorCode = "no-slot" | "bad-name" | "bad-rule" | "bad-item" | "too-many";
+export type SlotErrorCode = "no-slot" | "bad-name" | "bad-rule" | "bad-item" | "too-many" | "forbidden";
 
 export declare class SlotError extends Error {
   constructor(code: SlotErrorCode, message: string);

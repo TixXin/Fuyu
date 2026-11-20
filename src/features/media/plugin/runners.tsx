@@ -11,7 +11,7 @@ import { useIslandLyrics } from "../useIslandLyrics";
 import { useMediaState } from "../useMediaState";
 import { usePublishTrackArt } from "../usePublishTrackArt";
 import { demoMediaState } from "./demo";
-import { mediaIsland } from "./islandState";
+import { mediaIsland, useLyricWidgetsShown } from "./islandState";
 import { lyricLineContribution } from "./lyricLine";
 import { OWNER } from "./owner.ts";
 
@@ -36,7 +36,8 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   const demoState = useMemo(() => (demo.active ? demoMediaState(t.onboarding.demo, demo.startedAt) : null), [demo.active, demo.startedAt, t]);
   const media = useMemo(() => (demoState && live.mediaState.playbackStatus !== "playing" ? { ...live, mediaState: demoState } : live), [demoState, live]);
   const { mediaState, runMediaCommand } = media;
-  const { lyrics, lyricLine } = useIslandLyrics(settings, mediaState, { page, barShown: mode === "collapsed" && !isTucked && barText });
+  const lyricWidgets = useLyricWidgetsShown();
+  const { lyrics, lyricLine } = useIslandLyrics(settings, mediaState, { page, barShown: mode === "collapsed" && !isTucked && barText, widget: lyricWidgets });
   const waveformVisible = !isTucked && (mode === "collapsed" || (page === "music" && !lyrics.lines));
   useAudioLevel(
     live.applyAudioLevel,

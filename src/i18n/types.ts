@@ -28,6 +28,7 @@ import type { ErrorsText } from "./sections/errors";
 import type { VoiceInputText } from "./sections/voiceInput";
 import type { TrayMenuText } from "./sections/trayMenu";
 import type { SyncText } from "./sections/sync";
+import type { IslandWidgetsText } from "./sections/islandWidgets";
 
 export type LocaleCode = "zh-CN" | "en";
 
@@ -43,6 +44,7 @@ export type Translations = {
   translator: TranslatorText;
 
   island: IslandText;
+  islandWidgets: IslandWidgetsText;
 
   agent: AgentText;
   agentNotice: AgentNoticeText;
