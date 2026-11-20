@@ -186,9 +186,9 @@ export const zhCN: OnboardingText = {
   },
   agentConnect: {
     title: "连上你的 AI 代理",
-    lead: "三步：有 SSH 远程电脑就先加上（没有可跳过）；打开你在用的 AI 代理，点「安装/修复」装上状态钩子；再打开回复状态标记。以后在设置 → AI Agent 里都能改。",
+    lead: "三步：有 SSH 远程电脑就先加上（没有可跳过）；打开你在用的 AI 代理，点「全部安装」装上状态钩子（已经装过的会在卡片上显示「修复」或「安装」）；再打开回复状态标记。以后在设置 → AI Agent 里都能改。",
     remote: "1. SSH 远程电脑（可跳过）",
-    agents: "2. 选 AI 代理，点「安装/修复」",
+    agents: "2. 选 AI 代理，装上钩子",
     marker: "3. 回复状态标记（推荐打开）",
   },
   bundle: {
@@ -309,9 +309,9 @@ export const en: OnboardingText = {
   },
   agentConnect: {
     title: "Connect your AI agents",
-    lead: "Three steps: add your SSH remote computers if you have any (or skip); switch on the agents you use and click Install/repair to set up the status hooks; then switch on the reply status marker. All of it stays in Settings → AI Agent.",
+    lead: "Three steps: add your SSH remote computers if you have any (or skip); switch on the agents you use and click Install all to set up the status hooks (if some are set up already, their cards show Repair or Install); then switch on the reply status marker. All of it stays in Settings → AI Agent.",
     remote: "1. SSH remote computers (optional)",
-    agents: "2. Pick your agents, click Install/repair",
+    agents: "2. Pick your agents and give them hooks",
     marker: "3. Reply status marker (recommended)",
   },
   bundle: {

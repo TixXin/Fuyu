@@ -75,6 +75,7 @@ mod mimo;
 mod pi;
 mod cursor;
 mod third_party;
+pub(crate) mod per_agent_hooks;
 mod uninstall;
 
 use serde::Serialize;
@@ -331,8 +332,11 @@ fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallRe
         running_script: &running_script_path,
         status_script: &status_script_path,
     };
-    for (_, hooks) in harness::with_hooks() {
-        (hooks.install)(&env)?;
+    let errors: Vec<String> = harness::with_hooks()
+        .filter_map(|(id, hooks)| (hooks.install)(&env).err().map(|error| format!("{id}: {error}")))
+        .collect();
+    if !errors.is_empty() {
+        return Err(errors.join("; "));
     }
     let dsh_bridge = dsh_hooks::bridge_lines(&env);
     reply_marker::repair();
@@ -704,6 +708,8 @@ macro_rules! tauri_commands {
             crate::agent_status::clear_agent_status,
             crate::agent_status::install_agent_status_hooks,
             crate::agent_status::uninstall_agent_status_hooks,
+            crate::agent_status::per_agent_hooks::install_agent_hooks,
+            crate::agent_status::per_agent_hooks::uninstall_agent_hooks,
             crate::agent_status::get_agent_hooks_state,
             crate::agent_status::focus_agent_window,
             crate::agent_status::get_editor_extension_states,

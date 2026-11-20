@@ -3573,6 +3573,58 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "钩子设置",
+        "title": "自动配置新 Agent",
+        "description": "装了一家支持的 Agent 后，自动给它装钩子，并在岛上提示。只在已经装过钩子的电脑上生效，开关关掉的 Agent 不动。"
+      },
+      "en": {
+        "group": "Hook settings",
+        "title": "Set up new agents",
+        "description": "When a supported agent is installed, give it hooks and say so on the island. Only on a computer that already has hooks, and never for agents switched off."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "钩子设置",
+        "title": "自动更新旧版钩子",
+        "description": "浮屿升级后，已接入的 Agent 的钩子自动换成新版。"
+      },
+      "en": {
+        "group": "Hook settings",
+        "title": "Update outdated hooks",
+        "description": "After Fuyu updates, connected agents get the new hooks."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "钩子设置",
+        "title": "重新安装全部钩子",
+        "description": "一家一家重装，也会装上 SSH 远程主机里的钩子；某一家失败不影响其他家。"
+      },
+      "en": {
+        "group": "Hook settings",
+        "title": "Reinstall all hooks",
+        "description": "Agent by agent, including the SSH remote hosts; one failing does not stop the rest."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "钩子设置",
+        "title": "移除全部钩子",
+        "description": "从各家 Agent 的配置里删掉浮屿加的钩子和脚本，正在运行的 Agent 重启后生效。"
+      },
+      "en": {
+        "group": "Hook settings",
+        "title": "Remove all hooks",
+        "description": "Takes Fuyu's hooks and scripts out of every agent's config; running agents pick it up after a restart."
+      }
+    },
+    {
       "page": "agentConnect",
       "zh-CN": {
         "group": "回复状态标记",

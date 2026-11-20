@@ -69,6 +69,8 @@
         "agentNoticeStack": "sync",
         "agentNoticeButtonOrder": "sync",
         "agentNoticeShortcuts": "sync",
+        "agentHooksAutoInstall": "local",
+        "agentHooksAutoUpdate": "local",
         "taskTextColor": "sync",
         "pulseColor": "sync",
         "pulseBrightness": "sync",

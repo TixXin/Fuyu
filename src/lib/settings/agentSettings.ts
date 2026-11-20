@@ -75,6 +75,8 @@ export type AgentSettingValues = {
   agentNoticeStack: AgentNoticeStack;
   agentNoticeButtonOrder: AgentNoticeButtonOrder;
   agentNoticeShortcuts: boolean;
+  agentHooksAutoInstall: boolean;
+  agentHooksAutoUpdate: boolean;
 };
 
 export const DEFAULT_AGENT_SETTINGS: AgentSettingValues = {
@@ -114,6 +116,8 @@ export const DEFAULT_AGENT_SETTINGS: AgentSettingValues = {
   agentNoticeStack: "peek",
   agentNoticeButtonOrder: "allowRight",
   agentNoticeShortcuts: true,
+  agentHooksAutoInstall: true,
+  agentHooksAutoUpdate: true,
 };
 
 export const LEGACY_AGENT_FALLBACKS = {
@@ -136,6 +140,8 @@ export function normalizeAgentSettings(settings: LegacyIslandSettings | null | u
     agentHiddenProviders: normalizeHiddenProviders(settings),
     agentHideFinished: settings?.agentHideFinished === true,
     agentHideClosed: settings?.agentHideClosed !== false,
+    agentHooksAutoInstall: settings?.agentHooksAutoInstall !== false,
+    agentHooksAutoUpdate: settings?.agentHooksAutoUpdate !== false,
     agentShowElapsed: settings?.agentShowElapsed === true,
     agentShowModel: settings?.agentShowModel !== false,
     agentShowActivity: settings?.agentShowActivity !== false,

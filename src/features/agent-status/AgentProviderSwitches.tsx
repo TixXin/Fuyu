@@ -1,16 +1,14 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
-import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { useTranslation } from "../../i18n";
 import { useDevBuild } from "../../lib/platform";
 import type { IslandSettings } from "../../lib/settings/types";
-import { AGENTS } from "./agents";
+import { AgentHooksSummary } from "./AgentHooksSummary";
 import { AgentProviderIcon } from "./AgentProviderIcon";
+import { AgentProviderTile, resolveDotTone } from "./AgentProviderTile";
 import type {
-  AgentHooksState,
-  AgentStatusSnapshot,
   AgentTaskStatus,
   ExternalAgentStatus,
   HookInstallState,
@@ -24,19 +22,10 @@ import {
   isAgentAttentionPhase,
   partitionAgentProviders,
 } from "./status";
+import type { AgentStatusSettings } from "./useAgentStatusSettings";
 import "./AgentHooksSettingsSection.css";
 
 const SHOWN_PROVIDERS = Object.keys(AGENT_PROVIDER_LABELS) as SessionProvider[];
-
-type DotTone = "idle" | "running" | "waiting" | "attention" | "done";
-
-function resolveDotTone(status: AgentTaskStatus, hookState: HookInstallState | undefined): DotTone {
-  if (status.phase === "running") return "running";
-  if (status.phase === "waiting") return "waiting";
-  if (isAgentAttentionPhase(status.phase) || hookState === "outdated" || hookState === "notInstalled") return "attention";
-  if (status.phase === "completed") return "done";
-  return "idle";
-}
 
 function ExternalTile({
   entry,
@@ -86,82 +75,6 @@ function ExternalTile({
   );
 }
 
-function ProviderTile({
-  provider,
-  shown,
-  status,
-  hookState,
-  devBuild,
-  clearing,
-  onToggle,
-  onClearStatus,
-}: {
-  provider: SessionProvider;
-  shown: boolean;
-  status: AgentTaskStatus;
-  hookState: HookInstallState | undefined;
-  devBuild: boolean;
-  clearing: boolean;
-  onToggle: (shown: boolean) => void;
-  onClearStatus?: () => void;
-}) {
-  const t = useTranslation();
-  const text = t.settings.agent;
-  const switchId = useId();
-  const attention = isAgentAttentionPhase(status.phase);
-  const active = status.phase === "running" || status.phase === "waiting";
-  const dotTone = resolveDotTone(status, hookState);
-  const needsHookAttention = status.phase === "idle" && (hookState === "outdated" || hookState === "notInstalled");
-  const statusText =
-    status.phase !== "idle"
-      ? getAgentPhaseLabel(status.phase, t)
-      : !AGENTS[provider].statusLight
-        ? text.sessionOnlyBadge
-        : hookState === "outdated"
-          ? text.hookBadgeOutdated
-          : hookState === "notInstalled"
-            ? text.hookBadgeNotInstalled
-            : hookState === "absent"
-              ? text.notDetectedBadge
-              : getAgentPhaseLabel("idle", t);
-
-  const cardClass = [
-    "agent-provider-card",
-    shown ? "" : "agent-provider-card--off",
-    shown && attention ? "agent-provider-card--attention" : "",
-    shown && active ? "agent-provider-card--active" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <div className={cardClass} data-provider={provider}>
-      <span className="agent-provider-card__icon" aria-hidden="true">
-        <AgentProviderIcon provider={provider} />
-      </span>
-      <div className="agent-provider-card__body">
-        <label className="agent-provider-card__name" htmlFor={switchId}>
-          {AGENT_PROVIDER_LABELS[provider]}
-        </label>
-        <div className="agent-provider-card__meta">
-          <span className={`agent-provider-card__dot agent-provider-card__dot--${dotTone}`} aria-hidden="true" />
-          <span className={attention || needsHookAttention ? "agent-hooks-value agent-hooks-value--attention" : "agent-hooks-value"}>
-            {statusText}
-          </span>
-          {attention && !devBuild && onClearStatus ? (
-            <SettingsLinkButton disabled={clearing} onClick={onClearStatus}>
-              {clearing ? text.clearing : text.clearStatus}
-            </SettingsLinkButton>
-          ) : null}
-        </div>
-      </div>
-      <div className="agent-provider-card__side">
-        <SettingsSwitch id={switchId} checked={shown} onChange={onToggle} />
-      </div>
-    </div>
-  );
-}
-
 export function AgentProviderSwitches({
   settings,
   onSettingsChange,
@@ -169,14 +82,19 @@ export function AgentProviderSwitches({
   agentHooksState = null,
   clearingAgentProvider = null,
   onClearAgentStatus,
+  hookBusy,
+  hookErrors,
+  hookDone,
+  dshBridge,
+  onInstallHooks,
+  onUninstallHook,
+  onReinstallAll,
+  bulkHooks,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
-  agentStatus?: AgentStatusSnapshot;
-  agentHooksState?: AgentHooksState | null;
-  clearingAgentProvider?: string | null;
-  onClearAgentStatus?: (provider: string) => void;
-}) {
+} & Partial<Pick<AgentStatusSettings, "agentStatus" | "agentHooksState" | "clearingAgentProvider" | "onClearAgentStatus">> &
+  Pick<AgentStatusSettings, "hookBusy" | "hookErrors" | "hookDone" | "dshBridge" | "onInstallHooks" | "onUninstallHook" | "onReinstallAll" | "bulkHooks">) {
   const text = useTranslation().settings.agent;
   const devBuild = useDevBuild();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -197,16 +115,19 @@ export function AgentProviderSwitches({
     const status = (agentStatus as Partial<Record<SessionProvider, AgentTaskStatus>>)[provider] ?? DEFAULT_AGENT_TASK_STATUS;
     const hookState = (agentHooksState as Partial<Record<SessionProvider, HookInstallState>> | null)?.[provider];
     return (
-      <ProviderTile
+      <AgentProviderTile
         key={provider}
         provider={provider}
         shown={!settings.agentHiddenProviders.includes(provider)}
         status={status}
         hookState={hookState}
-        devBuild={devBuild}
+        busy={hookBusy.has(provider)}
         clearing={clearingAgentProvider === provider}
+        canRemoveHooks={!devBuild}
         onToggle={(shown) => setProviderShown(provider, shown)}
-        onClearStatus={onClearAgentStatus ? () => onClearAgentStatus(provider) : undefined}
+        onInstallHooks={() => void onInstallHooks([provider])}
+        onRemoveHooks={() => void onUninstallHook(provider)}
+        onClearStatus={onClearAgentStatus && !devBuild ? () => onClearAgentStatus(provider) : undefined}
       />
     );
   };
@@ -217,6 +138,18 @@ export function AgentProviderSwitches({
         <h2 className="settings-group__title">{text.agentsSection}</h2>
         <span className="agent-providers__summary">{text.agentsEnabledCount(enabledCount, SHOWN_PROVIDERS.length)}</span>
       </div>
+      <AgentHooksSummary
+        providers={SHOWN_PROVIDERS}
+        hidden={settings.agentHiddenProviders}
+        agentHooksState={agentHooksState}
+        hookBusy={hookBusy}
+        hookErrors={hookErrors}
+        hookDone={hookDone}
+        dshBridge={dshBridge}
+        busy={bulkHooks.state === "working"}
+        onInstallHooks={(providers) => void onInstallHooks(providers)}
+        onInstallAll={() => void onReinstallAll()}
+      />
       <div className="agent-provider-grid">
         {primary.map(renderTile)}
         {externals.map((entry) => (

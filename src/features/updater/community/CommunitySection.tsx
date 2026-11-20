@@ -15,11 +15,11 @@ function open(url: string) {
 function CommunityRow({ group, source }: { group: CommunityGroup; source: CommunitySource }) {
   const text = useTranslation().settings.project.community;
   const { locale } = useLocale();
-  const [showing, setShowing] = useState(false);
+  const expired = isExpired(group);
+  const [showing, setShowing] = useState(() => Boolean(group.qr) && !expired);
   const [copy, setCopy] = useState<"copied" | "copyFailed" | null>(null);
   const [imageTry, setImageTry] = useState(0);
   const imageSource = imageSourcesFrom(source)[imageTry];
-  const expired = isExpired(group);
   const app = text.platforms[group.platform];
   const name = group.name[locale];
   const details = [

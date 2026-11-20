@@ -239,6 +239,8 @@ mockIPC((command, payload) => {
     case "list_ssh_hosts": return ["devbox", "nas"]; case "get_agent_remote_hosts": return [{ host: "devbox", fetchedAt: 0, error: null, fetching: false }];
     case "get_agent_hooks_state": return { codex: "notInstalled", claudeCode: "notInstalled", scriptsOutdated: false };
     case "uninstall_agent_status_hooks": return { removedAt: 1700000000000, remotes: [] };
+    case "install_agent_status_hooks": return { scriptsDir: "C:\\Users\\demo\\.fuyu", statusPath: "", installedAt: 1700000000000, remotes: [], dshBridge: null };
+    case "install_agent_hooks": return { results: (args.providers as string[]).map((provider) => ({ provider, error: null })), dshBridge: null };
     case "list_sound_packs": return [{ id: "chimes-1", name: "Chimes", author: "Ann", license: "CC0-1.0", sounds: { complete: "complete.wav", error: "error.wav" } }];
     case "get_v2_plugin_migration":
     case "dismiss_v2_plugin_migration":

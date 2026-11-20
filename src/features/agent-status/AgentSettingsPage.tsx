@@ -5,7 +5,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { LightStyleArt } from "./AgentAppearanceGlyphs";
-import { AgentHooksSettingsSection } from "./AgentHooksSettingsSection";
+import { AgentHooksOptions } from "./AgentHooksOptions";
 import { AgentProviderSwitches } from "./AgentProviderSwitches";
 import { useAgentStatusSettings } from "./useAgentStatusSettings";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../lib/settings/types";
@@ -80,8 +80,8 @@ function HooksAndProvidersSection({ settings, onSettingsChange }: AgentSectionPr
   const agentStatus = useAgentStatusSettings();
   return (
     <>
-      <AgentHooksSettingsSection {...agentStatus} />
       <AgentProviderSwitches settings={settings} onSettingsChange={onSettingsChange} {...agentStatus} />
+      <AgentHooksOptions settings={settings} onSettingsChange={onSettingsChange} {...agentStatus} />
     </>
   );
 }

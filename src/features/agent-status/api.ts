@@ -50,6 +50,10 @@ export interface AgentHooksUninstallResult {
 
 export type HookInstallState = "absent" | "notInstalled" | "outdated" | "current";
 
+export type AgentHookResult = { provider: string; error: string | null };
+
+export type AgentHooksBatchResult = { results: AgentHookResult[]; dshBridge: string | null };
+
 export type AgentHooksState = Partial<Record<SessionProvider, HookInstallState>> & {
   scriptsOutdated: boolean;
 };
@@ -280,6 +284,14 @@ export function installAgentStatusHooks() {
 
 export function uninstallAgentStatusHooks() {
   return invoke<AgentHooksUninstallResult>("uninstall_agent_status_hooks");
+}
+
+export function installAgentHooks(providers: string[]) {
+  return invoke<AgentHooksBatchResult>("install_agent_hooks", { providers });
+}
+
+export function uninstallAgentHooks(provider: string) {
+  return invoke<void>("uninstall_agent_hooks", { provider });
 }
 
 export function listAgentEffortLabels() {
