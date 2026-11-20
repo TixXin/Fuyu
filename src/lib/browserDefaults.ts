@@ -31,6 +31,21 @@ export function isEditableTarget(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && Boolean(target.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']"));
 }
 
+type TextCheckTarget = {
+  matches: (selector: string) => boolean;
+  hasAttribute: (name: string) => boolean;
+  setAttribute: (name: string, value: string) => void;
+};
+
+const TEXT_CHECK_OFF: ReadonlyArray<[string, string]> = [["spellcheck", "false"], ["autocorrect", "off"], ["autocapitalize", "off"]];
+
+export function quietTextChecking(target: TextCheckTarget): void {
+  if (!target.matches("input, textarea, [contenteditable=''], [contenteditable='true']")) return;
+  for (const [name, value] of TEXT_CHECK_OFF) {
+    if (!target.hasAttribute(name)) target.setAttribute(name, value);
+  }
+}
+
 export function macSelectionCopyText(
   event: ShortcutKeys,
   options: { mac: boolean },
@@ -71,6 +86,13 @@ export function blockBrowserDefaults(options: { mac: boolean; dev: boolean }) {
         event.preventDefault();
         void copyMessageText(copyText).catch(() => undefined);
       }
+    },
+    true,
+  );
+  window.addEventListener(
+    "focusin",
+    (event) => {
+      if (event.target instanceof HTMLElement) quietTextChecking(event.target);
     },
     true,
   );

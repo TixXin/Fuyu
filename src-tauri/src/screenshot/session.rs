@@ -268,6 +268,7 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
         .skip_taskbar(true)
         .shadow(false)
         .focused(false)
+        .accept_first_mouse(true)
         .visible(false)
         .build()
         .map_err(|error| error.to_string())?;

@@ -61,6 +61,7 @@
       },
       {
         "label": "clipboard-preview",
+        "acceptFirstMouse": true,
         "create": false,
         "title": "浮屿 - 剪贴板预览",
         "url": "index.html?window=clipboard-preview",
@@ -94,6 +95,7 @@
       },
       {
         "label": "onboarding",
+        "acceptFirstMouse": true,
         "create": false,
         "title": "Fuyu",
         "url": "index.html?window=onboarding",
