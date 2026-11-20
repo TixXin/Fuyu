@@ -1,6 +1,6 @@
 # 交流群
 
-设置 → 关于 → 帮助 最上面的「交流群」一组，列出用户群：微信群显示二维码，以后加 QQ 群、Discord、Telegram 也在这里。代码在 `src/features/updater/community/`，挂在更新模块的设置分区上（`about.community`）。
+设置 → 关于 → 帮助 最上面的「交流群」一组，列出用户群：微信群显示二维码（列表读到后直接展开，「收起二维码」可以收起；过期的群默认收起），以后加 QQ 群、Discord、Telegram 也在这里。代码在 `src/features/updater/community/`，挂在更新模块的设置分区上（`about.community`）。
 
 ## 数据从哪来
 
