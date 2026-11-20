@@ -260,7 +260,9 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
     }
     if (expectedPlatform === "windows") assert.equal(watching.sample.programs.status, "pending");
     const history = await sysmon("getHistory");
-    assert.equal(history.points.at(-1).cpu, watching.sample.cpuPercent);
+    const recorded = history.points.find((point) => point.at === watching.sample.takenAt);
+    assert.ok(recorded, "the sample the page got is in the history");
+    assert.equal(recorded.cpu, watching.sample.cpuPercent);
     const closed = await sysmon("watchPage", { viewerId: "page-1", active: false });
     assert.equal(closed.sampling, true);
     if (expectedPlatform !== "windows") assert.equal(sysmonTimers(), 1);
