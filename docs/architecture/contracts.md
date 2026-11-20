@@ -11,6 +11,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 | `fuyu-settings` | `lib/settings/storage.ts` |
 | `fuyu-collapsed-text-default-v1`（迁移标记） | `lib/settings/storage.ts` |
 | `fuyu-glass-backdrop-default-v1`（迁移标记，2026-11-19 起，C135：`"1"` 表示 `fuyu-settings` 里的 `glassBackdrop: "wallpaper"` 已一次性改成 `"native"`；新装首次读取时直接写入，之后手选 `wallpaper` 不再被改） | `lib/settings/storage.ts` |
+| `fuyu-agent-light-jellyfish-v1`（迁移标记，2026-11-20 起，C159：`"1"` 表示 `fuyu-settings` 里的 `agentLightStyle: "dot"` 已一次性改成 `"mark"`（水母），缺省值也从 `"dot"` 改成 `"mark"`；新装首次读取时直接写入，之后手选圆点不再被改） | `lib/settings/storage.ts` |
 | `fuyu-setting-presets` | `lib/settings/storage.ts` |
 | `fuyu-todos`（这一行到 `fuyu-daily-note` 的 6 个待办 key：迁移到 `todos.json` 后只在启动时读取用于迁移，不再写入也不删除，保留给旧版本用） | `features/todos/storage.ts` |
 | `fuyu-active-todo` | `features/todos/storage.ts` |
