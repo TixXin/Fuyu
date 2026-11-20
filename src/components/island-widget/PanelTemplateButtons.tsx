@@ -1,9 +1,9 @@
-import { Briefcase, Coffee } from "lucide-react";
+import { Briefcase, Coffee, Sparkles } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { PANEL_TEMPLATES, type PanelTemplate } from "../../lib/settings/panelTemplates";
 import "./PanelTemplateButtons.css";
 
-const ICONS = { workbench: Briefcase, fun: Coffee } as const;
+const ICONS = { fuyu: Sparkles, workbench: Briefcase, fun: Coffee } as const;
 
 export function PanelTemplateButtons({ onPick }: { onPick: (template: PanelTemplate) => void }) {
   const t = useTranslation().islandWidgets.panel;

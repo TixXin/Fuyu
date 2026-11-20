@@ -302,7 +302,7 @@ export function dropNewPanelItem(panel: CustomPanel, widget: string, size: Panel
 export const FUYU_PANEL_ID = "fuyu";
 export const FUYU_PAGE_ID = `${CUSTOM_PANEL_PAGE_PREFIX}${FUYU_PANEL_ID}`;
 
-const DEFAULT_FUYU_ITEMS: readonly (readonly [string, PanelSize])[] = [
+export const DEFAULT_FUYU_ITEMS: readonly (readonly [string, PanelSize])[] = [
   ["today", "l"],
   ["next-meeting", "m"],
   ["todos", "m"],

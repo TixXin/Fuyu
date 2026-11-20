@@ -28,8 +28,8 @@ export type IslandWidgetsText = {
   panel: {
     empty: string;
     templateHint: string;
-    templates: { workbench: string; fun: string };
-    templateDetail: { workbench: string; fun: string };
+    templates: { fuyu: string; workbench: string; fun: string };
+    templateDetail: { fuyu: string; workbench: string; fun: string };
     edit: string;
     done: string;
     addWidget: string;
@@ -120,8 +120,8 @@ export const zhCN: IslandWidgetsText = {
   panel: {
     empty: "这个面板还没有组件",
     templateHint: "从模板开始，或者点右上角的布局按钮自己加",
-    templates: { workbench: "工作台", fun: "娱乐" },
-    templateDetail: { workbench: "待办 · 会议 · Agent", fun: "音乐 · 歌词 · 天气" },
+    templates: { fuyu: "Fuyu 默认", workbench: "工作台", fun: "娱乐" },
+    templateDetail: { fuyu: "今日 · 番茄钟 · 系统等全套", workbench: "待办 · 会议 · Agent", fun: "音乐 · 歌词 · 天气" },
     edit: "调整布局",
     done: "完成调整",
     addWidget: "添加组件",
@@ -212,8 +212,8 @@ export const en: IslandWidgetsText = {
   panel: {
     empty: "This panel has no widgets yet",
     templateHint: "Start from a template, or use the layout button to add your own",
-    templates: { workbench: "Workbench", fun: "Leisure" },
-    templateDetail: { workbench: "Todos · Meeting · Agent", fun: "Music · Lyrics · Weather" },
+    templates: { fuyu: "Fuyu default", workbench: "Workbench", fun: "Leisure" },
+    templateDetail: { fuyu: "Today · Pomodoro · System and more", workbench: "Todos · Meeting · Agent", fun: "Music · Lyrics · Weather" },
     edit: "Edit layout",
     done: "Done editing",
     addWidget: "Add widget",

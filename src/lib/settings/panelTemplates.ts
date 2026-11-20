@@ -1,11 +1,12 @@
-import { addPanelItem, defaultWidgetSize, type CustomPanel, type PanelSize } from "./customPanels.ts";
+import { addPanelItem, DEFAULT_FUYU_ITEMS, defaultWidgetSize, type CustomPanel, type PanelSize } from "./customPanels.ts";
 
-export const PANEL_TEMPLATES = ["workbench", "fun"] as const;
+export const PANEL_TEMPLATES = ["fuyu", "workbench", "fun"] as const;
 export type PanelTemplate = (typeof PANEL_TEMPLATES)[number];
 
 type TemplateItem = { widget: string; size: PanelSize };
 
 const TEMPLATE_ITEMS: Record<PanelTemplate, readonly TemplateItem[]> = {
+  fuyu: DEFAULT_FUYU_ITEMS.map(([widget, size]) => ({ widget, size })),
   workbench: [
     { widget: "todos", size: "l" },
     { widget: "next-meeting", size: "m" },
