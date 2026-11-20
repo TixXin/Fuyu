@@ -89,7 +89,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
             let is_move_armed = match hwnd {
                 _ if modifier::is_resizing() => modifier::resize_target(),
                 Some(_) if is_inside && win32::input::is_left_button_down() => was_move_armed,
-                Some(hwnd) if is_inside => modifier::target(hwnd),
+                Some(_) if is_inside => modifier::target(&window),
                 _ => ModifierTarget::None,
             };
             if is_move_armed != was_move_armed {

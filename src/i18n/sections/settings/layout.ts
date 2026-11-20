@@ -35,9 +35,7 @@ export type SettingsLayoutText = {
   panelWidth: string;
   collapsedWidthExtra: string;
   collapsedWidthHint: string;
-  collapsedWidthHintMac: string;
   panelSizeHint: string;
-  panelSizeHintMac: string;
   launchAtStartup: string;
   launchAtStartupMac: string;
   trayIcon: string;
@@ -106,9 +104,7 @@ export const zhCN: SettingsLayoutText = {
   panelWidth: "面板宽度",
   collapsedWidthExtra: "折叠岛屿宽度",
   collapsedWidthHint: "在随内容变化的宽度上加宽或收窄。也可以把鼠标移到折叠岛屿的左右边缘，出现提示线后拖动来调。",
-  collapsedWidthHintMac: "在随内容变化的宽度上加宽或收窄。",
   panelSizeHint: "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以把鼠标移到展开面板的左右边缘或底边，出现提示线后拖动来调。",
-  panelSizeHintMac: "所有页面都用这个宽度和高度，内容多了在页面里滚动。",
   launchAtStartup: "开机自启动",
   launchAtStartupMac: "登录时打开",
   trayIcon: "在托盘显示图标",
@@ -181,9 +177,7 @@ export const en: SettingsLayoutText = {
   panelWidth: "Panel width",
   collapsedWidthExtra: "Collapsed island width",
   collapsedWidthHint: "Widens or narrows the width that follows the content. Or point at the collapsed island's side until a line shows, then drag it.",
-  collapsedWidthHintMac: "Widens or narrows the width that follows the content.",
   panelSizeHint: "Every page has this width and height and scrolls inside when it holds more. Or point at the open panel's side or bottom edge until a line shows, then drag it.",
-  panelSizeHintMac: "Every page has this width and height and scrolls inside when it holds more.",
   launchAtStartup: "Launch at startup",
   launchAtStartupMac: "Open at login",
   trayIcon: "Show icon in the system tray",

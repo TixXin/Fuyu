@@ -52,7 +52,7 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
         />
         <SettingsSliderRow
           title={text.collapsedWidthExtra}
-          description={isMacOS ? text.collapsedWidthHintMac : text.collapsedWidthHint}
+          description={text.collapsedWidthHint}
           value={settings.collapsedWidthExtra}
           min={MIN_COLLAPSED_WIDTH_EXTRA}
           max={MAX_COLLAPSED_WIDTH_EXTRA}
@@ -77,7 +77,7 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
         />
         <SettingsSliderRow
           title={text.panelWidth}
-          description={isMacOS ? text.panelSizeHintMac : text.panelSizeHint}
+          description={text.panelSizeHint}
           value={settings.panelWidth}
           min={MIN_PANEL_WIDTH}
           max={MAX_PANEL_WIDTH}

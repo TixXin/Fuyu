@@ -27,7 +27,7 @@ pub(crate) mod side;
 pub(crate) mod glass;
 #[cfg(windows)]
 pub(crate) mod glass_capture;
-#[cfg_attr(not(windows), path = "modifier_unsupported.rs")]
+#[cfg_attr(not(any(windows, target_os = "macos")), path = "modifier_unsupported.rs")]
 pub(crate) mod modifier;
 #[cfg_attr(not(windows), path = "outside_click_unsupported.rs")]
 pub(crate) mod outside_click;

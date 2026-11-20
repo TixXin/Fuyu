@@ -24,11 +24,10 @@ function IslandLayerSection({ settings, onSettingsChange, takenBy }: ShortcutsSe
 function IslandReference() {
   const t = useTranslation();
   const text = t.settings.shortcuts;
-  const resizeRows: [string, string][] = isMacOS ? [] : [[text.resizePanel, text.dragEdge]];
   return (
     <ShortcutReferenceGroup
       title={text.islandTitle}
-      rows={[[text.collapse, "Esc"], [text.moveIsland, text.longPressDrag], ...resizeRows]}
+      rows={[[text.collapse, "Esc"], [text.moveIsland, text.longPressDrag], [text.resizePanel, text.dragEdge]]}
     />
   );
 }
