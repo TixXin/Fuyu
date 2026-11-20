@@ -20,10 +20,18 @@ export function useWindowDragGesture(isTucked: boolean, onWindowDragStart: () =>
     start.current = null;
   }, []);
 
+  const beginDrag = useCallback(() => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+    start.current = null;
+    didDragRef.current = true;
+    latest.current();
+  }, []);
+
   useEffect(() => {
     const move = (event: PointerEvent) => {
       const from = start.current;
-      if (from && event.pointerId === from.pointer && Math.hypot(event.clientX - from.x, event.clientY - from.y) > SLOP_PX) cancelWindowDrag();
+      if (from && event.pointerId === from.pointer && Math.hypot(event.clientX - from.x, event.clientY - from.y) > SLOP_PX) beginDrag();
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", cancelWindowDrag);
@@ -36,7 +44,7 @@ export function useWindowDragGesture(isTucked: boolean, onWindowDragStart: () =>
       window.removeEventListener("pointercancel", cancelWindowDrag);
       window.removeEventListener("blur", cancelWindowDrag);
     };
-  }, [cancelWindowDrag]);
+  }, [beginDrag, cancelWindowDrag]);
 
   const prepareWindowDrag = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
@@ -45,14 +53,9 @@ export function useWindowDragGesture(isTucked: boolean, onWindowDragStart: () =>
       if (event.button !== 0 || isTucked) return;
       if (event.target instanceof Element && event.target.closest(NOT_A_HANDLE)) return;
       start.current = { x: event.clientX, y: event.clientY, pointer: event.pointerId };
-      timer.current = window.setTimeout(() => {
-        timer.current = null;
-        start.current = null;
-        didDragRef.current = true;
-        latest.current();
-      }, HOLD_MS);
+      timer.current = window.setTimeout(beginDrag, HOLD_MS);
     },
-    [isTucked, cancelWindowDrag],
+    [isTucked, beginDrag, cancelWindowDrag],
   );
 
   return { didDragRef, prepareWindowDrag, cancelWindowDrag };

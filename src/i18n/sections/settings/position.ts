@@ -19,7 +19,7 @@ export type SettingsPositionText = {
 
 export const zhCN: SettingsPositionText = {
   title: "位置",
-  moveHint: "在收起的岛上，或展开面板的顶部按住不动片刻，再拖动就能移动它。拖到屏幕顶部、底部或左右两侧附近会自动贴齐。",
+  moveHint: "按住收起的岛或展开面板的顶部拖动就能移动它，触控板三指拖动也行。拖到屏幕顶部、底部或左右两侧附近会自动贴齐。",
   resetRow: "回到默认位置",
   reset: "复位",
   resetDone: "已复位",
@@ -38,7 +38,7 @@ export const zhCN: SettingsPositionText = {
 
 export const en: SettingsPositionText = {
   title: "Position",
-  moveHint: "Press and hold the collapsed island, or the top of the open panel, for a moment, then drag to move it. Drop it near the top, bottom or either side of the screen to snap flush.",
+  moveHint: "Drag the collapsed island, or the top of the open panel, to move it; a three-finger trackpad drag works too. Drop it near the top, bottom or either side of the screen to snap flush.",
   resetRow: "Back to the default position",
   reset: "Reset",
   resetDone: "Done",
