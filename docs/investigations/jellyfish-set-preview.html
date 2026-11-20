@@ -273,7 +273,7 @@
 <div class="cards" id="more-fun"></div>
 
 <h2>5. 应用图标</h2>
-<p class="note">深色底上叠几团彩色光晕，水母带一圈柔光，顶部一层玻璃反光和一圈细亮边。三套配色可以切换；32 像素及以下用简化版：去掉高光、腮红和柔光，眼睛放大。最右边是 Mac 菜单栏的单色模板图，比上一版大一点（18 像素高）。</p>
+<p class="note">深色底上叠几团彩色光晕，水母带一圈柔光，顶部一层玻璃反光和一圈细亮边。三套配色可以切换，定了深海（默认显示），水母放大到占图标约四分之三宽；32 像素及以下用简化版：去掉高光、腮红和柔光，眼睛放大。最右边是 Mac 菜单栏的单色模板图，比上一版大一点（18 像素高）。</p>
 <div class="group" id="ctl-icon" style="margin-bottom:12px"><span>配色</span></div>
 <div class="icons" id="icons"></div>
 <p class="note" style="margin-top:18px">放在桌面壁纸上，三套并排：</p>
@@ -414,7 +414,7 @@ function iconSvg(size, simple, key) {
     ? `<ellipse cx="24" cy="25" rx="3.8" ry="5.2" fill="${pal.eye}"/><ellipse cx="40" cy="25" rx="3.8" ry="5.2" fill="${pal.eye}"/>`
     : `<ellipse cx="20" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 20 14)" fill="#fff" opacity=".7"/><circle cx="29" cy="10.2" r="1.5" fill="#fff" opacity=".8"/><ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fb0" opacity=".75"/><ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fb0" opacity=".75"/><ellipse cx="24" cy="25" rx="2.8" ry="4" fill="${pal.eye}"/><ellipse cx="40" cy="25" rx="2.8" ry="4" fill="${pal.eye}"/><circle cx="25" cy="23.3" r=".95" fill="#fff"/><circle cx="41" cy="23.3" r=".95" fill="#fff"/>`;
   const glow = simple ? "" : `<g fill="${pal.glow}" opacity=".75" filter="url(#f${n})">${shape}</g>`;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64"><defs>${blobs}<clipPath id="k${n}"><rect x="1" y="1" width="62" height="62" rx="15"/></clipPath><linearGradient id="l${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="${pal.jelly[0]}"/><stop offset="1" stop-color="${pal.jelly[1]}"/></linearGradient><linearGradient id="g${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f${n}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter></defs><g clip-path="url(#k${n})"><rect width="64" height="64" fill="${pal.base}"/>${pal.blobs.map((_, i) => `<rect width="64" height="64" fill="url(#r${n}-${i})"/>`).join("")}<g transform="translate(9 12) scale(.72)">${glow}<g fill="url(#l${n})">${shape}</g>${face}</g><rect width="64" height="64" fill="url(#g${n})"/></g><rect x="1.4" y="1.4" width="61.2" height="61.2" rx="14.6" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width=".8"/></svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64"><defs>${blobs}<clipPath id="k${n}"><rect x="1" y="1" width="62" height="62" rx="15"/></clipPath><linearGradient id="l${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="${pal.jelly[0]}"/><stop offset="1" stop-color="${pal.jelly[1]}"/></linearGradient><linearGradient id="g${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f${n}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter></defs><g clip-path="url(#k${n})"><rect width="64" height="64" fill="${pal.base}"/>${pal.blobs.map((_, i) => `<rect width="64" height="64" fill="url(#r${n}-${i})"/>`).join("")}<g transform="translate(4.5 9.4) scale(.86)">${glow}<g fill="url(#l${n})">${shape}</g>${face}</g><rect width="64" height="64" fill="url(#g${n})"/></g><rect x="1.4" y="1.4" width="61.2" height="61.2" rx="14.6" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width=".8"/></svg>`;
 }
 
 function renderIcons() {
@@ -440,7 +440,7 @@ function build() {
   document.getElementById("pills").innerHTML = row("深色岛", { live: true }) + row("浅色岛", { light: true, live: true }) + row("减少动画", { live: false }) + row("深色岛 · 放大 3 倍", { live: true }, " z3");
 }
 
-const view = { bg: "light", speed: 1, motion: true, icon: "aurora" };
+const view = { bg: "light", speed: 1, motion: true, icon: "ocean" };
 
 function applySpeed() {
   requestAnimationFrame(() => { for (const a of document.getAnimations()) a.playbackRate = view.speed; });
