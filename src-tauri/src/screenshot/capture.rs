@@ -1,8 +1,11 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 use tauri::{AppHandle, Monitor, WebviewWindow};
 
+use super::blank;
 use crate::win32;
+
+const WGC_WAIT: Duration = Duration::from_millis(800);
 
 pub(super) struct Grab {
     pub(super) origin: (i32, i32),
@@ -23,7 +26,12 @@ pub(super) fn planned(monitor: &Monitor) -> Grab {
 
 pub(super) fn monitor(monitor: &Monitor) -> Option<Grab> {
     let (position, size) = (monitor.position(), monitor.size());
-    let rgba = win32::screen_capture::capture(position.x, position.y, size.width, size.height)?;
+    let (x, y, width, height) = (position.x, position.y, size.width, size.height);
+    let rgba = blank::pick(
+        win32::notification_state::exclusive_fullscreen_in_front(),
+        || win32::screen_capture::capture(x, y, width, height),
+        || win32::graphics_capture::grab_screen(x, y, width, height, WGC_WAIT),
+    )?;
     Some(Grab { origin: (position.x, position.y), width: size.width, height: size.height, scale: 1.0, rgba })
 }
 

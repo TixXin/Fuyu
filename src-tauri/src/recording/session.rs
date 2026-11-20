@@ -122,7 +122,7 @@ fn open(options: &Options, frames: SyncSender<Message>) -> Result<Pipeline, Stri
     let dropped = Arc::new(AtomicU64::new(0));
     let counter = Arc::clone(&dropped);
     let interval = TICKS_PER_SECOND / i64::from(options.fps);
-    let capture = MonitorCapture::start(&gpu, area, format::capture_buffers(options.fps), interval, move |frame, time| {
+    let capture = MonitorCapture::start(&gpu, area, format::capture_buffers(options.fps), interval, true, move |frame, time| {
         if let Err(TrySendError::Full(_)) = frames.try_send(Message::Frame(frame, time)) {
             counter.fetch_add(1, Ordering::Relaxed);
         }

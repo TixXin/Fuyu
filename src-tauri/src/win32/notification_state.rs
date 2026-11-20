@@ -12,3 +12,7 @@ pub(crate) fn fullscreen_app_in_front() -> bool {
         Err(_) => false,
     }
 }
+
+pub(crate) fn exclusive_fullscreen_in_front() -> bool {
+    matches!(unsafe { SHQueryUserNotificationState() }, Ok(state) if state == QUNS_RUNNING_D3D_FULL_SCREEN)
+}

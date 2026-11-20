@@ -1,4 +1,6 @@
 mod background;
+#[cfg(any(windows, test))]
+mod blank;
 #[cfg_attr(target_os = "macos", path = "capture_macos.rs")]
 mod capture;
 #[cfg_attr(target_os = "macos", path = "clipboard_macos.rs")]
