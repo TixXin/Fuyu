@@ -17,6 +17,7 @@
   body { margin: 0; padding: 24px 32px 80px; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; overflow-x: hidden; }
   h1 { font-size: 22px; margin: 0 0 4px; }
   h2 { font-size: 16px; margin: 36px 0 4px; }
+  h3.sub { font-size: 13.5px; margin: 18px 0 8px; color: var(--sub); font-weight: 600; }
   p.note { color: var(--sub); margin: 0 0 12px; max-width: 980px; }
   .controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; padding: 10px 14px; margin: 12px 0 0; border-radius: 10px; background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--line); backdrop-filter: blur(8px); max-width: 1180px; }
   .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -134,6 +135,94 @@
   @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, .97); } }
   @keyframes drift { 0% { opacity: 0; transform: translate(0, 2px); } 25%, 60% { opacity: 1; } 100% { opacity: 0; transform: translate(3px, -6px); } }
 
+
+  .jl .bub, .jl .paper { fill: #fff; stroke: #cfc8bd; stroke-width: 1.2; }
+  .jl .ink { fill: none; stroke: #5a5866; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .jl .ink.bad { stroke: #e5352b; }
+  .jl .drop { fill: #7cc7ff; }
+  .jl .note { fill: #8a7ad6; }
+  .jl .note path { fill: none; stroke: #8a7ad6; stroke-width: 1.6; stroke-linecap: round; }
+  .jl .note.pink { fill: #ff7fa5; }
+  .jl .note.pink path { stroke: #ff7fa5; }
+  .jl .ok { fill: none; stroke: #2fb873; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 10; }
+  .jl .steam { fill: none; stroke: #c9c4bb; stroke-width: 1.4; stroke-linecap: round; }
+  .jl .bt { fill: #5a5866; font: 700 6px/1 -apple-system, "PingFang SC", sans-serif; text-anchor: middle; }
+  .jl .lobes { transform-origin: 32px 33px; }
+  body.motion .jl.live .lobes, body.motion .jl.live .spin { animation-iteration-count: infinite; animation-timing-function: var(--ease-io); }
+
+  body.motion .jl.live[data-a="think"] .body { animation-name: float; animation-duration: 4s; }
+  body.motion .jl.live[data-a="think"] .fx > * { animation-name: dot; animation-duration: 1.5s; }
+  body.motion .jl.live[data-a="think"] .fx > *:nth-child(2) { animation-delay: .25s; }
+  body.motion .jl.live[data-a="think"] .fx > *:nth-child(3) { animation-delay: .5s; }
+  body.motion .jl.live[data-a="search"] .fx > * { animation-name: scan; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="search"] .eyes { animation-name: follow; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="type"] .body { animation-name: float; animation-duration: .8s; }
+  body.motion .jl.live[data-a="type"] .lobe { animation-name: tap; animation-duration: .4s; }
+  body.motion .jl.live[data-a="type"] .lobe:nth-child(even) { animation-delay: .2s; }
+  body.motion .jl.live[data-a="type"] .fx > * { animation-name: typebar; animation-duration: 1.8s; }
+  body.motion .jl.live[data-a="type"] .fx > *:nth-child(2) { animation-delay: .3s; }
+  body.motion .jl.live[data-a="type"] .fx > *:nth-child(3) { animation-delay: .6s; }
+  body.motion .jl.live[data-a="sweat"] .body { animation-name: jitter; animation-duration: .3s; }
+  body.motion .jl.live[data-a="sweat"] .fx > * { animation-name: drip; animation-duration: 1.6s; }
+  body.motion .jl.live[data-a="offline"] .fx > *:nth-child(-n+3) { animation-name: dot; animation-duration: 1.8s; }
+  body.motion .jl.live[data-a="offline"] .fx > *:nth-child(2) { animation-delay: .3s; }
+  body.motion .jl.live[data-a="offline"] .fx > *:nth-child(1) { animation-delay: .6s; }
+  body.motion .jl.live[data-a="dizzy"] .body { animation-name: wobble; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="dizzy"] .spin { animation-name: spin; animation-duration: 1s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="dizzy"] .fx > * { animation-name: orbit; animation-duration: 1.2s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="dizzy"] .fx > *:nth-child(2) { animation-delay: -.6s; }
+  body.motion .jl.live[data-a="music"] .body { animation-name: sway; animation-duration: .8s; }
+  body.motion .jl.live[data-a="music"] .fx > * { animation-name: notefloat; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="music"] .fx > *:nth-child(2) { animation-delay: 1.2s; }
+  body.motion .jl.live[data-a="meeting"] .body { animation-name: jolt; animation-duration: 1.6s; animation-timing-function: var(--ease-out); }
+  body.motion .jl.live[data-a="meeting"] .fx > * { animation-name: ring; animation-duration: 1.6s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="mail"] .fx > * { animation-name: mailin; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="mail"] .body { animation-name: rise; animation-duration: 2.4s; animation-timing-function: var(--ease-out); }
+  body.motion .jl.live[data-a="copy"] .fx > *:nth-child(2) { animation-name: checkdraw; animation-duration: 1.8s; }
+  body.motion .jl.live[data-a="shot"] .fx > *:nth-child(2) { animation-name: flash; animation-duration: 1.6s; animation-timing-function: var(--ease-out); }
+  body.motion .jl.live[data-a="shot"] .eyes { animation-name: flinch; animation-duration: 1.6s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="translate"] .fx > * { animation-name: alt; animation-duration: 2.4s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="translate"] .fx > *:nth-child(2) { animation-delay: 1.2s; }
+  body.motion .jl.live[data-a="translate"] .eyes { animation-name: follow; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="drag"] .lobes { animation-name: skew; animation-duration: 1s; }
+  body.motion .jl.live[data-a="drag"] .body { animation-name: wobble; animation-duration: 1s; }
+  body.motion .jl.live[data-a="peek"] .body { animation-name: peek; animation-duration: 3.2s; }
+  body.motion .jl.live[data-a="shy"] .body { animation-name: tilt; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="shy"] .fx > * { animation-name: notefloat; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="party"] .body { animation-name: jolt; animation-duration: 1.8s; animation-timing-function: var(--ease-out); }
+  body.motion .jl.live[data-a="party"] .fx > * { animation-name: fall; animation-duration: 1.8s; }
+  body.motion .jl.live[data-a="party"] .fx > *:nth-child(2n) { animation-delay: .4s; }
+  body.motion .jl.live[data-a="party"] .fx > *:nth-child(3n) { animation-delay: .9s; }
+  body.motion .jl.live[data-a="birthday"] .fx > * { animation-name: sway; animation-duration: 1.6s; }
+  body.motion .jl.live[data-a="coffee"] .head { animation-name: breathe; animation-duration: 3.2s; }
+  body.motion .jl.live[data-a="coffee"] .eyes { animation-name: blink; animation-duration: 3.2s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="coffee"] .fx > *:nth-child(n+2) { animation-name: steam; animation-duration: 2s; }
+  body.motion .jl.live[data-a="coffee"] .fx > *:nth-child(3) { animation-delay: 1s; }
+  body:not(.motion) .jl[data-a="peek"] .body { transform: translateX(-16px); }
+
+  @keyframes dot { 0%, 100% { opacity: .2; } 25%, 70% { opacity: 1; } }
+  @keyframes scan { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-22px); } }
+  @keyframes follow { 0%, 100% { transform: translateX(1.4px); } 50% { transform: translateX(-1.6px); } }
+  @keyframes tap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.72); } }
+  @keyframes typebar { 0% { transform: scaleX(0); opacity: 1; } 30%, 80% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+  @keyframes jitter { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-.5px); } 75% { transform: translateX(.5px); } }
+  @keyframes drip { 0% { transform: translateY(-2px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+  @keyframes wobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes orbit { 0%, 100% { transform: translate(-12px, 0) scale(.8); } 25% { transform: translate(0, 2.6px) scale(1); } 50% { transform: translate(12px, 0) scale(.8); } 75% { transform: translate(0, -2.6px) scale(.55); } }
+  @keyframes sway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  @keyframes notefloat { 0% { opacity: 0; transform: translate(0, 4px); } 25%, 60% { opacity: 1; } 100% { opacity: 0; transform: translate(5px, -9px); } }
+  @keyframes ring { 0%, 40%, 100% { transform: rotate(0); } 5%, 15%, 25%, 35% { transform: rotate(14deg); } 10%, 20%, 30% { transform: rotate(-14deg); } }
+  @keyframes mailin { 0% { opacity: 0; transform: translateX(10px); } 15%, 75% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(0); } }
+  @keyframes checkdraw { 0%, 10% { stroke-dashoffset: 10; opacity: 1; } 40%, 85% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+  @keyframes flash { 0% { opacity: 1; transform: scale(.4); } 35%, 100% { opacity: 0; transform: scale(1.6); } }
+  @keyframes flinch { 0%, 20%, 100% { transform: scaleY(1); } 4%, 14% { transform: scaleY(.15); } }
+  @keyframes alt { 0%, 52%, 100% { opacity: 0; } 6%, 44% { opacity: 1; } }
+  @keyframes skew { 0%, 100% { transform: skewX(-22deg); } 50% { transform: skewX(14deg); } }
+  @keyframes peek { 0%, 100% { transform: translateX(-42px); } 25%, 75% { transform: translateX(-16px); } }
+  @keyframes fall { 0% { opacity: 0; transform: translate(0, -4px) rotate(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(3px, 30px) rotate(260deg); } }
+  @keyframes steam { 0% { opacity: 0; transform: translateY(2px); } 40% { opacity: .9; } 100% { opacity: 0; transform: translateY(-5px); } }
+
   @media (prefers-reduced-motion: reduce) { .jl, .jl * { animation: none !important; } }
   body:not(.motion) .jl * { animation: none !important; }
   body:not(.motion) .jl[data-a="running"] .body { transform: rotate(-5deg); }
@@ -171,7 +260,16 @@
 <p class="note">交互和过渡时用，颜色跟当时的状态走，这里都用空闲的米白。</p>
 <div class="cards" id="extras"></div>
 
-<h2>4. 应用图标</h2>
+<h2>4. 更多状态</h2>
+<p class="note">脑洞版：让水母替岛上的各个功能说话。颜色仍按状态走，没写的都用空闲的米白；道具（放大镜、信封、闹钟……）只在 40 像素以上出现，岛上 24 像素只保留表情。</p>
+<h3 class="sub">Agent 干活时</h3>
+<div class="cards" id="more-agent"></div>
+<h3 class="sub">岛上的功能</h3>
+<div class="cards" id="more-app"></div>
+<h3 class="sub">互动和彩蛋</h3>
+<div class="cards" id="more-fun"></div>
+
+<h2>5. 应用图标</h2>
 <p class="note">32 像素及以下用简化版：去掉高光和腮红，眼睛放大。最右边是 Mac 菜单栏的单色模板图。</p>
 <div class="icons" id="icons"></div>
 
@@ -198,6 +296,33 @@ const EXTRAS = [
   { a: "sleep", name: "睡着", face: "sleep", fx: "zz", notes: [["用在", "长时间没有会话、勿扰模式"], ["身体", "3.2 秒一轮慢慢呼吸"], ["Z", "两个交替往右上飘"]] },
 ];
 
+const MORE = [
+  ["agent", [
+    { a: "think", name: "思考中", state: "running", face: "up", fx: "think", notes: [["用在", "模型在想、还没开始动手"], ["眼睛", "往右上看，嘴抿成一条线"], ["气泡", "三个圆点依次亮起"]] },
+    { a: "search", name: "翻文件 / 搜索", state: "running", face: "open", fx: "lens", notes: [["用在", "读文件、grep、联网搜索"], ["放大镜", "从右往左扫过脸，眼睛跟着走"]] },
+    { a: "type", name: "敲代码", state: "running", face: "focus", fx: "code", notes: [["用在", "正在改文件"], ["触手", "两两交替快速敲"], ["代码行", "一行行打出来再消失"]] },
+    { a: "sweat", name: "额度快用完", face: "worried", fx: "drop", notes: [["用在", "用量环超过 90%"], ["表情", "八字眉、波浪嘴"], ["身体", "细细地抖，汗珠往下滑"]] },
+    { a: "offline", name: "连不上", face: "worried", fx: "wifi", notes: [["用在", "远程会话断线、钩子没回音"], ["信号", "三格依次闪，红线划掉"]] },
+  ]],
+  ["app", [
+    { a: "music", name: "在放歌", face: "hum", fx: "notes", notes: [["用在", "媒体控制在播放"], ["身体", "跟着拍子左右摇（0.8 秒一拍）"], ["音符", "两个交替飘出来"]] },
+    { a: "meeting", name: "会议要开始", face: "o", fx: "clock", notes: [["用在", "日历提醒前 5 分钟"], ["闹钟", "抖一阵、停一下"], ["身体", "被吓得一蹦"]] },
+    { a: "mail", name: "新邮件", face: "cheer", fx: "mail", notes: [["用在", "邮箱、QQ、微信来消息"], ["信封", "从右边滑进来，红点表示未读"]] },
+    { a: "copy", name: "复制好了", state: "done", face: "hum", fx: "copy", notes: [["用在", "剪贴板记下一条、文件中转完成"], ["对勾", "在纸上一笔画出来"]] },
+    { a: "shot", name: "截图", face: "open", fx: "camera", notes: [["用在", "按下截图快捷键"], ["闪光", "一闪而过，眼睛被闪得一眯"]] },
+    { a: "translate", name: "翻译中", face: "open", fx: "bubbles", notes: [["用在", "快捷翻译"], ["气泡", "「文」和「A」轮流冒出，眼睛跟着看"]] },
+  ]],
+  ["fun", [
+    { a: "drag", name: "被拖着走", face: "o", notes: [["用在", "拖动岛的时候"], ["触手", "往反方向甩来甩去"]] },
+    { a: "peek", name: "贴边偷看", face: "peek", fx: "edge", clip: true, notes: [["用在", "岛贴边收起时偶尔探头"], ["身体", "从屏幕边上露出半个头，看一会儿缩回去"]] },
+    { a: "shy", name: "害羞", face: "shy", fx: "heart", notes: [["用在", "鼠标在它身上停很久"], ["表情", "腮红变大，歪头，冒一颗心"]] },
+    { a: "dizzy", name: "被戳晕了", face: "spiral", fx: "orbit", notes: [["用在", "连点 5 下以上的彩蛋"], ["眼睛", "蚊香眼在转"], ["星星", "绕着头转圈"]] },
+    { a: "party", name: "庆祝", state: "done", face: "cheer", fx: "confetti", notes: [["用在", "今天的待办全部做完、发版成功"], ["彩纸", "从头顶撒下来"]] },
+    { a: "birthday", name: "生日 / 节日", face: "cheer", fx: "hat", notes: [["用在", "用户生日、安装一周年、春节"], ["帽子", "跟着节奏左右晃"]] },
+    { a: "coffee", name: "熬夜陪跑", state: "running", face: "focus", fx: "cup", notes: [["用在", "半夜还有会话在跑"], ["表情", "眯着眼，慢慢呼吸"], ["咖啡", "冒热气"]] },
+  ]],
+];
+
 function faceSvg(face, small) {
   const glint = small ? "" : `<circle cx="25" cy="23.4" r=".9" fill="#fff"/><circle cx="41" cy="23.4" r=".9" fill="#fff"/>`;
   const eyes = `<ellipse class="eye" cx="24" cy="25" rx="2.7" ry="3.9"/><ellipse class="eye" cx="40" cy="25" rx="2.7" ry="3.9"/>${glint}`;
@@ -211,6 +336,14 @@ function faceSvg(face, small) {
     wink: `<g class="eyes"><ellipse class="eye" cx="24" cy="25" rx="2.7" ry="3.9"/><path class="line" d="M43 22l-5 3 5 3"/></g>`,
     o: `<g class="eyes"><ellipse class="eye" cx="24" cy="24.5" rx="3" ry="4.3"/><ellipse class="eye" cx="40" cy="24.5" rx="3" ry="4.3"/>${glint}</g><ellipse class="eye" cx="32" cy="32.4" rx="2.1" ry="2.6"/><ellipse cx="32" cy="33.4" rx="1.2" ry="1" fill="#ff6b7a"/>`,
     sleep: `<g class="eyes"><path class="line" d="M20.6 25a3.4 3.4 0 0 0 6.8 0M36.6 25a3.4 3.4 0 0 0 6.8 0"/></g>`,
+    up: `<g class="eyes" transform="translate(2 -2.6)"><ellipse class="eye" cx="24" cy="25" rx="2.5" ry="3.6"/><ellipse class="eye" cx="40" cy="25" rx="2.5" ry="3.6"/>${glint}</g><path class="line" style="stroke-width:2" d="M29.6 31.8h4.8"/>`,
+    focus: `<g class="eyes"><path class="eye" d="M21.2 23.4h5.6v2a2.8 2.8 0 0 1-5.6 0Z"/><path class="eye" d="M37.2 23.4h5.6v2a2.8 2.8 0 0 1-5.6 0Z"/></g><path class="line" style="stroke-width:2" d="M29.6 31.8h4.8"/>`,
+    worried: `<g class="eyes">${eyes}</g><path class="line" style="stroke-width:2.2" d="M19 19.8l7-2.6M45 19.8l-7-2.6"/><path class="line" style="stroke-width:1.8" d="M27.6 32.4q1.1-1.4 2.2 0t2.2 0t2.2 0t2.2 0"/>`,
+    spiral: [24, 40].map((x) => `<g class="spin" style="transform-origin:${x}px 25px"><path class="line" style="stroke-width:1.8" d="M${x} 25a1 1 0 0 1 1 1a2 2 0 0 1-2 2a3 3 0 0 1-3-3a4 4 0 0 1 4-4a5 5 0 0 1 5 5"/></g>`).join("") + `<path class="line" style="stroke-width:1.8" d="M28 32.6q2-1.6 4 0t4 0"/>`,
+    shy: `<ellipse class="cheek" cx="17.6" cy="31" rx="5" ry="3" style="opacity:.95"/><ellipse class="cheek" cx="46.4" cy="31" rx="5" ry="3" style="opacity:.95"/><g class="eyes"><path class="line" d="M20.6 26.4a3.4 3.4 0 0 1 6.8 0M36.6 26.4a3.4 3.4 0 0 1 6.8 0"/></g><path class="line" style="stroke-width:2" d="M29.8 31.6q2.2 1.6 4.4 0"/>`,
+    cheer: `<g class="eyes"><path class="line" d="M20.6 26.4a3.4 3.4 0 0 1 6.8 0M36.6 26.4a3.4 3.4 0 0 1 6.8 0"/></g><path class="eye" d="M28.2 30.4h7.6a3.8 3.8 0 0 1-7.6 0Z"/><ellipse cx="32" cy="33.1" rx="2" ry="1.1" fill="#ff6b7a"/>`,
+    hum: `<g class="eyes"><path class="line" d="M20.6 26.4a3.4 3.4 0 0 1 6.8 0M36.6 26.4a3.4 3.4 0 0 1 6.8 0"/></g><ellipse class="eye" cx="32" cy="32" rx="1.5" ry="1.8"/>`,
+    peek: `<g class="eyes" transform="translate(2.6 0)">${eyes}</g>`,
   };
   return cheeks + parts[face];
 }
@@ -224,10 +357,27 @@ function fxSvg(fx) {
   if (fx === "anger") return `<g class="fx"><path class="anger" style="transform-origin:59px 5.5px" d="M55.5 3.5c1.6 0 2.5-.9 2.5-2.5M62.5 3.5c-1.6 0-2.5-.9-2.5-2.5M55.5 7.5c1.6 0 2.5.9 2.5 2.5M62.5 7.5c-1.6 0-2.5.9-2.5 2.5"/></g>`;
   if (fx === "sparks") return `<g class="fx">${star(59, 3, 4.6)}${star(65.5, 11, 3)}</g>`;
   if (fx === "zz") return `<g class="fx"><text class="zz" x="55" y="10" style="transform-origin:57px 8px">z</text><text class="zz" x="60" y="3" font-size="10" style="transform-origin:63px 0px;font-size:10px">Z</text></g>`;
+  if (fx === "think") return `<g class="fx"><circle class="bub" cx="53" cy="7" r="1.6"/><circle class="bub" cx="58" cy="2.6" r="2.3"/><circle class="bub" cx="64.5" cy="-3" r="3.2"/></g>`;
+  if (fx === "lens") return `<g class="fx"><g><circle cx="46" cy="25" r="6" fill="#fff" fill-opacity=".4" stroke="#5a5866" stroke-width="2.2"/><path d="M50.3 29.3l5 5" stroke="#5a5866" stroke-width="3" stroke-linecap="round"/></g></g>`;
+  if (fx === "code") return `<g class="fx">${[[14, 9], [19.5, 12], [25, 6]].map(([y, w]) => `<path class="ink" style="transform-origin:62px ${y}px;stroke:#8b90a0" d="M62 ${y}h${w}"/>`).join("")}</g>`;
+  if (fx === "drop") return `<g class="fx"><path class="drop" d="M54 6c2 3 3 4.6 3 6a3 3 0 0 1-6 0c0-1.4 1-3 3-6Z"/></g>`;
+  if (fx === "wifi") return `<g class="fx"><circle cx="61" cy="15" r="1.5" fill="#5a5866"/><path class="ink" d="M57.5 12a5 5 0 0 1 7 0"/><path class="ink" d="M55 9a9 9 0 0 1 12 0"/><path class="ink bad" d="M55.5 3.5l11 13.5"/></g>`;
+  if (fx === "orbit") return `<g class="fx">${star(32, 1, 2.8)}${star(32, 1, 2.2)}</g>`;
+  if (fx === "notes") return `<g class="fx">${[[54, 11, ""], [61, 5, " pink"]].map(([x, y, c]) => `<g class="note${c}"><ellipse cx="${x}" cy="${y}" rx="2.3" ry="1.7" transform="rotate(-20 ${x} ${y})"/><path d="M${x + 2} ${y}V${y - 8}q3 .6 3.6 3.6"/></g>`).join("")}</g>`;
+  if (fx === "clock") return `<g class="fx"><g style="transform-origin:59px 26px"><path d="M53.6 20.4l2.4-2.2M64.4 20.4l-2.4-2.2" stroke="#e5352b" stroke-width="2.4" stroke-linecap="round"/><circle cx="59" cy="26" r="6" fill="#fff" stroke="#e5352b" stroke-width="1.8"/><path class="ink" style="stroke-width:1.5" d="M59 22.8V26l2.2 1.4"/></g></g>`;
+  if (fx === "mail") return `<g class="fx"><g><rect class="paper" x="51" y="20" width="14" height="10" rx="2"/><path class="ink" style="stroke-width:1.4" d="M51.8 21l6.2 4.6 6.2-4.6"/><circle cx="64.6" cy="20.4" r="2.4" fill="#ff453a"/></g></g>`;
+  if (fx === "copy") return `<g class="fx"><g><rect class="paper" x="54.5" y="13" width="10" height="13" rx="1.8"/><rect class="paper" x="51" y="16.5" width="10" height="13" rx="1.8"/></g><path class="ok" d="M53.2 23.2l2.2 2.3 3.8-4.6"/></g>`;
+  if (fx === "camera") return `<g class="fx"><g><rect x="54.5" y="19.6" width="5" height="3" rx="1" fill="#5a5866"/><rect x="51" y="21.6" width="14" height="10" rx="2.4" fill="#5a5866"/><circle cx="58" cy="26.6" r="3" fill="#fff"/><circle cx="58" cy="26.6" r="1.6" fill="#5a5866"/></g><path style="transform-origin:58px 14px" fill="#fff3a8" d="M58 4l1.8 7 7 1.8-7 1.8L58 22l-1.8-7.4-7-1.8 7-1.8Z"/></g>`;
+  if (fx === "bubbles") return `<g class="fx"><g><rect class="paper" x="44" y="-7" width="11" height="9" rx="3"/><text class="bt" x="49.5" y="0.2">文</text></g><g><rect class="paper" x="56" y="0" width="11" height="9" rx="3"/><text class="bt" x="61.5" y="7">A</text></g></g>`;
+  if (fx === "edge") return `<g class="fx"><rect x="-3" y="-6" width="3" height="58" rx="1.5" fill="#cfc8bd"/></g>`;
+  if (fx === "heart") return `<g class="fx"><path fill="#ff7fa5" d="M56 8c-1.6-2.4-5-1.2-4.4 1.4.4 1.8 2.8 3.2 4.4 4.4 1.6-1.2 4-2.6 4.4-4.4.6-2.6-2.8-3.8-4.4-1.4Z"/></g>`;
+  if (fx === "confetti") return `<g class="fx">${[[12, -2, "#ff5b4f"], [22, -7, "#ffcd3c"], [33, -4, "#6db6f4"], [44, -8, "#5ed69e"], [53, -2, "#b38cff"], [6, 4, "#ff8fa0"], [60, 4, "#ffcd3c"]].map(([x, y, c]) => `<rect x="${x}" y="${y}" width="2.6" height="4" rx=".8" fill="${c}" style="transform-origin:${x + 1.3}px ${y + 2}px"/>`).join("")}</g>`;
+  if (fx === "hat") return `<g class="fx"><g style="transform-origin:32px 8px"><path d="M25.5 9L32 -8l6.5 17Z" fill="#b38cff"/><path d="M27.6 3.6l7.4 2.2M29.6 -1.6l4.8 1.4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/><circle cx="32" cy="-8.4" r="2.3" fill="#ffcd3c"/></g></g>`;
+  if (fx === "cup") return `<g class="fx"><g><path d="M52 24h10v6a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4Z" fill="#fff" stroke="#cfc8bd" stroke-width="1.2"/><path d="M62 26h1.4a2 2 0 0 1 0 4H62" fill="none" stroke="#cfc8bd" stroke-width="1.4"/><path d="M53.2 25.6h7.6" stroke="#8b5a3c" stroke-width="1.6"/></g><path class="steam" d="M55 21q-1.4-2 0-4t0-4"/><path class="steam" d="M59 21q-1.4-2 0-4t0-4"/></g>`;
   return "";
 }
 
-function jelly({ a = "idle", state = a, face = "open", fx = "", small = false, light = false, live = true } = {}) {
+function jelly({ a = "idle", state = a, face = "open", fx = "", small = false, light = false, live = true, clip = false } = {}) {
   const n = ++uid;
   const shade = `url(#s${n})`;
   const defs = `<defs><linearGradient id="s${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient></defs>`;
@@ -236,11 +386,11 @@ function jelly({ a = "idle", state = a, face = "open", fx = "", small = false, l
   const lobes = LOBES.map((x) => `<g class="lobe" style="--ox:${x}px"><circle class="fill" cx="${x}" cy="39" r="${LR}"/><circle cx="${x}" cy="39" r="${LR}" fill="${shade}"/></g>`).join("");
   const hl = small ? "" : `<ellipse cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)" fill="#fff" opacity=".6"/><circle cx="28.5" cy="10" r="1.5" fill="#fff" opacity=".7"/>`;
   const cls = `jl${live ? " live" : ""}${light ? " on-light" : ""}`;
-  return `<svg class="${cls}" data-a="${a}" data-state="${state}" viewBox="0 0 64 48">${defs}${speed}<g class="body">${ghost}<g>${lobes}</g><g class="head"><path class="fill" d="${DOME}"/><path d="${DOME}" fill="${shade}"/>${hl}${faceSvg(face, small)}</g></g>${fxSvg(fx)}</svg>`;
+  return `<svg class="${cls}" data-a="${a}" data-state="${state}" viewBox="0 0 64 48">${defs}${speed}${clip ? `<clipPath id="c${n}"><rect x="0" y="-30" width="120" height="120"/></clipPath><g clip-path="url(#c${n})">` : ""}<g class="body">${ghost}<g class="lobes">${lobes}</g><g class="head"><path class="fill" d="${DOME}"/><path d="${DOME}" fill="${shade}"/>${hl}${faceSvg(face, small)}</g></g>${clip ? "</g>" : ""}${fxSvg(fx)}</svg>`;
 }
 
 function cardHtml(item, state) {
-  return `<div class="card" data-i="${item.a}"><b>${item.name}</b><div class="stage">${jelly({ a: item.a, state, face: item.face, fx: item.fx })}</div><ul>${item.notes.map(([k, v]) => `<li><i>${k}</i>：${v}</li>`).join("")}</ul></div>`;
+  return `<div class="card" data-i="${item.a}"><b>${item.name}</b><div class="stage">${jelly({ ...item, state: item.state || state })}</div><ul>${item.notes.map(([k, v]) => `<li><i>${k}</i>：${v}</li>`).join("")}</ul></div>`;
 }
 
 function iconSvg(size, simple) {
@@ -257,6 +407,7 @@ function monoSvg(color) {
 function build() {
   document.getElementById("states").innerHTML = STATES.map((s) => cardHtml(s, s.a)).join("");
   document.getElementById("extras").innerHTML = EXTRAS.map((s) => cardHtml(s, "idle")).join("");
+  for (const [id, items] of MORE) document.getElementById(`more-${id}`).innerHTML = items.map((s) => cardHtml(s, "idle")).join("");
   const row = (label, opts, z = "") => `<div class="pillrow"><span>${label}</span><div class="pill${opts.light ? " light" : ""}${z}">${STATES.map((s) => jelly({ a: s.a, face: s.face, fx: s.fx, small: !z, light: opts.light, live: opts.live })).join("")}</div></div>`;
   document.getElementById("pills").innerHTML = row("深色岛", { live: true }) + row("浅色岛", { light: true, live: true }) + row("减少动画", { live: false }) + row("深色岛 · 放大 3 倍", { live: true }, " z3");
   const fig = (svg, label) => `<figure>${svg}${label}</figure>`;
