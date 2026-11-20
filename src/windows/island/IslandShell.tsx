@@ -21,6 +21,7 @@ import type { IslandGlassView } from "./useIslandGlass";
 import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
 import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
+import { useSidePluginRows } from "./useSidePluginRows";
 import { IslandSideBubble } from "./IslandSideBubble";
 import { AlertPopup, useActiveAlert } from "./NotchAlert";
 import { IslandDragHint } from "./IslandDragHint";
@@ -180,7 +181,8 @@ export function IslandShell({
   const { status } = contributed;
   const agentVisualState = status?.state ?? "idle";
   const agentStatusLabel = status?.label ?? "";
-  const sideLayout = useSideColumnRows({ onOpenPage }, collapsedSlots?.gauges ?? [], sideHeight);
+  const sidePlugins = useSidePluginRows(side !== null, onOpenPage);
+  const sideLayout = useSideColumnRows({ onOpenPage }, collapsedSlots?.gauges ?? [], sideHeight, sidePlugins.rows);
   const sideHot = contributed.preview?.hot ?? null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();
@@ -249,6 +251,7 @@ export function IslandShell({
               label={collapsedLabel}
               hot={sideBubble ? sideHot : null}
               layout={sideLayout}
+              probes={sidePlugins.probes}
               onOpen={() => onOpenPage(page)}
               onWindowDragStart={onWindowDragStart}
             />

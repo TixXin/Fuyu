@@ -1,4 +1,4 @@
-import { act, StrictMode, useState, type CSSProperties } from "react";
+import { act, StrictMode, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { emit } from "@tauri-apps/api/event";
@@ -14,6 +14,7 @@ import type { MediaState } from "../../src/features/media/api";
 import type { MessagePreview } from "../../src/features/messages/messagePreview";
 import type { LevelChange } from "../../src/features/system-levels/api";
 import { useFixtureLines } from "./islandLines";
+import { windowSlots } from "../../src/features/plugin-kernel/slots";
 
 const FULL_DEVICES = { camera: ["会议"], microphone: [] };
 const NO_DEVICES = { camera: [], microphone: [] };
@@ -54,6 +55,20 @@ type State = {
 };
 let change: (next: Partial<State>) => void;
 
+const PLUGIN = "@someone/clocks";
+let clockShown = false;
+const clockListeners = new Set<() => void>();
+const setClockShown = (next: boolean) => act(async () => { clockShown = next; for (const listener of clockListeners) listener(); });
+function ClockBar() {
+  const shown = useSyncExternalStore((listener) => { clockListeners.add(listener); return () => clockListeners.delete(listener); }, () => clockShown);
+  return shown ? <span className="clock-bar">东京 14:05</span> : null;
+}
+const opened: string[] = [];
+const registry = windowSlots("island");
+registry.add("island.page/v1", { id: "clocks", component: () => null }, PLUGIN, { external: true });
+registry.add("island.collapsed/v1", { id: "clocks-bar", opens: "clocks", component: ClockBar }, PLUGIN, { external: true });
+registry.add("island.collapsed/v1", { id: "idle-bar", component: () => null }, "@someone/idle", { external: true });
+
 function Fixture() {
   const [state, setState] = useState<State>({ side: "left", expanded: false, tucked: false, full: false, gauges: 0, cover: false, preview: null, level: null, height: null, lyric: false });
   change = (next) => setState((current) => ({ ...current, ...next }));
@@ -68,7 +83,7 @@ function Fixture() {
       showCollapsedText appearanceMode="classic" nativeGlassState="disabled"
       collapsedSlots={{ gauges }}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
-      onOpenPage={() => {}}
+      onOpenPage={(page) => opened.push(page)}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>
@@ -91,6 +106,11 @@ async function settleTransitions() {
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 900)); });
 }
 const last = <T,>(list: T[]) => list[list.length - 1];
+async function waitFor(ready: () => boolean, label: string) {
+  for (let tries = 0; tries < 60 && !ready(); tries += 1) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+  if (!ready()) throw new Error(`等不到：${label}`);
+}
+const hasPluginRow = () => items().includes("plugin-bar:clocks-bar");
 const results = document.getElementById("results")!;
 
 async function runChecks() {
@@ -110,10 +130,22 @@ async function runChecks() {
     check(getComputedStyle(document.querySelector(".island__side-handle")!).opacity === "0", "没收起时不显示把手");
 
     await set({ full: true });
+    await setClockShown(true);
+    await waitFor(hasPluginRow, "插件那行出现");
     await settleTransitions();
     shell = island().getBoundingClientRect();
-    check(items().join(",") === "agent,music,todo,device-camera,shelf", "图标从上到下按收起条的顺序排");
-    check(near(shell.height, 184) && last(reported) === 184, "高度随内容长到 184");
+    check(items().join(",") === "agent,music,todo,device-camera,shelf,plugin-bar:clocks-bar", "图标从上到下按收起条的顺序排，插件的收起项排在最后");
+    check(!items().includes("plugin-bar:idle-bar"), "插件收起项没内容时不占一行");
+    document.querySelector<HTMLElement>('[data-side-item="plugin-bar:clocks-bar"] button')!.click();
+    check(last(opened) === "clocks", "点插件那行打开它登记的页面");
+    await setClockShown(false);
+    await waitFor(() => !hasPluginRow(), "插件那行收回");
+    check(!hasPluginRow(), "插件收起项变空后那行收回");
+    await setClockShown(true);
+    await waitFor(hasPluginRow, "插件那行回来");
+    await settleTransitions();
+    check(hasPluginRow(), "插件收起项又有内容时那行回来");
+    check(near(shell.height, 218) && last(reported) === 218, "高度随内容长到 218");
     check(document.querySelector(".island-side-ring")!.textContent === "3", "Agent 环里写会话数");
     check(document.querySelector('[data-side-item="todo"] .island-side-cell__num')!.textContent === "5", "待办写数字");
 
@@ -137,7 +169,7 @@ async function runChecks() {
     const lyric = document.querySelector(".media-side-lyric");
     check(lyric && getComputedStyle(lyric).writingMode === "vertical-rl", "侧边歌词竖排");
     check(box('[data-side-item="music"]').height > 100, "多出的高度给了音乐那行");
-    check(near(box('[data-side-item="shelf"]').bottom, shell.bottom - 10), "音乐后面的图标排到底部");
+    check(near(box('[data-side-item="plugin-bar:clocks-bar"]').bottom, shell.bottom - 10), "音乐后面的图标排到底部");
     await set({ height: null, lyric: false });
     await settleTransitions();
 

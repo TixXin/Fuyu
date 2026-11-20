@@ -16,6 +16,7 @@ type IslandSideColumnProps = {
   label: string;
   hot: string | null;
   layout: SideColumnLayout<SideColumnRow>;
+  probes?: ReactNode;
   onOpen: () => void;
   onWindowDragStart: () => void;
 };
@@ -25,7 +26,7 @@ function stop(event: { stopPropagation: () => void }, action: () => void) {
   action();
 }
 
-export function useSideColumnRows(context: SideRowContext, gauges: readonly { id: string; node: ReactNode }[], target: number | null) {
+export function useSideColumnRows(context: SideRowContext, gauges: readonly { id: string; node: ReactNode }[], target: number | null, extra: readonly SideColumnRow[] = []) {
   const entries = useSlotEntries(sideSlot);
   const { side } = useIslandContributed();
   const rows: SideColumnRow[] = [];
@@ -40,10 +41,11 @@ export function useSideColumnRows(context: SideRowContext, gauges: readonly { id
     if (row) rows.push({ id: entry.id, height: row.height, grow: row.grow, node: <SlotView slot={sideSlot} props={context} select={() => [entry]} /> });
   }
   if (!gaugesPlaced) placeGauges();
+  rows.push(...extra);
   return layoutSideColumn(rows, target ?? SIDE_COLUMN_MAX_HEIGHT, target !== null);
 }
 
-export function IslandSideColumn({ label, hot, layout, onOpen, onWindowDragStart }: IslandSideColumnProps) {
+export function IslandSideColumn({ label, hot, layout, probes = null, onOpen, onWindowDragStart }: IslandSideColumnProps) {
   const t = useTranslation();
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } = useWindowDragGesture(false, onWindowDragStart);
 
@@ -88,6 +90,7 @@ export function IslandSideColumn({ label, hot, layout, onOpen, onWindowDragStart
           +{layout.hidden}
         </button>
       )}
+      {probes}
     </div>
   );
 }
