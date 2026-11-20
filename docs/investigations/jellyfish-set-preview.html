@@ -34,6 +34,12 @@
   button.seg.on { background: #2f4a3f; border-color: #6abf9b; color: #fff; }
   details { max-width: 1180px; margin: 8px 0; color: var(--sub); }
   details > summary { cursor: pointer; }
+  .final { display: flex; flex-wrap: wrap; gap: 14px; max-width: 1180px; }
+  .final figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+  .final figcaption { font-size: 12px; color: var(--sub); text-align: center; margin-top: 6px; }
+  .fin-stage { display: flex; align-items: center; justify-content: center; gap: 12px; height: 180px; padding: 0 14px; border-radius: 10px; background: var(--stage); }
+  .fin-dark { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; background: #1e1e1e; }
+  .fin-dark img { filter: invert(1); }
   details img { display: block; width: 100%; max-width: 760px; margin-top: 8px; border-radius: 12px; }
 
   .stagebox { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 14px; max-width: 1180px; }
@@ -355,11 +361,21 @@
 <p class="note" style="margin-top:18px">Mac 菜单栏的单色模板图（18 像素高），形状和选定的图标一致：</p>
 <div class="icons" id="menus"></div>
 
-<h2>7. 落地前还要做的</h2>
+<h2>7. 定稿文件</h2>
+<p class="note"><b>矢量定稿（2026-11-20）。</b>文件在 <code>docs/assets/logo/</code>，规格写在 <code>docs/design/logo.md</code>。头和四瓣触手合成了一条轮廓，图标和菜单栏模板图都用它；岛上的分层母版保留头和四个圆，方便触手各自动。</p>
+<div class="final">
+  <figure><div class="fin-stage"><img src="../assets/logo/app-icon.svg" width="160"></div><figcaption>app-icon<br>应用图标母版</figcaption></figure>
+  <figure><div class="fin-stage"><img src="../assets/logo/app-icon-macos.svg" width="160"></div><figcaption>app-icon-macos<br>.icns 用，留边加投影</figcaption></figure>
+  <figure><div class="fin-stage"><img src="../assets/logo/app-icon-small.svg" width="16"><img src="../assets/logo/app-icon-small.svg" width="24"><img src="../assets/logo/app-icon-small.svg" width="32"><img src="../assets/logo/app-icon-small.svg" width="96"></div><figcaption>app-icon-small<br>32 像素及以下</figcaption></figure>
+  <figure><div class="fin-stage"><img src="../assets/logo/menubar-template.svg" height="18"><img src="../assets/logo/menubar-template.svg" height="54"><span class="fin-dark"><img src="../assets/logo/menubar-template.svg" height="18"><img src="../assets/logo/menubar-template.svg" height="54"></span></div><figcaption>menubar-template<br>Mac 菜单栏，18 像素高</figcaption></figure>
+  <figure><div class="fin-stage"><img src="../assets/logo/jellyfish.svg" height="24"><img src="../assets/logo/jellyfish.svg" height="110"></div><figcaption>jellyfish<br>岛上状态灯的分层母版</figcaption></figure>
+</div>
+
+<h2>8. 落地前还要做的</h2>
 <ul class="plain">
   <li><b>在真岛上看 24 像素</b>：速度线、感叹线、怒气符号在这页上看得清，但真岛有缩放和半透明，要实际看一眼再定留哪些。</li>
   <li><b>量性能</b>：岛是常驻置顶的透明窗口，SVG 子元素的动画在 WebView 里不一定走 GPU。运行中、等你两个循环要量一下 CPU 占用；岛贴边收起或隐藏时暂停（现有的 <code>data-paused</code>）。</li>
-  <li><b>重画矢量定稿</b>：这页的 SVG 是照着 GPT 的图近似画的，定稿要认真画一遍，再导出 <code>src-tauri/icons/</code> 的全部尺寸、Mac 菜单栏模板图和 README 里的图。</li>
+  <li><b>替换进产品</b>：矢量定稿已经画好（第 7 节），还要导出 <code>src-tauri/icons/</code> 的全部尺寸、换掉 Rust 画的菜单栏模板图和 README 里的图，要换的位置列在 <code>docs/design/logo.md</code>「还没替换的地方」。</li>
   <li><b>状态灯的设置项</b>：在「悬岛 / 圆点」之外加「水母」并设为新默认，还是直接替换；老用户已选的保持原样。</li>
   <li><b>issue #281 的署名</b>：造型已经离 ShengLin1001 的原稿很远，想好怎么回复和署名。</li>
   <li><b>撞脸检查</b>：选定的蓝色水母在深色炫彩底上和 MagIsland 的图标接近，定稿前把两个图标按 16、32、128 像素并排放一次，确认触手、腮红和眼睛足够把它们分开；Phantom 钱包的图标也一起看。</li>
