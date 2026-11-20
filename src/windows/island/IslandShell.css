@@ -76,8 +76,8 @@
     --island-shell-height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-top-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-bottom-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    --island-hover-grow-x var(--motion-medium) var(--motion-ease-out),
-    --island-hover-grow-y var(--motion-medium) var(--motion-ease-out),
+    --island-hover-grow-x var(--island-hover-duration, var(--island-motion-hover-shrink, var(--motion-base))) var(--island-hover-ease, var(--island-motion-hover-shrink-ease, var(--motion-ease-out))),
+    --island-hover-grow-y var(--island-hover-duration, var(--island-motion-hover-shrink, var(--motion-base))) var(--island-hover-ease, var(--island-motion-hover-shrink-ease, var(--motion-ease-out))),
     --island-shell-fill var(--motion-slow) var(--motion-ease),
     --island-shell-opacity var(--island-opacity-duration, var(--motion-base)) var(--motion-ease);
 }
@@ -111,8 +111,10 @@
 }
 
 .island--collapsed:not(.island--side, .island--tucked, .island--dimmed, .island--glass-active):hover {
-  --island-hover-grow-x: calc(16px * var(--island-scale, 1));
+  --island-hover-grow-x: calc(20px * var(--island-scale, 1));
   --island-hover-grow-y: calc(5px * var(--island-scale, 1));
+  --island-hover-duration: var(--island-motion-hover-grow, var(--motion-medium));
+  --island-hover-ease: var(--island-motion-hover-grow-ease, var(--motion-ease-out));
 }
 
 .island--collapsed:has(:focus-visible) {
