@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import type { PetMood } from "../center-pattern/patterns";
 import "./JellyfishMark.css";
 
@@ -96,11 +96,17 @@ function Effect({ mood }: { mood: PetMood }) {
   return null;
 }
 
-export function JellyfishMark({ mood }: { mood: PetMood }) {
+export function JellyfishMark({ mood, paused = false, height }: { mood: PetMood; paused?: boolean; height?: number }) {
   const shade = `center-jelly-shade-${useId().replace(/:/g, "")}`;
   const shadeFill = `url(#${shade})`;
   return (
-    <span className="center-jelly" data-mood={mood}>
+    <span
+      className="center-jelly"
+      data-mood={mood}
+      data-paused={paused || undefined}
+      style={height === undefined ? undefined : ({ "--center-jelly-height": `${height}px` } as CSSProperties)}
+      aria-hidden="true"
+    >
       <svg viewBox={VIEW_BOX}>
         <defs>
           <linearGradient id={shade} gradientUnits="userSpaceOnUse" x1={0} y1={6} x2={0} y2={48}>

@@ -1,9 +1,12 @@
 .center-jelly {
   --center-jelly-fill: var(--center-jelly-idle, #f6e3d3);
   --center-jelly-ink: var(--center-jelly-eye-color, #1d1b22);
+  --center-jelly-size: var(--center-jelly-height, var(--center-pattern-height, 22px));
   display: block;
-  height: var(--center-pattern-height, 22px);
-  width: calc(var(--center-pattern-height, 22px) * 58 / 43);
+  flex: none;
+  height: var(--center-jelly-size);
+  width: calc(var(--center-jelly-size) * 58 / 43);
+  pointer-events: none;
 }
 .center-jelly[data-mood="running"] { --center-jelly-fill: var(--center-jelly-running, #6db6f4); }
 .center-jelly[data-mood="waiting"] { --center-jelly-fill: var(--center-jelly-waiting, #ffcd3c); }
@@ -11,9 +14,18 @@
 .center-jelly[data-mood="done"] { --center-jelly-fill: var(--center-jelly-done, #5ed69e); }
 .island-light .center-jelly[data-mood="idle"] { --center-jelly-fill: var(--center-jelly-idle-light, #ecdcc8); }
 
-.center-pattern .center-jelly svg {
+.center-pattern .center-jelly svg,
+.center-jelly svg {
+  display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;
+}
+.center-jelly svg * {
+  transform-box: view-box;
+}
+.center-jelly[data-paused] * {
+  animation-play-state: paused !important;
 }
 
 .center-jelly-fill {

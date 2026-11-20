@@ -229,6 +229,8 @@ async function runChecks() {
   const lightJelly = jelly(".cp-light");
   expect(fixture.querySelector<HTMLElement>(".cp-light .center-jelly")?.dataset.mood === "waiting" && lightJelly !== undefined && Math.abs(lightJelly.height - 24) < 0.6,
     "水母状态灯：中心图案关着也跟随 Agent，24px 高");
+  expect(!fixture.querySelector(".cp-light .center-pattern") && lightJelly !== undefined && Math.abs(lightJelly.width - (24 * 58) / 43) < 0.6,
+    "水母状态灯不套中心图案的外壳，宽度按高度算（不会被撑成 SVG 默认的 300px）");
   await syncSwitch(true, { pattern: "mark", pet: "" });
   await render(<Slot key="light-and-center" markLight />);
   expect(fixture.querySelector(".cp-slot .island__center-slot .center-jelly") !== null && !fixture.querySelector(".cp-agent-icon"),
