@@ -8,7 +8,7 @@ import { usePluginNames } from "../../features/plugin-kernel/pluginNames";
 import { localizedTitle, packageLabel } from "../../features/plugin-kernel/slotTitle";
 import { useLocale, useTranslation } from "../../i18n";
 import { headerDotPages, isPageEnabled, isPageShown, pageShortcutOrder, type IslandFeatures } from "./features";
-import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
+import { headerSlot, TRAILING_HEADER_IDS, withShortcut, type IslandHeaderContext } from "./slots/header";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
 import type { HeaderDotPage, IslandPage } from "./types";
@@ -20,7 +20,6 @@ import { useHeaderSpotlight } from "./usePluginSpotlight";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import "./IslandHeader.css";
 
-const SETTINGS_ID = "settings";
 const INTERACTIVE = "button, a, input, textarea, select, label, [role='button'], [contenteditable='true']";
 
 type IslandHeaderProps = {
@@ -199,7 +198,7 @@ export function IslandHeader({
         {trailing.map(renderDot)}
       </div>
       <div className="window-actions window-actions--lead">
-        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.id !== SETTINGS_ID && (item.enabled?.(buttons) ?? true))} />
+        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => !TRAILING_HEADER_IDS.has(item.id) && (item.enabled?.(buttons) ?? true))} />
       </div>
       </div>
 
@@ -216,7 +215,7 @@ export function IslandHeader({
       />
 
       <div className="window-actions">
-        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.id === SETTINGS_ID && (item.enabled?.(buttons) ?? true))} />
+        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => TRAILING_HEADER_IDS.has(item.id) && (item.enabled?.(buttons) ?? true))} />
       </div>
     </header>
   );

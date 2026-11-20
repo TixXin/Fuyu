@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Check, CirclePlus, LayoutDashboard } from "lucide-react";
+import { CirclePlus } from "lucide-react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import type { LibraryWidget } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
@@ -86,7 +86,6 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
   const { removed, remember, forget } = useUndoableRemoval();
   const [held, setHeld] = useState<HeldWidget | null>(null);
-  const startEditing = useCallback(() => startPanelEditing(panelId), [panelId]);
   const hold = useCallback(
     ({ target, ...point }: LongPressStart) => {
       window.getSelection()?.removeAllRanges();
@@ -123,7 +122,6 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
     if (removed) change(removed.before);
     forget();
   };
-  const toggle = editing ? stopPanelEditing : startEditing;
 
   return (
     <div
@@ -132,11 +130,6 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
       data-window-drag={editing ? "false" : undefined}
       onPointerDown={editing ? undefined : onPointerDown}
     >
-      <div className="custom-panel__bar">
-        <button className="custom-panel__edit" type="button" aria-pressed={editing} aria-label={editing ? t.done : t.edit} title={editing ? t.done : t.edit} onClick={toggle}>
-          {editing ? <Check size={15} strokeWidth={2.6} aria-hidden="true" /> : <LayoutDashboard size={15} strokeWidth={2} aria-hidden="true" />}
-        </button>
-      </div>
       <div className="custom-panel__scroll" ref={ref}>
         {empty ? (
           <div className="custom-panel__empty">

@@ -23,6 +23,9 @@ export type IslandHeaderContext = {
   isPageShown: (target: IslandPage) => boolean;
 };
 
+export const PANEL_LAYOUT_ID = "panel-layout";
+export const TRAILING_HEADER_IDS: ReadonlySet<string> = new Set([PANEL_LAYOUT_ID, "settings"]);
+
 export const headerSlot = defineSlot<IslandHeaderContext, IslandHeaderMeta<IslandHeaderContext>>("island.header/v1");
 
 export function withShortcut({ features, pageDigitModifiers }: Pick<IslandHeaderContext, "features" | "pageDigitModifiers">, label: string, target: IslandPage) {
