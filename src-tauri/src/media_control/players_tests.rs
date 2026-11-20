@@ -195,3 +195,33 @@ fn splits_combined_metadata_titles_when_artist_is_missing() {
         (Some("稻香".to_string()), Some("周杰伦".to_string()))
     );
 }
+
+#[test]
+fn strips_album_from_apple_music_artist() {
+    let apple = Some("AppleInc.AppleMusicWin_nzyj5cx40ttqa!App");
+    let song = || Some("渡".to_string());
+    assert_eq!(
+        normalize_metadata_track(song(), Some("薛之谦 — 渡 The Crossing".to_string()), apple),
+        (song(), Some("薛之谦".to_string()))
+    );
+    assert_eq!(
+        normalize_metadata_track(song(), Some("Taylor Swift – 1989 (Taylor's Version)".to_string()), apple),
+        (song(), Some("Taylor Swift".to_string()))
+    );
+    assert_eq!(
+        normalize_metadata_track(song(), Some("AC - DC".to_string()), apple),
+        (song(), Some("AC - DC".to_string()))
+    );
+    assert_eq!(
+        normalize_metadata_track(song(), Some("Jay—Z".to_string()), apple),
+        (song(), Some("Jay—Z".to_string()))
+    );
+    assert_eq!(
+        normalize_metadata_track(song(), Some(" — 渡".to_string()), apple),
+        (song(), Some(" — 渡".to_string()))
+    );
+    assert_eq!(
+        normalize_metadata_track(song(), Some("薛之谦 — 渡 The Crossing".to_string()), Some("cloudmusic.exe")),
+        (song(), Some("薛之谦 — 渡 The Crossing".to_string()))
+    );
+}
