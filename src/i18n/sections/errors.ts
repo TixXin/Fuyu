@@ -43,6 +43,7 @@ export type ErrorCode =
   | "recording.failed"
   | "bark.scheme"
   | "bark.key"
+  | "lyrics.appleToken"
   | "bark.noKey"
   | "bark.unreachable"
   | "bark.unknownKey"
@@ -422,6 +423,7 @@ export const zhCN: ErrorsText = {
     "recording.failed": "录屏失败。",
     "bark.scheme": "Bark 服务器地址要以 https:// 或 http:// 开头。",
     "bark.key": "这不像 Bark 的设备 Key：在 Bark 里复制推送地址或其中那串字母数字。",
+    "lyrics.appleToken": "这不像 Apple Music 的 media-user-token：复制 Cookie 里 media-user-token 的值，不要带空格。",
     "bark.noKey": "还没有填 Bark 设备 Key。",
     "bark.unreachable": "连不上 Bark 服务器。",
     "bark.unknownKey": "Bark 不认这个设备 Key，请重新复制。",
@@ -798,6 +800,7 @@ export const en: ErrorsText = {
     "recording.failed": "The recording failed.",
     "bark.scheme": "The Bark server address must start with https:// or http://.",
     "bark.key": "That does not look like a Bark device key: copy the push URL in Bark, or the letters and digits in it.",
+    "lyrics.appleToken": "That does not look like an Apple Music media-user-token: copy the value of the media-user-token cookie, without spaces.",
     "bark.noKey": "No Bark device key yet.",
     "bark.unreachable": "Could not reach the Bark server.",
     "bark.unknownKey": "Bark does not know this device key; copy it again.",

@@ -12,6 +12,7 @@ import { checkGlassLooks } from "./settings-glass-looks";
 import { checkIdleDimSettings } from "./settings-idle-dim";
 import { checkLocalApiNotify } from "./settings-local-api";
 import { checkNotchPreview } from "./settings-notch-preview";
+import { checkIslandLayout } from "./settings-island-layout";
 import { checkAgentNoticeSettings } from "./settings-agent-notice";
 import { checkMessageNotice, checkMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
@@ -98,7 +99,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "generalData", "generalSync", "theme", "themeStyle", "appearance", "appearanceCollapsed", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "todosReminders", "todosArchive", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
+    const pages = [...categories(), "generalData", "generalSync", "theme", "themeStyle", "appearance", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "todosReminders", "todosArchive", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -137,6 +138,15 @@ if (!automated) {
     await act(async () => { leaveSwitch()!.click(); }); check(leaveSwitch()?.checked === true && Boolean(settingRow("鼠标移开后收起前等待")) && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { clickCollapseOnLeave?: boolean }).clickCollapseOnLeave === true, "Turning close-on-leave on saves it and shows the collapse delay slider"); await act(async () => { leaveSwitch()!.click(); });
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps");
+    await openPage("musicLyrics");
+    const onlineSwitch = settingRow("在线查找歌词")?.querySelector<HTMLInputElement>("input");
+    if (onlineSwitch && !onlineSwitch.checked) await act(async () => { onlineSwitch.click(); });
+    const appleSwitch = () => settingRow("Apple Music 官方歌词")?.querySelector<HTMLInputElement>("input");
+    check(appleSwitch()?.checked === false && !settingRow("Apple Music 令牌"), "Lyrics: Apple Music lyrics are off by default, without a token row");
+    await act(async () => { appleSwitch()!.click(); await new Promise((resolve) => setTimeout(resolve, 20)); });
+    check(Boolean(settingRow("Apple Music 令牌")?.textContent?.includes("还没有保存令牌")) && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { lyricsAppleMusic?: boolean }).lyricsAppleMusic === true,
+      "Turning Apple Music lyrics on saves it and shows the token row, saying no token is saved and how to get one");
+    await act(async () => { appleSwitch()!.click(); });
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
     await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound and break reminders");
     await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");
@@ -170,7 +180,7 @@ if (!automated) {
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
     await openPage("themeStyle"); await checkIdleDimSettings(check); await checkGlassLooks(check); await checkNotchPreview(check);
     await openPage("agentAlerts"); await checkAgentNoticeSettings(check);
-    await openPage("appearanceCollapsed");
+    await openPage("islandLayout"); await checkIslandLayout(check);
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
     const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean; shelf?: boolean }[] } | null;
@@ -202,11 +212,11 @@ if (!automated) {
     await checkThemeMarket(check, () => openPage("overview"));
 
     await openPage("music");
-    const waveSwitch = () => settingRow("在收起的岛上显示音乐波形")?.querySelector<HTMLInputElement>("input");
-    check(waveSwitch()?.checked === true && savedItems() === null, "The music wave shows on the collapsed bar by default");
-    await act(async () => { waveSwitch()!.click(); });
-    check(waveSwitch()?.checked === false && savedItems()?.items.find((item) => item.id === "music")?.hidden === true, "Turning the music wave off hides the bar's music item");
-    await act(async () => { waveSwitch()!.click(); }); check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again"); localStorage.removeItem("fuyu-collapsed-items");
+    const waveLink = () => settingRow("在收起的岛上显示音乐波形")?.querySelector<HTMLButtonElement>(".settings-link-button");
+    check(waveLink()?.textContent === "右侧第 5 个 · 调整 ›" && !settingRow("在收起的岛上显示音乐波形")?.querySelector("input"), "The music page only links to where the wave sits on the island");
+    await act(async () => { waveLink()!.click(); await new Promise((resolve) => setTimeout(resolve, 50)); });
+    check(document.querySelector(".settings-sidebar__item[data-category='islandLayout']")?.getAttribute("aria-current") === "page"
+      && document.querySelector(".collapsed-items__item[data-item='music']")?.classList.contains("collapsed-items__item--found"), "Its link opens the island layout and points at the music row");
 
     await openPage("behaviorTuck");
     const holdRow = (title: string) => settingRow(title)?.querySelector<HTMLInputElement>("input");

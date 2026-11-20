@@ -13,6 +13,7 @@ import {
   type ScreenshotSettings,
 } from "./settings";
 import { useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
 
 export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: ScreenshotSettings; onChange: (settings: ScreenshotSettings) => void }) {
   const text = useTranslation().settings.screenshot;
@@ -22,7 +23,7 @@ export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: Scre
     <SettingsGroup title={text.recordTitle}>
       <SettingsRow
         title={text.recordFormat}
-        description={text.recordFormatHint}
+        description={isMacOS ? text.recordFormatHintMac : text.recordFormatHint}
         control={
           <SettingsChoice<RecordFormat>
             value={record.format}
@@ -64,13 +65,13 @@ export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: Scre
       />
       <SettingsToggleRow
         title={text.recordMicrophone}
-        description={text.recordMicrophoneHint}
+        description={isMacOS ? text.recordMicrophoneHintMac : text.recordMicrophoneHint}
         checked={record.microphone}
         onChange={(microphone) => set({ microphone })}
       />
       <SettingsToggleRow
         title={text.recordOwnWindows}
-        description={text.recordOwnWindowsHint}
+        description={isMacOS ? text.recordOwnWindowsHintMac : text.recordOwnWindowsHint}
         checked={record.ownWindows}
         onChange={(ownWindows) => set({ ownWindows })}
       />

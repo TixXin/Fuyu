@@ -1,5 +1,5 @@
 const ACTION_ID = /^[a-z][a-z0-9._-]{0,62}$/;
-const ICONS = new Set(["inbox", "bot", "sparkles", "share", "copy", "pin", "wand"]);
+const ICONS = new Set(["inbox", "bot", "sparkles", "share", "copy", "pin", "wand", "notebook", "list-todo"]);
 
 const isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -16,6 +16,12 @@ function normalizeLabel(value, field) {
     return { "zh-CN": value["zh-CN"].trim(), en: value.en.trim() };
   }
   throw actionError("bad-params", `${field} must be a non-empty string or { "zh-CN", en }`);
+}
+
+function normalizeSource(value) {
+  if (!isObject(value) || typeof value.app !== "string" || !value.app.trim()) return null;
+  const text = (field) => (typeof value[field] === "string" && value[field].trim() ? value[field].trim() : null);
+  return { app: value.app.trim(), title: text("title"), url: text("url") };
 }
 
 function normalizeRunResult(result) {
@@ -65,6 +71,7 @@ export function createScreenshotActionRegistry() {
         order,
         seq: ++seq,
         disabled: spec.disabled,
+        keeps: spec.keeps === true,
         run: async (context) => {
           if (!isObject(context) || typeof context.path !== "string" || !context.path.trim()) {
             throw actionError("bad-params", `screenshot action ${spec.id} needs { path }`);
@@ -74,6 +81,8 @@ export function createScreenshotActionRegistry() {
             saved: context.saved === true,
             thumbnail: typeof context.thumbnail === "string" ? context.thumbnail : null,
             text: typeof context.text === "string" ? context.text : null,
+            source: normalizeSource(context.source),
+            locale: context.locale === "en" ? "en" : "zh-CN",
           });
           return normalizeRunResult(result);
         },
@@ -109,6 +118,7 @@ export function createScreenshotActionRegistry() {
           icon: entry.icon,
           order: entry.order,
           disabled: typeof entry.disabled === "function" ? Boolean(entry.disabled()) : entry.disabled === true,
+          keeps: entry.keeps,
         }));
     },
 

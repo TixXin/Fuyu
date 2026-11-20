@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Magnifier } from "../../features/screenshot/Magnifier";
-import { annotationArea, autoMosaicAt, textSize } from "../../features/screenshot/annotations";
+import { annotationArea, autoMosaicAt, textSize, toolForKey } from "../../features/screenshot/annotations";
 import { annotationAt } from "../../features/screenshot/annotationEdit";
-import { cancelScreenshot, findScreenshotWords, finishScreenshot, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
+import { cancelScreenshot, findScreenshotWords, finishScreenshot, openScreenshotLink, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
 import { colorAt } from "../../features/screenshot/picture";
 import { newMosaics, redactionRects } from "../../features/screenshot/redact";
 import { composeArea } from "../../features/screenshot/drawAnnotations";
@@ -31,6 +31,7 @@ import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { LongShotBar } from "./LongShotBar";
 import { MeasureLayer } from "./MeasureLayer";
 import { ScreenshotToolbar } from "./ScreenshotToolbar";
+import { ShortcutPanel } from "./ShortcutPanel";
 import { useLongShot } from "./useLongShot";
 import { useAnnotations } from "./useAnnotations";
 import { useAnnotationSelect } from "./useAnnotationSelect";
@@ -38,6 +39,7 @@ import { useMeasure } from "./useMeasure";
 import { useScreenshotFrame } from "./useScreenshotFrame";
 import { capturePointer, GRAB, useSelection, type PointerCoords } from "./useSelection";
 import { useTargets } from "./useTargets";
+import { useQrCodes } from "./useQrCodes";
 import "./ScreenshotOverlay.css";
 
 function useViewSize(): Size {
@@ -77,6 +79,7 @@ export function ScreenshotOverlay() {
   const choosing = chosen === null;
   const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
   const key = layersKey(layers);
+  const qrCodes = useQrCodes(chosen, !dragging && !quickAction(session?.mode) && !leaving && !long.active);
   const target = layers[Math.min(level.key === key ? level.value : 0, layers.length - 1)] ?? null;
   useEffect(() => {
     hovered.current = target;
@@ -154,6 +157,13 @@ export function ScreenshotOverlay() {
       else if (letter === "g" && !ctrl && quickMode === "record") setGif((value) => !value);
       else if (letter === "f" && !ctrl && quickMode === "record" && session && ready) setSelection({ x: 0, y: 0, width: session.width, height: session.height });
       else if (letter === "t" && !ctrl && chosen) finish("pin");
+      else if (!ctrl && !event.altKey && chosen && !quickMode && toolForKey(event.key)) {
+        const tool = toolForKey(event.key);
+        if (tool) {
+          select.clear();
+          annotations.chooseTool(tool);
+        }
+      }
       else if (letter === "c" && !ctrl && color) {
         void navigator.clipboard.writeText(color).then(() => setNotice(t.colorCopied(color)));
       }
@@ -173,10 +183,11 @@ export function ScreenshotOverlay() {
   const moveFrameRef = useRef(0);
   const pendingMoveRef = useRef<PointerCoords | null>(null);
   const latestMoveRef = useRef<(coords: PointerCoords) => void>(() => {});
+  const shiftRef = useRef(false);
   latestMoveRef.current = (coords: PointerCoords) => {
     onPointerMove(coords);
     const point = toPixels({ x: coords.clientX, y: coords.clientY }, scale);
-    annotations.extend(point);
+    annotations.extend(point, shiftRef.current);
     select.move(point);
   };
 
@@ -231,6 +242,7 @@ export function ScreenshotOverlay() {
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     if (leaving) return;
     const coords = { clientX: event.clientX, clientY: event.clientY };
+    shiftRef.current = event.shiftKey;
     if (!dragging && !annotations.drafting && !select.dragging) {
       latestMoveRef.current(coords);
       return;
@@ -338,7 +350,9 @@ export function ScreenshotOverlay() {
       {long.mine && area && <LongShotBar area={area} view={view} long={long} />}
       {select.selected && !leaving && !long.active && select.selected !== editingItem && <AnnotationSelectionBox item={select.selected} scale={scale} showHandles={!select.dragging} />}
       {area && chosen && !dragging && !annotations.drafting && !select.dragging && !quick && !leaving && !long.active && (
-        <ScreenshotToolbar area={area} view={view} annotations={annotations} select={select} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} />
+        <ScreenshotToolbar area={area} view={view} annotations={annotations} select={select} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} qrCodes={qrCodes}
+          onCopyText={(text) => void navigator.clipboard.writeText(text).then(() => setNotice(t.qr.copied))}
+          onOpenLink={(url) => void openScreenshotLink(url).then(() => cancelScreenshot()).catch((error: unknown) => setNotice(errorText(error)))} />
       )}
       {annotations.editing && (
         <AnnotationTextInput
@@ -367,6 +381,7 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
         </>
       )}
+      {ready && !leaving && !long.active && <ShortcutPanel sessionId={sessionId} phase={quickMode === "record" ? "record" : chosen && !quick ? "edit" : "pick"} pointer={cssPointer} startsHere={!!session?.underPointer} area={area} typing={!!annotations.editing} view={view} />}
       {measure.active && pixel && <MeasureLayer edges={measure.edges} from={measure.from} to={pixel} scale={scale} />}
       {drawn && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && !long.active && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />

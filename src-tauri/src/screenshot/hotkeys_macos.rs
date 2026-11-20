@@ -94,6 +94,10 @@ fn run_action(action: ShortcutAction) {
     if !STARTED.load(Ordering::SeqCst) || !ENABLED.load(Ordering::SeqCst) {
         return;
     }
+    if action == ShortcutAction::Record && crate::recording::is_busy() {
+        crate::recording::stop_in_background(app);
+        return;
+    }
     match action.mode() {
         Some(mode) => session::start(app, mode),
         None => super::pin::toggle_all(app),

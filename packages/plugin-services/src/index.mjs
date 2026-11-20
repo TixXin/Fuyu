@@ -10,6 +10,8 @@ import { messagesV1 } from "./services/messages.mjs";
 import { pluginConfigV1 } from "./services/pluginConfig.mjs";
 import { pluginWindowsV1 } from "./services/pluginWindows.mjs";
 import { remindersV1 } from "./services/reminders.mjs";
+import { screenshotActionsV1 } from "./services/screenshotActions.mjs";
+import { secretsV1 } from "./services/secrets.mjs";
 import { timersV1 } from "./services/timers.mjs";
 import { todosV1 } from "./services/todos.mjs";
 import { translatorV1 } from "./services/translator.mjs";
@@ -28,6 +30,8 @@ export {
   pluginConfigV1,
   pluginWindowsV1,
   remindersV1,
+  screenshotActionsV1,
+  secretsV1,
   timersV1,
   todosV1,
   translatorV1,
@@ -46,6 +50,8 @@ export const SERVICES = Object.freeze([
   pluginConfigV1.name,
   pluginWindowsV1.name,
   remindersV1.name,
+  screenshotActionsV1.name,
+  secretsV1.name,
   timersV1.name,
   todosV1.name,
   translatorV1.name,

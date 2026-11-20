@@ -39,6 +39,12 @@ test("todos.add with today's date adds to the list and a later date schedules it
   assert.deepEqual(later.change, { schedule: { title: "x", date: "2026-11-09" } });
 });
 
+test("todos.add takes an optional note of at most 1000 characters", () => {
+  assert.equal(run("todos.add", { title: "x", note: "![截图](</k/a.png>)" }).result.data.note, "![截图](</k/a.png>)");
+  assert.equal("note" in run("todos.add", { title: "x", note: "  " }).result.data, false);
+  for (const note of [3, "x".repeat(1001)]) assert.equal(run("todos.add", { title: "x", note }).result.status, 400);
+});
+
 test("todos.add rejects bad titles and dates", () => {
   for (const params of [{}, { title: "  " }, { title: 3 }, { title: "x".repeat(501) }, null, []]) {
     assert.equal(run("todos.add", params).result.status, 400, JSON.stringify(params));

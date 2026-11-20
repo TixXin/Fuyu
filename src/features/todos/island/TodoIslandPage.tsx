@@ -6,6 +6,7 @@ import { useTodoPrefs } from "../useTodoPrefs";
 import { TodoIslandArchive } from "./TodoIslandArchive";
 import { TodoIslandHeader } from "./TodoIslandHeader";
 import { TodoIslandTasks } from "./TodoIslandTasks";
+import { TodoNoteImages } from "./TodoNoteImages";
 import "../../../components/list/IslandList.css";
 import "./TodoIslandPage.css";
 import "./TodoIslandRow.css";
@@ -62,14 +63,17 @@ export function TodoIslandPage(props: TodoPageProps) {
         />
       )}
       {pageMode === "daily" && (
-        <textarea
-          className="todo-island__note"
-          value={props.dailyNote}
-          placeholder={t.todoIsland.notePlaceholder}
-          aria-label={t.notebook.dailyNoteLabel}
-          spellCheck={false}
-          onChange={(event) => props.onDailyNoteChange(event.currentTarget.value)}
-        />
+        <div className="todo-island__daily">
+          <textarea
+            className="todo-island__note"
+            value={props.dailyNote}
+            placeholder={t.todoIsland.notePlaceholder}
+            aria-label={t.notebook.dailyNoteLabel}
+            spellCheck={false}
+            onChange={(event) => props.onDailyNoteChange(event.currentTarget.value)}
+          />
+          <TodoNoteImages text={props.dailyNote} />
+        </div>
       )}
       {pageMode === "upcoming" && <ScheduledTodoList todos={props.scheduledTodos} onDelete={props.onDeleteScheduledTodo} onTag={props.onTagScheduledTodo} />}
       {pageMode === "archive" && <TodoIslandArchive archives={props.archives} todos={props.todos} currentDate={props.currentDate} showWeekSummary={prefs.showWeekSummary} onSelect={props.onSelectArchive} />}

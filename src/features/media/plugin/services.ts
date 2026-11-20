@@ -3,6 +3,7 @@ import { windowServices } from "../../plugin-kernel/services";
 import { isNativeError } from "../../../i18n/nativeError";
 import { getMediaState, isMediaSourceFrontmost, seekMedia, sendMediaCommand, type MediaCommand, type MediaState } from "../api";
 import { getLyrics } from "../lyrics/api";
+import { readSettingsText } from "../../../lib/settings/storage";
 import { fromRust, positionOf, serviceNowPlaying } from "../host/index.mjs";
 import { getLyricsSources, lookupLyricsWithSources, subscribeLyricsSources } from "../host/lyricsSources.mjs";
 import { OWNER } from "./owner.ts";
@@ -10,6 +11,14 @@ import { OWNER } from "./owner.ts";
 function failed(error: unknown): never {
   if (!isNativeError(error)) throw fromRust({ code: undefined, message: error instanceof Error ? error.message : String(error) });
   throw fromRust({ code: error.code, message: error.message, data: { args: error.args, detail: error.detail } });
+}
+
+function appleMusicOn() {
+  try {
+    return (JSON.parse(readSettingsText() ?? "{}") as { lyricsAppleMusic?: unknown }).lyricsAppleMusic === true;
+  } catch {
+    return false;
+  }
 }
 
 async function nowPlayingOf(state: MediaState) {
@@ -29,7 +38,7 @@ windowServices.provide(mediaV1, {
 }, { owner: OWNER });
 
 const lyricsProvider = windowServices.provide(lyricsV1, {
-  lookup: (query) => lookupLyricsWithSources(query, (normalized) => getLyrics(normalized).catch(failed)),
+  lookup: (query) => lookupLyricsWithSources(query, (normalized) => getLyrics({ ...normalized, appleMusic: appleMusicOn() }).catch(failed)),
   sources: () => ({ sources: [...getLyricsSources().sources] }),
 }, { owner: OWNER });
 

@@ -5,6 +5,7 @@ use super::model::{is_date, latest_started, ScheduledTodo, TodoItem, TodosData};
 
 const MAX_TITLE_LENGTH: usize = 500;
 const MAX_PROJECT_LENGTH: usize = 20;
+const MAX_NOTE_LENGTH: usize = 1000;
 const MAX_FOCUS_CREDIT_MINUTES: u64 = 600;
 const MAX_FOCUS_MINUTES_TOTAL: u64 = 1_000_000;
 
@@ -26,6 +27,14 @@ fn bad(message: impl Into<String>) -> CallError {
 
 fn title_error() -> CallError {
     bad(format!("\"title\" must be a non-empty string of at most {MAX_TITLE_LENGTH} characters."))
+}
+
+fn read_note(value: Option<&Value>) -> Result<Option<String>, CallError> {
+    match value {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(note)) if note.chars().count() <= MAX_NOTE_LENGTH => Ok((!note.trim().is_empty()).then(|| note.clone())),
+        Some(_) => Err(bad(format!("\"note\" must be a string of at most {MAX_NOTE_LENGTH} characters."))),
+    }
 }
 
 fn read_project(value: Option<&Value>) -> Result<Option<String>, CallError> {
@@ -83,6 +92,7 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
         "todos.add" => {
             let title = read_title(input.get("title")).ok_or_else(title_error)?;
             let project = read_project(input.get("project"))?;
+            let note = read_note(input.get("note"))?;
             let date = match input.get("date") {
                 None => None,
                 Some(Value::String(date)) if is_date(date) => Some(date.clone()),
@@ -109,7 +119,7 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
                         color: None,
                         recurrence: None,
                         subtasks: Vec::new(),
-                        note: None,
+                        note,
                         focus_minutes: None,
                         focused_at: None,
                         updated_at: None,

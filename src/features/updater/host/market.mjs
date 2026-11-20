@@ -40,6 +40,7 @@ export function createMarketService(options = {}) {
   const revokedUrl = options.revokedUrl ?? DEFAULT_REVOKED_URL;
   const nowFn = typeof options.now === "function" ? options.now : () => options.now ?? Date.now();
   const onConfigChanged = typeof options.onConfigChanged === "function" ? options.onConfigChanged : null;
+  const forgetSecrets = typeof options.forgetSecrets === "function" ? options.forgetSecrets : null;
   const listeners = new Set();
 
   const notifyChanged = () => {
@@ -277,6 +278,7 @@ export function createMarketService(options = {}) {
         if (!found) throw marketError("not-found", `Installed plugin ${params.id} was not found`);
         uninstallPackage(pluginsDir, found.id, { removeData: params.removeData === true });
       }
+      if (params.removeData === true && forgetSecrets) await Promise.resolve(forgetSecrets(params.id)).catch(() => undefined);
       if (onConfigChanged) await onConfigChanged();
       notifyChanged();
       return { id: params.id, removed: true };
@@ -302,7 +304,8 @@ export function provideMarketService(ctx, options = {}) {
       else if (typeof subtree?.refresh === "function") await subtree.refresh();
     }
   };
-  const service = createMarketService({ dataDir: ctx.dataDir, onConfigChanged: reloadConfig, ...options });
+  const forgetSecrets = typeof ctx?.rust?.call === "function" ? (id) => ctx.rust.call("pluginKernel.secretClear", { plugin: id }) : null;
+  const service = createMarketService({ dataDir: ctx.dataDir, onConfigChanged: reloadConfig, forgetSecrets, ...options });
   const provider = ctx.services.provide(marketV1, {
     catalog: () => service.catalog(),
     details: (params) => service.details(params),

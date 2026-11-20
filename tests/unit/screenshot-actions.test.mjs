@@ -97,12 +97,15 @@ test("a host plugin registers a post-screenshot action on screenshot.actions and
   });
   assert.deepEqual(
     actionsService.list().map((item) => item.id),
-    ["ocr-table"],
+    ["ocr-table", "todos.note", "todos.todo"],
   );
   assert.deepEqual(await actionsService.run("ocr-table", { path: "/tmp/shot.png" }), {
     message: "table:/tmp/shot.png",
     dismiss: false,
   });
   await fiber.dispose();
-  assert.deepEqual(actionsService.list(), []);
+  assert.deepEqual(
+    actionsService.list().map((item) => item.id),
+    ["todos.note", "todos.todo"],
+  );
 });

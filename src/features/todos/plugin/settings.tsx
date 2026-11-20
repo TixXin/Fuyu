@@ -7,9 +7,10 @@ import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcut
 import { useShortcutOwners } from "../../../lib/shortcut/useShortcutOwners";
 import { isBuiltinEnabled, switchBuiltinPlugin } from "../../plugin-kernel/builtinSwitches";
 import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
-import { settingsRunners, settingsSections, shortcutSections, type SettingsRunnerProps, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
+import { islandItemStyleId, islandItemStyles, settingsRunners, settingsSections, shortcutSections, type SettingsRunnerProps, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
 import { useBuiltinPlugins } from "../../plugin-kernel/useBuiltinPlugins";
 import { announceSaveDirectorySetting, holdSaveDirectorySetting } from "../saveDirectoryStore";
+import { TodoCountStyleRow } from "../TodoCountStyleRow";
 import { TodoShortcutSection } from "../TodoShortcutSection";
 import { TodosSettingsPage, type TodoSettingsTab } from "../TodosSettingsPage";
 import { useSaveDirectorySetting } from "../useSaveDirectorySetting";
@@ -93,3 +94,4 @@ todosSections.add({ id: "todos.shortcuts", category: "todos", order: 15, compone
 shortcutSections.add({ id: "shortcuts.todos", category: "shortcuts", order: 42, component: TodosShortcutsPageSection }, OWNER);
 settingsRunners.add({ id: "todos.save-directory", component: SaveDirectoryRunner }, OWNER);
 settingsRunners.add({ id: "todos.shortcut-owners", component: TodoShortcutOwners }, OWNER);
+islandItemStyles.add({ id: islandItemStyleId("todos-count"), category: "islandLayout", order: 10, component: TodoCountStyleRow }, OWNER);

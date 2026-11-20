@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
 import { Check, Copy, Images, Pin, Search, Sparkles, Trash2, X } from "lucide-react";
+import { ACTION_ICONS } from "./actionIcons";
+import { cardActions, runCardAction, subscribeCardActions } from "./actionStore";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { copyHistoryScreenshot, deleteHistoryScreenshot, dragScreenshot, pinHistoryScreenshot, type HistoryItem } from "./api";
-import { screenshotActions, subscribeScreenshotActions, type ScreenshotActionItem } from "./host/actions.mjs";
 import { clockTime, groupByDay, type HistoryDay } from "./historyDays";
 import { HistoryMarks } from "./HistoryMarks";
 import { searchHistory } from "./historySearch";
@@ -14,20 +15,6 @@ import "./ScreenshotHistoryPanel.css";
 const NOTICE_MS = 1800;
 const DRAG_DISTANCE = 5;
 const CLOCK_MS = 60_000;
-const NO_ACTIONS: readonly ScreenshotActionItem[] = [];
-let cachedHistoryActions: readonly ScreenshotActionItem[] = NO_ACTIONS;
-let cachedHistoryKey = "";
-
-function readHistoryActions(): readonly ScreenshotActionItem[] {
-  const list = screenshotActions.list();
-  if (list.length === 0) return NO_ACTIONS;
-  const key = JSON.stringify(list);
-  if (key !== cachedHistoryKey) {
-    cachedHistoryKey = key;
-    cachedHistoryActions = list;
-  }
-  return cachedHistoryActions;
-}
 
 export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslation();
@@ -35,7 +22,7 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
   const text = t.screenshot.history;
   const errorText = useErrorText();
   const { items, error, forget } = useScreenshotHistory();
-  const extraActions = useSyncExternalStore(subscribeScreenshotActions, readHistoryActions, readHistoryActions);
+  const extraActions = useSyncExternalStore(subscribeCardActions, cardActions, cardActions);
   const [notice, setNotice] = useState<string | null>(null);
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -153,6 +140,7 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
                       </button>
                       {extraActions.map((action) => {
                         const label = action.label[locale];
+                        const Icon = ACTION_ICONS[action.icon] ?? Sparkles;
                         return (
                           <button
                             key={action.id}
@@ -161,12 +149,13 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
                             title={action.disabled && action.disabledTitle ? action.disabledTitle[locale] : label}
                             disabled={action.disabled}
                             onClick={() =>
-                              void screenshotActions
-                                .run(action.id, { path: item.path, saved: true, thumbnail: item.thumbnail ?? null })
-                                .then((result) => result.message && setNotice(result.message), report)
+                              void runCardAction(action, { path: item.path, saved: true, thumbnail: item.thumbnail ?? null, locale }).then(
+                                (result) => result.message && setNotice(result.message),
+                                report,
+                              )
                             }
                           >
-                            <Sparkles size={13} aria-hidden="true" />
+                            <Icon size={13} aria-hidden="true" />
                           </button>
                         );
                       })}

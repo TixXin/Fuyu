@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { configureScreenshot, startScreenshot } from "./api";
+import { configureScreenshot, rememberPins, startScreenshot } from "./api";
 import { useScreenshotSettings } from "./useScreenshotSettings";
 import { getErrorMessage } from "../../utils/error";
 
@@ -12,6 +12,12 @@ export function useIslandScreenshot(enabled: boolean, collapseIsland: () => void
       console.error("Failed to configure screenshots", getErrorMessage(error));
     });
   }, [enabled, settings]);
+
+  const { restorePins } = settings;
+  useEffect(() => {
+    if (!enabled && restorePins) return;
+    rememberPins(restorePins).catch((error: unknown) => console.error("Failed to set up pin restore", getErrorMessage(error)));
+  }, [enabled, restorePins]);
 
   const start = useCallback(() => {
     collapseIsland();

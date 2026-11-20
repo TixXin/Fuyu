@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import {
   annotationAt,
   annotationLevel,
-  canRecolor,
   dragHandle,
   handleAt,
   moveAnnotation,
@@ -82,7 +81,6 @@ export function useAnnotationSelect(annotations: Annotations, scale: number) {
   return {
     selected: drag ? drag.current : selected,
     level: selected ? annotationLevel(selected, scale) : null,
-    recolorable: selected ? canRecolor(selected) : false,
     dragging: drag !== null,
     items: shown,
     hover,

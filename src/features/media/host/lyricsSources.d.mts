@@ -1,7 +1,8 @@
 import type { LyricsQuery, LyricsResult, LyricsSourceInfo } from "@fuyu/plugin-services";
 
-export type NormalizedLyricsQuery = Required<Omit<LyricsQuery, "trackId">> & {
+export type NormalizedLyricsQuery = Required<Omit<LyricsQuery, "trackId" | "sourceApp">> & {
   trackId: string | null;
+  sourceApp: string | null;
 };
 
 export type LyricsSourceSpec = {

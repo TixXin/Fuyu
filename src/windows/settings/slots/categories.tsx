@@ -10,11 +10,13 @@ import { AboutSettingsPage } from "../AboutSettingsPage";
 import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
 import { PluginMarketPage } from "../PluginMarketPage";
 import { PluginDiagnosticsPage } from "../PluginDiagnosticsPage";
+import { IslandLayoutPage } from "../island-layout/IslandLayoutPage";
 import { SlotView } from "../../../features/plugin-kernel/SlotView";
 import { addSettingsCategory, type SettingsCategory, type SettingsLink, type SettingsPageProps } from "./categorySlot";
 import { settingsSections } from "./sectionSlot";
 import "./builtinModuleSwitches";
 import "./featureSettings";
+import "../island-layout/registerPlacementLinks";
 
 export type { SettingsPageProps };
 
@@ -80,7 +82,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   behaviorTuck: behavior("behaviorTuck"),
   behaviorAlerts: behavior("behaviorAlerts"),
   appearance: appearance("appearance"),
-  appearanceCollapsed: appearance("appearanceCollapsed"),
+  islandLayout: ({ settings, onSettingsChange }) => <IslandLayoutPage settings={settings} onSettingsChange={onSettingsChange} />,
   theme: theme("theme"),
   themeStyle: theme("themeStyle"),
   shortcuts: shortcuts("shortcuts"),

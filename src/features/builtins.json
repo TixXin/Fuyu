@@ -5,7 +5,7 @@
     { "id": "calendar", "kind": "builtin", "root": "calendar", "host": "host/index.mjs", "background": ["shortcuts"], "provides": ["calendar/v1"] },
     { "id": "music", "kind": "builtin", "root": "media", "host": "host/index.mjs", "background": ["session"], "provides": ["media/v1", "lyrics/v1"] },
     { "id": "clipboard", "kind": "builtin", "root": "clipboard", "host": "host/index.mjs", "background": ["listener", "windows"], "provides": ["clipboard/v1"] },
-    { "id": "screenshot", "kind": "builtin", "root": "screenshot", "host": "host/index.mjs", "background": ["shortcuts", "windows"] },
+    { "id": "screenshot", "kind": "builtin", "root": "screenshot", "host": "host/index.mjs", "background": ["shortcuts", "windows"], "provides": ["screenshot.actions/v1"] },
     { "id": "file-shelf", "kind": "builtin", "root": "file-shelf", "host": "host/index.mjs", "background": [], "provides": ["file-shelf/v1"] },
     { "id": "translation", "kind": "builtin", "root": "translation", "host": "host/index.mjs", "background": ["shortcuts", "window"], "provides": ["translator/v1"] },
     { "id": "voice-input", "kind": "builtin", "root": "voice-input", "host": "host/index.mjs", "background": ["shortcuts"] },

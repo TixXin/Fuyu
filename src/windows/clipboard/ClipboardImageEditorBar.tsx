@@ -1,20 +1,10 @@
 import type { ReactNode } from "react";
-import { Circle, Crop, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Redo2, RotateCcw, RotateCw, Square, Type, Undo2, type LucideIcon } from "lucide-react";
-import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, type AnnotationTool } from "../../features/screenshot/annotations";
+import { Crop, Redo2, RotateCcw, RotateCw, Undo2 } from "lucide-react";
+import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS } from "../../features/screenshot/annotations";
+import { TOOL_ICONS } from "../../features/screenshot/annotationToolIcons";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { ImageEditor } from "./useImageEditor";
-
-const TOOL_ICONS: Record<AnnotationTool, LucideIcon> = {
-  rect: Square,
-  ellipse: Circle,
-  arrow: MoveUpRight,
-  pen: Pencil,
-  highlighter: Highlighter,
-  text: Type,
-  mosaic: Grid3x3,
-  number: Hash,
-};
 
 function Tool({ label, active, disabled, onClick, children }: { label: string; active?: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
   return (

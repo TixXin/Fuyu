@@ -1,10 +1,11 @@
 const isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
-const QUERY_KEYS = new Set(["title", "artist", "album", "durationMs", "folder", "online", "chinese", "trackId"]);
+const QUERY_KEYS = new Set(["title", "artist", "album", "durationMs", "folder", "online", "chinese", "trackId", "sourceApp"]);
 
 export const BUILTIN_LYRICS_SOURCES = Object.freeze([
   Object.freeze({ id: "local", label: { zh: "本地 LRC 文件夹", en: "Local LRC Folder" }, builtin: true, order: 10 }),
   Object.freeze({ id: "kugou-local", label: { zh: "酷狗客户端缓存", en: "KuGou App Cache" }, builtin: true, order: 15 }),
+  Object.freeze({ id: "apple-music", label: { zh: "Apple Music 官方歌词", en: "Apple Music Lyrics" }, builtin: true, order: 17 }),
   Object.freeze({ id: "netease", label: { zh: "网易云音乐", en: "NetEase Cloud Music" }, builtin: true, order: 20 }),
   Object.freeze({ id: "lrclib", label: { zh: "LRCLIB", en: "LRCLIB" }, builtin: true, order: 30 }),
   Object.freeze({ id: "kugou", label: { zh: "酷狗歌词", en: "KuGou Lyrics" }, builtin: true, order: 40 }),
@@ -17,7 +18,7 @@ function lyricsError(code, message) {
 
 export function lyricsQueryOf(params) {
   if (!isObject(params) || !Object.keys(params).every((key) => QUERY_KEYS.has(key))) {
-    throw lyricsError("bad-params", "lyrics/v1 lookup takes { title, artist?, album?, durationMs?, folder?, online?, chinese?, trackId? }");
+    throw lyricsError("bad-params", "lyrics/v1 lookup takes { title, artist?, album?, durationMs?, folder?, online?, chinese?, trackId?, sourceApp? }");
   }
   if (typeof params.title !== "string" || params.title.trim() === "") {
     throw lyricsError("bad-params", "lyrics/v1 lookup requires a non-empty string title");
@@ -31,6 +32,7 @@ export function lyricsQueryOf(params) {
     online: params.online !== false,
     chinese: params.chinese === true,
     trackId: typeof params.trackId === "string" && params.trackId.length > 0 ? params.trackId : null,
+    sourceApp: typeof params.sourceApp === "string" && params.sourceApp.length > 0 ? params.sourceApp : null,
   };
 }
 

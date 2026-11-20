@@ -219,14 +219,14 @@ mod gif_rate {
 
     #[test]
     fn a_thirty_frame_video_gives_every_other_frame_to_the_gif() {
-        let mut rate = GifRate::new();
+        let mut rate = GifRate::new(TICKS_PER_SECOND);
         let kept: Vec<i64> = (0..10).map(|n| n * 33 * MS).filter(|&stamp| rate.take(stamp)).collect();
         assert_eq!(kept, [0, 99 * MS, 165 * MS, 231 * MS, 297 * MS]);
     }
 
     #[test]
     fn a_frame_after_a_long_still_stretch_is_kept() {
-        let mut rate = GifRate::new();
+        let mut rate = GifRate::new(TICKS_PER_SECOND);
         assert!(rate.take(0));
         assert!(!rate.take(40 * MS));
         assert!(rate.take(2_000 * MS));
