@@ -64,26 +64,6 @@ const SNAPPY_CLOSE: MotionTiming = {
   fade: 100, fadeDelay: 0, layer: 100, collapsedDelay: 140, bloom: 220,
 };
 
-type HoverTiming = { grow: number; growEase: string; shrink: number; shrinkEase: string };
-
-const HOVER_EASE = "cubic-bezier(0.25, 0.1, 0.25, 1)";
-const HOVER_GENTLE: HoverTiming = { grow: 360, growEase: HOVER_EASE, shrink: 280, shrinkEase: HOVER_EASE };
-
-const HOVER: Record<IslandMotion, HoverTiming> = {
-  spring: HOVER_GENTLE,
-  snappy: HOVER_GENTLE,
-  bouncy: HOVER_GENTLE,
-  smooth: HOVER_GENTLE,
-  fast: { grow: 240, growEase: HOVER_EASE, shrink: 200, shrinkEase: HOVER_EASE },
-  none: { grow: 0, growEase: HOVER_EASE, shrink: 0, shrinkEase: HOVER_EASE },
-};
-
-export function islandHoverTiming(motion: IslandMotion, reducedMotion = false): HoverTiming {
-  const timing = HOVER[motion];
-  if (!reducedMotion) return timing;
-  return { grow: Math.min(timing.grow, MOTION_BASE_MS), growEase: EASE_OUT, shrink: Math.min(timing.shrink, MOTION_FAST_MS), shrinkEase: EASE_OUT };
-}
-
 const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }> = {
   spring: { open: WEBSITE_OPEN, close: WEBSITE_CLOSE },
   snappy: { open: SNAPPY_OPEN, close: SNAPPY_CLOSE },
@@ -120,7 +100,6 @@ function calmed(timing: MotionTiming, cap: number): MotionTiming {
 
 export function islandMotionVariables(motion: IslandMotion, direction: "open" | "close", reducedMotion = false): Record<string, string> {
   const timing = islandMotionTiming(motion, direction, reducedMotion);
-  const hover = islandHoverTiming(motion, reducedMotion);
   return {
     "--island-motion-width": `${timing.width}ms`,
     "--island-motion-width-ease": timing.widthEase,
@@ -134,9 +113,5 @@ export function islandMotionVariables(motion: IslandMotion, direction: "open" | 
     "--island-motion-collapsed-delay": `${timing.collapsedDelay}ms`,
     "--island-motion-bloom": `${timing.bloom}ms`,
     "--island-motion-layer": `${timing.layer}ms`,
-    "--island-motion-hover-grow": `${hover.grow}ms`,
-    "--island-motion-hover-grow-ease": hover.growEase,
-    "--island-motion-hover-shrink": `${hover.shrink}ms`,
-    "--island-motion-hover-shrink-ease": hover.shrinkEase,
   };
 }

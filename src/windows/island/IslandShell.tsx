@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useHoverGrow } from "./useHoverGrow";
 import type { AppearanceMode, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
@@ -41,6 +42,7 @@ type IslandShellProps = {
   glass?: IslandGlassView;
   isTucked: boolean;
   isDimmed?: boolean;
+  hoverGrow?: boolean;
   tuckStyle?: TuckStyle;
   tuckHint?: TuckHintSettings;
   isDetached: boolean;
@@ -136,6 +138,7 @@ export function IslandShell({
   glass,
   isTucked,
   isDimmed = false,
+  hoverGrow = true,
   tuckStyle = "edge",
   tuckHint,
   isDetached,
@@ -177,6 +180,7 @@ export function IslandShell({
     [isExpanded, isPreparing, prewarm.isPrewarmed],
   );
   const contentRef = usePageFadeIn<HTMLDivElement>(page, mode);
+  const shellRef = useRef<HTMLElement | null>(null);
   const contributed = useIslandContributed();
   const { status } = contributed;
   const agentVisualState = status?.state ?? "idle";
@@ -187,6 +191,7 @@ export function IslandShell({
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();
   const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
+  useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow);
   const className = [
     "island",
     `island--${mode}`,
@@ -214,6 +219,7 @@ export function IslandShell({
   return (
     <>
       <section
+        ref={shellRef}
         className={className}
         style={side ? ({ ...ISLAND_OUTLINE_STYLE, "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : (ISLAND_OUTLINE_STYLE as CSSProperties)}
         aria-label={collapsedLabel}
