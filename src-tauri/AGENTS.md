@@ -52,6 +52,7 @@ src-tauri/src/
 ├── voice_input/             # 语音输入：快捷键、录音（capture.rs）、下载识别组件和模型并核对 SHA-256（download.rs、packs.rs）、经 crates/sherpa-runtime 离线识别（engine.rs）；Mac 上换成 `*_macos.rs`
 ├── timer/                   # 内置插件 timer 的全局快捷键（默认 Ctrl+Alt+K，配置在 plugins.yml），按下时打开岛的计时器页；Mac 上是 hotkey_macos.rs
 ├── settings_window/         # 设置窗口：按需创建与显示（mod.rs）
+├── app_identity/            # 只在 macOS 上编译：应用菜单栏（menu.rs）、Dock 上的应用名和设置窗口标题，都跟岛的语言（set_tray_language）走；设置窗口开着时应用进 Dock（settings_window/dock_icon.rs），改名用 macos/display_name.rs 的 LaunchServices 私有接口，失败时退回包里按系统语言的名字
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
 ├── webview_recovery.rs      # 窗口的 WebView2 渲染进程崩溃或无响应后自动重载（D66）：on_page_load 时给每个 WebView 挂一次，同一窗口 1 分钟内崩 3 次后停在崩溃页，记 webview-crashes.log；Mac 上是 webview_recovery_unsupported.rs
 ├── webview_memory.rs        # 隐藏的翻译、剪贴板、截图选区窗口把 WebView2 的 MemoryUsageTargetLevel 设成 Low、显示前改回 Normal（D48，默认关，设 FUYU_WEBVIEW_LOW_MEMORY=1 才生效）；Mac 上是 webview_memory_unsupported.rs

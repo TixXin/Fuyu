@@ -1,10 +1,9 @@
 use tauri::{ActivationPolicy, AppHandle};
 
 pub(super) fn show(app: &AppHandle) {
+    crate::app_identity::before_dock_icon(app);
     set(app, ActivationPolicy::Regular);
-    if let Err(error) = app.run_on_main_thread(crate::macos::app_icon::use_own_icon_outside_bundle) {
-        eprintln!("failed to set the dock icon image: {error}");
-    }
+    crate::app_identity::after_dock_icon(app);
 }
 
 pub(super) fn hide(app: &AppHandle) {

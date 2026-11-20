@@ -1,4 +1,6 @@
 mod agent_approval;
+#[cfg(target_os = "macos")]
+mod app_identity;
 mod agent_status;
 mod calendar;
 mod cc_connect;
@@ -177,6 +179,8 @@ pub fn run() {
             system::update_backup::apply_pending_restore();
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            #[cfg(target_os = "macos")]
+            app_identity::init(app.handle());
             tray::build_tray(app)?;
             plugin_kernel::builtins::init(app.handle());
             coexist::init(app.handle());
