@@ -85,6 +85,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const startEditing = useCallback(() => startPanelEditing(panelId), [panelId]);
   const hold = useCallback(
     ({ target, ...point }: LongPressStart) => {
+      window.getSelection()?.removeAllRanges();
       startPanelEditing(panelId);
       const widget = target.closest<HTMLElement>(".custom-panel__cell[data-widget]")?.dataset.widget;
       if (widget) setHeld({ widget, ...point });
