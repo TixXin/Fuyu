@@ -85,6 +85,7 @@
 | Rust 方法的生成类型 | `pnpm check:rust-types`（不编译，核对 `#[host_service]` 方法名和 `packages/plugin-services/src/generated/` 的清单一致）；加、改这类方法后 `pnpm gen:rust-types` 重写生成文件（见 `docs/architecture/plugins/v3-services.md`「Rust 那条路」） |
 | 浏览器回归页 | `pnpm test:regression [页面名中的词] [--update-snapshots]`（跑 `tests/regression/` 的回归页并比对 DOM 快照；界面本该变时加 `--update-snapshots`，快照随提交带上；细节见 workflow.md「验证」） |
 | 岛屿实验台 | `pnpm lab`（打开 http://127.0.0.1:5199/，点按钮让正在跑的 `pnpm tauri dev` 的岛弹消息、展开收起、模拟刘海、发起 Agent 审批；不用开本地接口，见 `docs/features/island-lab.md`） |
+| 水母标志预览 | `pnpm logo`（在默认浏览器打开 `docs/investigations/jellyfish-set-preview.html`：状态、动效、岛上实际大小和应用图标） |
 | README 的 SVG | `pnpm readme:assets`（重新生成 `docs/assets/readme/` 里的小岛和下载按钮；改它们改 `scripts/readme/assets.mjs`，不直接改 SVG） |
 | 设置搜索索引 | `pnpm settings:index`（新增、删除或改名设置项后运行，重写 `src/windows/settings/searchIndex.json`；漏跑时 `settings-search` 回归页会失败） |
 | 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 动效检查 + CSS 括号检查 + 密钥字段检查 + Rust 生成类型检查 + 任务检查 + 单元测试） |
