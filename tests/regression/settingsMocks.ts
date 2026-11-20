@@ -185,6 +185,7 @@ mockIPC((command, payload) => {
     case "open_im_notification_settings": return null;
     case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
     case "has_translation_secret": return args.provider === "deepseek";
+    case "has_apple_music_token": return false;
     case "set_translation_shortcut": return args.shortcut;
     case "updater_configured": return true;
     case "plugin:app|version": return demoUpdate ? DEMO_CURRENT_VERSION : "0.0.0-test";

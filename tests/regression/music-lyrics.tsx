@@ -2,6 +2,7 @@ import "../../src/styles/tokens.css";
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
+import { emit } from "@tauri-apps/api/event";
 import { I18nProvider } from "../../src/i18n";
 import type { MediaState } from "../../src/features/media/api";
 import { DEFAULT_MEDIA_STATE } from "../../src/features/media/mediaState";
@@ -34,7 +35,7 @@ mockIPC((command, payload) => {
   if (query.title === "Yesterday") return { source: "kugou", lrc: ["[00:01.00]Oh I believe", "[00:05.00]in yesterday"].join("\n"), translation: "[00:01.00]哦 我相信" };
   if (query.title === "Believe") return { source: "kugou", lrc: "[00:01.00]<00:01.00>Oh <00:01.30>I <00:01.70>believe<00:03.00>\n[00:04.00]in yesterday" };
   return query.title === "晴天" ? { source: "lrclib", lrc: LRC } : null;
-});
+}, { shouldMockEvents: true });
 
 const fixture = document.getElementById("fixture")!;
 const results = document.getElementById("results")!;
@@ -253,6 +254,16 @@ try {
   stage("light").classList.remove("island-light");
   await renderCovers();
   check(cssHex(getComputedStyle(stage("light").querySelector(".media-waveform")!).color) === probe("light"), "波形用封面颜色");
+
+  const appleApp = "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App";
+  localStorage.setItem("fuyu-settings", JSON.stringify({ lyricsAppleMusic: true }));
+  await render({ ...track("晴天", 6000), sourceApp: appleApp }, { ...ONLINE, lyricsAppleMusic: true } as typeof ONLINE);
+  const asked = queries.length;
+  check(queries[asked - 1].sourceApp === appleApp && queries[asked - 1].appleMusic === true, "开了 Apple Music 官方歌词时，查歌词带上播放器和开关");
+  await act(async () => { await emit("apple-music-token-changed", { saved: true }); });
+  await lookedUp();
+  check(queries.length === asked + 1 && Boolean(view()), "保存或清除 Apple Music 令牌后丢掉这首的歌词重新查");
+  localStorage.removeItem("fuyu-settings");
 
   await runLyricsHandoffChecks(root, track("Believe", 1000, true), check);
 

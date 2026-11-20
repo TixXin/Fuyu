@@ -1,4 +1,6 @@
 mod amll;
+mod apple_token;
+mod applemusic;
 mod found;
 mod inflink;
 mod krc;
@@ -19,11 +21,12 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use found::{has_word_times, FoundLyrics};
 pub use inflink::InflinkState;
 use matching::{cache_key, named_in_simplified, stable_hash, traditional_chars};
+use crate::user_error::UserError;
 #[cfg(windows)]
 use crate::win32::chinese::to_simplified;
 
@@ -36,6 +39,9 @@ const CACHE_DIR_NAME: &str = "lyrics-cache";
 const MISSING_TTL: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 const MAX_CACHED: usize = 2000;
 const CHINESE_KEY: &str = "\u{1f}cn";
+const APPLE_KEY: &str = "\u{1f}am";
+const APPLE_SOURCE: &str = "apple-music";
+const APPLE_TOKEN_EVENT: &str = "apple-music-token-changed";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,6 +61,10 @@ pub struct LyricsQuery {
     chinese: bool,
     #[serde(default)]
     track_id: Option<String>,
+    #[serde(default)]
+    source_app: Option<String>,
+    #[serde(default)]
+    apple_music: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -88,6 +98,7 @@ fn source_name(name: &str) -> &'static str {
         "kugou" => "kugou",
         "netease" => "netease",
         "qq" => "qq",
+        APPLE_SOURCE => APPLE_SOURCE,
         _ => "lrclib",
     }
 }
@@ -107,6 +118,7 @@ fn read_cache(dir: &Path, key: &str, now: u64) -> Option<Option<Answer>> {
     }
     match entry.lrc {
         Some(_) if entry.source.as_deref() == Some("kugou") && !entry.word_times => None,
+        Some(_) if entry.source.as_deref() == Some(APPLE_SOURCE) && !key.contains(APPLE_KEY) => None,
         Some(lrc) if key.ends_with(CHINESE_KEY) && !entry.words_first && !has_word_times(&lrc) => None,
         Some(lrc) => {
             let source = source_name(entry.source.as_deref().unwrap_or_default());
@@ -164,25 +176,45 @@ fn for_display(source: &'static str, found: FoundLyrics, title: &str, artist: &s
     Lyrics { source, lrc: simplify(found.lrc), translation: found.translation.map(simplify) }
 }
 
-fn source_order(query: &LyricsQuery) -> Vec<&'static str> {
-    if !query.chinese {
-        return vec!["lrclib"];
-    }
+fn source_order(query: &LyricsQuery, apple: bool) -> Vec<&'static str> {
     let chinese_named = format!("{}{}", query.title, query.artist).chars().any(|c| ('\u{4E00}'..='\u{9FFF}').contains(&c));
-    match (netease::track_id(query.track_id.as_deref()).is_some(), chinese_named) {
-        (true, _) => vec!["netease", "kugou", "qq", "lrclib"],
-        (false, true) => vec!["kugou", "qq", "netease", "lrclib"],
-        (false, false) => vec!["lrclib", "kugou", "qq", "netease"],
+    let rest = match (query.chinese, netease::track_id(query.track_id.as_deref()).is_some(), chinese_named) {
+        (false, _, _) => vec!["lrclib"],
+        (true, true, _) => vec!["netease", "kugou", "qq", "lrclib"],
+        (true, false, true) => vec!["kugou", "qq", "netease", "lrclib"],
+        (true, false, false) => vec!["lrclib", "kugou", "qq", "netease"],
+    };
+    if apple {
+        [vec![APPLE_SOURCE], rest].concat()
+    } else {
+        rest
     }
 }
 
-async fn fetch_online(query: &LyricsQuery) -> Result<Option<Answer>, String> {
+fn apple_wanted(query: &LyricsQuery) -> bool {
+    query.online && query.apple_music && applemusic::is_apple_music(query.source_app.as_deref())
+}
+
+fn lyrics_cache_key(query: &LyricsQuery, apple: bool) -> String {
+    let mut key = cache_key(&query.title, &query.artist, query.duration_ms);
+    if apple {
+        key.push_str(APPLE_KEY);
+    }
+    if query.chinese {
+        key.push_str(CHINESE_KEY);
+    }
+    key
+}
+
+async fn fetch_online(query: &LyricsQuery, apple_token: Option<&str>) -> Result<(Option<Answer>, bool), String> {
     let (title, artist) = (query.title.as_str(), query.artist.as_str());
     let mut errors = Vec::new();
+    let mut apple_failed = false;
     let mut answered = false;
     let mut line_timed = None;
-    for source in source_order(query) {
+    for source in source_order(query, apple_token.is_some()) {
         let result = match source {
+            APPLE_SOURCE => applemusic::fetch(title, artist, query.duration_ms, apple_token.unwrap_or_default()).await,
             "kugou" => kugou::fetch(title, artist, query.duration_ms).await,
             "qq" => qq::fetch(title, artist, query.duration_ms).await,
             "netease" => netease::fetch(title, artist, query.duration_ms, query.track_id.as_deref()).await,
@@ -191,18 +223,19 @@ async fn fetch_online(query: &LyricsQuery) -> Result<Option<Answer>, String> {
                 .map(|lrc| lrc.map(|lrc| FoundLyrics { lrc, translation: None })),
         };
         match result {
-            Ok(Some(found)) if !query.chinese || has_word_times(&found.lrc) => return Ok(Some((source, found))),
+            Ok(Some(found)) if !query.chinese || has_word_times(&found.lrc) => return Ok((Some((source, found)), !apple_failed)),
             Ok(Some(found)) => {
                 line_timed.get_or_insert((source, found));
             }
             Ok(None) => answered = true,
-            Err(error) => errors.push(error),
+            Err(error) => {
+                apple_failed |= source == APPLE_SOURCE;
+                errors.push(error);
+            }
         }
     }
-    if line_timed.is_some() {
-        Ok(line_timed)
-    } else if answered {
-        Ok(None)
+    if line_timed.is_some() || answered {
+        Ok((line_timed, !apple_failed))
     } else {
         Err(errors.join("; "))
     }
@@ -234,15 +267,15 @@ pub async fn get_lyrics(app: AppHandle, query: LyricsQuery) -> Result<Option<Lyr
         return Ok(None);
     }
     let cache_dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| error.to_string())?.join(CACHE_DIR_NAME);
-    let mut key = cache_key(&query.title, &query.artist, query.duration_ms);
-    if query.chinese {
-        key.push_str(CHINESE_KEY);
-    }
+    let apple_token = if apple_wanted(&query) { apple_token::read().ok().flatten() } else { None };
+    let key = lyrics_cache_key(&query, apple_token.is_some());
     let answer = match read_cache(&cache_dir, &key, now_secs()) {
         Some(cached) => cached,
         None => {
-            let fetched = fetch_online(&query).await?;
-            write_cache(&cache_dir, &key, fetched.as_ref(), now_secs());
+            let (fetched, keep) = fetch_online(&query, apple_token.as_deref()).await?;
+            if keep {
+                write_cache(&cache_dir, &key, fetched.as_ref(), now_secs());
+            }
             fetched
         }
     };
@@ -259,12 +292,40 @@ pub async fn install_inflink() -> Result<InflinkState, crate::user_error::UserEr
     inflink::install().await
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AppleTokenChanged {
+    saved: bool,
+}
+
+#[tauri::command]
+pub async fn has_apple_music_token() -> Result<bool, UserError> {
+    Ok(apple_token::read()?.is_some())
+}
+
+#[tauri::command]
+pub async fn save_apple_music_token(app: AppHandle, token: String) -> Result<(), UserError> {
+    apple_token::save(&token)?;
+    let _ = app.emit(APPLE_TOKEN_EVENT, AppleTokenChanged { saved: true });
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_apple_music_token(app: AppHandle) -> Result<(), UserError> {
+    apple_token::delete()?;
+    let _ = app.emit(APPLE_TOKEN_EVENT, AppleTokenChanged { saved: false });
+    Ok(())
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::lyrics::get_lyrics,
             crate::lyrics::get_inflink_state,
             crate::lyrics::install_inflink,
+            crate::lyrics::has_apple_music_token,
+            crate::lyrics::save_apple_music_token,
+            crate::lyrics::delete_apple_music_token,
         ] $($rest)*)
     };
 }
@@ -315,9 +376,8 @@ mod tests {
         assert_eq!(for_display("lrclib", found(lrc, None), "餘香", "張小九").lrc, lrc);
     }
 
-    #[test]
-    fn chinese_songs_ask_the_chinese_sources_first() {
-        let query = |title: &str, chinese: bool, track_id: Option<&str>| LyricsQuery {
+    fn query(title: &str, chinese: bool, track_id: Option<&str>) -> LyricsQuery {
+        LyricsQuery {
             title: title.into(),
             artist: String::new(),
             album: String::new(),
@@ -326,11 +386,39 @@ mod tests {
             online: true,
             chinese,
             track_id: track_id.map(Into::into),
-        };
-        assert_eq!(source_order(&query("余香", false, None)), ["lrclib"]);
-        assert_eq!(source_order(&query("余香", true, None)), ["kugou", "qq", "netease", "lrclib"]);
-        assert_eq!(source_order(&query("Yesterday", true, None)), ["lrclib", "kugou", "qq", "netease"]);
-        assert_eq!(source_order(&query("Yesterday", true, Some("NCM-1"))), ["netease", "kugou", "qq", "lrclib"]);
+            source_app: None,
+            apple_music: false,
+        }
+    }
+
+    #[test]
+    fn chinese_songs_ask_the_chinese_sources_first() {
+        assert_eq!(source_order(&query("余香", false, None), false), ["lrclib"]);
+        assert_eq!(source_order(&query("余香", true, None), false), ["kugou", "qq", "netease", "lrclib"]);
+        assert_eq!(source_order(&query("Yesterday", true, None), false), ["lrclib", "kugou", "qq", "netease"]);
+        assert_eq!(source_order(&query("Yesterday", true, Some("NCM-1")), false), ["netease", "kugou", "qq", "lrclib"]);
+        assert_eq!(source_order(&query("余香", true, None), true), [APPLE_SOURCE, "kugou", "qq", "netease", "lrclib"]);
+        assert_eq!(source_order(&query("Yesterday", false, None), true), [APPLE_SOURCE, "lrclib"]);
+    }
+
+    #[test]
+    fn apple_music_is_asked_only_when_switched_on_for_its_own_player_and_cached_apart() {
+        let apple = |on: bool, app: Option<&str>| LyricsQuery { apple_music: on, source_app: app.map(Into::into), ..query("晴天", true, None) };
+        assert!(apple_wanted(&apple(true, Some("com.apple.Music"))));
+        assert!(!apple_wanted(&apple(false, Some("com.apple.Music"))));
+        assert!(!apple_wanted(&apple(true, Some("cloudmusic.exe"))));
+        assert!(!apple_wanted(&LyricsQuery { online: false, ..apple(true, Some("com.apple.Music")) }));
+        let (plain, with_apple) = (lyrics_cache_key(&query("晴天", true, None), false), lyrics_cache_key(&query("晴天", true, None), true));
+        assert_ne!(plain, with_apple);
+        assert!(with_apple.ends_with(CHINESE_KEY) && with_apple.contains(APPLE_KEY));
+        let dir = std::env::temp_dir().join(format!("fuyu-lyrics-apple-{}", std::process::id()));
+        let now = 1_800_000_000;
+        let timed = found("[00:01.00]<00:01.00>晴天<00:02.00>", Some("[00:01.00]Sunny"));
+        write_cache(&dir, &with_apple, Some(&(APPLE_SOURCE, timed.clone())), now);
+        assert_eq!(read_cache(&dir, &with_apple, now), Some(Some((APPLE_SOURCE, timed.clone()))));
+        write_cache(&dir, &plain, Some(&(APPLE_SOURCE, timed)), now);
+        assert_eq!(read_cache(&dir, &plain, now), None);
+        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

@@ -154,6 +154,7 @@
         "lyricsFolder": "local",
         "lyricsOnline": "sync",
         "lyricsChinese": "sync",
+        "lyricsAppleMusic": "sync",
         "lyricsOffsetMs": "sync",
         "lyricsOnIsland": "sync",
         "lyricsIslandPriority": "sync",
