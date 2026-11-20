@@ -4,7 +4,7 @@ import { useTranslation } from "../../../i18n";
 import { copyMessageText } from "../../../lib/api";
 import { notificationCopyableText } from "../messageCopy";
 import { MessageSourceIcon } from "../MessageSourceIcon";
-import { messagePreviewText } from "../messagePreview";
+import { messagePreviewText, previewBody } from "../messagePreview";
 import { bannerClock, bannerKey, type BannerState } from "./bannerMessages";
 import "./MessageBanner.css";
 
@@ -34,9 +34,9 @@ export function MessageBanner({
   const title = isFlash ? fallbackTitle : message.title.trim() || fallbackTitle;
   const plainWeChat = message.source === "wechat" && !message.chat;
   const body = isFlash ? t.newReminder
-    : message.source === "plugin" ? message.body.trim()
-      : message.source === "qqMail" ? message.body.trim() || t.newMail
-        : message.body.trim() || t.newMessage;
+    : message.source === "plugin" ? previewBody(message.body)
+      : message.source === "qqMail" ? previewBody(message.body) || t.newMail
+        : previewBody(message.body) || t.newMessage;
   const copyable = plainWeChat || isFlash || isBadge ? "" : notificationCopyableText(message.title, message.body);
   const copied = copiedKey === currentKey;
 

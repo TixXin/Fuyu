@@ -1,3 +1,4 @@
+import { markdownToPlainLine } from "../../components/markdown/markdownText.ts";
 import zhCN from "../../i18n/locales/zh-CN.ts";
 import type { Translations } from "../../i18n/types";
 import type { ImNotificationKind, ImSourceId } from "./im-sources/imSourcesState.ts";
@@ -21,14 +22,19 @@ export type MessagePreview = {
   chat?: string | null;
 };
 
+export function previewBody(body: string): string {
+  return markdownToPlainLine(body.trim());
+}
+
 export function messagePreviewText(preview: MessagePreview, copy: Translations["messages"] = zhCN.messages): string {
-  if (preview.source === "wechat" && preview.chat) return copy.qqPreview(preview.title, preview.body);
+  const body = previewBody(preview.body);
+  if (preview.source === "wechat" && preview.chat) return copy.qqPreview(preview.title, body);
   if (preview.source === "wechat") return copy.wechatPreview;
-  if (preview.source === "qqMail") return preview.body.trim() || copy.newMail;
-  if (preview.source === "plugin") return preview.body.trim() ? copy.qqPreview(preview.title, preview.body.trim()) : preview.title;
+  if (preview.source === "qqMail") return body || copy.newMail;
+  if (preview.source === "plugin") return body ? copy.qqPreview(preview.title, body) : preview.title;
   if (preview.kind === "flash") return copy.newReminder;
   const fallbackSender = preview.source === "qq" ? "QQ" : copy.sourceLabels[preview.source];
-  return copy.qqPreview(preview.title.trim() || fallbackSender, preview.body.trim() || copy.newMessage);
+  return copy.qqPreview(preview.title.trim() || fallbackSender, body || copy.newMessage);
 }
 
 export function latestMessagePreview(candidates: (MessagePreview | null)[], latestReceivedAt = -Infinity): MessagePreview | null {

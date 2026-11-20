@@ -50,6 +50,8 @@ export type MessagesText = {
   qqPreview: (title: string, body: string) => string;
   copyText: string;
   copied: string;
+  showFullMessage: string;
+  showLessMessage: string;
   copyCode: (code: string) => string;
   sampleTitle: string;
   sampleBody: string;
@@ -123,6 +125,8 @@ export const zhCN: MessagesText = {
   qqPreview: (title, body) => `${title}：${body}`,
   copyText: "复制内容",
   copied: "已复制",
+  showFullMessage: "展开全文",
+  showLessMessage: "收起",
   copyCode: (code) => `复制 ${code}`,
   sampleTitle: "示例消息",
   sampleBody: "新消息会像这样出现在岛上",
@@ -190,6 +194,8 @@ export const en: MessagesText = {
   qqPreview: (title, body) => `${title}: ${body}`,
   copyText: "Copy message",
   copied: "Copied",
+  showFullMessage: "Show more",
+  showLessMessage: "Show less",
   copyCode: (code) => `Copy ${code}`,
   sampleTitle: "Sample message",
   sampleBody: "New messages will show up on the island like this",

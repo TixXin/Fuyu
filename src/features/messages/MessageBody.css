@@ -1,0 +1,75 @@
+.message-body {
+  min-width: 0;
+  margin-top: 5px;
+  cursor: pointer;
+}
+
+.message-body__clip {
+  max-height: calc(12px * 1.6 * 12);
+  overflow: hidden;
+}
+
+.message-body--expanded .message-body__clip {
+  max-height: none;
+}
+
+.message-body--clipped .message-body__clip {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
+}
+
+.message-body__plain {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.message-body__markdown :is(p, blockquote) {
+  white-space: pre-wrap;
+}
+
+.message-body__markdown .markdown__table {
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.message-body__markdown table {
+  width: auto;
+  min-width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.message-body__markdown td {
+  white-space: nowrap;
+}
+
+.message-body :is(.message-body__plain, .message-body__markdown) a {
+  color: var(--info-text, #8fd8ff);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.message-body__toggle {
+  margin: 4px 0 0;
+  padding: 0;
+  color: var(--text-3);
+  font: inherit;
+  font-size: 11px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.message-body__toggle:hover {
+  color: var(--color-text);
+}
+
+.message-body :is(a, .message-body__toggle):focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}

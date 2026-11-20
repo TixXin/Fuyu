@@ -409,7 +409,7 @@ fn from_toast_item(spec: &ImSourceSpec, item: ToastItem) -> ImNotificationItem {
         id: format!("{}:toast:{}:{}", spec.id, item.id, item.ticks),
         kind: ImNotificationKind::Toast,
         title: title.chars().take(120).collect(),
-        body: body.chars().take(1000).collect(),
+        body: body.chars().take(4000).collect(),
         created_at: item.created_at,
         unread: None,
     }

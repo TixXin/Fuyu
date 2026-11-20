@@ -27,6 +27,14 @@ let view: MessageView;
 let setView: (source: MessageView) => void;
 let setExtraImOn: (on: boolean) => void;
 let imItemsBySource: Partial<Record<ImSourceId, ImSourceSnapshot["items"]>> = {};
+const BOT_TABLE = [
+  "**WebDev 前 20 有变动**",
+  "| 排名 | 模型 | 分数 | 变化 |",
+  "|---:|---|---:|:---:|",
+  ...Array.from({ length: 14 }, (_, index) => `| ${index + 1} | Model-${String.fromCharCode(65 + index)}-Reasoning-Preview | ${1500 - index * 7} | — |`),
+  "完整榜单：[WebDev Arena](https://example.com/webdev)",
+].join("\n");
+
 const imSnapshotOf = (source: ImSourceId): ImSourceSnapshot => {
   const enabled = sources[source] === true;
   return {
@@ -177,6 +185,7 @@ try {
         { id: "telegram:toast:1:1", kind: "toast", title: "Alice", body: "构建包已通过验收", createdAt: now - 5_000 },
         { id: "telegram:flash:2", kind: "flash", title: "Telegram", body: "", createdAt: now - 15_000 },
         { id: "telegram:badge:3", kind: "badge", title: "Telegram", body: "", createdAt: now - 25_000, unread: 4 },
+        { id: "telegram:toast:4:1", kind: "toast", title: "榜单机器人", body: BOT_TABLE, createdAt: now - 35_000 },
       ],
     };
     sources = { ...sources, ...Object.fromEntries(IM_SOURCE_IDS.map((id) => [id, true])) };
@@ -207,7 +216,7 @@ try {
     await click("Telegram 通知");
     const tgItems = () => [...document.querySelectorAll<HTMLElement>("[aria-label='最近收到的 Telegram 通知'] .qq-panel__item")];
     check(
-      tgItems().length === 3
+      tgItems().length === 4
         && tgItems()[0].textContent?.includes("Alice")
         && tgItems()[0].textContent?.includes("构建包已通过验收")
         && Boolean(tgItems()[0].querySelector(".qq-panel__copy"))
@@ -217,6 +226,17 @@ try {
         && !tgItems()[2].querySelector(".qq-panel__copy"),
       "通用 IM 面板兼容展示 Toast 正文、闪烁有新提醒与未读数条目",
     );
+    const bot = tgItems()[3];
+    const table = bot.querySelector<HTMLElement>(".message-body .markdown__table");
+    check(bot.querySelectorAll("tbody tr").length === 14 && bot.querySelectorAll("thead th").length === 4 && !bot.textContent?.includes("|---"), "机器人发的 Markdown 表格按行列显示");
+    check(table && table.scrollWidth > table.clientWidth && qqPanelEl.scrollWidth <= qqPanelEl.clientWidth + 1, "宽表格在卡片里横向滚动，不撑宽面板");
+    const toggle = bot.querySelector<HTMLButtonElement>(".message-body__toggle");
+    check(toggle?.textContent === "展开全文" && bot.querySelector<HTMLElement>(".message-body__clip")!.scrollHeight > bot.querySelector<HTMLElement>(".message-body__clip")!.clientHeight, "长消息先折起，有「展开全文」");
+    await act(async () => { toggle!.click(); });
+    check(toggle!.getAttribute("aria-expanded") === "true" && toggle!.textContent === "收起", "点「展开全文」看到整条");
+    await act(async () => { bot.querySelector<HTMLAnchorElement>('a[href="https://example.com/webdev"]')!.click(); });
+    check(calls.some((call) => call.command === "plugin:opener|open_url" && call.args.url === "https://example.com/webdev") && !calls.some((call) => call.command === "open_im_source"), "点正文里的链接只打开链接，不唤起应用");
+    calls.splice(0, calls.length, ...calls.filter((call) => call.command !== "plugin:opener|open_url"));
     await click("打开 Telegram：Alice");
     check(calls.some((call) => call.command === "open_im_source" && call.args.source === "telegram"), "点击 IM 通知项唤起对应应用");
     await click("清空岛内 Telegram 通知");
