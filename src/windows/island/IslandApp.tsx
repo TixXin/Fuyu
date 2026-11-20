@@ -40,6 +40,7 @@ import { useV2UpgradeNotice } from "./useV2UpgradeNotice";
 import { useIslandLayerNotice } from "./useIslandLayerNotice";
 import { useIslandNotice } from "./islandNotice";
 import { useIslandSide } from "./useIslandSide";
+import { sideColumnTarget } from "./sideColumn";
 import { IslandRunners } from "./IslandRunners";
 import { islandMarginY } from "./islandForm";
 import { useAutoIslandForm } from "./autoIslandForm";
@@ -230,6 +231,7 @@ export function IslandApp() {
         tuckHint={settings}
         isDetached={isPositionDetached || islandMarginY(settings, autoForm) > 0}
         side={side}
+        sideHeight={sideColumnTarget({ mode: settings.sideHeightMode, custom: settings.sideHeight, maxPanelHeight: settings.maxPanelHeight, expandedScale: settings.expandedScale, collapsedScale: settings.collapsedScale })}
         showTitle={settings.showTitle}
         showCollapsedText={barText}
         overflowMore={settings.collapsedOverflowMore}

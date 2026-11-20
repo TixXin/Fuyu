@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { layoutSideColumn, sideBubbleTop, SIDE_COLUMN_MAX_HEIGHT } from "../../src/windows/island/sideColumn.ts";
+import { layoutSideColumn, sideBubbleTop, sideColumnTarget, SIDE_COLUMN_MAX_HEIGHT } from "../../src/windows/island/sideColumn.ts";
 
 const rows = (count, height = 28) => Array.from({ length: count }, (_, index) => ({ id: `row-${index}`, height }));
 
@@ -37,4 +37,24 @@ test("a bubble lines up with its row and stays on the straight part of the colum
   assert.equal(sideBubbleTop(200, 190, 22), 140);
   assert.equal(sideBubbleTop(200, null, 22), 81);
   assert.equal(sideBubbleTop(48, 24, 22), 5);
+});
+
+test("a filled column centres its rows when nothing grows", () => {
+  const layout = layoutSideColumn(rows(2), 300, true);
+  assert.equal(layout.height, 300);
+  assert.deepEqual(layout.offsets, [119, 153]);
+});
+
+test("a filled column gives the spare height to the growing row", () => {
+  const layout = layoutSideColumn([{ id: "agent", height: 28 }, { id: "music", height: 28, grow: true }, { id: "todo", height: 28 }], 300, true);
+  assert.equal(layout.height, 300);
+  assert.deepEqual(layout.shown.map((row) => row.height), [28, 212, 28]);
+  assert.deepEqual(layout.offsets, [10, 44, 262]);
+});
+
+test("the side height follows the panel, a custom value or the content", () => {
+  const base = { custom: 400, maxPanelHeight: 360, expandedScale: 0.91, collapsedScale: 0.89 };
+  assert.equal(sideColumnTarget({ ...base, mode: "panel" }), Math.round((360 * 0.91) / 0.89));
+  assert.equal(sideColumnTarget({ ...base, mode: "custom" }), Math.round(400 / 0.89));
+  assert.equal(sideColumnTarget({ ...base, mode: "content" }), null);
 });

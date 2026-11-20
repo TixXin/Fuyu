@@ -1,5 +1,6 @@
 export const OFFICIAL_ICONS = Object.freeze({
   "@fuyu/alarm": { color: "#f08a24", glyph: "alarm-clock" },
+  "@fuyu/calculator": { color: "#d4569b", glyph: "calculator" },
   "@fuyu/countdown": { color: "#6f7dfa", glyph: "calendar-clock" },
   "@fuyu/ecdict": { color: "#3b94f5", glyph: "book-a" },
   "@fuyu/github-issues": { color: "#9575f5", glyph: "circle-dot" },

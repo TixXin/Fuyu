@@ -44,6 +44,7 @@ type IslandShellProps = {
   tuckHint?: TuckHintSettings;
   isDetached: boolean;
   side?: IslandSide | null;
+  sideHeight?: number | null;
   showTitle: boolean;
   showCollapsedText: boolean;
   overflowMore?: boolean;
@@ -138,6 +139,7 @@ export function IslandShell({
   tuckHint,
   isDetached,
   side = null,
+  sideHeight = null,
   showTitle,
   showCollapsedText,
   overflowMore = true,
@@ -178,7 +180,7 @@ export function IslandShell({
   const { status } = contributed;
   const agentVisualState = status?.state ?? "idle";
   const agentStatusLabel = status?.label ?? "";
-  const sideLayout = useSideColumnRows({ onOpenPage }, collapsedSlots?.gauges ?? []);
+  const sideLayout = useSideColumnRows({ onOpenPage }, collapsedSlots?.gauges ?? [], sideHeight);
   const sideHot = contributed.preview?.hot ?? null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();

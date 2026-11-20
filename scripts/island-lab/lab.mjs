@@ -1,5 +1,5 @@
 import {
-  NOTCHES, PAGES, agentStatus, deviceAlert, levelChange, permissionRequest, pluginNotification, qqMessage, questionRequest, trackNotification, wechatMessage,
+  MARKDOWN_MESSAGE, NOTCHES, PAGES, SYMBOL_CHAT, agentStatus, deviceAlert, levelChange, permissionRequest, pluginNotification, qqMessage, questionRequest, trackNotification, wechatMessage,
 } from "./actions.mjs";
 import { sweep } from "./builtins.mjs";
 
@@ -93,6 +93,8 @@ const GROUPS = [
   ]],
   ["消息", [
     ["QQ 消息", () => emit(qqMessage(now()))],
+    ["QQ Markdown 表格", () => emit(qqMessage(now(), "榜单机器人", MARKDOWN_MESSAGE))],
+    ["QQ 带符号的日常消息", () => emit(qqMessage(now(), "小王", SYMBOL_CHAT))],
     ["微信消息", () => emit(wechatMessage(now()))],
     ["插件通知（一行）", () => emit(pluginNotification("inline"))],
     ["插件通知（卡片）", () => emit(pluginNotification("card"))],

@@ -5,8 +5,7 @@ use objc2_foundation::MainThreadMarker;
 use tauri::{AppHandle, WebviewWindow};
 
 use super::geometry::{
-    island_left_in_stage, island_top_in_stage, STAGE_WINDOW_HEIGHT, STAGE_WINDOW_PADDING_Y,
-    STAGE_WINDOW_WIDTH,
+    island_left_in_stage, island_top_in_stage, STAGE_WINDOW_WIDTH,
 };
 use super::main_window;
 use super::state::{
@@ -34,8 +33,7 @@ pub(super) fn spec_from_state(
     state: IslandWindowState,
     frame: Option<IslandGlassFrame>,
 ) -> NativeGlassSpec {
-    let stage_height = STAGE_WINDOW_HEIGHT
-        .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y);
+    let stage_height = super::geometry::stage_height_for(state);
     let edge = match state.attached_edge {
         Some(Edge::Top) => Some(GlassEdge::Top),
         Some(Edge::Bottom) => Some(GlassEdge::Bottom),
