@@ -19,6 +19,8 @@ import { FuyuTextIcon } from "../../components/island-widget/FuyuTextIcon";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
 import "./IslandHeader.css";
 
+const INTERACTIVE = "button, a, input, textarea, select, label, [role='button'], [contenteditable='true']";
+
 type IslandHeaderProps = {
   page: IslandPage;
   features: IslandFeatures;
@@ -146,7 +148,14 @@ export function IslandHeader({
   ].join(" ");
 
   return (
-    <header ref={headerRef} className="island__header">
+    <header
+      ref={headerRef}
+      className="island__header"
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest(INTERACTIVE)) return;
+        onCollapse();
+      }}
+    >
       <span ref={pillRef} className="island__page-pill" aria-hidden="true" />
       <div className="island__header-start">
       <div className="island__title">
@@ -188,7 +197,10 @@ export function IslandHeader({
         aria-label={t.island.collapseIsland}
         data-tooltip=""
         data-window-drag="false"
-        onClick={onCollapse}
+        onClick={(event) => {
+          event.stopPropagation();
+          onCollapse();
+        }}
       />
 
       <div className="window-actions">
