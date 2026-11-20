@@ -22,9 +22,23 @@
 }
 
 .custom-panel__zoom {
+  position: relative;
   flex: none;
   width: fit-content;
   margin: 0 auto;
+}
+
+.custom-panel__scroll--paged {
+  scroll-snap-type: x mandatory;
+}
+
+.custom-panel__snap {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  scroll-snap-align: start;
 }
 
 .custom-panel__grid {

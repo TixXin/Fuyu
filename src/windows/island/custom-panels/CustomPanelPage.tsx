@@ -32,19 +32,23 @@ function useStrip(stored: CustomPanel, editing: boolean) {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  useWheelScrollsSideways(ref);
   const panel = layoutStrip(stored, FUYU_ROWS);
   const height = cellsToPx(FUYU_ROWS);
   const scale = room ? Math.min(1, room.width / cellsToPx(FUYU_COLUMNS), room.height / (height + FUYU_BOARD_TOP_PX)) : 1;
   const fit = scale > 0 ? scale : 1;
   const visible = room ? room.width / fit : cellsToPx(FUYU_COLUMNS);
   const right = stripRightPx(panel);
+  const pageColumns = Math.max(1, Math.floor((visible + GRID_GAP_PX) / STEP_PX));
+  const paged = panel.mode === "grid" && !editing && panel.items.length > 0;
+  const columns = Math.max(pageColumns, Math.ceil((right + GRID_GAP_PX) / STEP_PX) + (editing ? 1 : 0));
   const width =
     panel.mode === "free"
       ? Math.max(visible, right + (editing ? STEP_PX : 0))
-      : cellsToPx(Math.max(Math.floor((visible + GRID_GAP_PX) / STEP_PX), Math.ceil((right + GRID_GAP_PX) / STEP_PX) + (editing ? 1 : 0)));
+      : cellsToPx(paged ? Math.ceil(columns / pageColumns) * pageColumns : columns);
+  const pages = paged ? Math.ceil(columns / pageColumns) : 0;
+  useWheelScrollsSideways(ref, paged ? pageColumns * STEP_PX * fit : null);
   const board: Board = { width, height };
-  return { ref, scale: fit, board, panel };
+  return { ref, scale: fit, board, panel, pages, pageStepPx: pageColumns * STEP_PX };
 }
 
 function boardPoint(grid: HTMLElement | null, area: HTMLElement | null, drag: PickerDrag): { x: number; y: number } | null {
@@ -89,7 +93,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const { panels, save } = useCustomPanels();
   const library = useIslandWidgets();
   const editing = usePanelEditing() === panelId;
-  const { ref, scale, board, panel } = useStrip(fuyuPanel(panels), editing);
+  const { ref, scale, board, panel, pages, pageStepPx } = useStrip(fuyuPanel(panels), editing);
   const empty = panel.items.length === 0;
   const gridRef = useRef<HTMLDivElement>(null);
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
@@ -141,7 +145,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
       data-window-drag={editing ? "false" : undefined}
       onPointerDown={editing ? undefined : onPointerDown}
     >
-      <div className="custom-panel__scroll" ref={ref}>
+      <div className={pages > 0 ? "custom-panel__scroll custom-panel__scroll--paged" : "custom-panel__scroll"} ref={ref}>
         {empty ? (
           <div className="custom-panel__empty">
             <p>{t.empty}</p>
@@ -151,6 +155,9 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
         ) : (
           <div className="custom-panel__zoom" style={{ zoom: scale }}>
             <PanelBoard panel={panel} library={library} editing={editing} scale={scale} board={board} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
+            {Array.from({ length: pages }, (_, page) => (
+              <span key={page} className="custom-panel__snap" style={{ left: page * pageStepPx }} aria-hidden="true" />
+            ))}
           </div>
         )}
       </div>
