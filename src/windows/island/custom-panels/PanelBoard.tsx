@@ -4,7 +4,7 @@ import { useBoxDrag, type BoxDragKind } from "../../../components/island-widget/
 import { SlotView } from "../../../features/plugin-kernel/SlotView";
 import type { WidgetLibrary } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { boardHeightPx, GRID_CELL_PX, GRID_COLUMNS, GRID_GAP_PX, itemBoxPx, nextPanelSize, reorderPanelItem, resizePanelItem, sizeCells, type CustomPanel, type PanelSize } from "../../../lib/settings/customPanels";
+import { boardHeightPx, GRID_CELL_PX, GRID_GAP_PX, itemBoxPx, layoutGrid, nextPanelSize, reorderPanelItem, resizePanelItem, sizeCells, type CustomPanel, type PanelSize } from "../../../lib/settings/customPanels";
 import { MOTION_MEDIUM_MS } from "../../../lib/theme/motionTokens";
 import { widgetSlot } from "../slots/widget";
 import { draggedTo, freeTarget, keptInside, previewOf, type DragArea, type IncomingWidget } from "./boardDrag";
@@ -21,11 +21,11 @@ function sizeLabel(size: PanelSize) {
   return `${cols}×${rows}`;
 }
 
-function GridSlots({ height }: { height: number }) {
+function GridSlots({ height, columns }: { height: number; columns: number }) {
   const step = GRID_CELL_PX + GRID_GAP_PX;
   const rows = Math.max(1, Math.floor((height + GRID_GAP_PX) / step));
-  return Array.from({ length: rows * GRID_COLUMNS }, (_, at) => (
-    <span key={at} className="custom-panel__slot" style={{ left: (at % GRID_COLUMNS) * step, top: Math.floor(at / GRID_COLUMNS) * step, width: GRID_CELL_PX, height: GRID_CELL_PX }} aria-hidden="true" />
+  return Array.from({ length: rows * columns }, (_, at) => (
+    <span key={at} className="custom-panel__slot" style={{ left: (at % columns) * step, top: Math.floor(at / columns) * step, width: GRID_CELL_PX, height: GRID_CELL_PX }} aria-hidden="true" />
   ));
 }
 
@@ -52,6 +52,7 @@ type PanelBoardProps = {
   editing: boolean;
   scale: number;
   width: number;
+  columns: number;
   area: DragArea | null;
   incoming: IncomingWidget | null;
   held: HeldWidget | null;
@@ -61,7 +62,7 @@ type PanelBoardProps = {
   onRemove: (widget: string, name: string) => void;
 };
 
-export function PanelBoard({ panel, library, editing, scale, width, area, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
+export function PanelBoard({ panel, library, editing, scale, width, columns, area, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
   const t = useTranslation().islandWidgets.panel;
   const free = panel.mode === "free";
   const [settle, setSettle] = useSettle();
@@ -76,7 +77,7 @@ export function PanelBoard({ panel, library, editing, scale, width, area, incomi
       const drop = keptInside(panel, released, area, width);
       const item = panel.items.find((candidate) => candidate.widget === drop.widget);
       if (!item) return;
-      const next = draggedTo(panel, drop, width);
+      const next = layoutGrid(draggedTo(panel, drop, width), columns);
       const placed = next.items.find((candidate) => candidate.widget === drop.widget);
       if (drop.kind === "move" && placed) {
         const from = itemBoxPx(panel, item);
@@ -105,14 +106,14 @@ export function PanelBoard({ panel, library, editing, scale, width, area, incomi
     onChange(reorderPanelItem(panel, item.widget, before));
   };
   const drag = rawDrag && keptInside(panel, rawDrag, area, width);
-  const shown = previewOf(panel, drag, incoming, width);
+  const shown = layoutGrid(previewOf(panel, drag, incoming, width), columns);
   const target = drag ? freeTarget(panel, drag, width) : null;
   const last = panel.items.length - 1;
   const height = editing ? Math.max(boardHeightPx(shown), area?.bottom ?? 0) : boardHeightPx(shown);
 
   return (
     <div className="custom-panel__grid" ref={gridRef} style={{ width, height }} data-mode={panel.mode} data-editing={editing || undefined}>
-      {editing && !free ? <GridSlots height={height} /> : null}
+      {editing && !free ? <GridSlots height={height} columns={columns} /> : null}
       {target?.guideX != null ? <span className="custom-panel__guide" data-axis="x" style={{ left: target.guideX }} aria-hidden="true" /> : null}
       {target?.guideY != null ? <span className="custom-panel__guide" data-axis="y" style={{ top: target.guideY }} aria-hidden="true" /> : null}
       {shown.items.map((item, order) => {

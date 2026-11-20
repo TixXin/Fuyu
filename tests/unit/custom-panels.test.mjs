@@ -8,7 +8,9 @@ import {
   FUYU_PAGE_ID,
   fuyuPanel,
   fuyuPanels,
+  gridColumnsFor,
   gridRows,
+  layoutGrid,
   insertIndexAt,
   movePanelItemTo,
   nextPanelSize,
@@ -172,4 +174,12 @@ test("in a free panel a widget put down on others pushes them down instead of co
   assert.deepEqual([at("c").x, at("c").y], [0, 32]);
   panel = stretchFreeItem(panel, "b", 31, 40);
   assert.deepEqual([at("a").y, at("c").y], [41, 57]);
+});
+
+test("a grid panel uses as many columns as the panel is wide", () => {
+  assert.equal(gridColumnsFor(504), 4);
+  assert.equal(gridColumnsFor(760), 6);
+  assert.equal(gridColumnsFor(300), 4);
+  const panel = layoutGrid(addPanelItem(addPanelItem(addPanelItem(empty, "a", "m"), "b", "m"), "c", "m"), 6);
+  assert.deepEqual(boxes(panel), [["a", 0, 0], ["b", 2, 0], ["c", 4, 0]]);
 });

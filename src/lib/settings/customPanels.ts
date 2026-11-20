@@ -41,7 +41,7 @@ export type CellBox = { col: number; row: number; cols: number; rows: number };
 
 export function cellBox(item: PanelItem): CellBox {
   const { cols, rows } = CELLS[item.size];
-  return { col: Math.min(Math.max(0, Math.round(item.x / STEP)), GRID_COLUMNS - cols), row: Math.max(0, Math.round(item.y / STEP)), cols, rows };
+  return { col: Math.max(0, Math.round(item.x / STEP)), row: Math.max(0, Math.round(item.y / STEP)), cols, rows };
 }
 
 function placed(widget: string, size: PanelSize, col: number, row: number): PanelItem {
@@ -97,20 +97,20 @@ export function saveCustomPanels(panels: readonly CustomPanel[]) {
 
 const overlaps = (a: CellBox, b: CellBox) => a.col < b.col + b.cols && b.col < a.col + a.cols && a.row < b.row + b.rows && b.row < a.row + a.rows;
 
-function firstFit(taken: readonly CellBox[], size: PanelSize): CellBox {
+function firstFit(taken: readonly CellBox[], size: PanelSize, columns: number): CellBox {
   const { cols, rows } = CELLS[size];
   for (let row = 0; ; row += 1) {
-    for (let col = 0; col + cols <= GRID_COLUMNS; col += 1) {
+    for (let col = 0; col + cols <= Math.max(columns, cols); col += 1) {
       const box = { col, row, cols, rows };
       if (!taken.some((other) => overlaps(box, other))) return box;
     }
   }
 }
 
-export function flowPanelItems(items: readonly Pick<PanelItem, "widget" | "size">[]): PanelItem[] {
+export function flowPanelItems(items: readonly Pick<PanelItem, "widget" | "size">[], columns = GRID_COLUMNS): PanelItem[] {
   const taken: CellBox[] = [];
   return items.map((item) => {
-    const box = firstFit(taken, item.size);
+    const box = firstFit(taken, item.size, columns);
     taken.push(box);
     return placed(item.widget, item.size, box.col, box.row);
   });
@@ -225,8 +225,14 @@ export function boardHeightPx(panel: CustomPanel): number {
   return panel.mode === "free" ? Math.max(freeHeightPx(panel.items), GRID_CELL_PX) : cellsToPx(Math.max(1, gridRows(panel.items)));
 }
 
-export function boardWidthPx(panel: CustomPanel, freeWidthPx: number): number {
-  return panel.mode === "free" ? Math.max(gridWidthPx, freeWidthPx, freeRightPx(panel.items)) : gridWidthPx;
+export const gridColumnsFor = (widthPx: number) => Math.max(GRID_COLUMNS, Math.floor((widthPx + GRID_GAP_PX) / (GRID_CELL_PX + GRID_GAP_PX)));
+
+export function layoutGrid(panel: CustomPanel, columns: number): CustomPanel {
+  return panel.mode === "grid" ? { ...panel, items: flowPanelItems(panel.items, columns) } : panel;
+}
+
+export function boardWidthPx(panel: CustomPanel, widthPx: number): number {
+  return panel.mode === "free" ? Math.max(gridWidthPx, widthPx, freeRightPx(panel.items)) : cellsToPx(gridColumnsFor(widthPx));
 }
 
 export function setPanelMode(panel: CustomPanel, mode: PanelMode): CustomPanel {

@@ -3,7 +3,7 @@ import { CirclePlus } from "lucide-react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import type { LibraryWidget } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { addPanelItem, boardHeightPx, boardWidthPx, defaultWidgetSize, fuyuPanel, fuyuPanels, GRID_UNIT_PX, PANEL_MODES, removePanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
+import { addPanelItem, boardHeightPx, boardWidthPx, defaultWidgetSize, fuyuPanel, fuyuPanels, GRID_UNIT_PX, gridColumnsFor, layoutGrid, PANEL_MODES, removePanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import { dropIncoming, type DragArea, type IncomingWidget } from "./boardDrag";
@@ -21,7 +21,7 @@ const GRID_TOP_PX = 2;
 
 type Room = { width: number; height: number; rest: number };
 
-function useFitScale(panel: CustomPanel, editing: boolean) {
+function useFitScale(stored: CustomPanel, editing: boolean) {
   const ref = useRef<HTMLDivElement>(null);
   const editingRef = useRef(editing);
   const [room, setRoom] = useState<Room | null>(null);
@@ -40,12 +40,15 @@ function useFitScale(panel: CustomPanel, editing: boolean) {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const width = boardWidthPx(panel, room ? Math.floor(room.rest / GRID_UNIT_PX) * GRID_UNIT_PX : 0);
+  const rest = room ? Math.floor(room.rest / GRID_UNIT_PX) * GRID_UNIT_PX : 0;
+  const columns = gridColumnsFor(rest);
+  const panel = layoutGrid(stored, columns);
+  const width = boardWidthPx(panel, rest);
   const scale = room ? Math.min(1, room.width / width, room.height / (boardHeightPx(panel) + BOARD_MARGIN_PX)) : 1;
   const fit = scale > 0 ? scale : 1;
   const side = room ? (room.width / fit - width) / 2 : 0;
   const area: DragArea | null = room ? { left: -side, top: -GRID_TOP_PX, right: width + side, bottom: room.height / fit - BOARD_MARGIN_PX } : null;
-  return { ref, scale: fit, width, area };
+  return { ref, scale: fit, width, columns, area, panel };
 }
 
 function boardPoint(grid: HTMLElement | null, area: HTMLElement | null, drag: PickerDrag): { x: number; y: number } | null {
@@ -90,9 +93,8 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const { panels, save } = useCustomPanels();
   const library = useIslandWidgets();
   const editing = usePanelEditing() === panelId;
-  const panel = fuyuPanel(panels);
+  const { ref, scale, width, columns, area, panel } = useFitScale(fuyuPanel(panels), editing);
   const empty = panel.items.length === 0;
-  const { ref, scale, width, area } = useFitScale(panel, editing);
   const gridRef = useRef<HTMLDivElement>(null);
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
   const { removed, remember, forget } = useUndoableRemoval();
@@ -150,7 +152,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
           </div>
         ) : (
           <div className="custom-panel__zoom" style={{ zoom: scale }}>
-            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} width={width} area={area} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
+            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} width={width} columns={columns} area={area} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
           </div>
         )}
       </div>
