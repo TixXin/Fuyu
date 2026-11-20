@@ -550,6 +550,17 @@ pub(crate) fn parse_window_track(
     Some((text.to_string(), None))
 }
 
+fn strip_apple_music_album(artist: String, app_label: &str) -> String {
+    if app_label != "Apple Music" {
+        return artist;
+    }
+    let cut = [" — ", " – "].iter().filter_map(|separator| artist.find(separator)).min();
+    match cut.map(|index| artist[..index].trim()) {
+        Some(left) if !left.is_empty() => left.to_string(),
+        _ => artist,
+    }
+}
+
 pub(crate) fn normalize_metadata_track(
     title: Option<String>,
     artist: Option<String>,
@@ -559,6 +570,7 @@ pub(crate) fn normalize_metadata_track(
         return (None, artist);
     };
     let app_label = source_app.map(friendly_app_label).unwrap_or_default();
+    let artist = artist.map(|value| strip_apple_music_album(value, &app_label));
     if artist.as_ref().is_some_and(|value| !value.trim().is_empty()) {
         let cleaned = strip_player_affixes(strip_browser_suffix(&raw_title), &app_label).trim();
         let final_title = if cleaned.is_empty() { raw_title } else { cleaned.to_string() };

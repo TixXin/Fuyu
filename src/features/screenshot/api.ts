@@ -7,6 +7,7 @@ import type { OcrWord } from "./redact";
 import type { PixelRect } from "./selection";
 import { shortcutConfig, type RecordSettings, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import type { Target } from "./targets";
+import type { ScreenshotSource } from "./agentMessage";
 import type { HistoryLines } from "./historySearch";
 
 export const SCREENSHOT_SESSION_EVENT = "screenshot-session";
@@ -225,6 +226,7 @@ export type ScreenshotTaken = {
   path: string;
   thumbnail: string | null;
   saved: boolean;
+  source?: ScreenshotSource | null;
 };
 
 export function listenScreenshotTaken(handler: EventCallback<ScreenshotTaken>) {
@@ -260,8 +262,8 @@ export function dragScreenshot(path: string) {
   return invoke<void>("screenshot_drag", { path });
 }
 
-export function pasteScreenshotToFront(path: string) {
-  return invoke<void>("screenshot_paste_to_front", { path });
+export function pasteScreenshotToFront(path: string, text?: string) {
+  return invoke<void>("screenshot_paste_to_front", { path, ...(text ? { text } : {}) });
 }
 
 export const RECORDING_STATE_EVENT = "recording-state";

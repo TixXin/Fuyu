@@ -1,4 +1,4 @@
-import { formatNumber, formatPlain, parseNumber } from "../format.ts";
+import { formatNumber, formatPlain, parseValue } from "../format.ts";
 import { unitName } from "../names.ts";
 import { text } from "../text.ts";
 import { Field, ResultRow, Select } from "../ui.tsx";
@@ -8,9 +8,10 @@ import type { PrefsApi } from "../usePrefs.ts";
 export function UnitPanel({ api, category }: { api: PrefsApi; category: UnitCategory }) {
   const raw = api.field(`${category}.value`, "1");
   const from = api.prefs.units[category];
-  const value = parseNumber(raw);
+  const value = parseValue(raw);
   const digits = api.prefs.settings.digits;
   const options = UNITS[category].map((unit) => ({ value: unit.id, label: unitName(category, unit.id) }));
+  const pick = (id: string, next: number) => api.update({ units: { ...api.prefs.units, [category]: id }, fields: { [`${category}.value`]: formatPlain(next, digits) } });
   return (
     <div className="fuyu-calc__panel">
       <div className="fuyu-calc__inputs">
@@ -22,7 +23,7 @@ export function UnitPanel({ api, category }: { api: PrefsApi; category: UnitCate
       ) : (
         <div className="fuyu-calc__grid">
           {convertAll(category, value, from).map((item) => (
-            <ResultRow key={item.id} label={unitName(category, item.id)} value={formatNumber(item.value, digits)} copyValue={formatPlain(item.value, digits)} />
+            <ResultRow key={item.id} label={unitName(category, item.id)} value={formatNumber(item.value, digits)} copyValue={formatPlain(item.value, digits)} onPick={() => pick(item.id, item.value)} />
           ))}
         </div>
       )}

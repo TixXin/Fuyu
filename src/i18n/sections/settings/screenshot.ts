@@ -31,6 +31,8 @@ export type SettingsScreenshotText = {
   historyDaysOption: (days: number) => string;
   historyText: string;
   historyTextHint: string;
+  agentSource: string;
+  agentSourceHint: string;
   recordTitle: string;
   recordFps: string;
   recordFpsHint: string;
@@ -102,6 +104,8 @@ export const zhCN: SettingsScreenshotText = {
   historyDaysOption: (days) => `${days} 天`,
   historyText: "识别历史截图里的文字",
   historyTextHint: "存进历史后在本机识字，「截图」页能按图里的文字搜；文字只存在本机，跟着截图一起删。",
+  agentSource: "发给 Agent 时附上来源",
+  agentSourceHint: "截图时前台的应用、窗口标题和浏览器网址，和截图路径一起贴给 Agent。",
   recordTitle: "录屏",
   recordFps: "帧率",
   recordFpsHint: "60 帧更流畅，文件大一些。GIF 固定 15 帧。",
@@ -173,6 +177,8 @@ export const en: SettingsScreenshotText = {
   historyDaysOption: (days) => (days === 1 ? "1 day" : `${days} days`),
   historyText: "Read text in history screenshots",
   historyTextHint: "Reads the text on this computer after a screenshot is kept, so the Screenshots page can search it. The text stays local and goes when the screenshot does.",
+  agentSource: "Say where a screenshot came from",
+  agentSourceHint: "When sending to an agent, also paste the app, window title and browser address that were in front when you took it.",
   recordTitle: "Screen recording",
   recordFps: "Frame rate",
   recordFpsHint: "60 is smoother and makes bigger files. GIFs are always 15.",

@@ -336,3 +336,15 @@ fn pruning_the_history_takes_the_text_of_old_screenshots_and_strays_with_it() {
     assert!(!dir.join("stray.words.json").exists());
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_source_window_is_tidied_and_only_real_web_addresses_are_kept() {
+    use super::source::{tidy, Source};
+    let source = |app: &str, title: Option<&str>, url: Option<&str>| Source { app: app.to_string(), title: title.map(str::to_string), url: url.map(str::to_string) };
+    assert_eq!(tidy("chrome", " Pull  requests\n· GitHub ", Some("github.com/pulls")), Some(source("chrome", Some("Pull requests · GitHub"), Some("https://github.com/pulls"))));
+    assert_eq!(tidy("Safari", "Docs", Some("http://localhost/a")), Some(source("Safari", Some("Docs"), Some("http://localhost/a"))));
+    assert_eq!(tidy("Code", "Code", Some("搜索或输入网址")), Some(source("Code", None, None)), "a title that only repeats the app, and a placeholder in the address bar, are dropped");
+    assert_eq!(tidy("Finder", "", Some("file:///Users/me")), Some(source("Finder", None, None)));
+    assert_eq!(tidy("  ", "Title", None), None, "no app name, no source");
+    assert_eq!(tidy("app", &"x".repeat(500), None).and_then(|source| source.title).map(|title| title.chars().count()), Some(300));
+}

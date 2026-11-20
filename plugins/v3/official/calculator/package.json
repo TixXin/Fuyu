@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/calculator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Expressions, exchange rates, units, dates, number bases, income tax, mortgages, kinship terms and BMI.",
   "keywords": [

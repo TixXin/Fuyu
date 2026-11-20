@@ -23,7 +23,28 @@ export function ScreenshotNotice({ notice }: { notice: ScreenshotNoticeState }) 
       {taken.thumbnail && (
         <img className="screenshot-notice__thumb" src={taken.thumbnail} alt="" title={t.card.dragHint} draggable={false} onPointerDown={notice.drag} />
       )}
-      <span className="screenshot-notice__text">{notice.text}</span>
+      {notice.composing ? (
+        <input
+          className="screenshot-notice__input"
+          value={notice.draft}
+          placeholder={t.card.instructionHint}
+          aria-label={t.card.instruction}
+          spellCheck={false}
+          autoFocus
+          onChange={(event) => notice.write(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              void notice.sendToAgent();
+            } else if (event.key === "Escape") {
+              event.preventDefault();
+              notice.stopComposing();
+            }
+          }}
+        />
+      ) : (
+        <span className="screenshot-notice__text">{notice.text}</span>
+      )}
     </span>
   );
 }
@@ -45,10 +66,11 @@ export function ScreenshotNoticeActions({ notice }: { notice: ScreenshotNoticeSt
       <button
         className="screenshot-notice__action"
         type="button"
-        aria-label={t.card.sendToAgent}
-        title={notice.canSend ? t.card.sendToAgent : t.card.noAgent}
+        aria-label={notice.composing ? t.card.sendNow : t.card.sendToAgent}
+        aria-pressed={notice.composing}
+        title={notice.canSend ? (notice.composing ? t.card.sendNow : t.card.sendToAgent) : t.card.noAgent}
         disabled={!notice.canSend}
-        onClick={stop(() => void notice.sendToAgent())}
+        onClick={stop(() => (notice.composing ? void notice.sendToAgent() : notice.compose()))}
       >
         <Bot size={13} strokeWidth={2} aria-hidden="true" />
       </button>

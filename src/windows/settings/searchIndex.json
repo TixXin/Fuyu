@@ -3237,6 +3237,19 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "截完之后",
+        "title": "发给 Agent 时附上来源",
+        "description": "截图时前台的应用、窗口标题和浏览器网址，和截图路径一起贴给 Agent。"
+      },
+      "en": {
+        "group": "After capturing",
+        "title": "Say where a screenshot came from",
+        "description": "When sending to an agent, also paste the app, window title and browser address that were in front when you took it."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "快捷键",
         "title": "按 PrintScreen 截图",
         "description": "单独按 PrintScreen 时打开浮屿的截图，不再交给系统截图工具。Alt+PrintScreen 等组合键不受影响。"

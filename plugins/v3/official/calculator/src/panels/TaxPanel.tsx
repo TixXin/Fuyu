@@ -1,4 +1,4 @@
-import { formatMoney, parseNumber } from "../format.ts";
+import { formatMoney, parseValue } from "../format.ts";
 import { estimateInsurance, salaryTax } from "../tax.ts";
 import { text } from "../text.ts";
 import { Field, Note, ResultRow } from "../ui.tsx";
@@ -11,12 +11,12 @@ export function TaxPanel({ api }: { api: PrefsApi }) {
   const insuranceText = api.field("tax.insurance");
   const specialText = api.field("tax.special", "0");
   const bonusText = api.field("tax.bonus", "0");
-  const salary = parseNumber(salaryText);
+  const salary = parseValue(salaryText);
   const rate = api.prefs.settings.insuranceRate;
   const estimate = salary === null ? 0 : estimateInsurance(salary, rate);
-  const insurance = insuranceText.trim() ? parseNumber(insuranceText) : estimate;
-  const special = specialText.trim() ? parseNumber(specialText) : 0;
-  const bonus = bonusText.trim() ? parseNumber(bonusText) : 0;
+  const insurance = insuranceText.trim() ? parseValue(insuranceText) : estimate;
+  const special = specialText.trim() ? parseValue(specialText) : 0;
+  const bonus = bonusText.trim() ? parseValue(bonusText) : 0;
   const ready = salary !== null && insurance !== null && special !== null && bonus !== null;
   const result = ready ? salaryTax({ salary, insurance, special, bonus }) : null;
   return (
