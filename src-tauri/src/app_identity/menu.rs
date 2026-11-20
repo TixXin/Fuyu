@@ -1,6 +1,6 @@
 use tauri::{
     menu::{AboutMetadata, Menu, PredefinedMenuItem, Submenu},
-    AppHandle, Manager, Wry,
+    AppHandle, Wry,
 };
 
 use crate::tray::TrayLanguage;
