@@ -168,6 +168,7 @@ export function IslandCollapsedBar({
           onPointerUp={cancelWindowDrag}
           onPointerCancel={cancelWindowDrag}
           onClick={(event) => {
+            if (event.detail > 1) return;
             if (event.detail === 0 || !didDragRef.current) {
               if (preview) {
                 if (preview.action) runIslandAction(preview.action);
@@ -221,6 +222,7 @@ export function IslandCollapsedBar({
       inert={isExpanded}
       onContextMenu={openItemsMenu}
       onClick={(event) => {
+        if (event.detail > 1) return;
         if (event.target === event.currentTarget || (event.target instanceof Element && event.target.hasAttribute(OPENS_BAR))) {
           if (peekLine && !preview) openPeek();
           else onOpenPage(openTarget);

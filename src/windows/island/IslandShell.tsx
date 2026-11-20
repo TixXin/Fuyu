@@ -230,7 +230,7 @@ export function IslandShell({
         style={side ? ({ ...ISLAND_OUTLINE_STYLE, "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : (ISLAND_OUTLINE_STYLE as CSSProperties)}
         aria-label={collapsedLabel}
         onClick={(event) => {
-          if (!isExpanded && event.target === event.currentTarget) {
+          if (!isExpanded && event.detail <= 1 && event.target === event.currentTarget) {
             onOpenPage(homePage);
           }
         }}
