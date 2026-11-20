@@ -14,6 +14,7 @@ mod hotkeys;
 mod long;
 mod output;
 mod pin;
+pub(crate) mod qr;
 mod session;
 mod shortcuts;
 mod source;
@@ -539,6 +540,7 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_shortcut_status,
             crate::screenshot::screenshot_start,
             crate::screenshot::screenshot_find_words,
+            crate::screenshot::qr::screenshot_read_qr,
             crate::screenshot::screenshot_long_bar,
             crate::screenshot::screenshot_long_pause,
             crate::screenshot::screenshot_long_end,

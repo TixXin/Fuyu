@@ -1,12 +1,13 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Download, EyeOff, Pin, Redo2, ScanText, SquareBottomDashedScissors, Trash2, Undo2, X } from "lucide-react";
-import type { ScreenshotAction } from "../../features/screenshot/api";
+import { Check, Download, EyeOff, Pin, QrCode, Redo2, ScanText, SquareBottomDashedScissors, Trash2, Undo2, X } from "lucide-react";
+import type { ScreenshotAction, ScreenshotQrCode } from "../../features/screenshot/api";
 import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, TOOL_KEYS, toolStyles } from "../../features/screenshot/annotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
 import { TOOL_ICONS } from "../../features/screenshot/annotationToolIcons";
 import { useTranslation } from "../../i18n";
 import type { Annotations } from "./useAnnotations";
 import type { AnnotationSelect } from "./useAnnotationSelect";
+import { QrCodePanel } from "./QrCodePanel";
 import "./ScreenshotToolbar.css";
 import { isMacOS } from "../../lib/platform";
 
@@ -36,22 +37,29 @@ export function ScreenshotToolbar({
   annotations,
   select,
   notice,
+  qrCodes,
   onCancel,
   onFinish,
   onRedact,
+  onCopyText,
+  onOpenLink,
 }: {
   area: PixelRect;
   view: Size;
   annotations: Annotations;
   select: AnnotationSelect;
   notice: string | null;
+  qrCodes: readonly ScreenshotQrCode[];
   onCancel: () => void;
   onFinish: (action: ScreenshotAction) => void;
   onRedact: () => void;
+  onCopyText: (text: string) => void;
+  onOpenLink: (url: string) => void;
 }) {
   const t = useTranslation().screenshot;
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [qrOpen, setQrOpen] = useState(false);
   useLayoutEffect(() => {
     const element = box.current;
     if (!element) return;
@@ -112,6 +120,11 @@ export function ScreenshotToolbar({
         <ToolButton label={t.readText} onClick={() => onFinish("text")}>
           <ScanText size={18} />
         </ToolButton>
+        {qrCodes.length > 0 && (
+          <ToolButton label={t.qr.button(qrCodes.length)} active={qrOpen} onClick={() => setQrOpen((open) => !open)}>
+            <QrCode size={18} />
+          </ToolButton>
+        )}
         <ToolButton label={t.pin} onClick={() => onFinish("pin")}>
           <Pin size={18} />
         </ToolButton>
@@ -155,6 +168,7 @@ export function ScreenshotToolbar({
           )}
         </div>
       )}
+      {qrOpen && qrCodes.length > 0 && <QrCodePanel codes={qrCodes} onCopy={onCopyText} onOpen={onOpenLink} />}
       {notice && <div className="screenshot-overlay__notice">{notice}</div>}
     </div>
   );

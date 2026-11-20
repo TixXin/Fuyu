@@ -11,8 +11,10 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 const calls: { command: string; payload: unknown; headers: Record<string, string> }[] = [];
+let qrCodes: { text: string; x: number; y: number; width: number; height: number }[] = [];
 mockIPC((command) => {
   switch (command) {
+    case "screenshot_read_qr": return qrCodes;
     case "screenshot_session": return { id: 1, mode: "region", width: WIDTH, height: HEIGHT, underPointer: true };
     case "screenshot_frame": return new Uint8Array(WIDTH * HEIGHT * 4).map((_, index) => (index % 4 === 3 ? 255 : 128)).buffer;
     case "screenshot_targets": return [];
@@ -74,6 +76,8 @@ async function runChecks() {
     await drag([40, 40], [240, 200]);
     check(document.querySelectorAll(".screenshot-overlay__toolbar button[aria-pressed]").length === 11, "A chosen region gets the toolbar with the eleven annotation tools");
     check(button("撤销（Ctrl+Z）")?.disabled && button("重做（Ctrl+Y）")?.disabled, "Undo and redo start disabled");
+    for (let tries = 0; tries < 50 && !calls.some((call) => call.command === "screenshot_read_qr"); tries += 1) await wait(20);
+    check(calls.some((call) => call.command === "screenshot_read_qr") && !document.querySelector(".screenshot-overlay__toolbar svg.lucide-qr-code"), "The settled selection is checked for QR codes; with none, nothing extra shows");
     await key({ key: "Enter" });
     const plain = last("screenshot_finish");
     check(plain?.headers["x-action"] === "copy" && plain.headers["x-left"] === "40" && plain.headers["x-width"] === "200" && plain.headers["x-height"] === "160", "Enter copies the region");
@@ -238,6 +242,25 @@ async function runChecks() {
     const ended = calls.filter((call) => call.command === "screenshot_long_end");
     check(ended.length === 1 && JSON.stringify(ended[0].payload).includes('"action":"copy"'), "Enter finishes and copies the long picture");
     check(calls.filter((call) => call.command === "screenshot_finish").length === finishes, "…without the overlay's own Enter copying the frozen selection");
+
+    await act(async () => { await emit("screenshot-ended"); });
+    qrCodes = [
+      { text: "https://example.com/some/long/path?with=query", x: 80, y: 80, width: 60, height: 60 },
+      { text: "浮屿 二维码", x: 160, y: 80, width: 60, height: 60 },
+    ];
+    await act(async () => { await emit("screenshot-session", { id: 4, mode: "region", width: WIDTH, height: HEIGHT, underPointer: true }); });
+    for (let tries = 0; tries < 50 && calls.filter((call) => call.command === "screenshot_overlay_ready").length < 4; tries += 1) await wait(20);
+    await drag([60, 60], [260, 200]);
+    for (let tries = 0; tries < 50 && !button("识别到 2 个二维码"); tries += 1) await wait(20);
+    check(button("识别到 2 个二维码"), "With QR codes in the selection the toolbar offers a QR button");
+    await click("识别到 2 个二维码");
+    const items = [...document.querySelectorAll(".screenshot-overlay__qr-item")];
+    check(items.length === 2 && items[0].textContent?.includes("https://example.com/some/long/path?with=query"), "It lists each code with the full link shown before anything opens");
+    check(items[0].textContent?.includes("打开链接") && !items[1].textContent?.includes("打开链接") && items[1].textContent?.includes("复制"), "…a link can be opened or copied, plain text only copied");
+    await act(async () => { items[0].querySelector<HTMLButtonElement>(".screenshot-overlay__qr-button")!.click(); });
+    await wait(20);
+    const opened = calls.find((call) => call.command === "plugin:opener|open_url");
+    check(JSON.stringify(opened?.payload).includes("https://example.com/some/long/path?with=query") && last("screenshot_cancel"), "Open link hands the link to the system browser and ends the screenshot");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } 
 import { Magnifier } from "../../features/screenshot/Magnifier";
 import { annotationArea, autoMosaicAt, textSize, toolForKey } from "../../features/screenshot/annotations";
 import { annotationAt } from "../../features/screenshot/annotationEdit";
-import { cancelScreenshot, findScreenshotWords, finishScreenshot, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
+import { cancelScreenshot, findScreenshotWords, finishScreenshot, openScreenshotLink, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
 import { colorAt } from "../../features/screenshot/picture";
 import { newMosaics, redactionRects } from "../../features/screenshot/redact";
 import { composeArea } from "../../features/screenshot/drawAnnotations";
@@ -38,6 +38,7 @@ import { useMeasure } from "./useMeasure";
 import { useScreenshotFrame } from "./useScreenshotFrame";
 import { capturePointer, GRAB, useSelection, type PointerCoords } from "./useSelection";
 import { useTargets } from "./useTargets";
+import { useQrCodes } from "./useQrCodes";
 import "./ScreenshotOverlay.css";
 
 function useViewSize(): Size {
@@ -77,6 +78,7 @@ export function ScreenshotOverlay() {
   const choosing = chosen === null;
   const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
   const key = layersKey(layers);
+  const qrCodes = useQrCodes(chosen, !dragging && !quickAction(session?.mode) && !leaving && !long.active);
   const target = layers[Math.min(level.key === key ? level.value : 0, layers.length - 1)] ?? null;
   useEffect(() => {
     hovered.current = target;
@@ -347,7 +349,9 @@ export function ScreenshotOverlay() {
       {long.mine && area && <LongShotBar area={area} view={view} long={long} />}
       {select.selected && !leaving && !long.active && select.selected !== editingItem && <AnnotationSelectionBox item={select.selected} scale={scale} showHandles={!select.dragging} />}
       {area && chosen && !dragging && !annotations.drafting && !select.dragging && !quick && !leaving && !long.active && (
-        <ScreenshotToolbar area={area} view={view} annotations={annotations} select={select} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} />
+        <ScreenshotToolbar area={area} view={view} annotations={annotations} select={select} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} qrCodes={qrCodes}
+          onCopyText={(text) => void navigator.clipboard.writeText(text).then(() => setNotice(t.qr.copied))}
+          onOpenLink={(url) => void openScreenshotLink(url).then(() => cancelScreenshot()).catch((error: unknown) => setNotice(errorText(error)))} />
       )}
       {annotations.editing && (
         <AnnotationTextInput

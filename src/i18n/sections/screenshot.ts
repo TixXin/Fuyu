@@ -50,6 +50,7 @@ export type ScreenshotText = {
   color: (hex: string) => string;
   textPlaceholder: string;
   deleteAnnotation: string;
+  qr: { title: string; button: (count: number) => string; link: string; text: string; open: string; copy: string; copied: string };
   pinMenu: {
     copy: string;
     save: string;
@@ -187,6 +188,15 @@ export const zhCN: ScreenshotText = {
   color: (hex) => `颜色 ${hex}`,
   textPlaceholder: "输入文字",
   deleteAnnotation: "删除这个标注（Delete）",
+  qr: {
+    title: "选区里的二维码",
+    button: (count) => (count > 1 ? `识别到 ${count} 个二维码` : "识别到二维码"),
+    link: "网址",
+    text: "文本",
+    open: "打开链接",
+    copy: "复制",
+    copied: "已复制二维码内容",
+  },
   pinMenu: {
     copy: "复制",
     save: "保存",
@@ -324,6 +334,15 @@ export const en: ScreenshotText = {
   color: (hex) => `Colour ${hex}`,
   textPlaceholder: "Type text",
   deleteAnnotation: "Delete this annotation (Delete)",
+  qr: {
+    title: "QR codes in the selection",
+    button: (count) => (count > 1 ? `${count} QR codes found` : "QR code found"),
+    link: "Link",
+    text: "Text",
+    open: "Open link",
+    copy: "Copy",
+    copied: "QR code content copied",
+  },
   pinMenu: {
     copy: "Copy",
     save: "Save",

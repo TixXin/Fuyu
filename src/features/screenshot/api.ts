@@ -1,3 +1,4 @@
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type EventCallback } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -146,6 +147,16 @@ export function endLongShot(action: LongEnding, save?: SaveTarget) {
 
 export function findScreenshotWords(rect: PixelRect) {
   return invoke<OcrWord[][]>("screenshot_find_words", { x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+}
+
+export type ScreenshotQrCode = { text: string; x: number; y: number; width: number; height: number };
+
+export function readScreenshotQr(rect: PixelRect) {
+  return invoke<ScreenshotQrCode[]>("screenshot_read_qr", { x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+}
+
+export function openScreenshotLink(url: string) {
+  return openUrl(url);
 }
 
 export function listenScreenshotSession(handler: EventCallback<ScreenshotSession>) {
