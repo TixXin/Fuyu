@@ -1,6 +1,8 @@
+import { en as dailyEn, zhCN as dailyZh, type DailyWidgetsText } from "./dailyWidgets.ts";
+
 export type IslandWidgetsText = {
   sizes: { bar: string; s: string; m: string; l: string; w: string };
-  groups: { todos: string; calendar: string; music: string; agents: string; usage: string; clipboard: string; shelf: string; timer: string };
+  groups: { todos: string; calendar: string; music: string; agents: string; usage: string; clipboard: string; shelf: string; timer: string; daily: string };
   widgets: {
     todos: string;
     nextMeeting: string;
@@ -12,6 +14,7 @@ export type IslandWidgetsText = {
     shelf: string;
     timer: string;
   };
+  daily: DailyWidgetsText;
   panel: {
     empty: string;
     templateHint: string;
@@ -59,7 +62,7 @@ export type IslandWidgetsText = {
 
 export const zhCN: IslandWidgetsText = {
   sizes: { bar: "条", s: "小", m: "中", l: "大", w: "宽" },
-  groups: { todos: "待办", calendar: "日历", music: "音乐", agents: "AI Agent", usage: "用量", clipboard: "剪贴板", shelf: "文件中转", timer: "计时器" },
+  groups: { todos: "待办", calendar: "日历", music: "音乐", agents: "AI Agent", usage: "用量", clipboard: "剪贴板", shelf: "文件中转", timer: "计时器", daily: "日常" },
   widgets: {
     todos: "今天的待办",
     nextMeeting: "下一个会议",
@@ -71,6 +74,7 @@ export const zhCN: IslandWidgetsText = {
     shelf: "文件中转",
     timer: "计时器",
   },
+  daily: dailyZh,
   panel: {
     empty: "这个面板还没有组件",
     templateHint: "从模板开始，或者点右上角的布局按钮自己加",
@@ -118,7 +122,7 @@ export const zhCN: IslandWidgetsText = {
 
 export const en: IslandWidgetsText = {
   sizes: { bar: "Bar", s: "S", m: "M", l: "L", w: "Wide" },
-  groups: { todos: "Todos", calendar: "Calendar", music: "Music", agents: "AI Agent", usage: "Usage", clipboard: "Clipboard", shelf: "File shelf", timer: "Timer" },
+  groups: { todos: "Todos", calendar: "Calendar", music: "Music", agents: "AI Agent", usage: "Usage", clipboard: "Clipboard", shelf: "File shelf", timer: "Timer", daily: "Daily" },
   widgets: {
     todos: "Today's todos",
     nextMeeting: "Next meeting",
@@ -130,6 +134,7 @@ export const en: IslandWidgetsText = {
     shelf: "File shelf",
     timer: "Timer",
   },
+  daily: dailyEn,
   panel: {
     empty: "This panel has no widgets yet",
     templateHint: "Start from a template, or use the layout button to add your own",

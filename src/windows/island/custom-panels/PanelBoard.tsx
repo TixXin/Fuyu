@@ -11,7 +11,8 @@ import { draggedTo, freeTarget, keptInside, previewOf, type Board, type Incoming
 import { FUYU_ROWS } from "./panelSize";
 import type { LongPressStart } from "./useLongPress";
 
-const CELL_PADDING = 10;
+const CELL_PADDING_X = 12;
+const CELL_PADDING_Y = 11;
 const WIGGLE_PERIOD_MS = 135;
 
 export type HeldWidget = Omit<LongPressStart, "target"> & { widget: string };
@@ -150,7 +151,7 @@ export function PanelBoard({ panel, library, editing, scale, board, incoming, he
           >
             <SlotView
               slot={widgetSlot}
-              props={{ size: item.size, width: box.width - CELL_PADDING * 2, height: box.height - CELL_PADDING * 2 }}
+              props={{ size: item.size, width: box.width - CELL_PADDING_X * 2, height: box.height - CELL_PADDING_Y * 2 }}
               select={(items) => items.filter((entry) => entry.id === item.widget && entry.sizes.includes(item.size)).slice(0, 1)}
             />
             {editing ? (

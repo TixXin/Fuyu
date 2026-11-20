@@ -302,9 +302,38 @@ export function dropNewPanelItem(panel: CustomPanel, widget: string, size: Panel
 export const FUYU_PANEL_ID = "fuyu";
 export const FUYU_PAGE_ID = `${CUSTOM_PANEL_PAGE_PREFIX}${FUYU_PANEL_ID}`;
 
+const DEFAULT_FUYU_ITEMS: readonly (readonly [string, PanelSize])[] = [
+  ["today", "l"],
+  ["next-meeting", "m"],
+  ["todos", "m"],
+  ["music", "m"],
+  ["pomodoro", "s"],
+  ["streak", "s"],
+  ["lyrics", "w"],
+  ["session-count", "m"],
+  ["focus-stats", "s"],
+  ["year-progress", "s"],
+  ["note", "m"],
+  ["clipboard-recent", "m"],
+  ["countdown", "s"],
+  ["world-clock", "s"],
+  ["water", "s"],
+  ["sun", "s"],
+  ["habits", "m"],
+  ["shelf", "s"],
+  ["timer", "s"],
+];
+
+let defaultFuyu: CustomPanel | null = null;
+
+export function defaultFuyuPanel(): CustomPanel {
+  defaultFuyu ??= DEFAULT_FUYU_ITEMS.reduce<CustomPanel>((panel, [widget, size]) => addPanelItem(panel, widget, size), { id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] });
+  return defaultFuyu;
+}
+
 export function fuyuPanel(panels: readonly CustomPanel[]): CustomPanel {
   const found = panels.find((panel) => panel.id === FUYU_PANEL_ID) ?? panels[0];
-  return found ? { ...found, id: FUYU_PANEL_ID } : { id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] };
+  return found ? { ...found, id: FUYU_PANEL_ID } : defaultFuyuPanel();
 }
 
 export function fuyuPanels(panel: CustomPanel): CustomPanel[] {
