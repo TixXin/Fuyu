@@ -49,7 +49,10 @@
   .icons figure { margin: 0; text-align: center; color: var(--sub); font-size: 12px; }
   .icons figure svg { display: block; margin: 0 auto 6px; }
   .menubar { display: flex; margin: 0 0 6px; align-items: center; gap: 14px; height: 30px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; }
-  .menubar svg { height: 16px; width: auto; display: block; }
+  .menubar svg { height: 18px; width: auto; display: block; }
+  .dock { display: flex; gap: 34px; flex-wrap: wrap; padding: 22px 28px; border-radius: 14px; max-width: 1180px; background: linear-gradient(135deg, #b9b4ad, #8f8a86 60%, #a7a29c); }
+  .dock figure { margin: 0; text-align: center; color: #fff; font-size: 13px; font-weight: 600; text-shadow: 0 1px 3px #0006; }
+  .dock svg { display: block; margin: 0 auto 6px; filter: drop-shadow(0 4px 10px #0004); }
 
   .jl { overflow: visible; --c: #f6e3d3; --eye: #1d1b22; --cheek: #ff8fa0; }
   .jl[data-state="running"] { --c: #6db6f4; }
@@ -270,8 +273,11 @@
 <div class="cards" id="more-fun"></div>
 
 <h2>5. 应用图标</h2>
-<p class="note">32 像素及以下用简化版：去掉高光和腮红，眼睛放大。最右边是 Mac 菜单栏的单色模板图。</p>
+<p class="note">深色底上叠几团彩色光晕，水母带一圈柔光，顶部一层玻璃反光和一圈细亮边。三套配色可以切换；32 像素及以下用简化版：去掉高光、腮红和柔光，眼睛放大。最右边是 Mac 菜单栏的单色模板图，比上一版大一点（18 像素高）。</p>
+<div class="group" id="ctl-icon" style="margin-bottom:12px"><span>配色</span></div>
 <div class="icons" id="icons"></div>
+<p class="note" style="margin-top:18px">放在桌面壁纸上，三套并排：</p>
+<div class="dock" id="dock"></div>
 
 <script>
 const DOME = "M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z";
@@ -393,10 +399,32 @@ function cardHtml(item, state) {
   return `<div class="card" data-i="${item.a}"><b>${item.name}</b><div class="stage">${jelly({ ...item, state: item.state || state })}</div><ul>${item.notes.map(([k, v]) => `<li><i>${k}</i>：${v}</li>`).join("")}</ul></div>`;
 }
 
-function iconSvg(size, simple) {
+const PALETTES = {
+  aurora: { name: "极光", base: "#0c0a22", blobs: [["#3d6bff", 14, 54, 34, .9], ["#9b3dff", 34, 22, 30, .75], ["#ff3d7f", 58, 6, 26, .7], ["#ff9a3d", 4, 4, 18, .45]], jelly: ["#f1dcff", "#8fb8ff"], glow: "#9cc0ff", eye: "#211a4d" },
+  ocean: { name: "深海", base: "#03101f", blobs: [["#00c2ff", 10, 58, 34, .8], ["#2d5bff", 52, 40, 32, .75], ["#7a3dff", 50, 2, 28, .6], ["#00ffc8", 2, 8, 18, .3]], jelly: ["#dff6ff", "#6cc4ff"], glow: "#6fd0ff", eye: "#0e2340" },
+  neon: { name: "霓虹", base: "#14061f", blobs: [["#ff2fb3", 58, 56, 34, .75], ["#7a2dff", 6, 50, 32, .85], ["#ff7a3d", 60, 0, 24, .55], ["#3d8bff", 6, 4, 20, .5]], jelly: ["#ffe4f6", "#c08cff"], glow: "#ff9ee0", eye: "#2a1240" },
+};
+
+function iconSvg(size, simple, key) {
   const n = ++uid;
-  const art = `<g transform="translate(9 11.5) scale(.72)"><g fill="url(#l${n})">${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}<path d="${DOME}"/></g>${simple ? `<ellipse cx="24" cy="25" rx="3.6" ry="5" fill="#2b1d5c"/><ellipse cx="40" cy="25" rx="3.6" ry="5" fill="#2b1d5c"/>` : `<ellipse cx="21" cy="13.5" rx="7" ry="3.2" transform="rotate(-28 21 13.5)" fill="#fff" opacity=".6"/><ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fb0" opacity=".75"/><ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fb0" opacity=".75"/><ellipse cx="24" cy="25" rx="2.8" ry="4" fill="#2b1d5c"/><ellipse cx="40" cy="25" rx="2.8" ry="4" fill="#2b1d5c"/>`}</g>`;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64"><defs><linearGradient id="b${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a4cf6"/><stop offset="1" stop-color="#2a15ad"/></linearGradient><linearGradient id="l${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="#f3c6fb"/><stop offset="1" stop-color="#c79bf0"/></linearGradient></defs><rect x="1" y="1" width="62" height="62" rx="15" fill="url(#b${n})"/>${art}</svg>`;
+  const pal = PALETTES[key];
+  const shape = `${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}<path d="${DOME}"/>`;
+  const blobs = pal.blobs.map(([c, x, y, r, o], i) => `<radialGradient id="r${n}-${i}" cx="${x}" cy="${y}" r="${r}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${c}" stop-opacity="${o}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`).join("");
+  const face = simple
+    ? `<ellipse cx="24" cy="25" rx="3.8" ry="5.2" fill="${pal.eye}"/><ellipse cx="40" cy="25" rx="3.8" ry="5.2" fill="${pal.eye}"/>`
+    : `<ellipse cx="20" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 20 14)" fill="#fff" opacity=".7"/><circle cx="29" cy="10.2" r="1.5" fill="#fff" opacity=".8"/><ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fb0" opacity=".75"/><ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fb0" opacity=".75"/><ellipse cx="24" cy="25" rx="2.8" ry="4" fill="${pal.eye}"/><ellipse cx="40" cy="25" rx="2.8" ry="4" fill="${pal.eye}"/><circle cx="25" cy="23.3" r=".95" fill="#fff"/><circle cx="41" cy="23.3" r=".95" fill="#fff"/>`;
+  const glow = simple ? "" : `<g fill="${pal.glow}" opacity=".75" filter="url(#f${n})">${shape}</g>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64"><defs>${blobs}<clipPath id="k${n}"><rect x="1" y="1" width="62" height="62" rx="15"/></clipPath><linearGradient id="l${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="${pal.jelly[0]}"/><stop offset="1" stop-color="${pal.jelly[1]}"/></linearGradient><linearGradient id="g${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f${n}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter></defs><g clip-path="url(#k${n})"><rect width="64" height="64" fill="${pal.base}"/>${pal.blobs.map((_, i) => `<rect width="64" height="64" fill="url(#r${n}-${i})"/>`).join("")}<g transform="translate(9 12) scale(.72)">${glow}<g fill="url(#l${n})">${shape}</g>${face}</g><rect width="64" height="64" fill="url(#g${n})"/></g><rect x="1.4" y="1.4" width="61.2" height="61.2" rx="14.6" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width=".8"/></svg>`;
+}
+
+function renderIcons() {
+  const fig = (svg, label) => `<figure>${svg}${label}</figure>`;
+  const k = view.icon;
+  document.getElementById("icons").innerHTML = [512, 128, 48].map((s) => fig(iconSvg(Math.min(s, 160), false, k), `${s}${s > 160 ? "（缩小显示）" : ""}`)).join("")
+    + fig(iconSvg(32, true, k), "32 简化版") + fig(iconSvg(16, true, k), "16 简化版")
+    + fig(`<div class="menubar" style="background:#e6e6ea;color:#1d1d1f">${monoSvg("#1d1d1f")}<span>周四 12:55</span></div>`, "菜单栏 · 浅色")
+    + fig(`<div class="menubar" style="background:#2a2b31;color:#f2f2f4">${monoSvg("#f2f2f4")}<span>周四 12:55</span></div>`, "菜单栏 · 深色");
+  document.getElementById("dock").innerHTML = Object.keys(PALETTES).map((key) => `<figure>${iconSvg(72, false, key)}<span>${PALETTES[key].name}</span></figure>`).join("");
 }
 
 function monoSvg(color) {
@@ -410,14 +438,9 @@ function build() {
   for (const [id, items] of MORE) document.getElementById(`more-${id}`).innerHTML = items.map((s) => cardHtml(s, "idle")).join("");
   const row = (label, opts, z = "") => `<div class="pillrow"><span>${label}</span><div class="pill${opts.light ? " light" : ""}${z}">${STATES.map((s) => jelly({ a: s.a, face: s.face, fx: s.fx, small: !z, light: opts.light, live: opts.live })).join("")}</div></div>`;
   document.getElementById("pills").innerHTML = row("深色岛", { live: true }) + row("浅色岛", { light: true, live: true }) + row("减少动画", { live: false }) + row("深色岛 · 放大 3 倍", { live: true }, " z3");
-  const fig = (svg, label) => `<figure>${svg}${label}</figure>`;
-  document.getElementById("icons").innerHTML = [512, 128, 48].map((s) => fig(iconSvg(Math.min(s, 160)), `${s}${s > 160 ? "（缩小显示）" : ""}`)).join("")
-    + fig(iconSvg(32, true), "32 简化版") + fig(iconSvg(16, true), "16 简化版")
-    + fig(`<div class="menubar" style="background:#e6e6ea;color:#1d1d1f">${monoSvg("#1d1d1f")}<span>周四 12:55</span></div>`, "菜单栏 · 浅色")
-    + fig(`<div class="menubar" style="background:#2a2b31;color:#f2f2f4">${monoSvg("#f2f2f4")}<span>周四 12:55</span></div>`, "菜单栏 · 深色");
 }
 
-const view = { bg: "light", speed: 1, motion: true };
+const view = { bg: "light", speed: 1, motion: true, icon: "aurora" };
 
 function applySpeed() {
   requestAnimationFrame(() => { for (const a of document.getAnimations()) a.playbackRate = view.speed; });
@@ -438,7 +461,8 @@ function segs(id, options, key) {
 function sync() {
   document.body.dataset.bg = view.bg;
   document.body.classList.toggle("motion", view.motion);
-  for (const [id, key] of [["ctl-bg", "bg"], ["ctl-speed", "speed"], ["ctl-motion", "motion"]]) {
+  renderIcons();
+  for (const [id, key] of [["ctl-bg", "bg"], ["ctl-speed", "speed"], ["ctl-motion", "motion"], ["ctl-icon", "icon"]]) {
     for (const b of document.getElementById(id).querySelectorAll("button")) b.classList.toggle("on", b.dataset.v === String(view[key]));
   }
   applySpeed();
@@ -456,6 +480,7 @@ build();
 segs("ctl-bg", [["light", "浅"], ["dark", "深"]], "bg");
 segs("ctl-speed", [[1, "1×"], [0.5, "0.5×"], [0.25, "0.25×"]], "speed");
 segs("ctl-motion", [[true, "开"], [false, "关"]], "motion");
+segs("ctl-icon", Object.entries(PALETTES).map(([k, v]) => [k, v.name]), "icon");
 sync();
 </script>
 </body>
