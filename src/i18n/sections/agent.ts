@@ -102,6 +102,8 @@ export type AgentText = {
     allowAlwaysHint: (rule: string) => string;
     terminal: string;
     terminalHint: string;
+    toCursor: string;
+    toCursorHint: string;
   };
   question: {
     label: string;
@@ -226,6 +228,8 @@ export const zhCN: AgentText = {
     allowAlwaysHint: (rule) => `本次会话内不再询问：${rule}`,
     terminal: "到终端",
     terminalHint: "交回终端处理，并切换到它的窗口",
+    toCursor: "去 Cursor",
+    toCursorHint: "Cursor 里也会弹出确认，在那里点运行或跳过",
   },
   question: {
     label: "在问你",
@@ -354,6 +358,8 @@ export const en: AgentText = {
     allowAlwaysHint: (rule) => `Don't ask again this session: ${rule}`,
     terminal: "Terminal",
     terminalHint: "Hand it back to the terminal and switch to its window",
+    toCursor: "Open Cursor",
+    toCursorHint: "Cursor also prompts; run or skip it there",
   },
   question: {
     label: "Asks you",

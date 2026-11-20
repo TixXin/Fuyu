@@ -140,7 +140,7 @@ export function CalendarMonth({
             day === selected && "calendar-month__day--selected",
             mark && `calendar-month__day--${mark}`,
           ].filter(Boolean).join(" ");
-          const title = [text.dayTitle(date), lunar ? chinese.lunar : "", lunar ? (chinese.festival ?? chinese.term ?? "") : "", mark === "off" ? text.offLabel : mark === "work" ? text.workLabel : ""]
+          const title = [text.dayTitle(date), lunar ? chinese.lunar : "", lunar ? (chinese.festival ?? chinese.term ?? chinese.memorial ?? "") : "", mark === "off" ? text.offLabel : mark === "work" ? text.workLabel : ""]
             .filter(Boolean).join(" ");
           const button = (
             <button

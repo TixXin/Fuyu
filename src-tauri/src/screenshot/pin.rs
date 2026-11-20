@@ -133,8 +133,8 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
             let _ = old.destroy();
         }
     }
-    let placed = screen::set_window_position(&window, PhysicalPosition::new(at.0 - margin as i32, at.1 - margin as i32))
-        .and_then(|()| screen::set_window_size(&window, PhysicalSize::new(width, height)));
+    let placed = screen::set_window_size(&window, PhysicalSize::new(width, height))
+        .and_then(|()| screen::set_window_position(&window, PhysicalPosition::new(at.0 - margin as i32, at.1 - margin as i32)));
     if let Err(error) = placed {
         pins().remove(&label);
         let _ = window.destroy();
@@ -189,8 +189,8 @@ pub(super) fn zoom(window: &WebviewWindow, scale: f64, anchor: (f64, f64)) -> Re
     let inner = (position.x + margin as i32, position.y + margin as i32);
     let shown = (size.width.saturating_sub(margin * 2), size.height.saturating_sub(margin * 2));
     let (x, y, width, height) = zoomed(inner, shown, picture, scale, anchor);
-    screen::set_window_position(window, PhysicalPosition::new(x - margin as i32, y - margin as i32))?;
-    screen::set_window_size(window, PhysicalSize::new(width + margin * 2, height + margin * 2))
+    screen::set_window_size(window, PhysicalSize::new(width + margin * 2, height + margin * 2))?;
+    screen::set_window_position(window, PhysicalPosition::new(x - margin as i32, y - margin as i32))
 }
 
 pub(super) fn zoomed(position: (i32, i32), size: (u32, u32), picture: (u32, u32), scale: f64, anchor: (f64, f64)) -> (i32, i32, u32, u32) {

@@ -1,13 +1,25 @@
 import "../../src/styles/tokens.css";
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { calendarV1 } from "@fuyu/plugin-services";
 import { I18nProvider } from "../../src/i18n";
+import { windowServices } from "../../src/features/plugin-kernel/services";
 import { TodoIslandPage } from "../../src/features/todos/island/TodoIslandPage";
 import type { TodoPageProps } from "../../src/features/todos/types";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 const TODAY = "2026-11-14";
 const picked: Array<string | null> = [];
+const holiday = (title: string, from: number, days: number) => ({
+  uid: title, title, startMs: from, endMs: from + days * 86_400_000, allDay: true, location: null, meetingLink: null, calendar: "节假日", declined: false, free: true,
+});
+windowServices.provide(calendarV1, {
+  events: async () => ({
+    events: [holiday("调休日（休）", new Date(2026, 10, 19).getTime(), 2), holiday("补班日（班）", new Date(2026, 10, 22).getTime(), 1)],
+    problems: [], fetchedAt: 0, fromMs: 0, toMs: 0, sourceCount: 1,
+  }),
+  sources: async () => ({ sources: [] }),
+}, { owner: "calendar" });
 const noop = () => {};
 
 function Page() {
@@ -63,6 +75,11 @@ try {
   await click(button("dark"));
   const popover = calendar("dark");
   check(popover && popover.parentElement?.id === "dark", "月历画在岛的 stage 里，继承岛的主题");
+  const markOf = (date: string) => day("dark", date).querySelector(".todo-date-calendar__mark")?.textContent ?? "";
+  for (let tries = 0; tries < 50 && !markOf("2026-11-19"); tries++) await act(async () => { await new Promise((done) => setTimeout(done, 20)); });
+  check([markOf("2026-11-19"), markOf("2026-11-20"), markOf("2026-11-22"), markOf("2026-11-21")].join("|") === "休|休|班|"
+    && day("dark", "2026-11-22").getAttribute("aria-label")?.endsWith("调休上班") && day("dark", "2026-11-21").classList.contains("todo-date-calendar__day--weekend"),
+    "节假日订阅的休、班标在日期角上，读屏写出调休上班；周末数字变淡");
   const pop = popover!.getBoundingClientRect();
   const anchor = button("dark").getBoundingClientRect();
   const island = $("dark", ".island")!.getBoundingClientRect();

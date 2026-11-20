@@ -232,8 +232,8 @@ fn contains(monitor: &Monitor, (x, y): (i32, i32)) -> bool {
 fn place_windows(app: &AppHandle, monitors: &[Monitor]) -> Result<(), String> {
     for (index, monitor) in monitors.iter().enumerate() {
         let window = overlay_window(app, &label(index))?;
-        screen::set_window_position(&window, screen::monitor_origin(monitor))?;
         screen::set_window_size(&window, screen::monitor_size(monitor))?;
+        screen::set_window_position(&window, screen::monitor_origin(monitor))?;
     }
     for (name, window) in app.webview_windows() {
         let index = name.strip_prefix(WINDOW_PREFIX).and_then(|index| index.parse::<usize>().ok());

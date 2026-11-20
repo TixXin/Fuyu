@@ -19,7 +19,7 @@
 .calendar-day__lunar {
   margin: -2px 0 4px;
   overflow: hidden;
-  color: rgba(var(--calendar-ink), 0.42);
+  color: rgba(var(--calendar-ink), 0.5);
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -181,14 +181,14 @@
 }
 
 .calendar-empty {
-  flex: 1;
+  flex: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 24px;
-  text-align: center;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(var(--calendar-ink), 0.05);
 }
 
 .calendar-empty__icon {
@@ -196,7 +196,7 @@
 }
 
 .calendar-empty strong {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -210,13 +210,12 @@
 .calendar-empty__actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 8px;
   margin-top: 4px;
 }
 
 .calendar-empty__actions button {
-  height: 30px;
+  height: 28px;
   padding: 0 14px;
   border: 0;
   border-radius: var(--radius-pill);

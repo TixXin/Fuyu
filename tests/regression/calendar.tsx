@@ -138,6 +138,8 @@ try {
   const emptyButtons = [...document.querySelectorAll<HTMLButtonElement>(".calendar-empty__actions button")];
   check(document.querySelector(".calendar-empty strong")?.textContent === "还没有日历" && emptyButtons.map((button) => button.textContent).join("|") === "订阅中国节假日|添加工作日历",
     "没加日历时，日历页说明怎么加，并能一键订阅节假日");
+  check(document.querySelectorAll(".calendar-month__day").length === 42 && document.querySelector(".calendar-month__lunar") && !document.querySelector(".calendar-day__empty"),
+    "没加日历也显示月历和农历，议程里不写「没有日程」");
   const before = added;
   await act(async () => { emptyButtons[0].click(); });
   await until(() => added > before);

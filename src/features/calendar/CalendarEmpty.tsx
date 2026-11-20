@@ -25,7 +25,7 @@ export function CalendarEmpty({ onAdded, onOpenSettings }: { onAdded: () => void
 
   return (
     <div className="calendar-empty">
-      <CalendarPlus className="calendar-empty__icon" size={26} strokeWidth={1.8} aria-hidden="true" />
+      <CalendarPlus className="calendar-empty__icon" size={18} strokeWidth={2} aria-hidden="true" />
       <strong>{text.emptyTitle}</strong>
       <span className="calendar-empty__hint">{text.emptyHint}</span>
       <div className="calendar-empty__actions">
