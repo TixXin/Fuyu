@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
-import { Check, Copy, Images, Pin, Sparkles, Trash2 } from "lucide-react";
+import { Check, Copy, Images, Pin, Search, Sparkles, Trash2, X } from "lucide-react";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { copyHistoryScreenshot, deleteHistoryScreenshot, dragScreenshot, pinHistoryScreenshot, type HistoryItem } from "./api";
 import { screenshotActions, subscribeScreenshotActions, type ScreenshotActionItem } from "./host/actions.mjs";
 import { clockTime, groupByDay, type HistoryDay } from "./historyDays";
+import { HistoryMarks } from "./HistoryMarks";
+import { searchHistory } from "./historySearch";
 import { useScreenshotHistory } from "./useScreenshotHistory";
 import "../../components/list/IslandList.css";
 import "./ScreenshotHistoryPanel.css";
@@ -38,7 +40,10 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const pressed = useRef<{ path: string; x: number; y: number } | null>(null);
-  const days = useMemo(() => groupByDay(items ?? [], now), [items, now]);
+  const [query, setQuery] = useState("");
+  const matches = useMemo(() => searchHistory(items ?? [], query), [items, query]);
+  const hitsOf = useMemo(() => new Map(matches.map((match) => [match.item.path, match.hits])), [matches]);
+  const days = useMemo(() => groupByDay(matches.map((match) => match.item), now), [matches, now]);
   const thisYear = new Date(now).getFullYear();
 
   useEffect(() => {
@@ -86,7 +91,23 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
           {items && items.length > 0 && <span className="island-list-count">{items.length}</span>}
         </div>
       )}
-      {items && items.length === 0 ? (
+      {items && items.length > 0 && (
+        <label className="screenshot-history__search">
+          <Search size={13} aria-hidden="true" />
+          <input type="search" value={query} placeholder={text.search} aria-label={text.search} spellCheck={false} onChange={(event) => setQuery(event.target.value)} />
+          {query && (
+            <button type="button" aria-label={text.clearSearch} title={text.clearSearch} onClick={() => setQuery("")}>
+              <X size={12} aria-hidden="true" />
+            </button>
+          )}
+        </label>
+      )}
+      {items && items.length > 0 && matches.length === 0 ? (
+        <div className="island-list-empty screenshot-history__no-match">
+          <span className="island-list-empty__icon" aria-hidden="true"><Search size={22} strokeWidth={1.8} /></span>
+          <strong>{text.noMatch(query.trim())}</strong>
+        </div>
+      ) : items && items.length === 0 ? (
         <div className="island-list-empty">
           <span className="island-list-empty__icon" aria-hidden="true"><Images size={22} strokeWidth={1.8} /></span>
           <strong>{text.empty}</strong>
@@ -114,6 +135,7 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
                       onClick={() => void copy(item)}
                     >
                       {item.thumbnail ? <img src={item.thumbnail} alt="" loading="lazy" decoding="async" draggable={false} /> : <Images size={22} aria-hidden="true" />}
+                      {item.thumbnail && <HistoryMarks width={item.width} height={item.height} hits={hitsOf.get(item.path) ?? []} />}
                       <span className="screenshot-history__time">{clockTime(item.takenAt)}</span>
                       {copiedPath === item.path && (
                         <span className="screenshot-history__copied" role="status">

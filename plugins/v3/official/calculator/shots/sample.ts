@@ -2,8 +2,9 @@ import { defaultPrefs } from "../src/model.ts";
 
 const prefs = {
   ...defaultPrefs(),
-  tab: "loan",
-  fields: { "loan.kind": "combo", "loan.commercial": "120", "loan.fund": "60", "loan.years": "30" },
+  tab: "calc",
+  history: ["100 美元换成人民币 = 712.35 人民币", "3 斤是多少公斤 = 1.5 公斤", "(1200+350)*12% = 186"],
+  fields: { "calc.expr": "5 km to mi", "calc.ans": "186" },
 };
 
 export default {

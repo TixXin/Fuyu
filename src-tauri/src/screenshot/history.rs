@@ -11,6 +11,7 @@ use std::{
 
 use serde::Serialize;
 
+use super::history_text::{self, HistoryWord};
 use super::output::{self, Picture};
 
 pub(super) const DEFAULT_KEEP_DAYS: u32 = 7;
@@ -19,12 +20,15 @@ pub(super) const KEEP_DAY_CHOICES: [u32; 4] = [1, 7, 30, 90];
 static KEEP_DAYS: AtomicU32 = AtomicU32::new(DEFAULT_KEEP_DAYS);
 static THUMBNAILS: Mutex<Option<HashMap<PathBuf, (SystemTime, String)>>> = Mutex::new(None);
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HistoryItem {
     pub(crate) path: String,
     pub(crate) taken_at: i64,
     pub(crate) thumbnail: Option<String>,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) words: Option<Vec<Vec<HistoryWord>>>,
 }
 
 pub(super) fn set_keep_days(days: u32) {
@@ -79,10 +83,16 @@ pub(super) fn list(dir: &Path) -> Vec<HistoryItem> {
     }
     files
         .into_iter()
-        .map(|(modified, path)| HistoryItem {
-            thumbnail: thumbnail_of(&path, modified),
-            taken_at: millis(modified),
-            path: path.display().to_string(),
+        .map(|(modified, path)| {
+            let (width, height) = image::image_dimensions(&path).unwrap_or((0, 0));
+            HistoryItem {
+                thumbnail: thumbnail_of(&path, modified),
+                width,
+                height,
+                taken_at: millis(modified),
+                words: history_text::read(&path),
+                path: path.display().to_string(),
+            }
         })
         .collect()
 }

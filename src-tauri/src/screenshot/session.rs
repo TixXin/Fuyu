@@ -95,6 +95,7 @@ fn label(index: usize) -> String {
 }
 
 fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
+    super::source::remember();
     super::capture::ensure_access()?;
     let hints_hidden = crate::island::hide_transient_hints(app);
     if crate::clipboard_history::show_popup_in_screenshot(app) || hints_hidden {
@@ -295,7 +296,6 @@ pub(crate) fn targets_for(label: &str) -> Vec<LocalTarget> {
         .unwrap_or_default()
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
 pub(super) fn add_targets(id: u64, more: Vec<Target>) -> Option<Vec<String>> {
     let mut guard = session();
     let session = guard.as_mut().filter(|session| session.id == id)?;

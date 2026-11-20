@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::{
+    sync::{mpsc, Arc},
+    time::Duration,
+};
 
 use windows::{
     core::{factory, Interface, Result},
@@ -199,7 +202,7 @@ pub(crate) struct MonitorCapture {
 }
 
 impl MonitorCapture {
-    pub(crate) fn start<F>(gpu: &Gpu, area: MonitorArea, buffers: u32, interval: i64, on_frame: F) -> Result<Self>
+    pub(crate) fn start<F>(gpu: &Gpu, area: MonitorArea, buffers: u32, interval: i64, cursor: bool, on_frame: F) -> Result<Self>
     where
         F: Fn(GpuFrame, i64) + Send + Sync + 'static,
     {
@@ -225,13 +228,33 @@ impl MonitorCapture {
             frame.Close()
         }))?;
         let session = pool.CreateCaptureSession(&item)?;
-        let _ = session.SetIsCursorCaptureEnabled(true);
+        let _ = session.SetIsCursorCaptureEnabled(cursor);
         let _ = session.SetIsBorderRequired(false);
         let _ = session.SetMinUpdateInterval(TimeSpan { Duration: interval });
         session.StartCapture()?;
         Ok(Self { pool, session, token })
     }
 }
+
+pub(crate) fn grab_screen(x: i32, y: i32, width: u32, height: u32, wait: Duration) -> Option<Vec<u8>> {
+    let _apartment = super::com::WinRtApartment::multithreaded().ok()?;
+    let gpu = Gpu::create().ok()?;
+    let area = monitor_area(x, y, width, height)?;
+    if (area.width, area.height) != (width, height) {
+        return None;
+    }
+    let (sender, receiver) = mpsc::sync_channel(1);
+    let capture = MonitorCapture::start(&gpu, area, 1, ONE_FRAME_INTERVAL, false, move |frame, _| {
+        let _ = sender.try_send(frame);
+    })
+    .ok()?;
+    let frame = receiver.recv_timeout(wait).ok()?;
+    drop(capture);
+    let (read_width, read_height, rgba) = gpu.read_rgba(&frame).ok()?;
+    ((read_width, read_height) == (width, height)).then_some(rgba)
+}
+
+const ONE_FRAME_INTERVAL: i64 = 166_667;
 
 impl Drop for MonitorCapture {
     fn drop(&mut self) {

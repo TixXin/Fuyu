@@ -16,7 +16,7 @@ export function RadixPanel({ api }: { api: PrefsApi }) {
   return (
     <div className="fuyu-calc__panel">
       <div className="fuyu-calc__inputs">
-        <Field label={text.value} value={raw} onChange={(next) => api.setField("radix.value", next)} wide />
+        <Field label={text.value} value={raw} onChange={(next) => api.setField("radix.value", next)} wide math={false} />
         <Select label={text.radix.base} value={String(base)} options={options} onChange={(next) => api.setField("radix.base", next)} />
         <Select label={text.radix.custom} value={String(custom)} options={options} onChange={(next) => api.setField("radix.custom", next)} />
       </div>

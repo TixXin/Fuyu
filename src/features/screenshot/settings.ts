@@ -29,6 +29,8 @@ export type ScreenshotSettings = {
   saveFolder: string;
   cardSeconds: CardSeconds;
   historyDays: HistoryDays;
+  historyText: boolean;
+  agentSource: boolean;
   record: RecordSettings;
   version: 2;
 };
@@ -50,6 +52,8 @@ export const DEFAULT_SCREENSHOT_SETTINGS: ScreenshotSettings = {
   saveFolder: "",
   cardSeconds: 3,
   historyDays: 7,
+  historyText: true,
+  agentSource: true,
   record: { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4", ownWindows: false },
   version: 2,
 };
@@ -89,6 +93,8 @@ export function normalizeScreenshotSettings(value: unknown): ScreenshotSettings 
     saveFolder: folder.length <= MAX_FOLDER_CHARS ? folder : "",
     cardSeconds: saved.version === 2 && (CARD_SECONDS as readonly unknown[]).includes(saved.cardSeconds) ? (saved.cardSeconds as CardSeconds) : DEFAULT_SCREENSHOT_SETTINGS.cardSeconds,
     historyDays: (HISTORY_DAYS as readonly unknown[]).includes(saved.historyDays) ? (saved.historyDays as HistoryDays) : DEFAULT_SCREENSHOT_SETTINGS.historyDays,
+    historyText: saved.historyText !== false,
+    agentSource: saved.agentSource !== false,
     record: recordOf(saved.record),
     version: 2,
   };

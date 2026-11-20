@@ -1,5 +1,5 @@
 import { bmiLevel, bmiLimits, bmiOf, healthyRange, type BmiStandard } from "../bmi.ts";
-import { clamp, formatNumber, parseNumber } from "../format.ts";
+import { clamp, formatNumber, parseValue } from "../format.ts";
 import { text } from "../text.ts";
 import { Field, Segmented } from "../ui.tsx";
 import type { PrefsApi } from "../usePrefs.ts";
@@ -12,8 +12,8 @@ export function BmiPanel({ api }: { api: PrefsApi }) {
   const heightText = api.field("bmi.height", "170");
   const weightText = api.field("bmi.weight", "65");
   const standard: BmiStandard = api.field("bmi.standard", "cn") === "who" ? "who" : "cn";
-  const height = parseNumber(heightText);
-  const weight = parseNumber(weightText);
+  const height = parseValue(heightText);
+  const weight = parseValue(weightText);
   const bmi = height !== null && weight !== null ? bmiOf(height, weight) : null;
   const level = bmi === null ? null : bmiLevel(bmi, standard);
   const [under, over, obese] = bmiLimits(standard);

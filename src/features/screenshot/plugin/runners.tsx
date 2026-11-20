@@ -39,7 +39,7 @@ function ScreenshotRunner({ settings, collapseIsland }: RunnerProps) {
   const peek = useScreenshotText();
   const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
   const card = useScreenshotCard(screenshot.settings.cardSeconds);
-  const notice = useScreenshotNotice(card);
+  const notice = useScreenshotNotice(card, screenshot.settings.agentSource);
   const recording = useRecording();
   usePinsKey();
   useIslandAction("screenshot.start", screenshot.start);

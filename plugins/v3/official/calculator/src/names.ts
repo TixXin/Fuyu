@@ -1,8 +1,8 @@
 import { currentLocale } from "./locale.ts";
 
-type Pair = [zh: string, en: string];
+export type Pair = [zh: string, en: string];
 
-const UNIT_NAMES: Record<string, Pair> = {
+export const UNIT_NAMES: Record<string, Pair> = {
   "length:km": ["千米", "Kilometre"],
   "length:m": ["米", "Metre"],
   "length:dm": ["分米", "Decimetre"],
@@ -98,9 +98,40 @@ const UNIT_NAMES: Record<string, Pair> = {
   "data:GiB": ["GiB（1024³）", "GiB (1024³)"],
   "data:TiB": ["TiB（1024⁴）", "TiB (1024⁴)"],
   "data:PiB": ["PiB（1024⁵）", "PiB (1024⁵)"],
+  "angle:deg": ["度 °", "Degree °"],
+  "angle:rad": ["弧度", "Radian"],
+  "angle:grad": ["百分度", "Gradian"],
+  "angle:arcmin": ["角分 ′", "Arcminute ′"],
+  "angle:arcsec": ["角秒 ″", "Arcsecond ″"],
+  "angle:turn": ["圈", "Turn"],
+  "pressure:Pa": ["帕 Pa", "Pascal Pa"],
+  "pressure:kPa": ["千帕 kPa", "Kilopascal kPa"],
+  "pressure:MPa": ["兆帕 MPa", "Megapascal MPa"],
+  "pressure:hPa": ["百帕 hPa", "Hectopascal hPa"],
+  "pressure:bar": ["巴 bar", "Bar"],
+  "pressure:atm": ["标准大气压 atm", "Atmosphere atm"],
+  "pressure:psi": ["磅力 / 平方英寸 psi", "PSI"],
+  "pressure:mmHg": ["毫米汞柱 mmHg", "mmHg"],
+  "pressure:kgfcm2": ["公斤力 / 平方厘米", "kgf/cm²"],
+  "energy:J": ["焦耳 J", "Joule J"],
+  "energy:kJ": ["千焦 kJ", "Kilojoule kJ"],
+  "energy:MJ": ["兆焦 MJ", "Megajoule MJ"],
+  "energy:cal": ["卡 cal", "Calorie cal"],
+  "energy:kcal": ["千卡（大卡）", "Kilocalorie kcal"],
+  "energy:Wh": ["瓦时 Wh", "Watt-hour Wh"],
+  "energy:kWh": ["千瓦时（度）", "Kilowatt-hour kWh"],
+  "energy:eV": ["电子伏特 eV", "Electronvolt eV"],
+  "energy:BTU": ["英热单位 BTU", "BTU"],
+  "power:W": ["瓦 W", "Watt W"],
+  "power:kW": ["千瓦 kW", "Kilowatt kW"],
+  "power:MW": ["兆瓦 MW", "Megawatt MW"],
+  "power:hp": ["英制马力 hp", "Horsepower hp"],
+  "power:ps": ["公制马力 PS", "Metric horsepower PS"],
+  "power:kcalh": ["千卡 / 时", "kcal per hour"],
+  "power:BTUh": ["BTU / 时", "BTU per hour"],
 };
 
-const CURRENCY_NAMES: Record<string, Pair> = {
+export const CURRENCY_NAMES: Record<string, Pair> = {
   CNY: ["人民币", "Chinese yuan"],
   USD: ["美元", "US dollar"],
   EUR: ["欧元", "Euro"],

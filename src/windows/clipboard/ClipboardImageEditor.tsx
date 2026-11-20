@@ -190,7 +190,7 @@ export function ClipboardImageEditor({ item, onDone }: { item: ClipboardHistoryI
             {crop && <div className="clipboard-image-editor__crop" style={{ left: crop.x, top: crop.y, width: crop.width, height: crop.height }} />}
             {annotations.editing && (
               <AnnotationTextInput
-                at={annotations.editing}
+                at={annotations.editing.at}
                 color={annotations.style.color}
                 size={textSize(annotations.style.level, 1 / editor.fit)}
                 placeholder={t.screenshot.textPlaceholder}

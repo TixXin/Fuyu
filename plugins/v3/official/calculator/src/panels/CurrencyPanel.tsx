@@ -1,6 +1,6 @@
 import type { Context } from "@fuyu/plugin-base";
 import { CURRENCIES, DEFAULT_FROM, convertCurrency } from "../currency.ts";
-import { formatAmount, formatNumber, parseNumber } from "../format.ts";
+import { formatAmount, formatNumber, parseValue } from "../format.ts";
 import { currencyName } from "../names.ts";
 import { locale, text } from "../text.ts";
 import { Field, Note, ResultRow, Select } from "../ui.tsx";
@@ -14,7 +14,7 @@ export function CurrencyPanel({ api, ctx }: { api: PrefsApi; ctx: Context }) {
   const { rates, refresh } = useRates(ctx);
   const raw = api.field("currency.value", "100");
   const from = api.field("currency.from", DEFAULT_FROM);
-  const value = parseNumber(raw);
+  const value = parseValue(raw);
   const options = CURRENCIES.map((code) => ({ value: code, label: `${code} ${currencyName(code)}` }));
   const status = rates.loading ? text.currency.loading : rates.updatedAt ? text.currency.updated(timeText(rates.updatedAt)) : rates.error ? text.currency.failed : text.currency.never;
   return (
@@ -43,6 +43,7 @@ export function CurrencyPanel({ api, ctx }: { api: PrefsApi; ctx: Context }) {
                 value={result === null ? "—" : formatAmount(result)}
                 copyValue={result === null ? "" : formatAmount(result).replace(/,/g, "")}
                 sub={unit === null ? undefined : `1 ${from} = ${formatNumber(unit, 5)}`}
+                onPick={result === null ? undefined : () => api.update({ fields: { "currency.from": code, "currency.value": formatAmount(result).replace(/,/g, "") } })}
               />
             );
           })}

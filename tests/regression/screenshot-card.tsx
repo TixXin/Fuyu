@@ -61,7 +61,7 @@ function Peek() {
 
 function Harness() {
   const card = useScreenshotCard(8);
-  const notice = useScreenshotNotice(card);
+  const notice = useScreenshotNotice(card, true);
   return (
     <div style={{ position: "relative", width: 360, height: 38, borderRadius: 19, overflow: "hidden" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, height: 38, padding: "0 18px", background: "#000" }}>
@@ -99,17 +99,41 @@ async function runChecks() {
     await wait(50);
     check(!card(), "Nothing shows before a screenshot");
 
-    await act(async () => { await emit("screenshot-taken", { path: PATH, thumbnail: THUMB, saved: false }); });
+    await act(async () => { await emit("screenshot-taken", { path: PATH, thumbnail: THUMB, saved: false, source: { app: "Google Chrome", title: "Pull requests", url: "https://github.com/pulls" } }); });
     check(card()?.textContent?.includes("截图已复制") && document.querySelector(".screenshot-notice__thumb"), "A copied screenshot shows the notice with its thumbnail");
 
     await act(async () => { button("放进文件中转")!.click(); });
     await wait(10);
     check(JSON.stringify(called("add_file_shelf_paths")[0]?.payload) === JSON.stringify({ paths: [PATH] }) && card()?.textContent?.includes("已放进文件中转"), "The shelf button puts the file on the file shelf and says so");
 
+    const input = () => document.querySelector<HTMLInputElement>(".screenshot-notice__input");
+    const press = async (key: string) => {
+      await act(async () => { input()!.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true })); });
+      await wait(20);
+    };
     await act(async () => { button("发给 Agent")!.click(); });
-    await wait(20);
-    check(JSON.stringify(focused[0]) === JSON.stringify({ provider: "claude", sessionId: "s1", cwd: "E:\\Projects\\demo", title: "demo" }), "With one local agent session, Send to an agent brings that session forward through agents/v1");
-    check(JSON.stringify(called("screenshot_paste_to_front")[0]?.payload) === JSON.stringify({ path: PATH }) && !card(), "…pastes the file into it and closes the card");
+    await wait(10);
+    check(input() && document.activeElement === input() && input()!.placeholder === "写一句话，回车发送（可不写）" && button("发送")?.getAttribute("aria-pressed") === "true" && !called("screenshot_paste_to_front").length, "Send to an agent first opens a box for a note, without sending yet");
+    await press("Escape");
+    check(!input() && card()?.textContent?.includes("已放进文件中转"), "Esc closes the box and keeps the card");
+    await act(async () => { button("发给 Agent")!.click(); });
+    await wait(10);
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input(), " 这个按钮没对齐，修一下 ");
+      input()!.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await press("Enter");
+    check(JSON.stringify(focused[0]) === JSON.stringify({ provider: "claude", sessionId: "s1", cwd: "E:\\Projects\\demo", title: "demo" }), "With one local agent session, Enter brings that session forward through agents/v1");
+    check(
+      JSON.stringify(called("screenshot_paste_to_front")[0]?.payload) === JSON.stringify({ path: PATH, text: `这个按钮没对齐，修一下\n来源：Google Chrome — Pull requests\nhttps://github.com/pulls\n"${PATH}"` }) && !card(),
+      "…pastes the note, where the screenshot came from and the file into it, and closes the card",
+    );
+
+    await act(async () => { await emit("screenshot-taken", { path: `${PATH}3`, thumbnail: THUMB, saved: false, source: null }); });
+    await act(async () => { button("发给 Agent")!.click(); });
+    await wait(10);
+    await press("Enter");
+    check(JSON.stringify(called("screenshot_paste_to_front")[1]?.payload) === JSON.stringify({ path: `${PATH}3` }) && !card(), "With no note and no source, Enter sends just the file, as before");
 
     await act(async () => { setSessions([]); });
     await wait(10);
