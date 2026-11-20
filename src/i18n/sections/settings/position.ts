@@ -38,7 +38,7 @@ export const zhCN: SettingsPositionText = {
 
 export const en: SettingsPositionText = {
   title: "Position",
-  moveHint: "Press and hold the collapsed island, or the top of the open panel, for a moment, then drag to move it. Drop it near the top, bottom or either side of the screen to snap flush.
+  moveHint: "Press and hold the collapsed island, or the top of the open panel, for a moment, then drag to move it. Drop it near the top, bottom or either side of the screen to snap flush.",
   resetRow: "Back to the default position",
   reset: "Reset",
   resetDone: "Done",
