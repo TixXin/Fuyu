@@ -7,6 +7,8 @@ pub struct PlatformSupport {
     unsupported: &'static [&'static str],
     #[serde(rename = "devBuild")]
     dev_build: bool,
+    #[serde(rename = "storePackage")]
+    store_package: bool,
 }
 
 #[cfg(target_os = "macos")]
@@ -14,15 +16,16 @@ const SUPPORT: PlatformSupport = PlatformSupport {
     os: "macos",
     unsupported: &[],
     dev_build: false,
+    store_package: false,
 };
 
 #[cfg(not(target_os = "macos"))]
-const SUPPORT: PlatformSupport = PlatformSupport { os: "windows", unsupported: &[], dev_build: false };
+const SUPPORT: PlatformSupport = PlatformSupport { os: "windows", unsupported: &[], dev_build: false, store_package: false };
 
 #[tauri::command]
 #[plugin_base::host_service("app.platformSupport")]
 pub fn get_platform_support() -> PlatformSupport {
-    PlatformSupport { dev_build: crate::dev_lane::lane().is_some(), ..SUPPORT }
+    PlatformSupport { dev_build: crate::dev_lane::lane().is_some(), store_package: crate::system::msix::is_packaged(), ..SUPPORT }
 }
 
 macro_rules! tauri_commands {

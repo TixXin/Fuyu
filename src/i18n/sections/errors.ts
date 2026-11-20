@@ -105,6 +105,10 @@ export type ErrorCode =
   | "coexist.devOnly"
   | "coexist.save"
   | "shortcut.update"
+  | "startup.task"
+  | "startup.disabledByUser"
+  | "startup.disabledByPolicy"
+  | "startup.enabledByPolicy"
   | "shortcut.timeout"
   | "shortcut.taken"
   | "calendar.save"
@@ -480,6 +484,10 @@ export const zhCN: ErrorsText = {
     "coexist.devOnly": "只有开发版有这个切换。",
     "coexist.save": "没能保存这个选择。",
     "shortcut.update": "无法更新快捷键。",
+    "startup.task": "读写商店版的开机自启设置失败。",
+    "startup.disabledByUser": "开机自启在任务管理器里被关掉了，请到任务管理器的「启动应用」里重新启用浮屿。",
+    "startup.disabledByPolicy": "开机自启被组织的策略禁用了。",
+    "startup.enabledByPolicy": "开机自启由组织的策略开启，这里关不掉。",
     "shortcut.timeout": "快捷键更新超时。",
     "shortcut.taken": ({ shortcut }) => `快捷键 ${shortcut} 已被占用或无法注册。`,
     "calendar.save": "无法保存日历设置。",
@@ -852,6 +860,10 @@ export const en: ErrorsText = {
     "coexist.devOnly": "Only a development build has this switch.",
     "coexist.save": "Could not save the choice.",
     "shortcut.update": "Could not change the shortcut.",
+    "startup.task": "Could not read or change the startup setting of the Microsoft Store app.",
+    "startup.disabledByUser": "Launch at startup was turned off in Task Manager. Turn Fuyu back on under Startup apps there.",
+    "startup.disabledByPolicy": "Launch at startup is turned off by your organization's policy.",
+    "startup.enabledByPolicy": "Launch at startup is turned on by your organization's policy and can't be turned off here.",
     "shortcut.timeout": "Changing the shortcut took too long.",
     "shortcut.taken": ({ shortcut }) => `The shortcut ${shortcut} is taken or cannot be registered.`,
     "calendar.save": "Could not save the calendar settings.",

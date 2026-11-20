@@ -42,7 +42,7 @@ export type JsonValue = number | string | boolean | Array<JsonValue> | { [key in
 
 export type NowPlaying = { available: boolean, playing: boolean, audible: boolean, title: string | null, artist: string | null, album: string | null, sourceApp: string | null, sourceFrontmost: boolean, positionMs: number, durationMs: number, canSeek: boolean, canNext: boolean, canPrevious: boolean, updatedAt: number, };
 
-export type PlatformSupport = { os: string, unsupported: Array<string>, devBuild: boolean, };
+export type PlatformSupport = { os: string, unsupported: Array<string>, devBuild: boolean, storePackage: boolean, };
 
 export type PluginHotkeyBindings = Array<PluginHotkeySpec>;
 

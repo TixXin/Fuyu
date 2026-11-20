@@ -1,4 +1,4 @@
-import { LOCALE_CODES, LOCALE_LABELS, isLocaleCode, useTranslation, type LocaleCode } from "../../../i18n";
+import { LOCALE_CODES, LOCALE_LABELS, isLocaleCode, useErrorText, useTranslation, type LocaleCode } from "../../../i18n";
 import { isMacOS, useDevBuild } from "../../../lib/platform";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
@@ -10,6 +10,7 @@ const LOCALE_OPTIONS = LOCALE_CODES.map((code) => ({ value: code, label: LOCALE_
 
 export function BehaviorSettingsSection({
   launchAtStartup,
+  launchAtStartupError = null,
   trayIconVisible,
   locale,
   onLaunchAtStartupChange,
@@ -17,6 +18,7 @@ export function BehaviorSettingsSection({
   onLocaleChange,
 }: {
   launchAtStartup: boolean;
+  launchAtStartupError?: unknown;
   trayIconVisible: boolean;
   locale: LocaleCode;
   onLaunchAtStartupChange: (enabled: boolean) => void;
@@ -25,11 +27,12 @@ export function BehaviorSettingsSection({
 }) {
   const t = useTranslation();
   const devBuild = useDevBuild();
+  const errorText = useErrorText();
   return (
     <SettingsGroup title={t.settings.behavior.title}>
       <SettingsToggleRow
         title={isMacOS ? t.settings.layout.launchAtStartupMac : t.settings.layout.launchAtStartup}
-        description={devBuild ? t.settings.devBuild.launchAtStartupOff : undefined}
+        description={devBuild ? t.settings.devBuild.launchAtStartupOff : launchAtStartupError === null ? undefined : errorText(launchAtStartupError)}
         checked={launchAtStartup}
         disabled={devBuild}
         onChange={onLaunchAtStartupChange}

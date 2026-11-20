@@ -80,7 +80,7 @@ type Clash = { on(): null };
 defineService<Clash>("demo.clash/v1", { methods: { on: true } });
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
-const supportShape: Same<PlatformSupport, { os: string; unsupported: Array<string>; devBuild: boolean }> = true;
+const supportShape: Same<PlatformSupport, { os: string; unsupported: Array<string>; devBuild: boolean; storePackage: boolean }> = true;
 const supportResult: Same<RustMethods["app.platformSupport"]["result"], PlatformSupport> = true;
 const versionParams: RustMethods["app.version"]["params"] = null;
 // @ts-expect-error app.echo needs its value

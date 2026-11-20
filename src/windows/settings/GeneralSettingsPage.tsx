@@ -30,12 +30,13 @@ type GeneralSectionProps = {
 };
 
 function StartupSection({ locale, onLocaleChange }: GeneralSectionProps) {
-  const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
+  const [launchAtStartup, updateLaunchAtStartup, launchAtStartupError] = useLaunchAtStartup();
   const [trayIconVisible, updateTrayIconVisible] = useTrayIconVisible();
 
   return (
     <BehaviorSettingsSection
       launchAtStartup={launchAtStartup}
+      launchAtStartupError={launchAtStartupError}
       trayIconVisible={trayIconVisible}
       locale={locale}
       onLaunchAtStartupChange={updateLaunchAtStartup}
