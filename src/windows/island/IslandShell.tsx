@@ -35,6 +35,7 @@ import "./IslandOutline.css";
 type IslandShellProps = {
   mode: IslandMode;
   page: IslandPage;
+  homePage?: IslandPage;
   popup?: boolean;
   resizeLabel?: string | null;
   appearanceMode: AppearanceMode;
@@ -131,6 +132,7 @@ function useCollapsedPrewarm(isExpanded: boolean) {
 export function IslandShell({
   mode,
   page,
+  homePage = page,
   popup = false,
   resizeLabel = null,
   appearanceMode,
@@ -225,7 +227,7 @@ export function IslandShell({
         aria-label={collapsedLabel}
         onClick={(event) => {
           if (!isExpanded && event.target === event.currentTarget) {
-            onOpenPage(leadPage);
+            onOpenPage(homePage);
           }
         }}
         onPointerEnter={prewarm.wake}
@@ -248,7 +250,7 @@ export function IslandShell({
               label={collapsedLabel}
               agentVisualState={agentVisualState}
               badge={contributed.hints.has("side.badge")}
-              onOpen={() => onOpenPage(lead?.handle ? leadPage : page)}
+              onOpen={() => onOpenPage(lead?.handle ? leadPage : homePage)}
               onWindowDragStart={onWindowDragStart}
             />
           )}
@@ -258,7 +260,7 @@ export function IslandShell({
               hot={sideBubble ? sideHot : null}
               layout={sideLayout}
               probes={sidePlugins.probes}
-              onOpen={() => onOpenPage(page)}
+              onOpen={() => onOpenPage(homePage)}
               onWindowDragStart={onWindowDragStart}
             />
           )}
@@ -317,7 +319,7 @@ export function IslandShell({
             summary={contributed.summary}
             previewing={contributed.preview !== null}
             alert={activeAlert && <AlertPopup alert={activeAlert} sources={NO_SOURCES} />}
-            onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(page))}
+            onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(homePage))}
           />
         )}
         <IslandDragHint />

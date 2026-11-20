@@ -47,7 +47,7 @@ import { useAutoIslandForm } from "./autoIslandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
-import { LINE_PRIORITY, leadLine } from "../../features/plugin-kernel/islandContributions";
+import { LINE_PRIORITY } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { effectiveIslandOpacity } from "./idleDim";
@@ -55,6 +55,8 @@ import { useIdleDim } from "./useIdleDim";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
+import { isPageShown } from "./features";
+import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
@@ -116,6 +118,7 @@ export function IslandApp() {
     setPage,
     openIslandPage,
   });
+  const homePage: IslandPage = isPageShown(FUYU_PAGE_ID, features) ? FUYU_PAGE_ID : page;
   const openPopup = [...popups.values()].find((entry) => entry.open === true);
   const hasOpenPopup = openPopup !== undefined;
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
@@ -196,7 +199,7 @@ export function IslandApp() {
     settings,
     navigation,
     quiet: game.quiet,
-    leadPage: (leadLine(contributedLines, { reserved: true })?.page ?? null) as IslandPage | null,
+    homePage,
     openEnabledPage,
   });
 
@@ -220,6 +223,7 @@ export function IslandApp() {
       <IslandShell
         mode={mode}
         page={page}
+        homePage={homePage}
         popup={popup}
         resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${settings.maxPanelHeight}` : null}
         appearanceMode={settings.appearanceMode}
