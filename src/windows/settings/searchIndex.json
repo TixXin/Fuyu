@@ -3371,12 +3371,12 @@
       "zh-CN": {
         "group": "截图时",
         "title": "快捷键说明",
-        "description": "截图时在屏幕一角列出当前能用的快捷键，选区前后内容不同。截图时按 ? 收起或展开，碰到选区或鼠标时自动变淡；截出来的图里不会有它。"
+        "description": "截图时在屏幕一角列出截图能用的快捷键。截图时按 ? 收起或展开，碰到选区或鼠标时自动变淡；截出来的图里不会有它。"
       },
       "en": {
         "group": "While capturing",
         "title": "Shortcut cheat sheet",
-        "description": "Lists the keys you can use in a corner of the screen while capturing; it changes once a region is chosen. Press ? to collapse or expand it; it fades when the selection or the pointer reaches it, and it never appears in the capture."
+        "description": "Lists the screenshot keys in a corner of the screen while capturing. Press ? to collapse or expand it; it fades when the selection or the pointer reaches it, and it never appears in the capture."
       }
     },
     {
