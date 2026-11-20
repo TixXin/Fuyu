@@ -18,7 +18,7 @@ use crate::win32::{
 use super::{
     audio::Audio,
     format,
-    gif::GifOutput,
+    gif::{GifOutput, Rgba},
     pacing::{Pacer, Step, TICKS_PER_SECOND},
 };
 
@@ -97,9 +97,14 @@ struct Pipeline {
     writer: VideoWriter,
     capture: MonitorCapture,
     audio: Audio,
-    gif: Option<GifOutput>,
+    gif: Option<GifOutput<GpuFrame>>,
     summary: Summary,
     dropped: Arc<AtomicU64>,
+}
+
+fn gif_reader(gpu: &Gpu) -> impl FnMut(GpuFrame) -> Result<Rgba, String> + Send + 'static {
+    let gpu = gpu.clone();
+    move |frame| gpu.read_rgba(&frame).map(|(width, height, pixels)| Rgba { width, height, pixels }).map_err(|error| error.to_string())
 }
 
 fn open(options: &Options, frames: SyncSender<Message>) -> Result<Pipeline, String> {
@@ -118,7 +123,7 @@ fn open(options: &Options, frames: SyncSender<Message>) -> Result<Pipeline, Stri
         Ok(writer) => (writer, true),
         Err(_) => (VideoWriter::create(&gpu, &options.path, &video, false, with_audio).map_err(|error| format!("Could not start the video encoder: {error}"))?, false),
     };
-    let gif = options.gif.clone().map(|path| GifOutput::start(&gpu, path)).transpose()?;
+    let gif = options.gif.clone().map(|path| GifOutput::start(path, TICKS_PER_SECOND, gif_reader(&gpu))).transpose()?;
     let dropped = Arc::new(AtomicU64::new(0));
     let counter = Arc::clone(&dropped);
     let interval = TICKS_PER_SECOND / i64::from(options.fps);
@@ -170,7 +175,7 @@ fn run(options: Options, frames: SyncSender<Message>, messages: Receiver<Message
                     break Err(format!("Could not encode the video: {error}"));
                 }
                 if let Some(gif) = &mut gif {
-                    gif.offer(&frame, stamp);
+                    gif.offer(stamp, || Some(frame.clone()));
                 }
                 summary.frames += 1;
             }
@@ -179,7 +184,7 @@ fn run(options: Options, frames: SyncSender<Message>, messages: Receiver<Message
                     break Err(format!("Could not encode the video: {error}"));
                 }
                 if let Some(gif) = &mut gif {
-                    gif.offer(&frame, stamp);
+                    gif.offer(stamp, || Some(frame.clone()));
                 }
                 summary.repeats += 1;
             }
@@ -207,7 +212,7 @@ fn run(options: Options, frames: SyncSender<Message>, messages: Receiver<Message
         Some((frame, stamp)) => {
             summary.frames += 1;
             if let Some(gif) = &mut gif {
-                gif.offer(&frame, stamp);
+                gif.offer(stamp, || Some(frame.clone()));
             }
             writer.write(&frame, stamp, interval).map_err(|error| format!("Could not encode the video: {error}"))
         }

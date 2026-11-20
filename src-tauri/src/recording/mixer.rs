@@ -8,10 +8,12 @@ const JITTER: i64 = RATE / 500;
 const LAG: i64 = RATE / 5;
 const CHUNK: i64 = RATE / 100;
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) fn frames_at(ticks: i64) -> i64 {
     (i128::from(ticks) * i128::from(RATE) / i128::from(TICKS_PER_SECOND)) as i64
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) fn ticks_at(frames: i64) -> i64 {
     (i128::from(frames) * i128::from(TICKS_PER_SECOND) / i128::from(RATE)) as i64
 }

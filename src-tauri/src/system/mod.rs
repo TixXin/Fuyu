@@ -34,6 +34,16 @@ pub(crate) fn pictures_dir() -> Option<PathBuf> {
     windows_home_dir().ok().map(|home| home.join("Pictures"))
 }
 
+#[cfg(windows)]
+pub(crate) fn videos_dir() -> Option<PathBuf> {
+    crate::win32::known_folder::videos()
+}
+
+#[cfg(not(windows))]
+pub(crate) fn videos_dir() -> Option<PathBuf> {
+    windows_home_dir().ok().map(|home| home.join("Movies"))
+}
+
 #[cfg(not(windows))]
 pub(crate) fn downloads_dir() -> Option<PathBuf> {
     windows_home_dir().ok().map(|home| home.join("Downloads"))

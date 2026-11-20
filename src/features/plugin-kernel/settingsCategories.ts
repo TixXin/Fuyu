@@ -41,7 +41,7 @@ export const BUILTIN_CATEGORIES = [
   { id: "clipboardSnippets", icon: ClipboardList, feature: "clipboard", available: supports("clipboard") },
   { id: "shelf", icon: Inbox, group: "features", feature: "shelf" },
   { id: "screenshot", icon: Crop, group: "features", tabs: ["screenshot", "screenshotRecord"], feature: "screenshot", available: supports("screenshot") },
-  { id: "screenshotRecord", icon: Crop, feature: "screenshot", available: ({ unsupported, mac }) => !mac && !unsupported.has("screenshot") },
+  { id: "screenshotRecord", icon: Crop, feature: "screenshot", available: supports("screenshot") },
   { id: "voiceInput", icon: Mic, group: "features", feature: "voiceInput" },
   { id: "behaviorAlerts", icon: Timer, group: "features", tabs: ["timerAlerts", "behaviorAlerts"] },
   { id: "timerAlerts", icon: Timer, aliases: ["timerBreaks"] },

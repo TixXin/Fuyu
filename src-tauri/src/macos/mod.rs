@@ -1,5 +1,8 @@
 pub(crate) mod accessibility;
 pub(crate) mod appearance;
+pub(crate) mod asset_writer;
+pub(crate) mod audio_samples;
+pub(crate) mod pixel_frames;
 pub(crate) mod apps;
 pub(crate) mod audio;
 pub(crate) mod audio_devices;
@@ -34,6 +37,7 @@ pub(crate) mod process_name;
 pub(crate) mod process_times;
 pub(crate) mod process_tree;
 pub(crate) mod screen_capture;
+pub(crate) mod screen_stream;
 pub(crate) mod session;
 pub(crate) mod sibling_island;
 pub(crate) mod terminal_tabs;

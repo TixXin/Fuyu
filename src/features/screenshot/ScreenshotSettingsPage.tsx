@@ -168,7 +168,7 @@ export function ScreenshotSettingsPage({
     if (folder !== screenshot.saveFolder) setScreenshot({ ...screenshot, saveFolder: folder });
   };
   const props = { settings, onSettingsChange, onOpenShortcuts, screenshot, onScreenshotChange: setScreenshot, takenBy, folderDraft, onFolderDraftChange: setFolderDraft, onSaveFolder: saveFolder };
-  const shown: ScreenshotTab = tab === "screenshotRecord" && !isMacOS ? "screenshotRecord" : "screenshot";
+  const shown: ScreenshotTab = tab === "screenshotRecord" ? "screenshotRecord" : "screenshot";
 
   return (
     <>

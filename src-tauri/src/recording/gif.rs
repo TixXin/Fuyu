@@ -10,14 +10,16 @@ use gifski::{progress::NoProgress, Repeat, Settings};
 use imgref::ImgVec;
 use rgb::RGBA8;
 
-use crate::win32::graphics_capture::{Gpu, GpuFrame};
-
-use super::pacing::TICKS_PER_SECOND;
-
 pub(crate) const GIF_FPS: i64 = 15;
 pub(crate) const GIF_MAX_WIDTH: u32 = 960;
 const GIF_QUALITY: u8 = 90;
 const QUEUE: usize = 8;
+
+pub(crate) struct Rgba {
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) pixels: Vec<u8>,
+}
 
 pub(crate) struct GifRate {
     interval: i64,
@@ -25,8 +27,8 @@ pub(crate) struct GifRate {
 }
 
 impl GifRate {
-    pub(crate) fn new() -> Self {
-        Self { interval: TICKS_PER_SECOND / GIF_FPS, next: None }
+    pub(crate) fn new(ticks_per_second: i64) -> Self {
+        Self { interval: ticks_per_second / GIF_FPS, next: None }
     }
 
     pub(crate) fn take(&mut self, stamp: i64) -> bool {
@@ -39,14 +41,14 @@ impl GifRate {
     }
 }
 
-pub(crate) struct GifOutput {
-    frames: Option<SyncSender<(GpuFrame, i64)>>,
+pub(crate) struct GifOutput<F> {
+    frames: Option<SyncSender<(F, i64)>>,
     thread: Option<JoinHandle<Result<(), String>>>,
     rate: GifRate,
     pub(crate) dropped: u64,
 }
 
-fn encode(gpu: Gpu, path: PathBuf, frames: mpsc::Receiver<(GpuFrame, i64)>) -> Result<(), String> {
+fn encode<F>(path: PathBuf, ticks_per_second: i64, mut read: impl FnMut(F) -> Result<Rgba, String>, frames: mpsc::Receiver<(F, i64)>) -> Result<(), String> {
     let settings = Settings { width: Some(GIF_MAX_WIDTH), height: None, quality: GIF_QUALITY, fast: false, repeat: Repeat::Infinite };
     let (collector, writer) = gifski::new(settings).map_err(|error| error.to_string())?;
     let file = File::create(&path).map_err(|error| format!("Failed to create {}: {error}", path.display()))?;
@@ -60,11 +62,11 @@ fn encode(gpu: Gpu, path: PathBuf, frames: mpsc::Receiver<(GpuFrame, i64)>) -> R
     let mut added = Ok(());
     for (frame, stamp) in frames {
         let start = *first.get_or_insert(stamp);
-        let seconds = (stamp - start) as f64 / TICKS_PER_SECOND as f64;
+        let seconds = (stamp - start) as f64 / ticks_per_second as f64;
         if seconds <= last {
             continue;
         }
-        let (width, height, rgba) = match gpu.read_rgba(&frame) {
+        let Rgba { width, height, pixels: rgba } = match read(frame) {
             Ok(read) => read,
             Err(error) => {
                 added = Err(format!("Could not read a frame for the GIF: {error}"));
@@ -84,25 +86,29 @@ fn encode(gpu: Gpu, path: PathBuf, frames: mpsc::Receiver<(GpuFrame, i64)>) -> R
     added.and(written).and_then(|()| if index == 0 { Err("No frames were recorded for the GIF.".to_string()) } else { Ok(()) })
 }
 
-impl GifOutput {
-    pub(crate) fn start(gpu: &Gpu, path: PathBuf) -> Result<Self, String> {
+impl<F: Send + 'static> GifOutput<F> {
+    pub(crate) fn start(path: PathBuf, ticks_per_second: i64, read: impl FnMut(F) -> Result<Rgba, String> + Send + 'static) -> Result<Self, String> {
         let (frames, received) = mpsc::sync_channel(QUEUE);
-        let gpu = gpu.clone();
         let thread = std::thread::Builder::new()
             .name("fuyu-recording-gif".into())
-            .spawn(move || encode(gpu, path, received))
+            .spawn(move || encode(path, ticks_per_second, read, received))
             .map_err(|error| error.to_string())?;
-        Ok(Self { frames: Some(frames), thread: Some(thread), rate: GifRate::new(), dropped: 0 })
+        Ok(Self { frames: Some(frames), thread: Some(thread), rate: GifRate::new(ticks_per_second), dropped: 0 })
     }
 
-    pub(crate) fn offer(&mut self, frame: &GpuFrame, stamp: i64) {
+    pub(crate) fn offer(&mut self, stamp: i64, frame: impl FnOnce() -> Option<F>) {
         if !self.rate.take(stamp) {
             return;
         }
-        if let Some(frames) = &self.frames {
-            if let Err(TrySendError::Full(_)) = frames.try_send((frame.clone(), stamp)) {
-                self.dropped += 1;
-            }
+        let Some(frames) = &self.frames else {
+            return;
+        };
+        let Some(frame) = frame() else {
+            self.dropped += 1;
+            return;
+        };
+        if let Err(TrySendError::Full(_)) = frames.try_send((frame, stamp)) {
+            self.dropped += 1;
         }
     }
 
