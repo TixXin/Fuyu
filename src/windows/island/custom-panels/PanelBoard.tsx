@@ -1,14 +1,17 @@
-import { useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type Ref } from "react";
 import { ChevronLeft, ChevronRight, MoveDiagonal2, X } from "lucide-react";
-import { snapPx, useBoxDrag, type BoxDrop, type BoxDragKind } from "../../../components/island-widget/useBoxDrag";
+import { snapPx, useBoxDrag, type BoxDrag, type BoxDragKind } from "../../../components/island-widget/useBoxDrag";
 import { SlotView } from "../../../features/plugin-kernel/SlotView";
 import type { WidgetLibrary } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
 import {
   boardHeightPx,
+  dropNewPanelItem,
   GRID_UNIT_PX,
   gridWidthPx,
+  insertIndexAt,
   itemBoxPx,
+  movePanelItemTo,
   nextPanelSize,
   placeFreeItem,
   reorderPanelItem,
@@ -21,20 +24,27 @@ import {
 import { widgetSlot } from "../slots/widget";
 
 const CELL_PADDING = 10;
-const EDIT_ROOM_PX = 64;
 const WIGGLE_PERIOD_MS = 135;
 
-function widgetUnder(drop: BoxDrop): string | null {
-  for (const element of document.elementsFromPoint(drop.clientX, drop.clientY)) {
-    const cell = element.closest<HTMLElement>(".custom-panel__cell[data-widget]");
-    if (cell && cell.dataset.widget !== drop.widget) return cell.dataset.widget ?? null;
-  }
-  return null;
-}
+export type IncomingWidget = { widget: string; name: string; size: PanelSize; x: number; y: number };
 
 function sizeLabel(size: PanelSize) {
   const { cols, rows } = sizeCells(size);
   return `${cols}×${rows}`;
+}
+
+function draggedTo(panel: CustomPanel, drag: Pick<BoxDrag, "widget" | "dx" | "dy">): CustomPanel {
+  const item = panel.items.find((candidate) => candidate.widget === drag.widget);
+  if (!item) return panel;
+  const box = itemBoxPx(panel, item);
+  const index = insertIndexAt(panel, box.left + box.width / 2 + drag.dx, box.top + box.height / 2 + drag.dy, drag.widget);
+  return movePanelItemTo(panel, drag.widget, index);
+}
+
+function previewOf(panel: CustomPanel, drag: BoxDrag | null, incoming: IncomingWidget | null): CustomPanel {
+  if (incoming) return dropNewPanelItem(panel, incoming.widget, incoming.size, incoming.x, incoming.y);
+  if (drag && drag.kind === "move" && panel.mode === "grid") return draggedTo(panel, drag);
+  return panel;
 }
 
 type PanelBoardProps = {
@@ -42,11 +52,13 @@ type PanelBoardProps = {
   library: WidgetLibrary;
   editing: boolean;
   scale: number;
+  incoming: IncomingWidget | null;
+  gridRef: Ref<HTMLDivElement>;
   onChange: (panel: CustomPanel) => void;
   onRemove: (widget: string, name: string) => void;
 };
 
-export function PanelBoard({ panel, library, editing, scale, onChange, onRemove }: PanelBoardProps) {
+export function PanelBoard({ panel, library, editing, scale, incoming, gridRef, onChange, onRemove }: PanelBoardProps) {
   const t = useTranslation().islandWidgets.panel;
   const free = panel.mode === "free";
   const [dropped, setDropped] = useState<string | null>(null);
@@ -63,7 +75,7 @@ export function PanelBoard({ panel, library, editing, scale, onChange, onRemove 
       setDropped(drop.widget);
       const dx = Math.round(drop.dx / GRID_UNIT_PX);
       const dy = Math.round(drop.dy / GRID_UNIT_PX);
-      if (!free) onChange(reorderPanelItem(panel, drop.widget, widgetUnder(drop)));
+      if (!free) onChange(draggedTo(panel, drop));
       else if (drop.kind === "move") onChange(placeFreeItem(panel, drop.widget, item.x + dx, item.y + dy));
       else onChange(stretchFreeItem(panel, drop.widget, item.w + dx, item.h + dy));
     },
@@ -80,19 +92,29 @@ export function PanelBoard({ panel, library, editing, scale, onChange, onRemove 
     const before = delta < 0 ? (panel.items[index - 1]?.widget ?? null) : (panel.items[index + 2]?.widget ?? null);
     onChange(reorderPanelItem(panel, item.widget, before));
   };
-  const height = boardHeightPx(panel) + (editing ? EDIT_ROOM_PX : 0);
+  const shown = previewOf(panel, drag, incoming);
   const last = panel.items.length - 1;
 
   return (
-    <div className="custom-panel__grid" style={{ width: gridWidthPx, height }} data-mode={panel.mode}>
-      {panel.items.map((item, index) => {
-        const box = itemBoxPx(panel, item);
+    <div className="custom-panel__grid" ref={gridRef} style={{ width: gridWidthPx, height: boardHeightPx(shown) }} data-mode={panel.mode}>
+      {shown.items.map((item, order) => {
+        const index = panel.items.findIndex((candidate) => candidate.widget === item.widget);
         const moving = drag?.widget === item.widget ? drag : null;
-        const style = { ...box, zIndex: moving ? panel.items.length + 1 : index + 1, "--wiggle-phase": `${(index * 53) % WIGGLE_PERIOD_MS}ms` } as CSSProperties;
+        const pending = incoming?.widget === item.widget;
+        const original = panel.items[index];
+        const box = itemBoxPx(shown, moving && original ? original : item);
+        const style = { ...box, zIndex: moving ? shown.items.length + 1 : order + 1, "--wiggle-phase": `${(Math.max(0, index) * 53) % WIGGLE_PERIOD_MS}ms` } as CSSProperties;
         if (moving?.kind === "move") style.transform = `translate(${free ? snapPx(moving.dx, GRID_UNIT_PX) : moving.dx}px, ${free ? snapPx(moving.dy, GRID_UNIT_PX) : moving.dy}px)`;
         if (moving?.kind === "stretch") {
           style.width = Math.max(box.width + snapPx(moving.dx, GRID_UNIT_PX), GRID_UNIT_PX * 4);
           style.height = Math.max(box.height + snapPx(moving.dy, GRID_UNIT_PX), GRID_UNIT_PX * 4);
+        }
+        if (pending && incoming) {
+          return (
+            <div key={item.widget} className="custom-panel__cell" style={style} data-widget={item.widget} data-size={item.size} data-pending="true">
+              <span className="custom-panel__pending-name">{incoming.name}</span>
+            </div>
+          );
         }
         const widget = library.find(item.widget);
         const name = widget?.name ?? item.widget;

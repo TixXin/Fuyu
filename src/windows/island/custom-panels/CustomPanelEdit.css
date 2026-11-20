@@ -24,6 +24,19 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
+.custom-panel--editing .custom-panel__cell[data-pending] {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1.5px dashed color-mix(in srgb, var(--color-accent) 70%, transparent);
+  animation: none;
+}
+
+.custom-panel__pending-name {
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.7);
+  font-size: 12px;
+}
+
 @keyframes custom-panel-wiggle {
   from {
     rotate: -0.9deg;
@@ -294,8 +307,14 @@
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
   border: 0;
   border-radius: 11px;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.custom-panel__chip[data-picked] {
+  cursor: grabbing;
+  opacity: 0.45;
 }
 
 .custom-panel__chip:hover {

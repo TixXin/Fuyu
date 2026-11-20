@@ -210,6 +210,36 @@ export function setPanelMode(panel: CustomPanel, mode: PanelMode): CustomPanel {
   return { ...panel, mode, items: flowPanelItems(ordered) };
 }
 
+export function insertIndexAt(panel: CustomPanel, x: number, y: number, skip: string | null): number {
+  const rest = panel.items.filter((item) => item.widget !== skip);
+  for (let index = 0; index < rest.length; index += 1) {
+    const box = itemBoxPx(panel, rest[index]);
+    const inRow = y >= box.top && y < box.top + box.height;
+    if (inRow && x >= box.left && x < box.left + box.width) return x < box.left + box.width / 2 ? index : index + 1;
+    if (y < box.top || (inRow && x < box.left)) return index;
+  }
+  return rest.length;
+}
+
+export function movePanelItemTo(panel: CustomPanel, widget: string, index: number): CustomPanel {
+  const moving = panel.items.find((item) => item.widget === widget);
+  if (!moving) return panel;
+  const rest = panel.items.filter((item) => item !== moving);
+  const at = clamp(Math.round(index), 0, rest.length);
+  if (panel.items[at] === moving) return panel;
+  return reflow(panel, [...rest.slice(0, at), moving, ...rest.slice(at)]);
+}
+
+export function dropNewPanelItem(panel: CustomPanel, widget: string, size: PanelSize, x: number, y: number): CustomPanel {
+  const added = addPanelItem(panel, widget, size);
+  if (added === panel) return panel;
+  if (panel.mode !== "grid") {
+    const box = minBox(size);
+    return placeFreeItem(added, widget, x / GRID_UNIT_PX - box.w / 2, y / GRID_UNIT_PX - box.h / 2);
+  }
+  return movePanelItemTo(added, widget, insertIndexAt(panel, x, y, null));
+}
+
 export const FUYU_PANEL_ID = "fuyu";
 export const FUYU_PAGE_ID = `${CUSTOM_PANEL_PAGE_PREFIX}${FUYU_PANEL_ID}`;
 

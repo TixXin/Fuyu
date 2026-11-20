@@ -4,10 +4,13 @@ import {
   addPanelItem,
   cellBox,
   defaultWidgetSize,
+  dropNewPanelItem,
   FUYU_PAGE_ID,
   fuyuPanel,
   fuyuPanels,
   gridRows,
+  insertIndexAt,
+  movePanelItemTo,
   nextPanelSize,
   panelIdOfPage,
   placeFreeItem,
@@ -138,4 +141,23 @@ test("a template adds its widgets at their sizes and skips the ones that are not
   assert.deepEqual(fun.items.map((item) => item.widget), ["music", "lyrics"]);
   const withWeather = applyPanelTemplate(empty, "fun", (id) => (id === "@fuyu/weather" ? ["s"] : sizes[id] ?? null));
   assert.deepEqual(boxes(withWeather), [["music", 0, 0], ["@fuyu/weather", 2, 0], ["lyrics", 0, 1]]);
+});
+
+const row = () => addPanelItem(addPanelItem(addPanelItem(empty, "a", "m"), "b", "m"), "c", "s");
+
+test("dragging a widget past the middle of another swaps them; short of the middle keeps the order", () => {
+  const panel = row();
+  const past = movePanelItemTo(panel, "a", insertIndexAt(panel, 450, 60, "a"));
+  assert.deepEqual(boxes(past), [["b", 0, 0], ["a", 2, 0], ["c", 0, 1]]);
+  assert.equal(movePanelItemTo(panel, "a", insertIndexAt(panel, 300, 60, "a")), panel);
+});
+
+test("a widget dragged in from the dock lands where it is dropped", () => {
+  const panel = row();
+  assert.deepEqual(boxes(dropNewPanelItem(panel, "d", "s", 300, 180)), [["a", 0, 0], ["b", 2, 0], ["c", 0, 1], ["d", 1, 1]]);
+  assert.deepEqual(boxes(dropNewPanelItem(panel, "d", "s", 20, 60)).map(([widget]) => widget), ["d", "a", "b", "c"]);
+  assert.equal(dropNewPanelItem(panel, "a", "s", 20, 60), panel);
+  const free = dropNewPanelItem(setPanelMode(panel, "free"), "d", "s", 200, 100);
+  const dropped = free.items.at(-1);
+  assert.deepEqual([dropped.widget, dropped.x, dropped.y], ["d", 18, 5]);
 });
