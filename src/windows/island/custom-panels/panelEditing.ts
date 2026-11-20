@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+export const PANEL_EDIT_GROW = { width: 80, height: 96 } as const;
+
 let editing: string | null = null;
 const listeners = new Set<() => void>();
 

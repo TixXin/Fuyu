@@ -22,6 +22,13 @@ export type IslandWidgetsText = {
     addWidget: string;
     removeWidget: (name: string) => string;
     stretchWidget: (name: string) => string;
+    moveLeft: (name: string) => string;
+    moveRight: (name: string) => string;
+    resizeWidget: (name: string) => string;
+    addThis: (name: string) => string;
+    removed: (name: string) => string;
+    undo: string;
+    emptyEditing: string;
     modes: { grid: string; free: string };
     mode: string;
     gridHint: string;
@@ -66,18 +73,25 @@ export const zhCN: IslandWidgetsText = {
   },
   panel: {
     empty: "这个面板还没有组件",
-    templateHint: "从模板开始，或者点「编辑」自己加",
+    templateHint: "从模板开始，或者点右上角的布局按钮自己加",
     templates: { workbench: "工作台", fun: "娱乐" },
     templateDetail: { workbench: "待办 · 会议 · Agent", fun: "音乐 · 歌词 · 天气" },
-    edit: "编辑",
-    done: "完成",
+    edit: "调整布局",
+    done: "完成调整",
     addWidget: "添加组件",
     removeWidget: (name) => `拿掉「${name}」`,
     stretchWidget: (name) => `拉伸「${name}」`,
+    moveLeft: (name) => `「${name}」往前挪`,
+    moveRight: (name) => `「${name}」往后挪`,
+    resizeWidget: (name) => `换「${name}」的大小`,
+    addThis: (name) => `加上「${name}」`,
+    removed: (name) => `拿掉了「${name}」`,
+    undo: "撤销",
+    emptyEditing: "点下面的组件加到面板上",
     modes: { grid: "网格", free: "自己摆" },
     mode: "排版",
-    gridHint: "拖动换顺序，点一下换大小",
-    freeHint: "拖动摆位置，拉右下角改大小",
+    gridHint: "拖动或点箭头换位置 · 自动保存",
+    freeHint: "拖动摆位置，拉右下角改大小 · 自动保存",
     allAdded: "能加的组件都加上了",
     plugin: "插件",
   },
@@ -118,18 +132,25 @@ export const en: IslandWidgetsText = {
   },
   panel: {
     empty: "This panel has no widgets yet",
-    templateHint: "Start from a template, or tap Edit to add your own",
+    templateHint: "Start from a template, or use the layout button to add your own",
     templates: { workbench: "Workbench", fun: "Leisure" },
     templateDetail: { workbench: "Todos · Meeting · Agent", fun: "Music · Lyrics · Weather" },
-    edit: "Edit",
-    done: "Done",
+    edit: "Edit layout",
+    done: "Done editing",
     addWidget: "Add widget",
     removeWidget: (name) => `Remove ${name}`,
     stretchWidget: (name) => `Resize ${name}`,
+    moveLeft: (name) => `Move ${name} earlier`,
+    moveRight: (name) => `Move ${name} later`,
+    resizeWidget: (name) => `Change the size of ${name}`,
+    addThis: (name) => `Add ${name}`,
+    removed: (name) => `Removed ${name}`,
+    undo: "Undo",
+    emptyEditing: "Click a widget below to add it",
     modes: { grid: "Grid", free: "Free" },
     mode: "Layout",
-    gridHint: "Drag to reorder, tap to change size",
-    freeHint: "Drag to move, pull the corner to resize",
+    gridHint: "Drag or use the arrows to reorder · Saved automatically",
+    freeHint: "Drag to move, pull the corner to resize · Saved automatically",
     allAdded: "Every widget is already here",
     plugin: "Plugin",
   },

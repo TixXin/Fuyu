@@ -19,6 +19,7 @@ import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTucking } from "./useIslandTucking";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
+import { PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
 import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
@@ -121,17 +122,19 @@ export function IslandApp() {
   const homePage: IslandPage = isPageShown(FUYU_PAGE_ID, features) ? FUYU_PAGE_ID : page;
   const openPopup = [...popups.values()].find((entry) => entry.open === true);
   const hasOpenPopup = openPopup !== undefined;
+  const panelEditing = usePanelEditing() !== null && !hasOpenPopup;
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
     hasOpenPopup,
     null,
-    panelIslandWidth(settings.panelWidth, settings.expandedScale),
+    panelIslandWidth(settings.panelWidth + (panelEditing ? PANEL_EDIT_GROW.width : 0), settings.expandedScale),
     openPopup?.wide === true,
   );
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
   const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
   const pageIslandHeight = getExpandedIslandHeight({ maxPanelHeight: settings.maxPanelHeight, panel: popups.get(page), popup });
-  const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
+  const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
+  const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight + editGrowHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
   const islandNotice = useIslandNotice({ firstHints, v2Upgrade, layer: layerNotice });
   const isDimmed = useIdleDim({
     enabled: settings.idleDim,

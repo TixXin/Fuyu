@@ -78,16 +78,15 @@
 }
 
 .custom-panel__edit {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.7);
-  font: inherit;
-  font-size: 11.5px;
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: 50%;
   cursor: pointer;
   transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
 }
@@ -95,6 +94,11 @@
 .custom-panel__edit:hover {
   color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.95);
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.13);
+}
+
+.custom-panel__edit[aria-pressed="true"] {
+  color: var(--color-on-accent, #fff);
+  background: var(--color-accent);
 }
 
 .custom-panel__edit:focus-visible {

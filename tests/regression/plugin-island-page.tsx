@@ -127,14 +127,17 @@ async function checkPanelEditing() {
   const panel = () => expandedRoot.querySelector<HTMLElement>(".custom-panel");
   await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__edit")!.click());
   check(panel()?.classList.contains("custom-panel--editing") && panel()?.dataset.windowDrag === "false" && expandedRoot.querySelectorAll(".custom-panel__remove").length === 3
-    && expandedRoot.querySelector(".custom-panel__done"), "点「编辑」进入编辑模式：面板不再拖岛，每个组件有「−」，底部有「完成」");
+    && expandedRoot.querySelectorAll(".custom-panel__strip").length === 3 && expandedRoot.querySelector(".custom-panel__edit")?.getAttribute("aria-pressed") === "true"
+    && expandedRoot.querySelector(".custom-panel__dock .custom-panel__picker"), "点布局按钮进入编辑模式：面板不再拖岛，每个组件有 × 和标签条，底部常驻组件栏");
   const shield = expandedRoot.querySelector<HTMLElement>(".custom-panel__cell[data-widget='next-meeting'] .custom-panel__shield")!;
   await act(async () => { pointer("pointerdown", shield); pointer("pointerup", window); });
   check(storedItems()?.items.find((item) => item.widget === "next-meeting")?.size === "l", "网格面板里点一下组件，换到它的下一档大小");
   await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__cell[data-widget='gone'] .custom-panel__remove")!.click());
-  check(storedItems()?.items.map((item) => item.widget).join() === "todos,next-meeting", "点「−」拿掉组件");
-  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__add")!.click());
-  check(expandedRoot.querySelector(".custom-panel__picker") && !expandedRoot.querySelector(".custom-panel__picker [data-widget='todos']"), "「添加组件」列出还没加的组件");
+  check(storedItems()?.items.map((item) => item.widget).join() === "todos,next-meeting", "点 × 拿掉组件");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__undo button")!.click());
+  check(storedItems()?.items.length === 3 && !expandedRoot.querySelector(".custom-panel__undo"), "点「撤销」把拿掉的组件放回去");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__cell[data-widget='gone'] .custom-panel__remove")!.click());
+  check(expandedRoot.querySelector(".custom-panel__picker [data-widget]") && !expandedRoot.querySelector(".custom-panel__picker [data-widget='todos']"), "组件栏列出还没加的组件");
   await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__modes [role='radio']:not([aria-checked='true'])")!.click());
   check(storedItems()?.mode === "free" && expandedRoot.querySelectorAll(".custom-panel__stretch").length === 2, "切到「自己摆」，组件右下角有拉伸角");
   const free = expandedRoot.querySelector<HTMLElement>(".custom-panel__cell[data-widget='todos'] .custom-panel__shield")!;
@@ -142,8 +145,8 @@ async function checkPanelEditing() {
   await act(async () => { pointer("pointerdown", free, 20, 20); pointer("pointermove", window, 20 + 40 * zoom, 20 + 24 * zoom); pointer("pointerup", window, 20 + 40 * zoom, 20 + 24 * zoom); });
   const moved = (JSON.parse(localStorage.getItem("fuyu-custom-panels")!) as { panels: { items: { widget: string; x: number; y: number }[] }[] }).panels[0].items.find((item) => item.widget === "todos");
   check(moved && moved.x === 5 && moved.y === 3, `自由面板里拖动按 8px 吸附移位置（${moved?.x},${moved?.y}）`);
-  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__done")!.click());
-  check(!panel()?.classList.contains("custom-panel--editing") && !expandedRoot.querySelector(".custom-panel__remove"), "点「完成」退出编辑模式");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__edit")!.click());
+  check(!panel()?.classList.contains("custom-panel--editing") && !expandedRoot.querySelector(".custom-panel__remove") && !expandedRoot.querySelector(".custom-panel__dock"), "再点布局按钮（✓）退出编辑模式");
   check(JSON.parse(localStorage.getItem("fuyu-custom-panels")!).panels.map((item: { id: string }) => item.id).join() === "fuyu", "编辑后存成唯一的 fuyu 面板");
   await setPanels({ version: 1, panels: [{ id: "fuyu", name: "", icon: "star", mode: "grid", items: [] }] });
   const workbench = expandedRoot.querySelector<HTMLButtonElement>(".panel-templates__button[data-template='workbench']");
