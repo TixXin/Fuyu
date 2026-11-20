@@ -594,7 +594,7 @@ fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
     let mut expanded = collapsed;
     expanded.mode = IslandMode::Expanded;
     expanded.collapsed_width = 312.0;
-    expanded.expanded_width = 800.0;
+    expanded.expanded_width = 780.0;
     expanded.is_dimmed = true;
     expanded.corner_radius = 24.0;
     expanded.corner_shape = CornerShape::Round;
@@ -606,6 +606,10 @@ fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
     expanded.expanded_height = 130.0;
     assert!(!stage_geometry_inputs_changed(&collapsed, &expanded));
     assert!(!should_apply_stage_geometry(&collapsed, &expanded, true));
+
+    let mut wider = expanded;
+    wider.expanded_width = 800.0;
+    assert!(stage_geometry_inputs_changed(&collapsed, &wider));
 
     let mut taller = expanded;
     taller.expanded_height = 490.0;
