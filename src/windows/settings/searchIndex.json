@@ -3224,6 +3224,19 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "截完之后",
+        "title": "识别历史截图里的文字",
+        "description": "存进历史后在本机识字，「截图」页能按图里的文字搜；文字只存在本机，跟着截图一起删。"
+      },
+      "en": {
+        "group": "After capturing",
+        "title": "Read text in history screenshots",
+        "description": "Reads the text on this computer after a screenshot is kept, so the Screenshots page can search it. The text stays local and goes when the screenshot does."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "快捷键",
         "title": "按 PrintScreen 截图",
         "description": "单独按 PrintScreen 时打开浮屿的截图，不再交给系统截图工具。Alt+PrintScreen 等组合键不受影响。"

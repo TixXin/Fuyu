@@ -229,6 +229,7 @@
         "saveFolder": "local",
         "cardSeconds": "sync",
         "historyDays": "sync",
+        "historyText": "sync",
         "record": "optional",
         "version": "local"
       }

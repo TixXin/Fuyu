@@ -119,6 +119,12 @@ function AfterSection({ screenshot, onScreenshotChange: setScreenshot, folderDra
           />
         }
       />
+      <SettingsToggleRow
+        title={text.historyText}
+        description={text.historyTextHint}
+        checked={screenshot.historyText}
+        onChange={(historyText) => setScreenshot({ ...screenshot, historyText })}
+      />
     </SettingsGroup>
   );
 }

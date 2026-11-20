@@ -29,6 +29,8 @@ export type SettingsScreenshotText = {
   historyDays: string;
   historyDaysHint: string;
   historyDaysOption: (days: number) => string;
+  historyText: string;
+  historyTextHint: string;
   recordTitle: string;
   recordFps: string;
   recordFpsHint: string;
@@ -98,6 +100,8 @@ export const zhCN: SettingsScreenshotText = {
   historyDays: "截图历史保留",
   historyDaysHint: "复制、保存、贴图过的截图留在浮屿的「截图」页，可以再复制、贴到屏幕上或拖出去；最多 100 张，超过天数的自动删掉。",
   historyDaysOption: (days) => `${days} 天`,
+  historyText: "识别历史截图里的文字",
+  historyTextHint: "存进历史后在本机识字，「截图」页能按图里的文字搜；文字只存在本机，跟着截图一起删。",
   recordTitle: "录屏",
   recordFps: "帧率",
   recordFpsHint: "60 帧更流畅，文件大一些。GIF 固定 15 帧。",
@@ -167,6 +171,8 @@ export const en: SettingsScreenshotText = {
   historyDays: "Keep screenshot history for",
   historyDaysHint: "Screenshots you copied, saved or pinned stay on the island's Screenshots page to copy, pin or drag out again; up to 100, older ones are deleted.",
   historyDaysOption: (days) => (days === 1 ? "1 day" : `${days} days`),
+  historyText: "Read text in history screenshots",
+  historyTextHint: "Reads the text on this computer after a screenshot is kept, so the Screenshots page can search it. The text stays local and goes when the screenshot does.",
   recordTitle: "Screen recording",
   recordFps: "Frame rate",
   recordFpsHint: "60 is smoother and makes bigger files. GIFs are always 15.",

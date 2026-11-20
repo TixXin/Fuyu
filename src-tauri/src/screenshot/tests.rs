@@ -292,3 +292,47 @@ fn the_shortcuts_and_windows_are_the_background_listed_for_screenshot() {
     let names = [super::background::SHORTCUTS.to_owned(), super::background::WINDOWS.to_owned()];
     assert_eq!(screenshot.background.as_deref(), Some(&names[..]));
 }
+
+#[test]
+fn history_text_is_kept_in_units_of_the_picture_and_goes_with_its_screenshot() {
+    use super::history_text::{normalized, orphans, read, remove, words_file, write};
+    use crate::platform::ocr::OcrWord;
+    let word = |text: &str, x: f32, y: f32| OcrWord { text: text.to_string(), x, y, width: 50.0, height: 20.0 };
+    let lines = normalized(vec![vec![word("Hello", 0.0, 10.0), word(" ", 60.0, 10.0), word("世界", 300.0, 10.0)], vec![word("  ", 0.0, 0.0)]], 200, 100);
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0].iter().map(|word| word.text.as_str()).collect::<Vec<_>>(), ["Hello", "世界"]);
+    assert_eq!((lines[0][0].x, lines[0][0].y, lines[0][0].width, lines[0][0].height), (0.0, 0.1, 0.25, 0.2));
+    assert_eq!(lines[0][1].x, 1.0);
+    assert!(normalized(vec![vec![word("x", 0.0, 0.0)]], 0, 10).is_empty());
+
+    let dir = std::env::temp_dir().join(format!("fuyu-screenshot-text-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("temp folder");
+    let png = dir.join("a.png");
+    std::fs::write(&png, b"png").expect("write png");
+    write(&png, &lines).expect("write words");
+    assert_eq!(words_file(&png), dir.join("a.words.json"));
+    assert_eq!(read(&png), Some(lines.clone()));
+    std::fs::write(dir.join("gone.words.json"), b"[]").expect("write orphan");
+    assert_eq!(orphans(&dir), vec![dir.join("gone.words.json")]);
+    assert!(super::history::list(&dir).iter().all(|item| item.path.ends_with(".png")));
+    remove(&png);
+    assert_eq!(read(&png), None);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn pruning_the_history_takes_the_text_of_old_screenshots_and_strays_with_it() {
+    use super::history_text::{read, write};
+    let dir = std::env::temp_dir().join(format!("fuyu-screenshot-prune-text-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("temp folder");
+    let png = dir.join("kept.png");
+    std::fs::write(&png, b"png").expect("write png");
+    write(&png, &[]).expect("write words");
+    std::fs::write(dir.join("stray.words.json"), b"[]").expect("write stray");
+    super::output::prune(&dir);
+    assert_eq!(read(&png), Some(Vec::new()));
+    assert!(!dir.join("stray.words.json").exists());
+    let _ = std::fs::remove_dir_all(&dir);
+}

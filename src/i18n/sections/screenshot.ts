@@ -98,6 +98,9 @@ export type ScreenshotText = {
     date: (year: number | null, month: number, day: number) => string;
     dayCount: (count: number) => string;
     tab: string;
+    search: string;
+    clearSearch: string;
+    noMatch: (query: string) => string;
   };
 };
 
@@ -223,6 +226,9 @@ export const zhCN: ScreenshotText = {
     date: (year, month, day) => `${year ? `${year}年` : ""}${month}月${day}日`,
     dayCount: (count) => `${count} 张`,
     tab: "截图",
+    search: "搜图里的文字",
+    clearSearch: "清除搜索",
+    noMatch: (query) => `没有截图里有「${query}」`,
   },
 };
 
@@ -348,5 +354,8 @@ export const en: ScreenshotText = {
     date: (year, month, day) => new Date(year ?? 2000, month - 1, day).toLocaleDateString("en", year ? { year: "numeric", month: "short", day: "numeric" } : { month: "short", day: "numeric" }),
     dayCount: (count) => (count === 1 ? "1 shot" : `${count} shots`),
     tab: "Screenshots",
+    search: "Search text in screenshots",
+    clearSearch: "Clear search",
+    noMatch: (query) => `No screenshot contains “${query}”`,
   },
 };

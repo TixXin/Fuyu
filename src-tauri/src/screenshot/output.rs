@@ -10,7 +10,7 @@ use image::{
     codecs::png::{CompressionType, FilterType, PngEncoder},
     ExtendedColorType, ImageEncoder,
 };
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use super::clipboard::put_on_clipboard;
 use super::session::PixelRect;
@@ -102,12 +102,22 @@ pub(super) fn keep_png(app: &AppHandle, png: &[u8]) -> Result<PathBuf, String> {
     let dir = screenshots_dir(app).ok_or_else(|| "The app data folder is unavailable.".to_string())?;
     let path = write_png(&dir, png)?;
     thread::spawn(move || prune(&dir));
+    let (indexed, app) = (path.clone(), app.clone());
+    thread::spawn(move || {
+        if super::history_text::index(&indexed) {
+            let _ = app.emit(super::HISTORY_EVENT, ());
+        }
+    });
     Ok(path)
 }
 
 pub(super) fn prune(dir: &Path) {
     let mut files = super::history::png_files(dir);
     for path in stale(&mut files, SystemTime::now(), super::history::keep_for()) {
+        let _ = fs::remove_file(&path);
+        super::history_text::remove(&path);
+    }
+    for path in super::history_text::orphans(dir) {
         let _ = fs::remove_file(path);
     }
 }

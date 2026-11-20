@@ -6,6 +6,7 @@ mod capture;
 #[cfg_attr(target_os = "macos", path = "clipboard_macos.rs")]
 mod clipboard;
 mod history;
+mod history_text;
 #[cfg_attr(target_os = "macos", path = "hotkeys_macos.rs")]
 mod hotkeys;
 mod long;
@@ -63,8 +64,18 @@ pub(crate) fn is_enabled() -> bool {
 }
 
 #[tauri::command]
-pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<shortcuts::ShortcutConfig>>, print_screen: Option<bool>, history_days: Option<u32>) {
+pub async fn screenshot_configure(
+    app: AppHandle,
+    enabled: bool,
+    shortcuts: Option<Vec<shortcuts::ShortcutConfig>>,
+    print_screen: Option<bool>,
+    history_days: Option<u32>,
+    history_text: Option<bool>,
+) {
     hotkeys::configure(enabled, shortcuts, print_screen);
+    if let Some(read) = history_text {
+        history_text::set_enabled(read);
+    }
     if let Some(days) = history_days {
         history::set_keep_days(days);
         output::prune_at_start(&app);
@@ -362,6 +373,7 @@ pub async fn screenshot_history_pin(app: AppHandle, path: String) -> Result<(), 
 pub async fn screenshot_history_delete(app: AppHandle, path: String) -> Result<(), String> {
     let path = history::history_file(&history_dir(&app)?, &path)?;
     std::fs::remove_file(&path).map_err(|error| format!("Failed to delete {}: {error}", path.display()))?;
+    history_text::remove(&path);
     let _ = app.emit(HISTORY_EVENT, ());
     Ok(())
 }
