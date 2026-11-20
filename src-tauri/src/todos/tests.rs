@@ -379,6 +379,16 @@ mod call_tests {
     }
 
     #[test]
+    fn add_takes_an_optional_note_for_todos_on_the_list() {
+        let (todo, _) = call("todos.add", json!({ "title": "x", "note": "![截图](</a b.png>)" })).expect("note");
+        assert_eq!(todo["note"], "![截图](</a b.png>)");
+        let (plain, _) = call("todos.add", json!({ "title": "x", "note": "  " })).expect("blank note");
+        assert!(plain.get("note").is_none());
+        assert!(call("todos.add", json!({ "title": "x", "note": 3 })).is_err());
+        assert!(call("todos.add", json!({ "title": "x", "note": "a".repeat(1001) })).is_err());
+    }
+
+    #[test]
     fn add_refuses_bad_titles_and_dates() {
         for params in [json!({}), json!({ "title": "   " }), json!({ "title": 5 }), json!({ "title": "x".repeat(501) })] {
             assert!(call("todos.add", params).expect_err("title").1.contains("title"));

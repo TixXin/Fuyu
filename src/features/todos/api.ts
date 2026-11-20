@@ -108,3 +108,11 @@ export function getTodoShortcutProblem(): Promise<TodoShortcutProblem | null> {
 export function listenTodoShortcutProblem(handler: (problem: TodoShortcutProblem | null) => void): Promise<UnlistenFn> {
   return listen<TodoShortcutProblem | null>(TODO_SHORTCUT_STATUS_EVENT, ({ payload }) => handler(payload));
 }
+
+export function readNoteImage(path: string) {
+  return invoke<string | null>("screenshot_kept_image", { path });
+}
+
+export function pinNoteImage(path: string) {
+  return invoke<void>("screenshot_history_pin", { path });
+}

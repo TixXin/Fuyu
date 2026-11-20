@@ -258,9 +258,59 @@
                   </button>
                 </div>
               </div>
-              <textarea aria-label="Daily note" class="todo-island__note" placeholder="写点今天的笔记…" spellcheck="false">
-                上午评审，下午写测试。
-              </textarea>
+              <div class="todo-island__daily">
+                <textarea aria-label="Daily note" class="todo-island__note" placeholder="写点今天的笔记…" spellcheck="false">
+                  上午评审，下午写测试。
+                </textarea>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="caption">
+        笔记里的截图（C150.11）
+      </p>
+      <div class="frame" id="frame-daily-shot" style="--island-ink-rgb: 241, 240, 246">
+        <div>
+          <div style="height: 100%">
+            <section aria-label="任务清单" class="todo-island todo-island--daily">
+              <div class="todo-island__header">
+                <div aria-label="待办页面" class="island-list-chips todo-island__tabs" role="tablist">
+                  <button aria-label="今天, 2 个未完成" aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    今天
+                    <span class="todo-island__tab-count">
+                      2
+                    </span>
+                  </button>
+                  <button aria-pressed="true" aria-selected="true" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    笔记
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    已安排
+                    <span class="todo-island__tab-count">
+                      1
+                    </span>
+                  </button>
+                  <button aria-pressed="false" aria-selected="false" class="island-list-chip todo-island__tab" role="tab" type="button">
+                    归档
+                  </button>
+                </div>
+              </div>
+              <div class="todo-island__daily">
+                <textarea aria-label="Daily note" class="todo-island__note" placeholder="写点今天的笔记…" spellcheck="false">
+                  看一下这个报错 ![截图](&lt;/kept/Fuyu_2026-11-20.png&gt;) ![截图](&lt;/kept/gone.png&gt;)
+                </textarea>
+                <div class="todo-note-images">
+                  <button aria-label="贴到屏幕上看" class="todo-note-images__item" title="贴到屏幕上看" type="button">
+                    <img alt="" draggable="false" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
+                  </button>
+                  <span class="todo-note-images__item todo-note-images__item--gone" title="这张截图已经删了">
+                    <svg aria-hidden="true" class="lucide lucide-image-off" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </span>
+                </div>
+              </div>
             </section>
           </div>
         </div>

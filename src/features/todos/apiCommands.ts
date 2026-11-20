@@ -36,6 +36,7 @@ export const TODO_API_METHODS = [
 export type TodoApiMethod = (typeof TODO_API_METHODS)[number];
 
 const MAX_TITLE_LENGTH = 500;
+const MAX_NOTE_LENGTH = 1000;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const ok = (data: unknown): TodoApiResult => ({ ok: true, data });
@@ -91,6 +92,10 @@ export function runTodoApiCall(
         return fail(400, `"project" must be a string.`);
       }
       const project = readProject(input.project);
+      if (input.note !== undefined && input.note !== null && (typeof input.note !== "string" || [...input.note].length > MAX_NOTE_LENGTH)) {
+        return fail(400, `"note" must be a string of at most ${MAX_NOTE_LENGTH} characters.`);
+      }
+      const note = typeof input.note === "string" && input.note.trim() ? input.note : null;
       const date = input.date;
       if (date !== undefined && (typeof date !== "string" || !DATE_PATTERN.test(date))) {
         return fail(400, `"date" must look like YYYY-MM-DD.`);
@@ -101,7 +106,7 @@ export function runTodoApiCall(
       if (typeof date === "string" && date > state.date) {
         return { result: ok({ title, date, scheduled: true }), change: { schedule: { title, date, ...(project ? { project } : {}) } } };
       }
-      const todo: TodoItem = { id: create.id, title, completed: false, createdAt: create.now, ...(project ? { project } : {}) };
+      const todo: TodoItem = { id: create.id, title, completed: false, createdAt: create.now, ...(project ? { project } : {}), ...(note ? { note } : {}) };
       return { result: ok(todo), change: { todos: [todo, ...state.todos] } };
     }
 

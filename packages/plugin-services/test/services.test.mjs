@@ -11,6 +11,7 @@ test("SERVICES names every built-in service the package defines, with its versio
   assert.ok(services.SERVICES.includes("reminders/v1"));
   assert.ok(services.SERVICES.includes("calendar/v1"));
   assert.ok(services.SERVICES.includes("file-shelf/v1"));
+  assert.ok(services.SERVICES.includes("screenshot.actions/v1"));
   assert.ok(services.SERVICES.includes("media/v1"));
   assert.ok(services.SERVICES.includes("clipboard/v1"));
   assert.ok(services.SERVICES.includes("agents/v1"));

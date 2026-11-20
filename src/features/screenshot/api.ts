@@ -179,7 +179,9 @@ export function listenSelecting(handler: EventCallback<string>) {
   return listen<string>(SCREENSHOT_SELECTING_EVENT, handler);
 }
 
-export type PinInfo = { width: number; height: number };
+export type PinInfo = { width: number; height: number; opacity?: number };
+
+export type PinTurn = "left" | "right" | "flipX" | "flipY";
 
 export function getPinInfo() {
   return invoke<PinInfo | null>("screenshot_pin_info");
@@ -223,6 +225,34 @@ export function togglePins() {
 
 export function closeAllPins() {
   return invoke<void>("screenshot_pins_close_all");
+}
+
+export function turnPin(turn: PinTurn) {
+  return invoke<void>("screenshot_pin_turn", { turn });
+}
+
+export function collapsePin(collapsed: boolean) {
+  return invoke<void>("screenshot_pin_collapse", { collapsed });
+}
+
+export function reservePinSpace(width: number, height: number) {
+  return invoke<void>("screenshot_pin_reserve", { width, height });
+}
+
+export function replacePin(image: ImageData) {
+  return invoke<void>("screenshot_pin_replace", rawBytes(image), { headers: { "x-width": String(image.width), "x-height": String(image.height) } });
+}
+
+export function setPinOpacity(opacity: number) {
+  return invoke<void>("screenshot_pin_opacity", { opacity });
+}
+
+export function readPinText() {
+  return invoke<string>("screenshot_pin_text");
+}
+
+export function rememberPins(enabled: boolean) {
+  return invoke<void>("screenshot_pins_remember", { enabled });
 }
 
 export function listenScreenshotText(handler: EventCallback<string>) {
@@ -271,6 +301,10 @@ export function listenScreenshotHistory(handler: () => void) {
 
 export function dragScreenshot(path: string) {
   return invoke<void>("screenshot_drag", { path });
+}
+
+export function keepScreenshot(path: string) {
+  return invoke<string>("screenshot_keep", { path });
 }
 
 export function pasteScreenshotToFront(path: string, text?: string) {
