@@ -41,6 +41,8 @@ export function useIslandMessagePanel({ enabled, mediaOnly = false, durationMs, 
   const otpEnabled = useMessageOtpCopyEnabled();
   const [arrivals, setArrivals] = useState<PanelArrival[] | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
+  const [leaving, setLeaving] = useState<PanelArrival[] | null>(null);
+  const shownRef = useRef<PanelArrival[] | null>(null);
   const autoOpenedRef = useRef(false);
   const pendingOpenRef = useRef(false);
   const closeTimerRef = useRef<number | undefined>(undefined);
@@ -64,6 +66,7 @@ export function useIslandMessagePanel({ enabled, mediaOnly = false, durationMs, 
 
   const close = useCallback(() => {
     const wasOpen = latest.current.isOnMessages;
+    if (wasOpen) setLeaving(shownRef.current);
     end();
     if (wasOpen) latest.current.collapseIsland();
   }, [end]);
@@ -137,6 +140,7 @@ export function useIslandMessagePanel({ enabled, mediaOnly = false, durationMs, 
   useEffect(() => {
     const collapsedNow = mode === "collapsed" && wasExpandedRef.current;
     wasExpandedRef.current = mode === "expanded";
+    if (showing && collapsedNow) setLeaving(shownRef.current);
     if (showing && (collapsedNow || (mode === "expanded" && page !== "qq"))) end();
   }, [mode, page, showing, end]);
   useEffect(() => {
@@ -217,11 +221,19 @@ export function useIslandMessagePanel({ enabled, mediaOnly = false, durationMs, 
   }, [arrivals, close, imSources, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
   const visibleArrivals = showing && (mode === "collapsed" || page === "qq") ? arrivals : null;
+  useLayoutEffect(() => {
+    if (visibleArrivals) shownRef.current = visibleArrivals;
+  });
+  const expanded = mode === "expanded";
+  useLayoutEffect(() => {
+    if (expanded) setLeaving(null);
+  }, [expanded]);
   const height = visibleArrivals ? (measuredHeight ?? estimateArrivalsHeight(visibleArrivals)) : 0;
 
   return {
     clearAll,
     arrivals: visibleArrivals,
+    closingArrivals: visibleArrivals || expanded ? null : leaving,
     height,
     measure: setMeasuredHeight,
     open,
