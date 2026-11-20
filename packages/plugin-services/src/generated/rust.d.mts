@@ -84,7 +84,7 @@ export type RustMethods = {
   "pluginKernel.windowControl": { params: { pluginId: string; windowId?: string | null; action: string; title?: string | null; width?: number | null; height?: number | null; x?: number | null; y?: number | null; alwaysOnTop?: boolean | null; resizable?: boolean | null; clickThrough?: boolean | null }; result: PluginWindowInfo | null };
   "pluginKernel.windowList": { params: { pluginId?: string | null }; result: PluginWindowList };
   "pluginKernel.windowOpen": { params: { spec: PluginWindowOpenSpec }; result: PluginWindowInfo };
-  "todos.add": { params: { title?: JsonValue | null; date?: JsonValue | null; project?: JsonValue | null }; result: JsonValue };
+  "todos.add": { params: { title?: JsonValue | null; date?: JsonValue | null; project?: JsonValue | null; note?: JsonValue | null }; result: JsonValue };
   "todos.days": { params: { from?: JsonValue | null; to?: JsonValue | null }; result: JsonValue };
   "todos.list": { params: { date?: JsonValue | null }; result: JsonValue };
   "todos.note": { params: { date?: JsonValue | null }; result: JsonValue };

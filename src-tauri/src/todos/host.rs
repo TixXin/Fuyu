@@ -39,8 +39,8 @@ fn days_for_host(from: Option<Value>, to: Option<Value>) -> Result<Value, ServeE
 }
 
 #[host_service("todos.add")]
-fn add_for_host(title: Option<Value>, date: Option<Value>, project: Option<Value>) -> Result<Value, ServeError> {
-    run("todos.add", "todos.add", params([("title", title), ("date", date), ("project", project)]))
+fn add_for_host(title: Option<Value>, date: Option<Value>, project: Option<Value>, note: Option<Value>) -> Result<Value, ServeError> {
+    run("todos.add", "todos.add", params([("title", title), ("date", date), ("project", project), ("note", note)]))
 }
 
 #[host_service("todos.update")]
