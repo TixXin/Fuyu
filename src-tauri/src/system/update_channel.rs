@@ -56,6 +56,9 @@ pub(crate) fn channel_endpoints(configured: &[Url], channel: &str) -> Result<Vec
 }
 
 fn configured_endpoints(app: &AppHandle) -> Result<Vec<Url>, String> {
+    if super::msix::is_packaged() {
+        return Err("The Microsoft Store app is updated by the Store.".to_string());
+    }
     let config = app
         .config()
         .plugins

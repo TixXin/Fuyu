@@ -7,7 +7,7 @@
 ## 结论
 
 - **Snow Shot 走的是 MSIX 包，不是把 exe 安装包交给商店。** 交上去的 `.msix` 不签名，由 Microsoft Store 签名后再分发，所以它不用自己买证书。商店版和官网的 NSIS 安装包、便携版并存，是两个渠道。
-- **浮屿可以照这个做。** 它的好处正好对上 D114 的问题：商店装的包由微软签名，没有 SmartScreen「未知发布者」，也不用证书费。代价是商店版要单独打一个渠道，有四处行为要改（见下面「浮屿要改的」），其中 AI 代理钩子那一处最大。
+- **浮屿可以照这个做。** 它的好处正好对上 D114 的问题：商店装的包由微软签名，没有 SmartScreen「未知发布者」，也不用证书费。代价是商店版要单独打一个渠道，有三处行为要改（见下面「浮屿要改的」）。已经开工，见 D116 和 [microsoft-store.md](../features/microsoft-store.md)。
 - **商店版不能替代安装包签名。** 官网直接下载的 exe 照样没签名，SignPath 那条路还要走；商店是多一个不报警的下载入口。
 
 ## Snow Shot 怎么做的
@@ -32,7 +32,7 @@
 
 | 问题 | 现在的做法 | 商店版要怎么改 |
 |---|---|---|
-| **AI 代理钩子（最大的一处）** | hook 脚本 `fuyu-agent-*.{cmd,ps1}`、`agent-status.json`、运行标记都在应用数据目录 `%APPDATA%\com.tixxin.fuyu`，由 Claude Code 等外部进程执行和写入（`data-storage.md`） | MSIX 里应用往 AppData 新写的文件会被重定向到 `%LOCALAPPDATA%\Packages\<包>\LocalCache\Roaming\…`，外部进程按原路径找不到脚本，也写不到岛读的地方（Claude 桌面版的 MSIX 就是这样，岛已经在读它的 LocalCache，见 `agent-status-hooks.md`）。两条路：共享文件挪到 `~\.fuyu`（Mac 已经这样），或在清单里关掉文件写虚拟化（`desktop6:FileSystemWriteVirtualization` + 受限能力 `unvirtualizedResources`，要在提交时写理由，能不能过审待核实）。前一条更稳 |
+| **AI 代理钩子（更正：不用改）** | 写这份调研时以为 hook 脚本、`agent-status.json` 在 `%APPDATA%\com.tixxin.fuyu`。其实 D30.3（2026-11-12）起它们都在家目录 `%USERPROFILE%\.fuyu`，MSIX 不重定向家目录，钩子命令也不调用 `fuyu.exe`，所以照常工作。下面这一格是当时的分析，留作记录 | MSIX 里应用往 AppData 新写的文件会被重定向到 `%LOCALAPPDATA%\Packages\<包>\LocalCache\Roaming\…`，外部进程按原路径找不到脚本，也写不到岛读的地方（Claude 桌面版的 MSIX 就是这样，岛已经在读它的 LocalCache，见 `agent-status-hooks.md`）。两条路：共享文件挪到 `~\.fuyu`（Mac 已经这样），或在清单里关掉文件写虚拟化（`desktop6:FileSystemWriteVirtualization` + 受限能力 `unvirtualizedResources`，要在提交时写理由，能不能过审待核实）。前一条更稳 |
 | 开机自启 | 写 `HKCU\…\Run` 的 `Fuyu`（`system/startup.rs`，对外契约） | 商店版改用 `windows.startupTask`，前端开关读写它的状态；HKCU 的写入在包里也会被虚拟化，写了不生效。正式版仍写注册表，契约不变 |
 | 自动更新 | Tauri updater 读 `latest.json` | 商店版不打包 updater、关掉检查更新入口，更新走商店（Snow Shot 同样） |
 | 卸载清理 | NSIS 卸载时跑 `fuyu.exe --uninstall-cleanup` 移除钩子 | MSIX 卸载不能跑自定义程序，外部钩子会留下。靠设置里的「移除钩子」和钩子命令的存在性守卫兜底（Mac 已经是这样） |
@@ -53,7 +53,7 @@
 ## 建议
 
 1. D114 里 Windows 签名那部分不变，仍申请 SignPath，官网下载的安装包靠它。
-2. 另开一个任务做商店版，顺序是：先把 Windows 上的钩子共享文件挪到 `~\.fuyu`（对安装版也是好事，和 Mac 统一）→ 商店渠道的构建开关（去 updater、自启改 startupTask）→ MSIX 打包脚本和本地自签测试 → Partner Center 保留名字、写隐私政策 → 提交。
+2. 另开一个任务做商店版，顺序是：商店渠道的构建开关（去 updater、自启改 startupTask）→ MSIX 打包脚本和本地自签测试 → Partner Center 保留名字、写隐私政策 → 提交。
 3. 用户本人要做的：注册 Partner Center 账号、保留「浮屿 / Fuyu」名字、确认隐私政策内容。
 
 ## 参考

@@ -23,6 +23,10 @@ export function loadDevBuild(): Promise<boolean> {
   return loadPlatformSupport().then((support) => support?.devBuild === true);
 }
 
+export function loadStorePackage(): Promise<boolean> {
+  return loadPlatformSupport().then((support) => support?.storePackage === true);
+}
+
 export function useUnsupportedFeatures(): ReadonlySet<PlatformFeature> {
   const [unsupported, setUnsupported] = useState(NONE);
   useEffect(() => {
@@ -37,16 +41,24 @@ export function useUnsupportedFeatures(): ReadonlySet<PlatformFeature> {
   return unsupported;
 }
 
-export function useDevBuild(): boolean {
-  const [devBuild, setDevBuild] = useState(false);
+function usePlatformFlag(load: () => Promise<boolean>): boolean {
+  const [flag, setFlag] = useState(false);
   useEffect(() => {
     let live = true;
-    void loadDevBuild().then((value) => {
-      if (live) setDevBuild(value);
+    void load().then((value) => {
+      if (live) setFlag(value);
     });
     return () => {
       live = false;
     };
-  }, []);
-  return devBuild;
+  }, [load]);
+  return flag;
+}
+
+export function useDevBuild(): boolean {
+  return usePlatformFlag(loadDevBuild);
+}
+
+export function useStorePackage(): boolean {
+  return usePlatformFlag(loadStorePackage);
 }

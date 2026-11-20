@@ -2,6 +2,7 @@ pub(crate) mod accent_color;
 mod command_flags;
 pub(crate) mod download_mirrors;
 pub(crate) mod fullscreen;
+pub(crate) mod msix;
 #[cfg_attr(target_os = "macos", path = "network_cost_macos.rs")]
 pub(crate) mod network_cost;
 pub(crate) mod permissions;

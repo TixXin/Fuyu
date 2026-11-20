@@ -8,6 +8,7 @@
     "prepare": "node scripts/install-git-hooks.mjs",
     "dev": "vite",
     "build:exe": "node scripts/heavy/heavy.mjs --label build:exe --lane target:release -- node scripts/build-exe.mjs",
+    "msix": "node scripts/msix/package.mjs",
     "heavy": "node scripts/heavy/heavy.mjs",
     "prune:target": "node scripts/prune-build-cache.mjs",
     "build": "tsc && vite build && node scripts/plugins-v3/build-builtins.mjs",
