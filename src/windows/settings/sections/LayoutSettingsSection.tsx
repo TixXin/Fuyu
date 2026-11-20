@@ -5,7 +5,8 @@ import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRo
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../../i18n";
 import { isMacOS } from "../../../lib/platform";
-import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MAX_TOP_FILLET_RADIUS, MIN_COLLAPSED_WIDTH_EXTRA, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "../../../lib/settings/settings";
+import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, MAX_TOP_FILLET_RADIUS, MIN_COLLAPSED_WIDTH_EXTRA, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "../../../lib/settings/settings";
+import { maxPanelHeightFor, maxPanelWidthFor } from "../../../lib/settings/panelRoom";
 import type { IslandCornerShape, IslandForm, IslandSettings } from "../../../lib/settings/types";
 import { useIslandDockEdge } from "./useIslandDockEdge";
 
@@ -80,7 +81,7 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           description={text.panelSizeHint}
           value={settings.panelWidth}
           min={MIN_PANEL_WIDTH}
-          max={MAX_PANEL_WIDTH}
+          max={Math.max(settings.panelWidth, maxPanelWidthFor(settings.expandedScale))}
           step={1}
           format={pixels}
           defaultValue={DEFAULT_SETTINGS.panelWidth}
@@ -91,7 +92,7 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           title={text.maxPanelHeight}
           value={settings.maxPanelHeight}
           min={MIN_MAX_PANEL_HEIGHT}
-          max={MAX_MAX_PANEL_HEIGHT}
+          max={Math.max(settings.maxPanelHeight, maxPanelHeightFor(settings.expandedScale))}
           step={1}
           format={pixels}
           defaultValue={DEFAULT_SETTINGS.maxPanelHeight}

@@ -140,11 +140,13 @@ test("expand trigger, hover delays and max panel height default for older settin
   assert.equal(normalizeSettings({ hoverCollapseDelayMs: 9_000 }).hoverCollapseDelayMs, 2_000);
   assert.equal(normalizeSettings({ hoverCollapseDelayMs: 0 }).hoverCollapseDelayMs, 0);
   assert.equal(normalizeSettings({ maxPanelHeight: 100 }).maxPanelHeight, 360);
-  assert.equal(normalizeSettings({ maxPanelHeight: 999 }).maxPanelHeight, 640);
+  assert.equal(normalizeSettings({ maxPanelHeight: 999 }).maxPanelHeight, 999, "a tall screen keeps a panel taller than the old 640 cap");
+  assert.equal(normalizeSettings({ maxPanelHeight: 1e9 }).maxPanelHeight, 4320);
   assert.equal(normalizeSettings({ maxPanelHeight: 400.6 }).maxPanelHeight, 401);
   assert.equal(normalizeSettings({}).panelWidth, 560, "settings from before C25 keep the 560px panel");
   assert.equal(normalizeSettings({ panelWidth: 100 }).panelWidth, 480);
-  assert.equal(normalizeSettings({ panelWidth: 2000 }).panelWidth, 800);
+  assert.equal(normalizeSettings({ panelWidth: 2000 }).panelWidth, 2000, "a wide screen keeps a panel wider than the old 800 cap");
+  assert.equal(normalizeSettings({ panelWidth: 1e9 }).panelWidth, 7680);
   assert.equal(older.minimizeAction, "tray");
   assert.equal(older.tuckedHoverAction, "reveal", "settings saved before the option only slide out, as before");
   assert.equal(normalizeSettings({ tuckedHoverAction: "expand" }).tuckedHoverAction, "expand");

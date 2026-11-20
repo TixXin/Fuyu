@@ -9,7 +9,10 @@ use std::{
 use tauri::{LogicalSize, Monitor, PhysicalPosition, Size, WebviewWindow};
 
 use super::screen;
-use super::state::{CornerShape, Edge, IslandMode, IslandPosition, IslandWindowState, MonitorFollow, TuckStyle};
+use super::state::{
+    mutate_window_state, read_window_state, CornerShape, Edge, IslandMode, IslandPosition, IslandWindowState, MonitorFollow,
+    TuckStyle,
+};
 
 pub(super) const STAGE_WINDOW_WIDTH: f64 = 820.0;
 pub(super) const STAGE_WINDOW_HEIGHT: f64 = 460.0;
@@ -42,8 +45,86 @@ pub(super) const SIDE_COLUMN_MAX_HEIGHT: f64 = 1200.0;
 
 const MAX_TOP_FILLET_RADIUS: f64 = 12.0;
 
-pub(super) fn max_expanded_width(scale: f64) -> f64 {
-    (((STAGE_WINDOW_WIDTH - 4.0) / scale).floor() - 2.0 * MAX_TOP_FILLET_RADIUS).max(EXPANDED_ISLAND_WIDTH)
+pub(super) fn max_expanded_width(scale: f64, room_width: f64) -> f64 {
+    (((room_width.max(STAGE_WINDOW_WIDTH) - 4.0) / scale).floor() - 2.0 * MAX_TOP_FILLET_RADIUS).max(EXPANDED_ISLAND_WIDTH)
+}
+
+pub(super) fn max_expanded_height(scale: f64, room_height: f64) -> f64 {
+    ((room_height - STAGE_WINDOW_PADDING_Y) / scale)
+        .floor()
+        .max(DEFAULT_EXPANDED_ISLAND_HEIGHT + EXPANDED_ISLAND_HEIGHT_RANGE)
+}
+
+pub(super) fn stage_room(window: &WebviewWindow) -> (f64, f64) {
+    let Some(monitor) = window.current_monitor().ok().flatten() else {
+        return (STAGE_WINDOW_WIDTH, DEFAULT_EXPANDED_ISLAND_HEIGHT + EXPANDED_ISLAND_HEIGHT_RANGE + STAGE_WINDOW_PADDING_Y);
+    };
+    let scale = screen::monitor_scale(&monitor).max(0.1);
+    let (_, _, width, height) = screen::monitor_work_rect(&monitor);
+    (f64::from(width) / scale, f64::from(height) / scale)
+}
+
+static STAGE_WIDTH_BITS: AtomicU64 = AtomicU64::new(0);
+
+pub(super) fn stage_width() -> f64 {
+    let width = f64::from_bits(STAGE_WIDTH_BITS.load(Ordering::SeqCst));
+    if width > 0.0 {
+        width
+    } else {
+        STAGE_WINDOW_WIDTH
+    }
+}
+
+pub(super) fn stage_width_for(state: IslandWindowState) -> f64 {
+    let (width, _) = state.base_size();
+    let needed = ((width + 2.0 * MAX_TOP_FILLET_RADIUS) * state.active_scale() + 4.0).ceil();
+    if needed.is_finite() {
+        STAGE_WINDOW_WIDTH.max(needed)
+    } else {
+        STAGE_WINDOW_WIDTH
+    }
+}
+
+fn half_stage(width: f64, scale: f64) -> i32 {
+    (width * scale / 2.0).round() as i32
+}
+
+pub(super) fn shift_custom_position(state: IslandWindowState, shift: i32) -> IslandWindowState {
+    let mut shifted = state;
+    if shift != 0 {
+        shifted.custom_position = state.custom_position.map(|position| shift_position(position, shift));
+    }
+    shifted
+}
+
+fn shift_position(position: IslandPosition, shift: i32) -> IslandPosition {
+    if super::side::stored_side(position).is_some() {
+        position
+    } else {
+        IslandPosition { x: position.x + shift, ..position }
+    }
+}
+
+pub(super) fn nominal_position(window: &WebviewWindow, position: IslandPosition) -> IslandPosition {
+    let scale = screen::window_scale(window).unwrap_or(1.0);
+    shift_position(position, half_stage(stage_width(), scale) - half_stage(STAGE_WINDOW_WIDTH, scale))
+}
+
+fn commit_stage_width(window: &WebviewWindow, width: f64) -> i32 {
+    let previous = stage_width();
+    STAGE_WIDTH_BITS.store(width.to_bits(), Ordering::SeqCst);
+    if previous.to_bits() == width.to_bits() {
+        return 0;
+    }
+    let scale = screen::window_scale(window).unwrap_or(1.0);
+    let shift = half_stage(previous, scale) - half_stage(width, scale);
+    if shift != 0 {
+        mutate_window_state(|state| {
+            *state = shift_custom_position(*state, shift);
+            *state
+        });
+    }
+    shift
 }
 pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 360.0;
 pub(super) const MIN_EXPANDED_ISLAND_HEIGHT: f64 = 72.0;
@@ -147,7 +228,7 @@ pub(super) fn cursor_near_stage(
     cursor_x: f64,
     cursor_y: f64,
 ) -> bool {
-    let margin = PASSTHROUGH_WAKE_MARGIN * (window_width / STAGE_WINDOW_WIDTH).max(1.0);
+    let margin = PASSTHROUGH_WAKE_MARGIN * (window_width / stage_width()).max(1.0);
     cursor_x >= window_left - margin
         && cursor_x <= window_left + window_width + margin
         && cursor_y >= window_top - margin
@@ -204,6 +285,7 @@ pub(super) fn stage_geometry_inputs_changed(
     next: &IslandWindowState,
 ) -> bool {
     stage_height_for(*previous).to_bits() != stage_height_for(*next).to_bits()
+        || stage_width_for(*previous).to_bits() != stage_width_for(*next).to_bits()
         || side_stage_height_key(*previous) != side_stage_height_key(*next)
         || previous.is_tucked != next.is_tucked
         || previous.tuck_style != next.tuck_style
@@ -237,10 +319,11 @@ pub(crate) fn apply_stage_geometry(
     let anchored_below = state.attached_edge == Some(Edge::Bottom)
         || state.custom_position.is_some_and(super::bottom_edge::is_bottom);
 
-    resize_stage(window, LogicalSize::new(STAGE_WINDOW_WIDTH, stage_height), anchored_below)?;
+    let shift = resize_stage(window, LogicalSize::new(stage_width_for(state), stage_height), anchored_below)?;
     if state.is_dragging {
         return Ok(());
     }
+    let state = shift_custom_position(state, shift);
     let result = apply_stage_position(window, state, stage_height, animate_position);
     if result.is_ok() {
         STAGE_GEOMETRY_SYNCED.store(true, Ordering::SeqCst);
@@ -278,7 +361,7 @@ fn apply_stage_position(
     let scale = screen::monitor_scale(&monitor);
     let monitor_position = screen::monitor_origin(&monitor);
     let monitor_size = screen::monitor_size(&monitor);
-    let physical_width = (STAGE_WINDOW_WIDTH * scale).round() as i32;
+    let physical_width = (stage_width() * scale).round() as i32;
     let physical_top_offset = (state.margin_y * scale).round() as i32;
     let tucked_top_offset = tucked_top_offset(state.collapsed_scale, scale, state.tuck_style);
     let top_inset = super::top_edge::top_edge(&monitor, super::notch::under_menu_bar(window, &monitor, state)).y - monitor_position.y;
@@ -365,30 +448,56 @@ fn apply_stage_position(
     Ok(())
 }
 
-fn resize_stage(window: &WebviewWindow, stage_size: LogicalSize<f64>, immediate: bool) -> Result<(), String> {
+fn resize_stage(window: &WebviewWindow, stage_size: LogicalSize<f64>, immediate: bool) -> Result<i32, String> {
     let generation = STAGE_SHRINK_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
     let scale_factor = window.scale_factor().map_err(|error| error.to_string())?;
     let current = window.inner_size().map_err(|error| error.to_string())?;
     let target = stage_size.to_physical::<u32>(scale_factor);
     if current == target {
-        return Ok(());
+        return Ok(commit_stage_width(window, stage_size.width));
     }
-    if immediate || target.height >= current.height {
-        return window
+    let width_grows = target.width >= current.width;
+    let height_grows = target.height >= current.height;
+    if immediate || (width_grows && height_grows) {
+        window
             .set_size(Size::Logical(stage_size))
-            .map_err(|error| error.to_string());
+            .map_err(|error| error.to_string())?;
+        return Ok(commit_stage_width(window, stage_size.width));
+    }
+
+    let width_now = if width_grows { stage_size.width } else { stage_width() };
+    let height_now = if height_grows { stage_size.height } else { f64::from(current.height) / scale_factor };
+    let size_now = LogicalSize::new(width_now, height_now);
+    let mut shift = 0;
+    if size_now.to_physical::<u32>(scale_factor) != current {
+        window
+            .set_size(Size::Logical(size_now))
+            .map_err(|error| error.to_string())?;
+        shift = commit_stage_width(window, width_now);
     }
 
     let window = window.clone();
     thread::spawn(move || {
         thread::sleep(STAGE_SHRINK_DELAY);
-        if STAGE_SHRINK_GENERATION.load(Ordering::SeqCst) == generation {
-            if let Err(error) = window.set_size(Size::Logical(stage_size)) {
-                eprintln!("Failed to shrink island stage: {error}");
-            }
+        if STAGE_SHRINK_GENERATION.load(Ordering::SeqCst) != generation {
+            return;
+        }
+        if let Err(error) = window.set_size(Size::Logical(stage_size)) {
+            eprintln!("Failed to shrink island stage: {error}");
+            return;
+        }
+        if commit_stage_width(&window, stage_size.width) == 0 {
+            return;
+        }
+        let state = read_window_state();
+        if state.is_dragging {
+            return;
+        }
+        if let Err(error) = apply_stage_position(&window, state, stage_size.height, false) {
+            eprintln!("Failed to recentre the island stage: {error}");
         }
     });
-    Ok(())
+    Ok(shift)
 }
 
 pub(super) fn interpolate_stage_position(
@@ -413,7 +522,7 @@ pub(super) fn monitor_for_island_position(
 
     Ok(monitors.into_iter().find(|monitor| {
         let scale = screen::monitor_scale(monitor);
-        let island_center_x = position.x as f64 + STAGE_WINDOW_WIDTH * scale / 2.0;
+        let island_center_x = position.x as f64 + stage_width() * scale / 2.0;
         let island_center_y = position.y as f64 + COLLAPSED_ISLAND_HEIGHT * scale / 2.0;
         let monitor_position = screen::monitor_origin(monitor);
         let monitor_size = screen::monitor_size(monitor);
@@ -544,7 +653,7 @@ pub(super) fn island_rect(
     window_height: f64,
     state: IslandWindowState,
 ) -> IslandOnScreen {
-    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let physical_scale = window_width / stage_width();
     let (base_width, base_height) = state.base_size();
     let width = base_width * state.active_scale() * physical_scale;
     let height = base_height * state.active_scale() * physical_scale;
@@ -573,7 +682,7 @@ pub(super) fn island_top_in_stage(edge: Option<Edge>, window_height: f64, island
 }
 
 pub(super) fn stage_point(window_left: f64, window_top: f64, window_width: f64, cursor_x: f64, cursor_y: f64) -> (f64, f64) {
-    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let physical_scale = window_width / stage_width();
     let round = |value: f64| (value * 10.0).round() / 10.0;
     (round((cursor_x - window_left) / physical_scale), round((cursor_y - window_top) / physical_scale))
 }
@@ -599,7 +708,7 @@ pub(super) fn cursor_near_island(
         return cursor_on_island(window_left, window_top, window_width, window_height, cursor_x, cursor_y, state);
     }
     let rect = island_rect(window_left, window_top, window_width, window_height, state);
-    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let physical_scale = window_width / stage_width();
     let margin = DIM_WAKE_MARGIN * physical_scale;
     cursor_x >= rect.left - margin
         && cursor_x <= rect.left + rect.width + margin
@@ -616,7 +725,7 @@ pub(super) fn cursor_on_island(
     cursor_y: f64,
     state: IslandWindowState,
 ) -> bool {
-    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let physical_scale = window_width / stage_width();
     let local_x = cursor_x - window_left;
     let local_y = cursor_y - window_top;
 

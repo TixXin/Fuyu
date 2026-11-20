@@ -5,7 +5,7 @@ use objc2_foundation::MainThreadMarker;
 use tauri::{AppHandle, WebviewWindow};
 
 use super::geometry::{
-    island_left_in_stage, island_top_in_stage, STAGE_WINDOW_WIDTH,
+    island_left_in_stage, island_top_in_stage, stage_width,
 };
 use super::main_window;
 use super::state::{
@@ -83,7 +83,7 @@ pub(super) fn spec_from_state(
     let (base_width, base_height) = state.base_size();
     let width = (base_width * scale).max(1.0);
     let height = (base_height * scale).max(1.0);
-    let left = island_left_in_stage(state.side(), STAGE_WINDOW_WIDTH, width);
+    let left = island_left_in_stage(state.side(), stage_width(), width);
     let top = island_top_in_stage(state.attached_edge, stage_height, height);
     let top_radius = state.top_corner_radius() * scale;
     let bottom_radius = state.bottom_corner_radius() * scale;

@@ -6,7 +6,7 @@
 
 - 吸附只有顶边：`src-tauri/src/island/top_edge.rs` 只比较 Y，离顶边 16 逻辑像素以内就贴上去，状态是一个布尔值 `top_attached`，事件 `island-top-attachment-changed` 的载荷也是布尔值。
 - 贴边收起只往上缩：`geometry.rs` 用 `TUCKED_VISIBLE_EDGE_HEIGHT`（10px）算 `tucked_y`，只露出底下一条。
-- 岛窗口是固定 820 宽的透明舞台，岛在里面水平居中，展开时往下长；原生点击区域（`passthrough.rs`）按"顶部居中"计算。
+- 岛窗口是透明舞台（2026-11-20 前固定 820 宽，之后至少 820、岛更宽时跟着变宽，见 `geometry.rs` 的 `stage_width_for`），岛在里面水平居中，展开时往下长；原生点击区域（`passthrough.rs`）按"顶部居中"计算。
 - 多显示器跟随（`follow.rs`）把收起的岛移到目标屏幕的顶部正中，拖动保存的位置（`fuyu-position`）随之清掉。
 - 前端的顶边造型（反向圆弧、`IslandTopEdge.css`）和 `windows/island/topEdge.ts` 也只认顶边。
 

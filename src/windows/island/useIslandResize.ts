@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  MAX_COLLAPSED_WIDTH_EXTRA, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MIN_COLLAPSED_WIDTH_EXTRA, MIN_MAX_PANEL_HEIGHT,
-  MIN_PANEL_WIDTH,
+  MAX_COLLAPSED_WIDTH_EXTRA, MIN_COLLAPSED_WIDTH_EXTRA, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH,
 } from "../../lib/settings/settings";
 import type { IslandSettings } from "../../lib/settings/types";
 import { clamp } from "../../utils/number.ts";
 import { throttle } from "../../utils/throttle.ts";
 import { listenIslandResize, setIslandPanelResizable, type IslandResizeDelta } from "./api";
-import { maxExpandedIslandWidth } from "./layout";
+import { maxExpandedIslandHeight, maxExpandedIslandWidth } from "./layout";
 
 const RESIZING_CLASS = "island-resizing";
 const RESIZE_THROTTLE_MS = 16;
@@ -39,9 +38,9 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
         if (collapsedWidthExtra !== current.collapsedWidthExtra) save({ ...current, collapsedWidthExtra });
         return;
       }
-      const maxWidth = Math.min(MAX_PANEL_WIDTH, maxExpandedIslandWidth(current.expandedScale));
+      const maxWidth = maxExpandedIslandWidth(current.expandedScale);
       const panelWidth = clamp(Math.round(start.width + width), MIN_PANEL_WIDTH, maxWidth);
-      const maxPanelHeight = clamp(Math.round(start.height + height), MIN_MAX_PANEL_HEIGHT, MAX_MAX_PANEL_HEIGHT);
+      const maxPanelHeight = clamp(Math.round(start.height + height), MIN_MAX_PANEL_HEIGHT, maxExpandedIslandHeight(current.expandedScale));
       if (panelWidth !== current.panelWidth || maxPanelHeight !== current.maxPanelHeight) {
         save({ ...current, panelWidth, maxPanelHeight });
       }

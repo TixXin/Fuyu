@@ -7,7 +7,7 @@ use std::{
 use tauri::{Emitter, WebviewWindow};
 
 use super::{
-    geometry::{island_top_in_stage, STAGE_WINDOW_WIDTH},
+    geometry::{island_top_in_stage, stage_width},
     state::{read_window_state, Edge, IslandMode},
 };
 
@@ -104,7 +104,7 @@ fn edges_under_cursor(window: &WebviewWindow) -> Option<(i8, bool, f64, bool)> {
     let frame = window_frame(window)?;
     let (cursor_x, cursor_y) = super::screen::cursor_position()?;
     let state = read_window_state();
-    let per_px = frame.width / STAGE_WINDOW_WIDTH * state.active_scale();
+    let per_px = frame.width / stage_width() * state.active_scale();
     let flipped = state.attached_edge == Some(Edge::Bottom);
     if state.side().is_some() {
         return Some((0, false, per_px, flipped));
