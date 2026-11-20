@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { isImSource } from "./im-sources/imSourcesState";
 import { MessageSourceIcon } from "./MessageSourceIcon";
-import { messagePreviewText, type MessagePreview } from "./messagePreview";
+import { messagePreviewText, previewBody, type MessagePreview } from "./messagePreview";
 import { useSummaryFit } from "./island/useSummaryFit";
 import { useTranslation } from "../../i18n";
 import "./CollapsedMessageContent.css";
@@ -20,7 +20,7 @@ function MessageContent({ preview, bodyOnly }: { preview: MessagePreview; bodyOn
   const richIm = preview.source !== "plugin" && isImSource(preview.source) && preview.kind !== "flash";
   if (bodyOnly) {
     const ownBody = preview.source === "qq" || richIm || (preview.source === "wechat" && preview.chat) || (preview.source === "plugin" && preview.body.trim());
-    const body = ownBody ? preview.body.trim() || t.messages.newMessage : messagePreviewText(preview, t.messages);
+    const body = ownBody ? previewBody(preview.body) || t.messages.newMessage : messagePreviewText(preview, t.messages);
     return <span className="island-message-preview__body">{body}</span>;
   }
   return <>
@@ -29,7 +29,7 @@ function MessageContent({ preview, bodyOnly }: { preview: MessagePreview; bodyOn
       <span className="island-message-preview__text">
         <strong className="island-message-preview__sender">{preview.title.trim() || (preview.source === "qq" ? "QQ" : t.messages.sourceLabels[preview.source])}</strong>
         <span className="island-message-preview__separator" aria-hidden="true">·</span>
-        <span className="island-message-preview__body">{preview.body.trim() || t.messages.newMessage}</span>
+        <span className="island-message-preview__body">{previewBody(preview.body) || t.messages.newMessage}</span>
       </span>
     ) : (
       <span className="island-message-preview__body">{messagePreviewText(preview, t.messages)}</span>

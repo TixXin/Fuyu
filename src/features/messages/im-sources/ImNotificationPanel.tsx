@@ -3,9 +3,11 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation, type Translations } from "../../../i18n";
 import { copyMessageText } from "../../../lib/api";
 import { isMacOS } from "../../../lib/platform";
+import { MessageBody } from "../MessageBody";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import { notificationCopyableText } from "../messageCopy";
 import "../qq-notifications/QQNotifications.css";
+import { openMessageLink } from "./api";
 import type { ImNotificationKind, ImSourceId, ImSourceStatus } from "./imSourcesState";
 
 export type ImPanelSource = "qq" | ImSourceId;
@@ -234,7 +236,7 @@ export function ImNotificationPanel({
           const copyable = isFlash || isBadge ? "" : notificationCopyableText(item.title, item.body);
           const copied = copiedId === item.id;
           return (
-            <article className={`qq-panel__item${copyable ? " qq-panel__item--copyable" : ""}`} key={item.id} role="listitem" data-message-id={item.id}>
+            <article className={`qq-panel__item qq-panel__item--split${copyable ? " qq-panel__item--copyable" : ""}`} key={item.id} role="listitem" data-message-id={item.id}>
               <button type="button" disabled={busy} onClick={() => void openApp()} aria-label={labels.openNotification(heading)}>
                 <div className="qq-panel__item-heading">
                   <strong>{heading}</strong>
@@ -242,8 +244,8 @@ export function ImNotificationPanel({
                     {new Date(item.createdAt).toLocaleTimeString(t.localeTag, { hour: "2-digit", minute: "2-digit" })}
                   </time>
                 </div>
-                {body && <p>{body}</p>}
               </button>
+              {body && <MessageBody text={body} onOpenLink={openMessageLink} onActivate={() => { if (!busy) void openApp(); }} />}
               {copyable && (
                 <button
                   className={`icon-button qq-panel__copy${copied ? " qq-panel__copy--done" : ""}`}

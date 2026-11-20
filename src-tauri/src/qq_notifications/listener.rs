@@ -277,7 +277,7 @@ fn from_toast_item(item: ToastItem) -> Option<QQNotification> {
     Some(QQNotification {
         id: format!("QQ:{}:{}", item.id, item.ticks),
         title: title.chars().take(120).collect(),
-        body: body.chars().take(1000).collect(),
+        body: body.chars().take(4000).collect(),
         created_at: item.created_at,
     })
 }

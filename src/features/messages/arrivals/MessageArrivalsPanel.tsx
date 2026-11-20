@@ -6,7 +6,7 @@ import { notificationCopyableText } from "../messageCopy";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import { ArrivalMediaControls, type ArrivalMedia } from "./ArrivalMediaControls";
 import { ArrivalTrackArt } from "./ArrivalTrackArt";
-import { messagePreviewText } from "../messagePreview";
+import { messagePreviewText, previewBody } from "../messagePreview";
 import { bannerClock } from "../banner/bannerMessages";
 import { arrivalKey, type ArrivalMessage } from "./messageArrivals";
 import "./MessageArrivalsPanel.css";
@@ -71,8 +71,8 @@ export function MessageArrivalsPanel({
               : message.title.trim() || (message.source === "qq" ? "QQ" : t.sourceLabels[message.source]);
           const body = plainWeChat ? t.wechatPreview
             : isFlash ? t.newReminder
-              : message.source === "qqMail" ? message.body.trim() || t.newMail
-                : message.source === "plugin" ? message.body.trim() : message.body.trim() || t.newMessage;
+              : message.source === "qqMail" ? previewBody(message.body) || t.newMail
+                : message.source === "plugin" ? previewBody(message.body) : previewBody(message.body) || t.newMessage;
           const controls = message.mediaControls && media ? media : null;
           const from = controls?.sourceLabel?.trim() || null;
           const key = arrivalKey(message);

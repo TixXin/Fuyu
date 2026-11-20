@@ -277,6 +277,32 @@
   background: rgba(var(--overlay-rgb, 255, 255, 255), .035);
 }
 
+.qq-panel__item--split {
+  border-radius: var(--radius-lg);
+  transition: background var(--motion-base) var(--motion-ease);
+}
+
+.qq-panel__item--split:hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), .035);
+}
+
+.qq-panel__item--split > button:first-child:hover {
+  background: transparent;
+}
+
+.qq-panel__item--split:has(> .message-body) > button:first-child {
+  padding-bottom: 0;
+}
+
+.qq-panel__item--split > .message-body {
+  margin: 0;
+  padding: 5px 8px 13px;
+}
+
+.qq-panel__item--split.qq-panel__item--copyable > .message-body {
+  padding-right: 36px;
+}
+
 .qq-panel .icon-button.qq-panel__copy {
   position: absolute;
   right: 6px;

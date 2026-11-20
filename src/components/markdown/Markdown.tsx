@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from "react";
-import { parseMarkdown, type Inline } from "./parseMarkdown.ts";
+import { parseMarkdown, type Inline, type MarkdownOptions } from "./parseMarkdown.ts";
 import "./Markdown.css";
 
 function renderInline(content: Inline[], onOpenLink: (href: string) => void): ReactNode[] {
@@ -19,8 +19,16 @@ function renderInline(content: Inline[], onOpenLink: (href: string) => void): Re
   });
 }
 
-export function Markdown({ text, onOpenLink, className }: { text: string; onOpenLink: (href: string) => void; className?: string }) {
-  const blocks = useMemo(() => parseMarkdown(text), [text]);
+export function Markdown({ text, onOpenLink, className, options }: {
+  text: string;
+  onOpenLink: (href: string) => void;
+  className?: string;
+  options?: MarkdownOptions;
+}) {
+  const emphasis = options?.emphasis;
+  const breaks = options?.breaks;
+  const autolink = options?.autolink;
+  const blocks = useMemo(() => parseMarkdown(text, { emphasis, breaks, autolink }), [text, emphasis, breaks, autolink]);
   return (
     <div className={className ? `markdown ${className}` : "markdown"}>
       {blocks.map((block, index) => {

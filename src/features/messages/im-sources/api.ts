@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type EventCallback, type UnlistenFn } from "@tauri-apps/api/event";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type {
   ImNotificationItem,
   ImNotificationKind,
@@ -9,6 +10,10 @@ import type {
 } from "./imSourcesState.ts";
 
 export type { ImNotificationItem, ImNotificationKind, ImSourceId, ImSourceSnapshot, ImSourceStatus };
+
+export function openMessageLink(url: string) {
+  if (/^https?:\/\//i.test(url)) void openUrl(url).catch(() => undefined);
+}
 
 export const IM_SOURCES_CHANGED_EVENT = "im-sources-changed";
 
