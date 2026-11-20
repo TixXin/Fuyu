@@ -44,6 +44,7 @@
   }
   .island::before { left: -10px; }
   .island::after { right: -10px; transform: scaleX(-1); }
+  .clip { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
   .layer { position: absolute; top: 0; left: 50%; pointer-events: none; }
   .collapsed { width: 280px; height: 36px; margin-left: -140px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 13px; }
   .collapsed .dot { width: 8px; height: 8px; border-radius: 50%; background: #f5d34a; }
@@ -154,7 +155,7 @@ const OPTIONS = [
   { key: "G", name: "先横后竖", desc: "先往两边拉开（280ms），高度晚 90ms 再往下长（380ms），像先拉开再落下；内容等高度长到一半再淡入。收起反过来：先收高度，再收宽度。",
     open: { w: [300, EASE_OUT], h: [380, EASE_OUT], hDelay: 90, r: [380, EASE_OUT], fade: [200, 200], out: 90 },
     close: { w: [260, EASE_OUT], wDelay: 120, h: [240, IN_OUT], r: [260, EASE_OUT], fade: [90, 0], back: [140, 300] } },
-  { key: "H", name: "利落 + 内容跟着长出来", desc: "外壳用 C 那样的快弹簧，但内容不模糊：内容层从岛的大小开始放大到原大小的同时淡入（只在 140ms 里动，动完就是整像素），像从岛里长出来。",
+  { key: "H", name: "利落 + 内容跟着长出来", desc: "外壳用 C 那样的快弹簧，但内容不模糊：内容层从 92% 等比例放大到原大小的同时淡入（只在 140ms 里动，动完就是整像素），配合外壳揭开，像从岛里长出来。",
     warn: "内容有放大，同样碰「文字不缩放」的规矩，选它要你点头。",
     open: { w: [420, springCurve(0.6)], h: [440, springCurve(0.68)], r: [420, springCurve(0.65)], fade: [160, 20], grow: true, out: 80 },
     close: { w: [280, springCurve(0.9)], h: [280, IN_OUT], r: [280, IN_OUT], fade: [90, 0], grow: true, back: [120, 150] } },
@@ -170,7 +171,7 @@ function render(opt) {
   const ms = (p) => `${opt[p].w[0]} / ${opt[p].h[0]}ms`;
   card.innerHTML = `
     <div class="stage">
-      <div class="island"></div>
+      <div class="island"><div class="clip">
       <div class="layer collapsed"><span class="dot"></span><span class="badge"><b>3</b>03:15</span></div>
       <div class="layer expanded">
         <div class="bar"><span class="pill">Fuyu</span><span class="icon"></span><span class="icon"></span><span class="icon"></span><span class="icon"></span><span class="spacer"></span><span class="icon"></span></div>
@@ -180,6 +181,7 @@ function render(opt) {
           <div class="tile"><span>专注</span><div class="ring">25:00</div></div>
         </div>
       </div>
+    </div></div>
     </div>
     <div class="meta">
       <div class="title"><span class="letter${opt.ref ? " ref" : ""}">${opt.key}</span><span class="name">${opt.name}</span></div>
@@ -214,7 +216,7 @@ function toggle(e, open) {
   e.big.style.transition = bigParts.join(", ");
   e.big.style.opacity = open ? "1" : "0";
   if (p.blur) e.big.style.filter = open ? "blur(0px)" : `blur(${p.blur}px)`;
-  if (p.grow) { e.big.style.transformOrigin = "50% 0"; e.big.style.transform = open ? "scale(1)" : "scale(0.55, 0.14)"; }
+  if (p.grow) { e.big.style.transformOrigin = "50% 0"; e.big.style.transform = open ? "scale(1)" : "scale(0.92)"; }
   const back = p.back || [120, 0];
   e.small.style.transition = open ? `opacity ${Math.round((p.out || 100) * f)}ms ${IN_OUT}` : `opacity ${Math.round(back[0] * f)}ms ${IN_OUT} ${Math.round(back[1] * f)}ms`;
   e.small.style.opacity = open ? "0" : "1";
@@ -223,7 +225,7 @@ function toggle(e, open) {
 OPTIONS.forEach(render);
 entries.forEach((e) => {
   if (e.opt.open.blur) e.big.style.filter = `blur(${e.opt.open.blur}px)`;
-  if (e.opt.open.grow) { e.big.style.transformOrigin = "50% 0"; e.big.style.transform = "scale(0.55, 0.14)"; }
+  if (e.opt.open.grow) { e.big.style.transformOrigin = "50% 0"; e.big.style.transform = "scale(0.92)"; }
 });
 
 document.getElementById("all").addEventListener("click", () => {
