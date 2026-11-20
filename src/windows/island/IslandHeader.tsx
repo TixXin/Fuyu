@@ -17,6 +17,7 @@ import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import { usePagePill } from "./usePagePill";
 import { FuyuTextIcon } from "../../components/island-widget/FuyuTextIcon";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
+import { useWindowDragGesture } from "./useWindowDragGesture";
 import "./IslandHeader.css";
 
 const SETTINGS_ID = "settings";
@@ -39,6 +40,7 @@ type IslandHeaderProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
+  onWindowDragStart: () => void;
 };
 
 export function IslandHeader({
@@ -58,6 +60,7 @@ export function IslandHeader({
   pageDigitModifiers,
   hoverSwitchPage,
   hoverSwitchDelayMs,
+  onWindowDragStart,
 }: IslandHeaderProps) {
   const t = useTranslation();
   const { locale } = useLocale();
@@ -66,6 +69,7 @@ export function IslandHeader({
   const editing = usePanelEditing() !== null;
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage && !editing, hoverSwitchDelayMs, page, onPageChange);
   const spotlightOf = useHeaderSpotlight();
+  const { didDragRef, prepareWindowDrag, cancelWindowDrag } = useWindowDragGesture(false, onWindowDragStart);
   const pages = useSlotEntries(pageSlot);
   const dots = headerDotPages(pages, features);
   const shortcutOrder = pageShortcutOrder(features);
@@ -152,7 +156,11 @@ export function IslandHeader({
     <header
       ref={headerRef}
       className="island__header"
+      onPointerDown={prepareWindowDrag}
+      onPointerUp={cancelWindowDrag}
+      onPointerCancel={cancelWindowDrag}
       onClick={(event) => {
+        if (didDragRef.current) return;
         if (event.target instanceof Element && event.target.closest(INTERACTIVE)) return;
         onCollapse();
       }}
@@ -200,9 +208,9 @@ export function IslandHeader({
         type="button"
         aria-label={t.island.collapseIsland}
         data-tooltip=""
-        data-window-drag="false"
         onClick={(event) => {
           event.stopPropagation();
+          if (event.detail > 0 && didDragRef.current) return;
           onCollapse();
         }}
       />

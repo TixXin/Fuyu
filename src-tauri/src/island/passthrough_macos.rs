@@ -2,7 +2,6 @@ use serde::Serialize;
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     thread,
-    time::{Duration, Instant},
 };
 use tauri::{AppHandle, Emitter, WebviewWindow};
 
@@ -16,18 +15,13 @@ use super::{
     ISLAND_DIM_WAKE_EVENT,
 };
 use super::screen;
-use crate::macos::input;
 
 const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
-const ISLAND_HOLD_CHANGED_EVENT: &str = "island-hold-changed";
-const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 const ISLAND_CURSOR_MOVED_EVENT: &str = "island-cursor-moved";
 const ISLAND_HIDE_HINTS_EVENT: &str = "island-hide-hints";
 const CURSOR_EVENT_EVERY_TICKS: u32 = 3;
-const MODIFIER_ARM_DELAY: Duration = Duration::from_millis(200);
 
 static CURSOR_TRACKING: AtomicBool = AtomicBool::new(false);
-static HIDE_REQUESTED: AtomicBool = AtomicBool::new(false);
 static HINTS_POSSIBLE: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
@@ -46,38 +40,12 @@ struct Pointer {
     cursor_y: f64,
 }
 
-#[derive(Debug, Default)]
-struct ModifierHold {
-    since: Option<Instant>,
-    blocked: bool,
-}
-
-impl ModifierHold {
-    fn block(&mut self) {
-        self.blocked = true;
-    }
-
-    fn update(&mut self, only_control: bool, now: Instant) -> bool {
-        if !only_control {
-            self.since = None;
-            self.blocked = false;
-            return false;
-        }
-        if self.blocked {
-            return false;
-        }
-        let since = *self.since.get_or_insert(now);
-        now.saturating_duration_since(since) >= MODIFIER_ARM_DELAY
-    }
-}
-
 #[tauri::command]
 pub fn set_island_cursor_tracking(enabled: bool) {
     CURSOR_TRACKING.store(enabled, Ordering::Relaxed);
 }
 
 pub(crate) fn hide_transient_hints(app: &AppHandle) -> bool {
-    HIDE_REQUESTED.store(true, Ordering::SeqCst);
     let Ok(window) = super::main_window(app) else {
         return false;
     };
@@ -133,9 +101,6 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut ignoring_cursor = false;
         let mut was_inside = false;
         let mut was_on_banner = false;
-        let mut was_held = false;
-        let mut was_move_armed = false;
-        let mut modifier_hold = ModifierHold::default();
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
         let mut dim_wake = DimWakeTracker::default();
@@ -179,22 +144,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
-            if HIDE_REQUESTED.swap(false, Ordering::SeqCst) {
-                modifier_hold.block();
-            }
-            let modifier = modifier_hold.update(input::is_only_control_key_down(), Instant::now());
-            let move_armed = is_inside && modifier && !state.is_tucked;
-            if move_armed != was_move_armed {
-                was_move_armed = move_armed;
-                let _ = window.emit(ISLAND_MOVE_ARMED_CHANGED_EVENT, if move_armed { "move" } else { "none" });
-            }
-            let held = modifier && matches!(state.mode, IslandMode::Expanded);
-            if held != was_held {
-                was_held = held;
-                let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);
-            }
-
-            HINTS_POSSIBLE.store(is_inside || was_held, Ordering::SeqCst);
+            HINTS_POSSIBLE.store(is_inside, Ordering::SeqCst);
 
             let near = pointer.is_none_or(|p| cursor_near_stage(p.left, p.top, p.width, p.height, p.cursor_x, p.cursor_y));
             tick = tick.wrapping_add(1);
@@ -213,49 +163,9 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 }
             }
 
-            let active = is_inside || is_on_banner || held || near;
+            let active = is_inside || is_on_banner || near;
             thread::sleep(passthrough_sleep_duration(true, active));
         }
     });
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn modifier_arms_only_after_delay() {
-        let start = Instant::now();
-        let mut hold = ModifierHold::default();
-        assert!(!hold.update(true, start));
-        assert!(!hold.update(true, start + Duration::from_millis(150)));
-        assert!(hold.update(true, start + MODIFIER_ARM_DELAY));
-        assert!(hold.update(true, start + Duration::from_millis(500)));
-    }
-
-    #[test]
-    fn releasing_or_adding_keys_disarms_at_once() {
-        let start = Instant::now();
-        let mut hold = ModifierHold::default();
-        hold.update(true, start);
-        assert!(hold.update(true, start + Duration::from_millis(300)));
-        assert!(!hold.update(false, start + Duration::from_millis(310)));
-        assert!(!hold.update(true, start + Duration::from_millis(320)));
-        assert!(!hold.update(true, start + Duration::from_millis(500)));
-        assert!(hold.update(true, start + Duration::from_millis(520)));
-    }
-
-    #[test]
-    fn a_blocked_hold_waits_for_control_to_be_released() {
-        let start = Instant::now();
-        let mut hold = ModifierHold::default();
-        hold.update(true, start);
-        assert!(hold.update(true, start + Duration::from_millis(300)));
-        hold.block();
-        assert!(!hold.update(true, start + Duration::from_millis(310)));
-        assert!(!hold.update(true, start + Duration::from_millis(900)));
-        assert!(!hold.update(false, start + Duration::from_millis(910)));
-        hold.update(true, start + Duration::from_millis(920));
-        assert!(hold.update(true, start + Duration::from_millis(1120)));
-    }
-}

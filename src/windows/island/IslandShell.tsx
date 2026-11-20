@@ -315,6 +315,7 @@ export function IslandShell({
               onOpenSettings={onOpenSettings}
               onOpenTranslator={onOpenTranslator}
               onResetPosition={onResetPosition}
+              onWindowDragStart={onWindowDragStart}
               minimizesToTray={minimizesToTray}
               onMinimize={onMinimize}
               pageDigitModifiers={pageDigitModifiers}

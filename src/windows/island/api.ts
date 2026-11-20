@@ -82,12 +82,12 @@ export function listenIslandDimWake(handler: () => void): Promise<UnlistenFn> {
 
 export const ISLAND_MOVE_ARMED_CHANGED_EVENT = "island-move-armed-changed";
 
-export type IslandModifierTarget = "none" | "move" | "left" | "right" | "bottom" | "bottomLeft" | "bottomRight";
+export type IslandResizeTarget = "none" | "left" | "right" | "bottom" | "bottomLeft" | "bottomRight";
 
 export function listenIslandMoveArmed(
-  handler: (target: IslandModifierTarget) => void,
+  handler: (target: IslandResizeTarget) => void,
 ): Promise<UnlistenFn> {
-  return listen<IslandModifierTarget>(ISLAND_MOVE_ARMED_CHANGED_EVENT, ({ payload }) => handler(payload));
+  return listen<IslandResizeTarget>(ISLAND_MOVE_ARMED_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
 const ISLAND_HIDE_HINTS_EVENT = "island-hide-hints";
@@ -240,7 +240,7 @@ export function startIslandDrag() {
   return invoke("start_island_drag");
 }
 
-export function startIslandModifierDrag() {
+export function startIslandEdgeResize() {
   return invoke("start_island_modifier_drag");
 }
 

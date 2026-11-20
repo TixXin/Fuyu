@@ -264,7 +264,7 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
     let current_state = read_window_state();
 
-    if !matches!(current_state.mode, IslandMode::Collapsed) {
+    if current_state.is_tucked {
         return Ok(());
     }
 
@@ -274,25 +274,8 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
-
-    if !drag_modifier_down() {
-        return Ok(());
-    }
-    if modifier::start_resize(&window) {
-        return Ok(());
-    }
-
-    drag_island(window, read_window_state())
-}
-
-#[cfg(windows)]
-fn drag_modifier_down() -> bool {
-    win32::input::is_alt_key_down()
-}
-
-#[cfg(target_os = "macos")]
-fn drag_modifier_down() -> bool {
-    crate::macos::input::is_only_control_key_down()
+    modifier::start_resize(&window);
+    Ok(())
 }
 
 #[cfg(windows)]

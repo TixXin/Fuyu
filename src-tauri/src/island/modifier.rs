@@ -24,7 +24,6 @@ static RESIZE_TARGET: AtomicU8 = AtomicU8::new(0);
 #[serde(rename_all = "camelCase")]
 pub(crate) enum ModifierTarget {
     None,
-    Move,
     Left,
     Right,
     Bottom,
@@ -38,7 +37,7 @@ impl ModifierTarget {
     }
 
     fn from_u8(value: u8) -> Self {
-        [Self::None, Self::Move, Self::Left, Self::Right, Self::Bottom, Self::BottomLeft, Self::BottomRight]
+        [Self::None, Self::Left, Self::Right, Self::Bottom, Self::BottomLeft, Self::BottomRight]
             .get(usize::from(value))
             .copied()
             .unwrap_or(Self::None)
@@ -68,7 +67,7 @@ fn target_for(side: i8, bottom: bool) -> ModifierTarget {
         (-1, false) => ModifierTarget::Left,
         (1, false) => ModifierTarget::Right,
         (_, true) => ModifierTarget::Bottom,
-        _ => ModifierTarget::Move,
+        _ => ModifierTarget::None,
     }
 }
 
@@ -106,7 +105,7 @@ pub(super) fn target(hwnd: HWND) -> ModifierTarget {
     if read_window_state().is_tucked {
         return ModifierTarget::None;
     }
-    edges_under_cursor(hwnd).map_or(ModifierTarget::Move, |(side, bottom, _, _)| target_for(side, bottom))
+    edges_under_cursor(hwnd).map_or(ModifierTarget::None, |(side, bottom, _, _)| target_for(side, bottom))
 }
 
 pub(super) fn is_resizing() -> bool {
@@ -177,12 +176,12 @@ mod tests {
     use super::{edges_at, target_for, ModifierTarget};
 
     #[test]
-    fn edges_pick_what_an_alt_drag_changes() {
+    fn edges_pick_what_a_drag_changes() {
         let at = |x, y| {
             let (side, bottom) = edges_at(x, y, 560.0, 400.0, 30.0);
             target_for(side, bottom)
         };
-        assert_eq!(at(280.0, 200.0), ModifierTarget::Move);
+        assert_eq!(at(280.0, 200.0), ModifierTarget::None);
         assert_eq!(at(4.0, 200.0), ModifierTarget::Left);
         assert_eq!(at(556.0, 200.0), ModifierTarget::Right);
         assert_eq!(at(280.0, 395.0), ModifierTarget::Bottom);
@@ -202,14 +201,13 @@ mod tests {
         assert_eq!(at(540.0, 394.0), ModifierTarget::BottomRight);
         assert_eq!(at(6.0, 360.0), ModifierTarget::Left);
         assert_eq!(at(500.0, 394.0), ModifierTarget::Bottom);
-        assert_eq!(at(20.0, 380.0), ModifierTarget::Move);
+        assert_eq!(at(20.0, 380.0), ModifierTarget::None);
     }
 
     #[test]
     fn targets_round_trip_through_the_atomic() {
         for target in [
             ModifierTarget::None,
-            ModifierTarget::Move,
             ModifierTarget::Left,
             ModifierTarget::Right,
             ModifierTarget::Bottom,

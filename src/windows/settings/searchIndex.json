@@ -998,12 +998,12 @@
       "zh-CN": {
         "group": "折叠岛屿",
         "title": "折叠岛屿宽度",
-        "description": "在随内容变化的宽度上加宽或收窄。也可以按住 Alt 拖动折叠岛屿的左右边缘来调。"
+        "description": "在随内容变化的宽度上加宽或收窄。也可以把鼠标移到折叠岛屿的左右边缘，出现提示线后拖动来调。"
       },
       "en": {
         "group": "Collapsed island",
         "title": "Collapsed island width",
-        "description": "Widens or narrows the width that follows the content. Or hold Alt and drag the collapsed island's sides."
+        "description": "Widens or narrows the width that follows the content. Or point at the collapsed island's side until a line shows, then drag it."
       }
     },
     {
@@ -1022,12 +1022,12 @@
       "zh-CN": {
         "group": "展开面板",
         "title": "面板宽度",
-        "description": "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。"
+        "description": "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以把鼠标移到展开面板的左右边缘或底边，出现提示线后拖动来调。"
       },
       "en": {
         "group": "Open panel",
         "title": "Panel width",
-        "description": "Every page has this width and height and scrolls inside when it holds more. Or hold Alt and drag the open panel's side or bottom edge."
+        "description": "Every page has this width and height and scrolls inside when it holds more. Or point at the open panel's side or bottom edge until a line shows, then drag it."
       }
     },
     {
@@ -1724,11 +1724,11 @@
       "page": "shortcutsReference",
       "zh-CN": {
         "group": "岛上操作",
-        "title": "调整面板宽高（按住 Alt 时面板不收起）"
+        "title": "调整面板宽高"
       },
       "en": {
         "group": "On the island",
-        "title": "Resize the panel (it stays open while Alt is held)"
+        "title": "Resize the panel"
       }
     },
     {

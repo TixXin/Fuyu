@@ -1,0 +1,19 @@
+html.island-resize-armed:is([data-island-drag="left"], [data-island-drag="right"]),
+html.island-resize-armed:is([data-island-drag="left"], [data-island-drag="right"]) * {
+  cursor: ew-resize !important;
+}
+
+html.island-resize-armed[data-island-drag="bottom"],
+html.island-resize-armed[data-island-drag="bottom"] * {
+  cursor: ns-resize !important;
+}
+
+html.island-resize-armed[data-island-drag="bottomLeft"],
+html.island-resize-armed[data-island-drag="bottomLeft"] * {
+  cursor: nesw-resize !important;
+}
+
+html.island-resize-armed[data-island-drag="bottomRight"],
+html.island-resize-armed[data-island-drag="bottomRight"] * {
+  cursor: nwse-resize !important;
+}

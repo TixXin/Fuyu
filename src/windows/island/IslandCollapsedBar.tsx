@@ -84,7 +84,7 @@ export function IslandCollapsedBar({
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
   const notch = useIslandNotch();
-  const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
+  const { didDragRef, prepareWindowDrag, cancelWindowDrag } =
     useWindowDragGesture(isTucked, onWindowDragStart);
   const pulseClassName = [
     "island__pulse",
@@ -164,7 +164,6 @@ export function IslandCollapsedBar({
           aria-expanded={preview || peekLine ? undefined : isExpanded}
           aria-controls={preview || peekLine ? undefined : "island-panel"}
           onPointerDown={prepareWindowDrag}
-          onPointerMove={handleWindowDragMove}
           onPointerUp={cancelWindowDrag}
           onPointerCancel={cancelWindowDrag}
           onClick={(event) => {
