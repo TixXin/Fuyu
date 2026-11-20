@@ -1,5 +1,7 @@
 mod bounds;
 #[cfg(target_os = "macos")]
+mod dock_icon;
+#[cfg(target_os = "macos")]
 mod mac_chrome;
 pub(crate) mod open_trace;
 mod sizing;
@@ -85,10 +87,11 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
         _ => {}
     }
     let closing = window.clone();
-    window.on_window_event(move |event| {
-        if let WindowEvent::CloseRequested { .. } = event {
-            bounds::save(&closing);
-        }
+    window.on_window_event(move |event| match event {
+        WindowEvent::CloseRequested { .. } => bounds::save(&closing),
+        #[cfg(target_os = "macos")]
+        WindowEvent::Destroyed => dock_icon::hide(closing.app_handle()),
+        _ => {}
     });
     trace.mark("built");
     *lock_pending() = Some(trace);
@@ -160,6 +163,8 @@ pub fn quit_island(app: AppHandle) {
 }
 
 fn reveal(window: &WebviewWindow) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    dock_icon::show(window.app_handle());
     window.show().map_err(|error| error.to_string())?;
     window.set_focus().map_err(|error| error.to_string())
 }
