@@ -8,7 +8,7 @@ export async function checkIslandLayout(check: (condition: unknown, message: str
   const preview = document.querySelector(".island-bar-preview__bar");
   const chips = [...(preview?.querySelectorAll<HTMLElement>(".island-bar-preview__item") ?? [])].map((chip) => chip.dataset.item);
   check(chips[0] === "status-light" && chips.includes("session-count") && chips.includes("center"), "The island layout page draws the collapsed bar with its items in order");
-  check(!style("status-light")?.open && titles("status-light").includes("状态灯样式"), "A row with a style keeps it folded under the row");
+  check(!style("status-light")?.open && titles("status-light").includes("样式"), "A row with a style keeps it folded under the row");
   await act(async () => { preview!.querySelector<HTMLButtonElement>("[data-item='session-count']")!.click(); });
   check(style("session-count")?.open && row("session-count")?.classList.contains("collapsed-items__item--found") && titles("session-count").includes("样式"),
     "Clicking an item on the preview opens its row with the session ring style");

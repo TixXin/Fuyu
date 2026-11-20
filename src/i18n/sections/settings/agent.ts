@@ -9,6 +9,7 @@ export type SettingsAgentText = {
   titleModeHint: string;
   titleModeOptions: { changes: string; running: string };
   lightSectionTitle: string;
+  lightSectionHint: string;
   lightStyle: string;
   lightStyleHint: string;
   lightStyleOptions: { mark: string; dot: string };
@@ -247,11 +248,12 @@ export const zhCN: SettingsAgentText = {
   titleMode: "什么时候显示",
   titleModeHint: "有变化时：会话开始、跑完或出错时显示 4 秒，等你确认时一直显示到你处理，其余时间留给待办和中心图案。运行时一直显示：有 Agent 在运行就显示，结束 3 秒后恢复待办。",
   titleModeOptions: { changes: "有变化时", running: "运行时一直显示" },
-  lightSectionTitle: "状态灯",
-  lightStyle: "状态灯样式",
-  lightStyleHint: "收起条上 Agent 状态灯的样子。水母：浮屿的标志，和条上的环一样高；空闲时米白、偶尔眨眼，运行时变蓝划水，等你确认时变黄跳动，失败或可能中断时变红皱眉，跑完变绿笑一下。圆点：原来的小圆点。",
+  lightSectionTitle: "浮屿水母",
+  lightSectionHint: "水母是浮屿的标志，一直待在收起条上。开着 Agent 时，它的颜色和动作会跟着 Agent 的状态变；样式在「岛屿布局」里水母那一项改。",
+  lightStyle: "样式",
+  lightStyleHint: "收起条上浮屿标志的样子。水母：和条上的环一样高，平时米白、偶尔游一下眨眨眼；开着 Agent 时，运行变蓝划水，等你确认变黄跳动，失败或可能中断变红皱眉，跑完变绿笑一下。圆点：极简的小圆点，开着 Agent 时按状态变色。",
   lightStyleOptions: { mark: "水母", dot: "圆点" },
-  lightStyleHints: { mark: "浮屿的小水母，颜色和动作随状态变", dot: "简洁的传统小圆点呼吸灯" },
+  lightStyleHints: { mark: "浮屿的小水母，开着 Agent 时随状态变", dot: "简洁的小圆点呼吸灯" },
   agentPageSection: "Agent 页",
   expandChildren: "子 Agent / 子会话默认展开",
   expandChildrenHint: "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。",
@@ -491,11 +493,12 @@ export const en: SettingsAgentText = {
   titleMode: "When to show it",
   titleModeHint: "On changes: for 4 seconds when a session starts, finishes or fails, and while it waits for your approval; otherwise the todo and the center pattern stay. While running: the whole time an agent runs, then the todo again 3 seconds after it finishes.",
   titleModeOptions: { changes: "On changes", running: "While running" },
-  lightSectionTitle: "Status light",
-  lightStyle: "Status light",
-  lightStyleHint: "How the Agent status light looks on the collapsed bar. Jellyfish: the Fuyu mark, as tall as the rings on the bar; cream and blinking now and then while idle, blue and paddling while running, yellow and hopping while waiting for you, red and frowning when failed or possibly stopped, and green with a smile when done. Dot: the original small dot.",
+  lightSectionTitle: "Fuyu jellyfish",
+  lightSectionHint: "The jellyfish is the Fuyu mark and always sits on the collapsed bar. With Agent on, its colour and moves follow the agents' state; change its style under the jellyfish item in Island layout.",
+  lightStyle: "Style",
+  lightStyleHint: "How the Fuyu mark looks on the collapsed bar. Jellyfish: as tall as the rings on the bar, cream with a swim and a blink now and then; with Agent on it turns blue and paddles while running, yellow and hops while waiting for you, red and frowns when failed or possibly stopped, and green with a smile when done. Dot: a minimal dot that takes the state colour with Agent on.",
   lightStyleOptions: { mark: "Jellyfish", dot: "Dot" },
-  lightStyleHints: { mark: "The little Fuyu jellyfish; its colour and moves follow the state", dot: "Minimal breathing status dot" },
+  lightStyleHints: { mark: "The little Fuyu jellyfish; follows the agents' state with Agent on", dot: "Minimal breathing dot" },
   agentPageSection: "Agent page",
   expandChildren: "Expand subagents and child sessions",
   expandChildrenHint: "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them.",

@@ -17,6 +17,7 @@ import { settingsSections } from "./sectionSlot";
 import "./builtinModuleSwitches";
 import "./featureSettings";
 import "../island-layout/registerPlacementLinks";
+import "../island-layout/registerStatusLightStyle";
 
 export type { SettingsPageProps };
 

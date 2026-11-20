@@ -1119,13 +1119,13 @@
       "page": "islandLayout",
       "zh-CN": {
         "group": "收起条上的项目",
-        "title": "状态灯样式",
-        "description": "收起条上 Agent 状态灯的样子。水母：浮屿的标志，和条上的环一样高；空闲时米白、偶尔眨眼，运行时变蓝划水，等你确认时变黄跳动，失败或可能中断时变红皱眉，跑完变绿笑一下。圆点：原来的小圆点。"
+        "title": "样式",
+        "description": "收起条上浮屿标志的样子。水母：和条上的环一样高，平时米白、偶尔游一下眨眨眼；开着 Agent 时，运行变蓝划水，等你确认变黄跳动，失败或可能中断变红皱眉，跑完变绿笑一下。圆点：极简的小圆点，开着 Agent 时按状态变色。"
       },
       "en": {
         "group": "Items on the collapsed bar",
-        "title": "Status light",
-        "description": "How the Agent status light looks on the collapsed bar. Jellyfish: the Fuyu mark, as tall as the rings on the bar; cream and blinking now and then while idle, blue and paddling while running, yellow and hopping while waiting for you, red and frowning when failed or possibly stopped, and green with a smile when done. Dot: the original small dot."
+        "title": "Style",
+        "description": "How the Fuyu mark looks on the collapsed bar. Jellyfish: as tall as the rings on the bar, cream with a swim and a blink now and then; with Agent on it turns blue and paddles while running, yellow and hops while waiting for you, red and frowns when failed or possibly stopped, and green with a smile when done. Dot: a minimal dot that takes the state colour with Agent on."
       }
     },
     {
@@ -1253,17 +1253,6 @@
       "page": "islandLayout",
       "zh-CN": {
         "group": "收起条上的项目",
-        "title": "样式"
-      },
-      "en": {
-        "group": "Items on the collapsed bar",
-        "title": "Style"
-      }
-    },
-    {
-      "page": "islandLayout",
-      "zh-CN": {
-        "group": "收起条上的项目",
         "title": "显示会话数",
         "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
       },
@@ -1372,36 +1361,12 @@
       "zh-CN": {
         "group": "开合动画",
         "title": "动画曲线",
-        "description": "灵动（默认）快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹",
-        "options": [
-          "灵动",
-          "弹性（同官网）",
-          "利落",
-          "柔弹",
-          "先横后竖",
-          "生长",
-          "平滑",
-          "快速",
-          "Q 弹",
-          "无动画"
-        ]
+        "description": "灵动（默认）快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹"
       },
       "en": {
         "group": "Open and close",
         "title": "Animation curve",
-        "description": "Lively (the default) shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot",
-        "options": [
-          "Lively",
-          "Spring (as the website)",
-          "Snappy",
-          "Soft spring",
-          "Unfold",
-          "Grow",
-          "Smooth",
-          "Fast",
-          "Bouncy",
-          "None"
-        ]
+        "description": "Lively (the default) shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot"
       }
     },
     {

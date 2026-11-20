@@ -2,7 +2,7 @@
 
 更新：2026-11-20（应用图标、菜单栏、托盘和岛上已换）
 
-浮屿的标志是一只宽头、四瓣触手、没有光环的小水母（issue #281）。它同时是应用图标、Mac 菜单栏图标，以及岛上 Agent 状态灯的角色。状态、动效和各种尺寸的预览在 `pnpm logo` 打开的 [jellyfish-set-preview.html](../investigations/jellyfish-set-preview.html)。
+浮屿的标志是一只宽头、四瓣触手、没有光环的小水母（issue #281）。它同时是应用图标、Mac 菜单栏图标，以及岛上收起条左边常驻的「浮屿水母」（开着 Agent 时随状态变色、做动作）。状态、动效和各种尺寸的预览在 `pnpm logo` 打开的 [jellyfish-set-preview.html](../investigations/jellyfish-set-preview.html)。
 
 ## 定稿文件
 
