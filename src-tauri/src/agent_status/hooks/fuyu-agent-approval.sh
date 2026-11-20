@@ -1,6 +1,13 @@
 #!/bin/sh
 agent=${1:-codex}
+[ "$agent" = claudeCode ] && [ -n "$CURSOR_VERSION" ] && exit 0
 case "$agent" in
+  claudeCode)
+    case "$2" in
+      question) route=claude/ask-user-question ;;
+      activity) route=claude/activity ;;
+      *) route=claude/permission-request ;;
+    esac ;;
   codex) route=codex/permission-request ;;
   workbuddy) route=workbuddy/permission-request ;;
   qoder) route=qoder/permission-request ;;

@@ -1,13 +1,5 @@
 use super::*;
 
-fn approval(port: u16) -> ApprovalHook {
-    ApprovalHook {
-        url: format!("http://127.0.0.1:{port}/claude/permission-request"),
-        question_url: Some(format!("http://127.0.0.1:{port}/claude/ask-user-question")),
-        activity_url: Some(format!("http://127.0.0.1:{port}/claude/activity")),
-        token: "t".to_string(),
-    }
-}
 
 fn paths() -> (&'static Path, &'static Path) {
     if cfg!(windows) {
@@ -20,7 +12,7 @@ fn paths() -> (&'static Path, &'static Path) {
 #[test]
 fn every_hook_is_one_command_string_without_args() {
     let (running, status) = paths();
-    for (event, entry) in claude_code_installed_entries(running, status, Some(&approval(51000))) {
+    for (event, entry) in claude_code_installed_entries(running, status, Some(&ApprovalHook)) {
         for hook in entry["hooks"].as_array().unwrap() {
             assert!(hook.get("args").is_none(), "{event}: {hook}");
             if hook["type"] == json!("command") {
@@ -56,12 +48,12 @@ fn hooks_pass_the_waiting_notifications_and_phases() {
 #[test]
 fn windows_hooks_start_with_the_quoted_script_or_powershell() {
     let (running, status) = paths();
-    let entries = claude_code_installed_entries(running, status, Some(&approval(51000)));
+    let entries = claude_code_installed_entries(running, status, Some(&ApprovalHook));
     let command = |event: &str| entries.iter().find(|(name, _)| *name == event).unwrap().1["hooks"][0]["command"].as_str().unwrap().to_string();
     assert_eq!(command("UserPromptSubmit"), r#""C:/Users/a b/fuyu-agent-running.cmd" claudeCode"#);
     assert_eq!(command("Stop"), r#"powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:/Users/a b/fuyu-agent-status.ps1" claudeCode completed"#);
     let activity = entries.iter().rev().find(|(name, _)| *name == "Stop").unwrap().1["hooks"][0].clone();
-    assert_eq!(activity["command"], json!(r#""C:/Users/a b/fuyu-agent-running.cmd" claudeCode activity http://127.0.0.1:51000/claude/activity t"#));
+    assert_eq!(activity["command"], json!(r#"powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:/Users/a b/fuyu-agent-approval.ps1" claudeCode activity"#));
     assert_eq!(activity["async"], json!(true));
     assert_eq!(claude_code_running_command(Path::new(r"C:\a$b\r.cmd"), &["claudeCode"]), "'C:/a$b/r.cmd' claudeCode");
 }
@@ -73,22 +65,30 @@ fn approval_hook_sits_beside_the_status_hook_and_repair_replaces_it() {
     let mut hooks = Map::new();
     hooks.insert("PermissionRequest".to_string(), json!([mine]));
 
-    install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, Some(&approval(47830))));
-    install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, Some(&approval(51000))));
+    let legacy_http = json!({ "hooks": [{ "type": "http", "url": "http://127.0.0.1:56439/claude/permission-request", "headers": { "Authorization": "Bearer old", "X-Fuyu-Hook": "fuyu-agent-approval" } }] });
+    hooks.get_mut("PermissionRequest").unwrap().as_array_mut().unwrap().push(legacy_http);
+    assert!(has_fixed_port_hooks(&Value::Object(hooks.clone())));
+    install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, Some(&ApprovalHook)));
+    install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, Some(&ApprovalHook)));
 
+    assert!(!has_fixed_port_hooks(&Value::Object(hooks.clone())));
     let entries = hooks["PermissionRequest"].as_array().unwrap();
     assert_eq!(entries.len(), 3, "the user's hook, the status hook and the approval hook");
     assert_eq!(entries[0], mine);
     let hook = &entries[2]["hooks"][0];
-    assert_eq!((hook["type"].clone(), hook["url"].clone()), (json!("http"), json!("http://127.0.0.1:51000/claude/permission-request")));
-    assert_eq!(hook["headers"]["Authorization"], json!("Bearer t"));
+    let command = hook["command"].as_str().unwrap().replace('\'', "");
+    assert_eq!(hook["type"], json!("command"));
+    assert!(command.contains("fuyu-agent-approval") && command.contains("claudeCode") && !command.contains("127.0.0.1"), "{command}");
+    assert_eq!(hook["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
+    assert!(!hooks.values().any(|entries| entries.to_string().contains("56439")), "the old hook with a fixed port is gone");
     let pre_tool = hooks["PreToolUse"].as_array().unwrap();
     assert_eq!(pre_tool[1]["matcher"], json!("AskUserQuestion"));
+    assert!(pre_tool[1]["hooks"][0]["command"].as_str().unwrap().replace('\'', "").contains("claudeCode question"));
 
     for event in ACTIVITY_EVENTS {
         let activity = &hooks[event].as_array().unwrap().last().unwrap()["hooks"][0];
         let command = activity["command"].as_str().unwrap().replace('\'', "");
-        assert!(command.contains("claudeCode activity http://127.0.0.1:51000/claude/activity t"), "{event}: {command}");
+        assert!(command.contains("fuyu-agent-approval") && command.contains("claudeCode activity") && !command.contains("127.0.0.1"), "{event}: {command}");
         assert_eq!(activity["async"], json!(true));
         assert!(is_approval_hook(activity) && value_contains_island_hook_signature(activity));
     }

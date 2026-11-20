@@ -2,23 +2,19 @@ use serde_json::{json, Map, Value};
 use std::{fs, path::Path};
 
 use super::{
-    write_text_file, AGENT_RUNNING_NOTIFICATION_ARG, AGENT_SESSION_SCRIPT_FILE_NAME,
-    AGENT_HOOK_SIGNATURE,
+    write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME, AGENT_RUNNING_NOTIFICATION_ARG, AGENT_SESSION_SCRIPT_FILE_NAME,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ApprovalHook {
-    pub url: String,
-    pub question_url: Option<String>,
-    pub activity_url: Option<String>,
-    pub token: String,
-}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ApprovalHook;
 
 pub(super) const ACTIVITY_EVENTS: [&str; 6] = ["PostToolUse", "PostToolUseFailure", "PermissionDenied", "Stop", "SubagentStop", "UserPromptSubmit"];
 
 pub(super) const APPROVAL_HOOK_TIMEOUT_SECONDS: i64 = 150;
 
 pub(super) const APPROVAL_HOOK_MARKER_HEADER: &str = "X-Fuyu-Hook";
+
+const APPROVAL_SCRIPT_STEM: &str = "fuyu-agent-approval";
 
 pub(super) fn install_claude_code_status_hooks(
     config_path: &Path,
@@ -152,25 +148,33 @@ pub(super) fn claude_code_installed_entries(
     approval: Option<&ApprovalHook>,
 ) -> Vec<(&'static str, Value)> {
     let mut entries = claude_code_hook_entries(running_script_path, status_script_path);
-    if let Some(approval) = approval {
-        entries.push(("PermissionRequest", claude_code_http_hook_entry(&approval.url, &approval.token, "approval")));
-        if let Some(question_url) = &approval.question_url {
-            let mut question = claude_code_http_hook_entry(question_url, &approval.token, "question");
-            if let Value::Object(object) = &mut question {
-                object.insert("matcher".to_string(), Value::String("AskUserQuestion".to_string()));
-            }
-            entries.push(("PreToolUse", question));
+    if approval.is_some() {
+        let approval_script = running_script_path.with_file_name(AGENT_APPROVAL_SCRIPT_FILE_NAME);
+        entries.push(("PermissionRequest", claude_code_approval_hook_entry(&approval_script, None, APPROVAL_HOOK_TIMEOUT_SECONDS)));
+        let mut question = claude_code_approval_hook_entry(&approval_script, Some(QUESTION_ARG), APPROVAL_HOOK_TIMEOUT_SECONDS);
+        if let Value::Object(object) = &mut question {
+            object.insert("matcher".to_string(), Value::String("AskUserQuestion".to_string()));
         }
-        if let Some(activity_url) = &approval.activity_url {
-            for event_name in ACTIVITY_EVENTS {
-                entries.push((event_name, claude_code_activity_hook_entry(running_script_path, activity_url, &approval.token)));
+        entries.push(("PreToolUse", question));
+        for event_name in ACTIVITY_EVENTS {
+            let mut activity = claude_code_approval_hook_entry(&approval_script, Some(ACTIVITY_ARG), 10);
+            if let Some(hook) = activity["hooks"][0].as_object_mut() {
+                hook.insert("async".to_string(), Value::Bool(true));
             }
+            entries.push((event_name, activity));
         }
     }
     entries
 }
 
+fn claude_code_approval_hook_entry(approval_script: &Path, mode: Option<&str>, timeout: i64) -> Value {
+    let args: Vec<&str> = std::iter::once(super::claude_code::PROVIDER).chain(mode).collect();
+    command_hook_entry(claude_code_powershell_command(approval_script, &args), timeout)
+}
+
 pub(super) const ACTIVITY_ARG: &str = "activity";
+
+const QUESTION_ARG: &str = "question";
 
 #[cfg(windows)]
 fn quoted_script(path: &Path) -> String {
@@ -212,31 +216,6 @@ pub(super) fn claude_code_running_command(script_path: &Path, rest: &[&str]) -> 
 #[cfg(not(windows))]
 fn claude_code_powershell_command(script_path: &Path, rest: &[&str]) -> String {
     claude_code_running_command(script_path, rest)
-}
-
-fn claude_code_activity_hook_entry(running_script_path: &Path, url: &str, token: &str) -> Value {
-    let command = claude_code_running_command(running_script_path, &[super::claude_code::PROVIDER, ACTIVITY_ARG, url, token]);
-    let mut entry = command_hook_entry(command, 10);
-    if let Some(hook) = entry["hooks"][0].as_object_mut() {
-        hook.insert("async".to_string(), Value::Bool(true));
-    }
-    entry
-}
-
-fn claude_code_http_hook_entry(url: &str, token: &str, marker: &str) -> Value {
-    json!({
-        "hooks": [
-            {
-                "type": "http",
-                "url": url,
-                "headers": {
-                    "Authorization": format!("Bearer {token}"),
-                    APPROVAL_HOOK_MARKER_HEADER: format!("{AGENT_HOOK_SIGNATURE}{marker}"),
-                },
-                "timeout": APPROVAL_HOOK_TIMEOUT_SECONDS
-            }
-        ]
-    })
 }
 
 pub(super) fn install_claude_code_hook_events(
@@ -285,7 +264,7 @@ fn unmanaged_entries(hooks: &mut Map<String, Value>, event_name: &str, keep_appr
 
 fn is_approval_hook(hook: &Value) -> bool {
     let text = hook.to_string();
-    text.contains(APPROVAL_HOOK_MARKER_HEADER) || text.contains("/claude/activity")
+    text.contains(APPROVAL_HOOK_MARKER_HEADER) || text.contains("/claude/activity") || text.contains(APPROVAL_SCRIPT_STEM)
 }
 
 fn remove_managed(mut entry: Value, keep_approval: bool) -> Option<Value> {
@@ -349,6 +328,14 @@ pub(super) fn claude_code_session_hook_entry(script_path: &Path, event: &str) ->
 pub(super) fn has_exec_form_hooks(hooks: &Value) -> bool {
     hooks.as_object().is_some_and(|events| {
         events.values().filter_map(Value::as_array).flatten().filter_map(|entry| entry["hooks"].as_array()).flatten().any(|hook| hook.get("args").is_some() && value_contains_island_hook_signature(hook))
+    })
+}
+
+pub(super) fn has_fixed_port_hooks(hooks: &Value) -> bool {
+    hooks.as_object().is_some_and(|events| {
+        events.values().filter_map(Value::as_array).flatten().filter_map(|entry| entry["hooks"].as_array()).flatten().any(|hook| {
+            value_contains_island_hook_signature(hook) && (hook["type"] == "http" || hook.to_string().contains("/claude/activity"))
+        })
     })
 }
 

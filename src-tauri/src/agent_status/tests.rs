@@ -1905,18 +1905,9 @@ mod approval_hooks_without_the_installed_endpoint {
     use serde_json::Value;
     use std::{fs, path::Path};
 
-    fn approval() -> ApprovalHook {
-        ApprovalHook {
-            url: "http://127.0.0.1:56439/claude/permission-request".into(),
-            question_url: Some("http://127.0.0.1:56439/claude/ask-user-question".into()),
-            activity_url: Some("http://127.0.0.1:56439/claude/activity".into()),
-            token: "release".into(),
-        }
-    }
-
     fn hook_count(settings: &Path, url: &str) -> usize {
         let text: Value = serde_json::from_str(&fs::read_to_string(settings).unwrap()).unwrap();
-        text["hooks"].as_object().unwrap().values().flat_map(|entries| entries.as_array().unwrap()).filter(|entry| entry.to_string().contains(url)).count()
+        text["hooks"].as_object().unwrap().values().flat_map(|entries| entries.as_array().unwrap()).filter(|entry| entry.to_string().replace(['\'', '"', '\\'], "").contains(url)).count()
     }
 
     #[test]
@@ -1924,15 +1915,15 @@ mod approval_hooks_without_the_installed_endpoint {
         let (home, _app) = temp_dirs();
         let settings = home.join(".claude").join("settings.json");
         let (running, status) = (Path::new("/fuyu/fuyu-agent-running.sh"), Path::new("/fuyu/fuyu-agent-status.sh"));
-        install_claude_code_status_hooks(&settings, running, status, Some(&approval()), false).unwrap();
-        let counts = || ["permission-request", "ask-user-question", "/claude/activity", "fuyu-agent-status.sh"].map(|text| hook_count(&settings, text));
+        install_claude_code_status_hooks(&settings, running, status, Some(&ApprovalHook), false).unwrap();
+        let counts = || ["fuyu-agent-approval", "claudeCode question", "claudeCode activity", "fuyu-agent-status"].map(|text| hook_count(&settings, text));
         let before = counts();
-        assert!(before[0] == 1 && before[1] == 1 && before[2] == 6 && before[3] > 0);
+        assert!(before[0] == 8 && before[1] == 1 && before[2] == 6 && before[3] > 0);
 
         install_claude_code_status_hooks(&settings, running, status, None, true).unwrap();
         assert_eq!(counts(), before);
 
         install_claude_code_status_hooks(&settings, running, status, None, false).unwrap();
-        assert_eq!(hook_count(&settings, "permission-request") + hook_count(&settings, "/claude/activity"), 0, "with approvals off the installed app removes them");
+        assert_eq!(hook_count(&settings, "fuyu-agent-approval"), 0, "with approvals off the installed app removes them");
     }
 }

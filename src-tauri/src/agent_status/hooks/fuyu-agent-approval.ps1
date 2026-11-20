@@ -16,6 +16,11 @@ $routes = @{
 }
 $agent = if ($args.Count -gt 0) { [string]$args[0] } else { 'codex' }
 $route = $routes[$agent]
+if ($agent -eq 'claudeCode') {
+    if ($env:CURSOR_VERSION) { exit 0 }
+    $mode = if ($args.Count -gt 1) { [string]$args[1] } else { '' }
+    $route = switch ($mode) { 'question' { 'claude/ask-user-question' } 'activity' { 'claude/activity' } default { 'claude/permission-request' } }
+}
 if (-not $route) { exit 0 }
 function Write-CursorAsk {
   if ($agent -ne 'cursor') { return }

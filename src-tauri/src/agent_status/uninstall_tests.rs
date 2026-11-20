@@ -156,12 +156,7 @@ fn all_harnesses_uninstall_cleanly_while_keeping_user_configs() {
     for (id, hooks) in &harnesses {
         (hooks.install)(&env).unwrap_or_else(|err| panic!("install {id}: {err}"));
     }
-    let approval = ApprovalHook {
-        url: "http://127.0.0.1:47830/claude/permission-request".into(),
-        question_url: Some("http://127.0.0.1:47830/claude/ask-user-question".into()),
-        activity_url: Some("http://127.0.0.1:47830/claude/activity".into()),
-        token: "tok".into(),
-    };
+    let approval = ApprovalHook;
     install_claude_code_status_hooks(
         &home.join(".claude/settings.json"),
         &running,
