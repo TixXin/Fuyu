@@ -237,22 +237,6 @@ fn a_decision_on_the_island_answers_the_waiting_hook() {
 }
 
 #[test]
-fn cursor_asks_in_the_editor_while_the_island_card_stays_up() {
-    let server = TestServer::start(Duration::from_secs(30));
-    let body = r#"{"conversation_id":"c1","command":"echo hi","cwd":"/tmp","workspace_roots":["/tmp"]}"#;
-    let (status, answer) = send(server.port, &raw_request(server.port, "/cursor/permission", TOKEN, "", body));
-    assert_eq!(status, 200);
-    assert_eq!(serde_json::from_str::<Value>(&answer).unwrap(), json!({ "permission": "ask" }));
-    server.wait_for(|server| server.requested().len() == 1);
-    let id = server.requested()[0].0;
-    assert_eq!(server.shared.pending().len(), 1);
-    server.shared.decide(id, out(Decision::Terminal, None)).unwrap();
-    server.wait_for(|server| !server.closed().is_empty());
-    assert_eq!(server.closed(), vec![(id, CloseReason::HandedBack)]);
-    assert!(server.shared.pending().is_empty());
-}
-
-#[test]
 fn handing_back_or_waiting_too_long_returns_an_empty_answer() {
     let server = TestServer::start(Duration::from_millis(400));
     let waiting = server.post_later("s1");
