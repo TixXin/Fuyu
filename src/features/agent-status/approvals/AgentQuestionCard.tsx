@@ -20,11 +20,13 @@ export function AgentQuestionCard({
   sessions,
   options = DEFAULT_AGENT_NOTICE_OPTIONS,
   preview = false,
+  statusInBand = false,
 }: {
   approvals: AgentApprovals;
   sessions: AgentSessionSummary[];
   options?: AgentNoticeOptions;
   preview?: boolean;
+  statusInBand?: boolean;
 }) {
   const t = useTranslation();
   const request = approvals.current;
@@ -104,7 +106,7 @@ export function AgentQuestionCard({
       noticeStyle={options.style}
       tone="yourTurn"
       provider={request.agent}
-      headline={t.agentNotice.headline.question}
+      headline={statusInBand ? "" : t.agentNotice.headline.question}
       state={t.agentNotice.state.question}
       title={title}
       titlePrefix={prefix}

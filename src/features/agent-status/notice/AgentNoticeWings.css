@@ -2,7 +2,8 @@
   display: none;
 }
 
-:is(:root[data-island-notch="on"], [data-notice-notch="on"]) .agent-notice-stack__notch {
+:root[data-island-notch="on"] .island--popup .agent-notice-stack__notch,
+[data-notice-notch="on"] .agent-notice-stack__notch {
   display: grid;
   flex: none;
   grid-template-columns: minmax(0, 1fr) calc(var(--island-notch-width) / var(--island-expanded-scale, 1) + 16px) minmax(0, 1fr);

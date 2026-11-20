@@ -203,6 +203,10 @@
   text-overflow: ellipsis;
 }
 
+.agent-notice__headline:empty {
+  display: none;
+}
+
 .agent-notice--status .agent-notice__title {
   display: block;
   margin-top: 1px;

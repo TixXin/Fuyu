@@ -167,6 +167,9 @@ async function runChecks() {
     check(document.querySelector(".agent-approval") && Math.abs(box(approvalWings).top - box(island()).top) < 1, "审批卡：刘海两边同样有两翼标题带");
     check(approvalWings.contains(hit(approvalWings.querySelector(".agent-provider-icon")!)) && approvalState.textContent === "等你确认" && approvalWings.contains(hit(approvalState)), "审批卡的两翼看得见：左边是发起审批的 Agent 图标，右边是「等你确认」");
     check(box(document.querySelector(".agent-approval")!).top >= box(island()).top + NOTCH.height - 0.5, "审批卡在刘海下面");
+    check(document.querySelector(".agent-approval .agent-notice__headline")?.textContent === "Bash", "两翼已写「等你确认」时卡片标题只留工具名，不再重复状态句");
+    const allowBtn = [...document.querySelectorAll<HTMLElement>(".agent-approval .agent-notice__button")].find((button) => button.textContent?.includes("允许"));
+    check(allowBtn && box(allowBtn).bottom <= box(island()).bottom + 0.5, "审批按钮完整露在岛内，不被底部裁切");
     await set({ card: "pile" });
     await settleTransitions();
     const pileWing = document.querySelector<HTMLElement>(".agent-notice-stack__notch .agent-notice-stack__wing--left")!;

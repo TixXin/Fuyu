@@ -22,8 +22,7 @@ import { isTestSession } from "./testNotice";
 import type { UnseenSessions } from "./useUnseenSessions";
 import type { SessionRemoval } from "./useHiddenSessions";
 import type { AlertedSession } from "./useAgentAlerts";
-import { AgentApprovalCard } from "./approvals/AgentApprovalCard";
-import { AgentQuestionCard } from "./approvals/AgentQuestionCard";
+import { AgentApprovalNotice } from "./approvals/AgentApprovalNotice";
 import type { AgentApprovals } from "./approvals/useAgentApprovals";
 import { AgentSessionRow } from "./AgentSessionRow";
 import { AgentSessionNotice } from "./notice/AgentSessionNotice";
@@ -31,6 +30,7 @@ import { DEFAULT_AGENT_NOTICE_OPTIONS, type AgentNoticeOptions } from "./notice/
 import { AgentNoticeStack } from "./notice/AgentNoticeStack";
 import { AgentNoticeWings } from "./notice/AgentNoticeWings";
 import { stackItemOf } from "./notice/noticeStack";
+import { useNotchBandLive } from "./notice/useNotchBandLive";
 import type { AlertedNotice } from "./useAgentAlerts";
 import type { AgentNoticeNotch, AgentNoticeStack as NoticeStackMode } from "./agentSettings";
 import { AgentSessionRowMenu } from "./AgentSessionRowMenu";
@@ -96,6 +96,8 @@ export function AgentSessionsPanel({
   onOpenAgentPage?: () => void;
 }) {
   const t = useTranslation();
+  const notchLive = useNotchBandLive();
+  const statusInBand = notch === "band" && notchLive;
   const [pickedKey, setPickedKey] = useState<string | null>(null);
   const shown = (reveal && stack.find((entry) => entry.key === pickedKey)) || reveal;
   const sessions = shown ? [listed.find((session) => sessionKey(session) === shown.key) ?? shown.session] : listed;
@@ -206,19 +208,7 @@ export function AgentSessionsPanel({
   };
 
   if (approvals?.current) {
-    const items = [{ key: "approval", provider: approvals.current.agent, tone: "needs" as const, title: "", state: t.agentNotice.state[approvals.current.kind === "question" ? "question" : "needs"] }];
-    return (
-      <section className="agent-sessions" aria-label={t.agent.sessions.title}>
-        <AgentNoticeWings mode={stackMode} notch={notch} items={items} activeKey="approval" />
-        <AgentNoticeStack mode={stackMode} notch={notch} items={items} activeKey="approval" onSelect={() => {}}>
-          {() => approvals.current?.kind === "question" ? (
-            <AgentQuestionCard approvals={approvals} sessions={listed} options={notice} />
-          ) : (
-            <AgentApprovalCard approvals={approvals} sessions={listed} options={notice} />
-          )}
-        </AgentNoticeStack>
-      </section>
-    );
+    return <AgentApprovalNotice approvals={approvals} sessions={listed} notice={notice} stackMode={stackMode} notch={notch} statusInBand={statusInBand} />;
   }
 
   if (shown && sessions[0]) {
@@ -240,6 +230,7 @@ export function AgentSessionsPanel({
                   icon={icon}
                   onOpen={() => focus(session)}
                   onOpenAgentPage={onOpenAgentPage}
+                  statusInBand={statusInBand}
                 />
               )}
             </AgentNoticeStack>

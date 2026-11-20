@@ -35,6 +35,7 @@ export function AgentSessionNotice({
   onOpen,
   onOpenAgentPage,
   cardRef,
+  statusInBand = false,
 }: {
   session: AgentSessionSummary;
   options: AgentNoticeOptions;
@@ -44,6 +45,7 @@ export function AgentSessionNotice({
   onOpen: () => void;
   onOpenAgentPage?: (() => void) | null;
   cardRef?: Ref<HTMLElement>;
+  statusInBand?: boolean;
 }) {
   const t = useTranslation();
   const copy = t.agentNotice;
@@ -52,9 +54,11 @@ export function AgentSessionNotice({
   const provider = getAgentProviderLabel(session.provider);
   const title = session.title ?? project ?? provider;
   const tool = session.currentTool ?? null;
-  const headline = tone === "working" ? copy.headline.working(tool?.name ?? null)
-    : tone === "needs" ? (tool ? copy.headline.needs(tool.name) : copy.state.needs)
-    : copy.headline[tone];
+  const headline = statusInBand
+    ? (tone === "working" || tone === "needs" ? tool?.name ?? "" : "")
+    : tone === "working" ? copy.headline.working(tool?.name ?? null)
+      : tone === "needs" ? (tool ? copy.headline.needs(tool.name) : copy.state.needs)
+      : copy.headline[tone];
 
   let body = null;
   if (tone === "working" && tool) {

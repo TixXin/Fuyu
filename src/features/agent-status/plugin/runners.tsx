@@ -47,7 +47,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
     quiet,
     canPopUp: !quiet && mode === "collapsed" && !isTucked,
   });
-  const { alertedSession, alertedStack, approvals, agentCardHeight, alertPopup } = useIslandAgentAlerts({
+  const { alertedSession, alertedStack, approvals, agentCardHeight, alertPopup, alertWide } = useIslandAgentAlerts({
     sessions: agentSessions,
     unseen: unseenAgentSessions.keys,
     settings,
@@ -96,7 +96,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   const busy = agentSessions.some((session) => session.phase === "running" || session.phase === "waiting");
   const list: IslandContribution[] = [
     { kind: "status", state: agentVisualState, label: agentStatusLabel },
-    { kind: "popup", page: "agents", height: agentCardHeight !== undefined ? getAgentAlertExpandedHeight(agentCardHeight) : undefined, saving: AGENT_POPUP_LIST_SAVING, open: alertPopup },
+    { kind: "popup", page: "agents", height: agentCardHeight !== undefined ? getAgentAlertExpandedHeight(agentCardHeight) : undefined, saving: AGENT_POPUP_LIST_SAVING, open: alertPopup, wide: alertWide },
   ];
   list.push({ kind: "side", item: "agent", height: ISLAND_SIDE_ROW_HEIGHT });
   if (line) list.push(line);

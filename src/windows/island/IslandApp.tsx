@@ -115,12 +115,14 @@ export function IslandApp() {
     setPage,
     openIslandPage,
   });
-  const hasOpenPopup = [...popups.values()].some((entry) => entry.open === true);
+  const openPopup = [...popups.values()].find((entry) => entry.open === true);
+  const hasOpenPopup = openPopup !== undefined;
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
     hasOpenPopup,
     null,
     panelIslandWidth(settings.panelWidth, settings.expandedScale),
+    openPopup?.wide === true,
   );
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
   const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
