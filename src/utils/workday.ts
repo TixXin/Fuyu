@@ -6,6 +6,10 @@ const OFF_MARK = /[（(]休[)）]\s*$/u;
 const WORK_MARK = /[（(]班[)）]\s*$/u;
 const DAY_MS = 86_400_000;
 
+export function holidayTitleName(title: string): string {
+  return title.trim().replace(OFF_MARK, "").replace(WORK_MARK, "").trim();
+}
+
 export function parseHolidayTitleMark(title: string): HolidayDayMark | null {
   const trimmed = title.trim();
   if (WORK_MARK.test(trimmed)) return "work";

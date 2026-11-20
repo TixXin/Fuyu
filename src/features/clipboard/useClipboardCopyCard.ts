@@ -5,7 +5,7 @@ import { useClipboardLinks } from "./useClipboardLinks";
 
 const LINK_SECONDS = 6;
 
-type Card = { item: ClipboardHistoryItem; key: number; link: URL | null; offered: boolean };
+type Card = { item: ClipboardHistoryItem; key: number; link: URL | null; offered: boolean; needsAccess: boolean };
 
 export function useClipboardCopyCard(enabled: boolean) {
   const links = useClipboardLinks();
@@ -30,12 +30,12 @@ export function useClipboardCopyCard(enabled: boolean) {
     if (!enabled) return;
     let cancelled = false;
     let stop: (() => void) | null = null;
-    void listenClipboardItemCopied(({ item, seconds, origin }) => {
+    void listenClipboardItemCopied(({ item, seconds, origin, pasteBlocked }) => {
       const offered = origin === "capture" ? offeredLink(item, settings.current) : null;
       if (origin === "capture" ? !offered : seconds <= 0) return;
       shownFor.current = (offered ? Math.max(seconds, LINK_SECONDS) : seconds) * 1000;
       setSaved(null);
-      setCurrent({ item, key: Date.now(), link: offered ?? itemLink(item), offered: offered !== null });
+      setCurrent({ item, key: Date.now(), link: offered ?? itemLink(item), offered: offered !== null, needsAccess: pasteBlocked === "accessibility" });
       release();
     }).then((unlisten) => {
       if (cancelled) unlisten();

@@ -35,6 +35,12 @@ export function CalendarAlertsSection() {
         />
       )}
       <SettingsToggleRow
+        title={text.holidayEveReminder}
+        description={text.holidayEveReminderHint}
+        checked={prefs.holidayEveReminder}
+        onChange={(holidayEveReminder) => setPrefs({ ...prefs, holidayEveReminder })}
+      />
+      <SettingsToggleRow
         title={text.pauseMediaOnJoin}
         description={text.pauseMediaOnJoinHint}
         checked={prefs.pauseMediaOnJoin}

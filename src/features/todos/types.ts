@@ -5,7 +5,7 @@ export type { TodoProject };
 
 export type TodoPriority = "high" | "medium" | "low";
 export type TodoColor = "red" | "orange" | "yellow" | "green" | "blue" | "purple";
-export type TodoRecurrenceKind = "daily" | "workdays" | "weekly" | "monthly";
+export type TodoRecurrenceKind = "daily" | "workdays" | "weekly" | "monthly" | "yearly" | "lunarYearly";
 
 export type TodoRecurrence = {
   kind: TodoRecurrenceKind;

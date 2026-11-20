@@ -7,8 +7,9 @@ import { CalendarEmpty } from "./CalendarEmpty";
 import { CalendarMonth } from "./CalendarMonth";
 import { CalendarTodoInput } from "./CalendarTodoInput";
 import { prepareCalendarEvents, resolveCalendarColor } from "./calendarPrefs";
+import { nextHolidayBreak } from "./holidayBreaks.ts";
 import { joinCalendarMeeting } from "./joinMeeting";
-import { chineseDay } from "./lunar.ts";
+import { chineseDay } from "../../utils/lunar.ts";
 import { agendaDayStarts, eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
 import { SCHEDULED_TODO_UID, scheduledTodoEvents } from "./todoEvents";
 import { clockTime } from "./upcoming";
@@ -71,7 +72,13 @@ export function CalendarPanel({
     const chinese = chineseDay(new Date(day));
     const named = chinese.festival ?? chinese.term ?? chinese.memorial;
     const coming = day === today && !named ? nextSpecialDay(day) : null;
-    return [chinese.lunar, named, coming ? text.daysUntil(coming.name, coming.days) : ""].filter(Boolean).join(" · ");
+    const holiday = day === today ? nextHolidayBreak(events, new Date(day)) : null;
+    return [
+      chinese.lunar,
+      named,
+      coming ? text.daysUntil(coming.name, coming.days) : "",
+      holiday ? text.holidayIn(holiday.name, holiday.days, holiday.length) : "",
+    ].filter(Boolean).join(" · ");
   };
   const tomorrow = nextDay(today);
   const days = agendaDayStarts(today, selected, prefs.agendaRange).map((day) => ({

@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale, useTranslation } from "../../i18n";
 import type { CalendarEvent } from "./api";
 import type { WeekStartsOn } from "./calendarPrefs";
-import { chineseDay } from "./lunar.ts";
+import { chineseDay } from "../../utils/lunar.ts";
 import { dayMark, monthDays, monthWeekNumbers, namesTheDay, nextDay, resolveWeekStart, startOfDay } from "./monthView.ts";
 import "./CalendarMonth.css";
 

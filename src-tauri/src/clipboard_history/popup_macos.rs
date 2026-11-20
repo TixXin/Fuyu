@@ -60,7 +60,11 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
     let _ = window.set_content_protected(super::wanted_capture_protection(settings.hide_from_capture));
     super::sequence::stop();
     let own = i32::try_from(std::process::id()).ok();
-    *TARGET_APP.lock().unwrap_or_else(PoisonError::into_inner) = apps::frontmost_pid().filter(|pid| Some(*pid) != own);
+    let frontmost = apps::frontmost_pid();
+    if frontmost.is_some() && frontmost == own {
+        eprintln!("clipboard paste: Fuyu itself was in front when the window opened, so there is no app to paste into");
+    }
+    *TARGET_APP.lock().unwrap_or_else(PoisonError::into_inner) = frontmost.filter(|pid| Some(*pid) != own);
 
     let (width, height) = popup_size(settings.popup_layout);
     let _ = window.set_size(Size::Logical(LogicalSize::new(width, height)));
@@ -167,9 +171,15 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
         service.copy_item_as(id, copy_as)?;
     }
     if !settings.popup_pinned {
-        hide(app)?;
+        hide_before_paste(app);
     }
-    Ok(paste_into(target, settings.auto_paste, options.enter))
+    let outcome = paste_into(target, settings.auto_paste, options.enter);
+    match outcome {
+        Outcome::NoAccess => super::copy_notice::notify_not_pasted(id, true),
+        Outcome::NoTarget => super::copy_notice::notify_not_pasted(id, false),
+        Outcome::Sent | Outcome::Off => {}
+    }
+    Ok(outcome == Outcome::Sent)
 }
 
 pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(), String> {
@@ -177,39 +187,68 @@ pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(),
     super::suspend_clipboard_capture(Duration::from_millis(800));
     super::clipboard_io::write_clipboard_text(text)?;
     if !settings.popup_pinned {
-        hide(app)?;
+        hide_before_paste(app);
     }
     paste_into(target_for_paste(settings.popup_pinned), settings.auto_paste, enter);
     Ok(())
 }
 
-fn will_send_keys(target: Option<i32>, auto_paste: bool, can_post_keys: impl FnOnce() -> bool) -> Option<i32> {
-    target.filter(|_| auto_paste && can_post_keys())
+fn hide_before_paste(app: &AppHandle) {
+    if let Err(error) = hide(app) {
+        eprintln!("clipboard paste: could not hide the clipboard window: {error}");
+    }
 }
 
-fn paste_into(target: Option<i32>, auto_paste: bool, enter: bool) -> bool {
-    let Some(target) = will_send_keys(target, auto_paste, input::can_post_keys) else {
-        if target.is_some() && auto_paste {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Outcome {
+    Sent,
+    Off,
+    NoTarget,
+    NoAccess,
+}
+
+fn outcome(target: Option<i32>, auto_paste: bool, can_post_keys: impl FnOnce() -> bool) -> Outcome {
+    match (auto_paste, target) {
+        (false, _) => Outcome::Off,
+        (true, None) => Outcome::NoTarget,
+        (true, Some(_)) if !can_post_keys() => Outcome::NoAccess,
+        (true, Some(_)) => Outcome::Sent,
+    }
+}
+
+fn paste_into(target: Option<i32>, auto_paste: bool, enter: bool) -> Outcome {
+    let result = outcome(target, auto_paste, input::can_post_keys);
+    match result {
+        Outcome::NoTarget => eprintln!("clipboard paste: no app was recorded when the window opened, so it was only copied"),
+        Outcome::NoAccess => {
+            let own = i32::try_from(std::process::id()).unwrap_or_default();
+            let owner = apps::display_name(apps::responsible_pid(own)).unwrap_or_else(|| "Fuyu".to_string());
+            eprintln!("clipboard paste: {owner} may not send keys (Privacy & Security > Accessibility), so it was only copied");
             thread::spawn(input::ask_to_post_keys);
         }
-        return false;
+        Outcome::Sent | Outcome::Off => {}
+    }
+    let (Outcome::Sent, Some(target)) = (result, target) else {
+        return result;
     };
     thread::spawn(move || {
-        if apps::activate(target) {
+        if !apps::activate(target) {
+            eprintln!("clipboard paste: could not bring app {target} to the front, so ⌘V was not sent");
+            return;
+        }
+        thread::sleep(FOCUS_SETTLE);
+        input::send_paste_shortcut();
+        if enter {
             thread::sleep(FOCUS_SETTLE);
-            input::send_paste_shortcut();
-            if enter {
-                thread::sleep(FOCUS_SETTLE);
-                input::send_enter();
-            }
+            input::send_enter();
         }
     });
-    true
+    result
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{pinned_origin, will_send_keys, ClipboardHistorySettings};
+    use super::{outcome, pinned_origin, ClipboardHistorySettings, Outcome};
 
     fn pinned_at(pinned: bool, x: Option<i32>, y: Option<i32>) -> ClipboardHistorySettings {
         ClipboardHistorySettings { popup_pinned: pinned, popup_pin_x: x, popup_pin_y: y, ..ClipboardHistorySettings::default() }
@@ -217,10 +256,11 @@ mod tests {
 
     #[test]
     fn keys_are_sent_only_with_a_target_auto_paste_and_access() {
-        assert_eq!(will_send_keys(Some(42), true, || true), Some(42));
-        assert_eq!(will_send_keys(Some(42), true, || false), None);
-        assert_eq!(will_send_keys(Some(42), false, || true), None);
-        assert_eq!(will_send_keys(None, true, || true), None);
+        assert_eq!(outcome(Some(42), true, || true), Outcome::Sent);
+        assert_eq!(outcome(Some(42), true, || false), Outcome::NoAccess);
+        assert_eq!(outcome(Some(42), false, || true), Outcome::Off);
+        assert_eq!(outcome(None, true, || true), Outcome::NoTarget);
+        assert_eq!(outcome(None, false, || panic!("access is not asked when auto paste is off")), Outcome::Off);
     }
 
     #[test]

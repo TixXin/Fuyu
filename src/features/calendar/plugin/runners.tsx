@@ -8,6 +8,7 @@ import { joinCalendarMeeting } from "../joinMeeting";
 import { todoEvents } from "../todoEvents";
 import { useCalendar } from "../useCalendar";
 import { useCalendarPrefs } from "../useCalendarPrefs";
+import { useHolidayEve } from "../useHolidayEve";
 import { useMeetingBanner } from "../useMeetingBanner";
 import { useTodoLink } from "../useTodoLink";
 import { calendarState, meetingBannerState, meetingState, todoLinkState } from "./islandState";
@@ -79,6 +80,7 @@ function CalendarRunner({ barText, settings }: RunnerProps) {
     [prefs.countdownFormat, prefs.pauseMediaOnJoin, settings.calendarEnabled, settings.calendarShowTitle, upcoming],
   );
   meetingState.useProvide(meeting);
+  useHolidayEve(settings.calendarEnabled && prefs.holidayEveReminder, calendar.snapshot.events, calendar.now);
   const banner = useMeetingBanner(settings.calendarEnabled, calendar.snapshot.events, calendar.now, prefs, settings.calendarShowTitle);
   meetingBannerState.useProvide(banner);
   const lineContributions = useMeetingContributions(meeting, barText);
