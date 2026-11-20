@@ -41,7 +41,7 @@ export const METHODS = {
 
 export const TOPICS = { state: "state" } as const;
 
-export const CONFIG_VERSION = 2;
+export const CONFIG_VERSION = 3;
 export const OLD_DEFAULT_DURATION = 6;
 export const DURATIONS = [3, 6, 10, 15];
 export const CONTENT_MODES: ContentMode[] = ["title-artist", "title", "title-artist-album"];
@@ -60,7 +60,7 @@ export const DEFAULT_CONFIG: NoticeConfig = Object.freeze({
   content: "title-artist",
   showControls: true,
   lastOnly: true,
-  skipFrontmost: true,
+  skipFrontmost: false,
   browsers: false,
   appMode: "all",
   apps: [],
@@ -113,8 +113,11 @@ export function normalizeConfig(patch: unknown, base: NoticeConfig = DEFAULT_CON
 
 export function readStoredConfig(stored: unknown): NoticeConfig {
   const config = normalizeConfig(stored, DEFAULT_CONFIG);
-  const old = isObject(stored) && stored.version !== CONFIG_VERSION;
-  return old && stored.durationSec === OLD_DEFAULT_DURATION ? { ...config, durationSec: DEFAULT_CONFIG.durationSec } : config;
+  if (!isObject(stored)) return config;
+  const version = typeof stored.version === "number" ? stored.version : 1;
+  const durationSec = version < 2 && stored.durationSec === OLD_DEFAULT_DURATION ? DEFAULT_CONFIG.durationSec : config.durationSec;
+  const skipFrontmost = version < 3 ? DEFAULT_CONFIG.skipFrontmost : config.skipFrontmost;
+  return { ...config, durationSec, skipFrontmost };
 }
 
 export function trackKey(track: Partial<NowPlaying> | null | undefined): string | null {
