@@ -46,6 +46,10 @@ const RECURRENCE_TOKENS: Readonly<Record<string, TodoRecurrence["kind"]>> = {
   weekly: "weekly",
   每月: "monthly",
   monthly: "monthly",
+  每年: "yearly",
+  yearly: "yearly",
+  农历每年: "lunarYearly",
+  每年农历: "lunarYearly",
 };
 
 function parsePriorityToken(token: string): TodoPriority | undefined {

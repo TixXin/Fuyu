@@ -1,4 +1,5 @@
 import { getLocalDateString } from "../../utils/date.ts";
+import { lunarDate } from "../../utils/lunar.ts";
 import { isStatutoryWorkday, type HolidayDayMark } from "../../utils/workday.ts";
 import { addDays, isDateString } from "./schedule.ts";
 import type { ScheduledTodo, TodoRecurrence, TodoRecurrenceKind } from "./types.ts";
@@ -8,10 +9,13 @@ export const TODO_RECURRENCE_KINDS: readonly TodoRecurrenceKind[] = [
   "workdays",
   "weekly",
   "monthly",
+  "yearly",
+  "lunarYearly",
 ];
 
 const MAX_RECURRENCE_INTERVAL = 365;
 const MAX_WORKDAY_SCAN = 400;
+const MAX_LUNAR_YEAR_SCAN = 400;
 
 export function readRecurrence(value: unknown): TodoRecurrence | undefined {
   if (!value || typeof value !== "object") return undefined;
@@ -36,6 +40,33 @@ function addMonthsClamped(dateStr: string, months: number): string {
   return getLocalDateString(clamped);
 }
 
+function lunarOf(dateStr: string) {
+  return lunarDate(new Date(`${dateStr}T00:00:00`));
+}
+
+function addLunarYears(dateStr: string, years: number): string {
+  const anchor = lunarOf(dateStr);
+  if (!anchor) return addMonthsClamped(dateStr, 12 * years);
+  const month = anchor.month.replace(/^闰/u, "");
+  let cursor = addDays(dateStr, 1);
+  let remaining = years;
+  for (let step = 0; step < MAX_LUNAR_YEAR_SCAN * years; step += 1) {
+    const lunar = lunarOf(cursor);
+    if (!lunar) break;
+    if (lunar.month === month && lunar.day === Math.min(anchor.day, 29)) {
+      const next = addDays(cursor, 1);
+      const following = lunarOf(next);
+      const hit = anchor.day < 30 ? cursor : following?.month === month && following.day === 30 ? next : cursor;
+      remaining -= 1;
+      if (remaining <= 0) return hit;
+      cursor = addDays(hit, 300);
+      continue;
+    }
+    cursor = addDays(cursor, 1);
+  }
+  return addMonthsClamped(dateStr, 12 * years);
+}
+
 export function nextOccurrenceDate(
   fromDate: string,
   recurrence: TodoRecurrence,
@@ -50,6 +81,10 @@ export function nextOccurrenceDate(
       return addDays(fromDate, 7 * interval);
     case "monthly":
       return addMonthsClamped(fromDate, interval);
+    case "yearly":
+      return addMonthsClamped(fromDate, 12 * interval);
+    case "lunarYearly":
+      return addLunarYears(fromDate, interval);
     case "workdays": {
       let cursor = fromDate;
       let remaining = interval;

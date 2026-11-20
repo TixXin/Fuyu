@@ -197,7 +197,7 @@ try {
   check(getComputedStyle(tagRows[0].querySelector(".todo-tag-dot")!).backgroundColor !== getComputedStyle(tagRows[2].querySelector(".todo-tag-dot")!).backgroundColor, "不同颜色的点颜色不同");
   check(tagRows.every((row) => row.offsetHeight === 32), "加了标签按钮，一行仍是 32px");
   await openMenu(tagRows[3].querySelector<HTMLElement>(".todo-tag-button"));
-  check([...document.querySelectorAll(".row-menu__item")].map((item) => item.textContent).join("|") === "高优先级|中优先级|低优先级|红色|橙色|黄色|绿色|蓝色|紫色|每天重复|法定工作日重复|每周重复|每月重复", "菜单列出三档优先级、六种颜色和四种重复规则");
+  check([...document.querySelectorAll(".row-menu__item")].map((item) => item.textContent).join("|") === "高优先级|中优先级|低优先级|红色|橙色|黄色|绿色|蓝色|紫色|每天重复|法定工作日重复|每周重复|每月重复|每年重复|每年重复（农历）", "菜单列出三档优先级、六种颜色和六种重复规则");
   await click(menuItem("高优先级"));
   check(calls.includes('tag:t4:{"priority":"high"}'), "选优先级只改优先级");
   await openMenu(tagRows[3].querySelector<HTMLElement>(".todo-tag-button"));
