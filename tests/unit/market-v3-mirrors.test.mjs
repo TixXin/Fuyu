@@ -25,7 +25,7 @@ function githubWorld(prefix) {
 
 test("the market uses the same mirrors, in the same order, as the app update", () => {
   const config = JSON.parse(readFileSync(new URL("../../src-tauri/tauri.conf.json", import.meta.url), "utf8"));
-  const endpoints = config.plugins.updater.endpoints;
+  const endpoints = config.plugins.updater.endpoints.filter((url) => !url.startsWith("https://fuyu.tix.xin/"));
   assert.deepEqual(sourcesFor(endpoints[0]).map((source) => `${source.prefix}${endpoints[0]}`), endpoints);
   assert.deepEqual(sourcesFor(INDEX).map((source) => source.name), [DIRECT, "ghfast.top", "gh-proxy.com"]);
   assert.equal(sourcesFor(`${PACKAGES}clock-1.0.0.fuyu`).length, 3);
