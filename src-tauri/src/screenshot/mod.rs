@@ -15,6 +15,9 @@ mod kept;
 mod long;
 mod output;
 mod pin;
+pub(crate) mod pin_commands;
+mod pin_edit;
+mod pin_store;
 pub(crate) mod qr;
 mod session;
 mod shortcuts;
@@ -584,6 +587,13 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_pin_close,
             crate::screenshot::screenshot_pins_toggle,
             crate::screenshot::screenshot_pins_close_all,
+            crate::screenshot::pin_commands::screenshot_pin_turn,
+            crate::screenshot::pin_commands::screenshot_pin_collapse,
+            crate::screenshot::pin_commands::screenshot_pin_reserve,
+            crate::screenshot::pin_commands::screenshot_pin_replace,
+            crate::screenshot::pin_commands::screenshot_pin_opacity,
+            crate::screenshot::pin_commands::screenshot_pin_text,
+            crate::screenshot::pin_commands::screenshot_pins_remember,
             crate::screenshot::screenshot_drag,
             crate::screenshot::screenshot_paste_to_front,
         ] $($rest)*)

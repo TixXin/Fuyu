@@ -63,3 +63,121 @@ body:has(.pin-window) {
   text-overflow: ellipsis;
   pointer-events: none;
 }
+
+.pin-window--editing .pin-window__frame {
+  right: auto;
+  bottom: auto;
+  cursor: default;
+}
+
+.pin-window--collapsed .pin-window__frame {
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.pin-window--collapsed .pin-window__picture {
+  object-fit: cover;
+}
+
+.pin-window__annotator {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.pin-window__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pin-window__bar {
+  position: absolute;
+  left: var(--pin-margin);
+}
+
+.pin-annotate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  color: var(--pin-bar-text, rgba(245, 245, 247, 0.92));
+  background: var(--pin-bar-bg, rgba(20, 20, 24, 0.94));
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.14);
+  border-radius: 8px;
+  cursor: default;
+}
+
+.pin-annotate__row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pin-annotate__spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.pin-annotate__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.pin-annotate__tool:hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.12);
+}
+
+.pin-annotate__tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pin-annotate__tool--active,
+.pin-annotate__tool--active:hover {
+  color: var(--color-accent, #74d6ff);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.16);
+}
+
+.pin-annotate__tool--primary {
+  color: var(--pin-bar-primary-text, #0b0b0d);
+  background: var(--color-accent, #74d6ff);
+}
+
+.pin-annotate__tool:focus-visible,
+.pin-annotate__swatch:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #74d6ff);
+  outline-offset: 1px;
+}
+
+.pin-annotate__dot {
+  display: block;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.pin-annotate__swatch {
+  width: 16px;
+  height: 16px;
+  margin: 0 2px;
+  padding: 0;
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.pin-annotate__swatch--active {
+  outline: 2px solid var(--color-accent, #74d6ff);
+  outline-offset: 1px;
+}

@@ -9,9 +9,15 @@ use std::{
 };
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 
-use super::{capture, output::Picture, session};
+use super::{
+    capture,
+    output::Picture,
+    pin_edit::{self, PinTurn},
+    pin_store::{self, SavedPin, StoreItem},
+    session,
+};
 use crate::island::screen;
 
 pub(crate) const WINDOW_PREFIX: &str = "pin-";
@@ -23,12 +29,29 @@ const MIN_SIDE: f64 = 16.0;
 const HANDOFF_TIMEOUT: Duration = Duration::from_millis(600);
 const SWAP_DELAY: Duration = Duration::from_millis(50);
 const MAX_PINS: usize = 20;
+const COLLAPSED_SIDE: f64 = 56.0;
+
+type Frame = (i32, i32, u32, u32);
 
 struct Pin {
     picture: Arc<Picture>,
     margin: u32,
     density: f64,
     session: Option<u64>,
+    opacity: f64,
+    stored: Option<String>,
+    collapsed: Option<Frame>,
+    reserved: Option<(u32, u32)>,
+}
+
+impl Pin {
+    fn new(picture: Picture, margin: u32, density: f64, session: Option<u64>) -> Self {
+        Self { picture: Arc::new(picture), margin, density, session, opacity: 1.0, stored: None, collapsed: None, reserved: None }
+    }
+
+    fn info(&self) -> PinInfo {
+        PinInfo { width: self.picture.width, height: self.picture.height, opacity: self.opacity }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]
@@ -36,6 +59,7 @@ struct Pin {
 pub(crate) struct PinInfo {
     width: u32,
     height: u32,
+    opacity: f64,
 }
 
 static PINS: Mutex<BTreeMap<String, Pin>> = Mutex::new(BTreeMap::new());
@@ -62,6 +86,12 @@ fn build(app: &AppHandle) -> Result<WebviewWindow, String> {
         .build()
         .map_err(|error| error.to_string())?;
     capture::prepare_pin(&window);
+    let moved = app.clone();
+    window.on_window_event(move |event| {
+        if matches!(event, WindowEvent::Moved(_)) {
+            pin_store::request_save(&moved);
+        }
+    });
     Ok(window)
 }
 
@@ -111,8 +141,9 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
     let units = capture::units_per_css(scale);
     let margin = (MARGIN * units).round().max(0.0) as u32;
     let density = scale / units;
-    let info = PinInfo { width: picture.width, height: picture.height };
-    let shown = shown_size((picture.width, picture.height), density);
+    let pin = Pin::new(picture, margin, density, session);
+    let info = pin.info();
+    let shown = shown_size((info.width, info.height), density);
     let (width, height) = (shown.0 + margin * 2, shown.1 + margin * 2);
     let evicted = {
         let mut guard = pins();
@@ -125,7 +156,7 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
                 break;
             }
         }
-        guard.insert(label.clone(), Pin { picture: Arc::new(picture), margin, density, session });
+        guard.insert(label.clone(), pin);
         to_remove
     };
     for old_label in evicted {
@@ -141,11 +172,161 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
         return Err(error);
     }
     let _ = app.emit_to(label.as_str(), ASSIGNED_EVENT, info);
+    pin_store::thaw();
+    pin_store::request_save(app);
+    Ok(())
+}
+
+pub(super) fn restore(app: &AppHandle, picture: Picture, saved: &SavedPin) -> Result<(), String> {
+    let window = build(app)?;
+    let label = window.label().to_string();
+    let mut pin = Pin::new(picture, saved.margin, saved.density, None);
+    pin.opacity = saved.opacity.clamp(0.0, 1.0);
+    pin.stored = Some(saved.file.clone());
+    let info = pin.info();
+    pins().insert(label.clone(), pin);
+    let placed = screen::set_window_size(&window, PhysicalSize::new(saved.width, saved.height))
+        .and_then(|()| screen::set_window_position(&window, PhysicalPosition::new(saved.x, saved.y)));
+    if let Err(error) = placed {
+        pins().remove(&label);
+        let _ = window.destroy();
+        return Err(error);
+    }
+    let _ = app.emit_to(label.as_str(), ASSIGNED_EVENT, info);
     Ok(())
 }
 
 pub(super) fn info(label: &str) -> Option<PinInfo> {
-    pins().get(label).map(|pin| PinInfo { width: pin.picture.width, height: pin.picture.height })
+    pins().get(label).map(Pin::info)
+}
+
+fn frame(window: &WebviewWindow) -> Result<Frame, String> {
+    let position = screen::window_position(window)?;
+    let size = screen::window_size(window)?;
+    Ok((position.x, position.y, size.width, size.height))
+}
+
+fn set_frame(window: &WebviewWindow, (x, y, width, height): Frame) -> Result<(), String> {
+    screen::set_window_size(window, PhysicalSize::new(width, height))?;
+    screen::set_window_position(window, PhysicalPosition::new(x, y))
+}
+
+fn inset((x, y, width, height): Frame, margin: u32) -> Frame {
+    (x + margin as i32, y + margin as i32, width.saturating_sub(margin * 2), height.saturating_sub(margin * 2))
+}
+
+fn outset((x, y, width, height): Frame, margin: u32) -> Frame {
+    (x - margin as i32, y - margin as i32, width + margin * 2, height + margin * 2)
+}
+
+pub(super) fn turn(app: &AppHandle, window: &WebviewWindow, turn: PinTurn) -> Result<(), String> {
+    let (info, margin) = {
+        let mut guard = pins();
+        let pin = guard.get_mut(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
+        if pin.collapsed.is_some() || pin.reserved.is_some() {
+            return Err("Finish editing or open the pin first.".to_string());
+        }
+        pin.picture = Arc::new(pin_edit::turn_picture(&pin.picture, turn));
+        pin.stored = None;
+        (pin.info(), pin.margin)
+    };
+    let (x, y, width, height) = inset(frame(window)?, margin);
+    set_frame(window, outset(pin_edit::turned_frame((x, y), (width, height), turn), margin))?;
+    let _ = app.emit_to(window.label(), ASSIGNED_EVENT, info);
+    pin_store::request_save(app);
+    Ok(())
+}
+
+pub(super) fn replace(app: &AppHandle, window: &WebviewWindow, picture: Picture) -> Result<(), String> {
+    let info = {
+        let mut guard = pins();
+        let pin = guard.get_mut(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
+        pin.picture = Arc::new(picture);
+        pin.stored = None;
+        pin.info()
+    };
+    let _ = app.emit_to(window.label(), ASSIGNED_EVENT, info);
+    pin_store::request_save(app);
+    Ok(())
+}
+
+pub(super) fn collapse(app: &AppHandle, window: &WebviewWindow, collapsed: bool) -> Result<(), String> {
+    let current = frame(window)?;
+    let side = (COLLAPSED_SIDE * window.scale_factor().unwrap_or(1.0)).round().max(1.0) as u32;
+    let next = {
+        let mut guard = pins();
+        let pin = guard.get_mut(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
+        match (collapsed, pin.collapsed) {
+            (true, None) => {
+                pin.collapsed = Some(current);
+                let (x, y, width, height) = inset(current, pin.margin);
+                Some(outset(pin_edit::collapsed_frame((x, y), (width, height), side), pin.margin))
+            }
+            (false, Some(before)) => {
+                pin.collapsed = None;
+                Some((current.0, current.1, before.2, before.3))
+            }
+            _ => None,
+        }
+    };
+    if let Some(next) = next {
+        set_frame(window, next)?;
+        pin_store::request_save(app);
+    }
+    Ok(())
+}
+
+pub(super) fn reserve(window: &WebviewWindow, extra_css: (f64, f64)) -> Result<(), String> {
+    let factor = window.scale_factor().unwrap_or(1.0);
+    let extra = ((extra_css.0.max(0.0) * factor).round() as u32, (extra_css.1.max(0.0) * factor).round() as u32);
+    let (x, y, width, height) = frame(window)?;
+    let size = {
+        let mut guard = pins();
+        let pin = guard.get_mut(window.label()).ok_or_else(|| "This pin is closed.".to_string())?;
+        let original = *pin.reserved.get_or_insert((width, height));
+        if extra == (0, 0) {
+            pin.reserved = None;
+            original
+        } else {
+            let inner = (original.0.saturating_sub(pin.margin * 2), original.1.saturating_sub(pin.margin * 2));
+            let (inner_width, inner_height) = pin_edit::reserved_size(inner, extra);
+            (inner_width + pin.margin * 2, inner_height + pin.margin * 2)
+        }
+    };
+    screen::set_window_size(window, PhysicalSize::new(size.0, size.1))?;
+    screen::set_window_position(window, PhysicalPosition::new(x, y))
+}
+
+pub(super) fn set_opacity(app: &AppHandle, label: &str, opacity: f64) {
+    if let Some(pin) = pins().get_mut(label) {
+        pin.opacity = if opacity.is_finite() { opacity.clamp(0.0, 1.0) } else { 1.0 };
+    }
+    pin_store::request_save(app);
+}
+
+pub(super) fn store_items(app: &AppHandle) -> Vec<StoreItem> {
+    let guard = pins();
+    guard
+        .iter()
+        .filter(|(_, pin)| pin.session.is_none())
+        .filter_map(|(label, pin)| {
+            let window = app.get_webview_window(label)?;
+            let (x, y, width, height) = frame(&window).ok()?;
+            let (width, height) = pin.collapsed.map(|before| (before.2, before.3)).or(pin.reserved).unwrap_or((width, height));
+            Some(StoreItem {
+                label: label.clone(),
+                picture: Arc::clone(&pin.picture),
+                file: pin.stored.clone(),
+                saved: SavedPin { file: String::new(), x, y, width, height, margin: pin.margin, density: pin.density, opacity: pin.opacity },
+            })
+        })
+        .collect()
+}
+
+pub(super) fn mark_stored(label: &str, picture: &Arc<Picture>, file: &str) {
+    if let Some(pin) = pins().get_mut(label).filter(|pin| Arc::ptr_eq(&pin.picture, picture)) {
+        pin.stored = Some(file.to_string());
+    }
 }
 
 pub(super) fn picture(label: &str) -> Option<Arc<Picture>> {
@@ -190,7 +371,9 @@ pub(super) fn zoom(window: &WebviewWindow, scale: f64, anchor: (f64, f64)) -> Re
     let shown = (size.width.saturating_sub(margin * 2), size.height.saturating_sub(margin * 2));
     let (x, y, width, height) = zoomed(inner, shown, picture, scale, anchor);
     screen::set_window_size(window, PhysicalSize::new(width + margin * 2, height + margin * 2))?;
-    screen::set_window_position(window, PhysicalPosition::new(x - margin as i32, y - margin as i32))
+    screen::set_window_position(window, PhysicalPosition::new(x - margin as i32, y - margin as i32))?;
+    pin_store::request_save(window.app_handle());
+    Ok(())
 }
 
 pub(super) fn zoomed(position: (i32, i32), size: (u32, u32), picture: (u32, u32), scale: f64, anchor: (f64, f64)) -> (i32, i32, u32, u32) {
@@ -240,6 +423,7 @@ pub(super) fn toggle_all(app: &AppHandle) {
 pub(super) fn close(window: &WebviewWindow) {
     forget(window.label());
     let _ = window.destroy();
+    pin_store::request_save(window.app_handle());
 }
 
 pub(super) fn close_all(app: &AppHandle) {
@@ -250,6 +434,7 @@ pub(super) fn close_all(app: &AppHandle) {
 }
 
 pub(super) fn close_every(app: &AppHandle) {
+    pin_store::freeze();
     for (label, window) in app.webview_windows() {
         if label.starts_with(WINDOW_PREFIX) {
             close(&window);

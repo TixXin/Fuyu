@@ -131,6 +131,12 @@ function AfterSection({ screenshot, onScreenshotChange: setScreenshot, folderDra
         checked={screenshot.agentSource}
         onChange={(agentSource) => setScreenshot({ ...screenshot, agentSource })}
       />
+      <SettingsToggleRow
+        title={text.restorePins}
+        description={text.restorePinsHint}
+        checked={screenshot.restorePins}
+        onChange={(restorePins) => setScreenshot({ ...screenshot, restorePins })}
+      />
     </SettingsGroup>
   );
 }

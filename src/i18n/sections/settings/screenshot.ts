@@ -32,6 +32,8 @@ export type SettingsScreenshotText = {
   historyDaysOption: (days: number) => string;
   historyText: string;
   historyTextHint: string;
+  restorePins: string;
+  restorePinsHint: string;
   agentSource: string;
   agentSourceHint: string;
   recordTitle: string;
@@ -109,6 +111,8 @@ export const zhCN: SettingsScreenshotText = {
   historyDaysOption: (days) => `${days} 天`,
   historyText: "识别历史截图里的文字",
   historyTextHint: "存进历史后在本机识字，「截图」页能按图里的文字搜；文字只存在本机，跟着截图一起删。",
+  restorePins: "重启后恢复贴图",
+  restorePinsHint: "退出时开着的贴图下次启动回到原来的位置，缩放和透明度不变。图存在家目录的 screenshot-pins 里，关掉后一并删除。",
   agentSource: "发给 Agent 时附上来源",
   agentSourceHint: "截图时前台的应用、窗口标题和浏览器网址，和截图路径一起贴给 Agent。",
   recordTitle: "录屏",
@@ -186,6 +190,8 @@ export const en: SettingsScreenshotText = {
   historyDaysOption: (days) => (days === 1 ? "1 day" : `${days} days`),
   historyText: "Read text in history screenshots",
   historyTextHint: "Reads the text on this computer after a screenshot is kept, so the Screenshots page can search it. The text stays local and goes when the screenshot does.",
+  restorePins: "Bring pins back after a restart",
+  restorePinsHint: "Pins still open when Fuyu quits come back at the same place, size and opacity. They are kept in screenshot-pins in the home folder and deleted when this is turned off.",
   agentSource: "Say where a screenshot came from",
   agentSourceHint: "When sending to an agent, also paste the app, window title and browser address that were in front when you took it.",
   recordTitle: "Screen recording",

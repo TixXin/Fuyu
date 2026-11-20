@@ -232,6 +232,7 @@
         "historyDays": "sync",
         "historyText": "sync",
         "agentSource": "sync",
+        "restorePins": "sync",
         "record": "optional",
         "version": "local"
       }

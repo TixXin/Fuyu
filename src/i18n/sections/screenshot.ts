@@ -59,7 +59,17 @@ export type ScreenshotText = {
     hideAll: string;
     close: string;
     closeAll: string;
+    annotate: string;
+    readText: string;
+    turnLeft: string;
+    turnRight: string;
+    flipX: string;
+    flipY: string;
+    collapse: string;
+    expand: string;
   };
+  pinAnnotate: { done: string; cancel: string };
+  pinText: { reading: string; copied: string; empty: string };
   pinCopied: string;
   recording: {
     countdown: (seconds: number) => string;
@@ -205,7 +215,17 @@ export const zhCN: ScreenshotText = {
     hideAll: "隐藏所有贴图（T）",
     close: "关闭（Esc）",
     closeAll: "关闭所有贴图",
+    annotate: "标注（空格）",
+    readText: "识别文字并复制（O）",
+    turnLeft: "向左转 90°（1）",
+    turnRight: "向右转 90°（2）",
+    flipX: "水平翻转（3）",
+    flipY: "垂直翻转（4）",
+    collapse: "缩成小图标（双击 / M）",
+    expand: "还原（双击 / M）",
   },
+  pinAnnotate: { done: "完成标注（Enter）", cancel: "放弃这次标注（Esc）" },
+  pinText: { reading: "正在识别文字…", copied: "已复制识别出的文字", empty: "没有识别到文字" },
   pinCopied: "已复制",
   recording: {
     countdown: (seconds) => `${seconds} 秒后开始录屏`,
@@ -351,7 +371,17 @@ export const en: ScreenshotText = {
     hideAll: "Hide all pins (T)",
     close: "Close (Esc)",
     closeAll: "Close all pins",
+    annotate: "Annotate (Space)",
+    readText: "Read text and copy (O)",
+    turnLeft: "Turn left 90° (1)",
+    turnRight: "Turn right 90° (2)",
+    flipX: "Flip horizontally (3)",
+    flipY: "Flip vertically (4)",
+    collapse: "Shrink to an icon (double-click / M)",
+    expand: "Restore (double-click / M)",
   },
+  pinAnnotate: { done: "Finish annotating (Enter)", cancel: "Discard these annotations (Esc)" },
+  pinText: { reading: "Reading the text…", copied: "Text copied", empty: "No text found" },
   pinCopied: "Copied",
   recording: {
     countdown: (seconds) => `Recording in ${seconds}`,

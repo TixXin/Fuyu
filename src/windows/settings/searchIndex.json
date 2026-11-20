@@ -3276,6 +3276,19 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "截完之后",
+        "title": "重启后恢复贴图",
+        "description": "退出时开着的贴图下次启动回到原来的位置，缩放和透明度不变。图存在家目录的 screenshot-pins 里，关掉后一并删除。"
+      },
+      "en": {
+        "group": "After capturing",
+        "title": "Bring pins back after a restart",
+        "description": "Pins still open when Fuyu quits come back at the same place, size and opacity. They are kept in screenshot-pins in the home folder and deleted when this is turned off."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "快捷键",
         "title": "按 PrintScreen 截图",
         "description": "单独按 PrintScreen 时打开浮屿的截图，不再交给系统截图工具。Alt+PrintScreen 等组合键不受影响。"
