@@ -193,13 +193,15 @@
   padding: 18px 20px 20px;
   pointer-events: none;
   opacity: 0;
+  visibility: hidden;
   filter: var(--island-motion-content-filter, none);
   scale: var(--island-motion-content-scale, none);
   transform-origin: 50% 0;
   transition:
     opacity var(--island-motion-layer, 120ms) var(--motion-ease),
     filter var(--island-motion-layer, 120ms) var(--motion-ease),
-    scale var(--island-motion-layer, 120ms) var(--motion-ease);
+    scale var(--island-motion-layer, 120ms) var(--motion-ease),
+    visibility 0s linear var(--island-motion-layer, 120ms);
 }
 
 .island--preparing.island--collapsed .island__surface {
@@ -208,12 +210,14 @@
 
 .island--preparing.island--collapsed .island__expanded {
   opacity: 0.001;
+  visibility: visible;
   transition: none;
 }
 
 .island--expanded .island__expanded {
   pointer-events: auto;
   opacity: 1;
+  visibility: visible;
   filter: none;
   scale: none;
   transition:
