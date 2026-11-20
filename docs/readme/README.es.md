@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/"><img src="../assets/readme/island-en.svg" alt="Una pequeña isla colgada de la parte superior de la página, con el rótulo Fuyu 浮屿, que de vez en cuando se abre para avisar que se busca un logo; debajo, escrita a mano en letra cursiva, la dirección del sitio https://fuyu.ing, con una flechita que apunta a la isla" width="540" height="100"></a>
+  <a href="https://fuyu.ing/"><img src="../assets/readme/island-en.svg" alt="Una pequeña isla colgada de la parte superior de la página, con una medusita a la izquierda y el rótulo Fuyu 浮屿, que de vez en cuando se abre y dice «Free · Your island up top»; debajo, escrita a mano en letra cursiva, la dirección del sitio https://fuyu.ing, con una flechita que apunta a la isla" width="540" height="100"></a>
 
   <h1>Fuyu</h1>
 
@@ -193,14 +193,11 @@ Tecnologías: Tauri 2, React 19 + TypeScript y Rust. Las versiones y las actuali
 
 ## Cómo contribuir
 
-<a href="https://fuyu.ing/logo/"><img src="../assets/logo-placeholder.svg" alt="Un espacio vacío con borde punteado: Fuyu todavía busca logo" width="88" height="88" align="right"></a>
-
 Fuyu lo hacemos entre todos, y hay lugar para ti:
 
 - **Reporta problemas e ideas**: abre un [issue](https://github.com/TixXin/fuyu/issues) y cuéntanos qué te estorba o qué te gustaría tener.
 - **Cambia código, documentación o traducciones**: abre un pull request. [CONTRIBUTING.md](../../CONTRIBUTING.md) explica cómo hacerlo y qué comprobaciones correr antes; [AGENTS.md](../../AGENTS.md) explica cómo está organizado el código (en chino).
 - **Escribe un plugin**: no hace falta tocar la isla; cuando esté listo, publícalo en el [mercado de plugins](https://github.com/TixXin/fuyu-plugins).
-- **Dibuja un logo**: Fuyu todavía no tiene un logo oficial y la [convocatoria](https://fuyu.ing/logo/) sigue abierta; el espacio vacío de la derecha lo está esperando.
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="Personas que contribuyen a Fuyu"></a>
 

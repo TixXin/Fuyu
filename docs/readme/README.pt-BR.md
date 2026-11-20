@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/"><img src="../assets/readme/island-en.svg" alt="Uma pequena ilha pendurada no topo da página, com o nome Fuyu 浮屿, que de vez em quando se abre para avisar que estamos procurando um logo; embaixo, escrito à mão em letra cursiva, o endereço do site https://fuyu.ing, com uma setinha apontando para a ilha" width="540" height="100"></a>
+  <a href="https://fuyu.ing/"><img src="../assets/readme/island-en.svg" alt="Uma pequena ilha pendurada no topo da página, com uma pequena água-viva à esquerda e o nome Fuyu 浮屿, que de vez em quando se abre e mostra “Free · Your island up top”; embaixo, escrito à mão em letra cursiva, o endereço do site https://fuyu.ing, com uma setinha apontando para a ilha" width="540" height="100"></a>
 
   <h1>Fuyu</h1>
 
@@ -193,14 +193,11 @@ Tem dúvidas, ideias ou só quer bater papo? Entre no nosso [servidor do Discord
 
 ## Como contribuir
 
-<a href="https://fuyu.ing/logo/"><img src="../assets/logo-placeholder.svg" alt="Um espaço vazio com borda pontilhada: o Fuyu ainda procura um logo" width="88" height="88" align="right"></a>
-
 O Fuyu é feito por todos nós, e tem lugar para você:
 
 - **Relate problemas e ideias**: abra uma [issue](https://github.com/TixXin/fuyu/issues) e conte o que está atrapalhando ou o que você gostaria de ter.
 - **Mude código, documentação ou traduções**: abra um pull request. O [CONTRIBUTING.md](../../CONTRIBUTING.md) explica como fazer e quais verificações rodar antes; o [AGENTS.md](../../AGENTS.md) explica como o código está organizado (em chinês).
 - **Crie um plugin**: não precisa mexer na ilha; quando estiver pronto, publique na [loja de plugins](https://github.com/TixXin/fuyu-plugins).
-- **Desenhe um logo**: o Fuyu ainda não tem um logo oficial e a [chamada](https://fuyu.ing/logo/) continua aberta; o espaço vazio à direita está esperando por ele.
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="Pessoas que contribuem com o Fuyu"></a>
 

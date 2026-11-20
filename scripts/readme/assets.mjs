@@ -14,13 +14,15 @@ const RIM = "#4e5358";
 const LINE = "#8b949e";
 const ACCENT = "#74d6ff";
 const ON_ACCENT = "#06202c";
-const MINT = "#4ade9c";
+const JELLY = "#f6e3d3";
+const JELLY_EYE = "#1d1b22";
+const JELLY_BODY = "M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H51.88A6.6 6.6 0 0 1 41.35 43.68A6.6 6.6 0 0 1 32 43.63A6.6 6.6 0 0 1 22.65 43.68A6.6 6.6 0 0 1 12.12 36H10.4C7.4 36 5 33.5 5 30.5Z";
 const WAVE = "#9fe8c5";
 const PEN = "#4795c9";
 
 const ISLANDS = {
-  "island-zh.svg": { label: "浮屿 Fuyu：屏幕顶上的一座小岛，旁边手写着官网 https://fuyu.ing", word: "浮屿 Fuyu", chip: "征集中", chipWidth: 54, call: "给浮屿画一个 Logo", callWidth: 132 },
-  "island-en.svg": { label: "Fuyu, an island at the top of your screen, with the website https://fuyu.ing handwritten beside it", word: "Fuyu 浮屿", chip: "Open", chipWidth: 48, call: "Draw Fuyu a logo", callWidth: 122 },
+  "island-zh.svg": { label: "浮屿 Fuyu：屏幕顶上的一座小岛，旁边手写着官网 https://fuyu.ing", word: "浮屿 Fuyu", chip: "开源", chipWidth: 44, call: "屏幕顶上的效率小岛", callWidth: 140 },
+  "island-en.svg": { label: "Fuyu, an island at the top of your screen, with the website https://fuyu.ing handwritten beside it", word: "Fuyu 浮屿", chip: "Free", chipWidth: 44, call: "Your island up top", callWidth: 128 },
 };
 const DOWNLOADS = {
   "download-windows.svg": { label: "Download for Windows (x64)", name: "Windows", nameWidth: 68, tag: "x64", tagWidth: 20 },
@@ -180,8 +182,12 @@ function island({ label, word, chip, chipWidth, call, callWidth }) {
   <g transform="translate(${width / 2} 0)">
     ${shell({ L, H, R, E }, "    ")}
     <g class="capl">
-      <circle class="halo" cx="${dotX}" cy="26" r="9" fill="${MINT}"/>
-      <circle cx="${dotX}" cy="26" r="4.5" fill="${MINT}"/>
+      <g transform="translate(${dotX} 26) scale(.36) translate(-32 -26.3)">
+        <path class="halo" d="${JELLY_BODY}" fill="${JELLY}" transform="translate(32 26.3) scale(1.25) translate(-32 -26.3)"/>
+        <path d="${JELLY_BODY}" fill="${JELLY}"/>
+        <ellipse cx="24" cy="25" rx="2.8" ry="4" fill="${JELLY_EYE}"/>
+        <ellipse cx="40" cy="25" rx="2.8" ry="4" fill="${JELLY_EYE}"/>
+      </g>
     </g>
     <text class="idle" y="31.6" text-anchor="middle" font-size="16" font-weight="600" letter-spacing=".4" fill="${INK}">${word}</text>
     <g class="capr">

@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing"><img src="../assets/readme/island-en.svg" alt="페이지 위쪽에 매달린 작은 섬. 「Fuyu 浮屿」라고 쓰여 있고 가끔 펼쳐져 로고를 모집 중이라고 알려 줍니다. 오른쪽 아래에는 웹사이트 주소 https://fuyu.ing가 필기체로 적혀 있고, 작은 화살표가 섬을 가리킵니다" width="540" height="100"></a>
+  <a href="https://fuyu.ing"><img src="../assets/readme/island-en.svg" alt="페이지 위쪽에 매달린 작은 섬. 왼쪽에 작은 해파리가 있고 「Fuyu 浮屿」라고 쓰여 있으며, 가끔 펼쳐져 「Free · Your island up top」을 보여 줍니다. 오른쪽 아래에는 웹사이트 주소 https://fuyu.ing가 필기체로 적혀 있고, 작은 화살표가 섬을 가리킵니다" width="540" height="100"></a>
 
   <h1>Fuyu</h1>
 
@@ -192,14 +192,11 @@ pnpm tauri build    # 설치 프로그램 빌드
 
 ## 기여하기
 
-<a href="https://fuyu.ing/logo/"><img src="../assets/logo-placeholder.svg" alt="점선으로 그린 빈자리: Fuyu의 로고를 모집 중입니다" width="88" height="88" align="right"></a>
-
 Fuyu는 모두가 함께 만들고 있습니다. 여러분도 한 조각을 보태 주세요.
 
 - **문제와 아이디어 제안하기**: [Issues](https://github.com/TixXin/fuyu/issues)에서 불편한 점이나 바라는 기능을 알려 주세요.
 - **코드, 문서, 번역 고치기**: 바로 PR을 보내 주세요. 보내는 방법과 보내기 전에 돌릴 검사는 [CONTRIBUTING.md](../../CONTRIBUTING.md)를, 코드 구성은 [AGENTS.md](../../AGENTS.md)를 참고하세요(중국어).
 - **플러그인 만들기**: 섬 본체를 고칠 필요 없이, 완성하면 [플러그인 마켓](https://github.com/TixXin/fuyu-plugins)에 올리면 됩니다.
-- **로고 그리기**: Fuyu에는 아직 정식 로고가 없습니다. [모집 페이지](https://fuyu.ing/logo/)는 계속 열려 있고, 오른쪽의 빈자리가 바로 로고를 위한 자리입니다.
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="Fuyu의 기여자들"></a>
 
