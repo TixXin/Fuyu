@@ -48,6 +48,7 @@ export type ScreenshotText = {
   sizes: Record<0 | 1 | 2, string>;
   color: (hex: string) => string;
   textPlaceholder: string;
+  deleteAnnotation: string;
   pinMenu: {
     copy: string;
     save: string;
@@ -82,6 +83,10 @@ export type ScreenshotText = {
     noAgent: string;
     agentNotFound: string;
     close: string;
+    instruction: string;
+    instructionHint: string;
+    sendNow: string;
+    source: string;
   };
   history: {
     title: string;
@@ -98,6 +103,9 @@ export type ScreenshotText = {
     date: (year: number | null, month: number, day: number) => string;
     dayCount: (count: number) => string;
     tab: string;
+    search: string;
+    clearSearch: string;
+    noMatch: (query: string) => string;
   };
 };
 
@@ -173,6 +181,7 @@ export const zhCN: ScreenshotText = {
   sizes: { 0: "细", 1: "中", 2: "粗" },
   color: (hex) => `颜色 ${hex}`,
   textPlaceholder: "输入文字",
+  deleteAnnotation: "删除这个标注（Delete）",
   pinMenu: {
     copy: "复制",
     save: "保存",
@@ -207,6 +216,10 @@ export const zhCN: ScreenshotText = {
     noAgent: "没有正在运行的 Agent 会话",
     agentNotFound: "找不到这个会话的窗口",
     close: "关闭",
+    instruction: "给 Agent 的一句话",
+    instructionHint: "写一句话，回车发送（可不写）",
+    sendNow: "发送",
+    source: "来源：",
   },
   history: {
     title: "截图历史",
@@ -223,6 +236,9 @@ export const zhCN: ScreenshotText = {
     date: (year, month, day) => `${year ? `${year}年` : ""}${month}月${day}日`,
     dayCount: (count) => `${count} 张`,
     tab: "截图",
+    search: "搜图里的文字",
+    clearSearch: "清除搜索",
+    noMatch: (query) => `没有截图里有「${query}」`,
   },
 };
 
@@ -298,6 +314,7 @@ export const en: ScreenshotText = {
   sizes: { 0: "Thin", 1: "Medium", 2: "Thick" },
   color: (hex) => `Colour ${hex}`,
   textPlaceholder: "Type text",
+  deleteAnnotation: "Delete this annotation (Delete)",
   pinMenu: {
     copy: "Copy",
     save: "Save",
@@ -332,6 +349,10 @@ export const en: ScreenshotText = {
     noAgent: "No agent session is running",
     agentNotFound: "Could not find this session's window",
     close: "Close",
+    instruction: "A note for the agent",
+    instructionHint: "Add a note, Enter to send (optional)",
+    sendNow: "Send",
+    source: "Source: ",
   },
   history: {
     title: "Screenshot history",
@@ -348,5 +369,8 @@ export const en: ScreenshotText = {
     date: (year, month, day) => new Date(year ?? 2000, month - 1, day).toLocaleDateString("en", year ? { year: "numeric", month: "short", day: "numeric" } : { month: "short", day: "numeric" }),
     dayCount: (count) => (count === 1 ? "1 shot" : `${count} shots`),
     tab: "Screenshots",
+    search: "Search text in screenshots",
+    clearSearch: "Clear search",
+    noMatch: (query) => `No screenshot contains “${query}”`,
   },
 };

@@ -86,6 +86,24 @@ body:has(.screenshot-overlay) {
   border-radius: 50%;
 }
 
+.screenshot-overlay__picked {
+  position: absolute;
+  margin: -1px 0 0 -1px;
+  border: 1px dashed var(--color-accent, #74d6ff);
+  pointer-events: none;
+}
+
+.screenshot-overlay__picked-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: var(--screenshot-handle-fill, #fff);
+  border: 1px solid var(--color-accent, #74d6ff);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
 .screenshot-overlay__size {
   position: absolute;
   left: -1px;

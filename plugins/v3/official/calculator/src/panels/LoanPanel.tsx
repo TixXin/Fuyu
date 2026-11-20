@@ -1,4 +1,4 @@
-import { formatMoney, parseNumber } from "../format.ts";
+import { formatMoney, parseValue } from "../format.ts";
 import { DEFAULT_COMMERCIAL_RATE, DEFAULT_FUND_RATE, combinedLoan, type LoanPart, type LoanResult } from "../loan.ts";
 import { text } from "../text.ts";
 import { Field, ResultRow, Segmented } from "../ui.tsx";
@@ -28,13 +28,13 @@ export function LoanPanel({ api }: { api: PrefsApi }) {
   const yearsText = api.field("loan.years", "30");
   const parts: (LoanPart | null)[] = [];
   const toPart = (amountText: string, rateText: string): LoanPart | null => {
-    const amount = parseNumber(amountText);
-    const rate = parseNumber(rateText);
+    const amount = parseValue(amountText);
+    const rate = parseValue(rateText);
     return amount !== null && rate !== null && amount >= 0 && rate >= 0 ? { amount: amount * 10_000, rate } : null;
   };
   if (kind !== "fund") parts.push(toPart(commercialText, commercialRateText));
   if (kind !== "commercial") parts.push(toPart(fundText, fundRateText));
-  const years = parseNumber(yearsText);
+  const years = parseValue(yearsText);
   const valid = parts.every(Boolean) && years !== null && years > 0 && years <= 50;
   const clean = parts.filter((part): part is LoanPart => part !== null);
   return (

@@ -4,6 +4,7 @@ pub(crate) mod audio_capture;
 pub(crate) mod audio_outputs;
 pub(crate) mod ble_battery;
 pub(crate) mod brightness;
+pub(crate) mod browser_url;
 pub(crate) mod capture_targets;
 pub(crate) mod chinese;
 pub(crate) mod clipboard;

@@ -14,9 +14,10 @@ pub(super) fn put_on_clipboard(_picture: &Picture, png: &[u8], file: Option<&Pat
     }
 }
 
-pub(super) fn paste_path(path: &Path) -> Result<(), String> {
-    let text = path.to_string_lossy();
-    if !pasteboard::write_file_with_text(&text, &format!("\"{text}\"")) {
+pub(super) fn paste_path(path: &Path, text: Option<&str>) -> Result<(), String> {
+    let file = path.to_string_lossy();
+    let quoted = format!("\"{file}\"");
+    if !pasteboard::write_file_with_text(&file, text.unwrap_or(&quoted)) {
         return Err("Failed to copy the screenshot.".to_string());
     }
     thread::sleep(PASTE_DELAY);

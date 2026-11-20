@@ -1,9 +1,14 @@
 mod background;
+#[cfg(any(windows, test))]
+mod blank;
 #[cfg_attr(target_os = "macos", path = "capture_macos.rs")]
 mod capture;
 #[cfg_attr(target_os = "macos", path = "clipboard_macos.rs")]
 mod clipboard;
+#[cfg_attr(target_os = "macos", path = "front_window_macos.rs")]
+mod front_window;
 mod history;
+mod history_text;
 #[cfg_attr(target_os = "macos", path = "hotkeys_macos.rs")]
 mod hotkeys;
 mod long;
@@ -11,6 +16,7 @@ mod output;
 mod pin;
 mod session;
 mod shortcuts;
+mod source;
 mod stitch;
 #[cfg_attr(target_os = "macos", path = "targets_macos.rs")]
 mod targets;
@@ -29,6 +35,7 @@ const TEXT_EVENT: &str = "screenshot-text";
 const TRANSLATE_EVENT: &str = "screenshot-translate";
 const TAKEN_EVENT: &str = "screenshot-taken";
 const HISTORY_EVENT: &str = "screenshot-history-changed";
+const PASTE_TEXT_LIMIT: usize = 4000;
 
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -36,10 +43,11 @@ struct Taken {
     path: String,
     thumbnail: Option<String>,
     saved: bool,
+    source: Option<source::Source>,
 }
 
 fn announce(app: &AppHandle, picture: &Picture, path: &std::path::Path, saved: bool) {
-    let taken = Taken { path: path.display().to_string(), thumbnail: output::thumbnail(picture), saved };
+    let taken = Taken { path: path.display().to_string(), thumbnail: output::thumbnail(picture), saved, source: source::current() };
     let _ = app.emit_to(crate::island::WINDOW_LABEL, TAKEN_EVENT, taken);
 }
 use output::Picture;
@@ -61,8 +69,18 @@ pub(crate) fn is_enabled() -> bool {
 }
 
 #[tauri::command]
-pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Option<Vec<shortcuts::ShortcutConfig>>, print_screen: Option<bool>, history_days: Option<u32>) {
+pub async fn screenshot_configure(
+    app: AppHandle,
+    enabled: bool,
+    shortcuts: Option<Vec<shortcuts::ShortcutConfig>>,
+    print_screen: Option<bool>,
+    history_days: Option<u32>,
+    history_text: Option<bool>,
+) {
     hotkeys::configure(enabled, shortcuts, print_screen);
+    if let Some(read) = history_text {
+        history_text::set_enabled(read);
+    }
     if let Some(days) = history_days {
         history::set_keep_days(days);
         output::prune_at_start(&app);
@@ -360,6 +378,7 @@ pub async fn screenshot_history_pin(app: AppHandle, path: String) -> Result<(), 
 pub async fn screenshot_history_delete(app: AppHandle, path: String) -> Result<(), String> {
     let path = history::history_file(&history_dir(&app)?, &path)?;
     std::fs::remove_file(&path).map_err(|error| format!("Failed to delete {}: {error}", path.display()))?;
+    history_text::remove(&path);
     let _ = app.emit(HISTORY_EVENT, ());
     Ok(())
 }
@@ -500,9 +519,10 @@ pub async fn screenshot_drag(window: WebviewWindow, path: String) -> Result<(), 
 }
 
 #[tauri::command]
-pub async fn screenshot_paste_to_front(path: String) -> Result<(), String> {
+pub async fn screenshot_paste_to_front(path: String, text: Option<String>) -> Result<(), String> {
     let path = card_file(&path)?;
-    tauri::async_runtime::spawn_blocking(move || clipboard::paste_path(&path))
+    let text = text.filter(|text| !text.trim().is_empty() && text.chars().count() <= PASTE_TEXT_LIMIT);
+    tauri::async_runtime::spawn_blocking(move || clipboard::paste_path(&path, text.as_deref()))
         .await
         .map_err(|error| format!("Failed to paste the screenshot: {error}"))?
 }

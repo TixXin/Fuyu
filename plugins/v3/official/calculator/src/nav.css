@@ -1,0 +1,74 @@
+.fuyu-calc__nav {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, 64px);
+  grid-auto-rows: 22px;
+  align-content: start;
+  gap: 1px 2px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.fuyu-calc__nav,
+.fuyu-calc__body {
+  scrollbar-gutter: auto;
+}
+
+.fuyu-calc__nav::-webkit-scrollbar,
+.fuyu-calc__body::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.fuyu-calc__nav::-webkit-scrollbar-button,
+.fuyu-calc__body::-webkit-scrollbar-button {
+  display: none;
+}
+
+.fuyu-calc__nav::-webkit-scrollbar-track,
+.fuyu-calc__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fuyu-calc__nav::-webkit-scrollbar-thumb,
+.fuyu-calc__body::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background: transparent;
+}
+
+.fuyu-calc__nav:hover::-webkit-scrollbar-thumb,
+.fuyu-calc__body:hover::-webkit-scrollbar-thumb {
+  background: var(--fuyu-plugin-border);
+}
+
+.fuyu-calc__tab {
+  min-width: 0;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.fuyu-calc__tab:hover {
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-calc__tab:focus-visible {
+  outline: 1px solid var(--fuyu-plugin-accent);
+  outline-offset: -1px;
+}
+
+.fuyu-calc__tab.is-on {
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-accent);
+  font-weight: 600;
+}

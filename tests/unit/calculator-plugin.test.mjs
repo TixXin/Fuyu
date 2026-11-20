@@ -6,17 +6,19 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { startHost } from "../../packages/plugin-base/src/host/kernel.mjs";
 import { installPackage, pack } from "../../packages/plugin-cli/src/index.mjs";
+import { ageOf, lunarOf, signIndex, zodiacIndex } from "../../plugins/v3/official/calculator/src/age.ts";
 import { bmiLevel, bmiOf, healthyRange } from "../../plugins/v3/official/calculator/src/bmi.ts";
 import { toChineseDigits, toChineseLower, toChineseUpper, toRmbUpper } from "../../plugins/v3/official/calculator/src/chinese.ts";
 import { convertCurrency, parseRatesResponse } from "../../plugins/v3/official/calculator/src/currency.ts";
 import { addMonths, addWorkdays, dateSpan, formatDate, parseDate } from "../../plugins/v3/official/calculator/src/dates.ts";
 import { tryEvaluate } from "../../plugins/v3/official/calculator/src/expr.ts";
-import { formatNumber, parseNumber } from "../../plugins/v3/official/calculator/src/format.ts";
+import { formatNumber, parseNumber, parseValue } from "../../plugins/v3/official/calculator/src/format.ts";
 import { reverseChain, solve } from "../../plugins/v3/official/calculator/src/kinship.ts";
 import { describeChain, lookupTitle } from "../../plugins/v3/official/calculator/src/kinshipTitles.ts";
 import { annuity, combinedLoan, equalPrincipal } from "../../plugins/v3/official/calculator/src/loan.ts";
-import { mergePrefs, normalizePrefs, pushHistory } from "../../plugins/v3/official/calculator/src/model.ts";
+import { DEFAULT_SETTINGS, TABS, mergePrefs, normalizeSettings, normalizePrefs, pushHistory } from "../../plugins/v3/official/calculator/src/model.ts";
 import { formatInBase, parseInBase } from "../../plugins/v3/official/calculator/src/radix.ts";
+import { parseQuery, resolveUnit } from "../../plugins/v3/official/calculator/src/query.ts";
 import { bonusTax, salaryTax } from "../../plugins/v3/official/calculator/src/tax.ts";
 import { UNITS, convertUnit } from "../../plugins/v3/official/calculator/src/units.ts";
 
@@ -191,6 +193,75 @@ test("C149 prefs keep only known values", () => {
 const PLUGIN_DIR = fileURLToPath(new URL("../../plugins/v3/official/calculator", import.meta.url));
 const scratch = mkdtempSync(join(tmpdir(), "fuyu-c149-calculator-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
+
+test("C155 percent adds onto the left side, ans is the last result", () => {
+  assert.equal(tryEvaluate("100+10%"), 110);
+  assert.equal(tryEvaluate("100-10%"), 90);
+  assert.equal(tryEvaluate("200*10%"), 20);
+  assert.equal(tryEvaluate("50%"), 0.5);
+  assert.equal(tryEvaluate("ans*2", { ans: 21 }), 42);
+  assert.equal(tryEvaluate("ans*2"), null);
+});
+
+test("C155 fields take expressions", () => {
+  assert.equal(parseValue("1,200"), 1200);
+  assert.equal(parseValue("12*3"), 36);
+  assert.equal(parseValue("100+10%"), 110);
+  assert.equal(parseValue("12*3+"), null);
+  assert.equal(parseValue(""), null);
+});
+
+test("C155 natural conversions in the calc page", () => {
+  assert.deepEqual(resolveUnit("公里"), { kind: "unit", category: "length", id: "km" });
+  assert.deepEqual(resolveUnit("美金"), { kind: "currency", code: "USD" });
+  assert.equal(resolveUnit("nothing"), null);
+  const km = parseQuery("5 km to mi");
+  assert.equal(km.value, 5);
+  assert.deepEqual([km.from.id, km.to.id], ["km", "mi"]);
+  const usd = parseQuery("100美元换成人民币");
+  assert.deepEqual([usd.from.code, usd.to.code], ["USD", "CNY"]);
+  assert.deepEqual([parseQuery("$20 in eur").from.code, parseQuery("$20 in eur").to.code], ["USD", "EUR"]);
+  const inch = parseQuery("1 in to cm");
+  assert.deepEqual([inch.from.id, inch.to.id], ["in", "cm"]);
+  const jin = parseQuery("3斤是多少公斤");
+  assert.deepEqual([jin.value, jin.from.id, jin.to.id], [3, "jin", "kg"]);
+  assert.equal(parseQuery("37℃ to ℉").to.id, "f");
+  assert.equal(parseQuery("2*ans km to m", { ans: 3 }).value, 6);
+  assert.equal(parseQuery("5 km to kg"), null);
+  assert.equal(parseQuery("1+2"), null);
+});
+
+test("C155 new unit categories", () => {
+  near(convertUnit("angle", 180, "deg", "rad"), Math.PI);
+  near(convertUnit("pressure", 1, "atm", "kPa"), 101.325);
+  near(convertUnit("energy", 1, "kcal", "kJ"), 4.184);
+  near(convertUnit("power", 1, "hp", "W"), 745.6998715822702, 1e-3);
+  for (const category of ["angle", "pressure", "energy", "power"]) assert.ok(UNITS[category].length >= 6, category);
+});
+
+test("C155 age, lunar birthday, zodiac and sign", () => {
+  const birth = Date.UTC(1990, 0, 20);
+  const age = ageOf(birth, Date.UTC(2026, 10, 20));
+  assert.equal(age.years, 36);
+  assert.equal(age.nominal, 38);
+  assert.equal(age.nextBirthday, Date.UTC(2027, 0, 20));
+  assert.equal(age.daysToBirthday, 61);
+  assert.equal(lunarOf(birth).yearName, "己巳");
+  assert.equal(zodiacIndex(birth), 5);
+  assert.equal(signIndex(birth), 0);
+  assert.equal(signIndex(Date.UTC(2000, 0, 19)), 11);
+  assert.equal(signIndex(Date.UTC(2000, 11, 25)), 11);
+  assert.equal(ageOf(Date.UTC(2000, 1, 29), Date.UTC(2001, 1, 28)).years, 1);
+});
+
+test("C155 settings and tabs", () => {
+  assert.equal(DEFAULT_SETTINGS.keypad, true);
+  assert.equal(normalizeSettings({ keypad: false }).keypad, false);
+  assert.equal(normalizeSettings({ keypad: "no" }).keypad, true);
+  assert.deepEqual(TABS.slice(0, 2), ["calc", "currency"]);
+  for (const tab of ["angle", "pressure", "energy", "power"]) assert.ok(TABS.includes(tab), tab);
+  assert.equal(new Set(TABS).size, TABS.length);
+});
 
 test("C149 the calculator packs, installs and runs in startHost", async () => {
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });

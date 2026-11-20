@@ -1,4 +1,4 @@
-export type UnitCategory = "length" | "area" | "volume" | "weight" | "temperature" | "speed" | "time" | "data";
+export type UnitCategory = "length" | "area" | "volume" | "weight" | "temperature" | "speed" | "time" | "data" | "angle" | "pressure" | "energy" | "power";
 
 export interface Unit {
   id: string;
@@ -121,6 +121,45 @@ export const UNITS: Record<UnitCategory, Unit[]> = {
     linear("TiB", 1024 ** 4),
     linear("PiB", 1024 ** 5),
   ],
+  angle: [
+    linear("deg", 1),
+    linear("rad", 180 / Math.PI),
+    linear("grad", 0.9),
+    linear("arcmin", 1 / 60),
+    linear("arcsec", 1 / 3600),
+    linear("turn", 360),
+  ],
+  pressure: [
+    linear("Pa", 1),
+    linear("kPa", 1e3),
+    linear("MPa", 1e6),
+    linear("hPa", 100),
+    linear("bar", 1e5),
+    linear("atm", 101325),
+    linear("psi", 6894.757293168),
+    linear("mmHg", 133.322387415),
+    linear("kgfcm2", 98066.5),
+  ],
+  energy: [
+    linear("J", 1),
+    linear("kJ", 1e3),
+    linear("MJ", 1e6),
+    linear("cal", 4.184),
+    linear("kcal", 4184),
+    linear("Wh", 3600),
+    linear("kWh", 3.6e6),
+    linear("eV", 1.602176634e-19),
+    linear("BTU", 1055.05585262),
+  ],
+  power: [
+    linear("W", 1),
+    linear("kW", 1e3),
+    linear("MW", 1e6),
+    linear("hp", 745.69987158227),
+    linear("ps", 735.49875),
+    linear("kcalh", 4184 / 3600),
+    linear("BTUh", 1055.05585262 / 3600),
+  ],
 };
 
 export const DEFAULT_UNIT: Record<UnitCategory, string> = {
@@ -132,6 +171,10 @@ export const DEFAULT_UNIT: Record<UnitCategory, string> = {
   speed: "kmh",
   time: "h",
   data: "GB",
+  angle: "deg",
+  pressure: "kPa",
+  energy: "kcal",
+  power: "kW",
 };
 
 export const UNIT_CATEGORIES = Object.keys(UNITS) as UnitCategory[];

@@ -5,6 +5,7 @@ import { useErrorText, useTranslation } from "../../i18n";
 import { windowServices } from "../plugin-kernel/services";
 import { dragScreenshot, pasteScreenshotToFront, type ScreenshotTaken } from "./api";
 import { screenshotActions, subscribeScreenshotActions, type ScreenshotActionItem } from "./host/actions.mjs";
+import { agentMessage } from "./agentMessage";
 import { serviceFailed } from "./serviceErrors";
 import type { ScreenshotCardState } from "./useScreenshotCard";
 
@@ -65,11 +66,13 @@ function useLocalSessions(watching: boolean) {
   return watching ? sessions : NO_SESSIONS;
 }
 
-export function useScreenshotNotice(card: ScreenshotCardState) {
+export function useScreenshotNotice(card: ScreenshotCardState, withSource: boolean) {
   const t = useTranslation().screenshot;
   const errorText = useErrorText();
   const [message, setMessage] = useState<{ path: string; text: string } | null>(null);
+  const [draft, setDraft] = useState<{ path: string; text: string } | null>(null);
   const taken: ScreenshotTaken | null = card.current;
+  const composing = taken !== null && draft?.path === taken.path;
   const local = useLocalSessions(taken !== null);
   const report = (error: unknown) => taken && setMessage({ path: taken.path, text: errorText(error) });
 
@@ -80,8 +83,21 @@ export function useScreenshotNotice(card: ScreenshotCardState) {
       setMessage({ path: taken.path, text: t.card.agentNotFound });
       return;
     }
-    await pasteScreenshotToFront(taken.path);
+    const text = agentMessage(taken.path, { instruction: draft?.path === taken.path ? draft.text : "", source: withSource ? taken.source : null, text: t.card });
+    await pasteScreenshotToFront(taken.path, text ?? undefined);
+    setDraft(null);
     card.dismiss();
+  };
+
+  const compose = () => {
+    if (!taken) return;
+    card.hold();
+    setDraft({ path: taken.path, text: "" });
+  };
+  const write = (text: string) => taken && setDraft({ path: taken.path, text });
+  const stopComposing = () => {
+    setDraft(null);
+    card.release();
   };
 
   const sendToAgent = async () => {
@@ -128,7 +144,22 @@ export function useScreenshotNotice(card: ScreenshotCardState) {
     );
   };
 
-  return { taken, text, canSend: local.length > 0, sendToAgent, shelve, drag, card, extraActions, runAction };
+  return {
+    taken,
+    text,
+    canSend: local.length > 0,
+    composing,
+    draft: composing ? (draft?.text ?? "") : "",
+    compose,
+    write,
+    stopComposing,
+    sendToAgent,
+    shelve,
+    drag,
+    card,
+    extraActions,
+    runAction,
+  };
 }
 
 export type ScreenshotNoticeState = ReturnType<typeof useScreenshotNotice>;
