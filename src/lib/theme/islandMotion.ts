@@ -66,15 +66,16 @@ const SNAPPY_CLOSE: MotionTiming = {
 
 type HoverTiming = { grow: number; growEase: string; shrink: number; shrinkEase: string };
 
-const HOVER_SPRING: HoverTiming = { grow: 420, growEase: springCurve(0.4), shrink: MOTION_BASE_MS, shrinkEase: EASE_OUT };
+const HOVER_EASE = "cubic-bezier(0.25, 0.1, 0.25, 1)";
+const HOVER_GENTLE: HoverTiming = { grow: 360, growEase: HOVER_EASE, shrink: 280, shrinkEase: HOVER_EASE };
 
 const HOVER: Record<IslandMotion, HoverTiming> = {
-  spring: HOVER_SPRING,
-  snappy: HOVER_SPRING,
-  bouncy: HOVER_SPRING,
-  smooth: { grow: MOTION_MEDIUM_MS, growEase: EASE_OUT_EXPO, shrink: MOTION_BASE_MS, shrinkEase: EASE_OUT_EXPO },
-  fast: { grow: MOTION_BASE_MS, growEase: EASE_OUT, shrink: MOTION_FAST_MS, shrinkEase: EASE_OUT },
-  none: { grow: 0, growEase: EASE_OUT, shrink: 0, shrinkEase: EASE_OUT },
+  spring: HOVER_GENTLE,
+  snappy: HOVER_GENTLE,
+  bouncy: HOVER_GENTLE,
+  smooth: HOVER_GENTLE,
+  fast: { grow: 240, growEase: HOVER_EASE, shrink: 200, shrinkEase: HOVER_EASE },
+  none: { grow: 0, growEase: HOVER_EASE, shrink: 0, shrinkEase: HOVER_EASE },
 };
 
 export function islandHoverTiming(motion: IslandMotion, reducedMotion = false): HoverTiming {
