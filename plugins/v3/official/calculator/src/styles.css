@@ -20,46 +20,12 @@
   color: inherit;
 }
 
-.fuyu-calc__nav {
-  display: flex;
-  flex: 0 0 88px;
-  flex-direction: column;
-  gap: 2px;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-
-.fuyu-calc__tab {
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border: 0;
-  border-radius: var(--fuyu-plugin-radius);
-  background: transparent;
-  color: var(--fuyu-plugin-text-secondary);
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-
-.fuyu-calc__tab:hover {
-  background: var(--fuyu-plugin-surface-hover);
-  color: var(--fuyu-plugin-text);
-}
-
-.fuyu-calc__tab.is-on {
-  background: var(--fuyu-plugin-accent);
-  color: var(--fuyu-plugin-on-accent);
-}
-
 .fuyu-calc__body {
   flex: 1;
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-width: thin;
+  container-type: inline-size;
 }
 
 .fuyu-calc__panel {
@@ -124,8 +90,46 @@
 }
 
 .fuyu-calc__control {
+  position: relative;
   display: flex;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
+}
+
+.fuyu-calc__control.is-invalid .fuyu-calc__input {
+  border-color: var(--fuyu-plugin-danger);
+}
+
+.fuyu-calc__computed {
+  position: absolute;
+  right: 8px;
+  max-width: 50%;
+  overflow: hidden;
+  color: var(--fuyu-plugin-text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.fuyu-calc__inline-button {
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fuyu-calc__inline-button:hover {
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
 }
 
 .fuyu-calc__input,
@@ -181,20 +185,59 @@
 .fuyu-calc__row {
   position: relative;
   display: flex;
+  min-width: 0;
+  border-radius: var(--fuyu-plugin-radius);
+}
+
+.fuyu-calc__row:hover {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-calc__row-main {
+  display: flex;
+  flex: 1;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
   min-width: 0;
   padding: 4px 8px;
   border: 0;
-  border-radius: var(--fuyu-plugin-radius);
+  border-radius: inherit;
   background: transparent;
   text-align: left;
   cursor: copy;
 }
 
-.fuyu-calc__row:hover {
-  background: var(--fuyu-plugin-surface-hover);
+.fuyu-calc__row.has-pick:hover .fuyu-calc__row-main {
+  padding-right: 30px;
+}
+
+.fuyu-calc__row-pick {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.fuyu-calc__row:hover .fuyu-calc__row-pick,
+.fuyu-calc__row-pick:focus-visible {
+  display: inline-flex;
+}
+
+.fuyu-calc__row-pick:hover {
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-accent);
 }
 
 .fuyu-calc__row-label {
@@ -331,171 +374,4 @@
 .fuyu-calc__segmented button.is-on {
   background: var(--fuyu-plugin-accent);
   color: var(--fuyu-plugin-on-accent);
-}
-
-.fuyu-calc__months {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 2px 6px;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.fuyu-calc__month {
-  display: flex;
-  justify-content: space-between;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-}
-
-.fuyu-calc__month-n {
-  color: var(--fuyu-plugin-text-muted);
-}
-
-.fuyu-calc__chain {
-  min-height: 22px;
-  font-size: 14px;
-}
-
-.fuyu-calc__keys {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 4px;
-}
-
-.fuyu-calc__key {
-  height: 28px;
-  padding: 0 4px;
-  border: 1px solid var(--fuyu-plugin-border);
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-
-.fuyu-calc__key:hover:not(:disabled) {
-  background: var(--fuyu-plugin-surface-hover);
-}
-
-.fuyu-calc__key:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.fuyu-calc__key.is-quiet {
-  color: var(--fuyu-plugin-text-secondary);
-}
-
-.fuyu-calc__kin-result {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.fuyu-calc__kin-result > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 10px;
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-}
-
-.fuyu-calc__kin-title {
-  font-size: 18px;
-}
-
-.fuyu-calc__bmi {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.fuyu-calc__bmi-value {
-  font-size: 28px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.fuyu-calc__badge {
-  padding: 2px 8px;
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-  font-size: 12px;
-}
-
-.fuyu-calc__badge.is-under {
-  color: var(--fuyu-calc-low);
-}
-
-.fuyu-calc__badge.is-normal {
-  color: var(--fuyu-calc-good);
-}
-
-.fuyu-calc__badge.is-over {
-  color: var(--fuyu-plugin-warning);
-}
-
-.fuyu-calc__badge.is-obese {
-  color: var(--fuyu-plugin-danger);
-}
-
-.fuyu-calc__scale {
-  position: relative;
-  display: flex;
-  height: 6px;
-  border-radius: 3px;
-  overflow: visible;
-}
-
-.fuyu-calc__scale > span {
-  height: 100%;
-}
-
-.fuyu-calc__scale > span:first-child {
-  border-radius: 3px 0 0 3px;
-}
-
-.fuyu-calc__scale .is-under {
-  background: var(--fuyu-calc-low);
-}
-
-.fuyu-calc__scale .is-normal {
-  background: var(--fuyu-calc-good);
-}
-
-.fuyu-calc__scale .is-over {
-  background: var(--fuyu-plugin-warning);
-}
-
-.fuyu-calc__scale .is-obese {
-  flex: 1;
-  border-radius: 0 3px 3px 0;
-  background: var(--fuyu-plugin-danger);
-}
-
-.fuyu-calc__scale > i {
-  position: absolute;
-  top: -3px;
-  width: 4px;
-  height: 12px;
-  border-radius: 2px;
-  background: var(--fuyu-plugin-text);
-  transform: translateX(-50%);
-}
-
-.fuyu-calc__scale-labels {
-  position: relative;
-  height: 14px;
-  color: var(--fuyu-plugin-text-muted);
-  font-size: 11px;
-}
-
-.fuyu-calc__scale-labels > span {
-  position: absolute;
-  transform: translateX(-50%);
 }

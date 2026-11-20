@@ -1,10 +1,11 @@
 import { addDays, addMonths, addWorkdays, dateSpan, formatDate, parseDate, todayText, weekdayOf } from "../dates.ts";
-import { formatNumber, parseNumber } from "../format.ts";
+import { formatNumber, parseValue } from "../format.ts";
 import { text } from "../text.ts";
-import { Field, Note, ResultRow, Segmented, Select } from "../ui.tsx";
+import { ageOf, lunarOf } from "../age.ts";
+import { Field, Note, ResultRow, Segmented, Select, TodayButton } from "../ui.tsx";
 import type { PrefsApi } from "../usePrefs.ts";
 
-type Mode = "span" | "add";
+type Mode = "span" | "add" | "age";
 type Step = "days" | "workdays" | "months";
 
 function SpanView({ api }: { api: PrefsApi }) {
@@ -17,8 +18,8 @@ function SpanView({ api }: { api: PrefsApi }) {
   return (
     <div className="fuyu-calc__split">
       <div className="fuyu-calc__column">
-        <Field label={text.date.from} type="date" value={from} onChange={(next) => api.setField("date.from", next)} />
-        <Field label={text.date.to} type="date" value={to} onChange={(next) => api.setField("date.to", next)} />
+        <Field label={text.date.from} type="date" value={from} onChange={(next) => api.setField("date.from", next)} suffix={<TodayButton onClick={() => api.setField("date.from", today)} />} />
+        <Field label={text.date.to} type="date" value={to} onChange={(next) => api.setField("date.to", next)} suffix={<TodayButton onClick={() => api.setField("date.to", today)} />} />
       </div>
       <div className="fuyu-calc__column">
         {span ? (
@@ -41,7 +42,7 @@ function AddView({ api }: { api: PrefsApi }) {
   const amountText = api.field("date.amount", "100");
   const step = api.field("date.step", "days") as Step;
   const at = parseDate(base);
-  const amount = parseNumber(amountText);
+  const amount = parseValue(amountText);
   let result: number | null = null;
   if (at !== null && amount !== null && Math.abs(amount) <= 1_000_000) {
     result = step === "workdays" ? addWorkdays(at, amount) : step === "months" ? addMonths(at, Math.trunc(amount)) : addDays(at, amount);
@@ -54,7 +55,7 @@ function AddView({ api }: { api: PrefsApi }) {
   return (
     <div className="fuyu-calc__split">
       <div className="fuyu-calc__column">
-        <Field label={text.date.base} type="date" value={base} onChange={(next) => api.setField("date.base", next)} />
+        <Field label={text.date.base} type="date" value={base} onChange={(next) => api.setField("date.base", next)} suffix={<TodayButton onClick={() => api.setField("date.base", todayText())} />} />
         <div className="fuyu-calc__inputs">
           <Field label={text.date.amount} value={amountText} onChange={(next) => api.setField("date.amount", next)} wide />
           <Select label={text.unit} value={step} options={steps} onChange={(next) => api.setField("date.step", next)} />
@@ -71,8 +72,40 @@ function AddView({ api }: { api: PrefsApi }) {
   );
 }
 
+function AgeView({ api }: { api: PrefsApi }) {
+  const today = todayText();
+  const birth = api.field("date.birth", "2000-01-01");
+  const birthAt = parseDate(birth);
+  const todayAt = parseDate(today);
+  const age = birthAt !== null && todayAt !== null ? ageOf(birthAt, todayAt) : null;
+  const lunar = birthAt !== null ? lunarOf(birthAt) : null;
+  return (
+    <div className="fuyu-calc__split">
+      <div className="fuyu-calc__column">
+        <Field label={text.date.birthday} type="date" value={birth} onChange={(next) => api.setField("date.birth", next)} />
+        {lunar && <ResultRow label={text.date.lunar} value={`${lunar.yearName}年${lunar.month}${lunar.day}`} />}
+      </div>
+      <div className="fuyu-calc__column">
+        {age === null ? (
+          <p className="fuyu-calc__muted">{birthAt !== null && todayAt !== null && birthAt > todayAt ? text.date.future : text.invalid}</p>
+        ) : (
+          <>
+            <ResultRow label={text.date.years} value={text.date.yearsValue(age.years)} copyValue={String(age.years)} strong />
+            <ResultRow label={text.date.nominal} value={text.date.yearsValue(age.nominal)} copyValue={String(age.nominal)} />
+            <ResultRow label={text.date.zodiac} value={text.date.zodiacNames[age.zodiac]} />
+            <ResultRow label={text.date.sign} value={text.date.signNames[age.sign]} />
+            <ResultRow label={text.date.lived} value={formatNumber(age.daysLived)} copyValue={String(age.daysLived)} />
+            <ResultRow label={text.date.nextBirthday} value={formatDate(age.nextBirthday)} sub={`${text.date.weekday[weekdayOf(age.nextBirthday)]} · ${text.date.inDays(age.daysToBirthday)}`} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function DatePanel({ api }: { api: PrefsApi }) {
-  const mode = (api.field("date.mode", "span") === "add" ? "add" : "span") as Mode;
+  const stored = api.field("date.mode", "span");
+  const mode: Mode = stored === "add" || stored === "age" ? stored : "span";
   return (
     <div className="fuyu-calc__panel">
       <Segmented<Mode>
@@ -80,11 +113,12 @@ export function DatePanel({ api }: { api: PrefsApi }) {
         options={[
           { value: "span", label: text.date.span },
           { value: "add", label: text.date.add },
+          { value: "age", label: text.date.age },
         ]}
         onChange={(next) => api.setField("date.mode", next)}
       />
-      {mode === "span" ? <SpanView api={api} /> : <AddView api={api} />}
-      <Note>{text.date.note}</Note>
+      {mode === "span" ? <SpanView api={api} /> : mode === "add" ? <AddView api={api} /> : <AgeView api={api} />}
+      {mode !== "age" && <Note>{text.date.note}</Note>}
     </div>
   );
 }

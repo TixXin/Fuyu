@@ -1,15 +1,18 @@
 import { toChineseDigits, toChineseLower, toChineseUpper, toRmbUpper } from "../chinese.ts";
+import { formatPlain, isPlainNumber, parseValue } from "../format.ts";
 import { text } from "../text.ts";
 import { Field, Note, ResultRow } from "../ui.tsx";
 import type { PrefsApi } from "../usePrefs.ts";
 
 export function UpperPanel({ api }: { api: PrefsApi }) {
   const raw = api.field("upper.value", "12345.67");
+  const computed = raw.trim() && !isPlainNumber(raw) ? parseValue(raw) : null;
+  const source = computed === null ? raw : formatPlain(computed, 15);
   const rows = [
-    { label: text.upper.rmb, value: toRmbUpper(raw), strong: true },
-    { label: text.upper.upperNum, value: toChineseUpper(raw) },
-    { label: text.upper.lowerNum, value: toChineseLower(raw) },
-    { label: text.upper.digits, value: toChineseDigits(raw) },
+    { label: text.upper.rmb, value: toRmbUpper(source), strong: true },
+    { label: text.upper.upperNum, value: toChineseUpper(source) },
+    { label: text.upper.lowerNum, value: toChineseLower(source) },
+    { label: text.upper.digits, value: toChineseDigits(source) },
   ];
   const valid = rows.every((row) => row.value !== null);
   return (

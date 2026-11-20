@@ -81,6 +81,10 @@ export default function apply(ctx: Context) {
           </Row>
         </Group>
         <Group title={S.resultTitle}>
+          <label className="fuyu-calc-set__check">
+            <input type="checkbox" checked={settings.keypad} onChange={(event) => setSettings({ keypad: event.target.checked })} />
+            <span>{S.keypad}</span>
+          </label>
           <Row label={S.digits}>
             <select value={settings.digits} onChange={(event) => setSettings({ digits: Number(event.target.value) })}>
               {DIGIT_CHOICES.map((n) => (

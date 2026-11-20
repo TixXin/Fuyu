@@ -19,15 +19,26 @@ export const TOPICS = {
 export const TABS = [
   "calc",
   "currency",
-  ...UNIT_CATEGORIES,
+  "length",
+  "area",
+  "volume",
+  "weight",
+  "temperature",
+  "speed",
+  "time",
   "date",
-  "radix",
-  "upper",
   "tax",
   "loan",
+  "upper",
+  "radix",
   "kinship",
   "bmi",
-] as const;
+  "data",
+  "angle",
+  "pressure",
+  "energy",
+  "power",
+] as const satisfies readonly (UnitCategory | "calc" | "currency" | "date" | "radix" | "upper" | "tax" | "loan" | "kinship" | "bmi")[];
 
 export type Tab = (typeof TABS)[number];
 
@@ -40,9 +51,10 @@ export interface CalculatorSettings {
   digits: number;
   ratesHours: number;
   insuranceRate: number;
+  keypad: boolean;
 }
 
-export const DEFAULT_SETTINGS: CalculatorSettings = { hidden: [], openOn: "last", digits: 10, ratesHours: 6, insuranceRate: 22.5 };
+export const DEFAULT_SETTINGS: CalculatorSettings = { hidden: [], openOn: "last", digits: 10, ratesHours: 6, insuranceRate: 22.5, keypad: true };
 
 export interface Prefs {
   tab: Tab;
@@ -113,6 +125,7 @@ export function normalizeSettings(raw: unknown): CalculatorSettings {
     digits: pick(source.digits, DIGIT_CHOICES, 10),
     ratesHours: pick(source.ratesHours, RATE_HOUR_CHOICES, 6),
     insuranceRate: rate,
+    keypad: typeof source.keypad === "boolean" ? source.keypad : DEFAULT_SETTINGS.keypad,
   };
 }
 

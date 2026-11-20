@@ -90,9 +90,11 @@ function factorial(value: number): number {
 class Parser {
   private index = 0;
   private readonly tokens: Token[];
+  private readonly vars: Record<string, number>;
 
-  constructor(tokens: Token[]) {
+  constructor(tokens: Token[], vars: Record<string, number>) {
     this.tokens = tokens;
+    this.vars = vars;
   }
 
   parse(): number {
@@ -115,10 +117,19 @@ class Parser {
     let value = this.term();
     while (this.isOp("+") || this.isOp("-")) {
       const op = (this.tokens[this.index++] as { value: string }).value;
+      const start = this.index;
       const right = this.term();
-      value = op === "+" ? value + right : value - right;
+      const share = this.isBarePercent(start) ? value * right : right;
+      value = op === "+" ? value + share : value - share;
     }
     return value;
+  }
+
+  private isBarePercent(start: number): boolean {
+    const slice = this.tokens.slice(start, this.index);
+    const last = slice[slice.length - 1];
+    if (last?.kind !== "op" || last.value !== "%") return false;
+    return slice.slice(0, -1).every((token) => token.kind === "num" || token.kind === "lparen" || token.kind === "rparen" || (token.kind === "op" && token.value !== "%"));
   }
 
   private startsFactor(): boolean {
@@ -193,6 +204,7 @@ class Parser {
       return value;
     }
     if (token.kind === "name") {
+      if (token.value in this.vars) return this.vars[token.value];
       if (token.value in CONSTANTS) return CONSTANTS[token.value];
       const fn = FUNCTIONS[token.value];
       if (!fn) throw new ExprError(`unknown "${token.value}"`);
@@ -210,13 +222,13 @@ class Parser {
   }
 }
 
-export function evaluate(input: string): number {
-  return new Parser(tokenize(input)).parse();
+export function evaluate(input: string, vars: Record<string, number> = {}): number {
+  return new Parser(tokenize(input), vars).parse();
 }
 
-export function tryEvaluate(input: string): number | null {
+export function tryEvaluate(input: string, vars: Record<string, number> = {}): number | null {
   try {
-    const value = evaluate(input);
+    const value = evaluate(input, vars);
     return Number.isNaN(value) ? null : value;
   } catch {
     return null;

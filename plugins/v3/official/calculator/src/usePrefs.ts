@@ -50,16 +50,17 @@ export function usePrefs(ctx: Context): PrefsApi {
   return { prefs, update, field, setField, setSettings };
 }
 
-export function useRates(ctx: Context) {
+export function useRates(ctx: Context, enabled = true) {
   const [rates, setRates] = useState<RatesSnapshot>(EMPTY_RATES);
 
   useEffect(() => {
+    if (!enabled) return;
     const off = ctx.host.on(TOPICS.rates, (next: RatesSnapshot) => setRates(next));
     ctx.host.call<RatesSnapshot>(METHODS.rates).then(setRates, () => {});
     return () => {
       void off();
     };
-  }, [ctx]);
+  }, [ctx, enabled]);
 
   const refresh = useCallback(() => {
     ctx.host.call<RatesSnapshot>(METHODS.refreshRates).then(setRates, () => {});

@@ -1,3 +1,5 @@
+import { tryEvaluate } from "./expr.ts";
+
 export function parseNumber(input: string): number | null {
   const cleaned = input.replace(/[,，\s_]/g, "").replace(/[。]/g, ".");
   if (!cleaned) return null;
@@ -25,6 +27,17 @@ export function formatNumber(value: number, digits = 10): string {
   const [whole, fraction] = fixed.split(".");
   const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return fraction ? `${grouped}.${fraction}` : grouped;
+}
+
+export function parseValue(input: string): number | null {
+  const plain = parseNumber(input);
+  if (plain !== null || !input.trim()) return plain;
+  const value = tryEvaluate(input);
+  return value !== null && Number.isFinite(value) ? value : null;
+}
+
+export function isPlainNumber(input: string): boolean {
+  return parseNumber(input) !== null;
 }
 
 export function formatPlain(value: number, digits = 10): string {
