@@ -188,3 +188,9 @@ test("dropping on the strip inserts by column, then by row", () => {
   assert.equal(stripInsertIndexAt(panel, 300, 10, null), 3);
   assert.equal(stripInsertIndexAt(panel, 100, 10, null), 1);
 });
+
+test("switching the Fuyu strip to free and back keeps the widgets where they were", () => {
+  const strip = layoutStrip(["a", "b", "c", "d", "e"].reduce((next, widget, at) => addPanelItem(next, widget, at === 1 ? "m" : "s"), empty), 2);
+  const back = layoutStrip(setPanelMode(setPanelMode(strip, "free"), "grid", true), 2);
+  assert.deepEqual(boxes(back), boxes(strip));
+});

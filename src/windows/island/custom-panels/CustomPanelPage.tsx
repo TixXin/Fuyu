@@ -163,7 +163,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
             </span>
             <div className="custom-panel__modes" role="radiogroup" aria-label={t.mode}>
               {PANEL_MODES.map((mode) => (
-                <button key={mode} type="button" role="radio" aria-checked={panel.mode === mode} onClick={() => change(setPanelMode(panel, mode))}>
+                <button key={mode} type="button" role="radio" aria-checked={panel.mode === mode} onClick={() => change(setPanelMode(panel, mode, true))}>
                   {t.modes[mode]}
                 </button>
               ))}

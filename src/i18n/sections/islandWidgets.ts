@@ -88,7 +88,7 @@ export const zhCN: IslandWidgetsText = {
     removed: (name) => `拿掉了「${name}」`,
     undo: "撤销",
     emptyEditing: "点下面的组件加到面板上",
-    modes: { grid: "网格", free: "自己摆" },
+    modes: { grid: "网格", free: "自由" },
     mode: "排版",
     gridHint: "拖动或点箭头换位置 · 自动保存",
     freeHint: "拖动摆位置，拉右下角改大小 · 自动保存",

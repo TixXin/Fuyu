@@ -262,10 +262,10 @@ export function stripInsertIndexAt(panel: CustomPanel, x: number, y: number, ski
   return rest.length;
 }
 
-export function setPanelMode(panel: CustomPanel, mode: PanelMode): CustomPanel {
+export function setPanelMode(panel: CustomPanel, mode: PanelMode, byColumn = false): CustomPanel {
   if (panel.mode === mode) return panel;
   if (mode === "free") return { ...panel, mode };
-  const ordered = [...panel.items].sort((a, b) => a.y - b.y || a.x - b.x);
+  const ordered = [...panel.items].sort((a, b) => (byColumn ? a.x - b.x || a.y - b.y : a.y - b.y || a.x - b.x));
   return { ...panel, mode, items: flowPanelItems(ordered) };
 }
 
