@@ -5,15 +5,11 @@ import {
   closeAllPins,
   closePin,
   copyPin,
-  getPinImage,
-  getPinInfo,
-  listenPinAssigned,
   pinReady,
   savePin,
   setPinClickThrough,
   togglePins,
   zoomPin,
-  type PinInfo,
 } from "../../features/screenshot/api";
 import { nextOpacity, nextScale } from "../../features/screenshot/pin";
 import { saveFolderOf } from "../../features/screenshot/settings";
@@ -21,56 +17,10 @@ import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import { useErrorText, useTranslation } from "../../i18n";
 import { MOTION_BASE_MS } from "../../lib/theme/motionTokens";
 import { getErrorMessage } from "../../utils/error";
+import { usePinPicture } from "./usePinPicture";
 import "./PinWindow.css";
 
 const NOTICE_MS = 1600;
-
-function usePinPicture() {
-  const [info, setInfo] = useState<PinInfo | null>(null);
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    let stop: (() => void) | null = null;
-    void listenPinAssigned((event) => setInfo(event.payload)).then((unlisten) => {
-      if (cancelled) unlisten();
-      else stop = unlisten;
-    });
-    getPinInfo()
-      .then((current) => { if (!cancelled && current) setInfo(current); })
-      .catch((error: unknown) => console.error("Failed to read the pin", getErrorMessage(error)));
-    return () => {
-      cancelled = true;
-      stop?.();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!info) return;
-    let cancelled = false;
-    let made: string | null = null;
-    getPinImage()
-      .then(async (png) => {
-        const url = URL.createObjectURL(new Blob([png], { type: "image/png" }));
-        const image = new Image();
-        image.src = url;
-        await image.decode();
-        if (cancelled) {
-          URL.revokeObjectURL(url);
-          return;
-        }
-        made = url;
-        setUrl(url);
-      })
-      .catch((error: unknown) => console.error("Failed to show the pin", getErrorMessage(error)));
-    return () => {
-      cancelled = true;
-      if (made) URL.revokeObjectURL(made);
-    };
-  }, [info]);
-
-  return { info, url };
-}
 
 export function PinWindow() {
   const t = useTranslation().screenshot;
