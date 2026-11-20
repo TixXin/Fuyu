@@ -26,6 +26,8 @@ export type SettingsCalendarText = {
   bannerEnabledHint: string;
   bannerMinutes: string;
   bannerOption: (minutes: CalendarBannerMinutes) => string;
+  holidayEveReminder: string;
+  holidayEveReminderHint: string;
   pauseMediaOnJoin: string;
   pauseMediaOnJoinHint: string;
   customDomain: string;
@@ -110,6 +112,8 @@ export const zhCN: SettingsCalendarText = {
   bannerEnabledHint: "临近开会时在岛屿弹出一次提醒横幅，有会议链接时附带「立即加入」按钮。",
   bannerMinutes: "强提醒提前量",
   bannerOption: (minutes) => (minutes === 0 ? "准点" : `会前 ${minutes} 分钟`),
+  holidayEveReminder: "调休和放假前一晚提醒",
+  holidayEveReminderHint: "订阅了中国节假日时，前一天 20:00 后在岛上提醒一次：明天调休要上班，或者明天起放假。",
   pauseMediaOnJoin: "点击加入会议时自动暂停媒体",
   pauseMediaOnJoinHint: "点「加入」打开会议链接前，若当前正在播放音乐或视频则自动暂停。",
   customDomain: "自定义视频会议域名",
@@ -202,6 +206,8 @@ export const en: SettingsCalendarText = {
   bannerEnabledHint: "Show a one-time banner on the island right before a meeting, with a Join now button when a link is available.",
   bannerMinutes: "Banner lead time",
   bannerOption: (minutes) => (minutes === 0 ? "At start" : `${minutes} min before`),
+  holidayEveReminder: "Remind the evening before make-up workdays and days off",
+  holidayEveReminderHint: "With China's holidays subscribed, the island reminds you once after 20:00 the day before a make-up workday or the first day off.",
   pauseMediaOnJoin: "Pause media when joining",
   pauseMediaOnJoinHint: "Pause active music or video playback automatically right before opening a meeting link.",
   customDomain: "Custom meeting domain",

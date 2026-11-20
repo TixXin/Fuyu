@@ -33,6 +33,7 @@ export type CalendarPrefs = {
   holdMinutes: CalendarHoldMinutes;
   bannerEnabled: boolean;
   bannerMinutes: CalendarBannerMinutes;
+  holidayEveReminder: boolean;
   pauseMediaOnJoin: boolean;
   agendaRange: AgendaRange;
   hideDeclined: boolean;
@@ -53,6 +54,7 @@ export const DEFAULT_CALENDAR_PREFS: CalendarPrefs = {
   holdMinutes: 5,
   bannerEnabled: true,
   bannerMinutes: 1,
+  holidayEveReminder: true,
   pauseMediaOnJoin: true,
   agendaRange: "twoDays",
   hideDeclined: true,
@@ -210,6 +212,7 @@ export function normalizeCalendarPrefs(value: unknown): CalendarPrefs {
     holdMinutes: pick(CALENDAR_HOLD_MINUTES, saved.holdMinutes, DEFAULT_CALENDAR_PREFS.holdMinutes),
     bannerEnabled: saved.bannerEnabled !== undefined ? Boolean(saved.bannerEnabled) : DEFAULT_CALENDAR_PREFS.bannerEnabled,
     bannerMinutes: pick(CALENDAR_BANNER_MINUTES, saved.bannerMinutes, DEFAULT_CALENDAR_PREFS.bannerMinutes),
+    holidayEveReminder: saved.holidayEveReminder !== undefined ? Boolean(saved.holidayEveReminder) : DEFAULT_CALENDAR_PREFS.holidayEveReminder,
     pauseMediaOnJoin: saved.pauseMediaOnJoin !== undefined ? Boolean(saved.pauseMediaOnJoin) : DEFAULT_CALENDAR_PREFS.pauseMediaOnJoin,
     agendaRange: pick(AGENDA_RANGES, saved.agendaRange, DEFAULT_CALENDAR_PREFS.agendaRange),
     hideDeclined: saved.hideDeclined !== undefined ? Boolean(saved.hideDeclined) : DEFAULT_CALENDAR_PREFS.hideDeclined,

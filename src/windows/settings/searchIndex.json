@@ -2136,6 +2136,19 @@
       "page": "calendar",
       "zh-CN": {
         "group": "会前强提醒与入会动作",
+        "title": "调休和放假前一晚提醒",
+        "description": "订阅了中国节假日时，前一天 20:00 后在岛上提醒一次：明天调休要上班，或者明天起放假。"
+      },
+      "en": {
+        "group": "Strong reminder & joining",
+        "title": "Remind the evening before make-up workdays and days off",
+        "description": "With China's holidays subscribed, the island reminds you once after 20:00 the day before a make-up workday or the first day off."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "会前强提醒与入会动作",
         "title": "点击加入会议时自动暂停媒体",
         "description": "点「加入」打开会议链接前，若当前正在播放音乐或视频则自动暂停。"
       },

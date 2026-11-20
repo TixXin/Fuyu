@@ -118,6 +118,28 @@ fn window(now: DateTime<Local>) -> (DateTime<Utc>, DateTime<Utc>) {
     (midnight(start).with_timezone(&Utc), midnight(end).with_timezone(&Utc))
 }
 
+const HOLIDAY_HOST: &str = "calendars.icloud.com";
+
+fn holiday_window(now: DateTime<Local>) -> (DateTime<Utc>, DateTime<Utc>) {
+    let year_start = |year: i32| {
+        NaiveDate::from_ymd_opt(year, 1, 1)
+            .and_then(|date| date.and_hms_opt(0, 0, 0))
+            .and_then(|naive| Local.from_local_datetime(&naive).earliest())
+            .unwrap_or(now)
+            .with_timezone(&Utc)
+    };
+    (year_start(now.year()), year_start(now.year() + 2))
+}
+
+fn window_for(source: &CalendarSource, now: DateTime<Local>) -> (DateTime<Utc>, DateTime<Utc>) {
+    if source.kind == SourceKind::Ics && source.host.eq_ignore_ascii_case(HOLIDAY_HOST) {
+        let (from, to) = window(now);
+        let (year_from, year_to) = holiday_window(now);
+        return (from.min(year_from), to.max(year_to));
+    }
+    window(now)
+}
+
 fn app_dir(app: &AppHandle) -> Result<std::path::PathBuf, UserError> {
     crate::home_dir::fuyu_home(app.path()).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))
 }
@@ -248,7 +270,8 @@ async fn read_source(
 }
 
 async fn read_all(sources: &mut [CalendarSource]) -> (CalendarSnapshot, bool) {
-    let (from, to) = window(Local::now());
+    let now = Local::now();
+    let (from, to) = window(now);
     let mut snapshot = CalendarSnapshot {
         fetched_at: Utc::now().timestamp_millis(),
         from_ms: from.timestamp_millis(),
@@ -259,7 +282,10 @@ async fn read_all(sources: &mut [CalendarSource]) -> (CalendarSnapshot, bool) {
     let mut changed = false;
     for source in sources.iter_mut() {
         let result = match sources::read_secret(&source.id) {
-            Ok(Some(secret)) => read_source(source, &secret, from, to).await,
+            Ok(Some(secret)) => {
+                let (source_from, source_to) = window_for(source, now);
+                read_source(source, &secret, source_from, source_to).await
+            }
             Ok(None) => Err(UserError::new("calendar.secretMissing", "The saved password or link is missing; remove this calendar and add it again.")),
             Err(error) => Err(error),
         };
@@ -493,6 +519,17 @@ mod tests {
         assert_eq!((from, to), (local(2026, 10, 1), local(2027, 1, 1)));
         let (from, to) = window(Local.with_ymd_and_hms(2027, 1, 31, 23, 0, 0).unwrap());
         assert_eq!((from, to), (local(2026, 12, 1), local(2027, 3, 1)));
+    }
+
+    #[test]
+    fn the_holiday_calendar_keeps_this_year_and_next() {
+        let local = |y, m, d| Local.with_ymd_and_hms(y, m, d, 0, 0, 0).unwrap().with_timezone(&Utc);
+        let source = |kind, host: &str| CalendarSource { id: "h".into(), kind, name: "节假日".into(), url: String::new(), host: host.into(), username: String::new(), calendars: Vec::new() };
+        let now = Local.with_ymd_and_hms(2026, 11, 19, 9, 0, 0).unwrap();
+        assert_eq!(window_for(&source(SourceKind::Ics, "calendars.icloud.com"), now), (local(2026, 1, 1), local(2028, 1, 1)));
+        assert_eq!(window_for(&source(SourceKind::Ics, "calendar.google.com"), now), (local(2026, 10, 1), local(2027, 1, 1)));
+        let january = Local.with_ymd_and_hms(2027, 1, 5, 9, 0, 0).unwrap();
+        assert_eq!(window_for(&source(SourceKind::Ics, "calendars.icloud.com"), january), (local(2026, 12, 1), local(2029, 1, 1)));
     }
 
     #[test]

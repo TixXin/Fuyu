@@ -43,6 +43,10 @@ export type CalendarText = {
   offLabel: string;
   workLabel: string;
   daysUntil: (name: string, days: number) => string;
+  holidayIn: (name: string | null, days: number, length: number) => string;
+  eveWorkTitle: string;
+  eveOffTitle: (name: string | null) => string;
+  eveOffDetail: (length: number) => string;
   dayLabel: (title: string, events: number) => string;
   notRead: string;
 };
@@ -95,6 +99,10 @@ export const zhCN: CalendarText = {
   offLabel: "休息日",
   workLabel: "调休上班",
   daysUntil: (name, days) => (days === 1 ? `明天${name}` : `${days} 天后${name}`),
+  holidayIn: (name, days, length) => `${days === 1 ? "明天" : `${days} 天后`}放${name ?? "假"} · 共 ${length} 天`,
+  eveWorkTitle: "明天调休，要上班",
+  eveOffTitle: (name) => (name ? `明天起${name}放假` : "明天起放假"),
+  eveOffDetail: (length) => `共 ${length} 天`,
   dayLabel: (title, events) => (events > 0 ? `${title}，${events} 个日程` : title),
   notRead: "只读取上个月到下个月的日程，这一天的看不到",
 };
@@ -144,6 +152,10 @@ export const en: CalendarText = {
   offLabel: "Day off",
   workLabel: "Make-up workday",
   daysUntil: (name, days) => (days === 1 ? `${name} tomorrow` : `${name} in ${days} days`),
+  holidayIn: (name, days, length) => `${name ?? "Days off"} ${days === 1 ? "tomorrow" : `in ${days} days`} · ${length} days off`,
+  eveWorkTitle: "Make-up workday tomorrow",
+  eveOffTitle: (name) => (name ? `${name} break starts tomorrow` : "Days off start tomorrow"),
+  eveOffDetail: (length) => `${length} days off`,
   dayLabel: (title, events) => (events === 0 ? title : `${title}, ${events === 1 ? "1 event" : `${events} events`}`),
   notRead: "Only last month to next month are read; this day's events are not shown",
 };
