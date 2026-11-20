@@ -34,6 +34,7 @@ let state = { mode: "collapsed" as IslandMode, page: "todo" as IslandPage };
 let setBlocked: (blocked: boolean) => void;
 let collapse: () => void;
 let setBand: (band: boolean) => void;
+let openPage: (page: IslandPage) => void;
 
 function Fixture() {
   const [mode, setMode] = useState<IslandMode>("collapsed");
@@ -56,9 +57,11 @@ function Fixture() {
     mode, page, openIslandPage, collapseIsland, onOpenMessages: () => {}, host: islandHost,
   });
   collapse = collapseIsland;
+  openPage = openIslandPage;
+  const kept = panel.arrivals ?? panel.closingArrivals;
   const heading = useArrivalsHeading(panel.arrivals);
   const art = useTrackArt();
-  return <div className="stage" data-mode={mode} data-page={page}>
+  return <div className="stage" data-mode={mode} data-page={page} data-kept={kept ? kept.map((item) => item.title).join("|") : "messages"}>
     {panel.arrivals && (
       <div className="island__expanded">
         {band && <NotchPopupBand page="qq" heading={heading ?? undefined} agentVisualState="idle" onCollapse={collapseIsland} />}
@@ -125,6 +128,12 @@ async function runChecks() {
     const shownAt = performance.now();
     await waitFor(() => rows().length === 0, "卡片按提示自己的时长收起", PANEL_MS - 500);
     check(performance.now() - shownAt < PANEL_MS - 500, "没有等到「消息面板停留」的时长");
+    const kept = () => document.querySelector<HTMLElement>(".stage")?.dataset.kept;
+    check(state.mode === "collapsed" && kept() === "安和桥", "岛收回的过程中消息页仍是这张卡片，不换成 QQ、微信、邮件的消息页");
+    await act(async () => openPage("qq"));
+    check(kept() === "messages", "之后手动打开消息页是平常的消息页，不是上次的卡片");
+    await act(async () => collapse());
+    check(kept() === "messages", "从平常的消息页收回时不会冒出上次的卡片");
 
     check(await deliver(track("董小姐", PANEL_MS)), "下一首照常提示");
     await waitFor(() => rows().length === 1, "卡片再次弹出");

@@ -26,6 +26,8 @@ type HeaderContext = {
   isPageEnabled: (target: "qq") => boolean;
 };
 
+const ignoreMeasure = () => {};
+
 const pageSlot = defineSlot<MessagesPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
 function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
@@ -34,10 +36,11 @@ function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
   const messages = messagesIsland.use();
   if (!messages) return null;
   const { mail: qqMail, qq: qqNotifications, wechat: wechatReminders, im: imSources, enabledSources, source: messageSource, panel: messagePanel, open: openMessages } = messages;
+  const shownArrivals = messagePanel?.arrivals ?? messagePanel?.closingArrivals ?? null;
   return (
     <div className="message-panel">
-      {messagePanel?.arrivals ? (
-        <MessageArrivalsPanel arrivals={messagePanel.arrivals} onOpen={messagePanel.open} onAction={messagePanel.runAction} onMeasure={messagePanel.measure} onShowAll={messagePanel.showAll} onClearAll={messagePanel.clearAll} media={{
+      {messagePanel && shownArrivals ? (
+        <MessageArrivalsPanel arrivals={shownArrivals} onOpen={messagePanel.open} onAction={messagePanel.runAction} onMeasure={messagePanel.arrivals ? messagePanel.measure : ignoreMeasure} onShowAll={messagePanel.showAll} onClearAll={messagePanel.clearAll} media={{
           playing,
           cover: art?.cover ?? null,
           sourceIcon: art?.sourceIcon ?? null,
