@@ -1,0 +1,56 @@
+.expanded-preview__slot {
+  position: absolute;
+}
+
+.expanded-preview__slot > .expanded-preview__cell {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.expanded-preview__grid[data-mode="free"] .expanded-preview__cell {
+  cursor: grab;
+  touch-action: none;
+}
+
+.expanded-preview__slot[data-dragging] .expanded-preview__cell {
+  cursor: grabbing;
+  box-shadow: inset 0 0 0 2px var(--color-accent), 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.expanded-preview__grid[data-mode="free"] {
+  background-image: radial-gradient(circle, var(--preview-tile-on) 1px, transparent 1.5px);
+  background-size: 16px 16px;
+  border-radius: 12px;
+}
+
+.expanded-preview__stretch {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: var(--preview-ink);
+  background: var(--preview-tile-on);
+  border-radius: 6px;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.expanded-preview__empty p {
+  margin: 0 0 6px;
+}
+
+.widget-markup-icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+}
+
+.widget-markup-icon svg {
+  width: 100%;
+  height: 100%;
+}

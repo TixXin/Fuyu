@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { Plus, Puzzle, Trash2, X } from "lucide-react";
 import { PANEL_ICON_COMPONENTS } from "../../../components/island-widget/panelIcons";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
-import type { WidgetGroup } from "../../../features/plugin-kernel/widgetCatalog";
+import { groupWidgets } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { addPanelItem, cleanPanelName, defaultWidgetSize, PANEL_ICONS, removePanelItem, reorderPanelItem, type CustomPanel } from "../../../lib/settings/customPanels";
+import { addPanelItem, cleanPanelName, defaultWidgetSize, PANEL_ICONS, PANEL_MODES, removePanelItem, reorderPanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
 import { useChipReorder } from "./useChipReorder";
 import type { LibraryWidget, WidgetLibrary } from "./useWidgetLibrary";
 import "./PanelEditor.css";
@@ -52,6 +52,13 @@ function PanelHead({ panel, onChange, onRemove }: Pick<PanelEditorProps, "panel"
           );
         })}
       </div>
+      <div className="panel-head__modes" role="radiogroup" aria-label={t.islandWidgets.panel.mode}>
+        {PANEL_MODES.map((mode) => (
+          <button key={mode} type="button" role="radio" data-mode={mode} aria-checked={panel.mode === mode} onClick={() => onChange(setPanelMode(panel, mode))}>
+            {t.islandWidgets.panel.modes[mode]}
+          </button>
+        ))}
+      </div>
       <button className="panel-head__remove" type="button" data-confirming={confirming || undefined} onBlur={() => setConfirming(false)} onClick={() => (confirming ? onRemove() : setConfirming(true))}>
         <Trash2 size={13} strokeWidth={2} aria-hidden="true" />
         {confirming ? text.confirmRemove : text.remove}
@@ -67,9 +74,7 @@ export function PanelEditor({ panel, library, selected, onSelect, onChange, onRe
   const { bind } = useChipReorder(ids, (widget, before) => onChange(reorderPanelItem(panel, widget, before)));
   const groups = useMemo(() => {
     const taken = new Set(panel.items.map((item) => item.widget));
-    const result = new Map<WidgetGroup, LibraryWidget[]>();
-    for (const widget of library.widgets) if (!taken.has(widget.id)) result.set(widget.group, [...(result.get(widget.group) ?? []), widget]);
-    return [...result];
+    return groupWidgets(library.widgets.filter((widget) => !taken.has(widget.id)));
   }, [library.widgets, panel.items]);
 
   const add = (widget: LibraryWidget) => {
@@ -130,12 +135,15 @@ export function PanelEditor({ panel, library, selected, onSelect, onChange, onRe
         </section>
         <section className="panel-bucket" data-bucket="add" aria-label={text.available}>
           <header>
-            {text.available} <span>{groups.reduce((count, [, list]) => count + list.length, 0)}</span>
+            {text.available} <span>{groups.reduce((count, [, , list]) => count + list.length, 0)}</span>
           </header>
           {groups.length === 0 ? <span className="panel-bucket__none">{text.allAdded}</span> : null}
-          {groups.map(([group, list]) => (
-            <div key={group} className="panel-bucket__group">
-              <span className="panel-bucket__label">{t.islandWidgets.groups[group]}</span>
+          {groups.map(([group, name, list]) => (
+            <div key={group} className="panel-bucket__group" data-plugin={list[0]?.plugin || undefined}>
+              <span className="panel-bucket__label">
+                {name}
+                {list[0]?.plugin ? <small className="panel-bucket__tag">{t.islandWidgets.panel.plugin}</small> : null}
+              </span>
               <div className="layout-chips">
                 {list.map((widget) => {
                   const Icon = widget.icon;

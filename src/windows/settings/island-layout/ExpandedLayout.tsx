@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { BarUsagePage } from "../../../features/plugin-kernel/barUsage";
+import type { BarUsagePage, BarUsageWidget } from "../../../features/plugin-kernel/barUsage";
 import { useTranslation } from "../../../i18n";
 import { createPanel, newPanelId, panelPageId, removePanel, updatePanel, type CustomPanel } from "../../../lib/settings/customPanels";
 import type { IslandSettings } from "../../../lib/settings/types";
@@ -15,14 +15,15 @@ import "./ExpandedLayout.css";
 type ExpandedLayoutProps = {
   settings: IslandSettings;
   pluginPages: readonly BarUsagePage[] | null;
+  pluginWidgets: readonly BarUsageWidget[];
   stage: (preview: ReactNode) => ReactNode;
 };
 
-export function ExpandedLayout({ settings, pluginPages, stage }: ExpandedLayoutProps) {
+export function ExpandedLayout({ settings, pluginPages, pluginWidgets, stage }: ExpandedLayoutProps) {
   const t = useTranslation();
   const { panels, save: savePanels } = useCustomPanels();
   const { rows, layout, save, pluginsListed } = useIslandPageRows(settings, pluginPages, panels);
-  const library = useWidgetLibrary();
+  const library = useWidgetLibrary(pluginWidgets);
   const [pageId, setPageId] = useState<string | null>(null);
   const [widgetId, setWidgetId] = useState<string | null>(null);
   const current = rows.find((row) => row.id === pageId) ?? rows.find((row) => !row.hidden && !row.off) ?? rows[0];
@@ -44,7 +45,7 @@ export function ExpandedLayout({ settings, pluginPages, stage }: ExpandedLayoutP
 
   return (
     <>
-      {stage(<ExpandedPreview rows={rows} current={current} panel={panel} library={library} selected={selected} onPage={setPageId} onWidget={setWidgetId} />)}
+      {stage(<ExpandedPreview rows={rows} current={current} panel={panel} library={library} selected={selected} onPage={setPageId} onWidget={setWidgetId} onPanel={change} />)}
       <PageStrip rows={rows} layout={layout} save={save} current={current?.id} onPick={setPageId} onCreate={create} pluginsListed={pluginsListed} />
       {panel ? (
         <div className="panel-editing" key={panel.id}>

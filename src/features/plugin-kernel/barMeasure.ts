@@ -1,5 +1,6 @@
 import { loadLocale } from "../../i18n";
-import { barItemName, barUsageReport, type BarUsageBox, type BarUsageCandidate, type BarUsagePage, type BarUsageReport } from "./barUsage.ts";
+import { barItemName, barUsageReport, type BarUsageBox, type BarUsageCandidate, type BarUsagePage, type BarUsageReport, type BarUsageWidget } from "./barUsage.ts";
+import { iconMarkup } from "./iconMarkup";
 import { pluginNames } from "./pluginNames";
 import { localizedTitle } from "./slotTitle";
 import { windowSlots } from "./slots";
@@ -7,8 +8,10 @@ import { windowSlots } from "./slots";
 const BAR = ".island__collapsed";
 const COLLAPSED_SLOT = "island.collapsed/v1";
 const PAGE_SLOT = "island.page/v1";
+const WIDGET_SLOT = "island.widget/v1";
 
 type PageCandidate = { id: string; owner: string; external?: boolean; title?: unknown };
+type WidgetCandidate = { id: string; owner: string; external?: boolean; label?: unknown; sizes?: unknown; icon?: unknown };
 
 export function measureBarUsage(id: number): BarUsageReport {
   const bar = document.querySelector<HTMLElement>(BAR);
@@ -29,5 +32,12 @@ export function measureBarUsage(id: number): BarUsageReport {
   const pages = (windowSlots("island").items(PAGE_SLOT) as readonly PageCandidate[])
     .filter((page) => page.external === true)
     .map((page): BarUsagePage => ({ id: page.id, owner: page.owner, name: localizedTitle(page.title, locale) ?? localizedTitle(names.get(page.owner), locale) ?? page.owner }));
-  return { ...report, pages };
+  const widgets = (windowSlots("island").items(WIDGET_SLOT) as readonly WidgetCandidate[])
+    .filter((widget) => widget.external === true && Array.isArray(widget.sizes))
+    .map((widget): BarUsageWidget => {
+      const plugin = localizedTitle(names.get(widget.owner), locale) ?? widget.owner;
+      const icon = iconMarkup(widget.icon);
+      return { id: widget.id, owner: widget.owner, name: localizedTitle(widget.label, locale) ?? plugin, plugin, sizes: (widget.sizes as unknown[]).filter((size): size is string => typeof size === "string"), ...(icon ? { icon } : {}) };
+    });
+  return { ...report, pages, widgets };
 }

@@ -119,6 +119,38 @@ const setPanels = async (value: unknown) => {
   await frame();
 };
 
+const storedItems = () => (JSON.parse(localStorage.getItem("fuyu-custom-panels") ?? "null") as { panels: { mode: string; items: { widget: string; size: string }[] }[] } | null)?.panels[0];
+const pointer = (type: string, target: EventTarget, x = 20, y = 20) =>
+  target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, button: 0, buttons: type === "pointerup" ? 0 : 1, pointerId: 7, clientX: x, clientY: y }));
+
+async function checkPanelEditing() {
+  const panel = () => expandedRoot.querySelector<HTMLElement>(".custom-panel");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__edit")!.click());
+  check(panel()?.classList.contains("custom-panel--editing") && panel()?.dataset.windowDrag === "false" && expandedRoot.querySelectorAll(".custom-panel__remove").length === 3
+    && expandedRoot.querySelector(".custom-panel__done"), "点「编辑」进入编辑模式：面板不再拖岛，每个组件有「−」，底部有「完成」");
+  const shield = expandedRoot.querySelector<HTMLElement>(".custom-panel__cell[data-widget='next-meeting'] .custom-panel__shield")!;
+  await act(async () => { pointer("pointerdown", shield); pointer("pointerup", window); });
+  check(storedItems()?.items.find((item) => item.widget === "next-meeting")?.size === "l", "网格面板里点一下组件，换到它的下一档大小");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__cell[data-widget='gone'] .custom-panel__remove")!.click());
+  check(storedItems()?.items.map((item) => item.widget).join() === "todos,next-meeting", "点「−」拿掉组件");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__add")!.click());
+  check(expandedRoot.querySelector(".custom-panel__picker") && !expandedRoot.querySelector(".custom-panel__picker [data-widget='todos']"), "「添加组件」列出还没加的组件");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__modes [role='radio']:not([aria-checked='true'])")!.click());
+  check(storedItems()?.mode === "free" && expandedRoot.querySelectorAll(".custom-panel__stretch").length === 2, "切到「自己摆」，组件右下角有拉伸角");
+  const free = expandedRoot.querySelector<HTMLElement>(".custom-panel__cell[data-widget='todos'] .custom-panel__shield")!;
+  const zoom = Number(expandedRoot.querySelector<HTMLElement>(".custom-panel__zoom")?.style.zoom) || 1;
+  await act(async () => { pointer("pointerdown", free, 20, 20); pointer("pointermove", window, 20 + 40 * zoom, 20 + 24 * zoom); pointer("pointerup", window, 20 + 40 * zoom, 20 + 24 * zoom); });
+  const moved = (JSON.parse(localStorage.getItem("fuyu-custom-panels")!) as { panels: { items: { widget: string; x: number; y: number }[] }[] }).panels[0].items.find((item) => item.widget === "todos");
+  check(moved && moved.x === 5 && moved.y === 3, `自由面板里拖动按 8px 吸附移位置（${moved?.x},${moved?.y}）`);
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__done")!.click());
+  check(!panel()?.classList.contains("custom-panel--editing") && !expandedRoot.querySelector(".custom-panel__remove"), "点「完成」退出编辑模式");
+  await setPanels({ version: 1, panels: [{ id: "desk", name: "工作台", icon: "star", mode: "grid", items: [] }] });
+  const workbench = expandedRoot.querySelector<HTMLButtonElement>(".panel-templates__button[data-template='workbench']");
+  check(workbench && expandedRoot.querySelector(".panel-templates__button[data-template='fun']"), "空面板里有「工作台」「娱乐」两个模板按钮");
+  await act(async () => workbench!.click());
+  check(storedItems()?.items.map((item) => `${item.widget}:${item.size}`).slice(0, 2).join() === "todos:l,next-meeting:m", `点「工作台」按模板加组件（${storedItems()?.items.map((item) => item.widget).join()}）`);
+}
+
 async function checkCustomPanel() {
   const dotOf = () => expandedRoot.querySelector<HTMLButtonElement>('.dot-button[data-page="panel:desk"]');
   check(!dotOf(), "没有 fuyu-custom-panels 时页头没有自定义面板");
@@ -138,6 +170,7 @@ async function checkCustomPanel() {
   check(cells.length === 3 && todos && todos.offsetWidth === 248 && todos.offsetHeight === 248 && todos.querySelector(".island-widget__empty")?.textContent === "今天没有待办",
     "打开面板按网格画出组件：大尺寸 248×248，内置的待办组件在没有数据时显示空状态");
   check(cells.find((cell) => cell.dataset.widget === "gone")?.childElementCount === 0, "找不到的组件留一个空格子，不报错");
+  await checkPanelEditing();
   await setPanels(null);
   check(!dotOf(), "删掉面板后页头的按钮也没了");
   await act(async () => goTo("todo"));

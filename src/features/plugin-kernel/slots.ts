@@ -75,6 +75,7 @@ export interface IslandWidgetMeta {
   sizes: readonly IslandWidgetSize[];
   label?: SlotTitle | ((t: Translations) => string);
   group?: string;
+  icon?: SlotIcon;
 }
 
 export interface IslandCollapsedCenterMeta<Context = unknown> {

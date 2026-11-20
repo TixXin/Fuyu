@@ -12,6 +12,7 @@ import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/head
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
 import type { HeaderDotPage, IslandPage } from "./types";
+import { usePanelEditing } from "./custom-panels/panelEditing";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
 import "./IslandHeader.css";
@@ -57,7 +58,8 @@ export function IslandHeader({
   const { locale } = useLocale();
   const pluginNames = usePluginNames();
   const { hints } = useIslandContributed();
-  const hoverSwitch = usePageHoverSwitch(hoverSwitchPage, hoverSwitchDelayMs, page, onPageChange);
+  const editing = usePanelEditing() !== null;
+  const hoverSwitch = usePageHoverSwitch(hoverSwitchPage && !editing, hoverSwitchDelayMs, page, onPageChange);
   const spotlightOf = useHeaderSpotlight();
   const pages = useSlotEntries(pageSlot);
   const dots = headerDotPages(pages, features);

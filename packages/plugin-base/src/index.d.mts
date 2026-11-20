@@ -188,7 +188,11 @@ declare module "cordis" {
        * draw (`"s"` 1×1, `"m"` 2×1, `"l"` 2×2, `"w"` 4×1 cells of 120px with 8px gaps, and `"bar"` when an
        * `island.collapsed/v1` item with the same id is its collapsed bar look) and gets `{ size, width, height }`
        * in pixels. Every `island.collapsed/v1` item without a widget counts as a widget that only has `"bar"`.
-       * For now only Fuyu's built-in plugins can add widgets; anything else fails with `forbidden`.
+       * Users add widgets to their panels on the island or in Settings, which lists them under the plugin's name.
+       * Give a widget a `label` (a string or `{ "zh-CN": ..., en: ... }`) and an `icon` (a component that draws
+       * one `<svg>` with `currentColor`, taking `size`); without them Settings shows the plugin's name and a
+       * puzzle piece. In a panel laid out by hand the box can be any size from the size's own cells up, so lay the
+       * widget out from `width` and `height` rather than from `size` alone. A plugin adds at most 8 widgets.
        */
       add(name: SlotName, item: { id: string; order?: number; component: unknown; [meta: string]: unknown }): () => Promise<void>;
     };

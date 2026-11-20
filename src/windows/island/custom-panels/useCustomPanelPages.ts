@@ -1,7 +1,7 @@
-import { createElement, useEffect, type FunctionComponent } from "react";
+import { createElement, useEffect, useMemo, type FunctionComponent } from "react";
 import { PANEL_ICON_COMPONENTS } from "../../../components/island-widget/panelIcons";
 import { useTranslation } from "../../../i18n";
-import { panelPageId } from "../../../lib/settings/customPanels";
+import { panelPageId, type PanelIcon } from "../../../lib/settings/customPanels";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import { pageSlot } from "../slots/pageSlot";
 import { CustomPanelPage } from "./CustomPanelPage";
@@ -24,8 +24,19 @@ function panelComponent(id: string): FunctionComponent {
 export function useCustomPanelPages() {
   const { panels } = useCustomPanels();
   const fallbackName = useTranslation().islandWidgets.panel.defaultName;
+  const signature = panels.map((panel) => [panel.id, panel.name, panel.icon].join("\u0000")).join("\u0001");
+  const heads = useMemo(
+    () =>
+      signature === ""
+        ? []
+        : signature.split("\u0001").map((part) => {
+            const [id = "", name = "", icon = ""] = part.split("\u0000");
+            return { id, name, icon: icon as PanelIcon };
+          }),
+    [signature],
+  );
   useEffect(() => {
-    const removals = panels.map((panel, index) =>
+    const removals = heads.map((panel, index) =>
       pageSlot.add({
         id: panelPageId(panel.id),
         order: PANEL_ORDER + index,
@@ -37,5 +48,5 @@ export function useCustomPanelPages() {
       }),
     );
     return () => removals.forEach((remove) => remove());
-  }, [fallbackName, panels]);
+  }, [fallbackName, heads]);
 }

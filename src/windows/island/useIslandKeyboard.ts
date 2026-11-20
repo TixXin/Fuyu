@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { pageCycleDirection, pageDigitFromEvent } from "../../lib/settings/pageShortcuts";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
+import { isPanelEditing, stopPanelEditing } from "./custom-panels/panelEditing";
 
 export function useIslandKeyboard(
   onCollapse: () => void,
@@ -33,7 +34,10 @@ export function useIslandKeyboard(
         return;
       }
 
-      if (event.key === "Escape") onCollapse();
+      if (event.key === "Escape") {
+        if (isPanelEditing()) stopPanelEditing();
+        else onCollapse();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);

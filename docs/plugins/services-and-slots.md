@@ -67,7 +67,7 @@
 | `island.header/v1` | `island` | `list` | 1 | `enabled` | 悬浮岛展开态顶栏右侧操作按钮 |
 | `island.collapsed/v1` | `island` | `list` | 2 | `group`, `width`, `hideable`, `shown`, `opens`, `label` | 悬浮岛收起条左翼 / 右翼状态项；`label`（字符串或 `{ "zh-CN", en }`）是这一项在右键清单和 外观 →「收起条上的项目」里的名字，不写时用插件名，一个插件有两项时建议写 |
 | `island.collapsed-center/v1` | `island` | `single` | 1 | `width`, `shown` | 悬浮岛收起条正中央图案 / 宠物 |
-| `island.widget/v1` | `island` | `list` | 8 | `sizes`, `label`, `group` | 自定义面板里的组件（C156.3）：`sizes` 是 `"bar"`、`"s"`（1×1）、`"m"`（2×1）、`"l"`（2×2）、`"w"`（4×1）的子集，格子 120px、间距 8px，组件拿到 `{ size, width, height }`；`"bar"` 表示同 id 的 `island.collapsed/v1` 项就是它在收起条上的样子，没有组件的收起条项目宿主当成只有 `"bar"` 的组件。**暂时只收内置插件**，别的插件登记会以 `forbidden` 失败，C156.4 开放 |
+| `island.widget/v1` | `island` | `list` | 8 | `sizes`, `label`, `group`, `icon` | 自定义面板里的组件（C156.3，C156.4 起第三方插件也能加）：`sizes` 是 `"bar"`、`"s"`（1×1）、`"m"`（2×1）、`"l"`（2×2）、`"w"`（4×1）的子集，格子 120px、间距 8px，组件拿到 `{ size, width, height }`（像素）；`"bar"` 表示同 id 的 `island.collapsed/v1` 项就是它在收起条上的样子，没有组件的收起条项目宿主当成只有 `"bar"` 的组件。`label` 是名字（字符串或 `{ "zh-CN", en }`），`icon` 是只画一个 `<svg>`、用 `currentColor`、收 `size` 的组件：设置窗口不加载插件代码，岛把它画成 SVG 报给设置，设置的「可以添加」里按插件分组、标「插件」。面板「自己摆」时框可以比尺寸档大，排版看 `width`、`height`，不只看 `size`。示例：官方插件天气（`@fuyu/weather` 1.2.0） |
 | `island.alert/v1` | `island` | `list` | 1 | `trailing`, `popup` | 刘海双翼提醒与收起态临时提示（音量、设备、额度等） |
 | `island.notice/v1` | `island` | `list` | 1 | `active`, `actions` | 收起态通知横条（计时到点、截图完成等） |
 | `island.line/v1` | `island` | `list` | 2 | 无 | 悬浮岛下方附加浮条（同步歌词行、选区翻译条等） |
@@ -107,6 +107,29 @@ ctx.slots.add("island.page/v1", {
   - 防抖：项变宽时岛马上跟着变宽（按 8px 取整）；变窄要窄出 32px 以上才收回。所以每秒刷新的读数只会让岛涨一次，不会来回改窗口大小；不用自己补空格或固定位数。
   - 上限：收起条最宽 520px，和原生窗口的上限一致，也不超过当前收起缩放下舞台窗口放得下的宽度；收起条上的长消息（C124）用的是同一个上限。放不下时先压岛自己的文字，插件项最后在右端淡出裁掉，所以重要的读数放在前面。
   - 项内不要写 `width: 100%`、`flex: 1` 这类撑满剩余空间的样式，容器按内容的 `max-content` 量，撑满写法会量不准；要省略号自己用 `max-width` 限定。
+
+### 面板里的组件（`island.widget/v1`）
+
+用户在岛上新建自定义面板，往里放组件：在岛上点面板右上角「编辑」，或在设置 → 岛屿布局 → 展开里加。插件登记了组件，就出现在这两处的「添加组件 / 可以添加」清单里，按插件分组、标「插件」。
+
+```tsx
+function WeatherWidget({ size, width, height }: { size: "s" | "m" | "l" | "w"; width: number; height: number }) {
+  return <div className="my-weather">{width >= 200 ? <Wide /> : <Small />}</div>;
+}
+
+ctx.slots.add("island.widget/v1", {
+  id: "@me/weather",
+  sizes: ["bar", "s", "m", "l"],
+  label: { "zh-CN": "天气", en: "Weather" },
+  icon: WeatherIcon,
+  component: WeatherWidget,
+});
+```
+
+- `sizes` 只写画得好的那几档；写了 `"bar"` 时，同 id 的 `island.collapsed/v1` 项就是它在收起条上的样子。
+- 面板可以「自己摆」：用户把框拉得比这一档的格子大，所以按 `width`、`height` 排版，不只看 `size`。
+- `icon` 要只画一个 `<svg>`、颜色用 `currentColor`、收 `size`：设置窗口不加载插件代码，岛把它画一次，把 SVG 文本报给设置。不写 `icon` 时设置里显示拼图块。
+- 一个插件最多 8 个组件。旧版本的浮屿不收第三方组件，登记时会抛 `forbidden`，想兼容旧版本就包一层 `try`，官方插件天气就是这样写的（`plugins/v3/official/weather/src/island.tsx`）。
 
 ### 插槽主题变量（`SLOT_THEME`）
 

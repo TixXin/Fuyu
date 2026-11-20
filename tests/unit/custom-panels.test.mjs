@@ -6,15 +6,20 @@ import {
   createPanel,
   defaultWidgetSize,
   gridRows,
+  nextPanelSize,
   panelIdOfPage,
+  placeFreeItem,
   panelPageId,
   readCustomPanels,
   removePanel,
   removePanelItem,
   reorderPanelItem,
   resizePanelItem,
+  setPanelMode,
+  stretchFreeItem,
   updatePanel,
 } from "../../src/lib/settings/customPanels.ts";
+import { applyPanelTemplate } from "../../src/lib/settings/panelTemplates.ts";
 
 const empty = { id: "p1", name: "Work", icon: "star", mode: "grid", items: [] };
 const boxes = (panel) => panel.items.map((item) => [item.widget, cellBox(item).col, cellBox(item).row]);
@@ -81,4 +86,49 @@ test("panels are created, renamed and removed by id, and map to their own page i
   assert.equal(panelPageId("p1"), "panel:p1");
   assert.equal(panelIdOfPage("panel:p1"), "p1");
   assert.equal(panelIdOfPage("todo"), null);
+});
+
+test("a free panel keeps hand-placed boxes: 8px steps, inside the four columns, never below a size's own cells (C156.4)", () => {
+  let panel = setPanelMode(addPanelItem(addPanelItem(empty, "a", "m"), "b", "s"), "free");
+  assert.deepEqual(panel.items.map(({ widget, x, y }) => [widget, x, y]), [["a", 0, 0], ["b", 32, 0]]);
+  panel = addPanelItem(panel, "c", "s");
+  assert.deepEqual([panel.items[2].x, panel.items[2].y], [0, 16]);
+  panel = placeFreeItem(panel, "a", 50.4, -3);
+  assert.deepEqual(panel.items.at(-1), { widget: "a", size: "m", x: 32, y: 0, w: 31, h: 15 });
+  panel = stretchFreeItem(panel, "a", 40, 4);
+  assert.deepEqual([panel.items.at(-1).w, panel.items.at(-1).h], [31, 15]);
+  panel = stretchFreeItem(panel, "b", 20, 22);
+  assert.deepEqual(panel.items.find((item) => item.widget === "b"), { widget: "b", size: "s", x: 32, y: 0, w: 20, h: 22 });
+  panel = removePanelItem(panel, "c");
+  assert.deepEqual(panel.items.map((item) => item.widget), ["b", "a"]);
+});
+
+test("back to grid, widgets are ordered top to bottom, then left to right, and flowed again; sizes are kept", () => {
+  let panel = setPanelMode(addPanelItem(addPanelItem(addPanelItem(empty, "a", "s"), "b", "m"), "c", "l"), "free");
+  panel = placeFreeItem(panel, "a", 40, 40);
+  panel = placeFreeItem(panel, "c", 0, 40);
+  panel = placeFreeItem(panel, "b", 8, 2);
+  const grid = setPanelMode(panel, "grid");
+  assert.equal(grid.mode, "grid");
+  assert.deepEqual(grid.items.map((item) => [item.widget, item.size]), [["b", "m"], ["c", "l"], ["a", "s"]]);
+  assert.deepEqual(boxes(grid), [["b", 0, 0], ["c", 2, 0], ["a", 0, 1]]);
+  assert.deepEqual(setPanelMode(grid, "free").items, grid.items);
+});
+
+test("tapping a grid widget on the island steps through only the sizes it has", () => {
+  assert.equal(nextPanelSize(["s", "m", "l"], "s"), "m");
+  assert.equal(nextPanelSize(["l", "m"], "l"), "m");
+  assert.equal(nextPanelSize(["m", "w"], "w"), "m");
+  assert.equal(nextPanelSize(["m"], "m"), null);
+});
+
+test("a template adds its widgets at their sizes and skips the ones that are not there", () => {
+  const sizes = { todos: ["m", "l"], "next-meeting": ["m", "l"], "session-count": ["m", "l"], music: ["m"], lyrics: ["w"] };
+  const work = applyPanelTemplate(empty, "workbench", (id) => sizes[id] ?? null);
+  assert.deepEqual(boxes(work), [["todos", 0, 0], ["next-meeting", 2, 0], ["session-count", 2, 1]]);
+  assert.equal(work.items[0].size, "l");
+  const fun = applyPanelTemplate(empty, "fun", (id) => sizes[id] ?? null);
+  assert.deepEqual(fun.items.map((item) => item.widget), ["music", "lyrics"]);
+  const withWeather = applyPanelTemplate(empty, "fun", (id) => (id === "@fuyu/weather" ? ["s"] : sizes[id] ?? null));
+  assert.deepEqual(boxes(withWeather), [["music", 0, 0], ["@fuyu/weather", 2, 0], ["lyrics", 0, 1]]);
 });

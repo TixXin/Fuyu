@@ -159,6 +159,45 @@ export default function apply(ctx: Context) {
     );
   }
 
+  function WeatherWidget({ width, height }: { width: number; height: number }) {
+    const { state } = useWeather(ctx);
+    const { config, place, forecast } = state;
+    const locale = currentLocale();
+    const copy = textFor(locale);
+    if (!config.city || !forecast) {
+      return (
+        <div className="fuyu-weather-widget is-empty">
+          <WeatherIcon />
+          <span>{config.city ? copy.loading : copy.setupHint}</span>
+        </div>
+      );
+    }
+    const wide = width >= 200;
+    const tall = height >= 200;
+    const days = tall ? forecast.daily.slice(0, Math.max(1, Math.floor((height - 110) / 22))) : [];
+    return (
+      <div className={wide ? "fuyu-weather-widget is-wide" : "fuyu-weather-widget"}>
+        <span className="fuyu-weather-widget__place">{place?.name ?? config.city}</span>
+        <div className="fuyu-weather-widget__now">
+          <ConditionIcon kind={conditionKind(forecast.current.code)} day={forecast.current.day} size={wide ? 30 : 24} />
+          <span className="fuyu-weather-widget__temp">{formatTemp(forecast.current.temp)}</span>
+        </div>
+        <span className="fuyu-weather-widget__cond">{conditionLabel(forecast.current.code, locale, !wide)}</span>
+        {days.length > 0 && (
+          <ul className="fuyu-weather-widget__days">
+            {days.map((day, idx) => (
+              <li key={day.date}>
+                <span>{idx === 0 ? copy.today : copy.weekdays[weekdayOf(day.date)] ?? day.date.slice(5)}</span>
+                <ConditionIcon kind={conditionKind(day.code)} />
+                <span>{`${formatTemp(day.min)} / ${formatTemp(day.max)}`}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
   ctx.slots.add("island.page/v1", {
     id: PAGE_ID,
     title: PAGE_TITLE,
@@ -172,4 +211,16 @@ export default function apply(ctx: Context) {
     component: WeatherCollapsed,
     hideable: true,
   });
+
+  try {
+    ctx.slots.add("island.widget/v1", {
+      id: PAGE_ID,
+      sizes: ["bar", "s", "m", "l"],
+      label: PAGE_TITLE,
+      icon: WeatherIcon,
+      component: WeatherWidget,
+    });
+  } catch (error) {
+    console.info("[weather] this Fuyu cannot take panel widgets yet", error);
+  }
 }

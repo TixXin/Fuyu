@@ -47,6 +47,23 @@ const addChip = (widget: string) => document.querySelector<HTMLButtonElement>(`.
 const panelChip = (widget: string) => document.querySelector<HTMLElement>(`.panel-bucket[data-bucket='in'] [data-widget='${widget}']`);
 const layoutOf = () => (savedPanels()?.panels[0].items ?? []).map((item) => `${item.widget}:${item.size}@${item.x},${item.y}`).join(" ");
 
+const modeButton = (mode: string) => document.querySelector<HTMLButtonElement>(`.panel-head__modes [data-mode='${mode}']`);
+const pointer = (type: string, target: EventTarget, x: number, y: number) =>
+  target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, button: 0, buttons: type === "pointerup" ? 0 : 1, pointerId: 9, clientX: x, clientY: y }));
+
+async function checkFreeCanvas(check: (condition: unknown, message: string) => void) {
+  check(!document.querySelector(".expanded-preview__stretch") && document.querySelector(".panel-bucket[data-bucket='in']"), "A grid panel has no drag canvas, only chips");
+  await act(async () => { modeButton("free")!.click(); });
+  check(document.querySelector(".expanded-preview__grid[data-mode='free']") && document.querySelectorAll(".expanded-preview__stretch").length === 3 && modeButton("free")?.getAttribute("aria-checked") === "true",
+    "Switching a panel to free shows a canvas with a resize corner on every widget");
+  const lyrics = document.querySelector<HTMLElement>(".expanded-preview__cell[data-widget='lyrics']")!;
+  const scale = Number(getComputedStyle(document.querySelector(".expanded-preview__island")!).zoom) || 1;
+  await act(async () => { pointer("pointerdown", lyrics, 100, 100); pointer("pointermove", window, 100 + 40 * scale, 100 + 80 * scale); pointer("pointerup", window, 100 + 40 * scale, 100 + 80 * scale); });
+  check(layoutOf() === "todos:l@0,0 session-count:m@32,0 lyrics:w@0,42", `Dragging on the canvas moves the widget in 8px steps, kept inside the four columns (${layoutOf()})`);
+  await act(async () => { modeButton("grid")!.click(); });
+  check(layoutOf() === "todos:l@0,0 session-count:m@32,0 lyrics:w@0,32" && !document.querySelector(".expanded-preview__stretch"), "Back to grid, the widgets flow again by position");
+}
+
 export async function checkCustomPanels(check: (condition: unknown, message: string) => void) {
   localStorage.removeItem("fuyu-custom-panels");
   check(savedPanels() === null && !document.querySelector(".panel-head"), "There are no custom panels until one is made");
@@ -54,6 +71,8 @@ export async function checkCustomPanels(check: (condition: unknown, message: str
   const created = savedPanels()?.panels[0];
   check(created && created.name === "新面板" && created.icon === "layout-grid" && pageRow(`panel:${created.id}`)?.getAttribute("aria-selected") === "true"
     && document.querySelector(".panel-head") && document.querySelector(".expanded-preview__empty"), "A new panel is saved, listed and shown empty on the preview");
+  check(document.querySelector(".expanded-preview__empty .panel-templates__button[data-template='workbench']") && document.querySelector(".panel-templates__button[data-template='fun']"),
+    "The empty panel on the preview offers the workbench and leisure templates");
   check(addChip("todos") && addChip("session-count") && addChip("lyrics") && !addChip("status-light"), "The add bucket lists the built-in widgets but not bar-only items");
   for (const widget of ["todos", "session-count", "lyrics"]) await act(async () => { addChip(widget)!.click(); });
   check(layoutOf() === "todos:m@0,0 session-count:m@32,0 lyrics:w@0,16" && !addChip("todos") && document.querySelectorAll(".expanded-preview__cell").length === 3,
@@ -62,8 +81,9 @@ export async function checkCustomPanels(check: (condition: unknown, message: str
     "The last widget added is selected and a one-size widget offers one card");
   await act(async () => { document.querySelector<HTMLButtonElement>(".size-picker__tabs [data-widget='todos']")!.click(); });
   await act(async () => { document.querySelector<HTMLButtonElement>(".size-card[data-size='l']")!.click(); });
-  check(layoutOf() === "todos:l@0,0 session-count:m@32,0 lyrics:w@0,32" && document.querySelector<HTMLElement>(".expanded-preview__cell[data-widget='todos']")?.style.height === "248px",
+  check(layoutOf() === "todos:l@0,0 session-count:m@32,0 lyrics:w@0,32" && document.querySelector<HTMLElement>(".expanded-preview__slot[data-widget='todos']")?.style.height === "248px",
     "Picking a larger size lays the panel out again and the preview follows");
+  await checkFreeCanvas(check);
   await act(async () => { altArrow(panelChip("session-count")!, "ArrowLeft"); });
   check(layoutOf() === "session-count:m@0,0 todos:l@32,0 lyrics:w@0,32", "Alt+Left moves a widget earlier in the panel");
   await act(async () => { panelChip("todos")!.querySelector<HTMLButtonElement>(".layout-chip__action")!.click(); });

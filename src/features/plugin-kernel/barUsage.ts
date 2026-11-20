@@ -22,12 +22,22 @@ export interface BarUsagePage {
   name: string;
 }
 
+export interface BarUsageWidget {
+  id: string;
+  owner: string;
+  name: string;
+  plugin: string;
+  sizes: string[];
+  icon?: string;
+}
+
 export interface BarUsageReport {
   id: number;
   collapsed: boolean;
   barWidth: number | null;
   items: BarUsageItem[];
   pages?: BarUsagePage[];
+  widgets?: BarUsageWidget[];
 }
 
 export type BarUsageCandidate = { id: string; owner: string; external: boolean; group?: unknown; hideable?: unknown; label?: unknown };
@@ -78,7 +88,7 @@ export function barUsageReport(
 
 export function readBarUsageReport(payload: unknown): BarUsageReport | null {
   if (!payload || typeof payload !== "object") return null;
-  const { id, collapsed, barWidth, items, pages } = payload as Record<string, unknown>;
+  const { id, collapsed, barWidth, items, pages, widgets } = payload as Record<string, unknown>;
   if (typeof id !== "number" || !Array.isArray(items)) return null;
   const width = px(barWidth);
   const read = items.flatMap((item): BarUsageItem[] => {
@@ -89,7 +99,22 @@ export function readBarUsageReport(payload: unknown): BarUsageReport | null {
     return [{ id: itemId, owner, hideable: hideable !== false, box: readBox(box), ...(label ? { name: label } : {}) }];
   });
   const report: BarUsageReport = { id, collapsed: collapsed === true && width !== null && width > 0, barWidth: width, items: read };
-  return Array.isArray(pages) ? { ...report, pages: readPages(pages) } : report;
+  return { ...report, ...(Array.isArray(pages) ? { pages: readPages(pages) } : {}), ...(Array.isArray(widgets) ? { widgets: readWidgets(widgets) } : {}) };
+}
+
+const WIDGET_SIZES = ["bar", "s", "m", "l", "w"];
+const ICON_LIMIT = 8000;
+
+function readWidgets(widgets: readonly unknown[]): BarUsageWidget[] {
+  return widgets.flatMap((widget): BarUsageWidget[] => {
+    if (!widget || typeof widget !== "object") return [];
+    const { id, owner, name, plugin, sizes, icon } = widget as Record<string, unknown>;
+    if (typeof id !== "string" || id === "" || typeof owner !== "string" || owner === "" || !Array.isArray(sizes)) return [];
+    const kept = WIDGET_SIZES.filter((size) => sizes.includes(size));
+    if (kept.length === 0) return [];
+    const svg = typeof icon === "string" && icon.length <= ICON_LIMIT && icon.trimStart().startsWith("<svg") ? icon : null;
+    return [{ id, owner, name: readName(name) ?? owner, plugin: readName(plugin) ?? owner, sizes: kept, ...(svg ? { icon: svg } : {}) }];
+  });
 }
 
 function readPages(pages: readonly unknown[]): BarUsagePage[] {

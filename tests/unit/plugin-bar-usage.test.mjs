@@ -115,3 +115,22 @@ test("the island names each plugin item for the settings list, and the name surv
   assert.ok(!("name" in read.items[6]));
   assert.equal(barItemName({ id: "a", owner: "@x/unknown" }, 1, null, undefined), "@x/unknown");
 });
+
+test("plugin widgets reach Settings with their sizes and an svg icon only (C156.4)", () => {
+  const read = readBarUsageReport({
+    id: 3,
+    collapsed: false,
+    items: [],
+    widgets: [
+      { id: "@fuyu/weather", owner: "@fuyu/weather", name: "天气", plugin: "天气", sizes: ["bar", "m", "huge"], icon: "<svg viewBox='0 0 24 24'></svg>" },
+      { id: "clock", owner: "@ann/clock", sizes: ["s"], icon: "<img src=x onerror=alert(1)>" },
+      { id: "broken", owner: "@ann/clock", sizes: ["xl"] },
+      { id: "", owner: "@ann/clock", sizes: ["s"] },
+    ],
+  });
+  assert.deepEqual(read.widgets, [
+    { id: "@fuyu/weather", owner: "@fuyu/weather", name: "天气", plugin: "天气", sizes: ["bar", "m"], icon: "<svg viewBox='0 0 24 24'></svg>" },
+    { id: "clock", owner: "@ann/clock", name: "@ann/clock", plugin: "@ann/clock", sizes: ["s"] },
+  ]);
+  assert.equal(readBarUsageReport({ id: 4, items: [] }).widgets, undefined);
+});
