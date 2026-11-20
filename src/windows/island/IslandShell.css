@@ -22,6 +22,18 @@
   initial-value: 0px;
 }
 
+@property --island-hover-grow-x {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --island-hover-grow-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
 @property --island-shell-fill {
   syntax: "<color>";
   inherits: false;
@@ -55,15 +67,17 @@
   box-shadow: var(--island-edge-lines, inset 0 0 0 1px var(--color-white-a08));
   overflow: visible;
   isolation: isolate;
-  --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px))) + var(--island-pixel-nudge, 0.001px));
+  --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px)) - var(--island-hover-grow-x) / 2) + var(--island-pixel-nudge, 0.001px));
   width: calc(100cqw - 2 * var(--island-shell-left));
-  height: var(--island-shell-height);
+  height: calc(var(--island-shell-height) + var(--island-hover-grow-y));
   border-radius: var(--island-shell-top-corner) var(--island-shell-top-corner) var(--island-shell-bottom-corner) var(--island-shell-bottom-corner);
   transition:
     --island-shell-width var(--island-motion-width, 550ms) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)),
     --island-shell-height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-top-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-bottom-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    --island-hover-grow-x var(--motion-medium) var(--motion-ease-out),
+    --island-hover-grow-y var(--motion-medium) var(--motion-ease-out),
     --island-shell-fill var(--motion-slow) var(--motion-ease),
     --island-shell-opacity var(--island-opacity-duration, var(--motion-base)) var(--motion-ease);
 }
@@ -94,6 +108,11 @@
   --island-shell-bottom-corner: var(--island-shell-radius-collapsed);
   cursor: default;
   box-shadow: none;
+}
+
+.island--collapsed:not(.island--side, .island--tucked, .island--dimmed, .island--glass-active):hover {
+  --island-hover-grow-x: calc(16px * var(--island-scale, 1));
+  --island-hover-grow-y: calc(5px * var(--island-scale, 1));
 }
 
 .island--collapsed:has(:focus-visible) {
@@ -212,6 +231,6 @@
 @media (prefers-reduced-motion: reduce) {
   .island {
     --island-opacity-duration: var(--motion-base);
-    transition-property: --island-shell-width, --island-shell-height, --island-shell-top-corner, --island-shell-bottom-corner, --island-shell-fill, --island-shell-opacity !important;
+    transition-property: --island-shell-width, --island-shell-height, --island-hover-grow-x, --island-hover-grow-y, --island-shell-top-corner, --island-shell-bottom-corner, --island-shell-fill, --island-shell-opacity !important;
   }
 }
