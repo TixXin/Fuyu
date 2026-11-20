@@ -1,6 +1,6 @@
 # 把窗口放进 Windows 11 任务栏
 
-> 日期：2026-11-20。问题：汽水音乐那样把歌词组件放进 Win11 任务栏是怎么做的，岛屿的「吸附到」能不能加一个「任务栏」。范围：本机实测正在运行的汽水音乐 3.7.0（枚举窗口树和窗口样式）；联网搜索「Windows 11 taskbar SetParent Shell_TrayWnd」「汽水音乐 任务栏歌词」「TrafficMonitor Win11 任务栏窗口」「BetterNCM TaskbarLyrics」「Windhawk taskbar」，读了 Deskband11Lib、ComposeWindowsTaskBar 的 README。相关任务：暂无。
+> 日期：2026-11-20。问题：汽水音乐那样把歌词组件放进 Win11 任务栏是怎么做的，岛屿的「吸附到」能不能加一个「任务栏」。范围：本机实测正在运行的汽水音乐 3.7.0（枚举窗口树和窗口样式）；联网搜索「Windows 11 taskbar SetParent Shell_TrayWnd」「汽水音乐 任务栏歌词」「TrafficMonitor Win11 任务栏窗口」「BetterNCM TaskbarLyrics」「Windhawk taskbar」，读了 Deskband11Lib、ComposeWindowsTaskBar 的 README。相关任务：[C154](/docs/tasks/C/C154.md)（岛屿和音乐歌词组件吸附到任务栏，子任务 C154.1 宿主、C154.2 岛屿、C154.3 歌词组件）。
 
 ## 结论
 
