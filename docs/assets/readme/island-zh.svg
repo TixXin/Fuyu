@@ -29,22 +29,22 @@
     .b4 { animation-duration: 1.2s; animation-delay: -.4s; }
     @keyframes capl {
       0%, 30% { transform: translateX(0); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
-      33.6% { transform: translateX(-40px); animation-timing-function: ease-in-out; }
-      35.4%, 80% { transform: translateX(-36px); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      33.6% { transform: translateX(-39px); animation-timing-function: ease-in-out; }
+      35.4%, 80% { transform: translateX(-35px); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
       83.6% { transform: translateX(3px); animation-timing-function: ease-in-out; }
       85.4%, 100% { transform: translateX(0); }
     }
     @keyframes capr {
       0%, 30% { transform: translateX(0); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
-      33.6% { transform: translateX(40px); animation-timing-function: ease-in-out; }
-      35.4%, 80% { transform: translateX(36px); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      33.6% { transform: translateX(39px); animation-timing-function: ease-in-out; }
+      35.4%, 80% { transform: translateX(35px); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
       83.6% { transform: translateX(-3px); animation-timing-function: ease-in-out; }
       85.4%, 100% { transform: translateX(0); }
     }
     @keyframes mid {
       0%, 30% { transform: scaleX(1); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
-      33.6% { transform: scaleX(1.444); animation-timing-function: ease-in-out; }
-      35.4%, 80% { transform: scaleX(1.4); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+      33.6% { transform: scaleX(1.433); animation-timing-function: ease-in-out; }
+      35.4%, 80% { transform: scaleX(1.389); animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
       83.6% { transform: scaleX(.967); animation-timing-function: ease-in-out; }
       85.4%, 100% { transform: scaleX(1); }
     }
@@ -100,8 +100,12 @@
       <rect x="-90" y="51" width="180" height="1" fill="#4e5358"/>
     </g>
     <g class="capl">
-      <circle class="halo" cx="-86" cy="26" r="9" fill="#4ade9c"/>
-      <circle cx="-86" cy="26" r="4.5" fill="#4ade9c"/>
+      <g transform="translate(-86 26) scale(.36) translate(-32 -26.3)">
+        <path class="halo" d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H51.88A6.6 6.6 0 0 1 41.35 43.68A6.6 6.6 0 0 1 32 43.63A6.6 6.6 0 0 1 22.65 43.68A6.6 6.6 0 0 1 12.12 36H10.4C7.4 36 5 33.5 5 30.5Z" fill="#f6e3d3" transform="translate(32 26.3) scale(1.25) translate(-32 -26.3)"/>
+        <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H51.88A6.6 6.6 0 0 1 41.35 43.68A6.6 6.6 0 0 1 32 43.63A6.6 6.6 0 0 1 22.65 43.68A6.6 6.6 0 0 1 12.12 36H10.4C7.4 36 5 33.5 5 30.5Z" fill="#f6e3d3"/>
+        <ellipse cx="24" cy="25" rx="2.8" ry="4" fill="#1d1b22"/>
+        <ellipse cx="40" cy="25" rx="2.8" ry="4" fill="#1d1b22"/>
+      </g>
     </g>
     <text class="idle" y="31.6" text-anchor="middle" font-size="16" font-weight="600" letter-spacing=".4" fill="#f8f6f0">浮屿 Fuyu</text>
     <g class="capr">
@@ -115,9 +119,9 @@
       <path class="call" d="M79 26h14m-5-5 5 5-5 5" fill="none" stroke="#f8f6f0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
     <g class="call">
-      <rect x="-101" y="15" width="54" height="22" rx="11" fill="#74d6ff" fill-opacity=".16"/>
-      <text x="-74" y="30.2" text-anchor="middle" font-size="12" font-weight="600" fill="#74d6ff">征集中</text>
-      <text x="-37" y="31.4" font-size="15" font-weight="600" fill="#f8f6f0" textLength="132" lengthAdjust="spacing">给浮屿画一个 Logo</text>
+      <rect x="-100" y="15" width="44" height="22" rx="11" fill="#74d6ff" fill-opacity=".16"/>
+      <text x="-78" y="30.2" text-anchor="middle" font-size="12" font-weight="600" fill="#74d6ff">开源</text>
+      <text x="-46" y="31.4" font-size="15" font-weight="600" fill="#f8f6f0" textLength="140" lengthAdjust="spacing">屏幕顶上的效率小岛</text>
     </g>
   </g>
   <mask id="pen" maskUnits="userSpaceOnUse" x="-10" y="-40" width="178" height="60">

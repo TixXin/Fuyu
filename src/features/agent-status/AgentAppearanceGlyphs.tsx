@@ -1,25 +1,5 @@
-import type { AgentLightStyle } from "../../lib/settings/types";
 import type { AgentSessionView } from "./agentSettings";
 import "./AgentAppearanceGlyphs.css";
-
-export function LightStyleArt({ style }: { style: AgentLightStyle }) {
-  return (
-    <span className="agent-glyph agent-glyph--bar">
-      <span className="agent-glyph__capsule">
-        {style === "mark" ? (
-          <span className="agent-glyph__mark">
-            <i className="agent-glyph__mark-dot" />
-            <b className="agent-glyph__mark-dots" />
-          </span>
-        ) : (
-          <i className="agent-glyph__dot" />
-        )}
-        <span className="agent-glyph__title-line" />
-        <span className="agent-glyph__ring" />
-      </span>
-    </span>
-  );
-}
 
 export function SessionViewArt({ view }: { view: AgentSessionView }) {
   if (view === "cards") {

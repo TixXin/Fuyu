@@ -4,10 +4,15 @@ import {
   addPanelItem,
   cellBox,
   defaultWidgetSize,
+  dropNewPanelItem,
   FUYU_PAGE_ID,
   fuyuPanel,
   fuyuPanels,
   gridRows,
+  layoutStrip,
+  stripInsertIndexAt,
+  insertIndexAt,
+  movePanelItemTo,
   nextPanelSize,
   panelIdOfPage,
   placeFreeItem,
@@ -76,11 +81,15 @@ test("a widget is added at medium when it has it, otherwise at its first size", 
   assert.equal(defaultWidgetSize([]), null);
 });
 
-test("there is one Fuyu panel: the stored one, else the first older panel, else an empty grid", () => {
-  const empty = fuyuPanel([]);
-  assert.equal(empty.id, "fuyu");
-  assert.equal(empty.mode, "grid");
-  assert.deepEqual(empty.items, []);
+test("there is one Fuyu panel: the stored one, else the first older panel, else the default page", () => {
+  const fresh = fuyuPanel([]);
+  assert.equal(fresh.id, "fuyu");
+  assert.equal(fresh.mode, "grid");
+  assert.deepEqual(fresh.items.slice(0, 6).map((item) => `${item.widget}:${item.size}`), ["today:l", "system-status:s", "battery:s", "countdown:s", "network:s", "pomodoro:s"]);
+  const off = new Set(["system-status", "battery", "unread"]);
+  const onlyOn = fuyuPanel([], (widget) => (off.has(widget) ? null : ["s", "m", "l", "w"]));
+  assert.deepEqual(onlyOn.items.slice(0, 4).map((item) => item.widget), ["today", "countdown", "network", "pomodoro"]);
+  assert.ok(onlyOn.items.every((item) => !off.has(item.widget)));
   const older = [
     { id: "p1", name: "Desk", icon: "home", mode: "free", items: [] },
     { id: "p2", name: "Play", icon: "music", mode: "grid", items: [] },
@@ -105,7 +114,7 @@ test("a free panel keeps hand-placed boxes: 8px steps, inside the four columns, 
   panel = stretchFreeItem(panel, "a", 40, 4);
   assert.deepEqual([panel.items.at(-1).w, panel.items.at(-1).h], [31, 15]);
   panel = stretchFreeItem(panel, "b", 20, 22);
-  assert.deepEqual(panel.items.find((item) => item.widget === "b"), { widget: "b", size: "s", x: 32, y: 0, w: 20, h: 22 });
+  assert.deepEqual(panel.items.find((item) => item.widget === "b"), { widget: "b", size: "s", x: 32, y: 16, w: 20, h: 22 });
   panel = removePanelItem(panel, "c");
   assert.deepEqual(panel.items.map((item) => item.widget), ["b", "a"]);
 });
@@ -138,4 +147,54 @@ test("a template adds its widgets at their sizes and skips the ones that are not
   assert.deepEqual(fun.items.map((item) => item.widget), ["music", "lyrics"]);
   const withWeather = applyPanelTemplate(empty, "fun", (id) => (id === "@fuyu/weather" ? ["s"] : sizes[id] ?? null));
   assert.deepEqual(boxes(withWeather), [["music", 0, 0], ["@fuyu/weather", 2, 0], ["lyrics", 0, 1]]);
+});
+
+const row = () => addPanelItem(addPanelItem(addPanelItem(empty, "a", "m"), "b", "m"), "c", "s");
+
+test("dragging a widget past the middle of another swaps them; short of the middle keeps the order", () => {
+  const panel = row();
+  const past = movePanelItemTo(panel, "a", insertIndexAt(panel, 450, 60, "a"));
+  assert.deepEqual(boxes(past), [["b", 0, 0], ["a", 2, 0], ["c", 0, 1]]);
+  assert.equal(movePanelItemTo(panel, "a", insertIndexAt(panel, 300, 60, "a")), panel);
+});
+
+test("a widget dragged in from the dock lands where it is dropped", () => {
+  const panel = row();
+  assert.deepEqual(boxes(dropNewPanelItem(panel, "d", "s", 300, 180)), [["a", 0, 0], ["b", 2, 0], ["c", 0, 1], ["d", 1, 1]]);
+  assert.deepEqual(boxes(dropNewPanelItem(panel, "d", "s", 20, 60)).map(([widget]) => widget), ["d", "a", "b", "c"]);
+  assert.equal(dropNewPanelItem(panel, "a", "s", 20, 60), panel);
+  const free = dropNewPanelItem(setPanelMode(panel, "free"), "d", "s", 200, 100);
+  const dropped = free.items.at(-1);
+  assert.deepEqual([dropped.widget, dropped.x, dropped.y], ["d", 18, 5]);
+});
+
+test("in a free panel a widget put down on others pushes them down instead of covering them", () => {
+  let panel = setPanelMode(addPanelItem(addPanelItem(addPanelItem(empty, "a", "s"), "b", "s"), "c", "s"), "free");
+  panel = placeFreeItem(panel, "c", 0, 16);
+  panel = placeFreeItem(panel, "b", 0, 0);
+  const at = (widget) => panel.items.find((item) => item.widget === widget);
+  assert.deepEqual([at("b").x, at("b").y], [0, 0]);
+  assert.deepEqual([at("a").x, at("a").y], [0, 16]);
+  assert.deepEqual([at("c").x, at("c").y], [0, 32]);
+  panel = stretchFreeItem(panel, "b", 31, 40);
+  assert.deepEqual([at("a").y, at("c").y], [41, 57]);
+});
+
+test("the Fuyu strip fills two rows column by column and grows to the right", () => {
+  const panel = layoutStrip(["a", "b", "c", "d", "e"].reduce((next, widget, at) => addPanelItem(next, widget, at === 1 ? "m" : "s"), empty), 2);
+  assert.deepEqual(boxes(panel), [["a", 0, 0], ["b", 0, 1], ["c", 1, 0], ["d", 2, 0], ["e", 2, 1]]);
+  assert.ok(panel.items.every((item) => cellBox(item).row + cellBox(item).rows <= 2));
+});
+
+test("dropping on the strip inserts by column, then by row", () => {
+  const panel = layoutStrip(["a", "b", "c"].reduce((next, widget) => addPanelItem(next, widget, "s"), empty), 2);
+  assert.equal(stripInsertIndexAt(panel, 10, 200, null), 1);
+  assert.equal(stripInsertIndexAt(panel, 300, 10, null), 3);
+  assert.equal(stripInsertIndexAt(panel, 100, 10, null), 1);
+});
+
+test("switching the Fuyu strip to free and back keeps the widgets where they were", () => {
+  const strip = layoutStrip(["a", "b", "c", "d", "e"].reduce((next, widget, at) => addPanelItem(next, widget, at === 1 ? "m" : "s"), empty), 2);
+  const back = layoutStrip(setPanelMode(setPanelMode(strip, "free"), "grid", true), 2);
+  assert.deepEqual(boxes(back), boxes(strip));
 });

@@ -29,7 +29,15 @@ body,
 }
 
 body {
+  -webkit-user-select: none;
   user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 button,

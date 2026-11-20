@@ -10,6 +10,7 @@ import type { useIslandNavigation } from "./useIslandNavigation";
 import { openSettingsWindow } from "../settings/api";
 import { useIslandShellPreparing, useIslandShellPrewarmed } from "./IslandShell";
 import { getTodoScrollStartRows } from "./layout";
+import { islandPageSize } from "./pageSize";
 import {
   finishCloseHold,
   finishDeferredOpen,
@@ -92,7 +93,7 @@ export function IslandPages(props: IslandPagesProps): ReactNode {
   const pageProps: IslandPageProps = {
     ...props,
     onOpenSettings: openSettingsWindow,
-    todoScrollStartRows: getTodoScrollStartRows(settings.maxPanelHeight),
+    todoScrollStartRows: getTodoScrollStartRows(islandPageSize(settings, "todo").height),
   };
   const folded = entries.find((entry) => entry.fold?.into === page && entry.fold.when(features));
   if (folded?.fold) {

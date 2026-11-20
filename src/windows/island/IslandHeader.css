@@ -3,7 +3,8 @@
   filter: brightness(var(--island-pulse-brightness));
   transition:
     color var(--motion-base) var(--motion-ease),
-    filter var(--motion-base) var(--motion-ease);
+    filter var(--motion-base) var(--motion-ease),
+    transform var(--motion-base) var(--motion-ease);
 }
 
 .island__agent-status-icon--idle {
@@ -31,10 +32,11 @@
 }
 
 .island__header {
+  position: relative;
   display: grid;
-  grid-template-columns: auto minmax(96px, auto) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(96px, auto) auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-md);
+  gap: 2px;
   min-height: 34px;
 }
 
@@ -45,7 +47,7 @@
 .island__title {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 2px;
   min-width: 0;
   color: var(--text-1);
   font-size: 15px;
@@ -76,7 +78,6 @@
   min-width: 96px;
   max-width: 100%;
   height: 34px;
-  padding-left: 4px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -88,8 +89,8 @@
 
 .island__collapse-target {
   min-width: 0;
-  height: 68px;
-  margin: -18px 0 -16px;
+  height: 60px;
+  margin: -10px 0 -16px;
   padding: 0;
   background: transparent;
   border: 0;
@@ -103,9 +104,9 @@
 }
 
 .dot-button {
-  --page-color: var(--color-accent);
+  position: relative;
   flex: 0 0 auto;
-  width: 26px;
+  width: 34px;
   height: 26px;
   display: inline-grid;
   place-items: center;
@@ -123,13 +124,69 @@
 
 .dot-button:hover {
   color: var(--text-1);
-  background: var(--color-white-a10);
+  background: var(--color-white-a08);
 }
 
 .dot-button--active,
 .dot-button--active:hover {
-  color: var(--page-color);
-  background: color-mix(in srgb, var(--page-color) 20%, transparent);
+  color: var(--text-1);
+  background: transparent;
+}
+
+.dot-button > svg,
+.dot-button > img {
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.dot-button:hover > svg,
+.dot-button:hover > img,
+.island__agent-button:hover > svg {
+  transform: translateY(-1px) scale(1.12);
+}
+
+.island__page-pill {
+  position: absolute;
+  left: 0;
+  right: 100%;
+  top: 4px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  background: var(--color-white-a16);
+  box-shadow: inset 0 0.5px 0 var(--color-white-a12);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    left var(--motion-medium) var(--motion-ease),
+    right var(--motion-medium) var(--motion-ease),
+    top var(--motion-base) var(--motion-ease),
+    height var(--motion-base) var(--motion-ease),
+    opacity var(--motion-base) var(--motion-ease);
+}
+
+.island__page-pill[data-shown="true"] {
+  opacity: 1;
+}
+
+.island__page-pill[data-dir="forward"] {
+  transition:
+    left var(--motion-medium) var(--motion-ease),
+    right var(--motion-base) var(--motion-ease),
+    top var(--motion-base) var(--motion-ease),
+    height var(--motion-base) var(--motion-ease),
+    opacity var(--motion-base) var(--motion-ease);
+}
+
+.island__page-pill[data-dir="back"] {
+  transition:
+    left var(--motion-base) var(--motion-ease),
+    right var(--motion-medium) var(--motion-ease),
+    top var(--motion-base) var(--motion-ease),
+    height var(--motion-base) var(--motion-ease),
+    opacity var(--motion-base) var(--motion-ease);
+}
+
+.island__page-pill[data-instant="true"] {
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .dot-button:focus-visible {
@@ -137,23 +194,50 @@
   outline-offset: 1px;
 }
 
-
-
-
-
 .window-actions {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-md);
+  gap: 2px;
+}
+
+.window-actions--lead {
+  justify-content: flex-start;
+}
+
+.island__header .window-actions .icon-button {
+  width: 34px;
+  height: 26px;
+  color: var(--text-2);
+  background: transparent;
+  border-radius: var(--radius-pill);
+}
+
+.island__header .window-actions .icon-button:hover {
+  color: var(--text-1);
+  background: var(--color-white-a08);
+}
+
+.island__header .window-actions .icon-button[aria-pressed="true"] {
+  color: var(--text-1);
+  background: var(--color-white-a16);
+}
+
+.window-actions .icon-button > svg {
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.window-actions .icon-button:hover > svg {
+  transform: translateY(-1px) scale(1.12);
 }
 
 .island__agent-button {
+  position: relative;
   display: inline-grid;
   place-items: center;
-  width: 26px;
+  width: 34px;
   height: 26px;
-  margin: -5px;
+  margin: -5px 0;
   padding: 0;
   background: transparent;
   border: 0;
@@ -162,9 +246,23 @@
   transition: background var(--motion-base) var(--motion-ease);
 }
 
-.island__agent-button:hover,
-.island__agent-button--active {
-  background: var(--color-white-a10);
+.island__title .island__agent-button .island__agent-status-icon {
+  color: var(--text-2);
+  filter: none;
+}
+
+.island__title .island__agent-button:hover .island__agent-status-icon,
+.island__title .island__agent-button--active .island__agent-status-icon {
+  color: var(--text-1);
+}
+
+.island__agent-button:hover {
+  background: var(--color-white-a08);
+}
+
+.island__agent-button--active,
+.island__agent-button--active:hover {
+  background: transparent;
 }
 
 .island__agent-button:focus-visible {
@@ -198,6 +296,15 @@
 
 .dot-button:has(.panel-text-icon) {
   width: auto;
-  min-width: 26px;
-  padding: 0 8px;
+  min-width: 34px;
+  padding: 0 12px;
 }
+
+.dot-button .panel-text-icon {
+  transition: text-shadow var(--motion-base) var(--motion-ease);
+}
+
+.dot-button:hover .panel-text-icon {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--text-1) 45%, transparent);
+}
+

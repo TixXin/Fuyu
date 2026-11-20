@@ -140,11 +140,19 @@ test("expand trigger, hover delays and max panel height default for older settin
   assert.equal(normalizeSettings({ hoverCollapseDelayMs: 9_000 }).hoverCollapseDelayMs, 2_000);
   assert.equal(normalizeSettings({ hoverCollapseDelayMs: 0 }).hoverCollapseDelayMs, 0);
   assert.equal(normalizeSettings({ maxPanelHeight: 100 }).maxPanelHeight, 360);
-  assert.equal(normalizeSettings({ maxPanelHeight: 999 }).maxPanelHeight, 640);
+  assert.equal(normalizeSettings({ maxPanelHeight: 999 }).maxPanelHeight, 999, "a tall screen keeps a panel taller than the old 640 cap");
+  assert.equal(normalizeSettings({ maxPanelHeight: 1e9 }).maxPanelHeight, 4320);
   assert.equal(normalizeSettings({ maxPanelHeight: 400.6 }).maxPanelHeight, 401);
   assert.equal(normalizeSettings({}).panelWidth, 560, "settings from before C25 keep the 560px panel");
   assert.equal(normalizeSettings({ panelWidth: 100 }).panelWidth, 480);
-  assert.equal(normalizeSettings({ panelWidth: 2000 }).panelWidth, 800);
+  assert.equal(normalizeSettings({ panelWidth: 2000 }).panelWidth, 2000, "a wide screen keeps a panel wider than the old 800 cap");
+  assert.equal(normalizeSettings({ panelWidth: 1e9 }).panelWidth, 7680);
+  assert.deepEqual(normalizeSettings({}).pageSizes, {}, "settings from before per-page sizes size every page from the defaults");
+  assert.deepEqual(
+    normalizeSettings({ pageSizes: { "panel:fuyu": { width: 1200.4, height: 500 }, todo: { width: 10, height: 1e9 }, bad: { width: "x", height: 300 }, "": { width: 600, height: 400 } } }).pageSizes,
+    { "panel:fuyu": { width: 1200, height: 500 }, todo: { width: 480, height: 4320 } },
+    "each page keeps its own size, clamped; broken entries are dropped",
+  );
   assert.equal(older.minimizeAction, "tray");
   assert.equal(older.tuckedHoverAction, "reveal", "settings saved before the option only slide out, as before");
   assert.equal(normalizeSettings({ tuckedHoverAction: "expand" }).tuckedHoverAction, "expand");
@@ -188,7 +196,7 @@ test("normalizing saved settings keeps the first-launch defaults", () => {
 test("first launch uses the maintainer's layout, while saved settings missing a field keep older behavior", () => {
   assert.equal(DEFAULT_SETTINGS.appearanceMode, "classic");
   assert.equal(DEFAULT_SETTINGS.islandBackgroundColor, "#030303");
-  assert.equal(DEFAULT_SETTINGS.islandCornerRadius, 32);
+  assert.equal(DEFAULT_SETTINGS.islandCornerRadius, 24);
   assert.equal(DEFAULT_SETTINGS.collapsedScale, 1);
   assert.equal(DEFAULT_SETTINGS.expandedScale, 1);
   assert.equal(normalizeSettings({ collapsedScale: 0.96, expandedScale: 1.05, islandCornerRadius: 16 }).expandedScale, 1.05);
@@ -209,11 +217,11 @@ test("first launch uses the maintainer's layout, while saved settings missing a 
 
 test("first launch takes the maintainer's settings of 0.3.5-beta.5; saved settings without a field keep the earlier default", () => {
   const changed = {
-    topFilletRadius: [8, 8], islandCornerRadius: [32, 30], maxPanelHeight: [360, 490], panelWidth: [800, 560],
+    topFilletRadius: [8, 8], islandCornerRadius: [24, 30], maxPanelHeight: [360, 490], panelWidth: [800, 560],
     pulseBrightness: [160, 100], islandBackgroundColor: ["#030303", "#000000"], collapsedDark: [false, false],
     agentAlertSeconds: [3, 5], agentRemindSeconds: [0, 60], carryOverIncompleteTodos: [false, true],
-    autoTuck: [false, false], autoTuckSeconds: [120, 30], messageNotice: ["panel", "line"], hoverSwitchPage: [true, false],
-    agentLightStyle: ["dot", "mark"], lyricsOnline: [true, false], lyricsOnIsland: [true, false],
+    autoTuck: [false, false], autoTuckSeconds: [120, 30], messageNotice: ["panel", "line"],
+    lyricsOnline: [true, false], lyricsOnIsland: [true, false],
   };
   const older = normalizeSettings({ opacity: 95 });
   for (const [key, [first, earlier]] of Object.entries(changed)) {

@@ -4,7 +4,7 @@
   flex-direction: column;
   height: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .custom-panel__scroll {
@@ -12,31 +12,48 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
+  overflow: auto hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.custom-panel__scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .custom-panel__zoom {
+  position: relative;
   flex: none;
   width: fit-content;
   margin: 0 auto;
 }
 
+.custom-panel__scroll--paged {
+  scroll-snap-type: x mandatory;
+}
+
+.custom-panel__snap {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  scroll-snap-align: start;
+}
+
 .custom-panel__grid {
   position: relative;
-  margin: 2px 0 8px;
+  margin: 2px 0 0;
 }
 
 .custom-panel__cell {
   position: absolute;
   box-sizing: border-box;
-  padding: 10px;
+  padding: 11px 12px;
   overflow: hidden;
-  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.065);
   border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
-  border-radius: 14px;
+  border-radius: 16px;
 }
 
 .custom-panel__empty {
@@ -57,17 +74,6 @@
   margin: 0;
 }
 
-.custom-panel__bar {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  min-width: 0;
-  min-height: 24px;
-  padding: 0 4px 4px;
-}
-
 .custom-panel__hint {
   min-width: 0;
   overflow: hidden;
@@ -77,27 +83,8 @@
   text-overflow: ellipsis;
 }
 
-.custom-panel__edit {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.7);
-  font: inherit;
-  font-size: 11.5px;
-  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
-  border: 0;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
-}
-
-.custom-panel__edit:hover {
-  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.95);
-  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.13);
-}
-
-.custom-panel__edit:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+.island__header .custom-panel__edit[aria-pressed="true"],
+.island__header .custom-panel__edit[aria-pressed="true"]:hover {
+  color: var(--color-on-accent, #fff);
+  background: var(--color-accent);
 }

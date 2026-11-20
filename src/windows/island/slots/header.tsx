@@ -1,10 +1,10 @@
-import { Minus, RotateCcw, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { shortcutLabel } from "../../../lib/shortcut/shortcut";
 import { defineSlot, type IslandHeaderMeta } from "../../../features/plugin-kernel/slots";
 import { runIslandAction, useIslandContributed } from "../../../features/plugin-kernel/useIslandContributions";
 import { useTranslation } from "../../../i18n";
-import { isMacOS } from "../../../lib/platform";
 import { pageShortcutLabel, type IslandFeatures } from "../features";
+import { OPEN_SETTINGS_SHORTCUT } from "../useIslandKeyboard";
 import type { IslandPage } from "../types";
 
 export type IslandHeaderContext = {
@@ -23,6 +23,9 @@ export type IslandHeaderContext = {
   isPageShown: (target: IslandPage) => boolean;
 };
 
+export const PANEL_LAYOUT_ID = "panel-layout";
+export const TRAILING_HEADER_IDS: ReadonlySet<string> = new Set([PANEL_LAYOUT_ID, "settings"]);
+
 export const headerSlot = defineSlot<IslandHeaderContext, IslandHeaderMeta<IslandHeaderContext>>("island.header/v1");
 
 export function withShortcut({ features, pageDigitModifiers }: Pick<IslandHeaderContext, "features" | "pageDigitModifiers">, label: string, target: IslandPage) {
@@ -37,7 +40,7 @@ function SettingsButton({ onOpenSettings }: IslandHeaderContext) {
     <button
       className="icon-button island-settings-button"
       type="button"
-      aria-label={badge?.label ?? t.settings.title}
+      aria-label={badge?.label ?? `${t.settings.title} (${OPEN_SETTINGS_SHORTCUT})`}
       onClick={(event) => {
         event.stopPropagation();
         if (!badge?.action || !runIslandAction(badge.action)) onOpenSettings();
@@ -49,42 +52,4 @@ function SettingsButton({ onOpenSettings }: IslandHeaderContext) {
   );
 }
 
-function ResetPositionButton({ isDetached, onResetPosition }: IslandHeaderContext) {
-  const t = useTranslation();
-  return (
-    <button
-      className={`icon-button island-reset-button${
-        isDetached ? " island-reset-button--available" : ""
-      }`}
-      type="button"
-      aria-label={t.island.resetPositionLabel}
-      onClick={(event) => {
-        event.stopPropagation();
-        onResetPosition();
-      }}
-    >
-      <RotateCcw size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-    </button>
-  );
-}
-
-function MinimizeButton({ minimizesToTray, onMinimize }: IslandHeaderContext) {
-  const t = useTranslation();
-  return (
-    <button
-      className="icon-button"
-      type="button"
-      aria-label={minimizesToTray ? (isMacOS ? t.island.minimizeToMenuBar : t.island.minimizeToTray) : t.island.tuckToTop}
-      onClick={(event) => {
-        event.stopPropagation();
-        onMinimize();
-      }}
-    >
-      <Minus size={16} strokeWidth={1.5} absoluteStrokeWidth />
-    </button>
-  );
-}
-
-headerSlot.add({ id: "settings", order: 10, component: SettingsButton });
-headerSlot.add({ id: "reset-position", order: 50, component: ResetPositionButton });
-headerSlot.add({ id: "minimize", order: 60, component: MinimizeButton });
+headerSlot.add({ id: "settings", order: 1000, component: SettingsButton });

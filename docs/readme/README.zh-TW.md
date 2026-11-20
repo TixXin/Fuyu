@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/zh/"><img src="../assets/readme/island-zh.svg" alt="掛在頁面頂端的一座小島，寫著「浮嶼 Fuyu」，不時會展開提示正在徵求 Logo；右下方用連筆手寫著官網網址 https://fuyu.ing，一個小箭頭指向小島" width="540" height="100"></a>
+  <a href="https://fuyu.ing/zh/"><img src="../assets/readme/island-zh.svg" alt="掛在頁面頂端的一座小島，左邊是一隻小水母，寫著「浮嶼 Fuyu」，不時會展開，寫著「開源 · 螢幕頂端的效率小島」；右下方用連筆手寫著官網網址 https://fuyu.ing，一個小箭頭指向小島" width="540" height="100"></a>
 
   <h1>浮嶼 Fuyu</h1>
 
@@ -192,14 +192,11 @@ pnpm tauri build    # 打包安裝程式
 
 ## 參與貢獻
 
-<a href="https://fuyu.ing/zh/logo/"><img src="../assets/logo-placeholder.svg" alt="一個用虛線畫出的空位：浮嶼正在徵求 Logo" width="88" height="88" align="right"></a>
-
 浮嶼是大家一起打造的，歡迎你也來添一塊：
 
 - **提出問題和想法**：到 [Issues](https://github.com/TixXin/fuyu/issues) 說說哪裡不好用、還想要什麼。
 - **修改程式碼、文件或翻譯**：直接提 PR。怎麼提、提之前要跑哪些檢查，請見 [CONTRIBUTING.md](../../CONTRIBUTING.md)；程式碼怎麼組織，請見 [AGENTS.md](../../AGENTS.md)。
 - **寫外掛**：不用改動島嶼本體，做好後上架到[外掛市集](https://github.com/TixXin/fuyu-plugins)。
-- **畫一個 Logo**：浮嶼還沒有正式的 Logo，[徵稿頁](https://fuyu.ing/zh/logo/)一直開放著，右邊這個空位就是留給它的。
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="浮嶼的貢獻者"></a>
 

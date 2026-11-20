@@ -12,19 +12,19 @@ type IslandHoverOptions = {
   settings: IslandSettings;
   navigation: ReturnType<typeof useIslandNavigation>;
   quiet: boolean;
-  leadPage: IslandPage | null;
+  homePage: IslandPage;
   openEnabledPage: (page: IslandPage) => void;
 };
 
-export function useIslandHover({ settings, navigation, quiet, leadPage, openEnabledPage }: IslandHoverOptions) {
+export function useIslandHover({ settings, navigation, quiet, homePage, openEnabledPage }: IslandHoverOptions) {
   const {
-    mode, page, isTucked, isPeeking, openedByHover,
+    mode, isTucked, isPeeking, openedByHover,
     collapseIsland, revealIsland, peekIsland, retractsAfterPeek, resumePeek, markHoverOpen,
   } = navigation;
   const { reveal } = useIslandContributed();
   const openCurrentPage = useCallback(
-    () => openEnabledPage(leadPage ?? page),
-    [leadPage, openEnabledPage, page],
+    () => openEnabledPage(homePage),
+    [homePage, openEnabledPage],
   );
   const openFromTuckedHover = useCallback(() => {
     openCurrentPage();

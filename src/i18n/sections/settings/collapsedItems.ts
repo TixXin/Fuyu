@@ -83,7 +83,7 @@ export const zhCN: SettingsCollapsedItemsText = {
   item: {
     center: "中心图案",
     todoCount: "剩余待办数",
-    statusLight: "Agent 状态灯",
+    statusLight: "浮屿水母",
     mail: "新邮件提醒",
     update: "更新提醒",
     deviceUse: "摄像头 / 麦克风",
@@ -131,7 +131,7 @@ export const en: SettingsCollapsedItemsText = {
   item: {
     center: "Center pattern",
     todoCount: "Todos left",
-    statusLight: "Agent status light",
+    statusLight: "Fuyu jellyfish",
     mail: "New mail",
     update: "Update available",
     deviceUse: "Camera / microphone",

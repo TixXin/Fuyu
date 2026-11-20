@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as islandApi from "./api";
 import { clearIslandPosition, loadIslandPosition, saveIslandPosition, type IslandPosition } from "./storage";
-import { useModifierWindowDrag } from "./useModifierWindowDrag";
+import { useEdgeResize } from "./useEdgeResize";
 import { useIslandHoldListener } from "./islandHold";
 
 export function useIslandPosition() {
@@ -16,12 +16,7 @@ export function useIslandPosition() {
     });
   }, [isPositionDetached]);
 
-  const startIslandModifierDrag = useCallback(() => {
-    void islandApi.startIslandModifierDrag().catch((error) => {
-      console.error("Failed to start island modifier drag", error);
-    });
-  }, []);
-  useModifierWindowDrag(startIslandModifierDrag);
+  useEdgeResize();
   useIslandHoldListener();
 
   useEffect(() => {

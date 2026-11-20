@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>面板编辑态预览</title>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --page-ink: #eef0f4;
+    --accent: #5aa9e6;
+    --on-accent: #04121f;
+    --danger: #ff6b6b;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+    --fast: 120ms;
+    --base: 160ms;
+    --medium: 240ms;
+    --slow: 420ms;
+    --wig: 0.9deg;
+    --wig-speed: 135ms;
+    --grow: 96px;
+    --grow-w: 80px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font: 14px/1.45 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--page-ink);
+    background: radial-gradient(circle at 30% 15%, #6b7280, #1b1e24 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 64px;
+    gap: 18px;
+  }
+  h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  h2 { margin: 18px 0 6px; font-size: 15px; }
+  .note { max-width: 880px; color: rgba(238, 240, 244, .75); font-size: 13px; margin: 0; }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; justify-content: center;
+    max-width: 880px; padding: 10px 16px; border-radius: 12px;
+    background: rgba(0, 0, 0, .35); font-size: 12.5px;
+  }
+  .controls label { display: flex; align-items: center; gap: 6px; }
+  .controls input[type=range] { width: 100px; }
+  .seg { display: inline-flex; padding: 2px; border-radius: 999px; background: rgba(255,255,255,.1); }
+  .seg button { padding: 2px 10px; border: 0; border-radius: 999px; font: inherit; font-size: 12px; color: rgba(238,240,244,.7); background: transparent; cursor: pointer; }
+  .seg button.on { color: #fff; background: rgba(255,255,255,.2); }
+  .reset { padding: 3px 10px; border: 0; border-radius: 8px; font: inherit; font-size: 12px; color: inherit; background: rgba(255,255,255,.12); cursor: pointer; }
+
+  .island {
+    --i-bg: #000;
+    --ink: 241, 240, 246;
+    --ov: 255, 255, 255;
+    --shadow: rgba(0, 0, 0, .6);
+    container: island / inline-size;
+    width: min(880px, 100%);
+    height: 420px;
+    color: rgb(var(--ink));
+    background: var(--i-bg);
+    border-radius: 28px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .55);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    transition: width var(--slow) var(--ease), height var(--slow) var(--ease);
+  }
+  .island.editing { height: calc(420px + var(--grow)); width: min(calc(880px + var(--grow-w)), 100%); }
+  .island.narrow { width: min(600px, 100%); }
+  .island.narrow.editing { width: min(calc(600px + var(--grow-w)), 100%); }
+  .island.light { --i-bg: #f3f3f6; --ink: 28, 30, 36; --ov: 0, 0, 0; --shadow: rgba(0, 0, 0, .22); }
+
+  .topbar { display: flex; align-items: center; gap: 4px; padding: 14px 18px 6px; flex: none; }
+  .brand { padding: 6px 16px; border-radius: 999px; background: rgba(var(--ov), .12); font-weight: 700; }
+  .tab { width: 34px; height: 34px; display: grid; place-items: center; color: rgba(var(--ink), .75); border-radius: 10px; flex: none; }
+  .tab svg { width: 18px; height: 18px; }
+  .tab.on { background: rgba(var(--ov), .1); color: rgb(var(--ink)); }
+  @container island (max-width: 640px) { .tab.extra { display: none; } }
+  .spacer { flex: 1; }
+  .round { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(var(--ov), .1); color: rgba(var(--ink), .85); flex: none; }
+  .round svg { width: 17px; height: 17px; }
+
+  .edit-btn {
+    display: grid; place-items: center; flex: none;
+    width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%;
+    cursor: pointer;
+    color: rgba(var(--ink), .9); background: rgba(var(--ov), .1);
+    transition: background var(--medium) var(--ease), color var(--medium) var(--ease);
+  }
+  .edit-btn:hover { background: rgba(var(--ov), .16); }
+  .edit-btn svg { width: 17px; height: 17px; }
+  .editing .edit-btn { background: var(--accent); color: var(--on-accent); }
+  .edit-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .body { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 10px 18px 12px; scrollbar-width: thin; }
+  .board {
+    position: relative;
+    display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start;
+    min-height: 100%;
+  }
+  .board[data-mode="free"] { display: block; }
+  .board[data-mode="free"] .cell { position: absolute; }
+  .editing .board[data-mode="free"] {
+    background-image: radial-gradient(rgba(var(--ov), .14) 1px, transparent 1.2px);
+    background-size: 16px 16px;
+    border-radius: 14px;
+  }
+
+  .cell {
+    position: relative;
+    flex: none;
+    width: 152px; height: 152px;
+    border-radius: 18px;
+    background: rgba(var(--ov), .07);
+    transition: background var(--medium) var(--ease), box-shadow var(--medium) var(--ease);
+    user-select: none;
+    outline: none;
+  }
+  .cell[data-size="2x1"] { width: 312px; }
+  .cell .content { position: absolute; inset: 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .editing .cell { background: rgba(var(--ov), .1); box-shadow: inset 0 0 0 1px rgba(var(--ov), .14); cursor: grab; }
+  .editing .cell .content { pointer-events: none; }
+  .wiggling .cell { animation: wiggle var(--wig-speed) var(--ease-in-out) infinite alternate; }
+  .wiggling .cell:hover, .wiggling .cell:focus-within, .wiggling .cell:focus-visible { animation-play-state: paused; }
+  .calm .cell { animation: none !important; }
+  .cell:focus-visible { box-shadow: inset 0 0 0 1px rgba(var(--ov), .14), 0 0 0 2px var(--accent); }
+  .cell.dragging {
+    animation: none !important;
+    z-index: 50 !important;
+    cursor: grabbing;
+    background: rgba(var(--ov), .14);
+    box-shadow: 0 18px 38px var(--shadow), inset 0 0 0 1px rgba(var(--ov), .25);
+    transition: none;
+  }
+  .cell.pending {
+    animation: none !important;
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 75%, transparent);
+  }
+  .cell.pending .content { opacity: .35; }
+  .cell.pending .strip, .cell.pending .size { display: none !important; }
+  @keyframes wiggle {
+    from { transform: rotate(calc(var(--wig) * -1)); }
+    to { transform: rotate(var(--wig)); }
+  }
+
+  .strip {
+    position: absolute; left: 6px; right: 6px; bottom: 6px; height: 28px;
+    display: flex; align-items: center; gap: 3px; padding: 0 3px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--i-bg) 55%, transparent);
+    backdrop-filter: blur(10px);
+    font-size: 12px;
+    opacity: 0; translate: 0 6px; pointer-events: none;
+    transition: opacity var(--medium) var(--ease), translate var(--medium) var(--ease);
+  }
+  .editing .strip { opacity: 1; translate: 0 0; pointer-events: auto; }
+  .board[data-mode="free"] .strip { right: 30px; }
+  .strip .name { flex: 1; min-width: 0; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip button, .size, .stretch {
+    width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; flex: none;
+    display: grid; place-items: center; cursor: pointer;
+    color: rgba(var(--ink), .85); background: rgba(var(--ov), .12);
+    transition: background var(--fast) var(--ease), color var(--fast) var(--ease), scale var(--fast) var(--ease);
+  }
+  .strip button:hover:not(:disabled), .size:hover { background: rgba(var(--ov), .24); scale: 1.12; }
+  .strip button:disabled { opacity: .28; cursor: default; }
+  .strip svg, .stretch svg { width: 13px; height: 13px; }
+  .close {
+    position: absolute; top: -8px; right: -8px; z-index: 3;
+    width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer;
+    color: rgb(var(--ink)); background: color-mix(in srgb, rgb(var(--ink)) 30%, var(--i-bg));
+    box-shadow: 0 2px 8px var(--shadow), 0 0 0 1px rgba(var(--ov), .18);
+    opacity: 0; scale: .6; pointer-events: none;
+    transition: opacity var(--base) var(--ease), scale var(--base) var(--ease-out), background var(--fast) var(--ease);
+  }
+  .close svg { width: 13px; height: 13px; }
+  .editing .cell:hover .close, .editing .cell:focus-within .close, .editing .cell:focus-visible .close { opacity: 1; scale: 1; pointer-events: auto; }
+  .close:hover { background: var(--danger); color: #fff; }
+  .cell.dragging .close, .cell.pending .close { display: none; }
+  .board[data-mode="free"] .strip .move { display: none; }
+  .size {
+    width: auto; padding: 0 7px; height: 20px;
+    border-radius: 999px; font: inherit; font-size: 10.5px; font-variant-numeric: tabular-nums;
+  }
+  .board[data-mode="free"] .size { display: none; }
+  .stretch { position: absolute; right: 6px; bottom: 9px; border-radius: 7px; cursor: nwse-resize; touch-action: none; display: none; }
+  .editing .board[data-mode="free"] .stretch { display: grid; }
+
+  .empty {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    color: rgba(var(--ink), .7); text-align: center; padding: 0 16px;
+  }
+  .empty p { margin: 0; font-size: 15px; color: rgba(var(--ink), .85); }
+  .empty small { font-size: 12.5px; }
+  .templates { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .tpl {
+    display: flex; align-items: center; gap: 12px; padding: 12px 18px; min-width: 200px;
+    border: 1px solid rgba(var(--ov), .14); border-radius: 16px; font: inherit; text-align: left;
+    color: inherit; background: rgba(var(--ov), .06); cursor: pointer;
+    transition: background var(--fast) var(--ease);
+  }
+  .tpl:hover { background: rgba(var(--ov), .12); }
+  .tpl b { display: block; font-size: 15px; }
+  .tpl span { font-size: 12.5px; color: rgba(var(--ink), .6); }
+  .drop-zone {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    border: 1.5px dashed rgba(var(--ov), .22); border-radius: 18px;
+    color: rgba(var(--ink), .6); font-size: 13px;
+  }
+  .drop-zone svg { width: 22px; height: 22px; }
+  .drop-zone.hot { border-color: var(--accent); color: rgb(var(--ink)); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+  .dock {
+    flex: none;
+    display: grid; grid-template-rows: 0fr;
+    margin: 0 18px;
+    border-top: 1px solid transparent;
+    opacity: 0;
+    transition: grid-template-rows var(--slow) var(--ease), opacity var(--medium) var(--ease), border-color var(--medium) var(--ease);
+  }
+  .dock > div { overflow: hidden; min-height: 0; }
+  .editing .dock { grid-template-rows: 1fr; opacity: 1; border-color: rgba(var(--ov), .1); }
+  .dock-head { display: flex; align-items: center; gap: 10px; padding: 8px 0 6px; font-size: 12.5px; white-space: nowrap; }
+  .dock-head .title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+  .dock-head .title svg { width: 15px; height: 15px; }
+  .modes { display: inline-flex; padding: 2px; border-radius: 999px; background: rgba(var(--ov), .08); }
+  .modes button { padding: 2px 10px; border: 0; border-radius: 999px; font: inherit; font-size: 11.5px; cursor: pointer; color: rgba(var(--ink), .6); background: transparent; transition: background var(--fast) var(--ease), color var(--fast) var(--ease); }
+  .modes button[aria-checked="true"] { color: rgb(var(--ink)); background: rgba(var(--ov), .16); }
+  .dock-head .hint { margin-left: auto; color: rgba(var(--ink), .5); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; transition: color var(--medium) var(--ease); }
+  .dock-head .hint.saved { color: #6fd08c; }
+  @container island (max-width: 640px) { .dock-head .hint { display: none; } }
+
+  .tray-wrap { position: relative; }
+  .tray {
+    display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none;
+    --fade-l: 0px; --fade-r: 24px;
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+  }
+  .tray.scrolled { --fade-l: 24px; }
+  .tray.at-end { --fade-r: 0px; }
+  .tray::-webkit-scrollbar { display: none; }
+  .group-label { flex: none; font-size: 11px; color: rgba(var(--ink), .45); padding: 0 2px 0 4px; }
+  .group-label + .chip { margin-left: -2px; }
+  .chip {
+    flex: none; display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 10px 0 12px; border-radius: 12px;
+    background: rgba(var(--ov), .08); cursor: grab; font-size: 12.5px; white-space: nowrap;
+    transition: background var(--fast) var(--ease), opacity var(--medium) var(--ease);
+    touch-action: none;
+  }
+  .chip:hover, .chip:focus-visible { background: rgba(var(--ov), .14); outline: none; }
+  .chip:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+  .chip > svg { width: 16px; height: 16px; }
+  .chip .plus { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: rgba(var(--ov), .14); }
+  .chip .plus svg { width: 12px; height: 12px; }
+  .chip.off { opacity: .45; cursor: not-allowed; }
+  .chip.off .plus { background: transparent; }
+  .chip.used { opacity: .3; }
+  .tray-empty { color: rgba(var(--ink), .5); font-size: 12px; padding: 10px 0 20px; }
+
+  .ghost {
+    position: fixed; z-index: 100; pointer-events: none;
+    padding: 0 12px; height: 40px; display: flex; align-items: center; gap: 8px;
+    border-radius: 12px; color: #f1f0f6; background: rgba(52, 56, 64, .96);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .5); font-size: 12.5px;
+    transition: opacity var(--fast) var(--ease), scale var(--fast) var(--ease);
+  }
+  .ghost.over { opacity: .0; scale: .8; }
+  .ghost svg { width: 16px; height: 16px; }
+
+  .peek {
+    position: fixed; z-index: 90; pointer-events: none;
+    padding: 8px; border-radius: 16px;
+    background: rgba(28, 30, 36, .96); color: #f1f0f6;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .5);
+    opacity: 0; translate: 0 6px;
+    transition: opacity var(--base) var(--ease), translate var(--base) var(--ease);
+    --ink: 241, 240, 246; --ov: 255, 255, 255;
+  }
+  .peek.show { opacity: 1; translate: 0 0; }
+  .peek .cell { width: 152px; height: 152px; zoom: .72; }
+  .peek .cell[data-size="2x1"] { width: 312px; }
+  .peek small { display: block; margin-top: 6px; font-size: 11px; color: rgba(241, 240, 246, .6); text-align: center; }
+
+  .toast {
+    position: absolute; left: 50%; bottom: 12px; z-index: 60;
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 6px 6px 14px; border-radius: 999px;
+    font-size: 12.5px; white-space: nowrap;
+    color: #f1f0f6; background: rgba(48, 52, 60, .97);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .45);
+    translate: -50% 12px; opacity: 0; pointer-events: none;
+    transition: opacity var(--medium) var(--ease), translate var(--medium) var(--ease);
+  }
+  .toast.show { translate: -50% 0; opacity: 1; pointer-events: auto; }
+  .toast button { padding: 3px 12px; border: 0; border-radius: 999px; font: inherit; font-weight: 600; color: var(--on-accent); background: var(--accent); cursor: pointer; }
+
+  .press {
+    position: fixed; z-index: 100; width: 40px; height: 40px; margin: -20px 0 0 -20px; pointer-events: none;
+  }
+  .press circle { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 107; stroke-dashoffset: 107; transform: rotate(-90deg); transform-origin: center; animation: press 450ms linear forwards; }
+  @keyframes press { to { stroke-dashoffset: 0; } }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  .w-title { font-size: 12px; color: rgba(var(--ink), .6); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .w-title svg { width: 13px; height: 13px; flex: none; }
+  .big { font-size: 30px; font-weight: 700; letter-spacing: .5px; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .todo { display: flex; align-items: center; gap: 6px; font-size: 12.5px; white-space: nowrap; }
+  .todo i { width: 12px; height: 12px; border-radius: 4px; border: 1.5px solid rgba(var(--ink), .5); flex: none; }
+  .todo.done { color: rgba(var(--ink), .4); text-decoration: line-through; }
+  .bar { height: 4px; border-radius: 2px; background: rgba(var(--ov), .15); overflow: hidden; flex: none; }
+  .bar b { display: block; height: 100%; background: var(--accent); }
+  .muted { color: rgba(var(--ink), .55); font-size: 12px; }
+
+  .notes { max-width: 880px; width: 100%; font-size: 13px; color: rgba(238, 240, 244, .85); }
+  .notes ul { margin: 4px 0; padding-left: 20px; }
+  .notes li { margin: 3px 0; }
+  .notes code { font-size: 12px; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,.1); }
+  .notes table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  .notes th, .notes td { text-align: left; padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,.1); vertical-align: top; }
+  .notes th { color: rgba(238,240,244,.6); font-weight: 500; }
+  kbd { font: 11.5px ui-monospace, monospace; padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,.14); }
+
+</style>
+</head>
+<body>
+  <h1>面板编辑态预览 · 第 3 版</h1>
+  <p class="note">点右上角的布局图标进入编辑；也可以在组件或空白处按住半秒，按住组件时会直接拿起它开始拖。<kbd>Esc</kbd> 或点岛外面退出。页面里的改动不会保存，点「重置」回到初始状态。</p>
+
+  <div class="controls" id="controls">
+    <label>抖动 <input id="wig" type="range" min="0" max="2" step="0.1" value="0.9"> <span id="wigv">0.9°</span></label>
+    <label>抖动周期 <input id="speed" type="range" min="80" max="260" step="5" value="135"> <span id="speedv">135ms</span></label>
+    <label>编辑时加高 <input id="grow" type="range" min="60" max="180" step="4" value="96"> <span id="growv">96px</span></label>
+    <label>编辑时加宽 <input id="growW" type="range" min="0" max="200" step="8" value="80"> <span id="growWv">80px</span></label>
+    <label><input id="calm" type="checkbox"> 减少动画</label>
+    <span class="seg" data-ctl="lang"><button class="on" data-v="zh">中文</button><button data-v="en">English</button></span>
+    <span class="seg" data-ctl="width"><button class="on" data-v="wide">宽岛</button><button data-v="narrow">窄岛</button></span>
+    <span class="seg" data-ctl="theme"><button class="on" data-v="dark">深色</button><button data-v="light">浅色</button></span>
+    <button class="reset" id="reset">重置</button>
+    <button class="reset" id="clear">清空面板</button>
+  </div>
+
+  <div class="island" id="island">
+    <div class="topbar">
+      <span class="brand">Fuyu</span>
+      <span class="tab"><i data-lucide="bot"></i></span>
+      <span class="tab"><i data-lucide="list-checks"></i></span>
+      <span class="tab"><i data-lucide="music"></i></span>
+      <span class="tab extra"><i data-lucide="calendar-days"></i></span>
+      <span class="tab on"><i data-lucide="layout-dashboard"></i></span>
+      <span class="tab extra"><i data-lucide="inbox"></i></span>
+      <span class="spacer"></span>
+      <button class="edit-btn" id="editBtn" type="button"></button>
+      <span class="round"><i data-lucide="settings"></i></span>
+    </div>
+    <div class="body">
+      <div class="scroll" id="scroll"><div class="board" id="board" role="list"></div></div>
+      <div class="dock" id="dock" inert>
+        <div>
+          <div class="dock-head">
+            <span class="title"><i data-lucide="circle-plus"></i><span id="addTitle"></span></span>
+            <span class="modes" role="radiogroup" id="modes">
+              <button type="button" role="radio" data-mode="grid"></button>
+              <button type="button" role="radio" data-mode="free"></button>
+            </span>
+            <span class="hint" id="hint"></span>
+          </div>
+          <div class="tray-wrap"><div class="tray" id="tray" role="list"></div></div>
+        </div>
+      </div>
+      <div class="toast" id="toast" role="status"><span id="toastText"></span><button type="button" id="undo"></button></div>
+    </div>
+    <div class="sr" aria-live="polite" id="live"></div>
+  </div>
+
+  <section class="notes">
+    <h2>这一版补了什么</h2>
+    <table>
+      <tr><th style="width:110px">方面</th><th>做法</th></tr>
+      <tr><td>进入 / 退出</td><td>右上角是只有图标的圆按钮：平时是布局图标，编辑时原地变成蓝底的 ✓，悬停显示「调整布局 / 完成调整」，读屏也能读出来。按住组件半秒直接拿起它开始拖（像手机桌面）；按住空白处只进编辑。按住时指针处有一圈进度环，按住期间移动超过 6px 就取消，留给拖岛。退出：完成、<kbd>Esc</kbd>、点岛外面；真岛上岛失焦时也退出（现在就是这样）。</td></tr>
+      <tr><td>动效顺序</td><td>组件不缩小，整个岛同时长高、加宽（默认高 +96px、宽 +80px，左右各 40px，420ms）：多出来的高度放底部组件栏，多出来的宽度让一行能多放组件，也让组件栏少滚动；岛长完再开始抖，避免两种动作叠在一起发晃。组件标签从下往上淡入。退出时立刻停抖，岛再收回原来的大小。所有时长和曲线都用现有的 <code>--motion-*</code> 档位。</td></tr>
+      <tr><td>抖动</td><td>转 ±0.9°，一个来回 135ms，每个组件起始相位不同。鼠标放上去、键盘聚焦到某个组件时它停止抖动，方便点小按钮。正在拖的那个不抖。系统开了「减少动画」时完全不抖，排序和增删也不做位移动画。</td></tr>
+      <tr><td>标签条</td><td>盖在卡片底部，用半透明加模糊，不加高卡片。这样进出编辑不会让整页重新排版，自由模式下也不会和下面的组件重叠。代价是底部约 30px 内容暂时被盖住。</td></tr>
+      <tr><td>拖动排序</td><td>网格模式下拖动时其他组件实时让位，用 FLIP 动画平滑移动；松手后被拖的组件弹回空位。拖到滚动区上下边缘时自动滚动。</td></tr>
+      <tr><td>从组件栏添加</td><td>点一下加到末尾，并滚到它的位置，带弹出动画。拖到上面时面板里先出现一个虚线占位，指到哪里占位就到哪里，拖回组件栏就取消。鼠标停在组件栏的某个组件上会浮出它的样子，加之前就能看到。</td></tr>
+      <tr><td>删除</td><td>鼠标移到组件上（或用键盘聚焦），右上角浮出一个 × 关闭按钮，压在卡片边角外面一点，悬停时变红。平时不显示，画面更干净。点 × 后组件缩小消失，回到底部组件栏；岛底部出现「已移除 · 撤销」，4 秒后消失。不做二次确认，因为能撤销。</td></tr>
+      <tr><td>尺寸</td><td>网格模式在底部标签条最右边显示 1×1 / 2×1，点一下换尺寸。自由模式不显示尺寸，改成右下角的拉伸手柄，按 8px 吸附。</td></tr>
+      <tr><td>自由模式</td><td>背景出现点阵，拖到任意位置吸附到格子，最后动过的组件放到最上层。从网格切过来时保持原来的位置，切回网格时按从上到下、从左到右的顺序重排。</td></tr>
+      <tr><td>组件栏</td><td>按「内置」「插件」分组，横向滚动，左右两边渐隐，滚轮可以直接横向滚。没启用的插件组件带锁并置灰，悬停说明原因。已经加进面板的组件不显示在栏里。</td></tr>
+      <tr><td>保存</td><td>每次改动立刻保存，右侧提示短暂变成绿色的「已保存」，不需要「保存」按钮。</td></tr>
+      <tr><td>键盘和读屏</td><td>编辑时组件可以用 <kbd>Tab</kbd> 聚焦：<kbd>←</kbd><kbd>→</kbd> 移动（自由模式四个方向都能移），<kbd>Enter</kbd> 换尺寸，<kbd>Delete</kbd> 删除；组件栏的组件按 <kbd>Enter</kbd> 添加。每次移动、添加、删除都会读出来。</td></tr>
+      <tr><td>空面板</td><td>平时显示模板（工作台 / 娱乐）。编辑时换成虚线框「把下面的组件拖到这里」，拖进来时框变亮。</td></tr>
+      <tr><td>窄岛、英文、浅色</td><td>窄岛下右侧提示隐藏，组件栏照样横向滚动；英文文案更长，标签条里的名字会截断成省略号。浅色主题全部走变量，不写死颜色。</td></tr>
+      <tr><td>实时组件</td><td>番茄钟在编辑时照常走秒，验证抖动时内容刷新不卡。</td></tr>
+    </table>
+
+    <h2>还要你定的</h2>
+    <ul>
+      <li><b>标签条</b>：盖在卡片底部（本页做法，不改布局），还是像 Nook X 那样放在卡片下面（整页会变高，自由模式要另想办法）？</li>
+      <li><b>自由模式重叠</b>：本页允许组件叠在一起，最后动过的在上面。现在的实现是什么规则要再对一下；要不要改成碰到就把别的组件推开？</li>
+      <li><b>岛往哪边长</b>：本页是往下长高、向两边对称加宽。岛贴近屏幕左右边缘时，加宽要改成只往一侧长。岛贴在屏幕顶部时只能往下；如果用户把岛放在屏幕底部，要改成往上长，否则会超出屏幕。真岛上这一步要改 Rust 侧的窗口尺寸，并且展开态、贴边收起时都要考虑。</li>
+      <li><b>按住组件就进编辑</b>：在真岛上，按住组件可能和组件自己的操作冲突（例如歌词拖动、番茄钟长按）。可以只在组件的空白处生效，或者只允许按住空白处进入。</li>
+    </ul>
+  </section>
+
+<script>
+const T = {
+  zh: {
+    edit: "调整布局", done: "完成调整", add: "添加组件", grid: "网格", free: "自由",
+    hintGrid: "拖动或点箭头调整位置 · 自动保存", hintFree: "拖到任意位置，右下角拉伸大小 · 自动保存", saved: "已保存",
+    removed: (n) => `已移除「${n}」`, undo: "撤销", builtin: "内置", plugin: "插件", allAdded: "可用组件都已经加上了",
+    emptyTitle: "这个面板还没有组件", emptyHint: "从模板开始，或者点「编辑」自己加", dropHere: "把下面的组件拖到这里，或点一下添加",
+    tplWork: "工作台", tplWorkSub: "待办 · 会议 · Agent", tplFun: "娱乐", tplFunSub: "音乐 · 歌词 · 天气",
+    moved: (n, i) => `${n} 移到第 ${i} 位`, added: (n) => `已添加${n}`, left: "左移", right: "右移",
+    remove: (n) => `移除${n}`, resize: (n) => `换${n}的尺寸`, stretch: (n) => `拉伸${n}`,
+    locked: "插件没启用，去 设置 → 插件 里打开", tapAdd: "点击添加，或拖到上面", peek: (s) => `默认 ${s}`,
+  },
+  en: {
+    edit: "Edit layout", done: "Done", add: "Add widgets", grid: "Grid", free: "Free",
+    hintGrid: "Drag or use the arrows to reorder · Saved automatically", hintFree: "Drag anywhere, stretch from the corner · Saved automatically", saved: "Saved",
+    removed: (n) => `Removed “${n}”`, undo: "Undo", builtin: "Built-in", plugin: "Plugins", allAdded: "Every widget is already on the panel",
+    emptyTitle: "This panel has no widgets yet", emptyHint: "Start from a template, or tap Edit to add your own", dropHere: "Drag a widget here from below, or tap one to add it",
+    tplWork: "Workspace", tplWorkSub: "Todos · Meetings · Agent", tplFun: "Leisure", tplFunSub: "Music · Lyrics · Weather",
+    moved: (n, i) => `${n} moved to position ${i}`, added: (n) => `Added ${n}`, left: "Move left", right: "Move right",
+    remove: (n) => `Remove ${n}`, resize: (n) => `Change the size of ${n}`, stretch: (n) => `Stretch ${n}`,
+    locked: "Plugin is off. Turn it on in Settings → Plugins", tapAdd: "Click to add, or drag it onto the panel", peek: (s) => `Default ${s}`,
+  },
+};
+let lang = "zh";
+const tr = (k, ...a) => (typeof T[lang][k] === "function" ? T[lang][k](...a) : T[lang][k]);
+const zh = () => lang === "zh";
+
+let timerLeft = 25 * 60;
+const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+const LIB = {
+  calendar: { name: { zh: "日历天气", en: "Calendar" }, icon: "calendar-days", sizes: ["2x1", "1x1"],
+    render: () => `<div class="w-title"><i data-lucide="cloud-sun"></i>${zh() ? "11 月 20 日 · 晴 14°" : "Nov 20 · Sunny 14°"}</div><div class="big">${zh() ? "周五" : "Fri"}</div><div class="muted">${zh() ? "15:00 设计评审" : "15:00 Design review"}</div>` },
+  todo: { name: { zh: "待办", en: "Todos" }, icon: "list-checks", sizes: ["1x1", "2x1"],
+    render: () => `<div class="w-title"><i data-lucide="list-checks"></i>${zh() ? "待办 · 3" : "Todos · 3"}</div><div class="todo"><i></i>${zh() ? "回复设计稿评论" : "Reply to review"}</div><div class="todo"><i></i>${zh() ? "周会准备" : "Prep weekly sync"}</div><div class="todo done"><i></i>${zh() ? "提交周报" : "Send report"}</div>` },
+  timer: { name: { zh: "番茄钟", en: "Pomodoro" }, icon: "timer", sizes: ["1x1"],
+    render: () => `<div class="w-title"><i data-lucide="timer"></i>${zh() ? "番茄钟 · 专注中" : "Pomodoro · Focus"}</div><div class="big js-timer">${fmt(timerLeft)}</div><div class="bar"><b class="js-timer-bar" style="width:${(1 - timerLeft / 1500) * 100}%"></b></div>` },
+  music: { name: { zh: "正在播放", en: "Now playing" }, icon: "music", sizes: ["2x1", "1x1"],
+    render: () => `<div class="w-title"><i data-lucide="music"></i>${zh() ? "正在播放" : "Now playing"}</div><div style="font-weight:600">${zh() ? "晴天" : "Sunny Day"}</div><div class="muted">${zh() ? "周杰伦" : "Jay Chou"}</div><div class="bar"><b style="width:42%"></b></div>` },
+  agent: { name: { zh: "Agent 状态", en: "Agent status" }, icon: "bot", sizes: ["1x1", "2x1"],
+    render: () => `<div class="w-title"><i data-lucide="bot"></i>Agent</div><div class="big" style="font-size:22px">${zh() ? "2 个运行中" : "2 running"}</div><div class="muted">${zh() ? "1 个等你确认" : "1 waiting for you"}</div>` },
+  meeting: { name: { zh: "会议", en: "Meetings" }, icon: "video", sizes: ["1x1", "2x1"],
+    render: () => `<div class="w-title"><i data-lucide="video"></i>${zh() ? "下一场会议" : "Next meeting"}</div><div style="font-weight:600">${zh() ? "设计评审" : "Design review"}</div><div class="muted">${zh() ? "15:00 · 还有 42 分钟" : "15:00 · in 42 min"}</div>` },
+  lyrics: { name: { zh: "歌词", en: "Lyrics" }, icon: "text-quote", sizes: ["2x1"],
+    render: () => `<div class="w-title"><i data-lucide="text-quote"></i>${zh() ? "歌词" : "Lyrics"}</div><div style="font-size:16px;font-weight:600">${zh() ? "故事的小黄花" : "The little yellow flower"}</div><div class="muted">${zh() ? "从出生那年就飘着" : "drifting since the year I was born"}</div>` },
+  system: { name: { zh: "系统面板", en: "System" }, icon: "gauge", sizes: ["1x1"],
+    render: () => `<div class="w-title"><i data-lucide="gauge"></i>${zh() ? "系统" : "System"}</div><div class="muted">CPU 23%</div><div class="bar"><b style="width:23%"></b></div><div class="muted">${zh() ? "内存" : "Memory"} 61%</div><div class="bar"><b style="width:61%"></b></div>` },
+  clipboard: { name: { zh: "剪贴板", en: "Clipboard" }, icon: "clipboard", sizes: ["1x1", "2x1"],
+    render: () => `<div class="w-title"><i data-lucide="clipboard"></i>${zh() ? "剪贴板" : "Clipboard"}</div><div class="muted">${zh() ? "最近 12 条" : "12 recent items"}</div><div style="font-size:12.5px">https://github.com/…</div>` },
+  weather: { name: { zh: "天气", en: "Weather" }, icon: "cloud-sun", sizes: ["1x1", "2x1"], plugin: true,
+    render: () => `<div class="w-title"><i data-lucide="cloud-sun"></i>${zh() ? "上海" : "Shanghai"}</div><div class="big">14°</div><div class="muted">${zh() ? "晴 · 明天小雨" : "Sunny · rain tomorrow"}</div>` },
+  stock: { name: { zh: "自选股", en: "Stocks" }, icon: "trending-up", sizes: ["2x1"], plugin: true, off: true, render: () => "" },
+};
+const nameOf = (id) => LIB[id].name[lang];
+
+const U = 8;
+const PX = { "1x1": [152, 152], "2x1": [312, 152] };
+const unitsOf = (size) => PX[size].map((v) => Math.round(v / U));
+const INITIAL = [{ id: "calendar", size: "2x1" }, { id: "todo", size: "1x1" }, { id: "timer", size: "1x1" }, { id: "music", size: "2x1" }];
+const TEMPLATES = { work: ["todo", "meeting", "agent"], fun: ["music", "lyrics", "weather"] };
+
+let items = INITIAL.map((x) => ({ ...x }));
+let mode = "grid";
+let editing = false;
+let lastRemoved = null;
+
+const $ = (id) => document.getElementById(id);
+const island = $("island"), board = $("board"), tray = $("tray"), scrollEl = $("scroll");
+const icon = (n) => `<i data-lucide="${n}"></i>`;
+const calm = () => island.classList.contains("calm");
+const dur = (ms) => (calm() ? 0 : ms);
+const EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+const EASE_OUT = "cubic-bezier(0.22, 1, 0.36, 1)";
+const boardScale = () => 1;
+const sizeLabel = (s) => (s === "2x1" ? "2×1" : "1×1");
+
+function announce(text) { $("live").textContent = text; }
+
+let savedTimer = null;
+function saved() {
+  const hint = $("hint");
+  hint.textContent = "✓ " + tr("saved");
+  hint.classList.add("saved");
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(renderChrome, 1200);
+}
+
+let wiggleTimer = null;
+function setEditing(on) {
+  if (editing === on) return;
+  editing = on;
+  island.classList.toggle("editing", on);
+  $("dock").inert = !on;
+  clearTimeout(wiggleTimer);
+  island.classList.remove("wiggling");
+  if (on) wiggleTimer = setTimeout(() => island.classList.add("wiggling"), dur(420));
+  hidePeek();
+  render();
+}
+
+function renderChrome() {
+  const editBtn = $("editBtn");
+  editBtn.innerHTML = icon(editing ? "check" : "layout-dashboard");
+  editBtn.setAttribute("aria-label", editing ? tr("done") : tr("edit"));
+  editBtn.title = editing ? tr("done") : tr("edit");
+  editBtn.setAttribute("aria-pressed", String(editing));
+  $("addTitle").textContent = tr("add");
+  for (const b of $("modes").children) {
+    b.textContent = tr(b.dataset.mode);
+    b.setAttribute("aria-checked", String(b.dataset.mode === mode));
+  }
+  const hint = $("hint");
+  hint.classList.remove("saved");
+  hint.textContent = mode === "free" ? tr("hintFree") : tr("hintGrid");
+  $("undo").textContent = tr("undo");
+}
+
+const els = new Map();
+function cellHTML(it, i) {
+  const w = LIB[it.id], n = nameOf(it.id);
+  return `<div class="content">${w.render()}</div>
+    <div class="strip">
+      <button class="move" type="button" data-act="left" tabindex="-1" ${i === 0 ? "disabled" : ""} aria-label="${tr("left")}" title="${tr("left")}">${icon("chevron-left")}</button>
+      <span class="name">${n}</span>
+      <button class="move" type="button" data-act="right" tabindex="-1" ${i === items.length - 1 ? "disabled" : ""} aria-label="${tr("right")}" title="${tr("right")}">${icon("chevron-right")}</button>
+      ${w.sizes.length > 1 ? `<button class="size" type="button" data-act="size" tabindex="-1" aria-label="${tr("resize", n)}" title="${tr("resize", n)}">${sizeLabel(it.size)}</button>` : ""}
+    </div>
+    <button class="close" type="button" data-act="remove" tabindex="-1" aria-label="${tr("remove", n)}" title="${tr("remove", n)}">${icon("x")}</button>
+    <span class="stretch" data-act="stretch" title="${tr("stretch", n)}">${icon("move-diagonal-2")}</span>`;
+}
+
+function freeSize(it) {
+  if (mode !== "free") return it.size;
+  return it.w * U >= 260 ? "2x1" : "1x1";
+}
+
+function render() {
+  renderChrome();
+  const live = new Set(items.map((x) => x.id));
+  for (const [id, el] of els) if (!live.has(id) && !el.dataset.leaving) { el.remove(); els.delete(id); }
+  board.dataset.mode = mode;
+  let needIcons = false;
+  items.forEach((it, i) => {
+    let el = els.get(it.id);
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "cell";
+      el.dataset.id = it.id;
+      el.setAttribute("role", "listitem");
+      els.set(it.id, el);
+    }
+    const shown = freeSize(it);
+    const sig = [lang, shown, mode, i === 0, i === items.length - 1].join("|");
+    if (el.dataset.sig !== sig) { el.innerHTML = cellHTML({ ...it, size: shown }, i); el.dataset.sig = sig; needIcons = true; }
+    el.dataset.size = shown;
+    el.classList.toggle("pending", !!it.pending);
+    el.tabIndex = editing && !it.pending ? 0 : -1;
+    el.setAttribute("aria-label", nameOf(it.id));
+    el.style.animationDelay = `-${Math.round(Math.abs(Math.sin(i * 7.3 + it.id.length)) * 135)}ms`;
+    if (mode === "free") {
+      Object.assign(el.style, { left: it.x * U + "px", top: it.y * U + "px", width: it.w * U + "px", height: it.h * U + "px", zIndex: i + 1 });
+    } else {
+      Object.assign(el.style, { left: "", top: "", width: "", height: "", zIndex: "" });
+    }
+    if (board.children[i] !== el) board.insertBefore(el, board.children[i] ?? null);
+  });
+  if (mode === "free") {
+    const bottom = Math.max(0, ...items.map((x) => (x.y + x.h) * U));
+    board.style.height = bottom + (editing ? 200 : 8) + "px";
+  } else board.style.height = "";
+  renderEmpty();
+  renderTray();
+  if (needIcons) lucide.createIcons();
+}
+
+function renderEmpty() {
+  board.querySelector(".empty, .drop-zone")?.remove();
+  if (items.length) return;
+  const box = document.createElement("div");
+  if (editing) {
+    box.className = "drop-zone";
+    box.innerHTML = `${icon("layout-grid")}<span>${tr("dropHere")}</span>`;
+  } else {
+    box.className = "empty";
+    box.innerHTML = `<p>${tr("emptyTitle")}</p><div class="templates">
+      <button class="tpl" type="button" data-tpl="work">${icon("briefcase")}<div><b>${tr("tplWork")}</b><span>${tr("tplWorkSub")}</span></div></button>
+      <button class="tpl" type="button" data-tpl="fun">${icon("coffee")}<div><b>${tr("tplFun")}</b><span>${tr("tplFunSub")}</span></div></button>
+    </div><small>${tr("emptyHint")}</small>`;
+  }
+  board.appendChild(box);
+  lucide.createIcons();
+}
+
+function renderTray() {
+  const taken = new Set(items.filter((x) => !x.pending).map((x) => x.id));
+  const pendingId = items.find((x) => x.pending)?.id;
+  const rest = Object.entries(LIB).filter(([id]) => !taken.has(id));
+  const chip = ([id, w]) => `<div class="chip ${w.off ? "off" : ""} ${id === pendingId ? "used" : ""}" role="listitem" tabindex="${w.off ? -1 : 0}" data-id="${id}" title="${w.off ? tr("locked") : tr("tapAdd")}">${icon(w.icon)}${nameOf(id)}<span class="plus">${icon(w.off ? "lock" : "plus")}</span></div>`;
+  const built = rest.filter(([, w]) => !w.plugin), plug = rest.filter(([, w]) => w.plugin);
+  let html = "";
+  if (built.length) html += `<span class="group-label">${tr("builtin")}</span>` + built.map(chip).join("");
+  if (plug.length) html += `<span class="group-label">${tr("plugin")}</span>` + plug.map(chip).join("");
+  if (!rest.some(([, w]) => !w.off)) html = `<div class="tray-empty">${tr("allAdded")}</div>` + (plug.length ? `<span class="group-label">${tr("plugin")}</span>` + plug.map(chip).join("") : "");
+  tray.innerHTML = html;
+  lucide.createIcons();
+  updateTrayFade();
+}
+
+function updateTrayFade() {
+  tray.classList.toggle("scrolled", tray.scrollLeft > 2);
+  tray.classList.toggle("at-end", tray.scrollLeft + tray.clientWidth >= tray.scrollWidth - 2);
+}
+tray.addEventListener("scroll", updateTrayFade);
+tray.addEventListener("wheel", (e) => {
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { tray.scrollLeft += e.deltaY; e.preventDefault(); }
+}, { passive: false });
+
+function flip(mutate, skip) {
+  const before = new Map();
+  for (const [id, el] of els) if (el.isConnected) before.set(id, el.getBoundingClientRect());
+  mutate();
+  render();
+  const s = boardScale();
+  for (const it of items) {
+    if (it.id === skip) continue;
+    const el = els.get(it.id);
+    const b = before.get(it.id);
+    const a = el.getBoundingClientRect();
+    if (!b) {
+      el.animate([{ scale: ".6", opacity: 0 }, { scale: "1", opacity: 1 }], { duration: dur(260), easing: EASE_OUT });
+      continue;
+    }
+    const dx = (b.left - a.left) / s, dy = (b.top - a.top) / s;
+    if (Math.abs(dx) + Math.abs(dy) < 1) continue;
+    el.animate([{ translate: `${dx}px ${dy}px` }, { translate: "0px 0px" }], { duration: dur(240), easing: EASE });
+  }
+}
+
+function boardPoint(cx, cy) {
+  const r = board.getBoundingClientRect(), s = boardScale();
+  return { x: (cx - r.left) / s, y: (cy - r.top) / s };
+}
+
+function indexAt(cx, cy, skip) {
+  const p = boardPoint(cx, cy);
+  const others = items.filter((x) => x.id !== skip);
+  for (let k = 0; k < others.length; k++) {
+    const el = els.get(others[k].id);
+    const top = el.offsetTop, left = el.offsetLeft, w = el.offsetWidth, h = el.offsetHeight;
+    if (p.y < top + h && (p.y < top || p.x < left + w / 2)) return k;
+  }
+  return others.length;
+}
+
+function boardUnits() { return Math.max(20, Math.floor(board.clientWidth / U)); }
+
+function toFree() {
+  items.forEach((it) => {
+    const el = els.get(it.id);
+    const [w, h] = unitsOf(it.size);
+    Object.assign(it, { x: Math.round(el.offsetLeft / U), y: Math.round(el.offsetTop / U), w, h });
+  });
+}
+function toGrid() {
+  items.sort((a, b) => a.y - b.y || a.x - b.x);
+  items.forEach((it) => {
+    const want = it.w * U >= 260 ? "2x1" : "1x1";
+    const sizes = LIB[it.id].sizes;
+    it.size = sizes.includes(want) ? want : sizes[0];
+  });
+}
+$("modes").addEventListener("click", (e) => {
+  const next = e.target.closest("button")?.dataset.mode;
+  if (!next || next === mode) return;
+  flip(() => { if (next === "free") toFree(); else toGrid(); mode = next; });
+  saved();
+});
+
+function freeSpot(w, h) {
+  const cols = boardUnits();
+  const hits = (x, y) => items.some((o) => !o.pending && x < o.x + o.w + 1 && x + w + 1 > o.x && y < o.y + o.h + 1 && y + h + 1 > o.y);
+  for (let y = 0; y < 400; y += 1) for (let x = 0; x + w <= cols; x += 1) if (!hits(x, y)) return { x, y };
+  return { x: 0, y: 0 };
+}
+
+function makeItem(id, extra = {}) {
+  const size = LIB[id].sizes[0];
+  const it = { id, size, ...extra };
+  if (mode === "free") { const [w, h] = unitsOf(size); Object.assign(it, { w, h }, it.x === undefined ? freeSpot(w, h) : {}); }
+  return it;
+}
+
+function addAtEnd(id) {
+  flip(() => items.push(makeItem(id)));
+  els.get(id)?.scrollIntoView({ block: "nearest", behavior: calm() ? "auto" : "smooth" });
+  announce(tr("added", nameOf(id)));
+  saved();
+}
+
+function removeItem(id) {
+  const i = items.findIndex((x) => x.id === id);
+  if (i < 0) return;
+  const el = els.get(id);
+  el.dataset.leaving = "1";
+  const after = () => {
+    delete el.dataset.leaving;
+    lastRemoved = { it: items[i], i };
+    flip(() => { items = items.filter((x) => x.id !== id); });
+    showToast(tr("removed", nameOf(id)));
+    announce(tr("removed", nameOf(id)));
+    saved();
+    board.querySelector(".cell[tabindex='0']")?.focus({ preventScroll: true });
+  };
+  if (calm()) after();
+  else el.animate([{ scale: "1", opacity: 1 }, { scale: ".6", opacity: 0 }], { duration: 160, easing: EASE, fill: "forwards" }).finished.then(after);
+}
+
+let toastTimer = null;
+function showToast(text) {
+  $("toastText").textContent = text;
+  $("toast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("toast").classList.remove("show"), 4000);
+}
+$("undo").onclick = () => {
+  if (!lastRemoved) return;
+  const { it, i } = lastRemoved;
+  lastRemoved = null;
+  els.get(it.id)?.getAnimations().forEach((a) => a.cancel());
+  flip(() => items.splice(Math.min(i, items.length), 0, it));
+  $("toast").classList.remove("show");
+  saved();
+};
+
+function move(id, delta) {
+  const i = items.findIndex((x) => x.id === id), j = i + delta;
+  if (j < 0 || j >= items.length) return;
+  flip(() => { [items[i], items[j]] = [items[j], items[i]]; });
+  announce(tr("moved", nameOf(id), j + 1));
+  saved();
+}
+
+function cycleSize(id) {
+  const it = items.find((x) => x.id === id);
+  const s = LIB[id].sizes;
+  if (s.length < 2) return;
+  flip(() => { it.size = s[(s.indexOf(it.size) + 1) % s.length]; });
+  els.get(id).animate([{ scale: ".96" }, { scale: "1" }], { duration: dur(240), easing: EASE_OUT });
+  saved();
+}
+
+board.addEventListener("click", (e) => {
+  const tpl = e.target.closest("[data-tpl]");
+  if (tpl) {
+    flip(() => { items = TEMPLATES[tpl.dataset.tpl].map((id) => makeItem(id)); });
+    saved();
+    return;
+  }
+  const btn = e.target.closest("button[data-act]");
+  if (!btn || !editing) return;
+  const id = btn.closest(".cell").dataset.id;
+  const act = btn.dataset.act;
+  if (act === "remove") removeItem(id);
+  if (act === "left") move(id, -1);
+  if (act === "right") move(id, 1);
+  if (act === "size") cycleSize(id);
+});
+
+board.addEventListener("keydown", (e) => {
+  const cell = e.target.closest?.(".cell");
+  if (!editing || !cell || e.target !== cell) return;
+  const id = cell.dataset.id;
+  const keep = () => requestAnimationFrame(() => els.get(id)?.focus({ preventScroll: true }));
+  if (mode === "free" && e.key.startsWith("Arrow")) {
+    const it = items.find((x) => x.id === id);
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    it.x = Math.max(0, Math.min(boardUnits() - it.w, it.x + d[0]));
+    it.y = Math.max(0, it.y + d[1]);
+    render(); saved(); e.preventDefault(); return;
+  }
+  if (e.key === "ArrowLeft") { move(id, -1); keep(); e.preventDefault(); }
+  if (e.key === "ArrowRight") { move(id, 1); keep(); e.preventDefault(); }
+  if (e.key === "Enter" || e.key === " ") { cycleSize(id); keep(); e.preventDefault(); }
+  if (e.key === "Delete" || e.key === "Backspace") { removeItem(id); e.preventDefault(); }
+});
+
+function autoScroll(cy) {
+  const r = scrollEl.getBoundingClientRect();
+  if (cy > r.bottom - 36) scrollEl.scrollTop += 10;
+  else if (cy < r.top + 36) scrollEl.scrollTop -= 10;
+}
+
+function beginDrag(el, id, e0) {
+  const s0 = el.getBoundingClientRect();
+  const gx = e0.clientX - s0.left, gy = e0.clientY - s0.top;
+  let tx = 0, ty = 0, lastSwap = 0, cx = e0.clientX, cy = e0.clientY;
+  el.getAnimations().forEach((a) => a.cancel());
+  el.classList.add("dragging");
+  const place = () => {
+    const s = boardScale();
+    const r = el.getBoundingClientRect();
+    tx = (cx - gx - (r.left - tx * s)) / s;
+    ty = (cy - gy - (r.top - ty * s)) / s;
+    el.style.translate = `${tx}px ${ty}px`;
+  };
+  let rawX = 0, rawY = 0;
+  const onMove = (ev) => {
+    cx = ev.clientX; cy = ev.clientY;
+    autoScroll(cy);
+    if (mode === "free") {
+      const s = boardScale();
+      rawX = (cx - e0.clientX) / s; rawY = (cy - e0.clientY) / s;
+      el.style.translate = `${Math.round(rawX / U) * U}px ${Math.round(rawY / U) * U}px`;
+      return;
+    }
+    place();
+    const idx = indexAt(cx, cy, id);
+    const cur = items.findIndex((x) => x.id === id);
+    const now = performance.now();
+    if (idx !== cur && now - lastSwap > 140) {
+      lastSwap = now;
+      flip(() => { const [it] = items.splice(cur, 1); items.splice(idx, 0, it); }, id);
+      place();
+    }
+  };
+  const onUp = () => {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    el.classList.remove("dragging");
+    if (mode === "free") {
+      const it = items.find((x) => x.id === id);
+      it.x = Math.max(0, Math.min(boardUnits() - it.w, it.x + Math.round(rawX / U)));
+      it.y = Math.max(0, it.y + Math.round(rawY / U));
+      el.style.translate = "";
+      items = items.filter((x) => x !== it).concat(it);
+      render();
+    } else {
+      const from = el.style.translate || "0px 0px";
+      el.style.translate = "";
+      el.animate([{ translate: from }, { translate: "0px 0px" }], { duration: dur(220), easing: EASE_OUT });
+      announce(tr("moved", nameOf(id), items.findIndex((x) => x.id === id) + 1));
+    }
+    saved();
+  };
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+}
+
+function beginStretch(el, id, e0) {
+  const it = items.find((x) => x.id === id);
+  const s = boardScale();
+  let w = it.w, h = it.h;
+  el.classList.add("dragging");
+  const onMove = (ev) => {
+    w = Math.max(16, Math.min(boardUnits() - it.x, it.w + Math.round((ev.clientX - e0.clientX) / s / U)));
+    h = Math.max(14, it.h + Math.round((ev.clientY - e0.clientY) / s / U));
+    el.style.width = w * U + "px";
+    el.style.height = h * U + "px";
+  };
+  const onUp = () => {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    el.classList.remove("dragging");
+    it.w = w; it.h = h;
+    render(); saved();
+  };
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+}
+
+let press = null;
+function startPress(e, onFire) {
+  cancelPress();
+  const ring = document.createElement("div");
+  ring.className = "press";
+  ring.style.left = e.clientX + "px";
+  ring.style.top = e.clientY + "px";
+  ring.innerHTML = `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/></svg>`;
+  document.body.appendChild(ring);
+  const sx = e.clientX, sy = e.clientY;
+  const onMove = (ev) => { if (Math.hypot(ev.clientX - sx, ev.clientY - sy) > 6) cancelPress(); };
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", cancelPress, { once: true });
+  press = { ring, onMove, timer: setTimeout(() => { cancelPress(); onFire(); }, 450) };
+}
+function cancelPress() {
+  if (!press) return;
+  clearTimeout(press.timer);
+  press.ring.remove();
+  window.removeEventListener("pointermove", press.onMove);
+  press = null;
+}
+
+scrollEl.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
+  if (e.target.closest("button, .tpl")) return;
+  const cell = e.target.closest(".cell");
+  if (editing) {
+    if (!cell || cell.classList.contains("pending")) return;
+    e.preventDefault();
+    if (e.target.closest("[data-act='stretch']")) beginStretch(cell, cell.dataset.id, e);
+    else beginDrag(cell, cell.dataset.id, e);
+    return;
+  }
+  startPress(e, () => {
+    setEditing(true);
+    if (cell) beginDrag(cell, cell.dataset.id, e);
+  });
+});
+
+let peekEl = null, peekTimer = null;
+function hidePeek() { clearTimeout(peekTimer); peekEl?.classList.remove("show"); }
+function showPeek(chip) {
+  const id = chip.dataset.id, w = LIB[id];
+  if (w.off) return;
+  if (!peekEl) { peekEl = document.createElement("div"); peekEl.className = "peek"; document.body.appendChild(peekEl); }
+  const size = w.sizes[0];
+  peekEl.innerHTML = `<div class="cell" data-size="${size}"><div class="content">${w.render()}</div></div><small>${tr("peek", sizeLabel(size))}</small>`;
+  lucide.createIcons();
+  const r = chip.getBoundingClientRect();
+  const pw = peekEl.offsetWidth, ph = peekEl.offsetHeight;
+  peekEl.style.left = Math.max(8, Math.min(innerWidth - pw - 8, r.left + r.width / 2 - pw / 2)) + "px";
+  peekEl.style.top = r.top - ph - 10 + "px";
+  requestAnimationFrame(() => peekEl.classList.add("show"));
+}
+tray.addEventListener("pointerover", (e) => {
+  const chip = e.target.closest(".chip");
+  if (!chip || e.pointerType === "touch") return;
+  clearTimeout(peekTimer);
+  peekTimer = setTimeout(() => showPeek(chip), 350);
+});
+tray.addEventListener("pointerout", (e) => { if (!e.relatedTarget?.closest?.(".chip")) hidePeek(); });
+
+tray.addEventListener("keydown", (e) => {
+  const chip = e.target.closest(".chip");
+  if (chip && !chip.classList.contains("off") && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    addAtEnd(chip.dataset.id);
+    tray.querySelector(".chip:not(.off)")?.focus();
+  }
+});
+
+tray.addEventListener("pointerdown", (e) => {
+  const chip = e.target.closest(".chip");
+  if (!chip || e.button !== 0) return;
+  hidePeek();
+  if (chip.classList.contains("off")) { chip.animate([{ translate: "0" }, { translate: "-4px" }, { translate: "4px" }, { translate: "0" }], { duration: dur(240) }); return; }
+  e.preventDefault();
+  const id = chip.dataset.id;
+  const sx = e.clientX, sy = e.clientY;
+  let ghost = null, lastSwap = 0;
+  const pendingIndex = () => items.findIndex((x) => x.pending);
+  const onMove = (ev) => {
+    if (!ghost && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
+    if (!ghost) {
+      ghost = document.createElement("div");
+      ghost.className = "ghost";
+      ghost.innerHTML = `${icon(LIB[id].icon)}${nameOf(id)}`;
+      document.body.appendChild(ghost);
+      lucide.createIcons();
+    }
+    ghost.style.left = ev.clientX - 30 + "px";
+    ghost.style.top = ev.clientY - 20 + "px";
+    const r = scrollEl.getBoundingClientRect();
+    const inside = ev.clientY >= r.top && ev.clientY <= r.bottom && ev.clientX >= r.left && ev.clientX <= r.right;
+    board.querySelector(".drop-zone")?.classList.toggle("hot", inside);
+    ghost.classList.toggle("over", inside && mode === "grid");
+    if (mode === "free") return;
+    autoScroll(ev.clientY);
+    const pi = pendingIndex();
+    const now = performance.now();
+    if (inside) {
+      const idx = indexAt(ev.clientX, ev.clientY, pi >= 0 ? id : null);
+      if (pi < 0) flip(() => items.splice(idx, 0, makeItem(id, { pending: true })));
+      else if (idx !== pi && now - lastSwap > 140) { lastSwap = now; flip(() => { const [it] = items.splice(pi, 1); items.splice(idx, 0, it); }); }
+    } else if (pi >= 0) flip(() => items.splice(pi, 1));
+  };
+  const onUp = (ev) => {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    if (!ghost) { addAtEnd(id); return; }
+    ghost.remove();
+    const pi = pendingIndex();
+    if (pi >= 0) {
+      delete items[pi].pending;
+      render();
+      els.get(id).animate([{ scale: ".94" }, { scale: "1" }], { duration: dur(240), easing: EASE_OUT });
+      announce(tr("added", nameOf(id)));
+      saved();
+      return;
+    }
+    const r = scrollEl.getBoundingClientRect();
+    if (mode === "free" && ev.clientY >= r.top && ev.clientY <= r.bottom) {
+      const p = boardPoint(ev.clientX, ev.clientY);
+      const [w, h] = unitsOf(LIB[id].sizes[0]);
+      const x = Math.max(0, Math.min(boardUnits() - w, Math.round(p.x / U - w / 2)));
+      const y = Math.max(0, Math.round(p.y / U - h / 2));
+      flip(() => items.push(makeItem(id, { x, y })));
+      announce(tr("added", nameOf(id)));
+      saved();
+    } else render();
+  };
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
+});
+
+$("editBtn").onclick = () => setEditing(!editing);
+window.addEventListener("keydown", (e) => { if (e.key === "Escape" && editing) { setEditing(false); $("editBtn").focus(); } });
+document.addEventListener("pointerdown", (e) => {
+  if (!editing) return;
+  if (island.contains(e.target) || $("controls").contains(e.target) || e.target.closest(".peek")) return;
+  setEditing(false);
+});
+
+setInterval(() => {
+  timerLeft = timerLeft > 0 ? timerLeft - 1 : 1500;
+  document.querySelectorAll(".js-timer").forEach((n) => (n.textContent = fmt(timerLeft)));
+  document.querySelectorAll(".js-timer-bar").forEach((n) => (n.style.width = (1 - timerLeft / 1500) * 100 + "%"));
+}, 1000);
+
+const root = document.documentElement.style;
+$("wig").oninput = (e) => { root.setProperty("--wig", e.target.value + "deg"); $("wigv").textContent = e.target.value + "°"; };
+$("speed").oninput = (e) => { root.setProperty("--wig-speed", e.target.value + "ms"); $("speedv").textContent = e.target.value + "ms"; };
+$("growW").oninput = (e) => { root.setProperty("--grow-w", e.target.value + "px"); $("growWv").textContent = e.target.value + "px"; };
+$("grow").oninput = (e) => { root.setProperty("--grow", e.target.value + "px"); $("growv").textContent = e.target.value + "px"; };
+const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+$("calm").checked = reduce.matches;
+island.classList.toggle("calm", reduce.matches);
+$("calm").onchange = (e) => island.classList.toggle("calm", e.target.checked);
+document.querySelectorAll(".seg").forEach((seg) => seg.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  seg.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+  const v = b.dataset.v;
+  if (seg.dataset.ctl === "lang") { lang = v; document.documentElement.lang = v === "zh" ? "zh-CN" : "en"; }
+  if (seg.dataset.ctl === "width") island.classList.toggle("narrow", v === "narrow");
+  if (seg.dataset.ctl === "theme") island.classList.toggle("light", v === "light");
+  render();
+}));
+$("reset").onclick = () => { mode = "grid"; flip(() => { items = INITIAL.map((x) => ({ ...x })); }); };
+$("clear").onclick = () => flip(() => { items = []; });
+
+lucide.createIcons();
+render();
+</script>
+</body>
+</html>

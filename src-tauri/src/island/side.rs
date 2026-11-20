@@ -3,8 +3,8 @@ use tauri::{Monitor, PhysicalPosition, WebviewWindow};
 use super::bottom_edge;
 use super::edge;
 use super::geometry::{
-    apply_stage_geometry, island_rect, monitor_for_island_position, SIDE_COLUMN_MAX_HEIGHT, SIDE_COLUMN_MIN_HEIGHT,
-    STAGE_WINDOW_WIDTH,
+    apply_stage_geometry, island_rect, monitor_for_island_position, stage_width, SIDE_COLUMN_MAX_HEIGHT,
+    SIDE_COLUMN_MIN_HEIGHT,
 };
 use super::screen;
 use super::state::{mutate_window_state, read_window_state, Edge, IslandMode, IslandPosition, IslandWindowState};
@@ -54,7 +54,7 @@ pub(super) fn placed_on(window: &WebviewWindow, monitor: &Monitor, edge: Edge, a
     let scale = screen::monitor_scale(monitor);
     let mut placed = state;
     placed.attached_edge = Some(edge);
-    let stage_width = (STAGE_WINDOW_WIDTH * scale).round() as i32;
+    let stage_width = (stage_width() * scale).round() as i32;
     let (x, y) = stage_position(edge, along, screen::monitor_work_rect(monitor), stage_width, island_height(placed, scale));
     Some(IslandPosition { x, y, edge: Some(edge), along: Some(along) })
 }
@@ -131,7 +131,7 @@ pub(super) fn snap_after_drag(window: &WebviewWindow, position: IslandPosition, 
 fn snap_to_side(window: &WebviewWindow, position: IslandPosition, state: IslandWindowState) -> Option<IslandPosition> {
     let monitor = monitor_for_island_position(window, position).ok().flatten()?;
     let scale = screen::monitor_scale(&monitor);
-    let stage_width = STAGE_WINDOW_WIDTH * scale;
+    let stage_width = stage_width() * scale;
     let rect = island_rect(position.x as f64, position.y as f64, stage_width, bottom_edge::window_height(window), state);
     let work = screen::monitor_work_rect(&monitor);
     let edge = near_side(rect.left, rect.width, work, SNAP_DISTANCE * scale)?;
@@ -154,7 +154,7 @@ fn snap_to_side(window: &WebviewWindow, position: IslandPosition, state: IslandW
 
 fn leave_side(window: &WebviewWindow, position: IslandPosition, state: IslandWindowState) -> IslandPosition {
     let scale = screen::window_scale(window).unwrap_or(1.0);
-    let stage_width = STAGE_WINDOW_WIDTH * scale;
+    let stage_width = stage_width() * scale;
     let rect = island_rect(position.x as f64, position.y as f64, stage_width, bottom_edge::window_height(window), state);
     let x = (rect.left + rect.width / 2.0 - stage_width / 2.0).round() as i32;
     edge::set_attached(window, None);

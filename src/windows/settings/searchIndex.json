@@ -998,12 +998,12 @@
       "zh-CN": {
         "group": "折叠岛屿",
         "title": "折叠岛屿宽度",
-        "description": "在随内容变化的宽度上加宽或收窄。也可以按住 Alt 拖动折叠岛屿的左右边缘来调。"
+        "description": "在随内容变化的宽度上加宽或收窄。也可以把鼠标移到折叠岛屿的左右边缘，出现提示线后拖动来调。"
       },
       "en": {
         "group": "Collapsed island",
         "title": "Collapsed island width",
-        "description": "Widens or narrows the width that follows the content. Or hold Alt and drag the collapsed island's sides."
+        "description": "Widens or narrows the width that follows the content. Or point at the collapsed island's side until a line shows, then drag it."
       }
     },
     {
@@ -1022,12 +1022,12 @@
       "zh-CN": {
         "group": "展开面板",
         "title": "面板宽度",
-        "description": "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。"
+        "description": "各页面默认都用这个宽度；高度上，待办、日历、剪贴板、消息和 Agent 这类列表页比它高 80，Fuyu 页按 6 列 × 2 行。把鼠标移到展开面板的左右边缘或底边，出现提示线后拖动，只改当前这一页，会记住。"
       },
       "en": {
         "group": "Open panel",
         "title": "Panel width",
-        "description": "Every page has this width and height and scrolls inside when it holds more. Or hold Alt and drag the open panel's side or bottom edge."
+        "description": "Every page uses this width by default. List pages (to-dos, calendar, clipboard, messages, agents) are 80 taller than this height, and the Fuyu page fits 6 × 2 cells. Point at the open panel's side or bottom edge until a line shows and drag it to size just that page; it is remembered."
       }
     },
     {
@@ -1039,6 +1039,19 @@
       "en": {
         "group": "Open panel",
         "title": "Panel height"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "展开面板",
+        "title": "各页面的尺寸",
+        "description": "在岛上拖过的页面各自记着尺寸。恢复后都回到上面的默认值。"
+      },
+      "en": {
+        "group": "Open panel",
+        "title": "Page sizes",
+        "description": "Pages you dragged on the island keep their own size. Resetting puts them all back on the defaults above."
       }
     },
     {
@@ -1059,12 +1072,12 @@
       "zh-CN": {
         "group": "收起条上的项目",
         "title": "中心图案",
-        "description": "收起的岛上没有文字时，在中间显示一个小动画（只有剩余待办数时排在待办数前面）；显示 Agent 标题时，宠物或悬岛标志站在标题前代替 Agent 图标。关掉这一节的开关可停用。"
+        "description": "收起的岛上没有文字时，在中间显示一个小动画（只有剩余待办数时排在待办数前面）；显示 Agent 标题时，宠物或水母站在标题前代替 Agent 图标。关掉这一节的开关可停用。"
       },
       "en": {
         "group": "Items on the collapsed bar",
         "title": "Center pattern",
-        "description": "When the collapsed island shows no text, a small animation sits in its middle (ahead of an idle to-do count when that is all there is); while an agent title shows, the pet or the island mark stands before it in place of the agent icon. Switch this group off to turn it off."
+        "description": "When the collapsed island shows no text, a small animation sits in its middle (ahead of an idle to-do count when that is all there is); while an agent title shows, the pet or the jellyfish stands before it in place of the agent icon. Switch this group off to turn it off."
       }
     },
     {
@@ -1096,12 +1109,12 @@
       "zh-CN": {
         "group": "收起条上的项目",
         "title": "大小（像素）",
-        "description": "图案的高度，默认 24，和收起条上的环一样高；悬岛量的是胶囊，宠物比它高 4。"
+        "description": "图案的高度，默认 24，和收起条上的环一样高；水母量的是整只的高度，宠物比它高 4。"
       },
       "en": {
         "group": "Items on the collapsed bar",
         "title": "Size (px)",
-        "description": "How tall the pattern is; 24 by default, as tall as the rings on the collapsed bar. For the island mark it is the pill; a pet is 4 taller."
+        "description": "How tall the pattern is; 24 by default, as tall as the rings on the collapsed bar. For the jellyfish it is the whole body; a pet is 4 taller."
       }
     },
     {
@@ -1119,13 +1132,13 @@
       "page": "islandLayout",
       "zh-CN": {
         "group": "收起条上的项目",
-        "title": "状态灯样式",
-        "description": "收起条上 Agent 状态灯的样子。悬岛：应用图标的白胶囊，和条上的环一样高；绿点呼吸，运行时短横换成三个依次亮起的点，等你确认时变黄闪烁，失败或可能中断时变红，跑完打勾。圆点：原来的小圆点。"
+        "title": "样式",
+        "description": "收起条上浮屿标志的样子。水母：和条上的环一样高，平时米白、偶尔游一下眨眨眼；开着 Agent 时，运行变蓝划水，等你确认变黄跳动，失败或可能中断变红皱眉，跑完变绿笑一下。圆点：极简的小圆点，开着 Agent 时按状态变色。"
       },
       "en": {
         "group": "Items on the collapsed bar",
-        "title": "Status light",
-        "description": "How the Agent status light looks on the collapsed bar. Island mark: the app icon's white pill, as tall as the rings on the bar; its light breathes, three dots take the dash's place while running, it turns yellow and blinks while waiting for you, red when failed or possibly stopped, and shows a tick when done. Dot: the original small dot."
+        "title": "Style",
+        "description": "How the Fuyu mark looks on the collapsed bar. Jellyfish: as tall as the rings on the bar, cream with a swim and a blink now and then; with Agent on it turns blue and paddles while running, yellow and hops while waiting for you, red and frowns when failed or possibly stopped, and green with a smile when done. Dot: a minimal dot that takes the state colour with Agent on."
       }
     },
     {
@@ -1253,17 +1266,6 @@
       "page": "islandLayout",
       "zh-CN": {
         "group": "收起条上的项目",
-        "title": "样式"
-      },
-      "en": {
-        "group": "Items on the collapsed bar",
-        "title": "Style"
-      }
-    },
-    {
-      "page": "islandLayout",
-      "zh-CN": {
-        "group": "收起条上的项目",
         "title": "显示会话数",
         "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
       },
@@ -1372,26 +1374,12 @@
       "zh-CN": {
         "group": "开合动画",
         "title": "动画曲线",
-        "description": "弹性同官网；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹",
-        "options": [
-          "弹性（同官网）",
-          "平滑",
-          "快速",
-          "Q 弹",
-          "无动画"
-        ]
+        "description": "灵动（默认）快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹"
       },
       "en": {
         "group": "Open and close",
         "title": "Animation curve",
-        "description": "Spring moves as the website's island; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce",
-        "options": [
-          "Spring (as the website)",
-          "Smooth",
-          "Fast",
-          "Bouncy",
-          "None"
-        ]
+        "description": "Lively (the default) shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot"
       }
     },
     {
@@ -1749,11 +1737,11 @@
       "page": "shortcutsReference",
       "zh-CN": {
         "group": "岛上操作",
-        "title": "调整面板宽高（按住 Alt 时面板不收起）"
+        "title": "调整面板宽高"
       },
       "en": {
         "group": "On the island",
-        "title": "Resize the panel (it stays open while Alt is held)"
+        "title": "Resize the panel"
       }
     },
     {

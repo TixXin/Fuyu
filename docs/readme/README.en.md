@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing"><img src="../assets/readme/island-en.svg" alt="A small island hanging from the top of the page, labelled Fuyu 浮屿, that opens now and then to say a logo is wanted; the website address https://fuyu.ing is handwritten in script below it, with a small arrow pointing at the island" width="540" height="100"></a>
+  <a href="https://fuyu.ing"><img src="../assets/readme/island-en.svg" alt="A small island hanging from the top of the page, with a little jellyfish on the left, labelled Fuyu 浮屿, that opens now and then to read “Free · Your island up top”; the website address https://fuyu.ing is handwritten in script below it, with a small arrow pointing at the island" width="540" height="100"></a>
 
   <h1>Fuyu</h1>
 
@@ -193,14 +193,11 @@ Questions, ideas, or just want to chat? Join our [Discord server](https://discor
 
 ## Contributing
 
-<a href="https://fuyu.ing/logo/"><img src="../assets/logo-placeholder.svg" alt="An empty dashed slot: Fuyu's logo is still wanted" width="88" height="88" align="right"></a>
-
 Fuyu is a shared effort, and there is room for you:
 
 - **Report a problem or an idea**: open an [issue](https://github.com/TixXin/fuyu/issues) and say what gets in your way or what you are missing.
 - **Change code, docs or translations**: open a pull request. [CONTRIBUTING.md](../../CONTRIBUTING.md) covers how, and which checks to run first; [AGENTS.md](../../AGENTS.md) explains how the code is laid out (in Chinese).
 - **Write a plugin**: no need to touch the island itself; publish it to the [plugin market](https://github.com/TixXin/fuyu-plugins).
-- **Draw a logo**: Fuyu has no real logo yet, and the [logo call](https://fuyu.ing/logo/) is open; the empty slot on the right is waiting for it.
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="Fuyu's contributors"></a>
 

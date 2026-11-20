@@ -23,7 +23,7 @@ description: ALWAYS invoke BEFORE adding or changing motion in the Fuyu UI - a C
 3. **曲线和时长写 token**（`var(--motion-ease)`、`var(--motion-base)` 这类，名字和用途见 motion.md「曲线」「时长」两张表），不写 `cubic-bezier(...)`、`ease` 关键字或表外的毫秒数：档位就是为收掉散落的值才定的。变量在 `src/styles/tokens.css`，TS 里读 `src/lib/theme/motionTokens.ts`，不在 TS 里另写一份。从无到有的进场（不论是面板还是一行）用进场那条曲线，常驻元素的变化用默认那条。文件里已有的旧写法不顺手改：并进档位会改观感，由专门的合并任务出对比页后统一改。
 4. **新 `animation` 在同一个文件里写减少动画**：`@media (prefers-reduced-motion: reduce)` 里停掉或换成不动的样子，`tests/unit/reduced-motion.test.mjs` 会检查。`transition` 不用自己写，由 `src/styles/base.css` 统一处理，现状和目标见 motion.md「减少动画」。TS 里按减少动画分支用 `src/lib/theme/useReducedMotion.ts`。
 5. **岛外壳的开合不进档位**：调预设改 `src/lib/theme/islandMotion.ts`，弹簧和 Q 弹的 `linear()` 曲线在 `src/lib/theme/motionCurves.ts`；节奏、预设和 Q 弹的合格标准见 `docs/design/island.md`「灵动岛视觉规范」里「展开、收起的节奏」「开合动画可选」「Q 弹」三条，调参可以在 `docs/investigations/island-motion-lab.html` 里先试。改完对一遍 motion.md「和原生窗口改尺寸的配合」的两个数。
-6. **验证**：跑根 `AGENTS.md`「验证」表要求的；改了岛、消息、设置窗口的界面再跑 `pnpm test:regression`，动画观感本该变时先加载 `fuyu-testing` 再更新快照。要看真岛的开合，用户开着 `pnpm tauri dev` 时可以用 `pnpm lab` 让岛展开收起（`docs/features/island-lab.md`）。
+6. **验证**：开发中不跑，用户说要推 PR 时按根 `AGENTS.md`「验证」跑；改了岛、消息、设置窗口的界面那时再跑 `pnpm test:regression`，动画观感本该变时先加载 `fuyu-testing` 再更新快照。要看真岛的开合，用户开着 `pnpm tauri dev` 时可以用 `pnpm lab` 让岛展开收起（`docs/features/island-lab.md`）。
 
 ## 坑
 

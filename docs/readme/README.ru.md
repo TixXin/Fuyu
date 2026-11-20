@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/"><img src="../assets/readme/island-en.svg" alt="Маленький остров у верхнего края страницы с надписью Fuyu 浮屿; время от времени он раскрывается и сообщает, что ищет логотип; под ним рукописным курсивом адрес сайта https://fuyu.ing и маленькая стрелка, указывающая на остров" width="540" height="100"></a>
+  <a href="https://fuyu.ing/"><img src="../assets/readme/island-en.svg" alt="Маленький остров у верхнего края страницы с маленькой медузой слева и надписью Fuyu 浮屿; время от времени он раскрывается и показывает «Free · Your island up top»; под ним рукописным курсивом адрес сайта https://fuyu.ing и маленькая стрелка, указывающая на остров" width="540" height="100"></a>
 
   <h1>Fuyu</h1>
 
@@ -193,14 +193,11 @@ pnpm tauri build    # собрать установщики
 
 ## Как помочь проекту
 
-<a href="https://fuyu.ing/logo/"><img src="../assets/logo-placeholder.svg" alt="Пустое место с пунктирной рамкой: Fuyu всё ещё ищет логотип" width="88" height="88" align="right"></a>
-
 Fuyu мы делаем все вместе, и для вас здесь тоже найдётся место:
 
 - **Сообщайте о проблемах и идеях**: откройте [issue](https://github.com/TixXin/fuyu/issues) и расскажите, что мешает или чего не хватает.
 - **Меняйте код, документацию или переводы**: присылайте pull request. В [CONTRIBUTING.md](../../CONTRIBUTING.md) описано, как это сделать и какие проверки запустить перед этим; в [AGENTS.md](../../AGENTS.md) — как устроен код (на китайском).
 - **Напишите плагин**: трогать сам остров не нужно; когда будет готов, опубликуйте его в [маркетплейсе плагинов](https://github.com/TixXin/fuyu-plugins).
-- **Нарисуйте логотип**: у Fuyu пока нет официального логотипа, и [конкурс](https://fuyu.ing/logo/) всё ещё открыт; пустое место справа ждёт именно его.
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="Участники проекта Fuyu"></a>
 

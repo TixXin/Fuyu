@@ -39,7 +39,7 @@ export function PositionSettingsSection({
   const menuBarOptions = (["notch", "below"] as const).map((value) => ({ value, label: t.settings.position.menuBarOptions[value] }));
 
   return (
-    <SettingsGroup title={t.settings.position.title} footer={<SettingsFootnote text={`${isMacOS ? t.settings.position.moveHintMac : t.settings.position.moveHint} ${t.settings.position.monitorHint}`} />}>
+    <SettingsGroup title={t.settings.position.title} footer={<SettingsFootnote text={`${t.settings.position.moveHint} ${t.settings.position.monitorHint}`} />}>
       <div className="position-layout">
         <PositionDiagram monitor={settings.islandMonitor} edge={dockEdge} marginY={settings.marginY} menuBar={isMacOS ? settings.menuBarPlacement : null} />
         <div className="position-layout__rows">

@@ -41,7 +41,7 @@ export type CellBox = { col: number; row: number; cols: number; rows: number };
 
 export function cellBox(item: PanelItem): CellBox {
   const { cols, rows } = CELLS[item.size];
-  return { col: Math.min(Math.max(0, Math.round(item.x / STEP)), GRID_COLUMNS - cols), row: Math.max(0, Math.round(item.y / STEP)), cols, rows };
+  return { col: Math.max(0, Math.round(item.x / STEP)), row: Math.max(0, Math.round(item.y / STEP)), cols, rows };
 }
 
 function placed(widget: string, size: PanelSize, col: number, row: number): PanelItem {
@@ -97,22 +97,39 @@ export function saveCustomPanels(panels: readonly CustomPanel[]) {
 
 const overlaps = (a: CellBox, b: CellBox) => a.col < b.col + b.cols && b.col < a.col + a.cols && a.row < b.row + b.rows && b.row < a.row + a.rows;
 
-function firstFit(taken: readonly CellBox[], size: PanelSize): CellBox {
+function firstFit(taken: readonly CellBox[], size: PanelSize, columns: number): CellBox {
   const { cols, rows } = CELLS[size];
   for (let row = 0; ; row += 1) {
-    for (let col = 0; col + cols <= GRID_COLUMNS; col += 1) {
+    for (let col = 0; col + cols <= Math.max(columns, cols); col += 1) {
       const box = { col, row, cols, rows };
       if (!taken.some((other) => overlaps(box, other))) return box;
     }
   }
 }
 
-export function flowPanelItems(items: readonly Pick<PanelItem, "widget" | "size">[]): PanelItem[] {
+export function flowPanelItems(items: readonly Pick<PanelItem, "widget" | "size">[], columns = GRID_COLUMNS): PanelItem[] {
   const taken: CellBox[] = [];
   return items.map((item) => {
-    const box = firstFit(taken, item.size);
+    const box = firstFit(taken, item.size, columns);
     taken.push(box);
     return placed(item.widget, item.size, box.col, box.row);
+  });
+}
+
+const crossesPage = (col: number, cols: number, page: number) => cols <= page && Math.floor(col / page) !== Math.floor((col + cols - 1) / page);
+
+export function flowStrip(items: readonly Pick<PanelItem, "widget" | "size">[], rows: number, page = Infinity): PanelItem[] {
+  const taken: CellBox[] = [];
+  return items.map((item) => {
+    const { cols, rows: tall } = CELLS[item.size];
+    for (let col = 0; ; col += 1) {
+      for (let row = 0; row + tall <= Math.max(rows, tall); row += 1) {
+        const box = { col, row, cols, rows: tall };
+        if (crossesPage(col, cols, page) || taken.some((other) => overlaps(box, other))) continue;
+        taken.push(box);
+        return placed(item.widget, item.size, col, row);
+      }
+    }
   });
 }
 
@@ -133,7 +150,12 @@ const reflow = (panel: CustomPanel, items: readonly PanelItem[]): CustomPanel =>
 export const FREE_WIDTH_UNITS = GRID_COLUMNS * STEP - 1;
 export const freeBottom = (items: readonly PanelItem[]) => items.reduce((bottom, item) => Math.max(bottom, item.y + item.h + 1), 0);
 export const freeHeightPx = (items: readonly PanelItem[]) => Math.max(0, freeBottom(items) - 1) * GRID_UNIT_PX;
+export const freeRightPx = (items: readonly PanelItem[]) => items.reduce((right, item) => Math.max(right, (item.x + item.w) * GRID_UNIT_PX), 0);
 const minBox = (size: PanelSize) => placed("", size, 0, 0);
+export const freeLeastPx = (size: PanelSize) => {
+  const box = minBox(size);
+  return { width: box.w * GRID_UNIT_PX, height: box.h * GRID_UNIT_PX };
+};
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), Math.max(low, high));
 
 export function addPanelItem(panel: CustomPanel, widget: string, size: PanelSize): CustomPanel {
@@ -173,21 +195,39 @@ export function nextPanelSize(sizes: readonly PanelSize[], current: PanelSize): 
   return order[(order.indexOf(current) + 1) % order.length] ?? null;
 }
 
-export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: number): CustomPanel {
-  const item = panel.items.find((candidate) => candidate.widget === widget);
-  if (!item || panel.mode !== "free") return panel;
-  const next = { ...item, x: clamp(Math.round(x), 0, FREE_WIDTH_UNITS - item.w), y: Math.max(0, Math.round(y)) };
-  if (next.x === item.x && next.y === item.y && panel.items[panel.items.length - 1] === item) return panel;
-  return { ...panel, items: [...panel.items.filter((candidate) => candidate !== item), next] };
+const touches = (a: PanelItem, b: PanelItem) => a.x < b.x + b.w + 1 && b.x < a.x + a.w + 1 && a.y < b.y + b.h + 1 && b.y < a.y + a.h + 1;
+
+function pushedAway(items: readonly PanelItem[], widget: string, sideways = false): PanelItem[] {
+  const placed = items.map((item) => ({ ...item }));
+  const queue = placed.filter((item) => item.widget === widget);
+  for (let guard = placed.length * placed.length; queue.length > 0 && guard > 0; guard -= 1) {
+    const blocker = queue.shift();
+    if (!blocker) break;
+    for (const other of placed) {
+      if (other === blocker || other.widget === widget || !touches(blocker, other)) continue;
+      if (sideways) other.x = blocker.x + blocker.w + 1;
+      else other.y = blocker.y + blocker.h + 1;
+      queue.push(other);
+    }
+  }
+  return placed.map((item, index) => (item.x === items[index].x && item.y === items[index].y ? items[index] : item));
 }
 
-export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number): CustomPanel {
+export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: number, widthUnits = FREE_WIDTH_UNITS, heightUnits = Infinity): CustomPanel {
+  const item = panel.items.find((candidate) => candidate.widget === widget);
+  if (!item || panel.mode !== "free") return panel;
+  const next = { ...item, x: clamp(Math.round(x), 0, widthUnits - item.w), y: clamp(Math.round(y), 0, heightUnits - item.h) };
+  if (next.x === item.x && next.y === item.y && panel.items[panel.items.length - 1] === item) return panel;
+  return { ...panel, items: pushedAway([...panel.items.filter((candidate) => candidate !== item), next], widget, heightUnits !== Infinity) };
+}
+
+export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number, widthUnits = FREE_WIDTH_UNITS, heightUnits = Infinity): CustomPanel {
   const item = panel.items.find((candidate) => candidate.widget === widget);
   if (!item || panel.mode !== "free") return panel;
   const least = minBox(item.size);
-  const next = { ...item, w: clamp(Math.round(w), least.w, FREE_WIDTH_UNITS - item.x), h: Math.max(least.h, Math.round(h)) };
+  const next = { ...item, w: clamp(Math.round(w), least.w, widthUnits - item.x), h: clamp(Math.round(h), least.h, heightUnits - item.y) };
   if (next.w === item.w && next.h === item.h) return panel;
-  return { ...panel, items: panel.items.map((candidate) => (candidate === item ? next : candidate)) };
+  return { ...panel, items: pushedAway(panel.items.map((candidate) => (candidate === item ? next : candidate)), widget, heightUnits !== Infinity) };
 }
 
 export type PanelBox = { left: number; top: number; width: number; height: number };
@@ -203,19 +243,121 @@ export function boardHeightPx(panel: CustomPanel): number {
   return panel.mode === "free" ? Math.max(freeHeightPx(panel.items), GRID_CELL_PX) : cellsToPx(Math.max(1, gridRows(panel.items)));
 }
 
-export function setPanelMode(panel: CustomPanel, mode: PanelMode): CustomPanel {
+export function layoutStrip(panel: CustomPanel, rows: number, page = Infinity): CustomPanel {
+  return panel.mode === "grid" ? { ...panel, items: flowStrip(panel.items, rows, page) } : panel;
+}
+
+export function stripRightPx(panel: CustomPanel): number {
+  if (panel.mode === "free") return freeRightPx(panel.items);
+  const cols = panel.items.reduce((right, item) => Math.max(right, cellBox(item).col + cellBox(item).cols), 0);
+  return cols > 0 ? cellsToPx(cols) : 0;
+}
+
+export function stripInsertIndexAt(panel: CustomPanel, x: number, y: number, skip: string | null): number {
+  const rest = panel.items.filter((item) => item.widget !== skip);
+  for (let index = 0; index < rest.length; index += 1) {
+    const box = itemBoxPx(panel, rest[index]);
+    const inColumn = x >= box.left && x < box.left + box.width;
+    if (inColumn && y >= box.top && y < box.top + box.height) return x < box.left + box.width / 2 ? index : index + 1;
+    if (x < box.left || (inColumn && y < box.top)) return index;
+  }
+  return rest.length;
+}
+
+export function setPanelMode(panel: CustomPanel, mode: PanelMode, byColumn = false): CustomPanel {
   if (panel.mode === mode) return panel;
   if (mode === "free") return { ...panel, mode };
-  const ordered = [...panel.items].sort((a, b) => a.y - b.y || a.x - b.x);
+  const ordered = [...panel.items].sort((a, b) => (byColumn ? a.x - b.x || a.y - b.y : a.y - b.y || a.x - b.x));
   return { ...panel, mode, items: flowPanelItems(ordered) };
+}
+
+export function insertIndexAt(panel: CustomPanel, x: number, y: number, skip: string | null): number {
+  const rest = panel.items.filter((item) => item.widget !== skip);
+  for (let index = 0; index < rest.length; index += 1) {
+    const box = itemBoxPx(panel, rest[index]);
+    const inRow = y >= box.top && y < box.top + box.height;
+    if (inRow && x >= box.left && x < box.left + box.width) return x < box.left + box.width / 2 ? index : index + 1;
+    if (y < box.top || (inRow && x < box.left)) return index;
+  }
+  return rest.length;
+}
+
+export function movePanelItemTo(panel: CustomPanel, widget: string, index: number): CustomPanel {
+  const moving = panel.items.find((item) => item.widget === widget);
+  if (!moving) return panel;
+  const rest = panel.items.filter((item) => item !== moving);
+  const at = clamp(Math.round(index), 0, rest.length);
+  if (panel.items[at] === moving) return panel;
+  return reflow(panel, [...rest.slice(0, at), moving, ...rest.slice(at)]);
+}
+
+export function dropNewPanelItem(panel: CustomPanel, widget: string, size: PanelSize, x: number, y: number, widthUnits = FREE_WIDTH_UNITS): CustomPanel {
+  const added = addPanelItem(panel, widget, size);
+  if (added === panel) return panel;
+  if (panel.mode !== "grid") {
+    const box = minBox(size);
+    return placeFreeItem(added, widget, x / GRID_UNIT_PX - box.w / 2, y / GRID_UNIT_PX - box.h / 2, widthUnits);
+  }
+  return movePanelItemTo(added, widget, insertIndexAt(panel, x, y, null));
 }
 
 export const FUYU_PANEL_ID = "fuyu";
 export const FUYU_PAGE_ID = `${CUSTOM_PANEL_PAGE_PREFIX}${FUYU_PANEL_ID}`;
 
-export function fuyuPanel(panels: readonly CustomPanel[]): CustomPanel {
+export const DEFAULT_FUYU_ITEMS: readonly (readonly [string, PanelSize])[] = [
+  ["today", "l"],
+  ["system-status", "s"],
+  ["battery", "s"],
+  ["countdown", "s"],
+  ["network", "s"],
+  ["pomodoro", "s"],
+  ["streak", "s"],
+  ["year-progress", "s"],
+  ["water", "s"],
+  ["music", "m"],
+  ["next-meeting", "m"],
+  ["lyrics", "w"],
+  ["todos", "m"],
+  ["focus-stats", "s"],
+  ["unread", "s"],
+  ["month-calendar", "l"],
+  ["note", "m"],
+  ["habits", "m"],
+  ["world-clock", "s"],
+  ["session-count", "m"],
+  ["sun", "s"],
+  ["translate", "m"],
+  ["clipboard-recent", "m"],
+  ["shelf", "s"],
+  ["screenshot-recent", "s"],
+  ["launcher", "s"],
+  ["levels", "s"],
+  ["stopwatch", "s"],
+  ["timer", "s"],
+];
+
+export type WidgetSizesOf = (widget: string) => readonly PanelSize[] | null;
+
+export function addAvailableItems(panel: CustomPanel, items: readonly (readonly [string, PanelSize])[], sizesOf: WidgetSizesOf): CustomPanel {
+  return items.reduce((next, [widget, size]) => {
+    const sizes = sizesOf(widget);
+    const chosen = sizes ? (sizes.includes(size) ? size : defaultWidgetSize(sizes)) : null;
+    return chosen ? addPanelItem(next, widget, chosen) : next;
+  }, panel);
+}
+
+const emptyFuyu = (): CustomPanel => ({ id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] });
+let defaultFuyu: CustomPanel | null = null;
+
+export function defaultFuyuPanel(sizesOf?: WidgetSizesOf): CustomPanel {
+  if (sizesOf) return addAvailableItems(emptyFuyu(), DEFAULT_FUYU_ITEMS, sizesOf);
+  defaultFuyu ??= DEFAULT_FUYU_ITEMS.reduce<CustomPanel>((panel, [widget, size]) => addPanelItem(panel, widget, size), emptyFuyu());
+  return defaultFuyu;
+}
+
+export function fuyuPanel(panels: readonly CustomPanel[], sizesOf?: WidgetSizesOf): CustomPanel {
   const found = panels.find((panel) => panel.id === FUYU_PANEL_ID) ?? panels[0];
-  return found ? { ...found, id: FUYU_PANEL_ID } : { id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] };
+  return found ? { ...found, id: FUYU_PANEL_ID } : defaultFuyuPanel(sizesOf);
 }
 
 export function fuyuPanels(panel: CustomPanel): CustomPanel[] {

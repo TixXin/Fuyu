@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings.ts";
 import {
+  AGENT_LIGHT_JELLYFISH_MIGRATION_KEY,
   COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY,
   GLASS_BACKDROP_DEFAULT_MIGRATION_KEY,
   STORAGE_KEY,
@@ -29,6 +30,7 @@ function withStorage(entries, run) {
 }
 
 const doneCollapsed = [COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY, "1"];
+const doneLight = [AGENT_LIGHT_JELLYFISH_MIGRATION_KEY, "1"];
 
 test("new installs default to live windows behind the glass and skip the migration", () => {
   assert.equal(DEFAULT_SETTINGS.glassBackdrop, "native");
@@ -50,7 +52,7 @@ test("a stored wallpaper backdrop moves to live windows once", () => {
 
 test("wallpaper picked after the migration is kept", () => {
   const stored = JSON.stringify({ glassBackdrop: "wallpaper" });
-  withStorage([doneCollapsed, [GLASS_BACKDROP_DEFAULT_MIGRATION_KEY, "1"], [STORAGE_KEY, stored]], (values, writes) => {
+  withStorage([doneCollapsed, doneLight, [GLASS_BACKDROP_DEFAULT_MIGRATION_KEY, "1"], [STORAGE_KEY, stored]], (values, writes) => {
     assert.equal(loadSettings().glassBackdrop, "wallpaper");
     assert.equal(values.get(STORAGE_KEY), stored);
     assert.deepEqual(writes, []);
@@ -60,7 +62,7 @@ test("wallpaper picked after the migration is kept", () => {
 test("other backdrops only get the marker, not a settings rewrite", () => {
   for (const glassBackdrop of ["none", "native"]) {
     const stored = JSON.stringify({ glassBackdrop });
-    withStorage([doneCollapsed, [STORAGE_KEY, stored]], (values, writes) => {
+    withStorage([doneCollapsed, doneLight, [STORAGE_KEY, stored]], (values, writes) => {
       assert.equal(loadSettings().glassBackdrop, glassBackdrop);
       assert.deepEqual(writes, [GLASS_BACKDROP_DEFAULT_MIGRATION_KEY]);
       assert.equal(values.get(STORAGE_KEY), stored);

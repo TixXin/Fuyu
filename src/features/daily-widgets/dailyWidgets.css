@@ -1,0 +1,415 @@
+.daily-big {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+  line-height: 1.05;
+}
+
+.daily-small {
+  font-size: 11px;
+}
+
+.daily-muted {
+  color: var(--widget-text-3);
+}
+
+.daily-unit {
+  margin-left: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.daily-fill {
+  flex: 1;
+  min-height: 0;
+}
+
+.daily-button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--daily-accent, var(--widget-text-1));
+  background: color-mix(in srgb, var(--daily-accent, rgba(var(--overlay-rgb, 255, 255, 255), 0.5)) 22%, transparent);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.daily-button--plain {
+  color: var(--widget-text-2);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+}
+
+.daily-button:hover {
+  filter: brightness(1.2);
+}
+
+.daily-button:focus-visible,
+.daily-heat__cell:focus-visible,
+.daily-habits__cell:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.daily-today {
+  justify-content: space-between;
+  gap: 0;
+}
+
+.daily-today__date {
+  color: var(--daily-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.daily-today__clock {
+  margin-top: 6px;
+  font-size: 44px;
+}
+
+.daily-today__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-top: auto;
+}
+
+.daily-today__words {
+  min-width: 0;
+}
+
+.daily-today__greeting {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.daily-today .daily-small {
+  margin-top: 3px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.daily-pomodoro {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+}
+
+.daily-ring {
+  width: 88px;
+  height: 88px;
+  transform: rotate(-90deg);
+}
+
+.daily-ring__track,
+.daily-ring__value {
+  fill: none;
+  stroke-width: 7;
+}
+
+.daily-ring__track {
+  stroke: color-mix(in srgb, var(--daily-accent) 18%, transparent);
+}
+
+.daily-ring__value {
+  stroke: var(--daily-accent);
+  stroke-linecap: round;
+}
+
+.daily-pomodoro__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 4px;
+}
+
+.daily-pomodoro__time {
+  font-size: 18px;
+}
+
+.daily-pomodoro__buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.daily-heat {
+  display: grid;
+  grid-template-columns: repeat(7, 10px);
+  gap: 3.5px;
+  margin: auto;
+}
+
+.daily-heat__cell {
+  display: block;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+  border: 0;
+  border-radius: 3px;
+}
+
+.daily-heat__cell[data-on] {
+  background: var(--daily-accent);
+}
+
+.daily-heat__cell[data-today] {
+  box-shadow: inset 0 0 0 2px var(--daily-accent);
+  cursor: pointer;
+}
+
+.daily-heat__cell[data-today][data-on] {
+  box-shadow: none;
+}
+
+.daily-streak__count {
+  color: var(--daily-accent);
+}
+
+.daily-focus__total {
+  font-size: 21px;
+}
+
+.daily-focus__bars {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  min-height: 0;
+}
+
+.daily-focus__bars b {
+  flex: 1;
+  background: color-mix(in srgb, var(--daily-accent) 32%, transparent);
+  border-radius: 3px;
+}
+
+.daily-focus__bars b[data-today] {
+  background: var(--daily-accent);
+}
+
+.daily-year__value,
+.daily-countdown__value {
+  font-size: 30px;
+}
+
+.daily-countdown__value {
+  color: var(--daily-accent);
+}
+
+.daily-year__months {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.daily-year__months i {
+  height: 8px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.12);
+  border-radius: 2px;
+}
+
+.daily-year__months i[data-state="past"] {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.65);
+}
+
+.daily-year__months i[data-state="now"] {
+  background: var(--daily-accent);
+}
+
+.daily-world__rows {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.daily-world__row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.daily-world__row .daily-big {
+  margin-left: auto;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.daily-world__city {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.daily-sun__arc {
+  display: block;
+  width: 84px;
+  height: 38px;
+  margin: 2px auto 0;
+}
+
+.daily-sun__path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--daily-accent) 40%, transparent);
+  stroke-width: 2;
+  stroke-dasharray: 3 4;
+}
+
+.daily-sun__horizon {
+  stroke: rgba(var(--overlay-rgb, 255, 255, 255), 0.16);
+}
+
+.daily-sun__dot {
+  fill: rgba(var(--overlay-rgb, 255, 255, 255), 0.3);
+}
+
+.daily-sun__dot[data-up] {
+  fill: var(--daily-accent);
+}
+
+.daily-sun__times {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.daily-water__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.daily-water__cup {
+  position: relative;
+  width: 32px;
+  height: 50px;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--daily-accent) 60%, transparent);
+  border-radius: 5px 5px 10px 10px;
+}
+
+.daily-water__cup b {
+  position: absolute;
+  inset: auto 0 0;
+  background: var(--daily-accent);
+  transition: height var(--motion-base) var(--motion-ease);
+}
+
+.daily-water__buttons {
+  display: grid;
+  gap: 6px;
+}
+
+.daily-habits__rows {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.daily-habits__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.daily-habits__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.daily-habits__cell {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.daily-habits__cell:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.daily-habits__cell[data-on] {
+  background: var(--daily-accent);
+}
+
+.daily-habits__row[data-habit="0"] {
+  --daily-accent: var(--daily-purple, #bf8cff);
+}
+
+.daily-habits__row[data-habit="1"] {
+  --daily-accent: var(--warning-text, #ff9f43);
+}
+
+.daily-habits__row[data-habit="2"] {
+  --daily-accent: var(--mint-text, #5ee6c8);
+}
+
+.daily-note__text {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  color: var(--widget-text-1);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  resize: none;
+}
+
+.daily-note__text::placeholder {
+  color: var(--widget-text-3);
+}
+
+.daily-today,
+.daily-pomodoro,
+.daily-focus {
+  --daily-accent: var(--warning-text, #ff9f43);
+}
+
+.daily-streak {
+  --daily-accent: var(--mint-text, #34c759);
+}
+
+.daily-countdown {
+  --daily-accent: var(--error-text, #ff6b9d);
+}
+
+.daily-year,
+.daily-sun {
+  --daily-accent: var(--warning-text, #ffd60a);
+}
+
+.daily-water {
+  --daily-accent: var(--info-text, #5ac8fa);
+}
+
+.island-light .daily-habits__row[data-habit="0"] {
+  --daily-accent: var(--daily-purple-light, #8a4fd6);
+}

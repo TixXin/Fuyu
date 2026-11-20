@@ -3,7 +3,9 @@ import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent 
 const HOLD_MS = 500;
 const SLOP_PX = 4;
 
-export function useLongPress(onHold: () => void, accepts: (target: Element) => boolean) {
+export type LongPressStart = { clientX: number; clientY: number; pointerId: number; target: Element };
+
+export function useLongPress(onHold: (start: LongPressStart) => void, accepts: (target: Element) => boolean) {
   const timer = useRef<number | null>(null);
   const start = useRef<{ x: number; y: number; pointer: number } | null>(null);
   const latest = useRef(onHold);
@@ -35,13 +37,15 @@ export function useLongPress(onHold: () => void, accepts: (target: Element) => b
 
   return useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.button !== 0 || !(event.target instanceof Element) || !accepts(event.target)) return;
+      const target = event.target;
+      if (event.button !== 0 || !(target instanceof Element) || !accepts(target)) return;
       cancel();
+      const held = { clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId, target };
       start.current = { x: event.clientX, y: event.clientY, pointer: event.pointerId };
       timer.current = window.setTimeout(() => {
         timer.current = null;
         start.current = null;
-        latest.current();
+        latest.current(held);
       }, HOLD_MS);
     },
     [accepts, cancel],

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { acquireIslandCursor, canTrackIslandCursor, listenIslandCursor, releaseIslandCursor, type CursorPoint } from "./api";
+import { acquireIslandCursor, canTrackIslandCursor, listenIslandCursor, releaseIslandCursor, type CursorPoint } from "../../lib/island-cursor/api";
 import { gazeOffset } from "./patterns";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";

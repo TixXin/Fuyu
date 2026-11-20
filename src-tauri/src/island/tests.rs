@@ -330,11 +330,11 @@ fn popup_width_narrows_the_expanded_hit_area() {
 
 #[test]
 fn a_wide_plugin_page_fits_the_island_window_at_any_scale() {
-    assert_eq!(max_expanded_width(1.0), 792.0);
-    assert_eq!(max_expanded_width(0.91), 872.0);
-    assert_eq!(max_expanded_width(1.4), 560.0);
+    assert_eq!(max_expanded_width(1.0, STAGE_WINDOW_WIDTH), 792.0);
+    assert_eq!(max_expanded_width(0.91, STAGE_WINDOW_WIDTH), 872.0);
+    assert_eq!(max_expanded_width(1.4, STAGE_WINDOW_WIDTH), 560.0);
     for scale in [0.91, 1.0, 1.15, 1.4] {
-        let side_room = (STAGE_WINDOW_WIDTH - max_expanded_width(scale) * scale) / 2.0;
+        let side_room = (STAGE_WINDOW_WIDTH - max_expanded_width(scale, STAGE_WINDOW_WIDTH) * scale) / 2.0;
         assert!(side_room >= 12.0 * scale, "scale {scale}: {side_room}");
     }
 }
@@ -594,7 +594,7 @@ fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
     let mut expanded = collapsed;
     expanded.mode = IslandMode::Expanded;
     expanded.collapsed_width = 312.0;
-    expanded.expanded_width = 800.0;
+    expanded.expanded_width = 780.0;
     expanded.is_dimmed = true;
     expanded.corner_radius = 24.0;
     expanded.corner_shape = CornerShape::Round;
@@ -606,6 +606,10 @@ fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
     expanded.expanded_height = 130.0;
     assert!(!stage_geometry_inputs_changed(&collapsed, &expanded));
     assert!(!should_apply_stage_geometry(&collapsed, &expanded, true));
+
+    let mut wider = expanded;
+    wider.expanded_width = 800.0;
+    assert!(stage_geometry_inputs_changed(&collapsed, &wider));
 
     let mut taller = expanded;
     taller.expanded_height = 490.0;

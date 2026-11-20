@@ -45,6 +45,15 @@ pub(super) fn brightness_percent(brightness: &BuiltinBrightness) -> Option<u32> 
     brightness.level().map(|level| (level * 100.0).round() as u32)
 }
 
+pub(super) fn read_now() -> (Option<(u32, bool)>, Option<u32>) {
+    let volume = audio::default_output().map(OutputVolume).as_ref().and_then(volume_reading);
+    (volume, open_brightness().as_ref().and_then(brightness_percent))
+}
+
+pub(super) fn set_volume_now(level: f32) -> bool {
+    audio::default_output().is_some_and(|device| audio::set_volume(device, level))
+}
+
 #[cfg(test)]
 mod tests {
     use super::{open_volume, volume_reading, AudioThread};

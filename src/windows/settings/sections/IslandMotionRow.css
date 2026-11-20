@@ -23,8 +23,8 @@
   border-radius: 11px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
   transition:
-    width var(--island-motion-width) var(--island-motion-width-ease),
-    height var(--island-motion-height) var(--island-motion-height-ease),
+    width var(--island-motion-width) var(--island-motion-width-ease) var(--island-motion-width-delay, 0ms),
+    height var(--island-motion-height) var(--island-motion-height-ease) var(--island-motion-height-delay, 0ms),
     border-radius var(--island-motion-radius) var(--island-motion-radius-ease);
 }
 

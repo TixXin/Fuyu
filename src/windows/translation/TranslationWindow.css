@@ -236,7 +236,7 @@
   font-size: 15px;
   line-height: 1.75;
   overflow-wrap: anywhere;
-  user-select: text;
+  -webkit-user-select: text; user-select: text;
 }
 .translation-window textarea::placeholder,
 .translation-window input::placeholder { color: var(--translation-muted); }
@@ -275,7 +275,7 @@
   line-height: 1.75;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  user-select: text;
+  -webkit-user-select: text; user-select: text;
 }
 .translation-window__result--filled { color: var(--translation-accent); }
 .translation-window__empty-result { display: flex; align-items: center; gap: var(--space-md); font-size: 13px; }

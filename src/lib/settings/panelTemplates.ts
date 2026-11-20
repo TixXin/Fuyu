@@ -1,11 +1,12 @@
-import { addPanelItem, defaultWidgetSize, type CustomPanel, type PanelSize } from "./customPanels.ts";
+import { addAvailableItems, DEFAULT_FUYU_ITEMS, type CustomPanel, type PanelSize, type WidgetSizesOf } from "./customPanels.ts";
 
-export const PANEL_TEMPLATES = ["workbench", "fun"] as const;
+export const PANEL_TEMPLATES = ["fuyu", "workbench", "fun"] as const;
 export type PanelTemplate = (typeof PANEL_TEMPLATES)[number];
 
 type TemplateItem = { widget: string; size: PanelSize };
 
 const TEMPLATE_ITEMS: Record<PanelTemplate, readonly TemplateItem[]> = {
+  fuyu: DEFAULT_FUYU_ITEMS.map(([widget, size]) => ({ widget, size })),
   workbench: [
     { widget: "todos", size: "l" },
     { widget: "next-meeting", size: "m" },
@@ -18,11 +19,6 @@ const TEMPLATE_ITEMS: Record<PanelTemplate, readonly TemplateItem[]> = {
   ],
 };
 
-export function applyPanelTemplate(panel: CustomPanel, template: PanelTemplate, sizesOf: (widget: string) => readonly PanelSize[] | null): CustomPanel {
-  return TEMPLATE_ITEMS[template].reduce((next, { widget, size }) => {
-    const sizes = sizesOf(widget);
-    if (!sizes) return next;
-    const chosen = sizes.includes(size) ? size : defaultWidgetSize(sizes);
-    return chosen ? addPanelItem(next, widget, chosen) : next;
-  }, panel);
+export function applyPanelTemplate(panel: CustomPanel, template: PanelTemplate, sizesOf: WidgetSizesOf): CustomPanel {
+  return addAvailableItems(panel, TEMPLATE_ITEMS[template].map(({ widget, size }) => [widget, size] as const), sizesOf);
 }

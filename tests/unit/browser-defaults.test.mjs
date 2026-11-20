@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { blockedShortcut, macSelectionCopyText } from "../../src/lib/browserDefaults.ts";
+import { blockedShortcut, macSelectionCopyText, quietTextChecking } from "../../src/lib/browserDefaults.ts";
 
 const keys = (key, mods = {}) => ({ key, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, ...mods });
 const mac = { mac: true, dev: false };
@@ -40,4 +40,29 @@ test("macOS selection copy only triggers on plain Cmd+C outside editable fields"
   assert.equal(macSelectionCopyText(keys("c", { metaKey: true }), mac, false, ""), null);
   assert.equal(macSelectionCopyText(keys("c", { ctrlKey: true }), win, false, "windows"), null);
   assert.equal(macSelectionCopyText(keys("c", { metaKey: true, shiftKey: true }), mac, false, "devtools"), null);
+});
+
+const field = (selector, attributes = {}) => {
+  const attrs = new Map(Object.entries(attributes));
+  return {
+    attrs,
+    matches: (query) => query.split(", ").includes(selector),
+    hasAttribute: (name) => attrs.has(name),
+    setAttribute: (name, value) => attrs.set(name, value),
+  };
+};
+
+test("text fields stop spell checking and auto-correcting unless they ask for it", () => {
+  const input = field("input");
+  quietTextChecking(input);
+  assert.deepEqual(Object.fromEntries(input.attrs), { spellcheck: "false", autocorrect: "off", autocapitalize: "off" });
+  const note = field("textarea", { spellcheck: "true" });
+  quietTextChecking(note);
+  assert.equal(note.attrs.get("spellcheck"), "true", "a field that turns spell checking on keeps it");
+  const editor = field("[contenteditable='true']");
+  quietTextChecking(editor);
+  assert.equal(editor.attrs.get("autocorrect"), "off");
+  const row = field("div");
+  quietTextChecking(row);
+  assert.equal(row.attrs.size, 0, "other elements are left alone");
 });

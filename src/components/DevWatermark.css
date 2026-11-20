@@ -13,8 +13,9 @@
 
 .dev-watermark--collapsed {
   top: 3px;
-  left: 7px;
+  left: 50%;
   font-size: 8px;
+  transform: translateX(-50%);
 }
 
 .dev-watermark--panel {

@@ -6,6 +6,7 @@ import { PROJECT_REPO_URL, websitePage } from "./projectLinks";
 import { UpdatePanel } from "./UpdatePanel";
 import { useOpenInBrowser } from "./useOpenInBrowser";
 import { getUpdateState, subscribeToUpdate } from "./updaterController";
+import appIcon from "../../../docs/assets/logo/app-icon.svg";
 import "./AboutHero.css";
 
 function AboutLinks() {
@@ -43,7 +44,7 @@ export function AboutHero() {
 
   return (
     <section className={`about-hero about-hero--${tone}`} aria-label={text.appName}>
-      <span className="about-hero__emblem" aria-hidden="true" />
+      <img className="about-hero__emblem" src={appIcon} alt="" aria-hidden="true" width={72} height={72} draggable={false} />
       <div className="about-hero__heading">
         <p className="about-hero__name">{text.appName}</p>
         {version ? <span className="about-hero__tag about-hero__tag--version">{text.versionChip(version)}</span> : null}

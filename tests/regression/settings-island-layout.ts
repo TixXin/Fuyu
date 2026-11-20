@@ -1,4 +1,5 @@
 import { act } from "react";
+import { FUYU_PANEL_ID, PANEL_ICONS, saveCustomPanels } from "../../src/lib/settings/customPanels";
 
 const row = (item: string) => document.querySelector<HTMLElement>(`.collapsed-items__item[data-item='${item}']`);
 const style = (item: string) => row(item)?.querySelector<HTMLDetailsElement>("details.collapsed-items__style");
@@ -8,7 +9,7 @@ export async function checkIslandLayout(check: (condition: unknown, message: str
   const preview = document.querySelector(".island-bar-preview__bar");
   const chips = [...(preview?.querySelectorAll<HTMLElement>(".island-bar-preview__item") ?? [])].map((chip) => chip.dataset.item);
   check(chips[0] === "status-light" && chips.includes("session-count") && chips.includes("center"), "The island layout page draws the collapsed bar with its items in order");
-  check(!style("status-light")?.open && titles("status-light").includes("状态灯样式"), "A row with a style keeps it folded under the row");
+  check(!style("status-light")?.open && titles("status-light").includes("样式"), "A row with a style keeps it folded under the row");
   await act(async () => { preview!.querySelector<HTMLButtonElement>("[data-item='session-count']")!.click(); });
   check(style("session-count")?.open && row("session-count")?.classList.contains("collapsed-items__item--found") && titles("session-count").includes("样式"),
     "Clicking an item on the preview opens its row with the session ring style");
@@ -69,8 +70,14 @@ export async function checkCustomPanels(check: (condition: unknown, message: str
   localStorage.removeItem("fuyu-custom-panels");
   await act(async () => { pageRow("panel:fuyu")!.click(); });
   check(savedPanels() === null && pageRow("panel:fuyu")?.getAttribute("aria-selected") === "true" && pageRow("panel:fuyu")?.textContent?.includes("Fuyu")
-    && document.querySelector(".panel-head__modes") && !document.querySelector(".panel-head__name") && !document.querySelector(".panel-head__remove") && document.querySelector(".expanded-preview__empty"),
-    "The Fuyu page is there before anything is saved, shows empty and offers only the layout switch, no name or delete");
+    && document.querySelector(".panel-head__modes") && !document.querySelector(".panel-head__name") && !document.querySelector(".panel-head__remove")
+    && !document.querySelector(".expanded-preview__empty") && document.querySelectorAll(".expanded-preview__cell").length > 0,
+    "The Fuyu page is there before anything is saved, shows the default widgets and offers only the layout switch, no name or delete");
+  await act(async () => {
+    saveCustomPanels([{ id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] }]);
+    window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-custom-panels" }));
+  });
+  check(document.querySelector(".expanded-preview__empty") && document.querySelectorAll(".expanded-preview__cell").length === 0, "A Fuyu panel saved with no widgets shows empty");
   check(document.querySelector(".expanded-preview__empty .panel-templates__button[data-template='workbench']") && document.querySelector(".panel-templates__button[data-template='fun']"),
     "The empty panel on the preview offers the workbench and leisure templates");
   check(addChip("todos") && addChip("session-count") && addChip("lyrics") && !addChip("status-light"), "The add bucket lists the built-in widgets but not bar-only items");

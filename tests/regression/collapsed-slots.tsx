@@ -184,7 +184,7 @@ async function runChecks() {
     check(bar().querySelector(".island__lyric")?.textContent === "故事的小黄花" && !bar().querySelector(".island__active-task"), "有歌词时显示当前这句，代替待办");
     openedPage = null;
     await act(async () => bar().querySelector<HTMLElement>(".island__open-button")!.click());
-    check(openedPage === "music", "点歌词打开音乐页");
+    check(openedPage === "todo", "点歌词也打开首页，不进音乐页");
     await set({ agentTitle: "修复登录" });
     check(!bar().querySelector(".island__lyric") && bar().querySelector(".island__agent-session-title")?.textContent === "修复登录", "外部传来 Agent 标题时不显示歌词");
     await set({ agentTitle: undefined });

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>悬停变胖候选</title>
+<style>
+  :root {
+    --bg: #1b1d22;
+    --card: #26292f;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #f2f0ea;
+    --muted: rgba(242, 240, 234, 0.6);
+    --accent: #7fc8ff;
+    --wall: linear-gradient(160deg, #c9cdd3, #9aa1aa 60%, #7d848e);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px 48px;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.5 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  }
+  header { max-width: 1180px; margin: 0 auto 18px; }
+  h1 { margin: 0 0 6px; font-size: 20px; }
+  header p { margin: 0 0 12px; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  .controls label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .controls select, .controls button {
+    background: var(--card); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 4px 10px; font: inherit; cursor: pointer;
+  }
+  .grid {
+    max-width: 1180px; margin: 0 auto;
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .stage {
+    position: relative; height: 128px; background: var(--wall);
+    cursor: default;
+  }
+  .stage.dark { background: linear-gradient(160deg, #3a3f48, #23262c); }
+  .island {
+    --w: 300px; --h: 38px; --r: 20px;
+    position: absolute; top: 0; left: 50%;
+    width: calc(var(--w) + var(--gx, 0px));
+    height: calc(var(--h) + var(--gy, 0px));
+    translate: -50% 0;
+    background: #000;
+    border-radius: 0 0 var(--r) var(--r);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  .island::before, .island::after {
+    content: ""; position: absolute; top: 0; width: 10px; height: 10px;
+    background: radial-gradient(circle at 0 100%, transparent 9.5px, #000 10px);
+  }
+  .island::before { left: -10px; }
+  .island::after { right: -10px; transform: scaleX(-1); }
+  .content {
+    position: absolute; top: 0; left: 50%; translate: -150px 0;
+    width: 300px; height: 38px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; color: #fff; font-size: 14px; pointer-events: none;
+  }
+  .content .dot { width: 9px; height: 9px; border-radius: 50%; background: #f5d34a; }
+  .content .badge {
+    display: inline-flex; gap: 8px; align-items: center; font-variant-numeric: tabular-nums;
+  }
+  .content .badge b {
+    width: 20px; height: 20px; border-radius: 50%; background: #17325a; color: #cfe3ff;
+    display: inline-grid; place-items: center; font-size: 11px;
+  }
+  .meta { padding: 12px 14px 14px; display: grid; gap: 4px; }
+  .meta .title { display: flex; gap: 8px; align-items: baseline; }
+  .meta .letter.new { background: #ffd36b; }
+  .meta .letter {
+    font-weight: 700; color: #000; background: var(--accent);
+    border-radius: 6px; padding: 0 7px; font-size: 13px;
+  }
+  .meta .name { font-weight: 600; }
+  .meta .desc { color: var(--muted); font-size: 13px; }
+  .meta code { color: var(--muted); font-size: 12px; }
+  .stage:hover .island, .stage.on .island {
+    --gx: var(--grow-x); --gy: var(--grow-y);
+  }
+  .sec { max-width: 1180px; margin: 22px auto 10px; font-size: 15px; color: var(--muted); font-weight: 600; }
+  footer { max-width: 1180px; margin: 22px auto 0; color: var(--muted); font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) {
+    .island { transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>收起的岛：悬停变胖候选</h1>
+  <p>新的一组（黄色字母）要从远处慢慢把鼠标移向岛、在岛上左右移动看；旧的一组把鼠标移到每张卡片的灰色区域上，岛会按这张卡的动画变胖，移开缩回；里面的文字和真岛一样不动。挑中了告诉我字母，也可以说「B 的曲线 + E 的幅度」这样组合。</p>
+  <div class="controls">
+    <label>速度
+      <select id="speed">
+        <option value="1">原速</option>
+        <option value="2">慢 2 倍</option>
+        <option value="4">慢 4 倍</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="auto"> 自动演示（每 1.6 秒进出一次）</label>
+    <label><input type="checkbox" id="dark"> 深色桌面</label>
+  </div>
+</header>
+<h2 class="sec">按 ui-motion skill 新做的：感知鼠标、连续响应</h2>
+<main class="grid" id="live"></main>
+<h2 class="sec">上一轮：只换曲线（A–I）</h2>
+<main class="grid" id="grid"></main>
+<footer>时长写的是变胖 / 缩回。岛宽 300px、高 38px，和默认缩放下的真岛差不多；真岛还会乘「折叠缩放」。</footer>
+<script>
+function springLinear(response, damping) {
+  const w = 2 * Math.PI / response;
+  const pts = [];
+  const N = 60;
+  const total = response * 1.6;
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * total;
+    let v;
+    if (damping >= 1) {
+      v = 1 - (1 + w * t) * Math.exp(-w * t);
+    } else {
+      const wd = w * Math.sqrt(1 - damping * damping);
+      v = 1 - Math.exp(-damping * w * t) * (Math.cos(wd * t) + (damping * w / wd) * Math.sin(wd * t));
+    }
+    pts.push(i === N ? 1 : Math.round(v * 10000) / 10000);
+  }
+  return { ease: `linear(${pts.join(", ")})`, ms: Math.round(total * 1000) };
+}
+
+const crit = springLinear(0.42, 1);
+const critSlow = springLinear(0.55, 1);
+
+const OPTIONS = [
+  { name: "现在的版本", desc: "缓入缓出的 ease，起步柔、收尾缓。", gx: 20, gy: 5,
+    grow: [360, "cubic-bezier(0.25, 0.1, 0.25, 1)"], shrink: [280, "cubic-bezier(0.25, 0.1, 0.25, 1)"] },
+  { name: "苹果式临界阻尼", desc: "像灵动岛的弹簧但不回弹（阻尼 1.0），起步有速度、尾巴很长很顺。", gx: 20, gy: 5,
+    grow: [crit.ms, crit.ease], shrink: [Math.round(crit.ms * 0.8), crit.ease] },
+  { name: "缓出五次方", desc: "一开始就动起来，后半段慢慢贴上去，干净利落。", gx: 20, gy: 5,
+    grow: [420, "cubic-bezier(0.22, 1, 0.36, 1)"], shrink: [300, "cubic-bezier(0.22, 1, 0.36, 1)"] },
+  { name: "正弦缓入缓出", desc: "前后对称，像呼吸一样鼓起来，最「软」。", gx: 20, gy: 5,
+    grow: [380, "cubic-bezier(0.37, 0, 0.63, 1)"], shrink: [320, "cubic-bezier(0.37, 0, 0.63, 1)"] },
+  { name: "先高后宽", desc: "高度先往下鼓，宽度晚 70ms 再展开，有一点「吸气」的层次。", gx: 20, gy: 6,
+    grow: [380, "cubic-bezier(0.22, 1, 0.36, 1)"], shrink: [280, "cubic-bezier(0.22, 1, 0.36, 1)"], stagger: 70 },
+  { name: "轻微鼓起", desc: "幅度小一半，像被手指轻轻碰了一下，最克制。", gx: 12, gy: 3,
+    grow: [320, "cubic-bezier(0.22, 1, 0.36, 1)"], shrink: [260, "cubic-bezier(0.22, 1, 0.36, 1)"] },
+  { name: "明显变胖 + 慢", desc: "幅度更大（宽 +30、高 +8），慢一点的临界阻尼，存在感强。", gx: 30, gy: 8,
+    grow: [critSlow.ms, critSlow.ease], shrink: [Math.round(critSlow.ms * 0.75), critSlow.ease] },
+  { name: "变胖 + 投影", desc: "同 C 的曲线，鼓起时下面渐渐浮出一层柔和投影，像微微抬起来。", gx: 20, gy: 5,
+    grow: [420, "cubic-bezier(0.22, 1, 0.36, 1)"], shrink: [300, "cubic-bezier(0.22, 1, 0.36, 1)"], shadow: true },
+  { name: "只鼓高度", desc: "宽度几乎不动（+6），主要往下长 6px，像水滴往下坠。", gx: 6, gy: 6,
+    grow: [380, "cubic-bezier(0.22, 1, 0.36, 1)"], shrink: [300, "cubic-bezier(0.22, 1, 0.36, 1)"] },
+];
+
+
+const LIVE = [
+  { key: "J", name: "skill 标准悬停", desc: "skill 的双向悬停：ease-in-out (0.4, 0, 0.2, 1)，约 2% 的轻微放大（宽 +8、高 +2），220ms。最安静的一种。", css: true, gx: 8, gy: 2,
+    grow: [220, "cubic-bezier(0.4, 0, 0.2, 1)"], shrink: [220, "cubic-bezier(0.4, 0, 0.2, 1)"] },
+  { key: "K", name: "靠近就鼓", desc: "鼠标进到岛周围 70px 内就开始慢慢鼓，越近越胖，碰到岛时最胖（宽 +20、高 +5）。跟随用临界阻尼弹簧，平滑、可随时折返，没有回弹。", gx: 20, gy: 5, range: 70 },
+  { key: "L", name: "靠近就鼓 + 磁吸", desc: "同 K，再加 skill 的磁吸：外壳朝鼠标那一侧最多偏 6px，像被吸过去一点；文字不动。", gx: 20, gy: 5, range: 70, magnet: 6 },
+  { key: "M", name: "鼠标那侧鼓得多", desc: "鼠标在岛的哪一侧，那一侧就鼓得更多，像液体被手指顶起来；在正中间时两边一样。", gx: 22, gy: 5, range: 70, lean: 0.7 },
+  { key: "N", name: "靠近微鼓 + 碰到再鼓", desc: "两段：进入 70px 内先轻轻鼓一点（宽 +6、高 +1）提示「可以点」，真正碰到岛再鼓到宽 +20、高 +5。", gx: 20, gy: 5, range: 70, twoStage: true },
+];
+
+const grid = document.getElementById("grid");
+const speed = document.getElementById("speed");
+const stages = [];
+
+function transitionFor(opt, phase, factor) {
+  const [ms, ease] = opt[phase];
+  const d = Math.round(ms * factor);
+  const lag = opt.stagger && phase === "grow" ? Math.round(opt.stagger * factor) : 0;
+  const parts = [`width ${d}ms ${ease} ${lag}ms`, `height ${d}ms ${ease}`];
+  if (opt.shadow) parts.push(`box-shadow ${d}ms ${ease}`);
+  return parts.join(", ");
+}
+
+function apply() {
+  const f = Number(speed.value);
+  stages.forEach(({ stage, island, opt }) => {
+    island.dataset.grow = transitionFor(opt, "grow", f);
+    island.dataset.shrink = transitionFor(opt, "shrink", f);
+    island.style.transition = stage.matches(":hover") || stage.classList.contains("on") ? island.dataset.grow : island.dataset.shrink;
+  });
+}
+
+function setOn(entry, on) {
+  const { stage, island, opt } = entry;
+  island.style.transition = on ? island.dataset.grow : island.dataset.shrink;
+  stage.classList.toggle("on", on);
+  island.style.boxShadow = opt.shadow && on ? "0 8px 22px rgba(0, 0, 0, 0.32)" : "";
+}
+
+OPTIONS.forEach((opt, i) => {
+  const letter = String.fromCharCode(65 + i);
+  const card = document.createElement("section");
+  card.className = "card";
+  card.innerHTML = cardHtml(letter, { ...opt, css: true }, false);
+  grid.appendChild(card);
+  const stage = card.querySelector(".stage");
+  const island = card.querySelector(".island");
+  island.style.setProperty("--grow-x", `${opt.gx}px`);
+  island.style.setProperty("--grow-y", `${opt.gy}px`);
+  const entry = { stage, island, opt };
+  stages.push(entry);
+  stage.addEventListener("mouseenter", () => setOn(entry, true));
+  stage.addEventListener("mouseleave", () => setOn(entry, false));
+});
+
+
+const liveGrid = document.getElementById("live");
+const liveEntries = [];
+function cardHtml(letter, opt, isNew) {
+  return `
+    <div class="stage"><div class="island"></div>
+      <div class="content"><span class="dot"></span><span class="badge"><b>3</b>03:15</span></div></div>
+    <div class="meta">
+      <div class="title"><span class="letter${isNew ? " new" : ""}">${letter}</span><span class="name">${opt.name}</span></div>
+      <div class="desc">${opt.desc}</div>
+      <code>${opt.css ? `宽 +${opt.gx} · 高 +${opt.gy} · ${opt.grow[0]} / ${opt.shrink[0]}ms` : `宽 +${opt.gx} · 高 +${opt.gy} · 跟随：临界阻尼弹簧，约 300ms 追上`}</code>
+    </div>`;
+}
+LIVE.forEach((opt) => {
+  const card = document.createElement("section");
+  card.className = "card";
+  card.innerHTML = cardHtml(opt.key, opt, true);
+  liveGrid.appendChild(card);
+  const stage = card.querySelector(".stage");
+  const island = card.querySelector(".island");
+  if (opt.css) {
+    island.style.setProperty("--grow-x", `${opt.gx}px`);
+    island.style.setProperty("--grow-y", `${opt.gy}px`);
+    const entry = { stage, island, opt };
+    stages.push(entry);
+    stage.addEventListener("mouseenter", () => setOn(entry, true));
+    stage.addEventListener("mouseleave", () => setOn(entry, false));
+    return;
+  }
+  island.style.transition = "none";
+  const e = { stage, island, opt, px: null, py: null, auto: null,
+    s: { gx: [0, 0], gy: [0, 0], left: [0, 0], off: [0, 0] } };
+  stage.addEventListener("mousemove", (ev) => { const r = stage.getBoundingClientRect(); e.px = ev.clientX - r.left; e.py = ev.clientY - r.top; });
+  stage.addEventListener("mouseleave", () => { e.px = null; e.py = null; });
+  liveEntries.push(e);
+});
+
+function targetsFor(e) {
+  const { opt } = e;
+  const W = 300, H = 38;
+  const sw = e.stage.clientWidth;
+  const cx = sw / 2;
+  let px = e.px, py = e.py;
+  if (e.auto !== null) { px = cx + e.auto * 60; py = e.auto === null ? null : 18; }
+  if (px === null) return { gx: 0, gy: 0, left: 0, off: 0 };
+  const dx = Math.max(0, Math.abs(px - cx) - W / 2);
+  const dy = Math.max(0, py - H);
+  const d = Math.hypot(dx, dy);
+  const inside = d === 0;
+  const near = Math.max(0, Math.min(1, 1 - d / opt.range));
+  const p = near * near * (3 - 2 * near);
+  let amt = p;
+  if (opt.twoStage) amt = inside ? 1 : 0.3 * p;
+  const lean = Math.max(-1, Math.min(1, (px - cx) / (W / 2)));
+  const gx = opt.gx * amt, gy = opt.gy * amt;
+  let left = gx / 2;
+  if (opt.lean) left = (gx / 2) * (1 - opt.lean * lean);
+  const off = opt.magnet ? Math.max(-opt.magnet, Math.min(opt.magnet, (px - cx) * 0.05)) * p : 0;
+  return { gx, gy, left, off };
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  const omega = (2 * Math.PI / 0.42) / Number(speed.value);
+  for (const e of liveEntries) {
+    const t = targetsFor(e);
+    for (const k of ["gx", "gy", "left", "off"]) {
+      const st = e.s[k];
+      const acc = omega * omega * (t[k] - st[0]) - 2 * omega * st[1];
+      st[1] += acc * dt;
+      st[0] += st[1] * dt;
+    }
+    const w = 300 + e.s.gx[0];
+    e.island.style.width = `${w}px`;
+    e.island.style.height = `${38 + e.s.gy[0]}px`;
+    e.island.style.translate = `${-150 - e.s.left[0] + e.s.off[0]}px 0`;
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+speed.addEventListener("change", apply);
+apply();
+
+let timer = 0;
+document.getElementById("auto").addEventListener("change", (e) => {
+  clearInterval(timer);
+  if (!e.target.checked) { stages.forEach((s) => setOn(s, false)); liveEntries.forEach((l) => { l.auto = null; }); return; }
+  let on = false;
+  const tick = () => { on = !on; stages.forEach((s) => setOn(s, on)); liveEntries.forEach((l) => { l.auto = on ? 0.6 : null; }); };
+  tick();
+  timer = setInterval(tick, 1600 * Number(speed.value));
+});
+document.getElementById("dark").addEventListener("change", (e) => {
+  stages.forEach(({ stage }) => stage.classList.toggle("dark", e.target.checked));
+});
+</script>
+</body>
+</html>

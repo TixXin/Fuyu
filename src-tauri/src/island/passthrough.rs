@@ -86,17 +86,17 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
-            let alt = win32::input::is_alt_key_down();
             let is_move_armed = match hwnd {
                 _ if modifier::is_resizing() => modifier::resize_target(),
-                Some(hwnd) if is_inside && alt => modifier::target(hwnd),
+                Some(_) if is_inside && win32::input::is_left_button_down() => was_move_armed,
+                Some(_) if is_inside => modifier::target(&window),
                 _ => ModifierTarget::None,
             };
             if is_move_armed != was_move_armed {
                 was_move_armed = is_move_armed;
                 let _ = window.emit(ISLAND_MOVE_ARMED_CHANGED_EVENT, is_move_armed);
             }
-            let held = modifier::is_resizing() || (alt && matches!(state.mode, IslandMode::Expanded));
+            let held = modifier::is_resizing();
             if held != was_held {
                 was_held = held;
                 let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);

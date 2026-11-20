@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing"><img src="../assets/readme/island-en.svg" alt="ページの上端にぶら下がる小さな島。「Fuyu 浮屿」と書かれ、ときどき開いてロゴ募集中を知らせます。右下には公式サイトのアドレス https://fuyu.ing が筆記体で手書きされ、小さな矢印が島を指しています" width="540" height="100"></a>
+  <a href="https://fuyu.ing"><img src="../assets/readme/island-en.svg" alt="ページの上端にぶら下がる小さな島。左に小さなクラゲがいて「Fuyu 浮屿」と書かれ、ときどき開いて「Free · Your island up top」と表示します。右下には公式サイトのアドレス https://fuyu.ing が筆記体で手書きされ、小さな矢印が島を指しています" width="540" height="100"></a>
 
   <h1>Fuyu</h1>
 
@@ -193,14 +193,11 @@ pnpm tauri build    # インストーラーをビルド
 
 ## コントリビュート
 
-<a href="https://fuyu.ing/logo/"><img src="../assets/logo-placeholder.svg" alt="点線で描かれた空き枠：Fuyu のロゴを募集中です" width="88" height="88" align="right"></a>
-
 Fuyu はみんなで作っています。あなたもぜひ参加してください：
 
 - **問題やアイデアを伝える**：[Issues](https://github.com/TixXin/fuyu/issues) で、使いにくいところや欲しい機能を教えてください。
 - **コード、ドキュメント、翻訳を直す**：そのまま PR を送ってください。送り方と事前に実行するチェックは [CONTRIBUTING.md](../../CONTRIBUTING.md)、コードの構成は [AGENTS.md](../../AGENTS.md) をご覧ください（中国語）。
 - **プラグインを書く**：島本体に手を入れる必要はありません。できたら[プラグインマーケット](https://github.com/TixXin/fuyu-plugins)に公開してください。
-- **ロゴを描く**：Fuyu にはまだ正式なロゴがありません。[募集ページ](https://fuyu.ing/logo/)はずっと開いていて、右の空き枠はそのために空けてあります。
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="Fuyu のコントリビューター"></a>
 

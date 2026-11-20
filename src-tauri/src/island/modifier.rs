@@ -5,13 +5,11 @@ use std::{
     time::Duration,
 };
 use tauri::{Emitter, WebviewWindow};
-use windows::Win32::Foundation::HWND;
 
 use super::{
-    geometry::{island_top_in_stage, STAGE_WINDOW_WIDTH},
+    geometry::{island_top_in_stage, stage_width},
     state::{read_window_state, Edge, IslandMode},
 };
-use crate::win32;
 
 const ISLAND_RESIZE_EVENT: &str = "island-resize";
 const EDGE: f64 = 12.0;
@@ -24,7 +22,6 @@ static RESIZE_TARGET: AtomicU8 = AtomicU8::new(0);
 #[serde(rename_all = "camelCase")]
 pub(crate) enum ModifierTarget {
     None,
-    Move,
     Left,
     Right,
     Bottom,
@@ -38,11 +35,42 @@ impl ModifierTarget {
     }
 
     fn from_u8(value: u8) -> Self {
-        [Self::None, Self::Move, Self::Left, Self::Right, Self::Bottom, Self::BottomLeft, Self::BottomRight]
+        [Self::None, Self::Left, Self::Right, Self::Bottom, Self::BottomLeft, Self::BottomRight]
             .get(usize::from(value))
             .copied()
             .unwrap_or(Self::None)
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Frame {
+    left: f64,
+    top: f64,
+    width: f64,
+    height: f64,
+}
+
+#[cfg(windows)]
+fn window_frame(window: &WebviewWindow) -> Option<Frame> {
+    let rect = crate::win32::window::window_rect(window.hwnd().ok()?)?;
+    Some(Frame {
+        left: f64::from(rect.left),
+        top: f64::from(rect.top),
+        width: f64::from((rect.right - rect.left).max(1)),
+        height: f64::from((rect.bottom - rect.top).max(1)),
+    })
+}
+
+#[cfg(target_os = "macos")]
+fn window_frame(window: &WebviewWindow) -> Option<Frame> {
+    let position = super::screen::window_position(window).ok()?;
+    let size = super::screen::window_size(window).ok()?;
+    Some(Frame {
+        left: f64::from(position.x),
+        top: f64::from(position.y),
+        width: f64::from(size.width.max(1)),
+        height: f64::from(size.height.max(1)),
+    })
 }
 
 pub(super) fn edges_at(x: f64, y: f64, width: f64, height: f64, corner: f64) -> (i8, bool) {
@@ -68,26 +96,24 @@ fn target_for(side: i8, bottom: bool) -> ModifierTarget {
         (-1, false) => ModifierTarget::Left,
         (1, false) => ModifierTarget::Right,
         (_, true) => ModifierTarget::Bottom,
-        _ => ModifierTarget::Move,
+        _ => ModifierTarget::None,
     }
 }
 
-fn edges_under_cursor(hwnd: HWND) -> Option<(i8, bool, f64, bool)> {
-    let window_rect = win32::window::window_rect(hwnd)?;
-    let cursor = win32::window::cursor_position()?;
+fn edges_under_cursor(window: &WebviewWindow) -> Option<(i8, bool, f64, bool)> {
+    let frame = window_frame(window)?;
+    let (cursor_x, cursor_y) = super::screen::cursor_position()?;
     let state = read_window_state();
-    let window_width = (window_rect.right - window_rect.left).max(1) as f64;
-    let per_px = window_width / STAGE_WINDOW_WIDTH * state.active_scale();
+    let per_px = frame.width / stage_width() * state.active_scale();
     let flipped = state.attached_edge == Some(Edge::Bottom);
     if state.side().is_some() {
         return Some((0, false, per_px, flipped));
     }
     let (width, height) = state.base_size();
-    let left = (window_width - width * per_px) / 2.0;
-    let window_height = (window_rect.bottom - window_rect.top).max(1) as f64;
-    let top = island_top_in_stage(state.attached_edge, window_height, height * per_px);
-    let x = ((cursor.x - window_rect.left) as f64 - left) / per_px;
-    let from_top = ((cursor.y - window_rect.top) as f64 - top) / per_px;
+    let left = (frame.width - width * per_px) / 2.0;
+    let top = island_top_in_stage(state.attached_edge, frame.height, height * per_px);
+    let x = (cursor_x - frame.left - left) / per_px;
+    let from_top = (cursor_y - frame.top - top) / per_px;
     let y = if flipped { height - from_top } else { from_top };
     let (side, bottom) = match state.mode {
         IslandMode::Expanded if !PANEL_RESIZABLE.load(Ordering::SeqCst) => (0, false),
@@ -102,11 +128,11 @@ pub fn set_island_panel_resizable(resizable: bool) {
     PANEL_RESIZABLE.store(resizable, Ordering::SeqCst);
 }
 
-pub(super) fn target(hwnd: HWND) -> ModifierTarget {
+pub(super) fn target(window: &WebviewWindow) -> ModifierTarget {
     if read_window_state().is_tucked {
         return ModifierTarget::None;
     }
-    edges_under_cursor(hwnd).map_or(ModifierTarget::Move, |(side, bottom, _, _)| target_for(side, bottom))
+    edges_under_cursor(window).map_or(ModifierTarget::None, |(side, bottom, _, _)| target_for(side, bottom))
 }
 
 pub(super) fn is_resizing() -> bool {
@@ -127,21 +153,18 @@ struct ResizeDelta {
 }
 
 pub(super) fn start_resize(window: &WebviewWindow) -> bool {
-    let Ok(hwnd) = window.hwnd() else {
-        return false;
-    };
     let state = read_window_state();
     if state.is_tucked || RESIZING.load(Ordering::SeqCst) {
         return false;
     }
     let collapsed = matches!(state.mode, IslandMode::Collapsed);
-    let Some((side, bottom, per_px, flipped)) = edges_under_cursor(hwnd) else {
+    let Some((side, bottom, per_px, flipped)) = edges_under_cursor(window) else {
         return false;
     };
     if side == 0 && !bottom {
         return false;
     }
-    let Some(start) = win32::window::cursor_position() else {
+    let Some(start) = super::screen::cursor_position() else {
         return false;
     };
     RESIZE_TARGET.store(target_for(side, bottom).to_u8(), Ordering::SeqCst);
@@ -150,13 +173,13 @@ pub(super) fn start_resize(window: &WebviewWindow) -> bool {
     thread::spawn(move || {
         let mut last = (0.0, 0.0);
         let delta = || {
-            let cursor = win32::window::cursor_position().unwrap_or(start);
-            let width = f64::from(side) * 2.0 * f64::from(cursor.x - start.x) / per_px;
-            let pulled = if flipped { start.y - cursor.y } else { cursor.y - start.y };
-            let height = if bottom { f64::from(pulled) / per_px } else { 0.0 };
+            let cursor = super::screen::cursor_position().unwrap_or(start);
+            let width = f64::from(side) * 2.0 * (cursor.0 - start.0) / per_px;
+            let pulled = if flipped { start.1 - cursor.1 } else { cursor.1 - start.1 };
+            let height = if bottom { pulled / per_px } else { 0.0 };
             (width.round(), height.round())
         };
-        while win32::input::is_left_button_down() {
+        while super::left_button_down() {
             let now = delta();
             if now != last {
                 last = now;
@@ -177,12 +200,12 @@ mod tests {
     use super::{edges_at, target_for, ModifierTarget};
 
     #[test]
-    fn edges_pick_what_an_alt_drag_changes() {
+    fn edges_pick_what_a_drag_changes() {
         let at = |x, y| {
             let (side, bottom) = edges_at(x, y, 560.0, 400.0, 30.0);
             target_for(side, bottom)
         };
-        assert_eq!(at(280.0, 200.0), ModifierTarget::Move);
+        assert_eq!(at(280.0, 200.0), ModifierTarget::None);
         assert_eq!(at(4.0, 200.0), ModifierTarget::Left);
         assert_eq!(at(556.0, 200.0), ModifierTarget::Right);
         assert_eq!(at(280.0, 395.0), ModifierTarget::Bottom);
@@ -202,14 +225,13 @@ mod tests {
         assert_eq!(at(540.0, 394.0), ModifierTarget::BottomRight);
         assert_eq!(at(6.0, 360.0), ModifierTarget::Left);
         assert_eq!(at(500.0, 394.0), ModifierTarget::Bottom);
-        assert_eq!(at(20.0, 380.0), ModifierTarget::Move);
+        assert_eq!(at(20.0, 380.0), ModifierTarget::None);
     }
 
     #[test]
     fn targets_round_trip_through_the_atomic() {
         for target in [
             ModifierTarget::None,
-            ModifierTarget::Move,
             ModifierTarget::Left,
             ModifierTarget::Right,
             ModifierTarget::Bottom,

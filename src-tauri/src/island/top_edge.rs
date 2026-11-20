@@ -2,7 +2,7 @@ use tauri::{Emitter, Monitor, PhysicalPosition, WebviewWindow};
 
 use super::edge;
 use super::geometry::{
-    apply_stage_geometry, monitor_at, monitor_for_island_position, work_area_top_inset, COLLAPSED_ISLAND_HEIGHT, STAGE_WINDOW_WIDTH,
+    apply_stage_geometry, monitor_at, monitor_for_island_position, work_area_top_inset, COLLAPSED_ISLAND_HEIGHT, stage_width,
 };
 use super::side::{full_rect, Rect};
 use super::screen;
@@ -63,7 +63,7 @@ fn monitor_for_drop(window: &WebviewWindow, position: IslandPosition) -> Option<
         return Some(monitor);
     }
     let scale = screen::window_scale(window).unwrap_or(1.0);
-    let centre = (f64::from(position.x) + STAGE_WINDOW_WIDTH * scale / 2.0, f64::from(position.y) + COLLAPSED_ISLAND_HEIGHT * scale / 2.0);
+    let centre = (f64::from(position.x) + stage_width() * scale / 2.0, f64::from(position.y) + COLLAPSED_ISLAND_HEIGHT * scale / 2.0);
     monitor_below(window, centre)
 }
 
@@ -89,7 +89,7 @@ pub(crate) fn snap_to_top(window: &WebviewWindow, position: IslandPosition) -> I
 
     if snapped.y == top.y && cfg!(target_os = "macos") && is_home_monitor(window, &monitor) {
         let (left, width) = (screen::monitor_origin(&monitor).x, screen::monitor_size(&monitor).width as i32);
-        if near_home(snapped.x, STAGE_WINDOW_WIDTH * scale, (left, width), HOME_DISTANCE * scale) {
+        if near_home(snapped.x, stage_width() * scale, (left, width), HOME_DISTANCE * scale) {
             go_home(window);
             return snapped;
         }
