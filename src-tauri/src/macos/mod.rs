@@ -1,4 +1,5 @@
 pub(crate) mod accessibility;
+pub(crate) mod app_icon;
 pub(crate) mod appearance;
 pub(crate) mod asset_writer;
 pub(crate) mod audio_samples;
