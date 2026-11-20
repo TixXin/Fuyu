@@ -1,9 +1,10 @@
 import { relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { DATA_DIR } from "./data.mjs";
+import { PACKAGES_DIR } from "./sources.mjs";
 
 export const WATCHED = [".", "!**/node_modules", "!**/.*"];
-export const DEV_WATCHED = [...WATCHED, `!${DATA_DIR}`];
+export const DEV_WATCHED = [...WATCHED, `!${DATA_DIR}`, `!${PACKAGES_DIR}`];
 const DEBOUNCE_MS = 30;
 
 export function watchBuiltins(ctx, catalog) {

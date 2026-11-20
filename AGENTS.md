@@ -94,6 +94,7 @@
 | 重任务排队 | `pnpm heavy [--label <名字>] -- <命令…>`（全机器限量排队，见 workflow.md「Rust 构建」） |
 | 清理 Rust 构建缓存 | `pnpm prune:target [--dry-run]`（删 `src-tauri/target` 里 3 天没用的增量缓存、本应用的旧产物和 lane 时期留下的预览目录；`pnpm verify` 跑完 `cargo test` 后自动跑） |
 | 完整打包 | `pnpm tauri build` |
+| Microsoft Store 的包 | `pnpm msix [--test-identity] [--allow-prerelease] [--test-cert <指纹>]`（先 `pnpm build:exe`；把 `fuyu.exe` 打成交商店的 MSIX，写到 `src-tauri/target/msix`，见 `docs/features/microsoft-store.md`） |
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
 | 查 GitHub issue | `pnpm issue [<编号…>]`（正文、回复和对应任务；不带编号是列表，参数见 workflow.md「任务认领」） |

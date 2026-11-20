@@ -102,6 +102,8 @@ export type SettingsProjectText = {
     notesHide: string;
     unavailable: string;
     manualOnly: string;
+    storeUpdates: string;
+    storeUpdatesHint: string;
     channel: string;
     channelStable: string;
     channelBeta: string;
@@ -251,6 +253,8 @@ export const zhCN: SettingsProjectText = {
     notesHide: "收起",
     unavailable: "这里不能应用内更新，请到 Release 页手动下载。",
     manualOnly: "需要手动更新",
+    storeUpdates: "由 Microsoft Store 更新",
+    storeUpdatesHint: "这是商店版，新版本由 Microsoft Store 自动安装。",
     channel: "更新通道",
     channelStable: "稳定版",
     channelBeta: "测试版（beta）",
@@ -400,6 +404,8 @@ export const en: SettingsProjectText = {
     notesHide: "Hide",
     unavailable: "In-app updates aren't available here. Grab new versions from the release page.",
     manualOnly: "Manual updates only",
+    storeUpdates: "Updated by Microsoft Store",
+    storeUpdatesHint: "This is the Store version. Microsoft Store installs new versions for you.",
     channel: "Update channel",
     channelStable: "Stable",
     channelBeta: "Beta",
