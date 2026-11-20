@@ -116,6 +116,21 @@ export function flowPanelItems(items: readonly Pick<PanelItem, "widget" | "size"
   });
 }
 
+export function flowStrip(items: readonly Pick<PanelItem, "widget" | "size">[], rows: number): PanelItem[] {
+  const taken: CellBox[] = [];
+  return items.map((item) => {
+    const { cols, rows: tall } = CELLS[item.size];
+    for (let col = 0; ; col += 1) {
+      for (let row = 0; row + tall <= Math.max(rows, tall); row += 1) {
+        const box = { col, row, cols, rows: tall };
+        if (taken.some((other) => overlaps(box, other))) continue;
+        taken.push(box);
+        return placed(item.widget, item.size, col, row);
+      }
+    }
+  });
+}
+
 export function gridRows(items: readonly PanelItem[]): number {
   return items.reduce((rows, item) => {
     const box = cellBox(item);
@@ -180,7 +195,7 @@ export function nextPanelSize(sizes: readonly PanelSize[], current: PanelSize): 
 
 const touches = (a: PanelItem, b: PanelItem) => a.x < b.x + b.w + 1 && b.x < a.x + a.w + 1 && a.y < b.y + b.h + 1 && b.y < a.y + a.h + 1;
 
-function pushedAway(items: readonly PanelItem[], widget: string): PanelItem[] {
+function pushedAway(items: readonly PanelItem[], widget: string, sideways = false): PanelItem[] {
   const placed = items.map((item) => ({ ...item }));
   const queue = placed.filter((item) => item.widget === widget);
   for (let guard = placed.length * placed.length; queue.length > 0 && guard > 0; guard -= 1) {
@@ -188,28 +203,29 @@ function pushedAway(items: readonly PanelItem[], widget: string): PanelItem[] {
     if (!blocker) break;
     for (const other of placed) {
       if (other === blocker || other.widget === widget || !touches(blocker, other)) continue;
-      other.y = blocker.y + blocker.h + 1;
+      if (sideways) other.x = blocker.x + blocker.w + 1;
+      else other.y = blocker.y + blocker.h + 1;
       queue.push(other);
     }
   }
-  return placed.map((item, index) => (item.y === items[index].y ? items[index] : item));
+  return placed.map((item, index) => (item.x === items[index].x && item.y === items[index].y ? items[index] : item));
 }
 
-export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: number, widthUnits = FREE_WIDTH_UNITS): CustomPanel {
+export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: number, widthUnits = FREE_WIDTH_UNITS, heightUnits = Infinity): CustomPanel {
   const item = panel.items.find((candidate) => candidate.widget === widget);
   if (!item || panel.mode !== "free") return panel;
-  const next = { ...item, x: clamp(Math.round(x), 0, widthUnits - item.w), y: Math.max(0, Math.round(y)) };
+  const next = { ...item, x: clamp(Math.round(x), 0, widthUnits - item.w), y: clamp(Math.round(y), 0, heightUnits - item.h) };
   if (next.x === item.x && next.y === item.y && panel.items[panel.items.length - 1] === item) return panel;
-  return { ...panel, items: pushedAway([...panel.items.filter((candidate) => candidate !== item), next], widget) };
+  return { ...panel, items: pushedAway([...panel.items.filter((candidate) => candidate !== item), next], widget, heightUnits !== Infinity) };
 }
 
-export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number, widthUnits = FREE_WIDTH_UNITS): CustomPanel {
+export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number, widthUnits = FREE_WIDTH_UNITS, heightUnits = Infinity): CustomPanel {
   const item = panel.items.find((candidate) => candidate.widget === widget);
   if (!item || panel.mode !== "free") return panel;
   const least = minBox(item.size);
-  const next = { ...item, w: clamp(Math.round(w), least.w, widthUnits - item.x), h: Math.max(least.h, Math.round(h)) };
+  const next = { ...item, w: clamp(Math.round(w), least.w, widthUnits - item.x), h: clamp(Math.round(h), least.h, heightUnits - item.y) };
   if (next.w === item.w && next.h === item.h) return panel;
-  return { ...panel, items: pushedAway(panel.items.map((candidate) => (candidate === item ? next : candidate)), widget) };
+  return { ...panel, items: pushedAway(panel.items.map((candidate) => (candidate === item ? next : candidate)), widget, heightUnits !== Infinity) };
 }
 
 export type PanelBox = { left: number; top: number; width: number; height: number };
@@ -225,14 +241,25 @@ export function boardHeightPx(panel: CustomPanel): number {
   return panel.mode === "free" ? Math.max(freeHeightPx(panel.items), GRID_CELL_PX) : cellsToPx(Math.max(1, gridRows(panel.items)));
 }
 
-export const gridColumnsFor = (widthPx: number) => Math.max(GRID_COLUMNS, Math.floor((widthPx + GRID_GAP_PX) / (GRID_CELL_PX + GRID_GAP_PX)));
-
-export function layoutGrid(panel: CustomPanel, columns: number): CustomPanel {
-  return panel.mode === "grid" ? { ...panel, items: flowPanelItems(panel.items, columns) } : panel;
+export function layoutStrip(panel: CustomPanel, rows: number): CustomPanel {
+  return panel.mode === "grid" ? { ...panel, items: flowStrip(panel.items, rows) } : panel;
 }
 
-export function boardWidthPx(panel: CustomPanel, widthPx: number): number {
-  return panel.mode === "free" ? Math.max(gridWidthPx, widthPx, freeRightPx(panel.items)) : cellsToPx(gridColumnsFor(widthPx));
+export function stripRightPx(panel: CustomPanel): number {
+  if (panel.mode === "free") return freeRightPx(panel.items);
+  const cols = panel.items.reduce((right, item) => Math.max(right, cellBox(item).col + cellBox(item).cols), 0);
+  return cols > 0 ? cellsToPx(cols) : 0;
+}
+
+export function stripInsertIndexAt(panel: CustomPanel, x: number, y: number, skip: string | null): number {
+  const rest = panel.items.filter((item) => item.widget !== skip);
+  for (let index = 0; index < rest.length; index += 1) {
+    const box = itemBoxPx(panel, rest[index]);
+    const inColumn = x >= box.left && x < box.left + box.width;
+    if (inColumn && y >= box.top && y < box.top + box.height) return x < box.left + box.width / 2 ? index : index + 1;
+    if (x < box.left || (inColumn && y < box.top)) return index;
+  }
+  return rest.length;
 }
 
 export function setPanelMode(panel: CustomPanel, mode: PanelMode): CustomPanel {

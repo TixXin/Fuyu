@@ -8,9 +8,9 @@ import {
   FUYU_PAGE_ID,
   fuyuPanel,
   fuyuPanels,
-  gridColumnsFor,
   gridRows,
-  layoutGrid,
+  layoutStrip,
+  stripInsertIndexAt,
   insertIndexAt,
   movePanelItemTo,
   nextPanelSize,
@@ -176,10 +176,15 @@ test("in a free panel a widget put down on others pushes them down instead of co
   assert.deepEqual([at("a").y, at("c").y], [41, 57]);
 });
 
-test("a grid panel uses as many columns as the panel is wide", () => {
-  assert.equal(gridColumnsFor(504), 4);
-  assert.equal(gridColumnsFor(760), 6);
-  assert.equal(gridColumnsFor(300), 4);
-  const panel = layoutGrid(addPanelItem(addPanelItem(addPanelItem(empty, "a", "m"), "b", "m"), "c", "m"), 6);
-  assert.deepEqual(boxes(panel), [["a", 0, 0], ["b", 2, 0], ["c", 4, 0]]);
+test("the Fuyu strip fills two rows column by column and grows to the right", () => {
+  const panel = layoutStrip(["a", "b", "c", "d", "e"].reduce((next, widget, at) => addPanelItem(next, widget, at === 1 ? "m" : "s"), empty), 2);
+  assert.deepEqual(boxes(panel), [["a", 0, 0], ["b", 0, 1], ["c", 1, 0], ["d", 2, 0], ["e", 2, 1]]);
+  assert.ok(panel.items.every((item) => cellBox(item).row + cellBox(item).rows <= 2));
+});
+
+test("dropping on the strip inserts by column, then by row", () => {
+  const panel = layoutStrip(["a", "b", "c"].reduce((next, widget) => addPanelItem(next, widget, "s"), empty), 2);
+  assert.equal(stripInsertIndexAt(panel, 10, 200, null), 1);
+  assert.equal(stripInsertIndexAt(panel, 300, 10, null), 3);
+  assert.equal(stripInsertIndexAt(panel, 100, 10, null), 1);
 });

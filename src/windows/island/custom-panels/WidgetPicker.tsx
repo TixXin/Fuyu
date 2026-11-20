@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import type { LibraryWidget, WidgetLibrary } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
 import type { CustomPanel } from "../../../lib/settings/customPanels";
+import { useWheelScrollsSideways } from "./useWheelScrollsSideways";
 
 const DRAG_START_PX = 5;
 
@@ -15,22 +16,6 @@ type PickerProps = {
   onDrag: (drag: PickerDrag | null) => void;
   onDrop: (drag: PickerDrag) => void;
 };
-
-function useWheelScrollsSideways() {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-    const onWheel = (event: WheelEvent) => {
-      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX) || element.scrollWidth <= element.clientWidth) return;
-      element.scrollLeft += event.deltaY;
-      event.preventDefault();
-    };
-    element.addEventListener("wheel", onWheel, { passive: false });
-    return () => element.removeEventListener("wheel", onWheel);
-  }, []);
-  return ref;
-}
 
 function useChipDrag({ onAdd, onDrag, onDrop }: Pick<PickerProps, "onAdd" | "onDrag" | "onDrop">) {
   const [ghost, setGhost] = useState<PickerDrag | null>(null);
@@ -80,7 +65,8 @@ function useChipDrag({ onAdd, onDrag, onDrop }: Pick<PickerProps, "onAdd" | "onD
 
 export function WidgetPicker({ panel, library, onAdd, onDrag, onDrop }: PickerProps) {
   const t = useTranslation().islandWidgets.panel;
-  const ref = useWheelScrollsSideways();
+  const ref = useRef<HTMLDivElement>(null);
+  useWheelScrollsSideways(ref);
   const { ghost, press } = useChipDrag({ onAdd, onDrag, onDrop });
   const taken = new Set(panel.items.map((item) => item.widget));
   const rest = library.widgets.filter((widget) => !taken.has(widget.id));

@@ -28,8 +28,18 @@ test("stretching stops one gap short of the widget below", () => {
   assert.equal(snapped.guideY, 192);
 });
 
-test("a free panel as wide as the island keeps a widget dropped past the old four-column edge", () => {
+test("a free strip keeps a widget inside its two rows and lets it go far to the right", () => {
   const panel = free([{ widget: "a", size: "m", x: 0, y: 0, w: 31, h: 15 }]);
-  const moved = draggedTo(panel, { widget: "a", kind: "move", dx: 520, dy: 0 }, 760).items[0];
-  assert.equal(moved.x * 8, 512);
+  const moved = draggedTo(panel, { widget: "a", kind: "move", dx: 900, dy: 400 }, { width: 1400, height: 248 }).items[0];
+  assert.deepEqual([moved.x * 8, moved.y * 8], [896, 128]);
+});
+
+test("in a free strip a widget put down on another pushes it to the right, not down", () => {
+  const panel = free([
+    { widget: "a", size: "s", x: 0, y: 0, w: 15, h: 15 },
+    { widget: "b", size: "s", x: 32, y: 0, w: 15, h: 15 },
+  ]);
+  const next = draggedTo(panel, { widget: "a", kind: "move", dx: 256, dy: 0 }, { width: 1400, height: 248 });
+  const b = next.items.find((item) => item.widget === "b");
+  assert.deepEqual([b.x, b.y], [48, 0]);
 });

@@ -4,10 +4,11 @@ import { useBoxDrag, type BoxDragKind } from "../../../components/island-widget/
 import { SlotView } from "../../../features/plugin-kernel/SlotView";
 import type { WidgetLibrary } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { boardHeightPx, GRID_CELL_PX, GRID_GAP_PX, itemBoxPx, layoutGrid, nextPanelSize, reorderPanelItem, resizePanelItem, sizeCells, type CustomPanel, type PanelSize } from "../../../lib/settings/customPanels";
+import { GRID_CELL_PX, GRID_GAP_PX, itemBoxPx, layoutStrip, nextPanelSize, reorderPanelItem, resizePanelItem, sizeCells, type CustomPanel, type PanelSize } from "../../../lib/settings/customPanels";
 import { MOTION_MEDIUM_MS } from "../../../lib/theme/motionTokens";
 import { widgetSlot } from "../slots/widget";
-import { draggedTo, freeTarget, keptInside, previewOf, type DragArea, type IncomingWidget } from "./boardDrag";
+import { draggedTo, freeTarget, keptInside, previewOf, type Board, type IncomingWidget } from "./boardDrag";
+import { FUYU_ROWS } from "./panelSize";
 import type { LongPressStart } from "./useLongPress";
 
 const CELL_PADDING = 10;
@@ -21,9 +22,10 @@ function sizeLabel(size: PanelSize) {
   return `${cols}×${rows}`;
 }
 
-function GridSlots({ height, columns }: { height: number; columns: number }) {
+function GridSlots({ width, height }: Board) {
   const step = GRID_CELL_PX + GRID_GAP_PX;
   const rows = Math.max(1, Math.floor((height + GRID_GAP_PX) / step));
+  const columns = Math.max(1, Math.floor((width + GRID_GAP_PX) / step));
   return Array.from({ length: rows * columns }, (_, at) => (
     <span key={at} className="custom-panel__slot" style={{ left: (at % columns) * step, top: Math.floor(at / columns) * step, width: GRID_CELL_PX, height: GRID_CELL_PX }} aria-hidden="true" />
   ));
@@ -51,9 +53,7 @@ type PanelBoardProps = {
   library: WidgetLibrary;
   editing: boolean;
   scale: number;
-  width: number;
-  columns: number;
-  area: DragArea | null;
+  board: Board;
   incoming: IncomingWidget | null;
   held: HeldWidget | null;
   onHeldTaken: () => void;
@@ -62,7 +62,7 @@ type PanelBoardProps = {
   onRemove: (widget: string, name: string) => void;
 };
 
-export function PanelBoard({ panel, library, editing, scale, width, columns, area, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
+export function PanelBoard({ panel, library, editing, scale, board, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
   const t = useTranslation().islandWidgets.panel;
   const free = panel.mode === "free";
   const [settle, setSettle] = useSettle();
@@ -74,14 +74,14 @@ export function PanelBoard({ panel, library, editing, scale, width, columns, are
   const { drag: rawDrag, begin, beginAt } = useBoxDrag({
     scale,
     onDrop: (released) => {
-      const drop = keptInside(panel, released, area, width);
+      const drop = keptInside(panel, released, board);
       const item = panel.items.find((candidate) => candidate.widget === drop.widget);
       if (!item) return;
-      const next = layoutGrid(draggedTo(panel, drop, width), columns);
+      const next = layoutStrip(draggedTo(panel, drop, board), FUYU_ROWS);
       const placed = next.items.find((candidate) => candidate.widget === drop.widget);
       if (drop.kind === "move" && placed) {
         const from = itemBoxPx(panel, item);
-        const target = freeTarget(panel, drop, width);
+        const target = freeTarget(panel, drop, board);
         const to = itemBoxPx(next, placed);
         setSettle({ widget: drop.widget, x: (target ? target.left : from.left + drop.dx) - to.left, y: (target ? target.top : from.top + drop.dy) - to.top, go: false });
       }
@@ -105,15 +105,14 @@ export function PanelBoard({ panel, library, editing, scale, width, columns, are
     const before = delta < 0 ? (panel.items[index - 1]?.widget ?? null) : (panel.items[index + 2]?.widget ?? null);
     onChange(reorderPanelItem(panel, item.widget, before));
   };
-  const drag = rawDrag && keptInside(panel, rawDrag, area, width);
-  const shown = layoutGrid(previewOf(panel, drag, incoming, width), columns);
-  const target = drag ? freeTarget(panel, drag, width) : null;
+  const drag = rawDrag && keptInside(panel, rawDrag, board);
+  const shown = layoutStrip(previewOf(panel, drag, incoming, board), FUYU_ROWS);
+  const target = drag ? freeTarget(panel, drag, board) : null;
   const last = panel.items.length - 1;
-  const height = editing ? Math.max(boardHeightPx(shown), area?.bottom ?? 0) : boardHeightPx(shown);
 
   return (
-    <div className="custom-panel__grid" ref={gridRef} style={{ width, height }} data-mode={panel.mode} data-editing={editing || undefined}>
-      {editing && !free ? <GridSlots height={height} columns={columns} /> : null}
+    <div className="custom-panel__grid" ref={gridRef} style={{ width: board.width, height: board.height }} data-mode={panel.mode} data-editing={editing || undefined}>
+      {editing && !free ? <GridSlots {...board} /> : null}
       {target?.guideX != null ? <span className="custom-panel__guide" data-axis="x" style={{ left: target.guideX }} aria-hidden="true" /> : null}
       {target?.guideY != null ? <span className="custom-panel__guide" data-axis="y" style={{ top: target.guideY }} aria-hidden="true" /> : null}
       {shown.items.map((item, order) => {

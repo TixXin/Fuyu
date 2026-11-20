@@ -33,20 +33,20 @@ function endPulls(starts: readonly number[], ends: readonly number[]): Pull[] {
   return [...ends.map((end) => ({ value: end, guide: end })), ...starts.map((start) => ({ value: start - GAP_PX, guide: start - GAP_PX }))];
 }
 
-export function snapMove(box: SnapBox, others: readonly SnapBox[], boardWidth: number): Snapped {
+export function snapMove(box: SnapBox, others: readonly SnapBox[], boardWidth: number, boardHeight = Infinity): Snapped {
   const x = closest(box.left, startPulls(others.map((other) => other.left), others.map((other) => other.left + other.width), box.width));
   const y = closest(box.top, startPulls(others.map((other) => other.top), others.map((other) => other.top + other.height), box.height));
   const left = within(x ? x.value : toDots(box.left), 0, boardWidth - box.width);
-  const top = Math.max(0, y ? y.value : toDots(box.top));
+  const top = within(y ? y.value : toDots(box.top), 0, boardHeight - box.height);
   return { ...box, left, top, guideX: x && left === x.value ? x.guide : null, guideY: y && top === y.value ? y.guide : null };
 }
 
-export function snapStretch(box: SnapBox, others: readonly SnapBox[], boardWidth: number, least: { width: number; height: number }): Snapped {
+export function snapStretch(box: SnapBox, others: readonly SnapBox[], boardWidth: number, least: { width: number; height: number }, boardHeight = Infinity): Snapped {
   const right = box.left + box.width;
   const bottom = box.top + box.height;
   const x = closest(right, endPulls(others.map((other) => other.left), others.map((other) => other.left + other.width)));
   const y = closest(bottom, endPulls(others.map((other) => other.top), others.map((other) => other.top + other.height)));
   const width = within((x ? x.value : toDots(right)) - box.left, least.width, boardWidth - box.left);
-  const height = Math.max(least.height, (y ? y.value : toDots(bottom)) - box.top);
+  const height = within((y ? y.value : toDots(bottom)) - box.top, least.height, boardHeight - box.top);
   return { ...box, width, height, guideX: x && box.left + width === x.value ? x.guide : null, guideY: y && box.top + height === y.value ? y.guide : null };
 }
