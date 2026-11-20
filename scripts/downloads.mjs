@@ -43,6 +43,14 @@ const rows = releases.map((r) => {
 });
 
 const grand = rows.reduce((s, r) => s + r.total, 0);
+const latestJson = rows.reduce(
+  (s, r) =>
+    s +
+    r.assets
+      .filter((a) => a.name === "latest.json")
+      .reduce((n, a) => n + a.download_count, 0),
+  0
+);
 const maxCount = Math.max(...rows.map((r) => r.total), 1);
 
 const tagW = Math.max(...rows.map((r) => r.tag.length), 7);
@@ -67,4 +75,5 @@ for (const row of rows) {
 
 console.log(`  ${"─".repeat(tagW + 2 + 20 + 2 + 8)}`);
 console.log(`  ${"总计".padEnd(tagW + 22)}${fmt(grand).padStart(8)}`);
+console.log(`  ${"latest.json 合计".padEnd(tagW + 22)}${fmt(latestJson).padStart(8)}`);
 console.log();
