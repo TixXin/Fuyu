@@ -50,6 +50,19 @@ export type ScreenshotText = {
   color: (hex: string) => string;
   textPlaceholder: string;
   deleteAnnotation: string;
+  sheet: {
+    title: string;
+    collapse: string;
+    expand: string;
+    dragHint: string;
+    sections: Record<"pick" | "finish" | "tools" | "record", string>;
+    words: Record<"drag" | "click" | "wheel" | "hold", string>;
+    rows: Record<
+      | "selectArea" | "pickWindow" | "layer" | "copyColor" | "measure" | "cancel" | "copy" | "save" | "pin" | "undoRedo" | "deleteMark" | "wholeScreen" | "gif" | "collapse"
+      | "rect" | "ellipse" | "line" | "arrow" | "pen" | "highlighter" | "text" | "mosaic" | "blur" | "spotlight" | "number",
+      string
+    >;
+  };
   qr: { title: string; button: (count: number) => string; link: string; text: string; open: string; copy: string; copied: string };
   pinMenu: {
     copy: string;
@@ -198,6 +211,19 @@ export const zhCN: ScreenshotText = {
   color: (hex) => `颜色 ${hex}`,
   textPlaceholder: "输入文字",
   deleteAnnotation: "删除这个标注（Delete）",
+  sheet: {
+    title: "快捷键",
+    collapse: "收起（?）",
+    expand: "展开快捷键说明（?）",
+    dragHint: "拖动标题栏换到别的角",
+    sections: { pick: "选区", finish: "截完", tools: "标注工具", record: "录屏" },
+    words: { drag: "拖动", click: "单击", wheel: "滚轮", hold: "按住" },
+    rows: {
+      selectArea: "选区域", pickWindow: "选窗口 / 控件", layer: "换外层 / 内层", copyColor: "复制颜色", measure: "测量距离", cancel: "取消",
+      copy: "复制", save: "保存", pin: "贴到屏幕", undoRedo: "撤销 / 重做", deleteMark: "删除选中标注", wholeScreen: "整个屏幕", gif: "MP4 / GIF", collapse: "收起说明",
+      rect: "矩形", ellipse: "椭圆", line: "直线", arrow: "箭头", pen: "画笔", highlighter: "荧光笔", text: "文字", mosaic: "马赛克", blur: "模糊", spotlight: "聚光灯", number: "序号",
+    },
+  },
   qr: {
     title: "选区里的二维码",
     button: (count) => (count > 1 ? `识别到 ${count} 个二维码` : "识别到二维码"),
@@ -354,6 +380,19 @@ export const en: ScreenshotText = {
   color: (hex) => `Colour ${hex}`,
   textPlaceholder: "Type text",
   deleteAnnotation: "Delete this annotation (Delete)",
+  sheet: {
+    title: "Shortcuts",
+    collapse: "Collapse (?)",
+    expand: "Show shortcuts (?)",
+    dragHint: "Drag the title to another corner",
+    sections: { pick: "Select", finish: "Finish", tools: "Annotate", record: "Record" },
+    words: { drag: "Drag", click: "Click", wheel: "Wheel", hold: "Hold" },
+    rows: {
+      selectArea: "Select area", pickWindow: "Pick window", layer: "Outer / inner", copyColor: "Copy colour", measure: "Measure", cancel: "Cancel",
+      copy: "Copy", save: "Save", pin: "Pin to screen", undoRedo: "Undo / redo", deleteMark: "Delete mark", wholeScreen: "Whole screen", gif: "MP4 / GIF", collapse: "Hide this",
+      rect: "Rectangle", ellipse: "Ellipse", line: "Line", arrow: "Arrow", pen: "Pen", highlighter: "Highlighter", text: "Text", mosaic: "Mosaic", blur: "Blur", spotlight: "Spotlight", number: "Number",
+    },
+  },
   qr: {
     title: "QR codes in the selection",
     button: (count) => (count > 1 ? `${count} QR codes found` : "QR code found"),

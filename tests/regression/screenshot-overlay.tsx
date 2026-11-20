@@ -72,10 +72,19 @@ async function runChecks() {
   try {
     for (let tries = 0; tries < 50 && !calls.some((call) => call.command === "screenshot_overlay_ready"); tries += 1) await wait(20);
     check(document.querySelector<HTMLCanvasElement>(".screenshot-overlay__picture")?.width === WIDTH, "The frozen picture is drawn at the monitor's size, then the overlay says it is ready");
+    const sheet = () => document.querySelector<HTMLElement>(".screenshot-sheet");
+    check(sheet()?.textContent?.includes("快捷键") && sheet()?.textContent?.includes("复制颜色") && !sheet()?.textContent?.includes("标注工具"), "Before a region is chosen, the cheat sheet lists the selecting keys");
+    check(sheet()!.offsetLeft === 12 && sheet()!.offsetTop + sheet()!.offsetHeight === HEIGHT - 12, "…in the bottom-left corner by default");
 
     await drag([40, 40], [240, 200]);
     check(document.querySelectorAll(".screenshot-overlay__toolbar button[aria-pressed]").length === 11, "A chosen region gets the toolbar with the eleven annotation tools");
     check(button("撤销（Ctrl+Z）")?.disabled && button("重做（Ctrl+Y）")?.disabled, "Undo and redo start disabled");
+    check(sheet()?.textContent?.includes("标注工具") && sheet()?.textContent?.includes("删除选中标注"), "Once a region is chosen, the cheat sheet switches to finishing keys and the tool keys");
+    await key({ key: "?" });
+    check(!sheet() && document.querySelector(".screenshot-sheet-pill") && JSON.parse(localStorage.getItem("fuyu-screenshot-settings") ?? "{}").shortcutPanel === "collapsed", "? collapses it to a small button and remembers that");
+    check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]'), "…without picking a tool");
+    await key({ key: "?" });
+    check(sheet() && JSON.parse(localStorage.getItem("fuyu-screenshot-settings") ?? "{}").shortcutPanel === "open", "? again brings it back");
     for (let tries = 0; tries < 50 && !calls.some((call) => call.command === "screenshot_read_qr"); tries += 1) await wait(20);
     check(calls.some((call) => call.command === "screenshot_read_qr") && !document.querySelector(".screenshot-overlay__toolbar svg.lucide-qr-code"), "The settled selection is checked for QR codes; with none, nothing extra shows");
     await key({ key: "Enter" });

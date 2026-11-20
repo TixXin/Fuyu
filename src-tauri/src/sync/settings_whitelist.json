@@ -233,6 +233,8 @@
         "historyText": "sync",
         "agentSource": "sync",
         "restorePins": "sync",
+        "shortcutPanel": "sync",
+        "shortcutCorner": "sync",
         "record": "optional",
         "version": "local"
       }

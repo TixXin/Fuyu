@@ -3211,6 +3211,32 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "截图时",
+        "title": "快捷键说明",
+        "description": "截图时在屏幕一角列出当前能用的快捷键，选区前后内容不同。截图时按 ? 收起或展开，碰到选区或鼠标时自动变淡；截出来的图里不会有它。"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Shortcut cheat sheet",
+        "description": "Lists the keys you can use in a corner of the screen while capturing; it changes once a region is chosen. Press ? to collapse or expand it; it fades when the selection or the pointer reaches it, and it never appears in the capture."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "截图时",
+        "title": "快捷键说明的位置",
+        "description": "截图时拖动说明的标题栏，松手后吸附到最近的角，这里会跟着变。"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Cheat sheet position",
+        "description": "While capturing, drag the cheat sheet by its title; it snaps to the nearest corner and this follows."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "截完之后",
         "title": "保存位置",
         "description": "Ctrl+S 和贴图的「保存」放到这里，文件名带时间。要写完整路径，例如 D:\\截图；留空就是「图片 › 浮屿截图」。"

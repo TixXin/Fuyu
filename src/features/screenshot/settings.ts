@@ -14,6 +14,11 @@ export type RecordQuality = (typeof RECORD_QUALITIES)[number];
 export const RECORD_FORMATS = ["mp4", "gif"] as const;
 export type RecordFormat = (typeof RECORD_FORMATS)[number];
 
+export const SHORTCUT_PANEL_STATES = ["open", "collapsed", "off"] as const;
+export type ShortcutPanelState = (typeof SHORTCUT_PANEL_STATES)[number];
+export const SHORTCUT_PANEL_CORNERS = ["bl", "br", "tl", "tr"] as const;
+export type ShortcutPanelCorner = (typeof SHORTCUT_PANEL_CORNERS)[number];
+
 export type RecordSettings = {
   fps: RecordFps;
   quality: RecordQuality;
@@ -32,6 +37,8 @@ export type ScreenshotSettings = {
   historyText: boolean;
   agentSource: boolean;
   restorePins: boolean;
+  shortcutPanel: ShortcutPanelState;
+  shortcutCorner: ShortcutPanelCorner;
   record: RecordSettings;
   version: 2;
 };
@@ -56,6 +63,8 @@ export const DEFAULT_SCREENSHOT_SETTINGS: ScreenshotSettings = {
   historyText: true,
   agentSource: true,
   restorePins: true,
+  shortcutPanel: "open",
+  shortcutCorner: "bl",
   record: { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4", ownWindows: false },
   version: 2,
 };
@@ -98,6 +107,8 @@ export function normalizeScreenshotSettings(value: unknown): ScreenshotSettings 
     historyText: saved.historyText !== false,
     agentSource: saved.agentSource !== false,
     restorePins: saved.restorePins !== false,
+    shortcutPanel: oneOf(SHORTCUT_PANEL_STATES, saved.shortcutPanel, DEFAULT_SCREENSHOT_SETTINGS.shortcutPanel),
+    shortcutCorner: oneOf(SHORTCUT_PANEL_CORNERS, saved.shortcutCorner, DEFAULT_SCREENSHOT_SETTINGS.shortcutCorner),
     record: recordOf(saved.record),
     version: 2,
   };

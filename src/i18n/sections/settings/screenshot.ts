@@ -4,6 +4,12 @@ export type SettingsScreenshotText = {
   whileCapturingTitle: string;
   guides: string;
   guidesHint: string;
+  shortcutPanel: string;
+  shortcutPanelHint: string;
+  shortcutPanelStates: Record<"open" | "collapsed" | "off", string>;
+  shortcutCorner: string;
+  shortcutCornerHint: string;
+  shortcutCorners: Record<"bl" | "br" | "tl" | "tr", string>;
   shortcutsTitle: string;
   actions: Record<ShortcutAction, string>;
   actionHints: Record<ShortcutAction, string>;
@@ -61,6 +67,12 @@ export const zhCN: SettingsScreenshotText = {
   whileCapturingTitle: "截图时",
   guides: "显示辅助线",
   guidesHint: "虚线贯穿整个屏幕，方便对齐边缘：一横一竖跟着鼠标（选好区域后隐藏），选区的四条边也各延长一条。",
+  shortcutPanel: "快捷键说明",
+  shortcutPanelHint: "截图时在屏幕一角列出当前能用的快捷键，选区前后内容不同。截图时按 ? 收起或展开，碰到选区或鼠标时自动变淡；截出来的图里不会有它。",
+  shortcutPanelStates: { open: "展开", collapsed: "收起成小按钮", off: "不显示" },
+  shortcutCorner: "快捷键说明的位置",
+  shortcutCornerHint: "截图时拖动说明的标题栏，松手后吸附到最近的角，这里会跟着变。",
+  shortcutCorners: { bl: "左下角", br: "右下角", tl: "左上角", tr: "右上角" },
   shortcutsTitle: "快捷键",
   actions: {
     region: "截图",
@@ -140,6 +152,12 @@ export const en: SettingsScreenshotText = {
   whileCapturingTitle: "While capturing",
   guides: "Show guide lines",
   guidesHint: "Dashed lines across the screen for lining up edges: one each way through the pointer (hidden once a region is chosen), and one along each edge of the selection.",
+  shortcutPanel: "Shortcut cheat sheet",
+  shortcutPanelHint: "Lists the keys you can use in a corner of the screen while capturing; it changes once a region is chosen. Press ? to collapse or expand it; it fades when the selection or the pointer reaches it, and it never appears in the capture.",
+  shortcutPanelStates: { open: "Expanded", collapsed: "Collapsed to a button", off: "Hidden" },
+  shortcutCorner: "Cheat sheet position",
+  shortcutCornerHint: "While capturing, drag the cheat sheet by its title; it snaps to the nearest corner and this follows.",
+  shortcutCorners: { bl: "Bottom left", br: "Bottom right", tl: "Top left", tr: "Top right" },
   shortcutsTitle: "Shortcuts",
   actions: {
     region: "Screenshot",
