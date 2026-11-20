@@ -20,6 +20,7 @@ export type IslandHeaderContext = {
   pageDigitModifiers: string;
   withShortcut: (label: string, target: IslandPage) => string;
   isPageEnabled: (target: IslandPage) => boolean;
+  isPageShown: (target: IslandPage) => boolean;
 };
 
 export const headerSlot = defineSlot<IslandHeaderContext, IslandHeaderMeta<IslandHeaderContext>>("island.header/v1");

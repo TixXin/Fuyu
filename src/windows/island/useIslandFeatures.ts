@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useUnsupportedFeatures } from "../../lib/platform";
+import { useIslandPages } from "../../lib/settings/useIslandPages";
 import { builtinConfigBoolean, isBuiltinEnabled } from "../../features/plugin-kernel/builtinSwitches";
-import { foldScreenshotsIntoClipboard, resolveIslandPage, withoutUnsupported, type IslandFeatures } from "./features";
+import { foldScreenshotsIntoClipboard, resolveIslandPage, withPageLayout, withoutUnsupported, type IslandFeatures } from "./features";
 import type { IslandPage } from "./types";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
@@ -23,11 +24,12 @@ export function useIslandFeatures({
   const unsupported = useUnsupportedFeatures();
   const plugins = useBuiltinPlugins();
   const { pages, settled } = useIslandContributed();
+  const { layout: pageLayout } = useIslandPages();
   const features = useMemo<IslandFeatures>(() => {
     const enabled = (id: string, fallback = true) => isBuiltinEnabled(plugins, id, fallback);
     const messagesOn = enabled("messages");
     const mailOn = messagesOn && (builtinConfigBoolean(plugins, "messages", "mail") ?? settings.mailEnabled);
-    return foldScreenshotsIntoClipboard(withoutUnsupported({
+    return withPageLayout(foldScreenshotsIntoClipboard(withoutUnsupported({
       todo: enabled("todos", settings.todoEnabled),
       calendar: enabled("calendar", settings.calendarEnabled),
       music: enabled("music", settings.musicEnabled),
@@ -40,8 +42,9 @@ export function useIslandFeatures({
       qqMail: mailOn,
       agents: enabled("agents", settings.agentStatusEnabled),
       translation: enabled("translation", settings.translationEnabled) && settings.translationTarget === "island",
-    }, unsupported));
+    }, unsupported)), pageLayout);
   }, [
+    pageLayout,
     unsupported,
     plugins,
     pages.qq,

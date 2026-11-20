@@ -7,6 +7,7 @@ import { DisplaySettingsSection } from "../sections/DisplaySettingsSection";
 import { CENTER_ITEMS } from "./centerItems";
 import { firstListedMatch } from "./itemPlace";
 import { IslandBarPreview } from "./IslandBarPreview";
+import { IslandPagesSection } from "./IslandPagesSection";
 import { onIslandLayoutItem, takeIslandLayoutItem } from "./islandLayoutFocus";
 import { useCollapsedLayout } from "./useCollapsedLayout";
 
@@ -60,6 +61,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
       <IslandBarPreview settings={settings} names={names} placements={placements} centers={centers} openItem={openItem} onPick={pick} />
       <CollapsedItemsSection layout={layout} settings={settings} onSettingsChange={onSettingsChange} openItem={openItem} onOpenItem={setOpenItem} />
       <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />
+      <IslandPagesSection settings={settings} pluginPages={layout.pluginPages} />
     </div>
   );
 }

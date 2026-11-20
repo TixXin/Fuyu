@@ -1,11 +1,14 @@
 import { loadLocale } from "../../i18n";
-import { barItemName, barUsageReport, type BarUsageBox, type BarUsageCandidate, type BarUsageReport } from "./barUsage.ts";
+import { barItemName, barUsageReport, type BarUsageBox, type BarUsageCandidate, type BarUsagePage, type BarUsageReport } from "./barUsage.ts";
 import { pluginNames } from "./pluginNames";
 import { localizedTitle } from "./slotTitle";
 import { windowSlots } from "./slots";
 
 const BAR = ".island__collapsed";
 const COLLAPSED_SLOT = "island.collapsed/v1";
+const PAGE_SLOT = "island.page/v1";
+
+type PageCandidate = { id: string; owner: string; external?: boolean; title?: unknown };
 
 export function measureBarUsage(id: number): BarUsageReport {
   const bar = document.querySelector<HTMLElement>(BAR);
@@ -22,5 +25,9 @@ export function measureBarUsage(id: number): BarUsageReport {
   const names = pluginNames();
   const nameOf = (candidate: BarUsageCandidate, siblings: number) =>
     barItemName(candidate, siblings, localizedTitle(candidate.label, locale), localizedTitle(names.get(candidate.owner), locale));
-  return barUsageReport(id, windowSlots("island").items(COLLAPSED_SLOT) as readonly BarUsageCandidate[], shown ? bar.offsetWidth : null, boxOf, nameOf);
+  const report = barUsageReport(id, windowSlots("island").items(COLLAPSED_SLOT) as readonly BarUsageCandidate[], shown ? bar.offsetWidth : null, boxOf, nameOf);
+  const pages = (windowSlots("island").items(PAGE_SLOT) as readonly PageCandidate[])
+    .filter((page) => page.external === true)
+    .map((page): BarUsagePage => ({ id: page.id, owner: page.owner, name: localizedTitle(page.title, locale) ?? localizedTitle(names.get(page.owner), locale) ?? page.owner }));
+  return { ...report, pages };
 }

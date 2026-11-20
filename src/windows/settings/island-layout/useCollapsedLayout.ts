@@ -18,7 +18,7 @@ export function useCollapsedLayout() {
   const plugins = useBuiltinPlugins();
   const usageOn = isBuiltinEnabled(plugins, CLAUDE_USAGE);
   const usageConfig = useBuiltinConfig(CLAUDE_USAGE);
-  const pluginItems = useCollapsedPluginItems();
+  const { items: pluginItems, pages: pluginPages } = useCollapsedPluginItems();
   const timerName = t.island.timer;
 
   const names = useMemo(() => {
@@ -42,5 +42,5 @@ export function useCollapsedLayout() {
 
   const listed = useMemo(() => [...names.keys()], [names]);
   const placements = useMemo(() => arrangeCollapsedItems(listed, saved), [listed, saved]);
-  return { names, listed, placements, saved, save };
+  return { names, listed, placements, saved, save, pluginPages };
 }

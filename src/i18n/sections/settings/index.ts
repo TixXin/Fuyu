@@ -4,6 +4,7 @@ import type { SettingsModulesText } from "./modules";
 import type { SettingsOverviewText } from "./overview";
 import type { SettingsMessageSourcesText } from "./messageSources";
 import type { SettingsCollapsedItemsText } from "./collapsedItems";
+import type { SettingsIslandPagesText } from "./islandPages";
 import type { SettingsThemeMarketText } from "./themeMarket";
 import type { SettingsResetAppearanceText } from "./resetAppearance";
 import type { SettingsWindowControlsText } from "./windowControls";
@@ -50,6 +51,7 @@ import * as modules from "./modules.ts";
 import * as overview from "./overview.ts";
 import * as messageSources from "./messageSources.ts";
 import * as collapsedItems from "./collapsedItems.ts";
+import * as islandPages from "./islandPages.ts";
 import * as themeMarket from "./themeMarket.ts";
 import * as resetAppearance from "./resetAppearance.ts";
 import * as windowControls from "./windowControls.ts";
@@ -94,6 +96,7 @@ export type SettingsText = {
   screenshot: SettingsScreenshotText;
   messageSources: SettingsMessageSourcesText;
   collapsedItems: SettingsCollapsedItemsText;
+  islandPages: SettingsIslandPagesText;
   themeMarket: SettingsThemeMarketText;
 
   modules: SettingsModulesText;
@@ -163,6 +166,7 @@ export const zhCN: SettingsText = {
   screenshot: screenshot.zhCN,
   messageSources: messageSources.zhCN,
   collapsedItems: collapsedItems.zhCN,
+  islandPages: islandPages.zhCN,
   themeMarket: themeMarket.zhCN,
 
   modules: modules.zhCN,
@@ -232,6 +236,7 @@ export const en: SettingsText = {
   screenshot: screenshot.en,
   messageSources: messageSources.en,
   collapsedItems: collapsedItems.en,
+  islandPages: islandPages.en,
   themeMarket: themeMarket.en,
 
   modules: modules.en,

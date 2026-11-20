@@ -7,7 +7,7 @@ import { PluginIcon } from "../../features/plugin-kernel/PluginIcon";
 import { usePluginNames } from "../../features/plugin-kernel/pluginNames";
 import { localizedTitle, packageLabel } from "../../features/plugin-kernel/slotTitle";
 import { useLocale, useTranslation } from "../../i18n";
-import { headerDotPages, isPageEnabled, type IslandFeatures } from "./features";
+import { headerDotPages, isPageEnabled, isPageShown, type IslandFeatures } from "./features";
 import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
@@ -83,6 +83,7 @@ export function IslandHeader({
     pageDigitModifiers,
     withShortcut: (label, target) => withShortcut({ features, pageDigitModifiers }, label, target),
     isPageEnabled: (target) => isPageEnabled(target, features),
+    isPageShown: (target) => isPageShown(target, features),
   };
   const builtinLabels: Record<HeaderDotPage, string> = {
     todo: t.island.todoList,
@@ -107,7 +108,7 @@ export function IslandHeader({
     <header className="island__header">
       <div className="island__header-start">
       <div className="island__title">
-        {features.agents ? (
+        {isPageShown("agents", features) ? (
           <button
             className={`island__agent-button${page === "agents" ? " island__agent-button--active" : ""}`}
             type="button"

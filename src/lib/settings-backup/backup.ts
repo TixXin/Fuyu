@@ -13,6 +13,7 @@ export const BACKUP_KEYS = [
   "fuyu-qq-mail-settings",
   "fuyu-qq-mail-remote-images",
   "fuyu-collapsed-items",
+  "fuyu-island-pages",
   "fuyu-screenshot-annotation",
   "fuyu-screenshot-settings",
   "fuyu-save-directory",
