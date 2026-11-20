@@ -11,8 +11,10 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 const calls: { command: string; payload: unknown; headers: Record<string, string> }[] = [];
+let qrCodes: { text: string; x: number; y: number; width: number; height: number }[] = [];
 mockIPC((command) => {
   switch (command) {
+    case "screenshot_read_qr": return qrCodes;
     case "screenshot_session": return { id: 1, mode: "region", width: WIDTH, height: HEIGHT, underPointer: true };
     case "screenshot_frame": return new Uint8Array(WIDTH * HEIGHT * 4).map((_, index) => (index % 4 === 3 ? 255 : 128)).buffer;
     case "screenshot_targets": return [];
@@ -72,8 +74,10 @@ async function runChecks() {
     check(document.querySelector<HTMLCanvasElement>(".screenshot-overlay__picture")?.width === WIDTH, "The frozen picture is drawn at the monitor's size, then the overlay says it is ready");
 
     await drag([40, 40], [240, 200]);
-    check(document.querySelectorAll(".screenshot-overlay__toolbar button[aria-pressed]").length === 8, "A chosen region gets the toolbar with the eight annotation tools");
+    check(document.querySelectorAll(".screenshot-overlay__toolbar button[aria-pressed]").length === 11, "A chosen region gets the toolbar with the eleven annotation tools");
     check(button("撤销（Ctrl+Z）")?.disabled && button("重做（Ctrl+Y）")?.disabled, "Undo and redo start disabled");
+    for (let tries = 0; tries < 50 && !calls.some((call) => call.command === "screenshot_read_qr"); tries += 1) await wait(20);
+    check(calls.some((call) => call.command === "screenshot_read_qr") && !document.querySelector(".screenshot-overlay__toolbar svg.lucide-qr-code"), "The settled selection is checked for QR codes; with none, nothing extra shows");
     await key({ key: "Enter" });
     const plain = last("screenshot_finish");
     check(plain?.headers["x-action"] === "copy" && plain.headers["x-left"] === "40" && plain.headers["x-width"] === "200" && plain.headers["x-height"] === "160", "Enter copies the region");
@@ -85,8 +89,8 @@ async function runChecks() {
     await click("识别文字");
     check(last("screenshot_finish")?.headers["x-action"] === "text", "Read text sends the region to OCR");
 
-    await click("矩形");
-    check(button("矩形")?.getAttribute("aria-pressed") === "true" && document.querySelectorAll(".screenshot-overlay__swatch").length === 8, "Choosing the rectangle shows the colours and thicknesses");
+    await click("矩形（R）");
+    check(button("矩形（R）")?.getAttribute("aria-pressed") === "true" && document.querySelectorAll(".screenshot-overlay__swatch").length === 8, "Choosing the rectangle shows the colours and thicknesses");
     const bar = document.querySelector<HTMLElement>(".screenshot-overlay__toolbar")!.getBoundingClientRect();
     check(bar.left >= 0 && bar.right <= WIDTH, "The toolbar, wider than this small selection, stays on the monitor");
     await drag([60, 60], [120, 120]);
@@ -99,7 +103,7 @@ async function runChecks() {
     await key({ key: "y", ctrlKey: true });
     check(isRed(layerPixel(60, 90)), "Ctrl+Y brings it back");
 
-    await click("文字");
+    await click("文字（I）");
     await pointer("pointerdown", 100, 150);
     await pointer("pointerup", 100, 150);
     await wait(10);
@@ -119,7 +123,7 @@ async function runChecks() {
     await key({ key: "Escape" }, second!);
     check(!document.querySelector(".screenshot-overlay__text-input") && !last("screenshot_cancel"), "Esc in a text box drops it without leaving the screenshot");
 
-    await click("序号");
+    await click("序号（N）");
     await pointer("pointerdown", 210, 70);
     await pointer("pointerup", 210, 70);
     check(isRed(layerPixel(205, 70)), "A click with the number tool places a badge");
@@ -158,6 +162,28 @@ async function runChecks() {
     let still = false;
     for (let x = 100; x < 140 && !still; x += 1) still = isRed(layerPixel(x, 160));
     check(!document.querySelector(".screenshot-overlay__text-input") && still, "…and Esc leaves it as it was");
+
+    const tool = (label: string) => document.querySelector(`.screenshot-overlay__toolbar button[aria-label^="${label}"]`)?.getAttribute("aria-pressed") === "true";
+    await key({ key: "l" });
+    check(tool("直线"), "L picks the line tool");
+    await pointer("pointerdown", 140, 100);
+    await act(async () => { overlay().dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: 230, clientY: 107, button: 0, pointerId: 1, isPrimary: true, shiftKey: true })); });
+    await wait(30);
+    await pointer("pointerup", 230, 107);
+    check(isRed(layerPixel(225, 100)) && !isRed(layerPixel(225, 106)), "With Shift held the line snaps level");
+    await key({ key: "b" });
+    check(tool("模糊"), "B picks blur");
+    check(document.querySelectorAll(".screenshot-overlay__swatch").length === 0, "…which has thicknesses but no colours");
+    await drag([150, 190], [190, 196]);
+    const blurred = layerPixel(170, 193);
+    check(blurred[3] === 255 && Math.abs(blurred[0] - 128) <= 2, `Blur covers its box with the softened picture (${blurred.join()})`);
+    await key({ key: "s" });
+    check(tool("聚光灯") && !document.querySelector(".screenshot-overlay__size-dot"), "S picks the spotlight, with no colour or thickness to choose");
+    await drag([150, 125], [200, 145]);
+    check(layerPixel(170, 135)[3] === 0 && layerPixel(230, 135)[3] > 100 && layerPixel(20, 20)[3] === 0, "The spotlight leaves its box clear and dims the rest of the selection, not beyond it");
+    for (let step = 0; step < 3; step += 1) await key({ key: "z", ctrlKey: true });
+    check(layerPixel(230, 135)[3] === 0 && !isRed(layerPixel(225, 100)), "Undo takes the three away again");
+    await act(async () => { overlay().dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 150, clientY: 150 })); });
 
     await key({ key: "Enter" });
     const annotated = last("screenshot_finish");
@@ -216,6 +242,25 @@ async function runChecks() {
     const ended = calls.filter((call) => call.command === "screenshot_long_end");
     check(ended.length === 1 && JSON.stringify(ended[0].payload).includes('"action":"copy"'), "Enter finishes and copies the long picture");
     check(calls.filter((call) => call.command === "screenshot_finish").length === finishes, "…without the overlay's own Enter copying the frozen selection");
+
+    await act(async () => { await emit("screenshot-ended"); });
+    qrCodes = [
+      { text: "https://example.com/some/long/path?with=query", x: 80, y: 80, width: 60, height: 60 },
+      { text: "浮屿 二维码", x: 160, y: 80, width: 60, height: 60 },
+    ];
+    await act(async () => { await emit("screenshot-session", { id: 4, mode: "region", width: WIDTH, height: HEIGHT, underPointer: true }); });
+    for (let tries = 0; tries < 50 && calls.filter((call) => call.command === "screenshot_overlay_ready").length < 4; tries += 1) await wait(20);
+    await drag([60, 60], [260, 200]);
+    for (let tries = 0; tries < 50 && !button("识别到 2 个二维码"); tries += 1) await wait(20);
+    check(button("识别到 2 个二维码"), "With QR codes in the selection the toolbar offers a QR button");
+    await click("识别到 2 个二维码");
+    const items = [...document.querySelectorAll(".screenshot-overlay__qr-item")];
+    check(items.length === 2 && items[0].textContent?.includes("https://example.com/some/long/path?with=query"), "It lists each code with the full link shown before anything opens");
+    check(items[0].textContent?.includes("打开链接") && !items[1].textContent?.includes("打开链接") && items[1].textContent?.includes("复制"), "…a link can be opened or copied, plain text only copied");
+    await act(async () => { items[0].querySelector<HTMLButtonElement>(".screenshot-overlay__qr-button")!.click(); });
+    await wait(20);
+    const opened = calls.find((call) => call.command === "plugin:opener|open_url");
+    check(JSON.stringify(opened?.payload).includes("https://example.com/some/long/path?with=query") && last("screenshot_cancel"), "Open link hands the link to the system browser and ends the screenshot");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

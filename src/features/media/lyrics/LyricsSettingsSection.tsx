@@ -8,6 +8,7 @@ import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRo
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { InflinkRow } from "./InflinkRow";
+import { AppleMusicLyricsRows } from "./AppleMusicLyricsRows";
 import type { LyricsIntro, LyricsIslandPriority } from "./lyricsSettings";
 import type { IslandSettings } from "../../../lib/settings/types";
 import "./LyricsSettingsSection.css";
@@ -102,6 +103,9 @@ export function LyricsSettingsSection({
           checked={settings.lyricsChinese}
           onChange={(lyricsChinese) => onSettingsChange({ ...settings, lyricsChinese })}
         />
+      )}
+      {settings.lyricsOnline && (
+        <AppleMusicLyricsRows enabled={settings.lyricsAppleMusic} onChange={(lyricsAppleMusic) => onSettingsChange({ ...settings, lyricsAppleMusic })} />
       )}
       <InflinkRow />
       <SettingsSliderRow

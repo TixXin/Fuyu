@@ -111,6 +111,7 @@
   "inflink.releaseUnreachable",
   "inflink.write",
   "internal",
+  "lyrics.appleToken",
   "mail.address",
   "mail.attachmentDecode",
   "mail.attachmentDownload",

@@ -200,7 +200,7 @@ test("all 7 Phase 4 seams support extending built-in implementations and clean u
   });
   assert.equal(clipboardRan, "cba");
 
-  assert.equal(screenshotActions.list().length, 1);
+  assert.deepEqual(screenshotActions.list().map((item) => item.id), ["ocr-archive", "todos.note", "todos.todo"]);
   await screenshotActions.run("ocr-archive", { path: "/tmp/shot.png", width: 100, height: 100, locale: "zh" });
   assert.equal(screenshotRan, "/tmp/shot.png");
 
@@ -215,7 +215,7 @@ test("all 7 Phase 4 seams support extending built-in implementations and clean u
   assert.equal((await calendar.events({})).events.length, 0);
   assert.equal((await agents.sessions()).sessions.length, 0);
   assert.equal(clipboardActions.list().length, 0);
-  assert.equal(screenshotActions.list().length, 0);
+  assert.deepEqual(screenshotActions.list().map((item) => item.id), ["todos.note", "todos.todo"]);
   assert.ok(!(await messages.sources()).sources.some((item) => item.id === "matrix"));
 });
 

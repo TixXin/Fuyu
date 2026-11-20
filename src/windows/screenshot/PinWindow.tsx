@@ -1,87 +1,33 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent, type PointerEvent, type WheelEvent } from "react";
-import { Menu } from "@tauri-apps/api/menu";
+import { useCallback, useEffect, useRef, useState, type PointerEvent, type WheelEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import {
-  closeAllPins,
-  closePin,
-  copyPin,
-  getPinImage,
-  getPinInfo,
-  listenPinAssigned,
-  pinReady,
-  savePin,
-  setPinClickThrough,
-  togglePins,
-  zoomPin,
-  type PinInfo,
-} from "../../features/screenshot/api";
-import { nextOpacity, nextScale } from "../../features/screenshot/pin";
-import { saveFolderOf } from "../../features/screenshot/settings";
-import { loadScreenshotSettings } from "../../features/screenshot/storage";
-import { useErrorText, useTranslation } from "../../i18n";
+import { closePin, pinReady, setPinOpacity } from "../../features/screenshot/api";
+import { toolForKey } from "../../features/screenshot/annotations";
+import { isDoubleClick, nextOpacity, nextScale, pinKeyCommand } from "../../features/screenshot/pin";
+import { useErrorText } from "../../i18n";
 import { MOTION_BASE_MS } from "../../lib/theme/motionTokens";
 import { getErrorMessage } from "../../utils/error";
+import { PinAnnotateBar } from "./PinAnnotateBar";
+import { PinAnnotator } from "./PinAnnotator";
+import { usePinActions } from "./usePinActions";
+import { usePinEditing } from "./usePinEditing";
+import { usePinPicture } from "./usePinPicture";
+import "./ScreenshotOverlay.css";
+import "./ScreenshotToolbar.css";
 import "./PinWindow.css";
 
 const NOTICE_MS = 1600;
 
-function usePinPicture() {
-  const [info, setInfo] = useState<PinInfo | null>(null);
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    let stop: (() => void) | null = null;
-    void listenPinAssigned((event) => setInfo(event.payload)).then((unlisten) => {
-      if (cancelled) unlisten();
-      else stop = unlisten;
-    });
-    getPinInfo()
-      .then((current) => { if (!cancelled && current) setInfo(current); })
-      .catch((error: unknown) => console.error("Failed to read the pin", getErrorMessage(error)));
-    return () => {
-      cancelled = true;
-      stop?.();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!info) return;
-    let cancelled = false;
-    let made: string | null = null;
-    getPinImage()
-      .then(async (png) => {
-        const url = URL.createObjectURL(new Blob([png], { type: "image/png" }));
-        const image = new Image();
-        image.src = url;
-        await image.decode();
-        if (cancelled) {
-          URL.revokeObjectURL(url);
-          return;
-        }
-        made = url;
-        setUrl(url);
-      })
-      .catch((error: unknown) => console.error("Failed to show the pin", getErrorMessage(error)));
-    return () => {
-      cancelled = true;
-      if (made) URL.revokeObjectURL(made);
-    };
-  }, [info]);
-
-  return { info, url };
-}
-
 export function PinWindow() {
-  const t = useTranslation().screenshot;
   const errorText = useErrorText();
   const { info, url } = usePinPicture();
   const frameRef = useRef<HTMLDivElement>(null);
+  const pictureRef = useRef<HTMLImageElement>(null);
+  const lastPress = useRef<{ at: number; x: number; y: number } | null>(null);
   const [shown, setShown] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [scale, setScale] = useState(1);
-  const [opacity, setOpacity] = useState(1);
+  const [fade, setFade] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const opacity = fade ?? info?.opacity ?? 1;
 
   const onLoaded = useCallback(() => {
     pinReady()
@@ -96,75 +42,94 @@ export function PinWindow() {
   }, [notice]);
 
   const report = useCallback((error: unknown) => setNotice(errorText(error)), [errorText]);
-  const copy = useCallback(() => copyPin().then(() => setNotice(t.pinCopied), report), [report, t]);
-  const save = useCallback(() => savePin({ folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName }).then((path) => setNotice(t.saved(path)), report), [report, t]);
   const close = useCallback(() => {
     setClosing(true);
     window.setTimeout(() => void closePin(), MOTION_BASE_MS);
   }, []);
-  const zoom = useCallback((next: number, anchor = { x: 0.5, y: 0.5 }) => {
-    setScale(next);
-    zoomPin(next, anchor).catch(report);
-  }, [report]);
+  const edit = usePinEditing(info, frameRef, pictureRef, report);
+  const actions = usePinActions(setNotice, report, close, edit.start);
+  const { annotations, select } = edit;
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLTextAreaElement) return;
       const ctrl = event.ctrlKey || event.metaKey;
-      const letter = event.key.toLowerCase();
-      if (event.key === "Escape") close();
-      else if (ctrl && letter === "c") void copy();
-      else if (ctrl && letter === "s") {
+      if (!edit.editing) {
+        const command = pinKeyCommand(event.key, ctrl);
+        if (!command) return;
         event.preventDefault();
-        void save();
-      } else if (!ctrl && letter === "t") void togglePins();
-      else if (ctrl && event.key === "0") zoom(1);
+        actions.run(command);
+        return;
+      }
+      const letter = event.key.toLowerCase();
+      if (annotations.editing) return;
+      if (ctrl && letter === "z") {
+        event.preventDefault();
+        if (event.shiftKey) annotations.redo();
+        else annotations.undo();
+      } else if (ctrl && letter === "y") {
+        event.preventDefault();
+        annotations.redo();
+      } else if (select.selected && (event.key === "Delete" || event.key === "Backspace")) select.remove();
+      else if (event.key === "Escape") {
+        if (select.selected) select.clear();
+        else edit.cancel();
+      } else if (event.key === "Enter") edit.done();
+      else if (!ctrl && !event.altKey) {
+        const tool = toolForKey(event.key);
+        if (tool) {
+          select.clear();
+          annotations.chooseTool(tool);
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [close, copy, save, zoom]);
+  }, [actions, annotations, edit, select]);
 
   const onWheel = (event: WheelEvent) => {
+    if (edit.editing || actions.collapsed) return;
     if (event.ctrlKey) {
-      setOpacity((current) => nextOpacity(current, event.deltaY));
+      const next = nextOpacity(opacity, event.deltaY);
+      setFade(next);
+      setPinOpacity(next).catch(report);
       return;
     }
     const frame = frameRef.current?.getBoundingClientRect();
     const anchor = frame && frame.width > 0 && frame.height > 0
       ? { x: (event.clientX - frame.left) / frame.width, y: (event.clientY - frame.top) / frame.height }
       : undefined;
-    zoom(nextScale(scale, event.deltaY), anchor);
+    actions.zoom(nextScale(actions.scale, event.deltaY), anchor);
   };
 
   const onPointerDown = (event: PointerEvent) => {
-    if (event.button === 0) void getCurrentWindow().startDragging();
+    if (event.button !== 0) return;
+    const press = { at: event.timeStamp, x: event.screenX, y: event.screenY };
+    const twice = !edit.editing && isDoubleClick(lastPress.current, press);
+    lastPress.current = twice ? null : press;
+    if (twice) actions.run("collapse");
+    else void getCurrentWindow().startDragging();
   };
 
-  const onContextMenu = async (event: MouseEvent) => {
-    event.preventDefault();
-    const menu = await Menu.new({
-      items: [
-        { text: t.pinMenu.copy, action: () => void copy() },
-        { text: t.pinMenu.save, action: () => void save() },
-        { text: t.pinMenu.actualSize, enabled: scale !== 1, action: () => zoom(1) },
-        { item: "Separator" },
-        { text: t.pinMenu.clickThrough, action: () => void setPinClickThrough(true).catch(report) },
-        { text: t.pinMenu.hideAll, action: () => void togglePins() },
-        { item: "Separator" },
-        { text: t.pinMenu.close, action: close },
-        { text: t.pinMenu.closeAll, action: () => void closeAllPins() },
-      ],
-    });
-    await menu.popup().catch(report);
-  };
-
-  const state = closing ? " pin-window--closing" : shown ? " pin-window--shown" : "";
+  const editing = edit.editing;
+  const state = `${closing ? " pin-window--closing" : shown ? " pin-window--shown" : ""}${actions.collapsed ? " pin-window--collapsed" : ""}${editing ? " pin-window--editing" : ""}`;
   return (
-    <div className={`pin-window${state}`} onPointerDown={onPointerDown} onWheel={onWheel} onContextMenu={(event) => void onContextMenu(event)}>
+    <div
+      className={`pin-window${state}`}
+      onPointerDown={onPointerDown}
+      onWheel={onWheel}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        if (!editing) void actions.openMenu();
+      }}
+    >
       {info && url && (
-        <div ref={frameRef} className="pin-window__frame" style={{ opacity }}>
-          <img className="pin-window__picture" src={url} alt="" draggable={false} onLoad={onLoaded} />
+        <div ref={frameRef} className="pin-window__frame" style={editing ? { opacity, width: editing.css.width, height: editing.css.height } : { opacity }}>
+          <img ref={pictureRef} className="pin-window__picture" src={url} alt="" draggable={false} onLoad={onLoaded} />
+          {editing && info && <PinAnnotator picture={pictureRef.current} size={info} scale={editing.scale} annotations={annotations} select={select} />}
         </div>
       )}
+      {editing && <div className="pin-window__bar" style={{ top: `calc(var(--pin-margin) + ${editing.css.height + 6}px)` }}><PinAnnotateBar annotations={annotations} select={select} onDone={edit.done} onCancel={edit.cancel} /></div>}
       {notice && <div className="pin-window__notice">{notice}</div>}
     </div>
   );

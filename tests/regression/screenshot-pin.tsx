@@ -24,6 +24,7 @@ mockIPC((command, payload) => {
   switch (command) {
     case "screenshot_pin_info": return null;
     case "screenshot_pin_image": return png;
+    case "screenshot_pin_text": return "";
     default: return null;
   }
 }, { shouldMockEvents: true });
@@ -47,6 +48,9 @@ const wait = (ms: number) => act(async () => { await new Promise((resolve) => se
 const called = (command: string) => calls.filter((call) => call.command === command);
 const pin = () => document.querySelector<HTMLElement>(".pin-window")!;
 const frame = () => document.querySelector<HTMLElement>(".pin-window__frame");
+const key = (init: KeyboardEventInit) => act(async () => { window.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init })); });
+const press = (target: Element, type: string, x: number, y: number, extra: PointerEventInit = {}) =>
+  act(async () => { target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, screenX: x, screenY: y, button: 0, pointerId: 1, isPrimary: true, ...extra })); });
 const wheel = (init: WheelEventInit) => act(async () => { frame()!.dispatchEvent(new WheelEvent("wheel", { bubbles: true, cancelable: true, ...init })); });
 
 async function runChecks() {
@@ -69,11 +73,58 @@ async function runChecks() {
 
     await wheel({ deltaY: 100, ctrlKey: true });
     check(frame()!.style.opacity === "0.9", "Ctrl + wheel fades it");
+    check((called("screenshot_pin_opacity").slice(-1)[0]?.payload as { opacity: number } | undefined)?.opacity === 0.9, "…and tells the native side, so a restart brings the pin back as faint");
+
+    await key({ key: "2" });
+    check((called("screenshot_pin_turn").slice(-1)[0]?.payload as { turn: string } | undefined)?.turn === "right", "2 turns it right");
+    await key({ key: "3" });
+    check((called("screenshot_pin_turn").slice(-1)[0]?.payload as { turn: string } | undefined)?.turn === "flipX", "3 flips it left to right");
+    await key({ key: "o" });
+    for (let tries = 0; tries < 20 && !document.querySelector(".pin-window__notice")?.textContent?.includes("没有识别到文字"); tries += 1) await wait(20);
+    check(called("screenshot_pin_text").length === 1 && document.querySelector(".pin-window__notice")?.textContent?.includes("没有识别到文字"), "O reads the text, and says so when there is none");
+
+    await key({ key: " " });
+    const reserved = called("screenshot_pin_reserve").slice(-1)[0]?.payload as { width: number; height: number } | undefined;
+    check(reserved && reserved.width > 0 && reserved.height > 0 && pin().classList.contains("pin-window--editing"), "Space opens the annotation bar and asks for room under the picture");
+    check(document.querySelectorAll(".pin-annotate__row:first-child .pin-annotate__tool").length === 11, "…with the same eleven tools as a screenshot");
+    await key({ key: "r" });
+    check(document.querySelector('.pin-annotate__tool[aria-label="矩形（R）"]')?.getAttribute("aria-pressed") === "true", "R picks the rectangle there too");
+    const area = document.querySelector<HTMLElement>(".pin-window__annotator")!;
+    const spot = area.getBoundingClientRect();
+    await press(area, "pointerdown", spot.left + spot.width * 0.1, spot.top + spot.height * 0.1);
+    await press(area, "pointermove", spot.left + spot.width * 0.6, spot.top + spot.height * 0.6);
+    await press(area, "pointerup", spot.left + spot.width * 0.6, spot.top + spot.height * 0.6);
+    const layer = document.querySelector<HTMLCanvasElement>(".pin-window__layer")!;
+    const drawn = layer.getContext("2d")!.getImageData(0, 0, layer.width, layer.height).data;
+    let inked = 0;
+    for (let i = 3; i < drawn.length; i += 4) if (drawn[i] > 0) inked += 1;
+    check(inked > 0, "Dragging on the pin draws a rectangle on it");
+    check(called("plugin:window|start_dragging").length === 0, "…without moving the window");
+    await key({ key: "Enter" });
+    const replaced = called("screenshot_pin_replace").slice(-1)[0]?.payload as Uint8Array | undefined;
+    check(replaced instanceof Uint8Array && replaced.byteLength === WIDTH * HEIGHT * 4, "Enter burns the annotations into the pin's own pixels");
+    check(!pin().classList.contains("pin-window--editing") && (called("screenshot_pin_reserve").slice(-1)[0]?.payload as { width: number }).width === 0, "…and gives the room back");
+
+    await key({ key: " " });
+    await key({ key: "Escape" });
+    check(!pin().classList.contains("pin-window--editing") && !pin().classList.contains("pin-window--closing"), "Esc while annotating only drops the bar, not the pin");
+
+    const target = frame()!;
+    await press(target, "pointerdown", 30, 30);
+    await press(target, "pointerdown", 31, 30);
+    await wait(20);
+    check((called("screenshot_pin_collapse").slice(-1)[0]?.payload as { collapsed: boolean } | undefined)?.collapsed === true && pin().classList.contains("pin-window--collapsed"), "A double click shrinks it to an icon");
+    await key({ key: "m" });
+    await wait(20);
+    check((called("screenshot_pin_collapse").slice(-1)[0]?.payload as { collapsed: boolean } | undefined)?.collapsed === false && !pin().classList.contains("pin-window--collapsed"), "M opens it again");
 
     await act(async () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
     check(pin().classList.contains("pin-window--closing") && called("screenshot_pin_close").length === 0, "Esc fades it out first");
     await wait(220);
     check(called("screenshot_pin_close").length === 1, "…then closes the window");
+
+    for (let tries = 0; tries < 60 && document.querySelector(".pin-window__notice"); tries += 1) await wait(50);
+    check(!document.querySelector(".pin-window__notice"), "The notice goes away on its own");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

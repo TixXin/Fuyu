@@ -2415,6 +2415,32 @@
       "page": "musicLyrics",
       "zh-CN": {
         "group": "歌词",
+        "title": "Apple Music 官方歌词",
+        "description": "用 Apple Music 播放时，先查 Apple 自己的逐字歌词和翻译，要 Apple Music 订阅。只在播放器是 Apple Music 时才问 Apple，会把歌名、歌手和时长发过去。"
+      },
+      "en": {
+        "group": "Lyrics",
+        "title": "Apple Music lyrics",
+        "description": "While Apple Music plays, Apple's own word-by-word lyrics and translations are tried first; needs an Apple Music subscription. Apple is asked only when the player is Apple Music, and gets the title, artist and length."
+      }
+    },
+    {
+      "page": "musicLyrics",
+      "zh-CN": {
+        "group": "歌词",
+        "title": "Apple Music 令牌",
+        "description": "还没有保存令牌。取法：在浏览器登录 music.apple.com，打开开发者工具 → 应用（Application）→ Cookie，复制 media-user-token 的值贴到这里。只存在系统凭据里，过期了重新贴一次。"
+      },
+      "en": {
+        "group": "Lyrics",
+        "title": "Apple Music token",
+        "description": "No token saved yet. To get one, sign in at music.apple.com in a browser, open the developer tools → Application → Cookies, and paste the value of media-user-token here. It is kept only in the system's credential store; paste it again when it expires."
+      }
+    },
+    {
+      "page": "musicLyrics",
+      "zh-CN": {
+        "group": "歌词",
         "title": "网易云精确同步（InfLink-rs）",
         "description": "网易云插件，让网易云把播放进度和歌曲 ID 告诉系统：音乐页有进度条，歌词按歌曲直接查、不会对不上。从 GitHub 下载，放进 BetterNCM 的插件文件夹。"
       },
@@ -3245,6 +3271,19 @@
         "group": "After capturing",
         "title": "Say where a screenshot came from",
         "description": "When sending to an agent, also paste the app, window title and browser address that were in front when you took it."
+      }
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "截完之后",
+        "title": "重启后恢复贴图",
+        "description": "退出时开着的贴图下次启动回到原来的位置，缩放和透明度不变。图存在家目录的 screenshot-pins 里，关掉后一并删除。"
+      },
+      "en": {
+        "group": "After capturing",
+        "title": "Bring pins back after a restart",
+        "description": "Pins still open when Fuyu quits come back at the same place, size and opacity. They are kept in screenshot-pins in the home folder and deleted when this is turned off."
       }
     },
     {

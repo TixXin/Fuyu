@@ -135,6 +135,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   lyricsFolder: string;
   lyricsOnline: boolean;
   lyricsChinese: boolean;
+  lyricsAppleMusic: boolean;
   lyricsOffsetMs: number;
   lyricsOnIsland: boolean;
   lyricsIslandPriority: LyricsIslandPriority;

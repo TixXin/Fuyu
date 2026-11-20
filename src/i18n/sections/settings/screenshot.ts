@@ -12,6 +12,7 @@ export type SettingsScreenshotText = {
   shortcutOff: string;
   textHintMac: string;
   regionHintMac: string;
+  recordHintMac: string;
   shortcutInvalidMac: string;
   setShortcut: string;
   turnOffShortcut: (action: string) => string;
@@ -31,6 +32,8 @@ export type SettingsScreenshotText = {
   historyDaysOption: (days: number) => string;
   historyText: string;
   historyTextHint: string;
+  restorePins: string;
+  restorePinsHint: string;
   agentSource: string;
   agentSourceHint: string;
   recordTitle: string;
@@ -44,11 +47,14 @@ export type SettingsScreenshotText = {
   recordSystemAudioHint: string;
   recordMicrophone: string;
   recordMicrophoneHint: string;
+  recordMicrophoneHintMac: string;
   recordFormat: string;
   recordFormatHint: string;
+  recordFormatHintMac: string;
   recordFormats: Record<"mp4" | "gif", string>;
   recordOwnWindows: string;
   recordOwnWindowsHint: string;
+  recordOwnWindowsHintMac: string;
 };
 
 export const zhCN: SettingsScreenshotText = {
@@ -81,6 +87,7 @@ export const zhCN: SettingsScreenshotText = {
   shortcutOff: "未设置",
   textHintMac: "选好区域就用 macOS 自带的文字识别读出文字并复制，浮屿上显示识别结果，点它在翻译里打开。",
   regionHintMac: "屏幕定格后，单击选中鼠标下的窗口或控件（滚轮切换到外层或内层），或拖动选择区域；工具栏里可以画矩形、箭头、文字、马赛克等标注（⌘Z 撤销）；↩ 复制，⌘S 保存，T 贴到屏幕上，Esc 取消；放大镜下按 C 复制颜色。",
+  recordHintMac: "选好区域、窗口或整个屏幕（按 F），3 秒后开始录成 MP4，带系统声音；浮屿上显示时长，可以暂停，再按一次快捷键停止。录好的视频在「影片」下的「浮屿录屏」文件夹，浮屿自己的窗口不会被录进去。第一次录要在系统设置里允许屏幕录制。",
   shortcutInvalidMac: "这个组合键用不了：要带 ⌃、⌥、⇧ 或 ⌘，再加一个字母、数字或功能键。",
   setShortcut: "设置",
   turnOffShortcut: (action) => `关闭「${action}」的快捷键`,
@@ -104,6 +111,8 @@ export const zhCN: SettingsScreenshotText = {
   historyDaysOption: (days) => `${days} 天`,
   historyText: "识别历史截图里的文字",
   historyTextHint: "存进历史后在本机识字，「截图」页能按图里的文字搜；文字只存在本机，跟着截图一起删。",
+  restorePins: "重启后恢复贴图",
+  restorePinsHint: "退出时开着的贴图下次启动回到原来的位置，缩放和透明度不变。图存在家目录的 screenshot-pins 里，关掉后一并删除。",
   agentSource: "发给 Agent 时附上来源",
   agentSourceHint: "截图时前台的应用、窗口标题和浏览器网址，和截图路径一起贴给 Agent。",
   recordTitle: "录屏",
@@ -117,11 +126,14 @@ export const zhCN: SettingsScreenshotText = {
   recordSystemAudioHint: "电脑里正在播放的声音。GIF 没有声音。",
   recordMicrophone: "录麦克风",
   recordMicrophoneHint: "用系统默认的麦克风。打开时 Windows 会在任务栏显示麦克风正在使用。",
+  recordMicrophoneHintMac: "用系统默认的麦克风，第一次会请求麦克风权限。录的时候菜单栏会亮起橙色圆点。",
   recordFormat: "默认格式",
   recordFormatHint: "录屏时选区之前按 G 可以临时换成另一种。视频放在「视频 › 浮屿录屏」。",
+  recordFormatHintMac: "录屏时选区之前按 G 可以临时换成另一种。视频放在「影片 › 浮屿录屏」。",
   recordFormats: { mp4: "MP4 视频", gif: "GIF 动图" },
   recordOwnWindows: "录制浮屿自己的窗口",
   recordOwnWindowsHint: "把剪贴板、快捷翻译、设置和悬浮岛也录进视频里。默认关，只录贴图。",
+  recordOwnWindowsHintMac: "把浮屿的窗口（悬浮岛、剪贴板、设置、贴图等）也录进视频里。默认关，这时贴图也不会录进去。",
 };
 
 export const en: SettingsScreenshotText = {
@@ -154,6 +166,7 @@ export const en: SettingsScreenshotText = {
   shortcutOff: "Not set",
   textHintMac: "Once a region is chosen, macOS's own text recognition reads it and the text is copied; the island shows it, and a click opens it in the translator.",
   regionHintMac: "The screen freezes; click the window or control under the pointer (scroll to step out or in) or drag a region. The toolbar draws rectangles, arrows, text, mosaic and more (⌘Z undoes). Return copies, ⌘S saves, T pins it to the screen, Esc cancels; under the magnifier, C copies the colour.",
+  recordHintMac: "Choose an area, a window or the whole screen (press F); recording to MP4 with system sound starts after 3 seconds. The island shows the time and can pause; press the shortcut again to stop. Videos go to the Fuyu Recordings folder under Movies, and Fuyu's own windows are left out. The first recording needs Screen Recording permission in System Settings.",
   shortcutInvalidMac: "These keys can't be used: add ⌃, ⌥, ⇧ or ⌘ to a letter, digit or function key.",
   setShortcut: "Set",
   turnOffShortcut: (action) => `Turn off the shortcut for ${action}`,
@@ -177,6 +190,8 @@ export const en: SettingsScreenshotText = {
   historyDaysOption: (days) => (days === 1 ? "1 day" : `${days} days`),
   historyText: "Read text in history screenshots",
   historyTextHint: "Reads the text on this computer after a screenshot is kept, so the Screenshots page can search it. The text stays local and goes when the screenshot does.",
+  restorePins: "Bring pins back after a restart",
+  restorePinsHint: "Pins still open when Fuyu quits come back at the same place, size and opacity. They are kept in screenshot-pins in the home folder and deleted when this is turned off.",
   agentSource: "Say where a screenshot came from",
   agentSourceHint: "When sending to an agent, also paste the app, window title and browser address that were in front when you took it.",
   recordTitle: "Screen recording",
@@ -190,9 +205,12 @@ export const en: SettingsScreenshotText = {
   recordSystemAudioHint: "What the computer is playing. GIFs have no sound.",
   recordMicrophone: "Record the microphone",
   recordMicrophoneHint: "Uses the default microphone. Windows shows that the microphone is in use while it is on.",
+  recordMicrophoneHintMac: "Uses the default microphone and asks for microphone access the first time. The menu bar shows an orange dot while it records.",
   recordFormat: "Default format",
   recordFormatHint: "Press G before choosing the area to switch for one recording. Videos go to Videos › Fuyu Recordings.",
+  recordFormatHintMac: "Press G before choosing the area to switch for one recording. Videos go to Movies › Fuyu Recordings.",
   recordFormats: { mp4: "MP4 video", gif: "GIF animation" },
   recordOwnWindows: "Record Fuyu's own windows",
   recordOwnWindowsHint: "Include the clipboard, translator, Settings and the island in recordings. Off by default, when only pins appear.",
+  recordOwnWindowsHintMac: "Include Fuyu's windows (the island, clipboard, Settings, pins and the rest) in recordings. Off by default, and then pins are left out too.",
 };

@@ -137,6 +137,15 @@ if (!automated) {
     await act(async () => { leaveSwitch()!.click(); }); check(leaveSwitch()?.checked === true && Boolean(settingRow("鼠标移开后收起前等待")) && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { clickCollapseOnLeave?: boolean }).clickCollapseOnLeave === true, "Turning close-on-leave on saves it and shows the collapse delay slider"); await act(async () => { leaveSwitch()!.click(); });
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps");
+    await openPage("musicLyrics");
+    const onlineSwitch = settingRow("在线查找歌词")?.querySelector<HTMLInputElement>("input");
+    if (onlineSwitch && !onlineSwitch.checked) await act(async () => { onlineSwitch.click(); });
+    const appleSwitch = () => settingRow("Apple Music 官方歌词")?.querySelector<HTMLInputElement>("input");
+    check(appleSwitch()?.checked === false && !settingRow("Apple Music 令牌"), "Lyrics: Apple Music lyrics are off by default, without a token row");
+    await act(async () => { appleSwitch()!.click(); await new Promise((resolve) => setTimeout(resolve, 20)); });
+    check(Boolean(settingRow("Apple Music 令牌")?.textContent?.includes("还没有保存令牌")) && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { lyricsAppleMusic?: boolean }).lyricsAppleMusic === true,
+      "Turning Apple Music lyrics on saves it and shows the token row, saying no token is saved and how to get one");
+    await act(async () => { appleSwitch()!.click(); });
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
     await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound and break reminders");
     await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");

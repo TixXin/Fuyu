@@ -22,8 +22,10 @@
 | `plugin-config/v1` | `pluginConfigV1` | 宿主内核 | `list()`、`get({ id })`、`set({ id, values })`、`reset({ id })` | `changed` | 按插件 `fuyu.config` JSON Schema 读取、校验、持久化与重置插件配置（`<dataDir>/<id>/config.json`） |
 | `plugin-windows/v1` | `pluginWindowsV1` | 宿主内核 | `getRules({ id })`、`setRules({ id, disallowAlwaysOnTop?, disallowClickThrough?, hideAll? })`、`list({ id? })` | `changed` | 查询当前实验性独立插件窗口状态，以及读写「禁止置顶 / 禁止点击穿透 / 隐藏全部窗口」护栏规则 |
 | `reminders/v1` | `remindersV1` | `timer`（主窗口） | `push({ id, source, icon, title, detail?, snoozable? })` | 无 | 往主窗口提醒队列推送一条提醒卡片 |
+| `screenshot.actions/v1` | `screenshotActionsV1` | `screenshot` | `list()`、`run({ id, context })` | `changed` | 列出、运行宿主里登记的截图后动作；截图卡片和截图历史面板经它显示宿主插件的动作 |
+| `secrets/v1` | `secretsV1` | 宿主内核 | `list()`、`get({ name })`、`set({ name, value })`、`remove({ name })` | 无 | 插件自己的密钥，存在系统凭据里（Windows 凭据管理器、macOS 钥匙串），见下面「存密钥」 |
 | `timers/v1` | `timersV1` | `timer` | `list()`、`start({ kind, durationMs?, hidden? })`、`pause({ id })`、`resume({ id })`、`extend({ id, byMs? })`、`remove({ id })`、`dismissRinging()`、`adopt({ timers })` | `changed`、`due` | 倒计时、番茄钟与秒表的增删改查及到点事件。插件建的计时带 `owner`（宿主按调用方填，传了也不认；用户建的没有），不隐藏的在计时器页标出插件名；`hidden: true` 的不进计时器页和收起条，到点不响铃、不弹提醒，只发 `due`。插件只能 `pause`、`resume`、`extend`、`remove` 自己建的计时（`owner` 是它），别人的当作不存在：前三个报 `not-found`，`remove` 返回 `{ removed: false }`；插件调 `dismissRinging()` 只删它自己在响的计时（含隐藏的），用户关提醒时删在响且不隐藏的。`list()` 和事件照旧给全部计时；`adopt` 只加进新 id，已有的计时原样不动 |
-| `todos/v1` | `todosV1` | `todos` | `list({ date? })`、`days({ from, to })`、`add({ title, date?, project? })`、`update({ id, title?, completed?, addFocusMinutes? })`、`remove({ id })`、`note({ date? })`、`setNote({ note } \| { append })` | `changed` | 今日待办、未来排期、历史归档与每日笔记读写 |
+| `todos/v1` | `todosV1` | `todos` | `list({ date? })`、`days({ from, to })`、`add({ title, date?, project?, note? })`、`update({ id, title?, completed?, addFocusMinutes? })`、`remove({ id })`、`note({ date? })`、`setNote({ note } \| { append })` | `changed` | 今日待办、未来排期、历史归档与每日笔记读写 |
 | `translator/v1` | `translatorV1` | `translation` | `translate(params)`、`rewrite(params)`（流式 `progress`）、`engines()` | `changed` | 文本翻译、流式 AI 改写、查询已配置引擎列表（不含密钥与自定义地址） |
 
 数据目录里的 `config.json` 会跟着用户走：从市场装的插件，这个文件的内容进用户的设置备份和跨设备同步，换电脑后在插件页一键装回时带过去。所以设置放 `config.json`（用 `fuyu.config` 表单，或自己读写这个文件都行），别的数据放别的文件。三条要知道的：字段名含 `password`、`passwd`、`token`、`secret`、`authcode`、`apikey`、`credential` 的不带，密钥请起这样的名字；整份超过 16 KB 就不带；用户选了「用那边的设置」时，声明了 `fuyu.config` 的插件按字段收到 `ctx.config.onChange`，没声明的会在文件写好后被重启一次，所以启动时要重新读这个文件。
@@ -50,7 +52,7 @@
 | **3. 日历来源** | `calendar.sources` | `ctx.calendarSources.register(spec)` | `{ id, name, host?, events({ refresh }) }`，日程与内置 ICS/CalDAV 合并去重，单源抛错隔离进 `problems` |
 | **4. AI 代理接入** | `agents.sources` | `ctx.agentSources.register(spec)` | `{ provider, sessions?, others?, focus?, usage? }`，外部 Agent 会话、窗口聚焦器与额度汇入 `agents/v1` |
 | **5. 剪贴板动作** | `clipboard.actions` | `ctx.clipboardActions.register(spec)` | `{ id, label: { zh, en }, note?, keywords?, group?, match?(item), run(context) }`，出现在剪贴板弹窗 `Ctrl+K` 面板与岛内剪贴板行菜单 |
-| **6. 截图后动作** | `screenshot.actions` | `ctx.screenshotActions.register(spec)` | `{ id, label: { "zh-CN", en }, order?, run({ path, width, height, locale }) }`，出现在截图完成通知卡与截图历史面板 |
+| **6. 截图后动作** | `screenshot.actions` | `ctx.screenshotActions.register(spec)` | `{ id, label: { "zh-CN", en }, icon?, order?, keeps?, run({ path, saved, thumbnail, source, locale }) }`，出现在截图完成通知卡与截图历史面板；`source` 是截图开始时前台的 `{ app, title, url }` 或 `null`；`keeps: true` 时交给 `run` 的是复制进 `screenshots/kept/` 的那份（不被历史清理），适合要长期引用图片的动作 |
 | **7. 消息来源** | `messages.sources` | `ctx.messageSources.register(spec)` | `{ id, label, order?, status?, clear?, open? }`，可新增消息来源标签或按同名 `id`（如 `qqMail`）替换单个内置来源 |
 
 ---
@@ -116,6 +118,43 @@ ctx.slots.add("island.page/v1", {
 - 字体与圆角：`--fuyu-plugin-font`、`--fuyu-plugin-radius`
 
 主题容器还设了 `color-scheme`：深色岛是 `dark`，浅色岛是 `light`，插件的元素会继承它（容器是 `display: contents`，不影响布局，继承照常）。所以插件可以直接写 `light-dark(浅色岛的值, 深色岛的值)`，跟着岛的深浅变；岛上、设置窗口和插件独立窗口里都一样。
+
+### 存密钥（`secrets/v1`）
+
+访问令牌、API Key、对象存储的 Secret 这类东西不要写进 `config.json`（它是明文文件）：用 `secrets/v1` 存进系统凭据（Windows 凭据管理器、macOS 钥匙串），2026-11-20 起（E81）。
+
+```js
+// 宿主代码；package.json 的 fuyu.inject.required 里写 "secrets/v1"
+import { secretsV1 } from "@fuyu/plugin-services";
+
+export const inject = ["clients", "settings", "secrets/v1"];
+export function apply(ctx) {
+  const secrets = ctx.services.get(secretsV1);
+  const report = async () => {
+    const saved = (await secrets.list()).names.includes("api-key");
+    ctx.settings.setup?.({ needed: !saved, hint: { "zh-CN": "填 API Key", en: "Enter the API key" } });
+    return { saved };
+  };
+  ctx.clients.handle("hasKey", report);
+  ctx.clients.handle("saveKey", async ({ value }) => {
+    await secrets.set({ name: "api-key", value });
+    return report();
+  });
+  async function request() {
+    const { value } = await secrets.get({ name: "api-key" });
+    if (!value) return null;
+    // 拼请求头时用 value，用完就丢
+  }
+  void report();
+}
+```
+
+- **只有宿主部分能调**。窗口里调 `secrets/v1` 一律回 `forbidden`：设置页让用户填密钥时，经自己宿主部分的 `ctx.clients.handle` 交过去存，界面上只显示「已保存」，不把值读回窗口。
+- **只看得到自己的**。条目按插件 id 分开，宿主按调用方填插件 id，参数里写别的插件 id 也没用；另一个插件用同一个名字存，存的是它自己的那条。
+- 名字 1–64 个字母、数字、`.`、`_`、`-`；值 1–8192 字；一个插件最多 32 条，超了回 `too-many`。`get` 没存过时回 `{ value: null }`；`remove` 删一条不存在的也算成功。
+- 值别写进日志、别放进 `ctx.http` 的错误信息里、别交给窗口。浮屿自己不会把值记进日志。
+- 用户在插件市场卸载插件并勾了「同时删除数据」时，它的密钥一起删；没勾时留着，重新装上还能用。卸载浮屿时全部删掉。
+- 这是减损不是沙箱：宿主插件和浮屿同权，技术上能读到同一用户的凭据（见 [v3-secrets.md](../architecture/plugins/v3-secrets.md)「这条规则管什么、不管什么」）。它防的是密钥落在明文文件里、跟着同步和备份走。
 
 ---
 

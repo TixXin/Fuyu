@@ -28,6 +28,7 @@ pub(crate) fn bitrate(width: u32, height: u32, fps: u32, high: bool) -> u32 {
     bits.clamp(2_000_000, 80_000_000) as u32
 }
 
+#[cfg(any(windows, test))]
 pub(crate) fn capture_buffers(fps: u32) -> u32 {
     (fps * 2).div_ceil(30).clamp(2, 4)
 }

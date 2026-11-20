@@ -348,3 +348,25 @@ fn the_source_window_is_tidied_and_only_real_web_addresses_are_kept() {
     assert_eq!(tidy("  ", "Title", None), None, "no app name, no source");
     assert_eq!(tidy("app", &"x".repeat(500), None).and_then(|source| source.title).map(|title| title.chars().count()), Some(300));
 }
+
+#[test]
+fn a_kept_screenshot_is_copied_out_of_the_history_and_only_kept_files_are_handed_out() {
+    use super::kept::{folder, keep, kept_file};
+    let dir = std::env::temp_dir().join(format!("fuyu-screenshot-kept-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("temp folder");
+    let shot = dir.join("a.png");
+    std::fs::write(&shot, b"png").expect("write shot");
+    let first = keep(&dir, &shot).expect("keep");
+    let second = keep(&dir, &shot).expect("keep again");
+    assert_eq!((first.clone(), second.clone()), (folder(&dir).join("a.png"), folder(&dir).join("a_2.png")));
+    assert_eq!(keep(&dir, &first).expect("already kept"), first, "keeping a kept picture again makes no copy");
+    std::fs::remove_file(&shot).expect("drop from history");
+    super::output::prune(&dir);
+    assert!(first.is_file(), "pruning the history leaves kept pictures alone");
+    assert!(super::history::list(&dir).is_empty(), "kept pictures are not in the history");
+    assert!(kept_file(&dir, &first.display().to_string()).is_ok());
+    assert!(kept_file(&dir, &shot.display().to_string()).is_err());
+    assert!(kept_file(&dir, &folder(&dir).join("missing.png").display().to_string()).is_err());
+    let _ = std::fs::remove_dir_all(&dir);
+}

@@ -1,24 +1,15 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Circle, Download, EyeOff, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Pin, Redo2, ScanText, Square, SquareBottomDashedScissors, Trash2, Type, Undo2, X, type LucideIcon } from "lucide-react";
-import type { ScreenshotAction } from "../../features/screenshot/api";
-import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, type AnnotationTool } from "../../features/screenshot/annotations";
+import { Check, Download, EyeOff, Pin, QrCode, Redo2, ScanText, SquareBottomDashedScissors, Trash2, Undo2, X } from "lucide-react";
+import type { ScreenshotAction, ScreenshotQrCode } from "../../features/screenshot/api";
+import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, TOOL_KEYS, toolStyles } from "../../features/screenshot/annotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
+import { TOOL_ICONS } from "../../features/screenshot/annotationToolIcons";
 import { useTranslation } from "../../i18n";
 import type { Annotations } from "./useAnnotations";
 import type { AnnotationSelect } from "./useAnnotationSelect";
+import { QrCodePanel } from "./QrCodePanel";
 import "./ScreenshotToolbar.css";
 import { isMacOS } from "../../lib/platform";
-
-const TOOL_ICONS: Record<AnnotationTool, LucideIcon> = {
-  rect: Square,
-  ellipse: Circle,
-  arrow: MoveUpRight,
-  pen: Pencil,
-  highlighter: Highlighter,
-  text: Type,
-  mosaic: Grid3x3,
-  number: Hash,
-};
 
 const ONE_ROW = 48;
 const TWO_ROWS = 88;
@@ -46,22 +37,29 @@ export function ScreenshotToolbar({
   annotations,
   select,
   notice,
+  qrCodes,
   onCancel,
   onFinish,
   onRedact,
+  onCopyText,
+  onOpenLink,
 }: {
   area: PixelRect;
   view: Size;
   annotations: Annotations;
   select: AnnotationSelect;
   notice: string | null;
+  qrCodes: readonly ScreenshotQrCode[];
   onCancel: () => void;
   onFinish: (action: ScreenshotAction) => void;
   onRedact: () => void;
+  onCopyText: (text: string) => void;
+  onOpenLink: (url: string) => void;
 }) {
   const t = useTranslation().screenshot;
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [qrOpen, setQrOpen] = useState(false);
   useLayoutEffect(() => {
     const element = box.current;
     if (!element) return;
@@ -72,7 +70,8 @@ export function ScreenshotToolbar({
   }, []);
   const left = Math.min(Math.max(EDGE, area.x + area.width - width), Math.max(EDGE, view.width - width - EDGE));
   const picked = select.selected;
-  const styling = annotations.tool !== null || picked !== null;
+  const parts = picked ? toolStyles(picked.kind) : annotations.tool ? toolStyles(annotations.tool) : { color: false, level: false };
+  const styling = picked !== null || parts.color || parts.level;
   const space = styling ? TWO_ROWS : ONE_ROW;
   const activeColor = picked ? picked.color : annotations.style.color;
   const activeLevel = picked ? select.level : annotations.style.level;
@@ -96,7 +95,7 @@ export function ScreenshotToolbar({
         {ANNOTATION_TOOLS.map((tool) => {
           const Icon = TOOL_ICONS[tool];
           return (
-            <ToolButton key={tool} label={t.tools[tool]} active={annotations.tool === tool} onClick={() => {
+            <ToolButton key={tool} label={t.toolWithKey(t.tools[tool], TOOL_KEYS[tool])} active={annotations.tool === tool} onClick={() => {
               select.clear();
               annotations.chooseTool(tool);
             }}>
@@ -121,6 +120,11 @@ export function ScreenshotToolbar({
         <ToolButton label={t.readText} onClick={() => onFinish("text")}>
           <ScanText size={18} />
         </ToolButton>
+        {qrCodes.length > 0 && (
+          <ToolButton label={t.qr.button(qrCodes.length)} active={qrOpen} onClick={() => setQrOpen((open) => !open)}>
+            <QrCode size={18} />
+          </ToolButton>
+        )}
         <ToolButton label={t.pin} onClick={() => onFinish("pin")}>
           <Pin size={18} />
         </ToolButton>
@@ -136,13 +140,13 @@ export function ScreenshotToolbar({
       </div>
       {styling && (
         <div className="screenshot-overlay__toolbar-row">
-          {STROKE_LEVELS.map((level) => (
+          {parts.level && STROKE_LEVELS.map((level) => (
             <ToolButton key={level} label={t.sizes[level]} active={activeLevel === level} onClick={() => (picked ? select.restyle({ level }) : annotations.setLevel(level))}>
               <span className="screenshot-overlay__size-dot" style={{ width: 4 + level * 4, height: 4 + level * 4 }} />
             </ToolButton>
           ))}
-          {(!picked || select.recolorable) && <span className="screenshot-overlay__separator" />}
-          {(!picked || select.recolorable) && ANNOTATION_COLORS.map((color) => (
+          {parts.level && parts.color && <span className="screenshot-overlay__separator" />}
+          {parts.color && ANNOTATION_COLORS.map((color) => (
             <button
               key={color}
               type="button"
@@ -156,7 +160,7 @@ export function ScreenshotToolbar({
           ))}
           {picked && (
             <>
-              <span className="screenshot-overlay__separator" />
+              {(parts.level || parts.color) && <span className="screenshot-overlay__separator" />}
               <ToolButton label={t.deleteAnnotation} onClick={select.remove}>
                 <Trash2 size={18} />
               </ToolButton>
@@ -164,6 +168,7 @@ export function ScreenshotToolbar({
           )}
         </div>
       )}
+      {qrOpen && qrCodes.length > 0 && <QrCodePanel codes={qrCodes} onCopy={onCopyText} onOpen={onOpenLink} />}
       {notice && <div className="screenshot-overlay__notice">{notice}</div>}
     </div>
   );

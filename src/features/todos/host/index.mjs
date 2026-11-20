@@ -1,6 +1,8 @@
 import { todosV1 } from "@fuyu/plugin-services";
+import { registerTodoScreenshotActions } from "./screenshotActions.mjs";
 
 export const name = "todos";
+export const inject = { "screenshot.actions": { required: false } };
 
 const PASSED = new Set(["bad-params", "not-found", "timeout", "peer-gone", "unavailable"]);
 const STATUS_CODES = { 400: "bad-params", 404: "not-found", 503: "not-ready" };
@@ -53,4 +55,6 @@ export function apply(ctx) {
     note: (params) => call("note", params),
     setNote: (params) => call("setNote", params),
   });
+  const actions = ctx.screenshotActions;
+  if (actions && typeof actions.register === "function") registerTodoScreenshotActions(actions, call);
 }

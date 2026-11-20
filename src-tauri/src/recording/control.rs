@@ -8,7 +8,7 @@ use std::{
 
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::{user_error::UserError, win32};
+use crate::user_error::UserError;
 
 use super::{
     format,
@@ -88,7 +88,7 @@ pub(crate) fn apply_to_window(window: &tauri::WebviewWindow) {
     if !hides_own_windows() || label.starts_with(crate::screenshot::WINDOW_PREFIX) || label.starts_with(crate::screenshot::PIN_PREFIX) {
         return;
     }
-    if window.hwnd().is_ok_and(|hwnd| win32::window::exclude_from_capture(hwnd, true)) {
+    if super::exclusion::exclude(window, true) {
         let mut hidden = HIDDEN.lock().unwrap_or_else(PoisonError::into_inner);
         if !hidden.iter().any(|item| item == label) {
             hidden.push(label.to_string());
@@ -100,7 +100,7 @@ fn prepare_own_windows(app: &AppHandle, own_windows: bool) {
     HIDING_OWN_WINDOWS.store(!own_windows, Ordering::SeqCst);
     RECORDING_OWN_WINDOWS.store(own_windows, Ordering::SeqCst);
     if own_windows {
-        crate::clipboard_history::unprotect_for_recording(app);
+        super::exclusion::show_clipboard(app);
         return;
     }
     let mut hidden = HIDDEN.lock().unwrap_or_else(PoisonError::into_inner);
@@ -108,7 +108,7 @@ fn prepare_own_windows(app: &AppHandle, own_windows: bool) {
         if label.starts_with(crate::screenshot::WINDOW_PREFIX) || label.starts_with(crate::screenshot::PIN_PREFIX) {
             continue;
         }
-        if window.hwnd().is_ok_and(|hwnd| win32::window::exclude_from_capture(hwnd, true)) {
+        if super::exclusion::exclude(&window, true) {
             hidden.push(label);
         }
     }
@@ -118,11 +118,11 @@ fn restore_own_windows(app: &AppHandle) {
     HIDING_OWN_WINDOWS.store(false, Ordering::SeqCst);
     RECORDING_OWN_WINDOWS.store(false, Ordering::SeqCst);
     for label in HIDDEN.lock().unwrap_or_else(PoisonError::into_inner).drain(..) {
-        if crate::clipboard_history::is_clipboard_window(&label) {
+        if super::exclusion::is_clipboard(&label) {
             continue;
         }
-        if let Some(hwnd) = app.get_webview_window(&label).and_then(|window| window.hwnd().ok()) {
-            win32::window::exclude_from_capture(hwnd, false);
+        if let Some(window) = app.get_webview_window(&label) {
+            super::exclusion::exclude(&window, false);
         }
     }
     crate::clipboard_history::restore_capture_protection(app);
@@ -133,7 +133,7 @@ pub(crate) fn start_now(app: &AppHandle, request: Request) -> Result<String, Use
     if active.is_some() {
         return Err(UserError::new("recording.busy", "A recording is already running."));
     }
-    let videos = win32::known_folder::videos().ok_or_else(|| failed("The Videos folder is unavailable."))?;
+    let videos = crate::system::videos_dir().ok_or_else(|| failed("The Videos folder is unavailable."))?;
     let folder = videos.join(crate::screenshot::sanitized_name(&request.folder_name));
     std::fs::create_dir_all(&folder).map_err(|error| failed(format!("Failed to create {}: {error}", folder.display())))?;
     let gif = request.gif.unwrap_or(false);

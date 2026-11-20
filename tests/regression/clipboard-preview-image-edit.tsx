@@ -75,7 +75,7 @@ export async function checkImageEdit(check: Check, calls: string[], image: Clipb
   check(editor() && since(mark).includes(editing(true)) && since(mark).includes(`read_clipboard_history_image:${JSON.stringify({ id: image.id })}`), "点「编辑图片」：换成图片编辑器，向 Rust 要键盘和原图");
   await ready();
   check(size() === "40px x 30px" && $("#frame .clipboard-image-editor__picture canvas"), "原图按自己的像素画进编辑区");
-  check(tool("裁剪") && tool("向左转") && tool("向右转") && tools().length === 13, "工具栏有裁剪、左右旋转、截图的八种标注和撤销重做");
+  check(tool("裁剪") && tool("向左转") && tool("向右转") && tools().length === 16, "工具栏有裁剪、左右旋转、截图的十一种标注和撤销重做");
   const buttons = [...document.querySelectorAll("#frame .clipboard-image-editor .clipboard-editor__buttons kbd")].map((kbd) => kbd.textContent).join("|");
   check(buttons.match(/S\|.*⇧ S\|Esc/), "底部和编辑文字一样：改这条、另存一条、取消，写着各自的键");
   check($("#frame .clipboard-preview__hint")?.textContent?.includes("Esc"), "编辑时顶栏提示 Esc 退出");

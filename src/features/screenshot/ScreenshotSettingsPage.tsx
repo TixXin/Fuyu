@@ -131,6 +131,12 @@ function AfterSection({ screenshot, onScreenshotChange: setScreenshot, folderDra
         checked={screenshot.agentSource}
         onChange={(agentSource) => setScreenshot({ ...screenshot, agentSource })}
       />
+      <SettingsToggleRow
+        title={text.restorePins}
+        description={text.restorePinsHint}
+        checked={screenshot.restorePins}
+        onChange={(restorePins) => setScreenshot({ ...screenshot, restorePins })}
+      />
     </SettingsGroup>
   );
 }
@@ -168,7 +174,7 @@ export function ScreenshotSettingsPage({
     if (folder !== screenshot.saveFolder) setScreenshot({ ...screenshot, saveFolder: folder });
   };
   const props = { settings, onSettingsChange, onOpenShortcuts, screenshot, onScreenshotChange: setScreenshot, takenBy, folderDraft, onFolderDraftChange: setFolderDraft, onSaveFolder: saveFolder };
-  const shown: ScreenshotTab = tab === "screenshotRecord" && !isMacOS ? "screenshotRecord" : "screenshot";
+  const shown: ScreenshotTab = tab === "screenshotRecord" ? "screenshotRecord" : "screenshot";
 
   return (
     <>

@@ -31,7 +31,6 @@ mod plugin_kernel;
 mod mail;
 #[cfg_attr(target_os = "macos", path = "qq_notifications/macos.rs")]
 mod qq_notifications;
-#[cfg_attr(not(windows), path = "recording/unsupported.rs")]
 mod recording;
 #[cfg_attr(not(windows), path = "rename_migration/unsupported.rs")]
 mod rename_migration;

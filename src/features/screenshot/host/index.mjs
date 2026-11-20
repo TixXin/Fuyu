@@ -1,3 +1,4 @@
+import { screenshotActionsV1 } from "@fuyu/plugin-services";
 import { createScreenshotActionRegistry } from "./actions.mjs";
 
 export const name = "screenshot";
@@ -19,6 +20,15 @@ export function apply(ctx) {
     },
   });
   ctx.effect(() => stopAccessor, "screenshotActions.accessor");
+  const provider = ctx.services.provide(screenshotActionsV1, {
+    list: () => ({ actions: registry.list() }),
+    run: (params) => {
+      const id = typeof params?.id === "string" ? params.id : "";
+      return registry.run(id, params?.context);
+    },
+  });
+  const stopWatching = registry.subscribe(() => provider.emit("changed", { actions: registry.list() }));
+  ctx.effect(() => stopWatching, "screenshotActions.changed");
   ctx.provide(
     "screenshot.actions",
     Object.freeze({

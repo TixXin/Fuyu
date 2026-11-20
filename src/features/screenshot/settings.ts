@@ -31,6 +31,7 @@ export type ScreenshotSettings = {
   historyDays: HistoryDays;
   historyText: boolean;
   agentSource: boolean;
+  restorePins: boolean;
   record: RecordSettings;
   version: 2;
 };
@@ -54,6 +55,7 @@ export const DEFAULT_SCREENSHOT_SETTINGS: ScreenshotSettings = {
   historyDays: 7,
   historyText: true,
   agentSource: true,
+  restorePins: true,
   record: { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4", ownWindows: false },
   version: 2,
 };
@@ -95,6 +97,7 @@ export function normalizeScreenshotSettings(value: unknown): ScreenshotSettings 
     historyDays: (HISTORY_DAYS as readonly unknown[]).includes(saved.historyDays) ? (saved.historyDays as HistoryDays) : DEFAULT_SCREENSHOT_SETTINGS.historyDays,
     historyText: saved.historyText !== false,
     agentSource: saved.agentSource !== false,
+    restorePins: saved.restorePins !== false,
     record: recordOf(saved.record),
     version: 2,
   };

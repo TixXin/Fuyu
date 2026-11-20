@@ -210,6 +210,7 @@ fn delete_release_credentials(fuyu_home: &Path) {
         ("com.tixxin.fuyu.plan-usage".to_string(), "glm".to_string()),
         ("com.tixxin.fuyu.plan-usage".to_string(), "kimi".to_string()),
         ("com.tixxin.fuyu.sync".to_string(), "webdav-password".to_string()),
+        ("com.tixxin.fuyu.apple-music".to_string(), "media-user-token".to_string()),
     ];
     for account in [
         "custom-address",

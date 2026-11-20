@@ -1,13 +1,24 @@
+#[cfg(windows)]
 mod audio;
 mod control;
+#[cfg_attr(target_os = "macos", path = "exclusion_macos.rs")]
+mod exclusion;
 mod format;
 mod gif;
 mod mixer;
+#[cfg_attr(not(windows), allow(dead_code))]
 mod pacing;
+#[cfg_attr(target_os = "macos", path = "session_macos.rs")]
 mod session;
 mod state;
+#[cfg(any(target_os = "macos", test))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+mod stereo;
 #[cfg(test)]
 mod tests;
+#[cfg(any(target_os = "macos", test))]
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+mod timeline;
 
 use tauri::AppHandle;
 
