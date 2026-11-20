@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>水母全套动效（issue #281）</title>
+<style>
+  :root {
+    --bg: #faf7f2; --card: #ffffff; --line: #ece6dc; --text: #2a2a2e; --sub: #8a8790; --stage: #f4efe7;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-io: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  body[data-bg="dark"] { --bg: #111214; --card: #1b1c1f; --line: #2c2d32; --text: #e8e8ea; --sub: #8d8e95; --stage: #0b0b0c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 80px; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; overflow-x: hidden; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 36px 0 4px; }
+  p.note { color: var(--sub); margin: 0 0 12px; max-width: 980px; }
+  .controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; padding: 10px 14px; margin: 12px 0 0; border-radius: 10px; background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--line); backdrop-filter: blur(8px); max-width: 1180px; }
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .group > span { color: var(--sub); }
+  button.seg { font: inherit; cursor: pointer; padding: 2px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+  button.seg.on { background: #2f4a3f; border-color: #6abf9b; color: #fff; }
+  details { max-width: 760px; margin: 8px 0; color: var(--sub); }
+  details img { display: block; width: 100%; margin-top: 8px; border-radius: 12px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; max-width: 1180px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; cursor: pointer; }
+  .card b { font-size: 14px; }
+  .card .stage { display: flex; align-items: center; justify-content: center; height: 190px; margin: 8px 0 10px; border-radius: 12px; background: var(--stage); }
+  .card .stage svg { height: 104px; width: auto; }
+  .card ul { margin: 0; padding-left: 16px; color: var(--sub); font-size: 12.5px; }
+  .card li { margin: 2px 0; }
+  .card li i { font-style: normal; color: var(--text); }
+
+  .pills { display: grid; gap: 10px; max-width: 1180px; }
+  .pillrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .pillrow > span { width: 7em; color: var(--sub); font-size: 12.5px; }
+  .pill { --z: 1; display: inline-flex; align-items: center; gap: calc(20px * var(--z)); height: calc(38px * var(--z)); padding: 0 calc(24px * var(--z)) 0 calc(14px * var(--z)); border-radius: 999px; background: #000; color: #f4f2ec; font-size: calc(12.5px * var(--z)); white-space: nowrap; }
+  .pill.light { background: #f1ede5; color: #1c1c1e; box-shadow: inset 0 0 0 1px #e2ddd2; }
+  .pill svg { height: calc(24px * var(--z)); width: auto; }
+  .pill.z3 { --z: 3; }
+  .scroll { overflow-x: auto; max-width: 1180px; padding-bottom: 4px; }
+
+  .icons { display: flex; align-items: flex-end; gap: 26px; flex-wrap: wrap; max-width: 1180px; }
+  .icons figure { margin: 0; text-align: center; color: var(--sub); font-size: 12px; }
+  .icons figure svg { display: block; margin: 0 auto 6px; }
+  .menubar { display: flex; margin: 0 0 6px; align-items: center; gap: 14px; height: 30px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; }
+  .menubar svg { height: 16px; width: auto; display: block; }
+
+  .jl { overflow: visible; --c: #f6e3d3; --eye: #1d1b22; --cheek: #ff8fa0; }
+  .jl[data-state="running"] { --c: #6db6f4; }
+  .jl[data-state="waiting"] { --c: #ffcd3c; }
+  .jl[data-state="failed"] { --c: #f2554c; }
+  .jl[data-state="done"] { --c: #5ed69e; }
+  .jl.on-light[data-state="idle"] { --c: #aeadb3; }
+  .jl * { transform-box: view-box; }
+  .jl .fill { fill: var(--c); }
+  .jl .eye { fill: var(--eye); }
+  .jl .line { fill: none; stroke: var(--eye); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .jl .cheek { fill: var(--cheek); opacity: .72; }
+  .jl .speed { fill: none; stroke: var(--c); stroke-width: 3; stroke-linecap: round; opacity: .5; }
+  .jl .ghost { fill: var(--c); opacity: .22; transform: translate(4px, 0); }
+  .jl .tick { fill: none; stroke: #f5b800; stroke-width: 2.4; stroke-linecap: round; }
+  .jl .tick.grey { stroke: #a2a1a8; }
+  .jl .anger { fill: none; stroke: #e5352b; stroke-width: 2; stroke-linecap: round; }
+  .jl .spark { fill: #ffd23f; }
+  .jl .zz { fill: #8a7ad6; font: 800 8px/1 -apple-system, "Segoe UI", sans-serif; }
+  .jl .body, .jl .head { transform-origin: 32px 40px; }
+  .jl .eyes { transform-origin: 32px 25px; }
+
+  body.motion .jl.live .body, body.motion .jl.live .head, body.motion .jl.live .eyes, body.motion .jl.live .lobe, body.motion .jl.live .fx > *, body.motion .jl.live .ghost { animation-iteration-count: infinite; animation-timing-function: var(--ease-io); }
+
+  body.motion .jl.live[data-a="idle"] .body { animation-name: float; animation-duration: 4s; }
+  body.motion .jl.live[data-a="idle"] .eyes { animation-name: blink; animation-duration: 5s; animation-timing-function: linear; }
+
+  body.motion .jl.live[data-a="running"] .body { animation-name: lean-bob; animation-duration: .6s; }
+  body.motion .jl.live[data-a="running"] .lobe { animation-name: paddle; animation-duration: .6s; }
+  body.motion .jl.live[data-a="running"] .lobe:nth-child(2) { animation-delay: .1s; }
+  body.motion .jl.live[data-a="running"] .lobe:nth-child(3) { animation-delay: .2s; }
+  body.motion .jl.live[data-a="running"] .lobe:nth-child(4) { animation-delay: .3s; }
+  body.motion .jl.live[data-a="running"] .speed { animation-name: stream; animation-duration: .6s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="running"] .speed:nth-child(2) { animation-delay: .2s; }
+  body.motion .jl.live[data-a="running"] .speed:nth-child(3) { animation-delay: .4s; }
+  body.motion .jl.live[data-a="running"] .ghost { animation-name: ghost; animation-duration: .6s; }
+
+  body.motion .jl.live[data-a="waiting"] .body { animation-name: hop; animation-duration: 1.6s; }
+  body.motion .jl.live[data-a="waiting"] .eyes { animation-name: blink; animation-duration: 3.2s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="waiting"] .fx > * { animation-name: pop; animation-duration: 1.6s; }
+
+  body.motion .jl.live[data-a="failed"] .body { animation-name: shake; animation-duration: 2.4s; animation-timing-function: var(--ease); }
+  body.motion .jl.live[data-a="failed"] .fx > * { animation-name: throb; animation-duration: 1.2s; }
+
+  body.motion .jl.live[data-a="done"] .body { animation-name: rise; animation-duration: 2.4s; animation-timing-function: var(--ease-out); }
+  body.motion .jl.live[data-a="done"] .fx > * { animation-name: twinkle; animation-duration: 1.6s; }
+  body.motion .jl.live[data-a="done"] .fx > *:nth-child(2) { animation-delay: .5s; }
+
+  body.motion .jl.live[data-a="blink"] .eyes { animation-name: blink2; animation-duration: 2s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="wink"] .body { animation-name: tilt; animation-duration: 2s; }
+  body.motion .jl.live[data-a="wink"] .fx > * { animation-name: pop; animation-duration: 2s; }
+  body.motion .jl.live[data-a="pressed"] .head { animation-name: press; animation-duration: 1.4s; }
+  body.motion .jl.live[data-a="pressed"] .fx > * { animation-name: pop; animation-duration: 1.4s; }
+  body.motion .jl.live[data-a="left"] .eyes { animation-name: look-left; animation-duration: 3s; }
+  body.motion .jl.live[data-a="right"] .eyes { animation-name: look-right; animation-duration: 3s; }
+  body.motion .jl.live[data-a="surprised"] .body { animation-name: jolt; animation-duration: 2s; animation-timing-function: var(--ease-out); }
+  body.motion .jl.live[data-a="surprised"] .fx > * { animation-name: pop; animation-duration: 2s; }
+  body.motion .jl.live[data-a="sleep"] .head { animation-name: breathe; animation-duration: 3.2s; }
+  body.motion .jl.live[data-a="sleep"] .fx > * { animation-name: drift; animation-duration: 3.2s; }
+  body.motion .jl.live[data-a="sleep"] .fx > *:nth-child(2) { animation-delay: 1.6s; }
+
+  .jl .fx > * { transform-origin: 59px 6px; }
+  .jl .lobe { transform-origin: var(--ox) 33px; }
+
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.4px); } }
+  @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.08); } }
+  @keyframes blink2 { 0%, 40%, 50%, 60%, 70%, 100% { transform: scaleY(1); } 45%, 65% { transform: scaleY(.08); } }
+  @keyframes lean-bob { 0%, 100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(-5deg) translateY(-1.2px); } }
+  @keyframes paddle { 0%, 60%, 100% { transform: scaleY(1); } 30% { transform: scaleY(.6); } }
+  @keyframes stream { from { transform: translateX(-4px); opacity: 0; } 30% { opacity: .55; } to { transform: translateX(8px); opacity: 0; } }
+  @keyframes ghost { 0%, 100% { opacity: .24; } 50% { opacity: .08; } }
+  @keyframes hop { 0%, 45%, 100% { transform: rotate(-6deg) translateY(0); } 11%, 33% { transform: rotate(-6deg) translateY(-3px); } 22% { transform: rotate(-6deg) translateY(-.3px); } }
+  @keyframes pop { 0%, 100% { opacity: 0; transform: scale(.7); } 12%, 60% { opacity: 1; transform: scale(1); } 75% { opacity: 0; transform: scale(1); } }
+  @keyframes shake { 0%, 18%, 100% { transform: translateX(0) scale(1.03, .94); } 4% { transform: translateX(-2.4px) scale(1.03, .94); } 9% { transform: translateX(2px) scale(1.03, .94); } 14% { transform: translateX(-1.2px) scale(1.03, .94); } }
+  @keyframes throb { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+  @keyframes rise { 0%, 40%, 100% { transform: translateY(0); } 18% { transform: translateY(-4px); } }
+  @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0); } 30%, 60% { opacity: 1; transform: scale(1) rotate(20deg); } }
+  @keyframes tilt { 0%, 100% { transform: rotate(0); } 25%, 70% { transform: rotate(-5deg); } }
+  @keyframes press { 0%, 55%, 100% { transform: scale(1, 1); } 15%, 40% { transform: scale(1.05, .9); } }
+  @keyframes look-left { 0%, 100% { transform: translateX(0); } 20%, 70% { transform: translateX(-2.6px); } }
+  @keyframes look-right { 0%, 100% { transform: translateX(0); } 20%, 70% { transform: translateX(2.6px); } }
+  @keyframes jolt { 0%, 40%, 100% { transform: translateY(0) scale(1); } 10% { transform: translateY(-4px) scale(.97, 1.04); } }
+  @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, .97); } }
+  @keyframes drift { 0% { opacity: 0; transform: translate(0, 2px); } 25%, 60% { opacity: 1; } 100% { opacity: 0; transform: translate(3px, -6px); } }
+
+  @media (prefers-reduced-motion: reduce) { .jl, .jl * { animation: none !important; } }
+  body:not(.motion) .jl * { animation: none !important; }
+  body:not(.motion) .jl[data-a="running"] .body { transform: rotate(-5deg); }
+
+  @media (max-width: 760px) {
+    body { padding: 16px 16px 60px; }
+    .controls { margin-left: -16px; margin-right: -16px; border-radius: 0; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .card .stage { height: 140px; }
+    .card .stage svg { height: 72px; }
+    .pillrow > span { width: 100%; }
+  }
+</style>
+</head>
+<body class="motion" data-bg="light">
+<h1>水母全套动效</h1>
+<p class="note">按下面 GPT 生成的那一套画成 SVG，每个都是真动画。不要光环。<b>点卡片重播</b>；用「速度」放慢看细节；「动画」关掉就是系统开了减少动画时的样子。</p>
+<details><summary>参考图（GPT 生成）</summary><img src="assets/jellyfish-set-reference.webp" alt="水母全套参考图" /></details>
+
+<div class="controls">
+  <div class="group" id="ctl-bg"><span>背景</span></div>
+  <div class="group" id="ctl-speed"><span>速度</span></div>
+  <div class="group" id="ctl-motion"><span>动画</span></div>
+</div>
+
+<h2>1. 五种状态</h2>
+<p class="note">只进场播一次的（失败的晃、完成的上浮）在这里每 2.4 秒重播一次，方便看清。</p>
+<div class="cards" id="states"></div>
+
+<h2>2. 放进岛里</h2>
+<p class="note">实际大小是 24 像素高。小尺寸上去掉高光的小圆点，速度线、感叹线、怒气符号和星星保留。浅色岛上只有空闲换成灰。</p>
+<div class="pills scroll" id="pills"></div>
+
+<h2>3. 补充表情</h2>
+<p class="note">交互和过渡时用，颜色跟当时的状态走，这里都用空闲的米白。</p>
+<div class="cards" id="extras"></div>
+
+<h2>4. 应用图标</h2>
+<p class="note">32 像素及以下用简化版：去掉高光和腮红，眼睛放大。最右边是 Mac 菜单栏的单色模板图。</p>
+<div class="icons" id="icons"></div>
+
+<script>
+const DOME = "M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z";
+const LOBES = [18, 27.3, 36.7, 46];
+const LR = 6.6;
+let uid = 0;
+
+const STATES = [
+  { a: "idle", name: "空闲", face: "open", notes: [["身体", "4 秒一轮上下浮动 1.4 像素"], ["眼睛", "5 秒眨一次"]] },
+  { a: "running", name: "运行中", face: "brows", fx: "speed", notes: [["身体", "前倾 5°，0.6 秒一轮上下颠"], ["触手", "四瓣依次收缩，像在划水"], ["速度线", "三条错开往后飘"], ["残影", "身后一层淡影，跟着闪"]] },
+  { a: "waiting", name: "等你", face: "smile", fx: "ticks", notes: [["身体", "歪头，跳两下停一下（1.6 秒）"], ["感叹线", "跟着跳的节奏闪出来"], ["表情", "张嘴笑，照常眨眼"]] },
+  { a: "failed", name: "失败", face: "brows", fx: "anger", notes: [["身体", "压扁，左右晃两下（420ms，只播一次）"], ["怒气符号", "1.2 秒一下一下鼓起"], ["表情", "皱眉，不看鼠标"]] },
+  { a: "done", name: "完成", face: "happy", fx: "sparks", notes: [["身体", "上浮 4 像素再落回（只播一次），不回弹"], ["星星", "两颗交替闪"], ["表情", "^ ^ 笑眼，3 秒后回到空闲"]] },
+];
+const EXTRAS = [
+  { a: "blink", name: "眨眼", face: "open", notes: [["眼睛", "连眨两下，空闲时随机出现"]] },
+  { a: "wink", name: "单眼眨", face: "wink", fx: "ticks", notes: [["用在", "设置里点到水母、彩蛋"], ["身体", "歪一下头"]] },
+  { a: "pressed", name: "被按下", face: "happy", fx: "ticks-grey", notes: [["用在", "鼠标按住状态灯"], ["身体", "伞面压扁，松手回弹到原样，不冲过头"]] },
+  { a: "left", name: "向左看", face: "open", notes: [["用在", "鼠标在左边、消息从左边来"], ["眼睛", "平移 2.6 像素，停一会儿回来"]] },
+  { a: "right", name: "向右看", face: "open", notes: [["用在", "鼠标在右边、消息从右边来"]] },
+  { a: "surprised", name: "惊讶", face: "o", fx: "ticks", notes: [["用在", "来了一条新消息"], ["身体", "往上一蹦，拉长一点"]] },
+  { a: "sleep", name: "睡着", face: "sleep", fx: "zz", notes: [["用在", "长时间没有会话、勿扰模式"], ["身体", "3.2 秒一轮慢慢呼吸"], ["Z", "两个交替往右上飘"]] },
+];
+
+function faceSvg(face, small) {
+  const glint = small ? "" : `<circle cx="25" cy="23.4" r=".9" fill="#fff"/><circle cx="41" cy="23.4" r=".9" fill="#fff"/>`;
+  const eyes = `<ellipse class="eye" cx="24" cy="25" rx="2.7" ry="3.9"/><ellipse class="eye" cx="40" cy="25" rx="2.7" ry="3.9"/>${glint}`;
+  const cheeks = `<ellipse class="cheek" cx="17.6" cy="31.5" rx="3.6" ry="2.2"/><ellipse class="cheek" cx="46.4" cy="31.5" rx="3.6" ry="2.2"/>`;
+  const brows = `<path class="line" d="M18.5 17.2l8 3.2M45.5 17.2l-8 3.2"/>`;
+  const parts = {
+    open: `<g class="eyes">${eyes}</g>`,
+    brows: `<g class="eyes">${eyes}</g>${brows}`,
+    smile: `<g class="eyes" transform="translate(0 -1)">${eyes}</g><path class="eye" d="M28.2 30.4h7.6a3.8 3.8 0 0 1-7.6 0Z"/><ellipse cx="32" cy="33.1" rx="2" ry="1.1" fill="#ff6b7a"/>`,
+    happy: `<g class="eyes"><path class="line" d="M20.6 26.4a3.4 3.4 0 0 1 6.8 0M36.6 26.4a3.4 3.4 0 0 1 6.8 0"/></g>`,
+    wink: `<g class="eyes"><ellipse class="eye" cx="24" cy="25" rx="2.7" ry="3.9"/><path class="line" d="M43 22l-5 3 5 3"/></g>`,
+    o: `<g class="eyes"><ellipse class="eye" cx="24" cy="24.5" rx="3" ry="4.3"/><ellipse class="eye" cx="40" cy="24.5" rx="3" ry="4.3"/>${glint}</g><ellipse class="eye" cx="32" cy="32.4" rx="2.1" ry="2.6"/><ellipse cx="32" cy="33.4" rx="1.2" ry="1" fill="#ff6b7a"/>`,
+    sleep: `<g class="eyes"><path class="line" d="M20.6 25a3.4 3.4 0 0 0 6.8 0M36.6 25a3.4 3.4 0 0 0 6.8 0"/></g>`,
+  };
+  return cheeks + parts[face];
+}
+
+function star(cx, cy, r) {
+  return `<path class="spark" d="M${cx} ${cy - r}Q${cx} ${cy} ${cx + r} ${cy}Q${cx} ${cy} ${cx} ${cy + r}Q${cx} ${cy} ${cx - r} ${cy}Q${cx} ${cy} ${cx} ${cy - r}Z" style="transform-origin:${cx}px ${cy}px"/>`;
+}
+
+function fxSvg(fx) {
+  if (fx === "ticks" || fx === "ticks-grey") return `<g class="fx"><path class="tick${fx === "ticks-grey" ? " grey" : ""}" d="M55 6l1.4-5M59 9.5l4.2-3.4M61 15l5-1"/></g>`;
+  if (fx === "anger") return `<g class="fx"><path class="anger" style="transform-origin:59px 5.5px" d="M55.5 3.5c1.6 0 2.5-.9 2.5-2.5M62.5 3.5c-1.6 0-2.5-.9-2.5-2.5M55.5 7.5c1.6 0 2.5.9 2.5 2.5M62.5 7.5c-1.6 0-2.5.9-2.5 2.5"/></g>`;
+  if (fx === "sparks") return `<g class="fx">${star(59, 3, 4.6)}${star(65.5, 11, 3)}</g>`;
+  if (fx === "zz") return `<g class="fx"><text class="zz" x="55" y="10" style="transform-origin:57px 8px">z</text><text class="zz" x="60" y="3" font-size="10" style="transform-origin:63px 0px;font-size:10px">Z</text></g>`;
+  return "";
+}
+
+function jelly({ a = "idle", state = a, face = "open", fx = "", small = false, light = false, live = true } = {}) {
+  const n = ++uid;
+  const shade = `url(#s${n})`;
+  const defs = `<defs><linearGradient id="s${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient></defs>`;
+  const speed = fx === "speed" ? `<g>${[[17, 62, 76], [25, 64, 82], [33, 62, 74]].map(([y, x1, x2]) => `<path class="speed" d="M${x1} ${y}H${x2}"/>`).join("")}</g>` : "";
+  const ghost = fx === "speed" || a === "waiting" ? `<g class="ghost"><path d="${DOME}"/>${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}</g>` : "";
+  const lobes = LOBES.map((x) => `<g class="lobe" style="--ox:${x}px"><circle class="fill" cx="${x}" cy="39" r="${LR}"/><circle cx="${x}" cy="39" r="${LR}" fill="${shade}"/></g>`).join("");
+  const hl = small ? "" : `<ellipse cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)" fill="#fff" opacity=".6"/><circle cx="28.5" cy="10" r="1.5" fill="#fff" opacity=".7"/>`;
+  const cls = `jl${live ? " live" : ""}${light ? " on-light" : ""}`;
+  return `<svg class="${cls}" data-a="${a}" data-state="${state}" viewBox="0 0 64 48">${defs}${speed}<g class="body">${ghost}<g>${lobes}</g><g class="head"><path class="fill" d="${DOME}"/><path d="${DOME}" fill="${shade}"/>${hl}${faceSvg(face, small)}</g></g>${fxSvg(fx)}</svg>`;
+}
+
+function cardHtml(item, state) {
+  return `<div class="card" data-i="${item.a}"><b>${item.name}</b><div class="stage">${jelly({ a: item.a, state, face: item.face, fx: item.fx })}</div><ul>${item.notes.map(([k, v]) => `<li><i>${k}</i>：${v}</li>`).join("")}</ul></div>`;
+}
+
+function iconSvg(size, simple) {
+  const n = ++uid;
+  const art = `<g transform="translate(9 11.5) scale(.72)"><g fill="url(#l${n})">${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}<path d="${DOME}"/></g>${simple ? `<ellipse cx="24" cy="25" rx="3.6" ry="5" fill="#2b1d5c"/><ellipse cx="40" cy="25" rx="3.6" ry="5" fill="#2b1d5c"/>` : `<ellipse cx="21" cy="13.5" rx="7" ry="3.2" transform="rotate(-28 21 13.5)" fill="#fff" opacity=".6"/><ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fb0" opacity=".75"/><ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fb0" opacity=".75"/><ellipse cx="24" cy="25" rx="2.8" ry="4" fill="#2b1d5c"/><ellipse cx="40" cy="25" rx="2.8" ry="4" fill="#2b1d5c"/>`}</g>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 64 64"><defs><linearGradient id="b${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a4cf6"/><stop offset="1" stop-color="#2a15ad"/></linearGradient><linearGradient id="l${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="#f3c6fb"/><stop offset="1" stop-color="#c79bf0"/></linearGradient></defs><rect x="1" y="1" width="62" height="62" rx="15" fill="url(#b${n})"/>${art}</svg>`;
+}
+
+function monoSvg(color) {
+  const n = ++uid;
+  return `<svg viewBox="0 0 64 48"><defs><mask id="m${n}"><rect x="0" y="0" width="64" height="48" fill="#fff"/><ellipse cx="24" cy="25" rx="3.2" ry="4.6" fill="#000"/><ellipse cx="40" cy="25" rx="3.2" ry="4.6" fill="#000"/></mask></defs><g fill="${color}" mask="url(#m${n})">${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}<path d="${DOME}"/></g></svg>`;
+}
+
+function build() {
+  document.getElementById("states").innerHTML = STATES.map((s) => cardHtml(s, s.a)).join("");
+  document.getElementById("extras").innerHTML = EXTRAS.map((s) => cardHtml(s, "idle")).join("");
+  const row = (label, opts, z = "") => `<div class="pillrow"><span>${label}</span><div class="pill${opts.light ? " light" : ""}${z}">${STATES.map((s) => jelly({ a: s.a, face: s.face, fx: s.fx, small: !z, light: opts.light, live: opts.live })).join("")}</div></div>`;
+  document.getElementById("pills").innerHTML = row("深色岛", { live: true }) + row("浅色岛", { light: true, live: true }) + row("减少动画", { live: false }) + row("深色岛 · 放大 3 倍", { live: true }, " z3");
+  const fig = (svg, label) => `<figure>${svg}${label}</figure>`;
+  document.getElementById("icons").innerHTML = [512, 128, 48].map((s) => fig(iconSvg(Math.min(s, 160)), `${s}${s > 160 ? "（缩小显示）" : ""}`)).join("")
+    + fig(iconSvg(32, true), "32 简化版") + fig(iconSvg(16, true), "16 简化版")
+    + fig(`<div class="menubar" style="background:#e6e6ea;color:#1d1d1f">${monoSvg("#1d1d1f")}<span>周四 12:55</span></div>`, "菜单栏 · 浅色")
+    + fig(`<div class="menubar" style="background:#2a2b31;color:#f2f2f4">${monoSvg("#f2f2f4")}<span>周四 12:55</span></div>`, "菜单栏 · 深色");
+}
+
+const view = { bg: "light", speed: 1, motion: true };
+
+function applySpeed() {
+  requestAnimationFrame(() => { for (const a of document.getAnimations()) a.playbackRate = view.speed; });
+}
+
+function segs(id, options, key) {
+  const host = document.getElementById(id);
+  for (const [value, text] of options) {
+    const b = document.createElement("button");
+    b.className = "seg";
+    b.textContent = text;
+    b.dataset.v = String(value);
+    b.addEventListener("click", () => { view[key] = value; sync(); });
+    host.append(b);
+  }
+}
+
+function sync() {
+  document.body.dataset.bg = view.bg;
+  document.body.classList.toggle("motion", view.motion);
+  for (const [id, key] of [["ctl-bg", "bg"], ["ctl-speed", "speed"], ["ctl-motion", "motion"]]) {
+    for (const b of document.getElementById(id).querySelectorAll("button")) b.classList.toggle("on", b.dataset.v === String(view[key]));
+  }
+  applySpeed();
+}
+
+document.addEventListener("click", (event) => {
+  const card = event.target.closest(".card");
+  if (!card) return;
+  const stage = card.querySelector(".stage");
+  stage.innerHTML = stage.innerHTML;
+  applySpeed();
+});
+
+build();
+segs("ctl-bg", [["light", "浅"], ["dark", "深"]], "bg");
+segs("ctl-speed", [[1, "1×"], [0.5, "0.5×"], [0.25, "0.25×"]], "speed");
+segs("ctl-motion", [[true, "开"], [false, "关"]], "motion");
+sync();
+</script>
+</body>
+</html>
