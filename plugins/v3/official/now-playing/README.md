@@ -10,7 +10,7 @@
 
 - 暂停、继续同一首不提示；连续切歌只提示最后停下的那首。
 - 岛展开、贴边收起或安静模式时不弹提示，岛上正显示 Agent 提示或聊天消息时也不弹（浮屿本身的规则），之后的下一首照常提示。
-- 播放软件在最前面时不提示；浏览器里播放的默认不提示。两项都能在设置里改。
+- 播放软件在最前面时照常提示，想避开可以在设置里打开「播放软件在最前面时不提示」；浏览器里播放的默认不提示，也能在设置里改。
 - 想马上看一眼现在放的是什么：在「设置 → 插件 → 换歌提示」点「现在提示一次」，或者运行命令「立即提示当前歌曲」（可以在插件详情里给它设快捷键）。
 
 这个插件不在岛上加页面，也不占收起条；浮屿自带的音乐页和收起条照常显示正在播放。
@@ -23,7 +23,7 @@
 |---|---|
 | 换歌时提示 | 开（以前存过「关」的照旧是关） |
 | 连续切歌只提示最后一首 | 开 |
-| 播放软件在最前面时不提示 | 开 |
+| 播放软件在最前面时不提示 | 关 |
 | 显示内容：歌名 + 歌手 / 只有歌名 / 歌名 + 歌手 + 专辑 | 歌名 + 歌手 |
 | 停留时长：3 / 6 / 10 / 15 秒 | 3 秒 |
 | 显示上一首、暂停、下一首按钮 | 开 |
@@ -51,7 +51,7 @@ It works as soon as it is installed: every time the track changes, the collapsed
 
 - Pausing and resuming the same song does not pop up; when you skip quickly, only the track you stop on is shown.
 - No notice pops up while the island is expanded, tucked away or quiet, or while it is showing an agent notice or a chat message (Fuyu's own rule); the next track after that shows as usual.
-- No notice while the player is the front app, and none for playback in browsers by default. Both can be changed in the settings.
+- Notices show even while the player is the front app; to avoid that, turn on "Skip it while the player is the front app" in the settings. Playback in browsers does not notify by default, which can also be changed there.
 - To see what is playing right now, click "Show it now" under Settings → Plugins → Track change notice, or run the "Show the current song" command (you can give it a shortcut in the plugin's details).
 
 The plugin adds no island page and takes no room on the collapsed bar; Fuyu's own music page and collapsed bar still show what is playing.
@@ -64,7 +64,7 @@ Under Settings → Plugins → Track change notice; changes take effect right aw
 |---|---|
 | Notify on track change | On (stays off if you turned it off before) |
 | When skipping quickly, only show the last track | On |
-| Skip it while the player is the front app | On |
+| Skip it while the player is the front app | Off |
 | Show: title + artist / title only / title + artist + album | Title + artist |
 | Stay for: 3 / 6 / 10 / 15 s | 3 s |
 | Show previous, pause and next buttons | On |

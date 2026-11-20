@@ -1,5 +1,11 @@
 # 更新记录 · Changelog
 
+## 1.3.0
+
+- 「播放软件在最前面时不提示」改成默认关：在播放软件里点下一首也会弹。从 1.2.0 升上来的会自动关掉一次；想要原来的样子，在设置里再打开。
+
+- "Skip it while the player is the front app" is now off by default, so skipping a track inside the player shows a notice too. It is switched off once when updating from 1.2.0; turn it on again in the settings to keep the old behaviour.
+
 ## 1.2.0
 
 - 默认停留 3 秒（原来 6 秒）。以前没改过时长的会变成 3 秒，自己选过 10 秒或 15 秒的不变；想要 6 秒在设置里再选一次。
