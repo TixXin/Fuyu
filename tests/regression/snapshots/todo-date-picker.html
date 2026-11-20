@@ -221,10 +221,10 @@
             <button aria-label="10月30日星期五" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--outside todo-date-calendar__day--past" data-date="2026-10-30" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
               30
             </button>
-            <button aria-label="10月31日星期六" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--outside todo-date-calendar__day--past" data-date="2026-10-31" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
+            <button aria-label="10月31日星期六" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--outside todo-date-calendar__day--past todo-date-calendar__day--weekend" data-date="2026-10-31" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
               31
             </button>
-            <button aria-label="11月1日星期日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past" data-date="2026-11-01" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
+            <button aria-label="11月1日星期日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past todo-date-calendar__day--weekend" data-date="2026-11-01" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
               1
             </button>
             <button aria-label="11月2日星期一" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past" data-date="2026-11-02" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
@@ -242,10 +242,10 @@
             <button aria-label="11月6日星期五" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past" data-date="2026-11-06" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
               6
             </button>
-            <button aria-label="11月7日星期六" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past" data-date="2026-11-07" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
+            <button aria-label="11月7日星期六" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past todo-date-calendar__day--weekend" data-date="2026-11-07" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
               7
             </button>
-            <button aria-label="11月8日星期日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past" data-date="2026-11-08" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
+            <button aria-label="11月8日星期日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past todo-date-calendar__day--weekend" data-date="2026-11-08" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
               8
             </button>
             <button aria-label="11月9日星期一" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past" data-date="2026-11-09" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
@@ -263,10 +263,10 @@
             <button aria-label="11月13日星期五" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--past" data-date="2026-11-13" disabled="" tabindex="-1" title="已经过去，不能选" type="button">
               13
             </button>
-            <button aria-current="date" aria-label="今天, 11月14日星期六" aria-pressed="true" class="todo-date-calendar__day todo-date-calendar__day--today todo-date-calendar__day--selected todo-date-calendar__day--cursor" data-date="2026-11-14" tabindex="0" type="button">
+            <button aria-current="date" aria-label="今天, 11月14日星期六" aria-pressed="true" class="todo-date-calendar__day todo-date-calendar__day--today todo-date-calendar__day--selected todo-date-calendar__day--cursor todo-date-calendar__day--weekend" data-date="2026-11-14" tabindex="0" type="button">
               14
             </button>
-            <button aria-label="11月15日星期日" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-15" tabindex="-1" type="button">
+            <button aria-label="11月15日星期日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--weekend" data-date="2026-11-15" tabindex="-1" type="button">
               15
             </button>
             <button aria-label="11月16日星期一" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-16" tabindex="-1" type="button">
@@ -278,17 +278,26 @@
             <button aria-label="11月18日星期三" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-18" tabindex="-1" type="button">
               18
             </button>
-            <button aria-label="11月19日星期四" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-19" tabindex="-1" type="button">
+            <button aria-label="11月19日星期四, 休息日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--off" data-date="2026-11-19" tabindex="-1" type="button">
               19
+              <span aria-hidden="true" class="todo-date-calendar__mark">
+                休
+              </span>
             </button>
-            <button aria-label="11月20日星期五" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-20" tabindex="-1" type="button">
+            <button aria-label="11月20日星期五, 休息日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--off" data-date="2026-11-20" tabindex="-1" type="button">
               20
+              <span aria-hidden="true" class="todo-date-calendar__mark">
+                休
+              </span>
             </button>
-            <button aria-label="11月21日星期六" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-21" tabindex="-1" type="button">
+            <button aria-label="11月21日星期六" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--weekend" data-date="2026-11-21" tabindex="-1" type="button">
               21
             </button>
-            <button aria-label="11月22日星期日" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-22" tabindex="-1" type="button">
+            <button aria-label="11月22日星期日, 调休上班" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--weekend todo-date-calendar__day--work" data-date="2026-11-22" tabindex="-1" type="button">
               22
+              <span aria-hidden="true" class="todo-date-calendar__mark">
+                班
+              </span>
             </button>
             <button aria-label="11月23日星期一" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-23" tabindex="-1" type="button">
               23
@@ -305,10 +314,10 @@
             <button aria-label="11月27日星期五" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-27" tabindex="-1" type="button">
               27
             </button>
-            <button aria-label="11月28日星期六" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-28" tabindex="-1" type="button">
+            <button aria-label="11月28日星期六" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--weekend" data-date="2026-11-28" tabindex="-1" type="button">
               28
             </button>
-            <button aria-label="11月29日星期日" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-29" tabindex="-1" type="button">
+            <button aria-label="11月29日星期日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--weekend" data-date="2026-11-29" tabindex="-1" type="button">
               29
             </button>
             <button aria-label="11月30日星期一" aria-pressed="false" class="todo-date-calendar__day" data-date="2026-11-30" tabindex="-1" type="button">
@@ -326,10 +335,10 @@
             <button aria-label="12月4日星期五" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--outside" data-date="2026-12-04" tabindex="-1" type="button">
               4
             </button>
-            <button aria-label="12月5日星期六" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--outside" data-date="2026-12-05" tabindex="-1" type="button">
+            <button aria-label="12月5日星期六" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--outside todo-date-calendar__day--weekend" data-date="2026-12-05" tabindex="-1" type="button">
               5
             </button>
-            <button aria-label="12月6日星期日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--outside" data-date="2026-12-06" tabindex="-1" type="button">
+            <button aria-label="12月6日星期日" aria-pressed="false" class="todo-date-calendar__day todo-date-calendar__day--outside todo-date-calendar__day--weekend" data-date="2026-12-06" tabindex="-1" type="button">
               6
             </button>
           </div>

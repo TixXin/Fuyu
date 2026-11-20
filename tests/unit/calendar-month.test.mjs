@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { chineseDay, lunarDate, lunarDayName, solarTerm } from "../../src/features/calendar/lunar.ts";
+import { CHINESE_DAY_NAMES, chineseDay, lunarDate, lunarDayName, solarTerm } from "../../src/features/calendar/lunar.ts";
 import { dayMark, eventsOn, isRead, monthDays, monthStart, namesTheDay, nextSpecialDay } from "../../src/features/calendar/monthView.ts";
 
 const day = (y, m, d) => new Date(y, m - 1, d);
@@ -22,9 +22,20 @@ test("solar terms and festivals name the day; the 1st of a lunar month shows the
   assert.equal(solarTerm(day(2026, 11, 9)), null);
   assert.equal(chineseDay(day(2027, 2, 5)).label, "除夕");
   assert.equal(chineseDay(day(2027, 2, 6)).label, "春节");
-  assert.deepEqual(chineseDay(day(2026, 11, 9)), { lunar: "十月初一", label: "十月", special: false, festival: null, term: null });
+  assert.deepEqual(chineseDay(day(2026, 11, 9)), { lunar: "十月初一", label: "十月", special: false, festival: null, term: null, memorial: null });
   assert.equal(chineseDay(day(2026, 10, 1)).label, "国庆节");
   assert.deepEqual(nextSpecialDay(ms(2026, 11, 9)), { name: "小雪", days: 13 });
+});
+
+test("festivals counted by weekday and memorial days name the day after festivals and terms", () => {
+  assert.equal(chineseDay(day(2026, 5, 10)).label, "母亲节");
+  assert.equal(chineseDay(day(2027, 5, 9)).label, "母亲节");
+  assert.equal(chineseDay(day(2026, 5, 17)).festival, null);
+  assert.equal(chineseDay(day(2026, 6, 21)).label, "父亲节");
+  assert.deepEqual([chineseDay(day(2026, 12, 13)).label, chineseDay(day(2026, 12, 13)).special], ["公祭日", true]);
+  assert.equal(chineseDay(day(2026, 9, 3)).memorial, "抗战胜利");
+  assert.equal(chineseDay(day(2026, 12, 4)).label, "宪法日");
+  assert.ok(CHINESE_DAY_NAMES.has("父亲节") && CHINESE_DAY_NAMES.has("公祭日"));
 });
 
 test("a month shows six weeks from Monday", () => {

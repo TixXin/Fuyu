@@ -52,13 +52,7 @@ export function CalendarPanel({
     onRefresh();
   }, [onRefresh]);
 
-  if (snapshot.sourceCount === 0 && snapshot.events.length === 0) {
-    return (
-      <section className="calendar-panel" aria-label={text.title}>
-        <CalendarEmpty onAdded={onRefresh} onOpenSettings={onOpenSettings} />
-      </section>
-    );
-  }
+  const noSources = snapshot.sourceCount === 0 && snapshot.events.length === 0;
 
   const select = (day: number) => {
     setPicked(day === today ? null : day);
@@ -75,7 +69,7 @@ export function CalendarPanel({
   const subtitle = (day: number) => {
     if (!lunar) return "";
     const chinese = chineseDay(new Date(day));
-    const named = chinese.festival ?? chinese.term;
+    const named = chinese.festival ?? chinese.term ?? chinese.memorial;
     const coming = day === today && !named ? nextSpecialDay(day) : null;
     return [chinese.lunar, named, coming ? text.daysUntil(coming.name, coming.days) : ""].filter(Boolean).join(" · ");
   };
@@ -147,6 +141,7 @@ export function CalendarPanel({
             <Settings size={14} strokeWidth={2.2} aria-hidden="true" />
           </button>
         </div>
+        {noSources && <CalendarEmpty onAdded={onRefresh} onOpenSettings={onOpenSettings} />}
         <div className="calendar-panel__days">
           {days.map(({ day, label }) => {
             const dayEvents = eventsOn(events, day).filter((event) => !namesTheDay(event));
@@ -182,7 +177,7 @@ export function CalendarPanel({
                       dayEvents.map(row)
                     )}
                   </ul>
-                ) : (
+                ) : noSources ? null : (
                   <p className="calendar-day__empty">{read ? text.nothing : text.notRead}</p>
                 )}
                 {showTodoInput && <CalendarTodoInput label={label} onAdd={(title) => todos!.onAdd(title, getLocalDateString(new Date(day)))} />}

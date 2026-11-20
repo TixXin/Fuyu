@@ -103,6 +103,24 @@ const LUNAR_FESTIVALS: Record<string, string> = {
   "七月-15": "中元节", "八月-15": "中秋节", "九月-9": "重阳节", "腊月-8": "腊八节", "腊月-23": "小年",
 };
 
+const WEEKDAY_FESTIVALS: [month: number, nth: number, weekday: number, name: string][] = [
+  [5, 2, 0, "母亲节"], [6, 3, 0, "父亲节"],
+];
+
+const MEMORIALS: Record<string, string> = {
+  "5-12": "护士节", "9-3": "抗战胜利", "9-18": "九一八", "9-30": "烈士纪念", "11-8": "记者节", "12-4": "宪法日", "12-13": "公祭日",
+};
+
+function weekdayFestival(date: Date) {
+  const nth = Math.ceil(date.getDate() / 7);
+  const found = WEEKDAY_FESTIVALS.find(([month, which, weekday]) => month === date.getMonth() + 1 && which === nth && weekday === date.getDay());
+  return found ? found[3] : null;
+}
+
+export function memorial(date: Date) {
+  return MEMORIALS[`${date.getMonth() + 1}-${date.getDate()}`] ?? null;
+}
+
 export function festival(date: Date, lunar: LunarDate | null = lunarDate(date)) {
   if (lunar) {
     const named = LUNAR_FESTIVALS[`${lunar.month}-${lunar.day}`];
@@ -112,7 +130,7 @@ export function festival(date: Date, lunar: LunarDate | null = lunarDate(date)) 
       if (next?.month === "正月" && next.day === 1) return "除夕";
     }
   }
-  return SOLAR_FESTIVALS[`${date.getMonth() + 1}-${date.getDate()}`] ?? null;
+  return SOLAR_FESTIVALS[`${date.getMonth() + 1}-${date.getDate()}`] ?? weekdayFestival(date);
 }
 
 export type ChineseDay = {
@@ -121,22 +139,26 @@ export type ChineseDay = {
   special: boolean;
   festival: string | null;
   term: string | null;
+  memorial: string | null;
 };
 
 export function chineseDay(date: Date): ChineseDay {
   const lunar = lunarDate(date);
   const named = festival(date, lunar);
   const term = solarTerm(date);
+  const remembered = memorial(date);
   const plain = lunar ? (lunar.day === 1 ? lunar.month : lunarDayName(lunar.day)) : "";
   return {
     lunar: lunar ? `${lunar.month}${lunarDayName(lunar.day)}` : "",
-    label: named ?? term ?? plain,
-    special: Boolean(named ?? term),
+    label: named ?? term ?? remembered ?? plain,
+    special: Boolean(named ?? term ?? remembered),
     festival: named,
     term,
+    memorial: remembered,
   };
 }
 
 export const CHINESE_DAY_NAMES: ReadonlySet<string> = new Set([
   ...TERMS.map(([name]) => name), ...Object.values(SOLAR_FESTIVALS), ...Object.values(LUNAR_FESTIVALS), "除夕",
+  ...WEEKDAY_FESTIVALS.map(([, , , name]) => name), ...Object.values(MEMORIALS),
 ]);

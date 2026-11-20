@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { addDays } from "./schedule";
 import { firstDayOfWeek, monthGrid, monthOf, moveDate, nextMonday, shiftMonth, weekdayNames } from "./datePicker";
+import { useHolidayMarks } from "./useHolidayMarks";
 
 export function TodoDateCalendar({
   selected,
@@ -18,6 +19,7 @@ export function TodoDateCalendar({
   const t = useTranslation();
   const text = t.notebook;
   const firstDay = firstDayOfWeek(t.localeTag);
+  const holidays = useHolidayMarks();
   const [cursor, setCursor] = useState(selected);
   const [month, setMonth] = useState(monthOf(selected));
   const gridRef = useRef<HTMLDivElement>(null);
@@ -77,6 +79,8 @@ export function TodoDateCalendar({
       </div>
       <div ref={gridRef} className="todo-date-calendar__grid" role="group" aria-label={dateLabel(`${month}-01`, { year: "numeric", month: "long" })} onKeyDown={onGridKey}>
         {days.map((day) => {
+          const mark = holidays.get(day.date);
+          const weekday = new Date(`${day.date}T00:00:00`).getDay();
           const className = [
             "todo-date-calendar__day",
             day.inMonth ? "" : "todo-date-calendar__day--outside",
@@ -84,8 +88,11 @@ export function TodoDateCalendar({
             day.today ? "todo-date-calendar__day--today" : "",
             day.date === selected ? "todo-date-calendar__day--selected" : "",
             day.date === cursor ? "todo-date-calendar__day--cursor" : "",
+            weekday === 0 || weekday === 6 ? "todo-date-calendar__day--weekend" : "",
+            mark ? `todo-date-calendar__day--${mark}` : "",
           ].filter(Boolean).join(" ");
-          const full = dateLabel(day.date, { month: "long", day: "numeric", weekday: "long" });
+          const date = dateLabel(day.date, { month: "long", day: "numeric", weekday: "long" });
+          const full = mark ? `${date}, ${mark === "off" ? t.calendar.offLabel : t.calendar.workLabel}` : date;
           return (
             <button
               key={day.date}
@@ -101,6 +108,7 @@ export function TodoDateCalendar({
               onClick={() => onPick(day.date)}
             >
               {day.day}
+              {mark && <span className="todo-date-calendar__mark" aria-hidden="true">{mark === "off" ? t.calendar.off : t.calendar.work}</span>}
             </button>
           );
         })}

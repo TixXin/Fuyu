@@ -168,6 +168,33 @@
   font-weight: 400;
 }
 
+.todo-date-calendar__day--weekend {
+  color: rgba(var(--cal-ink), 0.66);
+}
+
+.todo-date-calendar__mark {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.todo-date-calendar__day--off .todo-date-calendar__mark {
+  color: var(--mint-text, #6fd39b);
+}
+
+.todo-date-calendar__day--work .todo-date-calendar__mark {
+  color: var(--error-text, #ff8a8a);
+}
+
+.todo-date-calendar__day--selected .todo-date-calendar__mark,
+.todo-date-calendar__day--today.todo-date-calendar__day--selected .todo-date-calendar__mark {
+  color: inherit;
+}
+
 .todo-date-calendar__day--past {
   color: rgba(var(--cal-ink), 0.22);
   font-weight: 400;
