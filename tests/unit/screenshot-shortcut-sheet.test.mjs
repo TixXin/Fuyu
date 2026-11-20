@@ -11,6 +11,11 @@ test("after a region is chosen the sheet lists every annotation tool with the ke
   assert.deepEqual(tools.rows.map((row) => [row.id, row.keys[0]]), ANNOTATION_TOOLS.map((tool) => [tool, TOOL_KEYS[tool]]));
 });
 
+test("the sheet is the same before and after a region is chosen, so it never jumps in size", () => {
+  assert.deepEqual(shortcutSheet("pick", false), shortcutSheet("edit", false));
+  assert.deepEqual(shortcutSheet("pick", true), shortcutSheet("edit", true));
+});
+
 test("the sheet's own toggle key is not one of the tool keys", () => {
   assert.ok(!Object.values(TOOL_KEYS).includes("?"));
   for (const phase of ["pick", "edit", "record"]) assert.ok(keysOf(shortcutSheet(phase, false)).includes("?"), `${phase} tells how to collapse the sheet`);
@@ -24,7 +29,7 @@ test("measuring is shown as holding M, and only recording mentions F and G", () 
 });
 
 test("Mac key names use the command key", () => {
-  const finish = shortcutSheet("edit", true)[0].rows;
+  const finish = shortcutSheet("edit", true).find((group) => group.section === "finish").rows;
   assert.deepEqual(finish.find((row) => row.id === "save").keys, ["⌘", "S"]);
   assert.deepEqual(finish.find((row) => row.id === "deleteMark").keys, ["⌫"]);
 });

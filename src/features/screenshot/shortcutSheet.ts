@@ -25,37 +25,26 @@ export type SheetGroup = { section: SheetSection; rows: SheetRow[] };
 
 export function shortcutSheet(phase: SheetPhase, mac: boolean): SheetGroup[] {
   const mod = mac ? "⌘" : "Ctrl";
-  const measure: SheetRow = { id: "measure", word: "hold", keys: ["M"] };
   const cancel: SheetRow = { id: "cancel", keys: ["Esc"] };
   const collapse: SheetRow = { id: "collapse", keys: ["?"] };
+  const select: SheetGroup = {
+    section: "pick",
+    rows: [
+      { id: "selectArea", word: "drag", keys: [] },
+      { id: "pickWindow", word: "click", keys: [] },
+      { id: "layer", word: "wheel", keys: [] },
+      { id: "copyColor", keys: ["C"] },
+      { id: "measure", word: "hold", keys: ["M"] },
+    ],
+  };
   if (phase === "record") {
-    return [{
-      section: "record",
-      rows: [
-        { id: "selectArea", word: "drag", keys: [] },
-        { id: "pickWindow", word: "click", keys: [] },
-        { id: "wholeScreen", keys: ["F"] },
-        { id: "gif", keys: ["G"] },
-        cancel,
-        collapse,
-      ],
-    }];
-  }
-  if (phase === "pick") {
-    return [{
-      section: "pick",
-      rows: [
-        { id: "selectArea", word: "drag", keys: [] },
-        { id: "pickWindow", word: "click", keys: [] },
-        { id: "layer", word: "wheel", keys: [] },
-        { id: "copyColor", keys: ["C"] },
-        measure,
-        cancel,
-        collapse,
-      ],
-    }];
+    return [
+      { ...select, rows: select.rows.slice(0, 2) },
+      { section: "record", rows: [{ id: "wholeScreen", keys: ["F"] }, { id: "gif", keys: ["G"] }, cancel, collapse] },
+    ];
   }
   return [
+    select,
     {
       section: "finish",
       rows: [
@@ -64,7 +53,6 @@ export function shortcutSheet(phase: SheetPhase, mac: boolean): SheetGroup[] {
         { id: "pin", keys: ["T"] },
         { id: "undoRedo", keys: mac ? ["⌘Z", "⇧⌘Z"] : ["Ctrl+Z", "Ctrl+Y"], either: true },
         { id: "deleteMark", keys: [mac ? "⌫" : "Delete"] },
-        measure,
         cancel,
         collapse,
       ],

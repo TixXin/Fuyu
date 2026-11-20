@@ -4,7 +4,7 @@ import { cornerPosition, nearestCorner, overlaps, shortcutSheet, type CssBox, ty
 import type { Size } from "../../features/screenshot/selection";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
-import { useShortcutPanel } from "./useShortcutPanel";
+import type { ShortcutPanelControl } from "./useShortcutPanel";
 import "./ShortcutPanel.css";
 
 type Props = {
@@ -13,12 +13,13 @@ type Props = {
   pointer: { x: number; y: number } | null;
   startsHere: boolean;
   area: CssBox | null;
-  typing: boolean;
+  panel: ShortcutPanelControl;
   view: Size;
 };
 
 const MAGNIFIER = { offset: 16, width: 170, height: 190 };
 const TOOLBAR_HEIGHT = 100;
+const HEAD_HEIGHT = 34;
 
 function avoidBoxes(pointer: Props["pointer"], area: CssBox | null): CssBox[] {
   const boxes: CssBox[] = [];
@@ -32,9 +33,8 @@ function avoidBoxes(pointer: Props["pointer"], area: CssBox | null): CssBox[] {
 
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
-export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, typing, view }: Props) {
+export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, panel, view }: Props) {
   const t = useTranslation().screenshot.sheet;
-  const panel = useShortcutPanel(sessionId, typing);
   const ref = useRef<HTMLElement | null>(null);
   const setRef = (element: HTMLElement | null) => {
     ref.current = element;
@@ -42,7 +42,6 @@ export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, typ
   const wasInside = useRef(false);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [drag, setDrag] = useState<{ dx: number; dy: number; x: number; y: number } | null>(null);
-  const [overHead, setOverHead] = useState(false);
   const [leftHere, setLeftHere] = useState(false);
   const inside = pointer !== null;
 
@@ -69,7 +68,9 @@ export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, typ
 
   const at = drag ?? cornerPosition(panel.corner, view, size);
   const box = { x: at.x, y: at.y, width: size.width, height: size.height };
-  const faded = !drag && !overHead && size.width > 0 && avoidBoxes(pointer, area).some((other) => overlaps(box, other));
+  const grip = { ...box, height: panel.state === "collapsed" ? box.height : HEAD_HEIGHT };
+  const onGrip = pointer !== null && overlaps(grip, { ...pointer, width: 1, height: 1 });
+  const faded = !drag && !onGrip && size.width > 0 && avoidBoxes(pointer, area).some((other) => overlaps(box, other));
   const style = { left: at.x, top: at.y };
 
   if (panel.state === "collapsed") {
@@ -96,7 +97,11 @@ export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, typ
   const onDown = (event: PointerEvent<HTMLDivElement>) => {
     event.stopPropagation();
     if (event.button !== 0) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      return;
+    }
     setDrag({ dx: event.clientX - at.x, dy: event.clientY - at.y, x: at.x, y: at.y });
   };
   const onMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -127,8 +132,6 @@ export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, typ
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
-        onPointerEnter={() => setOverHead(true)}
-        onPointerLeave={() => setOverHead(false)}
       >
         <GripVertical size={13} className="screenshot-sheet__grip" aria-hidden="true" />
         <span className="screenshot-sheet__title">{t.title}</span>
@@ -136,7 +139,7 @@ export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, typ
           <ChevronDown size={14} aria-hidden="true" />
         </button>
       </div>
-      <div className={`screenshot-sheet__grid${phase === "edit" ? " screenshot-sheet__grid--two" : ""}`}>
+      <div className="screenshot-sheet__grid">
         {shortcutSheet(phase, isMacOS).map((group) => (
           <Fragment key={group.section}>
             <div className="screenshot-sheet__section">{t.sections[group.section]}</div>

@@ -5,7 +5,7 @@
   color: var(--screenshot-sheet-text, #e8e8ea);
   border: 1px solid var(--screenshot-sheet-border, rgba(255, 255, 255, 0.14));
   box-shadow: 0 6px 20px var(--screenshot-sheet-shadow, rgba(0, 0, 0, 0.4));
-  font: 12px/1.5 var(--font-ui, system-ui, sans-serif);
+  font: 13px/1.5 var(--font-ui, system-ui, sans-serif);
   transition: opacity var(--motion-base) var(--motion-ease);
 }
 
@@ -20,11 +20,6 @@
   opacity: 0.18;
 }
 
-.screenshot-sheet--faded .screenshot-sheet__head,
-.screenshot-sheet-pill.screenshot-sheet--faded {
-  pointer-events: none;
-}
-
 .screenshot-sheet--dragging {
   box-shadow: 0 12px 32px var(--screenshot-sheet-shadow-drag, rgba(0, 0, 0, 0.55));
 }
@@ -33,7 +28,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 4px 4px 6px;
+  padding: 5px 5px 5px 8px;
   border-bottom: 1px solid var(--screenshot-sheet-divider, rgba(255, 255, 255, 0.08));
   cursor: grab;
   pointer-events: auto;
@@ -80,19 +75,16 @@
 
 .screenshot-sheet__grid {
   display: grid;
-  gap: 3px 18px;
-  padding: 6px 10px 10px;
-}
-
-.screenshot-sheet__grid--two {
   grid-template-columns: auto auto;
+  gap: 4px 22px;
+  padding: 8px 12px 12px;
 }
 
 .screenshot-sheet__section {
   grid-column: 1 / -1;
   margin-top: 4px;
   color: var(--screenshot-sheet-muted, #8e8e95);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .screenshot-sheet__section:first-child {
@@ -126,7 +118,7 @@
   min-width: 20px;
   padding: 0 5px;
   color: var(--screenshot-sheet-key-text, #f2f2f4);
-  font: 11px/16px var(--font-mono, ui-monospace, monospace);
+  font: 12px/18px var(--font-mono, ui-monospace, monospace);
   text-align: center;
   background: var(--screenshot-sheet-key-bg, #2a2b30);
   border: 1px solid var(--screenshot-sheet-key-border, #44454b);

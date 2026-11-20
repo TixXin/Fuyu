@@ -33,6 +33,7 @@ import { MeasureLayer } from "./MeasureLayer";
 import { ScreenshotToolbar } from "./ScreenshotToolbar";
 import { ShortcutPanel } from "./ShortcutPanel";
 import { useLongShot } from "./useLongShot";
+import { useShortcutPanel } from "./useShortcutPanel";
 import { useAnnotations } from "./useAnnotations";
 import { useAnnotationSelect } from "./useAnnotationSelect";
 import { useMeasure } from "./useMeasure";
@@ -71,6 +72,7 @@ export function ScreenshotOverlay() {
   const annotations = useAnnotations(sessionId, scale);
   const select = useAnnotationSelect(annotations, scale);
   const long = useLongShot(sessionId, t.saveFolderName);
+  const sheet = useShortcutPanel(sessionId, !!annotations.editing);
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
   const color = pixel && picture ? colorAt(picture, pixel) : null;
@@ -350,7 +352,7 @@ export function ScreenshotOverlay() {
       {long.mine && area && <LongShotBar area={area} view={view} long={long} />}
       {select.selected && !leaving && !long.active && select.selected !== editingItem && <AnnotationSelectionBox item={select.selected} scale={scale} showHandles={!select.dragging} />}
       {area && chosen && !dragging && !annotations.drafting && !select.dragging && !quick && !leaving && !long.active && (
-        <ScreenshotToolbar area={area} view={view} annotations={annotations} select={select} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} qrCodes={qrCodes}
+        <ScreenshotToolbar area={area} view={view} annotations={annotations} select={select} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} qrCodes={qrCodes} sheetOpen={sheet.state === "open"} onSheet={sheet.toggle}
           onCopyText={(text) => void navigator.clipboard.writeText(text).then(() => setNotice(t.qr.copied))}
           onOpenLink={(url) => void openScreenshotLink(url).then(() => cancelScreenshot()).catch((error: unknown) => setNotice(errorText(error)))} />
       )}
@@ -381,7 +383,7 @@ export function ScreenshotOverlay() {
           <div className="screenshot-overlay__guide screenshot-overlay__guide--v" style={{ left: area.x + area.width - 1 }} />
         </>
       )}
-      {ready && !leaving && !long.active && <ShortcutPanel sessionId={sessionId} phase={quickMode === "record" ? "record" : chosen && !quick ? "edit" : "pick"} pointer={cssPointer} startsHere={!!session?.underPointer} area={area} typing={!!annotations.editing} view={view} />}
+      {ready && !leaving && !long.active && <ShortcutPanel sessionId={sessionId} phase={quickMode === "record" ? "record" : chosen && !quick ? "edit" : "pick"} pointer={cssPointer} startsHere={!!session?.underPointer} area={area} panel={sheet} view={view} />}
       {measure.active && pixel && <MeasureLayer edges={measure.edges} from={measure.from} to={pixel} scale={scale} />}
       {drawn && pixel && cssPointer && color && dragging !== "move" && !annotations.tool && !leaving && !long.active && (
         <Magnifier picture={canvasRef.current} pixel={pixel} pointer={cssPointer} view={view} color={color} lines={lines} />
