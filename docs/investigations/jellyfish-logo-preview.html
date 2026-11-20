@@ -42,7 +42,7 @@
 
   .stage { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 16px; max-width: 1100px; }
   .big { display: flex; align-items: center; justify-content: center; height: 300px; border-radius: 16px; background: #000; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-  .big svg { display: block; height: 208px; width: auto; }
+  .big svg { display: block; height: 196px; width: auto; }
   .side { display: flex; flex-direction: column; gap: 12px; background: #1b1c1f; border-radius: 16px; padding: 16px; min-width: 0; }
   .track { position: relative; height: 62px; border-radius: 12px; background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); overflow: hidden; }
   .track .bar { position: absolute; top: 12px; left: 16px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -119,40 +119,49 @@
   .desk .tb i { width: 26px; height: 26px; border-radius: 7px; background: #ffffff24; }
   .desk .tb .ico { width: 30px; height: 30px; }
 
-  .jf { --jf-ink: #f2f2f0; --jf-eye: #1c1c1e; --jf-body: var(--jf-ink); overflow: visible; }
-  body[data-tone="lilac"] .jf:not(.mono) { --jf-ink: #b3a0ff; --jf-eye: #ffffff; }
-  .jf.on-light { --jf-ink: #23262c; --jf-eye: #f4f2ec; }
+  .jf { --jf-ink: #fbf6ea; --jf-eye: #1c1c1e; --jf-cheek: #ff8c9c; --jf-body: var(--jf-ink); overflow: visible; }
+  body[data-tone="lilac"] .jf:not(.mono) { --jf-ink: #b9a6ff; }
+  .jf.on-light { --jf-ink: #a4a4aa; }
   .jf.mono { --jf-ink: currentColor; }
-  .jf.dim { opacity: .82; }
-  body .jf[data-state="waiting"]:not(.mono) { --jf-body: #ffd60a; --jf-eye: #1c1c1e; }
-  body .jf[data-state="failed"]:not(.mono) { --jf-body: #ff453a; --jf-eye: #1c1c1e; }
-  body .jf[data-state="done"]:not(.mono) { --jf-body: #6abf9b; --jf-eye: #1c1c1e; }
+  .jf.dim { opacity: .88; }
+  body .jf[data-state="running"]:not(.mono) { --jf-body: #8ccbf2; }
+  body .jf[data-state="waiting"]:not(.mono) { --jf-body: #ffd23f; }
+  body .jf[data-state="failed"]:not(.mono) { --jf-body: #ff5b4f; }
+  body .jf[data-state="done"]:not(.mono) { --jf-body: #63c99d; }
   .jf * { transform-box: view-box; }
-  .jf-bell { fill: var(--jf-body); transition: fill var(--motion-medium) var(--motion-ease); }
-  .jf-leg { fill: none; stroke: var(--jf-body); stroke-width: 4.6; stroke-linecap: round; transition: stroke var(--motion-medium) var(--motion-ease), transform var(--motion-medium) var(--motion-ease); }
-  .jf-body, .jf-head { transform-origin: 18px 18px; transition: transform var(--motion-medium) var(--motion-ease); }
-  .jf-legs { transform-origin: 18px 15px; transform: skewX(var(--jf-drag, 0deg)); }
+  .jf-fill { fill: var(--jf-body); transition: fill var(--motion-medium) var(--motion-ease); }
+  .jf-ghost { fill: var(--jf-body); opacity: 0; transform: translate(2.2px, .3px); transition: opacity var(--motion-medium) var(--motion-ease), fill var(--motion-medium) var(--motion-ease); }
+  .jf.mono .jf-shine, .jf.mono .jf-hl, .jf.mono .jf-cheeks, .jf.mono .jf-ghost { display: none; }
+  .jf-leg { transition: transform var(--motion-medium) var(--motion-ease); }
+  .jf-body, .jf-head { transform-origin: 18px 14px; transition: transform var(--motion-medium) var(--motion-ease); }
+  .jf-legs { transform-origin: 18px 14px; transform: skewX(var(--jf-drag, 0deg)); }
   .jf-face { transition: transform var(--motion-base) var(--motion-ease); }
-  .jf-lids, .jf-eyes { transform-origin: 18px 11px; }
+  .jf-lids, .jf-eyes { transform-origin: 18px 10.4px; }
   .jf-lids { transition: transform var(--motion-fast) var(--motion-ease); }
   .jf-eye-open { transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-medium) var(--motion-ease); }
-  .jf-eye-open ellipse { fill: var(--jf-eye); }
-  .jf-eye-happy, .jf-eye-sad { fill: none; stroke: var(--jf-eye); stroke-width: 1.5; stroke-linecap: round; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
-  .jf-ring { fill: none; stroke: #ffd60a; stroke-width: 1.2; opacity: 0; transform-origin: 18px 12px; }
+  .jf-eye-open ellipse, .jf-mouth { fill: var(--jf-eye); }
+  .jf-eye-happy, .jf-brows { fill: none; stroke: var(--jf-eye); stroke-width: 1.4; stroke-linecap: round; }
+  .jf-eye-happy, .jf-brows, .jf-mouth { opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .jf-cheeks ellipse { fill: var(--jf-cheek); opacity: .75; }
+  .jf-ring { fill: none; stroke: #ffd23f; stroke-width: 1.2; opacity: 0; transform-origin: 18px 12px; }
 
-  .jf[data-state="running"] .jf-leg1, .jf[data-state="running"] .jf-leg3 { transform: scaleY(.68); }
-  .jf[data-state="running"] .jf-eye-open { transform: translateY(.9px); }
+  .jf[data-state="running"] .jf-leg1, .jf[data-state="running"] .jf-leg3 { transform: scaleY(.82); }
+  .jf[data-state="running"] .jf-eye-open { transform: translateY(.4px); }
+  .jf[data-state="running"] .jf-brows, .jf[data-state="failed"] .jf-brows { opacity: 1; }
+  .jf[data-state="running"] .jf-ghost { opacity: .26; }
   .jf[data-state="waiting"] .jf-body { transform: rotate(-7deg); }
   .jf[data-state="waiting"] .jf-leg { transform: rotate(7deg); }
-  .jf[data-state="waiting"] .jf-eye-open { transform: translateY(-1px); }
-  .jf[data-state="failed"] .jf-body { transform: translateY(.8px); }
-  .jf[data-state="failed"] .jf-head { transform: scale(1.04, .88); }
-  .jf[data-state="failed"] .jf-leg1 { transform: rotate(22deg); }
-  .jf[data-state="failed"] .jf-leg2 { transform: scaleY(.75); }
-  .jf[data-state="failed"] .jf-leg3 { transform: rotate(-22deg); }
-  .jf[data-state="done"] .jf-leg { transform: scaleY(.62); }
-  .jf[data-state="done"] .jf-eye-open, .jf[data-state="failed"] .jf-eye-open { opacity: 0; }
-  .jf[data-state="done"] .jf-eye-happy, .jf[data-state="failed"] .jf-eye-sad { opacity: 1; }
+  .jf[data-state="waiting"] .jf-eye-open { transform: translateY(-.6px); }
+  .jf[data-state="waiting"] .jf-mouth { opacity: 1; }
+  .jf[data-state="waiting"] .jf-ghost { opacity: .2; }
+  .jf[data-state="failed"] .jf-body { transform: translateY(.6px); }
+  .jf[data-state="failed"] .jf-head { transform: scale(1.04, .92); }
+  .jf[data-state="failed"] .jf-leg1 { transform: rotate(12deg); }
+  .jf[data-state="failed"] .jf-leg2 { transform: scaleY(1.22); }
+  .jf[data-state="failed"] .jf-leg3 { transform: rotate(-12deg); }
+  .jf[data-state="done"] .jf-leg { transform: scaleY(.72); }
+  .jf[data-state="done"] .jf-eye-open { opacity: 0; }
+  .jf[data-state="done"] .jf-eye-happy { opacity: 1; }
   .pressed .jf-lids { transform: scaleY(.12); }
 
   body.motion .jf.live[data-state="idle"] .jf-body { animation: jf-idle-lift 10s var(--motion-ease-in-out) infinite; }
@@ -164,7 +173,9 @@
   body.motion .jf.live[data-state="running"] .jf-leg2 { animation-delay: .15s; }
   body.motion .jf.live[data-state="running"] .jf-leg3 { animation-delay: .3s; }
   body.motion .jf.live[data-state="running"] .jf-eyes { animation: jf-run-scan 2.4s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="running"] .jf-ghost { animation: jf-ghost 1.2s var(--motion-ease-in-out) infinite; }
   body.motion .jf.live[data-state="waiting"] .jf-body { animation: jf-wait-hop 2.4s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="waiting"] .jf-ghost { animation: jf-ghost 2.4s var(--motion-ease-in-out) infinite; }
   body.motion .jf.live[data-state="waiting"] .jf-ring { animation: jf-ring var(--motion-slow) var(--motion-ease-out) 1 backwards; }
   body.motion .jf.live[data-state="failed"] .jf-body { animation: jf-shake var(--motion-slow) var(--motion-ease) 1 backwards; }
   body.motion .jf.live[data-state="done"] .jf-body { animation: jf-rise var(--motion-slow) var(--motion-ease-out) 1 backwards; }
@@ -174,11 +185,12 @@
   @keyframes jf-idle-kick { 0%, 86%, 97%, 100% { transform: scaleY(1); } 90% { transform: scaleY(.7); } }
   @keyframes jf-blink { 0%, 92%, 97%, 100% { transform: scaleY(1); } 94.5% { transform: scaleY(.08); } }
   @keyframes jf-run-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-.7px); } }
-  @keyframes jf-run-leg { 0%, 60%, 100% { transform: scaleY(1); } 30% { transform: scaleY(.5); } }
-  @keyframes jf-run-scan { 0%, 100% { transform: translateX(-1px); } 50% { transform: translateX(1px); } }
+  @keyframes jf-run-leg { 0%, 60%, 100% { transform: scaleY(1); } 30% { transform: scaleY(.62); } }
+  @keyframes jf-run-scan { 0%, 100% { transform: translate(-.8px, .4px); } 50% { transform: translate(.8px, .4px); } }
+  @keyframes jf-ghost { 0%, 100% { opacity: .26; } 50% { opacity: .08; } }
   @keyframes jf-wait-hop { 0%, 40%, 100% { transform: rotate(-7deg) translateY(0); } 10%, 30% { transform: rotate(-7deg) translateY(-1.5px); } 20% { transform: rotate(-7deg) translateY(-.2px); } }
   @keyframes jf-ring { from { opacity: .75; transform: scale(.7); } to { opacity: 0; transform: scale(1.35); } }
-  @keyframes jf-shake { 0%, 100% { transform: translate(0, .8px); } 20% { transform: translate(-1.6px, .8px); } 45% { transform: translate(1.4px, .8px); } 70% { transform: translate(-.8px, .8px); } }
+  @keyframes jf-shake { 0%, 100% { transform: translate(0, .6px); } 20% { transform: translate(-1.6px, .6px); } 45% { transform: translate(1.4px, .6px); } 70% { transform: translate(-.8px, .6px); } }
   @keyframes jf-rise { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-2.2px); } }
 
   @media (prefers-reduced-motion: reduce) {
@@ -186,6 +198,9 @@
     .jf-leg, .jf-body, .jf-head, .jf-face, .jf-lids, .jf-eye-open { transition-property: opacity, fill, stroke !important; }
   }
   body:not(.motion) .jf-leg, body:not(.motion) .jf-body, body:not(.motion) .jf-head, body:not(.motion) .jf-face, body:not(.motion) .jf-lids, body:not(.motion) .jf-eye-open { transition-property: opacity, fill, stroke; }
+
+  .refimg { display: block; width: 100%; max-width: 760px; border-radius: 12px; }
+  .state { background: radial-gradient(90% 60% at 50% 30%, color-mix(in srgb, var(--tint, #fbf6ea) 14%, transparent), transparent 70%), #1b1c1f; }
 
   .rows { display: none; }
 
@@ -198,7 +213,7 @@
     .group { flex-wrap: nowrap; white-space: nowrap; }
     .stage { grid-template-columns: 1fr; }
     .big { height: 220px; }
-    .big svg { height: 150px; }
+    .big svg { height: 144px; }
     .side { padding: 14px; }
     .states { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .state { padding: 12px 8px 10px; gap: 10px; }
@@ -233,6 +248,8 @@
 <body class="motion" data-tone="ink">
 <h1>水母方案预览</h1>
 <p class="note">已定的方向：<b>应用图标用 issue #281 的原稿</b>，<b>岛上和其他地方用扁平的 B（圆顶双眼）</b>。这一页把 B 的状态、动效、交互和它会出现的每个位置都摆出来，B 是草图，线条定稿时再细画。</p>
+<p class="note">这一版按下面的参考图改了 B：<b>粗短的圆头触手、腮红、皱眉和张嘴、运行时的残影</b>，运行中改成淡蓝，五种状态各有一个颜色。参考图里头顶的光环不要。</p>
+<details style="max-width:760px;margin:6px 0 4px"><summary style="cursor:pointer;color:#c8c8cc">参考图（豆包生成）</summary><img class="refimg" src="assets/jellyfish-states-reference.webp" alt="五种状态的参考图" style="margin-top:8px" /></details>
 
 <div class="controls">
   <div class="group" id="ctl-state"><span>状态</span></div>
@@ -260,7 +277,7 @@
 </div>
 
 <h2>2. 五种状态</h2>
-<p class="note">不只靠颜色：每种状态的<b>颜色、眼睛、姿态</b>三样都不同，色弱或只用余光也分得开。空闲和运行中同色，靠触手动不动来分。每张卡片上面是放大的样子，下面三个是实际大小：深色岛、浅色岛，以及系统开了「减少动画」时（不动）。</p>
+<p class="note">不只靠颜色：每种状态的<b>颜色、表情、姿态</b>三样都不同，色弱或只用余光也分得开。空闲和运行中靠颜色、皱眉和残影来分。每张卡片上面是放大的样子，下面三个是实际大小：深色岛、浅色岛，以及系统开了「减少动画」时（不动）。</p>
 <div class="states" id="states"></div>
 <div class="scroll grid-table" id="grid-table"></div>
 <div class="rows" id="rows"></div>
@@ -268,6 +285,7 @@
   <li><b>曲线和时长</b>都用动效约定里的档位：过渡用 <code>--motion-ease</code>，进场用 <code>--motion-ease-out</code>，循环用 <code>--motion-ease-in-out</code>；时长是 120 / 160 / 240 / 420ms 四档。</li>
   <li><b>循环只给状态</b>：只有运行中、等你有持续的循环。空闲只有眨眼和 10 秒一次的游动，和现在悬岛的呼吸、宠物的眨眼是同一档。</li>
   <li><b>不回弹</b>：完成的上浮、失败的晃动都不冲过头。</li>
+  <li><b>参考图里浅色岛上的运行中、失败是灰的</b>，这里没照搬：浅色岛只有空闲换成灰，其余保留状态色，不然浅色主题下分不出状态。</li>
   <li><b>只动 transform、opacity 和颜色</b>，不触发排版；岛收起到边缘或隐藏时暂停（现有的 <code>data-paused</code>）。</li>
   <li><b>多个会话</b>时显示哪个状态，规则不变，仍按现在的优先级取最要紧的一个。</li>
 </ul>
@@ -286,13 +304,15 @@
 <div class="menus" id="menus"></div>
 
 <h2>6. 图标和岛放在一起</h2>
-<p class="note">图标是蓝紫色。岛上的 B 有两种本色可选，用上面的「岛上的身体颜色」切换：<b>米白、深色眼睛</b>和现有的中心图案一致，但只靠形状和图标呼应；<b>淡紫、白眼睛</b>和图标同一个配色，深色、浅色主题都不用换色。等你、失败、完成时两种都换成状态色。</p>
+<p class="note">图标是蓝紫色。岛上的 B 有两种本色可选，用上面的「岛上的身体颜色」切换：<b>米白</b>和现有的中心图案一致，但只靠形状和图标呼应；<b>淡紫</b>和图标同一个配色。运行中、等你、失败、完成时两种都换成状态色。</p>
 <div class="desk" id="desk"></div>
 
 <h2>7. 落地前要定的事</h2>
 <ul class="plain">
   <li><b>状态灯的设置项</b>：在「悬岛 / 圆点」之外加「水母」并设为新默认，还是直接替换悬岛？已经选了悬岛或圆点的老用户保持原样。中心图案里同样加一项「水母」。</li>
-  <li><b>身体颜色</b>：米白配深色眼睛（和现有图案一致），还是淡紫配白眼睛（和图标同一个配色）。</li>
+  <li><b>身体颜色</b>：空闲时米白（和现有图案一致），还是淡紫（和图标同一个配色）。眼睛都用深色，配腮红更像参考图。</li>
+  <li><b>残影</b>：运行中和等你时身后有一层淡淡的残影，小尺寸上可能显得糊，要在真岛上看一眼再定。</li>
+  <li><b>图标要不要跟着改</b>：原稿是细触手、没有腮红，B 改成粗短触手后两者差得更远。可以按参考图的风格重画图标（第 4 节的简化版草图已经换成新造型）。</li>
   <li><b>贴边把手</b>：12 像素宽放不下眼睛，只剩一个小伞形。保留圆点更清楚，建议把手不换。</li>
   <li><b>图标的制作</b>：原稿重画成矢量后，替换 <code>src-tauri/icons/</code> 的全部尺寸、Mac 菜单栏的模板图、README 里的小岛图和关于页；小尺寸简化版一起出。</li>
   <li><b>撞脸检查</b>：凭印象，Phantom 钱包的图标是紫底、白色幽灵、两只椭圆眼，和原稿接近，定稿前查一下。</li>
@@ -303,26 +323,33 @@
 const STATES = [["idle", "空闲"], ["running", "运行中"], ["waiting", "等你"], ["failed", "失败"], ["done", "完成"]];
 const SPEC_HEAD = ["颜色", "眼睛", "姿态", "进入时（只播一次）", "持续期间"];
 const SPEC = [
-  ["空闲", "本色", "睁开，约 6 秒眨一次，会看鼠标", "触手下垂", "颜色和姿态 240ms 过渡回来", "每 10 秒游一下（约 1 秒），其余时间不动"],
-  ["运行中", "本色", "略向下，左右来回看（2.4 秒一轮）", "三根触手依次收缩，身体跟着轻轻上浮", "240ms 过渡", "1.2 秒一轮，和悬岛的三个点同节奏；状态结束就停"],
-  ["等你", "黄", "向上看，照常眨眼", "歪着头，触手垂直挂着", "外圈扩散一次（420ms）", "跳两下、停一下，2.4 秒一轮；状态结束就停"],
-  ["失败 / 可能中断", "红", "下垂的两条线", "伞面压低，触手散开", "左右晃两下（420ms）", "不动"],
+  ["空闲", "米白（浅色岛上是灰）", "竖椭圆眼，约 6 秒眨一次，会看鼠标；有腮红", "触手垂着", "颜色和姿态 240ms 过渡回来", "每 10 秒游一下，其余时间不动"],
+  ["运行中", "淡蓝", "皱眉专注，左右来回看（2.4 秒一轮）", "三根触手依次收缩，身后有一层残影", "240ms 过渡", "1.2 秒一轮，和悬岛的三个点同节奏；状态结束就停"],
+  ["等你", "黄", "向上看，张嘴笑，照常眨眼", "歪着头，触手垂直挂着，带残影", "外圈扩散一次（420ms）", "跳两下、停一下，2.4 秒一轮；状态结束就停"],
+  ["失败 / 可能中断", "红", "睁眼皱眉", "伞面压低，两边触手散开，中间那根拉长往下滴", "左右晃两下（420ms）", "不动"],
   ["完成", "薄荷绿", "弯弯的笑眼", "触手收短", "上浮 2 像素再落回（420ms）", "不动，3 秒后回到空闲（和现在的宠物一样）"],
 ];
 const TOUCH = window.matchMedia("(hover: none)").matches;
 const TITLES = { idle: "Claude Code · 空闲", running: "Claude Code · 正在改 3 个文件", waiting: "Claude Code · 等你确认", failed: "Claude Code · 出错了", done: "Claude Code · 已完成" };
-const BELL = "M5 15a13 13 0 0 1 26 0v.5a2.5 2.5 0 0 1-2.5 2.5h-21A2.5 2.5 0 0 1 5 15.5Z";
-const LEG_X = [10.5, 18, 25.5];
+const BELL = "M6 14C6 7.4 11.4 2.5 18 2.5S30 7.4 30 14v.2a2.3 2.3 0 0 1-2.3 2.3H8.3A2.3 2.3 0 0 1 6 14.2Z";
+const LEG_X = [11.2, 18, 24.8];
+const legRect = (x, attrs) => `<rect x="${(x - 2.8).toFixed(1)}" y="11" width="5.6" height="12" rx="2.8"${attrs}/>`;
+const TINTS = { idle: "#fbf6ea", running: "#8ccbf2", waiting: "#ffd23f", failed: "#ff5b4f", done: "#63c99d" };
 const DONE_HOLD_MS = 3000;
 const AUTO_STEPS = [["idle", 2400], ["running", 4200], ["waiting", 4600], ["running", 2600], ["done", 3000], ["idle", 1800], ["running", 2600], ["failed", 3200]];
 const WANDER = [[0, 0], [-0.9, 0.2], [0.9, -0.3], [0, 0.7], [0.6, 0.5], [-0.7, -0.4]];
 let uid = 0;
 
 function jf({ state = "idle", follow = false, gaze = false, live = true, tiny = false, cls = "", style = "" } = {}) {
-  const legs = LEG_X.map((x, i) => `<path class="jf-leg jf-leg${i + 1}" style="transform-origin:${x}px 15px" d="M${x} 15V22.5"/>`).join("");
-  const face = tiny ? "" : `<g class="jf-face"><g class="jf-lids"><g class="jf-eyes"><g class="jf-eye-open"><ellipse cx="13.2" cy="11" rx="1.9" ry="2.8"/><ellipse cx="22.8" cy="11" rx="1.9" ry="2.8"/></g><path class="jf-eye-happy" d="M11.2 12.2a2 2 0 0 1 4 0M20.8 12.2a2 2 0 0 1 4 0"/><path class="jf-eye-sad" d="M11.4 12.3l3.5-1.7M24.6 12.3l-3.5-1.7"/></g></g></g>`;
+  const n = ++uid;
+  const sh = `url(#jfs${n})`;
+  const shine = (shape) => (tiny ? "" : shape.replace("/>", ` class="jf-shine" fill="${sh}"/>`));
+  const defs = tiny ? "" : `<defs><linearGradient id="jfs${n}" gradientUnits="userSpaceOnUse" x1="0" y1="2.5" x2="0" y2="23"><stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient></defs>`;
+  const legs = LEG_X.map((x, i) => `<g class="jf-leg jf-leg${i + 1}" style="transform-origin:${x}px 14px">${legRect(x, ' class="jf-fill"')}${shine(legRect(x, ""))}</g>`).join("");
+  const ghost = tiny ? "" : `<g class="jf-ghost"><path d="${BELL}"/>${LEG_X.map((x) => legRect(x, "")).join("")}</g>`;
+  const face = tiny ? "" : `<ellipse class="jf-hl" cx="12.4" cy="6.2" rx="2.4" ry="1.1" transform="rotate(-34 12.4 6.2)" fill="#fff" opacity=".45"/><g class="jf-face"><g class="jf-cheeks"><ellipse cx="10.4" cy="13" rx="2.1" ry="1.25"/><ellipse cx="25.6" cy="13" rx="2.1" ry="1.25"/></g><path class="jf-brows" d="M11.5 6.2l3.7 1.5M24.5 6.2l-3.7 1.5"/><g class="jf-lids"><g class="jf-eyes"><g class="jf-eye-open"><ellipse cx="13.8" cy="10.4" rx="1.75" ry="2.4"/><ellipse cx="22.2" cy="10.4" rx="1.75" ry="2.4"/></g><path class="jf-eye-happy" d="M12 11.2a1.8 1.8 0 0 1 3.6 0M20.4 11.2a1.8 1.8 0 0 1 3.6 0"/></g></g><path class="jf-mouth" d="M16.4 12.7h3.2a1.6 1.6 0 0 1-3.2 0Z"/></g>`;
   const flags = `${follow ? " data-follow" : ""}${gaze && !tiny ? " data-gaze" : ""}`;
-  return `<svg class="jf${live ? " live" : ""}${cls ? ` ${cls}` : ""}" data-state="${state}"${flags}${style ? ` style="${style}"` : ""} viewBox="0 0 36 26"><circle class="jf-ring" cx="18" cy="12" r="11"/><g class="jf-body"><g class="jf-legs">${legs}</g><g class="jf-head"><path class="jf-bell" d="${BELL}"/>${face}</g></g></svg>`;
+  return `<svg class="jf${live ? " live" : ""}${cls ? ` ${cls}` : ""}" data-state="${state}"${flags}${style ? ` style="${style}"` : ""} viewBox="0 0 36 26">${defs}<circle class="jf-ring" cx="18" cy="12" r="11"/><g class="jf-body">${ghost}<g class="jf-legs">${legs}</g><g class="jf-head"><path class="jf-fill" d="${BELL}"/>${shine(`<path d="${BELL}"/>`)}${face}</g></g></svg>`;
 }
 
 function ring() {
@@ -339,14 +366,15 @@ function iconOriginal() {
 
 function iconSmall() {
   const n = ++uid;
-  return `<svg viewBox="0 0 64 64"><defs><radialGradient id="bg${n}" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="#5544f2"/><stop offset="1" stop-color="#2a15ad"/></radialGradient><linearGradient id="jb${n}" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="23"><stop offset="0" stop-color="#b9a4ff"/><stop offset="1" stop-color="#eeaaf2"/></linearGradient></defs><rect x="1" y="1" width="62" height="62" rx="18" fill="url(#bg${n})"/><g transform="translate(8.6 14.5) scale(1.3)"><path d="M10.5 15V22.5M18 15V22.5M25.5 15V22.5" fill="none" stroke="url(#jb${n})" stroke-width="4.6" stroke-linecap="round"/><path d="${BELL}" fill="url(#jb${n})"/><ellipse cx="13" cy="11" rx="2.2" ry="3.2" fill="#f7f1ff"/><ellipse cx="23" cy="11" rx="2.2" ry="3.2" fill="#f7f1ff"/></g></svg>`;
+  const legs = LEG_X.map((x) => legRect(x, ` fill="url(#jb${n})"`)).join("");
+  return `<svg viewBox="0 0 64 64"><defs><radialGradient id="bg${n}" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="#5544f2"/><stop offset="1" stop-color="#2a15ad"/></radialGradient><linearGradient id="jb${n}" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="23"><stop offset="0" stop-color="#c4b2ff"/><stop offset="1" stop-color="#f1b3f2"/></linearGradient></defs><rect x="1" y="1" width="62" height="62" rx="18" fill="url(#bg${n})"/><g transform="translate(8.6 13.5) scale(1.3)">${legs}<path d="${BELL}" fill="url(#jb${n})"/><ellipse cx="10.4" cy="13" rx="2.1" ry="1.25" fill="#ff8cc0" opacity=".8"/><ellipse cx="25.6" cy="13" rx="2.1" ry="1.25" fill="#ff8cc0" opacity=".8"/><ellipse cx="13.8" cy="10.2" rx="2" ry="2.8" fill="#2a1f5c"/><ellipse cx="22.2" cy="10.2" rx="2" ry="2.8" fill="#2a1f5c"/></g></svg>`;
 }
 
 function build() {
   document.getElementById("big").innerHTML = jf({ follow: true, gaze: true });
   document.getElementById("track").innerHTML = bar({ gaze: true, id: "dragbar" });
 
-  document.getElementById("states").innerHTML = STATES.map(([state, name]) => `<div class="state"><b>${name}</b><span class="chip z3">${jf({ state })}</span><div class="minis"><span><span class="chip">${jf({ state })}</span>深色</span><span><span class="chip light">${jf({ state, cls: "on-light" })}</span>浅色</span><span><span class="chip">${jf({ state, live: false })}</span>减少动画</span></div></div>`).join("");
+  document.getElementById("states").innerHTML = STATES.map(([state, name]) => `<div class="state" style="--tint:${TINTS[state]}"><b>${name}</b><span class="chip z3">${jf({ state })}</span><div class="minis"><span><span class="chip">${jf({ state })}</span>深色</span><span><span class="chip light">${jf({ state, cls: "on-light" })}</span>浅色</span><span><span class="chip">${jf({ state, live: false })}</span>减少动画</span></div></div>`).join("");
   document.getElementById("grid-table").innerHTML = `<table><tr><th>状态</th>${SPEC_HEAD.map((h) => `<th>${h}</th>`).join("")}</tr>${SPEC.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
   document.getElementById("rows").innerHTML = SPEC.map(([name, ...cells]) => `<section><h3>${name}</h3><dl>${cells.map((c, i) => `<dt>${SPEC_HEAD[i].replace("（只播一次）", "")}</dt><dd>${c}</dd>`).join("")}</dl></section>`).join("");
   if (TOUCH) {
@@ -357,10 +385,10 @@ function build() {
   const place = (name, text, demo) => `<div class="place"><b>${name}</b><span>${text}</span><div class="demo">${demo}</div></div>`;
   document.getElementById("places").innerHTML = [
     place("收起条的状态灯", "最主要的位置，24 像素高，替换悬岛标志。", bar()),
-    place("浅色主题的岛", "米白那版在这里换成深色身体、浅色眼睛；淡紫那版不用换。状态色不变。", bar({ light: true })),
+    place("浅色主题的岛", "空闲的米白在这里换成灰（和参考图一样）；淡紫那版不用换。其余状态色不变。", bar({ light: true })),
     place("中心图案", "刘海或条中间的 40×22 位置，22 像素高。", `<div class="bar center"><span data-title-short></span><span class="slot">${jf({ follow: true })}</span>${ring()}</div>`),
     place("展开后顶部栏的 Agent 入口", "现在是机器人图标、颜色跟状态；换成 15 像素高的 B。其余图标用色块代替。", `<div class="topbar"><span class="entry">${jf({ follow: true, cls: "dim" })}</span><i></i><i></i><i></i><i></i><i></i><span class="gap"></span><i class="round"></i><i class="round"></i></div>`),
-    place("贴边把手", "12×72。左边是现在的圆点，右边换成 B：放不下眼睛，只剩小伞形。", `<span class="handle"><span class="dot" data-dot></span><span class="unread"></span></span><span class="cap">现在</span><span class="handle">${jf({ follow: true, tiny: true })}<span class="unread"></span></span><span class="cap">换成 B</span>`),
+    place("贴边把手", "12×72。左边是现在的圆点，右边换成 B：放不下五官，只剩小伞形和三根短触手。", `<span class="handle"><span class="dot" data-dot></span><span class="unread"></span></span><span class="cap">现在</span><span class="handle">${jf({ follow: true, tiny: true })}<span class="unread"></span></span><span class="cap">换成 B</span>`),
     place("Agent 页的空状态", "没有会话时放一只大的，52 像素高，会看鼠标。", `<div class="empty">${jf({ gaze: true })}<span>没有正在运行的会话</span><small>Agent 开始工作后会出现在这里</small></div>`),
   ].join("");
 
@@ -548,7 +576,7 @@ function draggable(barEl, trackEl) {
 build();
 segs(document.getElementById("ctl-state"), STATES, (state) => { view.auto = false; window.clearTimeout(autoTimer); sync(); setState(state); });
 segs(document.getElementById("ctl-auto"), [[true, "自动演示"]], () => { view.auto = !view.auto; autoStep = 0; sync(); runAuto(); });
-segs(document.getElementById("ctl-tone"), [["ink", "米白、深色眼睛"], ["lilac", "淡紫、白眼睛"]], (tone) => { view.tone = tone; sync(); });
+segs(document.getElementById("ctl-tone"), [["ink", "米白"], ["lilac", "淡紫"]], (tone) => { view.tone = tone; sync(); });
 segs(document.getElementById("ctl-motion"), [[false, "关"], [true, "开"]], (reduce) => { view.reduce = reduce; sync(); });
 pressable(document.getElementById("big"), () => { document.getElementById("hint").textContent = "点击：打开 Agent 页。"; });
 draggable(document.getElementById("dragbar"), document.getElementById("track"));

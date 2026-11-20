@@ -5,7 +5,6 @@ export const CUSTOM_PANEL_PAGE_PREFIX = "panel:";
 const PANELS_VERSION = 1;
 
 export const GRID_COLUMNS = 4;
-export const GRID_VISIBLE_ROWS = 4;
 export const GRID_CELL_PX = 120;
 export const GRID_GAP_PX = 8;
 export const GRID_UNIT_PX = 8;
@@ -97,16 +96,23 @@ export function saveCustomPanels(panels: readonly CustomPanel[]) {
 
 const overlaps = (a: CellBox, b: CellBox) => a.col < b.col + b.cols && b.col < a.col + a.cols && a.row < b.row + b.rows && b.row < a.row + a.rows;
 
-export function settleGrid(items: readonly PanelItem[], fixed: number | null = null): PanelItem[] {
-  const boxes = items.map(cellBox);
-  const order = items.map((_, index) => index).filter((index) => index !== fixed).sort((a, b) => boxes[a].row - boxes[b].row || boxes[a].col - boxes[b].col || a - b);
-  const done: CellBox[] = fixed === null || !boxes[fixed] ? [] : [boxes[fixed]];
-  for (const index of order) {
-    const box = boxes[index];
-    while (done.some((other) => overlaps(box, other))) box.row += 1;
-    done.push(box);
+function firstFit(taken: readonly CellBox[], size: PanelSize): CellBox {
+  const { cols, rows } = CELLS[size];
+  for (let row = 0; ; row += 1) {
+    for (let col = 0; col + cols <= GRID_COLUMNS; col += 1) {
+      const box = { col, row, cols, rows };
+      if (!taken.some((other) => overlaps(box, other))) return box;
+    }
   }
-  return items.map((item, index) => placed(item.widget, item.size, boxes[index].col, boxes[index].row));
+}
+
+export function flowPanelItems(items: readonly Pick<PanelItem, "widget" | "size">[]): PanelItem[] {
+  const taken: CellBox[] = [];
+  return items.map((item) => {
+    const box = firstFit(taken, item.size);
+    taken.push(box);
+    return placed(item.widget, item.size, box.col, box.row);
+  });
 }
 
 export function gridRows(items: readonly PanelItem[]): number {
@@ -116,42 +122,33 @@ export function gridRows(items: readonly PanelItem[]): number {
   }, 0);
 }
 
-export function freeCell(items: readonly PanelItem[], size: PanelSize): { col: number; row: number } {
-  const { cols, rows } = CELLS[size];
-  const boxes = items.map(cellBox);
-  for (let row = 0; ; row += 1) {
-    for (let col = 0; col + cols <= GRID_COLUMNS; col += 1) {
-      const box = { col, row, cols, rows };
-      if (!boxes.some((other) => overlaps(box, other))) return { col, row };
-    }
-  }
+export function defaultWidgetSize(sizes: readonly PanelSize[]): PanelSize | null {
+  return sizes.includes("m") ? "m" : (sizes[0] ?? null);
 }
+
+const reflow = (panel: CustomPanel, items: readonly Pick<PanelItem, "widget" | "size">[]): CustomPanel => ({ ...panel, items: flowPanelItems(items) });
 
 export function addPanelItem(panel: CustomPanel, widget: string, size: PanelSize): CustomPanel {
-  if (panel.items.length >= MAX_ITEMS) return panel;
-  const { col, row } = freeCell(panel.items, size);
-  return { ...panel, items: [...panel.items, placed(widget, size, col, row)] };
+  if (panel.items.length >= MAX_ITEMS || panel.items.some((item) => item.widget === widget)) return panel;
+  return reflow(panel, [...panel.items, { widget, size }]);
 }
 
-export function movePanelItem(panel: CustomPanel, index: number, col: number, row: number): CustomPanel {
-  const item = panel.items[index];
-  if (!item) return panel;
-  const { cols } = CELLS[item.size];
-  const target = placed(item.widget, item.size, Math.min(Math.max(0, Math.round(col)), GRID_COLUMNS - cols), Math.max(0, Math.round(row)));
-  const items = panel.items.map((other, at) => (at === index ? target : other));
-  return { ...panel, items: settleGrid(items, index) };
+export function resizePanelItem(panel: CustomPanel, widget: string, size: PanelSize): CustomPanel {
+  if (!panel.items.some((item) => item.widget === widget && item.size !== size)) return panel;
+  return reflow(panel, panel.items.map((item) => (item.widget === widget ? { widget, size } : item)));
 }
 
-export function resizePanelItem(panel: CustomPanel, index: number, size: PanelSize): CustomPanel {
-  const item = panel.items[index];
-  if (!item || item.size === size) return panel;
-  const box = cellBox(item);
-  const items = panel.items.map((other, at) => (at === index ? placed(item.widget, size, Math.min(box.col, GRID_COLUMNS - CELLS[size].cols), box.row) : other));
-  return { ...panel, items: settleGrid(items, index) };
+export function removePanelItem(panel: CustomPanel, widget: string): CustomPanel {
+  return reflow(panel, panel.items.filter((item) => item.widget !== widget));
 }
 
-export function removePanelItem(panel: CustomPanel, index: number): CustomPanel {
-  return { ...panel, items: panel.items.filter((_, at) => at !== index) };
+export function reorderPanelItem(panel: CustomPanel, widget: string, before: string | null): CustomPanel {
+  const moving = panel.items.find((item) => item.widget === widget);
+  if (!moving || before === widget) return panel;
+  const rest = panel.items.filter((item) => item !== moving);
+  const at = before === null ? rest.length : rest.findIndex((item) => item.widget === before);
+  if (at < 0) return panel;
+  return reflow(panel, [...rest.slice(0, at), moving, ...rest.slice(at)]);
 }
 
 export function createPanel(panels: readonly CustomPanel[], id: string, name: string, icon: PanelIcon): CustomPanel[] {

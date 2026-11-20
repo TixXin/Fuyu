@@ -1,6 +1,6 @@
 export type IslandWidgetsText = {
   sizes: { bar: string; s: string; m: string; l: string; w: string };
-  groups: { todos: string; calendar: string; music: string; agents: string; usage: string; clipboard: string; shelf: string; timer: string; bar: string };
+  groups: { todos: string; calendar: string; music: string; agents: string; usage: string; clipboard: string; shelf: string; timer: string };
   widgets: {
     todos: string;
     nextMeeting: string;
@@ -40,7 +40,7 @@ export type IslandWidgetsText = {
 
 export const zhCN: IslandWidgetsText = {
   sizes: { bar: "条", s: "小", m: "中", l: "大", w: "宽" },
-  groups: { todos: "待办", calendar: "日历", music: "音乐", agents: "AI Agent", usage: "用量", clipboard: "剪贴板", shelf: "文件中转", timer: "计时器", bar: "收起条" },
+  groups: { todos: "待办", calendar: "日历", music: "音乐", agents: "AI Agent", usage: "用量", clipboard: "剪贴板", shelf: "文件中转", timer: "计时器" },
   widgets: {
     todos: "今天的待办",
     nextMeeting: "下一个会议",
@@ -80,7 +80,7 @@ export const zhCN: IslandWidgetsText = {
 
 export const en: IslandWidgetsText = {
   sizes: { bar: "Bar", s: "S", m: "M", l: "L", w: "Wide" },
-  groups: { todos: "Todos", calendar: "Calendar", music: "Music", agents: "AI Agent", usage: "Usage", clipboard: "Clipboard", shelf: "File shelf", timer: "Timer", bar: "Collapsed bar" },
+  groups: { todos: "Todos", calendar: "Calendar", music: "Music", agents: "AI Agent", usage: "Usage", clipboard: "Clipboard", shelf: "File shelf", timer: "Timer" },
   widgets: {
     todos: "Today's todos",
     nextMeeting: "Next meeting",

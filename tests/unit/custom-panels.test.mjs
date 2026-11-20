@@ -4,13 +4,14 @@ import {
   addPanelItem,
   cellBox,
   createPanel,
+  defaultWidgetSize,
   gridRows,
-  movePanelItem,
   panelIdOfPage,
   panelPageId,
   readCustomPanels,
   removePanel,
   removePanelItem,
+  reorderPanelItem,
   resizePanelItem,
   updatePanel,
 } from "../../src/lib/settings/customPanels.ts";
@@ -45,20 +46,29 @@ test("a new widget goes into the first free cell, rows grow past four", () => {
   assert.deepEqual(panel.items[0], { widget: "a", size: "l", x: 0, y: 0, w: 31, h: 31 });
 });
 
-test("dropping a widget onto others pushes them down, the moved one keeps its cell", () => {
+test("a widget is added once, and every change lays the panel out again in order", () => {
   let panel = addPanelItem(addPanelItem(addPanelItem(empty, "a", "m"), "b", "m"), "c", "w");
-  panel = movePanelItem(panel, 2, 0, 0);
-  assert.deepEqual(boxes(panel), [["a", 0, 1], ["b", 2, 1], ["c", 0, 0]]);
-  panel = movePanelItem(panel, 0, 3, 0);
-  assert.deepEqual(boxes(panel), [["a", 2, 0], ["b", 2, 2], ["c", 0, 1]]);
+  assert.equal(addPanelItem(panel, "a", "s"), panel);
+  panel = reorderPanelItem(panel, "c", "a");
+  assert.deepEqual(boxes(panel), [["c", 0, 0], ["a", 0, 1], ["b", 2, 1]]);
+  panel = reorderPanelItem(panel, "c", null);
+  assert.deepEqual(boxes(panel), [["a", 0, 0], ["b", 2, 0], ["c", 0, 1]]);
+  assert.equal(reorderPanelItem(panel, "c", "missing"), panel);
 });
 
-test("resizing and removing keep the grid without overlaps", () => {
-  let panel = addPanelItem(addPanelItem(empty, "a", "s"), "b", "s");
-  panel = resizePanelItem(panel, 0, "l");
-  assert.deepEqual(boxes(panel), [["a", 0, 0], ["b", 1, 2]]);
-  panel = removePanelItem(panel, 0);
-  assert.deepEqual(boxes(panel), [["b", 1, 2]]);
+test("resizing and removing close the gaps", () => {
+  let panel = addPanelItem(addPanelItem(addPanelItem(empty, "a", "s"), "b", "s"), "c", "m");
+  panel = resizePanelItem(panel, "a", "l");
+  assert.deepEqual(boxes(panel), [["a", 0, 0], ["b", 2, 0], ["c", 2, 1]]);
+  panel = removePanelItem(panel, "a");
+  assert.deepEqual(boxes(panel), [["b", 0, 0], ["c", 1, 0]]);
+  assert.deepEqual(panel.items[1], { widget: "c", size: "m", x: 16, y: 0, w: 31, h: 15 });
+});
+
+test("a widget is added at medium when it has it, otherwise at its first size", () => {
+  assert.equal(defaultWidgetSize(["s", "m", "l"]), "m");
+  assert.equal(defaultWidgetSize(["w"]), "w");
+  assert.equal(defaultWidgetSize([]), null);
 });
 
 test("panels are created, renamed and removed by id, and map to their own page ids", () => {
