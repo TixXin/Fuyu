@@ -18,10 +18,8 @@ export type PanelSize = (typeof PANEL_SIZES)[number];
 export const PANEL_MODES = ["grid", "free"] as const;
 export type PanelMode = (typeof PANEL_MODES)[number];
 
-export const PANEL_ICONS = ["fuyu", "layout-grid", "star", "briefcase", "coffee", "music", "zap", "heart", "home", "gamepad", "book"] as const;
+export const PANEL_ICONS = ["layout-grid", "star", "briefcase", "coffee", "music", "zap", "heart", "home", "gamepad", "book"] as const;
 export type PanelIcon = (typeof PANEL_ICONS)[number];
-export const DEFAULT_PANEL_ICON: PanelIcon = "fuyu";
-const FALLBACK_PANEL_ICON: PanelIcon = "layout-grid";
 
 export type PanelItem = { widget: string; size: PanelSize; x: number; y: number; w: number; h: number };
 export type CustomPanel = { id: string; name: string; icon: PanelIcon; mode: PanelMode; items: PanelItem[] };
@@ -63,7 +61,7 @@ function readItem(value: unknown): PanelItem | null {
   return { widget, size, x: whole(x), y: whole(y), w: typeof w === "number" ? whole(w) || base.w : base.w, h: typeof h === "number" ? whole(h) || base.h : base.h };
 }
 
-export function cleanPanelName(name: unknown): string {
+function cleanPanelName(name: unknown): string {
   return typeof name === "string" ? name.trim().slice(0, MAX_NAME) : "";
 }
 
@@ -72,7 +70,7 @@ function readPanel(value: unknown): CustomPanel | null {
   const { id, name, icon, mode, items } = value as Record<string, unknown>;
   if (typeof id !== "string" || id === "") return null;
   const list = Array.isArray(items) ? items.map(readItem).filter((item): item is PanelItem => item !== null).slice(0, MAX_ITEMS) : [];
-  return { id, name: cleanPanelName(name), icon: isIcon(icon) ? icon : FALLBACK_PANEL_ICON, mode: mode === "free" ? "free" : "grid", items: list };
+  return { id, name: cleanPanelName(name), icon: isIcon(icon) ? icon : PANEL_ICONS[0], mode: mode === "free" ? "free" : "grid", items: list };
 }
 
 export function readCustomPanels(raw: string | null): CustomPanel[] {
@@ -212,19 +210,14 @@ export function setPanelMode(panel: CustomPanel, mode: PanelMode): CustomPanel {
   return { ...panel, mode, items: flowPanelItems(ordered) };
 }
 
-export function createPanel(panels: readonly CustomPanel[], id: string, name: string, icon: PanelIcon): CustomPanel[] {
-  if (panels.length >= MAX_PANELS || panels.some((panel) => panel.id === id)) return [...panels];
-  return [...panels, { id, name: cleanPanelName(name), icon, mode: "grid", items: [] }];
+export const FUYU_PANEL_ID = "fuyu";
+export const FUYU_PAGE_ID = `${CUSTOM_PANEL_PAGE_PREFIX}${FUYU_PANEL_ID}`;
+
+export function fuyuPanel(panels: readonly CustomPanel[]): CustomPanel {
+  const found = panels.find((panel) => panel.id === FUYU_PANEL_ID) ?? panels[0];
+  return found ? { ...found, id: FUYU_PANEL_ID } : { id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] };
 }
 
-export function updatePanel(panels: readonly CustomPanel[], id: string, change: (panel: CustomPanel) => CustomPanel): CustomPanel[] {
-  return panels.map((panel) => (panel.id === id ? change(panel) : panel));
-}
-
-export function removePanel(panels: readonly CustomPanel[], id: string): CustomPanel[] {
-  return panels.filter((panel) => panel.id !== id);
-}
-
-export function newPanelId(now: number, random: number): string {
-  return `${now.toString(36)}${Math.floor(random * 36 ** 4).toString(36).padStart(4, "0")}`;
+export function fuyuPanels(panel: CustomPanel): CustomPanel[] {
+  return [{ ...panel, id: FUYU_PANEL_ID }];
 }

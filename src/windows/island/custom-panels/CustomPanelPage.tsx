@@ -3,7 +3,7 @@ import { Check, Pencil, Plus } from "lucide-react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import type { LibraryWidget } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { addPanelItem, defaultWidgetSize, gridWidthPx, PANEL_MODES, setPanelMode, updatePanel, type CustomPanel } from "../../../lib/settings/customPanels";
+import { addPanelItem, defaultWidgetSize, fuyuPanel, fuyuPanels, gridWidthPx, PANEL_MODES, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import { PanelBoard } from "./PanelBoard";
@@ -60,9 +60,8 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
     if (!editing) setPicking(false);
   }, [editing]);
 
-  const panel = panels.find((candidate) => candidate.id === panelId);
-  if (!panel) return <div className="custom-panel" ref={ref} />;
-  const change = (next: CustomPanel) => save(updatePanel(panels, panelId, () => next));
+  const panel = fuyuPanel(panels);
+  const change = (next: CustomPanel) => save(fuyuPanels(next));
   const add = (widget: LibraryWidget) => {
     const size = defaultWidgetSize(widget.sizes);
     if (size) change(addPanelItem(panel, widget.id, size));

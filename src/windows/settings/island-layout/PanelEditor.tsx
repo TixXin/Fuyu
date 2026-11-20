@@ -1,10 +1,9 @@
-import { useMemo, useState } from "react";
-import { Plus, Puzzle, Trash2, X } from "lucide-react";
-import { PANEL_ICON_COMPONENTS } from "../../../components/island-widget/panelIcons";
+import { useMemo } from "react";
+import { Plus, Puzzle, X } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { groupWidgets } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { addPanelItem, cleanPanelName, defaultWidgetSize, PANEL_ICONS, PANEL_MODES, removePanelItem, reorderPanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
+import { addPanelItem, defaultWidgetSize, PANEL_MODES, removePanelItem, reorderPanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
 import { useChipReorder } from "./useChipReorder";
 import type { LibraryWidget, WidgetLibrary } from "./useWidgetLibrary";
 import "./PanelEditor.css";
@@ -15,59 +14,25 @@ type PanelEditorProps = {
   selected: string | undefined;
   onSelect: (widget: string) => void;
   onChange: (panel: CustomPanel) => void;
-  onRemove: () => void;
 };
 
-function PanelHead({ panel, onChange, onRemove }: Pick<PanelEditorProps, "panel" | "onChange" | "onRemove">) {
-  const t = useTranslation();
-  const text = t.settings.islandPages.panels;
-  const [name, setName] = useState(panel.name);
-  const [confirming, setConfirming] = useState(false);
-  const commitName = () => {
-    const next = cleanPanelName(name);
-    setName(next);
-    if (next !== panel.name) onChange({ ...panel, name: next });
-  };
+function PanelHead({ panel, onChange }: Pick<PanelEditorProps, "panel" | "onChange">) {
+  const text = useTranslation().islandWidgets.panel;
   return (
     <div className="panel-head">
-      <input
-        className="panel-head__name"
-        value={name}
-        maxLength={40}
-        aria-label={text.name}
-        placeholder={t.islandWidgets.panel.defaultName}
-        onChange={(event) => setName(event.target.value)}
-        onBlur={commitName}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") commitName();
-        }}
-      />
-      <div className="panel-head__icons" role="radiogroup" aria-label={text.icon}>
-        {PANEL_ICONS.map((icon) => {
-          const Icon = PANEL_ICON_COMPONENTS[icon];
-          return (
-            <button key={icon} type="button" role="radio" aria-checked={panel.icon === icon} aria-label={text.iconNames[icon]} title={text.iconNames[icon]} onClick={() => onChange({ ...panel, icon })}>
-              <Icon size={14} strokeWidth={1.9} />
-            </button>
-          );
-        })}
-      </div>
-      <div className="panel-head__modes" role="radiogroup" aria-label={t.islandWidgets.panel.mode}>
+      <span className="panel-head__label">{text.mode}</span>
+      <div className="panel-head__modes" role="radiogroup" aria-label={text.mode}>
         {PANEL_MODES.map((mode) => (
           <button key={mode} type="button" role="radio" data-mode={mode} aria-checked={panel.mode === mode} onClick={() => onChange(setPanelMode(panel, mode))}>
-            {t.islandWidgets.panel.modes[mode]}
+            {text.modes[mode]}
           </button>
         ))}
       </div>
-      <button className="panel-head__remove" type="button" data-confirming={confirming || undefined} onBlur={() => setConfirming(false)} onClick={() => (confirming ? onRemove() : setConfirming(true))}>
-        <Trash2 size={13} strokeWidth={2} aria-hidden="true" />
-        {confirming ? text.confirmRemove : text.remove}
-      </button>
     </div>
   );
 }
 
-export function PanelEditor({ panel, library, selected, onSelect, onChange, onRemove }: PanelEditorProps) {
+export function PanelEditor({ panel, library, selected, onSelect, onChange }: PanelEditorProps) {
   const t = useTranslation();
   const text = t.settings.islandPages.panels;
   const ids = panel.items.map((item) => item.widget);
@@ -86,7 +51,7 @@ export function PanelEditor({ panel, library, selected, onSelect, onChange, onRe
 
   return (
     <SettingsGroup title={text.title} footer={text.hint}>
-      <PanelHead key={panel.id} panel={panel} onChange={onChange} onRemove={onRemove} />
+      <PanelHead panel={panel} onChange={onChange} />
       <div className="panel-buckets">
         <section className="panel-bucket" data-bucket="in" aria-label={text.inPanel}>
           <header>

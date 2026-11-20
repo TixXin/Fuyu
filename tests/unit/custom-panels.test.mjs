@@ -3,21 +3,21 @@ import test from "node:test";
 import {
   addPanelItem,
   cellBox,
-  createPanel,
   defaultWidgetSize,
+  FUYU_PAGE_ID,
+  fuyuPanel,
+  fuyuPanels,
   gridRows,
   nextPanelSize,
   panelIdOfPage,
   placeFreeItem,
   panelPageId,
   readCustomPanels,
-  removePanel,
   removePanelItem,
   reorderPanelItem,
   resizePanelItem,
   setPanelMode,
   stretchFreeItem,
-  updatePanel,
 } from "../../src/lib/settings/customPanels.ts";
 import { applyPanelTemplate } from "../../src/lib/settings/panelTemplates.ts";
 
@@ -76,13 +76,20 @@ test("a widget is added at medium when it has it, otherwise at its first size", 
   assert.equal(defaultWidgetSize([]), null);
 });
 
-test("panels are created, renamed and removed by id, and map to their own page ids", () => {
-  let panels = createPanel([], "p1", "  Desk ", "home");
-  panels = createPanel(panels, "p1", "again", "home");
-  assert.deepEqual(panels, [{ id: "p1", name: "Desk", icon: "home", mode: "grid", items: [] }]);
-  panels = updatePanel(panels, "p1", (panel) => ({ ...panel, name: "Play" }));
-  assert.equal(panels[0].name, "Play");
-  assert.deepEqual(removePanel(panels, "p1"), []);
+test("there is one Fuyu panel: the stored one, else the first older panel, else an empty grid", () => {
+  const empty = fuyuPanel([]);
+  assert.equal(empty.id, "fuyu");
+  assert.equal(empty.mode, "grid");
+  assert.deepEqual(empty.items, []);
+  const older = [
+    { id: "p1", name: "Desk", icon: "home", mode: "free", items: [] },
+    { id: "p2", name: "Play", icon: "music", mode: "grid", items: [] },
+  ];
+  assert.equal(fuyuPanel(older).id, "fuyu");
+  assert.equal(fuyuPanel(older).name, "Desk");
+  assert.equal(fuyuPanel([...older, { ...older[1], id: "fuyu" }]).name, "Play");
+  assert.deepEqual(fuyuPanels(older[1]).map((panel) => panel.id), ["fuyu"]);
+  assert.equal(FUYU_PAGE_ID, "panel:fuyu");
   assert.equal(panelPageId("p1"), "panel:p1");
   assert.equal(panelIdOfPage("panel:p1"), "p1");
   assert.equal(panelIdOfPage("todo"), null);

@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Plus } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { useTranslation } from "../../../i18n";
 import { EMPTY_ISLAND_PAGES, placeIslandPage, setIslandPageHidden, type IslandPagesLayout } from "../../../lib/settings/islandPages";
@@ -11,11 +11,10 @@ type PageStripProps = {
   save: (layout: IslandPagesLayout) => void;
   current: string | undefined;
   onPick: (id: string) => void;
-  onCreate: () => void;
   pluginsListed: boolean;
 };
 
-export function PageStrip({ rows, layout, save, current, onPick, onCreate, pluginsListed }: PageStripProps) {
+export function PageStrip({ rows, layout, save, current, onPick, pluginsListed }: PageStripProps) {
   const text = useTranslation().settings.islandPages;
   const listed = rows.map((row) => row.id);
   const { bind } = useChipReorder(listed, (id, before) => save(placeIslandPage(layout, listed, id, before)));
@@ -64,10 +63,6 @@ export function PageStrip({ rows, layout, save, current, onPick, onCreate, plugi
             </div>
           );
         })}
-        <button className="layout-chip layout-chip--create" type="button" onClick={onCreate}>
-          <Plus size={14} strokeWidth={2.2} aria-hidden="true" />
-          {text.panels.create}
-        </button>
       </div>
       {pluginsListed ? null : <p className="settings-section__hint">{text.loading}</p>}
       <div className="layout-chips__actions">

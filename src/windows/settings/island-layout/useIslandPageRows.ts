@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { Puzzle } from "lucide-react";
-import { PANEL_ICON_COMPONENTS, type PanelIconComponent } from "../../../components/island-widget/panelIcons";
+import { FuyuTextIcon } from "../../../components/island-widget/FuyuTextIcon";
+import type { PanelIconComponent } from "../../../components/island-widget/panelIcons";
 import { useTranslation } from "../../../i18n";
 import type { BarUsagePage } from "../../../features/plugin-kernel/barUsage";
 import { isBuiltinEnabled } from "../../../features/plugin-kernel/builtinSwitches";
 import { useBuiltinPlugins } from "../../../features/plugin-kernel/useBuiltinPlugins";
 import { useUnsupportedFeatures } from "../../../lib/platform";
-import { panelPageId, type CustomPanel } from "../../../lib/settings/customPanels";
+import { FUYU_PAGE_ID, FUYU_PANEL_ID } from "../../../lib/settings/customPanels";
 import { arrangeIslandPages } from "../../../lib/settings/islandPages";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { useIslandPages } from "../../../lib/settings/useIslandPages";
@@ -15,10 +16,10 @@ import { BUILTIN_PAGES } from "./builtinPages";
 
 export type IslandPageRow = { id: string; name: string; icon: PanelIconComponent; plugin: boolean; off: boolean; hidden: boolean; panel?: string };
 
-export function useIslandPageRows(settings: IslandSettings, pluginPages: readonly BarUsagePage[] | null, panels: readonly CustomPanel[]) {
+export function useIslandPageRows(settings: IslandSettings, pluginPages: readonly BarUsagePage[] | null) {
   const t = useTranslation();
   const text = t.settings.islandPages;
-  const fallbackName = t.islandWidgets.panel.defaultName;
+  const appName = t.island.appName;
   const plugins = useBuiltinPlugins();
   const unsupported = useUnsupportedFeatures();
   const { layout, save } = useIslandPages();
@@ -39,13 +40,13 @@ export function useIslandPageRows(settings: IslandSettings, pluginPages: readonl
         off: !on(page.owner, page.fallback) || (page.platform !== undefined && unsupported.has(page.platform)) || page.needs?.(settings) === false,
       },
     }));
-    const custom = panels.map((panel, index) => ({
-      id: panelPageId(panel.id),
-      shortcutOrder: 100 + index,
+    const custom = [{
+      id: FUYU_PAGE_ID,
+      shortcutOrder: 0,
       headerDot: true,
       external: false,
-      row: { id: panelPageId(panel.id), name: panel.name || fallbackName, icon: PANEL_ICON_COMPONENTS[panel.icon], plugin: false, off: false, panel: panel.id },
-    }));
+      row: { id: FUYU_PAGE_ID, name: appName, icon: FuyuTextIcon, plugin: false, off: false, panel: FUYU_PANEL_ID },
+    }];
     const seen = new Set<string>([...builtin, ...custom].map((page) => page.id));
     const external = (pluginPages ?? []).filter((page) => !seen.has(page.id) && Boolean(seen.add(page.id))).map((page) => ({
       id: page.id,
@@ -60,7 +61,7 @@ export function useIslandPageRows(settings: IslandSettings, pluginPages: readonl
       const row = byId.get(id);
       return row ? [{ ...row, hidden: hidden.has(id) }] : [];
     });
-  }, [fallbackName, layout, panels, pluginPages, plugins, settings, text, unsupported]);
+  }, [appName, layout, pluginPages, plugins, settings, text, unsupported]);
 
   return { rows, layout, save, pluginsListed: pluginPages !== null };
 }

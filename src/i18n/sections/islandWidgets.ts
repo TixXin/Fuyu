@@ -13,7 +13,6 @@ export type IslandWidgetsText = {
     timer: string;
   };
   panel: {
-    defaultName: string;
     empty: string;
     templateHint: string;
     templates: { workbench: string; fun: string };
@@ -66,7 +65,6 @@ export const zhCN: IslandWidgetsText = {
     timer: "计时器",
   },
   panel: {
-    defaultName: "新面板",
     empty: "这个面板还没有组件",
     templateHint: "从模板开始，或者点「编辑」自己加",
     templates: { workbench: "工作台", fun: "娱乐" },
@@ -119,7 +117,6 @@ export const en: IslandWidgetsText = {
     timer: "Timer",
   },
   panel: {
-    defaultName: "New panel",
     empty: "This panel has no widgets yet",
     templateHint: "Start from a template, or tap Edit to add your own",
     templates: { workbench: "Workbench", fun: "Leisure" },
