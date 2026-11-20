@@ -19,6 +19,7 @@ const UPDATE_STAGES: [&str; 3] = ["available", "downloading", "ready"];
 #[serde(rename_all = "camelCase")]
 pub struct TrayMenuState {
     island_visible: bool,
+    island_behind: bool,
     clipboard_paused: bool,
     translate_enabled: bool,
     screenshot_enabled: bool,
@@ -39,6 +40,7 @@ fn update_available() -> Option<String> {
 fn current(app: &AppHandle) -> TrayMenuState {
     TrayMenuState {
         island_visible: crate::tray::island_visible(app),
+        island_behind: island::layer::behind(app),
         clipboard_paused: crate::clipboard_history::clipboard_capture_paused(),
         translate_enabled: translation::is_enabled(),
         screenshot_enabled: crate::screenshot::is_enabled(),
@@ -64,6 +66,7 @@ pub(crate) fn push_state(app: &AppHandle) {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Action {
     ToggleIsland,
+    RaiseIsland,
     Screenshot,
     Translate,
     Clipboard,
@@ -79,6 +82,7 @@ enum Action {
 fn parse_action(action: &str, arg: Option<&str>) -> Result<Action, String> {
     Ok(match action {
         "toggle_island" => Action::ToggleIsland,
+        "raise_island" => Action::RaiseIsland,
         "screenshot" => Action::Screenshot,
         "translate" => Action::Translate,
         "clipboard" => Action::Clipboard,
@@ -97,7 +101,7 @@ fn parse_action(action: &str, arg: Option<&str>) -> Result<Action, String> {
 }
 
 fn keeps_card_open(action: Action) -> bool {
-    matches!(action, Action::ToggleIsland | Action::ToggleClipboardPause)
+    matches!(action, Action::ToggleIsland | Action::RaiseIsland | Action::ToggleClipboardPause)
 }
 
 fn open_settings(app: &AppHandle, section: Option<&str>) {
@@ -118,6 +122,7 @@ fn run(app: &AppHandle, action: Action) {
     }
     match action {
         Action::ToggleIsland => crate::tray::toggle_island_from_card(app),
+        Action::RaiseIsland => island::layer::bring_front(app),
         Action::Screenshot => crate::screenshot::start_from_tray(app),
         Action::Translate => translation::open_translator(app),
         Action::Clipboard => crate::clipboard_history::open_from_tray(),
@@ -180,6 +185,7 @@ mod tests {
     #[test]
     fn actions_parse_by_name_and_pages_are_checked() {
         assert_eq!(parse_action("toggle_island", None), Ok(Action::ToggleIsland));
+        assert_eq!(parse_action("raise_island", None), Ok(Action::RaiseIsland));
         assert_eq!(parse_action("open_page", Some("calendar")), Ok(Action::OpenPage("calendar")));
         assert_eq!(parse_action("open_page", Some("file-shelf")), Ok(Action::OpenPage("file-shelf")));
         assert!(parse_action("open_page", Some("settings")).is_err());
@@ -191,6 +197,7 @@ mod tests {
     #[test]
     fn only_switches_keep_the_card_open() {
         assert!(keeps_card_open(Action::ToggleIsland));
+        assert!(keeps_card_open(Action::RaiseIsland));
         assert!(keeps_card_open(Action::ToggleClipboardPause));
         for action in [Action::Screenshot, Action::Translate, Action::Clipboard, Action::OpenSettings, Action::Update, Action::Restart, Action::Quit, Action::Close] {
             assert!(!keeps_card_open(action));

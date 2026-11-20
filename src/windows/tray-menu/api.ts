@@ -6,6 +6,7 @@ export const TRAY_MENU_STATE_EVENT = "tray-menu-state";
 
 export type TrayMenuState = {
   islandVisible: boolean;
+  islandBehind: boolean;
   clipboardPaused: boolean;
   translateEnabled: boolean;
   screenshotEnabled: boolean;
@@ -18,6 +19,7 @@ export type TrayMenuPage = "todo" | "notes" | "calendar" | "file-shelf" | "agent
 
 export type TrayMenuAction =
   | "toggle_island"
+  | "raise_island"
   | "screenshot"
   | "translate"
   | "clipboard"

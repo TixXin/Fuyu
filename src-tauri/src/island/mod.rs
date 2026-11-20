@@ -402,6 +402,7 @@ pub fn show_ready_island(app: AppHandle) -> Result<(), String> {
 
 pub(crate) fn show_island_without_focus(app: &AppHandle) -> Result<(), String> {
     USER_HIDDEN_ISLAND.store(false, Ordering::SeqCst);
+    layer::bring_front(app);
     let window = main_window(app)?;
     let previous = read_window_state();
     let state = mutate_window_state(|state| {
@@ -427,6 +428,7 @@ pub(crate) fn main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 
 pub(crate) fn show_island(app: &AppHandle) -> Result<(), String> {
     USER_HIDDEN_ISLAND.store(false, Ordering::SeqCst);
+    layer::bring_front(app);
     let window = main_window(app)?;
     let previous = read_window_state();
     let state = mutate_window_state(|state| {

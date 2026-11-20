@@ -79,11 +79,9 @@ export function TrayMenuWindow() {
 
   const handlers = useMemo<TrayCardHandlers>(() => ({
     onAction: (action, arg) => {
-      if (action === "toggle_island" || action === "toggle_clipboard_pause") {
-        setState((current) => current && (action === "toggle_island"
-          ? { ...current, islandVisible: !current.islandVisible }
-          : { ...current, clipboardPaused: !current.clipboardPaused }));
-      }
+      if (action === "toggle_island") setState((current) => current && { ...current, islandVisible: !current.islandVisible, islandBehind: false });
+      if (action === "raise_island") setState((current) => current && { ...current, islandBehind: false });
+      if (action === "toggle_clipboard_pause") setState((current) => current && { ...current, clipboardPaused: !current.clipboardPaused });
       send(action, arg);
     },
     onDnd: toggleDnd,

@@ -109,6 +109,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   pageNextShortcut: string;
   pagePreviousShortcut: string;
   islandLayerShortcut: string;
+  islandLayerShortcutChosen: boolean;
   todoEnabled: boolean;
   musicEnabled: boolean;
   agentStatusEnabled: boolean;

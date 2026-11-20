@@ -380,3 +380,13 @@ test("screenshot guide lines are on unless turned off, old settings included", (
   assert.equal(normalizeSettings({ opacity: 95 }).screenshotGuides, true);
   assert.equal(normalizeSettings({ screenshotGuides: false }).screenshotGuides, false);
 });
+
+test("the island layer shortcut counts only when it was set in settings, so the key 0.3.11 stored by default is dropped", () => {
+  assert.equal(DEFAULT_SETTINGS.islandLayerShortcut, "");
+  assert.equal(normalizeSettings({}).islandLayerShortcut, "");
+  assert.equal(normalizeSettings({ islandLayerShortcut: "Ctrl+Alt+B" }).islandLayerShortcut, "");
+  assert.equal(normalizeSettings({ islandLayerShortcut: "Ctrl+Alt+B", islandLayerShortcutChosen: "yes" }).islandLayerShortcut, "");
+  const chosen = normalizeSettings({ islandLayerShortcut: " Ctrl+Alt+B ", islandLayerShortcutChosen: true });
+  assert.equal(chosen.islandLayerShortcut, "Ctrl+Alt+B");
+  assert.equal(chosen.islandLayerShortcutChosen, true);
+});

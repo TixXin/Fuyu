@@ -193,6 +193,15 @@ async function runChecks() {
     await settle();
     check(tiles() === 4 && strip() === 5, "重新打开功能后入口回来");
 
+    windowState = { ...fx.state, islandBehind: true };
+    await openCard();
+    await settle();
+    const islandButton = () => $<HTMLButtonElement>(".tray-card__primary", card())!;
+    check(islandButton().getAttribute("aria-pressed") === "false" && islandButton().textContent?.includes(english ? "Behind windows" : "在窗口下面"), "岛退到窗口下面时，岛按钮写明在窗口下面");
+    await act(async () => islandButton().click());
+    check(actions().slice(-1)[0] === 'tray_menu_action:{"action":"raise_island","arg":null}' && islandButton().getAttribute("aria-pressed") === "true", "这时点岛按钮是叫回最前，不是隐藏");
+    windowState = fx.state;
+
     restoreStorage();
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

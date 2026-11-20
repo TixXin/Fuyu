@@ -17,6 +17,7 @@ export function trayCardFixtures() {
   const now = new Date(2026, 10, 15, 15, 5).getTime();
   const state: TrayMenuState = {
     islandVisible: true,
+    islandBehind: false,
     clipboardPaused: false,
     translateEnabled: false,
     screenshotEnabled: true,

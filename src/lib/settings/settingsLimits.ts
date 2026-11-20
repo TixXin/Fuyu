@@ -15,7 +15,6 @@ export const DEFAULT_ISLAND_OPACITY = 100;
 export const MIN_ISLAND_OPACITY = 20;
 export const MAX_ISLAND_OPACITY = 100;
 export const DEFAULT_IDLE_DIM_SECONDS = 30;
-export const DEFAULT_ISLAND_LAYER_SHORTCUT = "Ctrl+Alt+B";
 export const DEFAULT_IDLE_DIM_OPACITY = 35;
 export const MIN_IDLE_DIM_OPACITY = 5;
 export const MAX_IDLE_DIM_OPACITY = 90;
