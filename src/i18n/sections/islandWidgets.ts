@@ -40,6 +40,8 @@ export type IslandWidgetsText = {
     resizeWidget: (name: string) => string;
     addThis: (name: string) => string;
     removed: (name: string) => string;
+    reset: string;
+    resetDone: string;
     undo: string;
     emptyEditing: string;
     modes: { grid: string; free: string };
@@ -132,6 +134,8 @@ export const zhCN: IslandWidgetsText = {
     resizeWidget: (name) => `换「${name}」的大小`,
     addThis: (name) => `加上「${name}」`,
     removed: (name) => `拿掉了「${name}」`,
+    reset: "恢复默认",
+    resetDone: "已恢复默认布局",
     undo: "撤销",
     emptyEditing: "点下面的组件加到面板上",
     modes: { grid: "网格", free: "自由" },
@@ -224,6 +228,8 @@ export const en: IslandWidgetsText = {
     resizeWidget: (name) => `Change the size of ${name}`,
     addThis: (name) => `Add ${name}`,
     removed: (name) => `Removed ${name}`,
+    reset: "Reset",
+    resetDone: "Back to the default layout",
     undo: "Undo",
     emptyEditing: "Click a widget below to add it",
     modes: { grid: "Grid", free: "Free" },

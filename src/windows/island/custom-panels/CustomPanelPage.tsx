@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CirclePlus } from "lucide-react";
+import { CirclePlus, RotateCcw } from "lucide-react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import type { LibraryWidget } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
@@ -74,7 +74,7 @@ function useEditingLifetime(panelId: string, editing: boolean) {
   );
 }
 
-type Removed = { before: CustomPanel; name: string };
+type Removed = { before: CustomPanel; text: string };
 
 function useUndoableRemoval() {
   const [removed, setRemoved] = useState<Removed | null>(null);
@@ -120,7 +120,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
     change(panel.mode === "free" ? placeFreeItem(added, widget.id, stripRightPx(panel) / GRID_UNIT_PX + 1, 0, Infinity, Math.floor(board.height / GRID_UNIT_PX)) : added);
   };
   const remove = (widget: string, name: string) => {
-    remember({ before: panel, name });
+    remember({ before: panel, text: t.removed(name) });
     change(removePanelItem(panel, widget));
   };
   const incomingOf = (drag: PickerDrag | null): IncomingWidget | null => {
@@ -132,6 +132,10 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
     const incoming = incomingOf(drag);
     if (incoming) change(dropIncoming(panel, incoming, board));
     else if (empty && boardPoint(ref.current, ref.current, drag)) add(drag.widget);
+  };
+  const reset = () => {
+    remember({ before: panel, text: t.resetDone });
+    change(applyPanelTemplate({ ...panel, mode: "grid", items: [] }, "fuyu", (id) => library.find(id)?.sizes ?? null));
   };
   const undo = () => {
     if (removed) change(removed.before);
@@ -175,9 +179,13 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
                 </button>
               ))}
             </div>
+            <button type="button" className="custom-panel__reset" onClick={reset}>
+              <RotateCcw size={12} strokeWidth={2.2} aria-hidden="true" />
+              {t.reset}
+            </button>
             {removed ? (
               <span className="custom-panel__undo" role="status">
-                <span>{t.removed(removed.name)}</span>
+                <span>{removed.text}</span>
                 <button type="button" onClick={undo}>
                   {t.undo}
                 </button>
