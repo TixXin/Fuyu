@@ -117,8 +117,8 @@ async function runChecks() {
     await update(() => checkForUpdate());
     check(headline() === "发现新版本 v0.3.4" && Boolean(document.querySelector("#settings .about-hero__emblem")) && !document.querySelector("#settings .about-hero button.about-hero__emblem"),
       "名片是素的：Logo 位不能点，更新状态只在胶囊里");
-    check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 AGPL-3.0 开源 · 用 Tauri 和 React 构建 · Logo 征集中，来画一个 →",
-      "关于页最下面是落款，Logo 征集挪到落款里");
+    check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 AGPL-3.0 开源 · 用 Tauri 和 React 构建",
+      "关于页最下面是落款，Logo 定稿后不再有征集链接");
     check(document.querySelector("#settings .about-page > .about-danger:nth-last-child(2) .settings-row") !== null,
       "重置与退出在概览最底下、落款上面");
     const version = getUpdateState().nextVersion;
