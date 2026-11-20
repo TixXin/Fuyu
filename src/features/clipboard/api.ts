@@ -111,7 +111,7 @@ export const CLIPBOARD_HISTORY_SHORTCUT_EVENT = "clipboard-history-shortcut";
 export const CLIPBOARD_SHORTCUT_STATUS_EVENT = "clipboard-history-shortcut-status";
 export const CLIPBOARD_ITEM_COPIED_EVENT = "clipboard-item-copied";
 
-export type ClipboardCopiedNotice = { item: ClipboardHistoryItem; seconds: number; origin?: "history" | "capture" };
+export type ClipboardCopiedNotice = { item: ClipboardHistoryItem; seconds: number; origin?: "history" | "capture"; pasteBlocked?: "accessibility" };
 
 export const CLIPBOARD_LINKS_CHANGED_EVENT = "clipboard-links-changed";
 export type ClipboardLinkMatching = "any" | "web";

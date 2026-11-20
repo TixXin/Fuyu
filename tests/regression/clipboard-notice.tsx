@@ -10,7 +10,8 @@ import { useClipboardCopyCard } from "../../src/features/clipboard/useClipboardC
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 
-mockIPC(() => null, { shouldMockEvents: true });
+const invoked: { cmd: string; args: unknown }[] = [];
+mockIPC((cmd, args) => { invoked.push({ cmd, args }); return null; }, { shouldMockEvents: true });
 mockWindows("main");
 
 function Harness() {
@@ -75,6 +76,14 @@ async function runChecks() {
 
     await copied(TEXT, 0);
     check(!card(), "Nothing shows when the card is turned off");
+
+    await act(async () => { await emit("clipboard-item-copied", { item: TEXT, seconds: 8, pasteBlocked: "accessibility" }); });
+    check(card()?.textContent === "已复制，没能粘贴：要在辅助功能里允许浮屿", "A paste blocked by Accessibility says so instead of the summary");
+    await act(async () => { document.querySelector<HTMLButtonElement>('.clipboard-copy-notice__actions button[aria-label="打开辅助功能设置"]')!.click(); });
+    check(invoked.some(({ cmd, args }) => cmd === "open_system_permission" && (args as { kind?: string }).kind === "accessibility") && !card(), "Its button opens Accessibility settings and closes the card");
+
+    await copied(TEXT);
+    check(!document.querySelector('.clipboard-copy-notice__actions button[aria-label="打开辅助功能设置"]'), "An ordinary copy has no settings button");
 
     await copied(TEXT, 1);
     await wait(1200);
