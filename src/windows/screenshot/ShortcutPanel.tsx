@@ -4,7 +4,7 @@ import { cornerPosition, nearestCorner, overlaps, shortcutSheet, type CssBox, ty
 import type { Size } from "../../features/screenshot/selection";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
-import { useShortcutPanel } from "./useShortcutPanel";
+import type { ShortcutPanelControl } from "./useShortcutPanel";
 import "./ShortcutPanel.css";
 
 type Props = {
@@ -13,7 +13,7 @@ type Props = {
   pointer: { x: number; y: number } | null;
   startsHere: boolean;
   area: CssBox | null;
-  typing: boolean;
+  panel: ShortcutPanelControl;
   view: Size;
 };
 
@@ -33,9 +33,8 @@ function avoidBoxes(pointer: Props["pointer"], area: CssBox | null): CssBox[] {
 
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
-export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, typing, view }: Props) {
+export function ShortcutPanel({ sessionId, phase, pointer, startsHere, area, panel, view }: Props) {
   const t = useTranslation().screenshot.sheet;
-  const panel = useShortcutPanel(sessionId, typing);
   const ref = useRef<HTMLElement | null>(null);
   const setRef = (element: HTMLElement | null) => {
     ref.current = element;

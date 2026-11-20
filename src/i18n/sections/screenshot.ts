@@ -16,6 +16,8 @@ export type ScreenshotText = {
   selectHint: string;
   quickHints: Record<"copy" | "text" | "translate" | "long" | "record", string>;
   longShot: string;
+  recordArea: string;
+  showKeys: string;
   long: {
     title: string;
     height: (px: number) => string;
@@ -163,6 +165,8 @@ export const zhCN: ScreenshotText = {
   translateOff: "快捷翻译已关闭，打开后才能翻译截图",
   shelfOff: "文件中转已关闭",
   longShot: "长截图（自动往下滚动拼接，也可以自己滚）",
+  recordArea: "录屏（3 秒后开始录这个区域，标注不会录进去）",
+  showKeys: "快捷键（?）",
   long: {
     title: "长截图",
     height: (px) => `高 ${px.toLocaleString()} px`,
@@ -332,6 +336,8 @@ export const en: ScreenshotText = {
   translateOff: "Quick translation is off. Turn it on to translate screenshots.",
   shelfOff: "The file shelf is off",
   longShot: "Long screenshot (scrolls and stitches; you can scroll yourself too)",
+  recordArea: "Record this area (starts in 3 seconds; marks are not recorded)",
+  showKeys: "Shortcuts (?)",
   long: {
     title: "Long screenshot",
     height: (px) => `${px.toLocaleString()} px tall`,
