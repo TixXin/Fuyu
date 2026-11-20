@@ -72,11 +72,6 @@
     transform var(--motion-base) var(--motion-ease);
 }
 
-.icon-button.island-reset-button--available {
-  color: var(--info-text, #c8efff);
-  background: rgba(116, 214, 255, 0.14);
-}
-
 .icon-button:hover {
   color: rgb(var(--overlay-rgb, 255, 255, 255));
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.15);
