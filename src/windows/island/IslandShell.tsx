@@ -30,6 +30,8 @@ import { IslandTuckHint, type TuckHintSettings } from "./IslandTuckHint";
 import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
 import { ISLAND_OUTLINE_STYLE } from "./islandOutline";
+import { isBlankClick } from "./blankClick";
+import { usePanelEditing } from "./custom-panels/panelEditing";
 import "./IslandOutline.css";
 
 type IslandShellProps = {
@@ -215,6 +217,8 @@ export function IslandShell({
   const { lines } = contributed;
   const collapsedLabel = (showCollapsedText ? labelLine(lines)?.label : null) ?? t.island.appName;
   const lead = leadLine(lines);
+  const blankDownRef = useRef<EventTarget | null>(null);
+  const editingPanel = usePanelEditing();
   const leadPage = (lead?.page ?? page) as IslandPage;
   const showTuckHint = isTucked && tuckStyle === "hidden" && !notch && !isExpanded && tuckHint !== undefined && tuckHint.tuckHintStyle !== "none";
 
@@ -286,6 +290,15 @@ export function IslandShell({
             className="island__expanded"
             aria-hidden={!isExpanded}
             inert={!isExpanded}
+            onPointerDown={(event) => {
+              blankDownRef.current = event.button === 0 ? event.target : null;
+            }}
+            onClick={(event) => {
+              const down = blankDownRef.current;
+              blankDownRef.current = null;
+              if (!isExpanded || editingPanel !== null || down !== event.target) return;
+              if (isBlankClick(event.target, event.currentTarget, event.clientX, event.clientY)) onCollapse();
+            }}
           >
             <DevWatermark place="panel" />
             {popup && notch && <NotchPopupBand page={page} heading={contributed.popups.get(page)} agentVisualState={agentVisualState} onCollapse={onCollapse} />}
