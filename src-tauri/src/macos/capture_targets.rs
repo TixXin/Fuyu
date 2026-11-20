@@ -5,7 +5,12 @@ use super::fullscreen::{bounds, number, Area};
 
 const MIN_SIDE: f64 = 8.0;
 
-pub(crate) fn shown_windows() -> Vec<Area> {
+pub(crate) struct ShownWindow {
+    pub(crate) pid: i32,
+    pub(crate) area: Area,
+}
+
+pub(crate) fn shown_windows() -> Vec<ShownWindow> {
     let options = CGWindowListOption::OptionOnScreenOnly | CGWindowListOption::ExcludeDesktopElements;
     let Some(list) = CGWindowListCopyWindowInfo(options, 0) else {
         return Vec::new();
@@ -15,7 +20,7 @@ pub(crate) fn shown_windows() -> Vec<Area> {
     let own = i64::from(std::process::id());
     list.iter()
         .filter(|info| number(info, layer_key) == Some(0) && number(info, pid_key) != Some(own))
-        .filter_map(|info| bounds(&info, bounds_key))
-        .filter(|area| area.width >= MIN_SIDE && area.height >= MIN_SIDE)
+        .filter_map(|info| Some(ShownWindow { pid: i32::try_from(number(&info, pid_key)?).ok()?, area: bounds(&info, bounds_key)? }))
+        .filter(|window| window.area.width >= MIN_SIDE && window.area.height >= MIN_SIDE)
         .collect()
 }

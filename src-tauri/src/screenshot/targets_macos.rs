@@ -1,15 +1,26 @@
-use serde::Serialize;
-use tauri::{AppHandle, Manager};
+use std::{
+    thread,
+    time::{Duration, Instant},
+};
 
-use crate::macos::capture_targets;
+use serde::Serialize;
+use tauri::{AppHandle, Emitter, Manager};
+
+use super::session;
+use crate::macos::{capture_targets, control_frames, fullscreen::Area};
 
 pub(super) const TARGETS_EVENT: &str = "screenshot-targets";
+const WINDOWS_WITH_CONTROLS: usize = 8;
+const CONTROLS_PER_WINDOW: usize = 4000;
+const BUDGET: Duration = Duration::from_millis(2500);
+
+type Rect = (i32, i32, i32, i32);
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Target {
     window: u32,
     element: bool,
-    rect: (i32, i32, i32, i32),
+    rect: Rect,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -23,7 +34,7 @@ pub(crate) struct LocalTarget {
     height: u32,
 }
 
-pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<()>) {
+pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<(u32, i32, Area)>) {
     let mut targets: Vec<Target> = app
         .webview_windows()
         .into_iter()
@@ -38,18 +49,27 @@ pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<()>) {
             })
         })
         .collect();
-    targets.extend(capture_targets::shown_windows().into_iter().map(|area| {
-        let (left, top) = (area.x.round() as i32, area.y.round() as i32);
-        let (right, bottom) = ((area.x + area.width).round() as i32, (area.y + area.height).round() as i32);
-        Target { window: 0, element: false, rect: (left, top, right, bottom) }
-    }));
+    let own = targets.len();
+    let shown = capture_targets::shown_windows();
+    targets.extend(shown.iter().map(|window| Target { window: 0, element: false, rect: rounded(window.area) }));
     for (index, target) in targets.iter_mut().enumerate() {
         target.window = index as u32;
     }
-    (targets, Vec::new())
+    let windows = if control_frames::can_read() {
+        shown.into_iter().enumerate().map(|(index, window)| ((own + index) as u32, window.pid, window.area)).collect()
+    } else {
+        Vec::new()
+    };
+    (targets, windows)
 }
 
-fn intersect(a: (i32, i32, i32, i32), b: (i32, i32, i32, i32)) -> Option<(i32, i32, i32, i32)> {
+fn rounded(area: Area) -> Rect {
+    let (left, top) = (area.x.round() as i32, area.y.round() as i32);
+    let (right, bottom) = ((area.x + area.width).round() as i32, (area.y + area.height).round() as i32);
+    (left, top, right, bottom)
+}
+
+fn intersect(a: Rect, b: Rect) -> Option<Rect> {
     let rect = (a.0.max(b.0), a.1.max(b.1), a.2.min(b.2), a.3.min(b.3));
     (rect.2 > rect.0 && rect.3 > rect.1).then_some(rect)
 }
@@ -74,10 +94,40 @@ pub(crate) fn localize(targets: &[Target], origin: (i32, i32), size: (u32, u32),
         .collect()
 }
 
-pub(super) fn read_controls(_app: &AppHandle, _id: u64, _windows: Vec<()>) {}
+pub(super) fn read_controls(app: &AppHandle, id: u64, windows: Vec<(u32, i32, Area)>) {
+    if windows.is_empty() {
+        return;
+    }
+    let app = app.clone();
+    thread::spawn(move || {
+        let deadline = Instant::now() + BUDGET;
+        for (index, pid, window) in windows.into_iter().take(WINDOWS_WITH_CONTROLS) {
+            if Instant::now() >= deadline {
+                break;
+            }
+            let window_rect = rounded(window);
+            let controls: Vec<Target> = control_frames::control_frames(pid, window, CONTROLS_PER_WINDOW, deadline)
+                .into_iter()
+                .filter_map(|frame| intersect(rounded(frame), window_rect))
+                .map(|rect| Target { window: index, element: true, rect })
+                .collect();
+            if controls.is_empty() {
+                continue;
+            }
+            match session::add_targets(id, controls) {
+                Some(labels) => {
+                    for label in labels {
+                        let _ = app.emit_to(label.as_str(), TARGETS_EVENT, id);
+                    }
+                }
+                None => return,
+            }
+        }
+    });
+}
 
 #[cfg(test)]
-pub(super) fn target(window: u32, element: bool, rect: (i32, i32, i32, i32)) -> Target {
+pub(super) fn target(window: u32, element: bool, rect: Rect) -> Target {
     Target { window, element, rect }
 }
 

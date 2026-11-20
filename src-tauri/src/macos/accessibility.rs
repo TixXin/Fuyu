@@ -1,6 +1,6 @@
 use std::ptr::NonNull;
 
-use objc2_core_foundation::{CFArray, CFBoolean, CFDictionary, CFRetained, CFString, CFType};
+use objc2_core_foundation::{CFArray, CFBoolean, CFDictionary, CFRetained, CFString, CFType, CGPoint, CGRect, CGSize};
 use objc2_foundation::NSURL;
 
 const MESSAGING_TIMEOUT_SECONDS: f32 = 0.5;
@@ -16,7 +16,12 @@ extern "C" {
     fn AXUIElementCopyAttributeValue(element: *const CFType, attribute: *const CFString, value: *mut *mut CFType) -> i32;
     fn AXUIElementSetAttributeValue(element: *const CFType, attribute: *const CFString, value: *const CFType) -> i32;
     fn AXUIElementPerformAction(element: *const CFType, action: *const CFString) -> i32;
+    fn AXValueGetValue(value: *const CFType, kind: u32, out: *mut core::ffi::c_void) -> u8;
 }
+
+const AX_VALUE_POINT: u32 = 1;
+const AX_VALUE_SIZE: u32 = 2;
+const AX_VALUE_RECT: u32 = 3;
 
 pub(crate) fn is_trusted() -> bool {
     unsafe { AXIsProcessTrusted() != 0 }
@@ -77,6 +82,22 @@ impl Element {
 
     pub(crate) fn text(&self, name: &str) -> Option<String> {
         Some(attribute(&self.0, name)?.downcast_ref::<CFString>()?.to_string())
+    }
+
+    fn value<T: Default>(&self, name: &str, kind: u32) -> Option<T> {
+        let value = attribute(&self.0, name)?;
+        let mut out = T::default();
+        let read = unsafe { AXValueGetValue(&*value, kind, (&mut out as *mut T).cast()) };
+        (read != 0).then_some(out)
+    }
+
+    pub(crate) fn frame(&self) -> Option<CGRect> {
+        if let Some(rect) = self.value::<CGRect>("AXFrame", AX_VALUE_RECT) {
+            return Some(rect);
+        }
+        let origin = self.value::<CGPoint>("AXPosition", AX_VALUE_POINT)?;
+        let size = self.value::<CGSize>("AXSize", AX_VALUE_SIZE)?;
+        Some(CGRect { origin, size })
     }
 
     pub(crate) fn boolean(&self, name: &str) -> Option<bool> {
