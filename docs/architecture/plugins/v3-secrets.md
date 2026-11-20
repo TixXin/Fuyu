@@ -74,6 +74,7 @@
 |---|---|---|
 | `get_plugin_host_connection` / `HostConnection` | `token` | 每次启动随机、不落盘，窗口连宿主用 |
 | `get_cc_connect_feishu_setup` / `FeishuProgress` | `qr`、`url` | 给用户扫的一次性登录码 |
+| Rust 宿主方法 `pluginKernel.secretGet` / `PluginSecretValue` | `value` | E81（2026-11-20）：插件经 `secrets/v1` 取自己存的密钥，只回给宿主内核、再交给这个插件的宿主部分（Node），要它自己拼请求；不经 Tauri 命令、不到任何窗口，窗口调 `secrets/v1` 回 `forbidden` |
 
 ## 怎么守住
 

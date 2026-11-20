@@ -185,6 +185,24 @@ export type PluginConfigEvents = {
 
 export declare const pluginConfigV1: ServiceDefinition<PluginConfigMethods, PluginConfigEvents, {}>;
 
+/**
+ * The calling plugin's own secrets, kept in the system credential store (Windows Credential Manager, macOS Keychain).
+ * Only a plugin's host part may call it; a call from a window is refused with `forbidden`.
+ * Each plugin sees only its own entries. A name is 1-64 letters, digits, `.`, `_` or `-`; a value is 1-8192 characters; a plugin keeps at most 32.
+ */
+export type SecretsMethods = {
+  /** The names this plugin has stored, sorted. */
+  list(): { names: string[] };
+  /** The stored value, or `null` when there is none. Keep it in memory only: never log it or hand it to a window. */
+  get(params: { name: string }): { value: string | null };
+  /** Stores or replaces a value. Fails with `too-many` past 32 names. */
+  set(params: { name: string; value: string }): { names: string[] };
+  /** Deletes a value; deleting one that is not there is fine. */
+  remove(params: { name: string }): { names: string[] };
+};
+
+export declare const secretsV1: ServiceDefinition<SecretsMethods, {}, {}>;
+
 export type PluginWindowRules = {
   disallowAlwaysOnTop: boolean;
   disallowClickThrough: boolean;

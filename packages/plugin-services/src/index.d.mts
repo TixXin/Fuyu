@@ -12,6 +12,7 @@ export * from "./services/pluginConfig.mjs";
 export * from "./services/pluginWindows.mjs";
 export * from "./services/reminders.mjs";
 export * from "./services/screenshotActions.mjs";
+export * from "./services/secrets.mjs";
 export * from "./services/timers.mjs";
 export * from "./services/todos.mjs";
 export * from "./services/translator.mjs";
@@ -30,6 +31,7 @@ export declare const SERVICES: readonly [
   "plugin-windows/v1",
   "reminders/v1",
   "screenshot.actions/v1",
+  "secrets/v1",
   "timers/v1",
   "todos/v1",
   "translator/v1",

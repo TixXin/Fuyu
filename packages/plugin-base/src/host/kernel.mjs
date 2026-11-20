@@ -17,6 +17,7 @@ import { PluginConfig } from "./plugin-config.mjs";
 import { DEV_WATCHED, watchBuiltins } from "./reload.mjs";
 import { IslandControl } from "./island.mjs";
 import { RustBridge } from "./rust.mjs";
+import { PluginSecrets } from "./secrets.mjs";
 import { Services } from "./services.mjs";
 import { SettingsOpener } from "./settings.mjs";
 import { shareModules } from "./share.mjs";
@@ -94,6 +95,9 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   if (rpc) commands.attach(rpc);
   const pluginConfig = new PluginConfig({ dataRoot, services, usage });
   pluginConfig.install(ctx);
+  const secrets = new PluginSecrets({ services });
+  secrets.install(ctx);
+  if (rpc) secrets.attach(rpc);
   const settings = new SettingsOpener();
   settings.install(ctx);
   const island = new IslandControl();
