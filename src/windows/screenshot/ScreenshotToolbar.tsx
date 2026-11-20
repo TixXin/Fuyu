@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Download, EyeOff, Pin, QrCode, Redo2, ScanText, SquareBottomDashedScissors, Trash2, Undo2, X } from "lucide-react";
+import { Check, Download, EyeOff, Keyboard, Pin, QrCode, Redo2, ScanText, SquareBottomDashedScissors, Trash2, Undo2, Video, X } from "lucide-react";
 import type { ScreenshotAction, ScreenshotQrCode } from "../../features/screenshot/api";
 import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, TOOL_KEYS, toolStyles } from "../../features/screenshot/annotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
@@ -15,11 +15,11 @@ const ONE_ROW = 48;
 const TWO_ROWS = 88;
 const EDGE = 4;
 
-function ToolButton({ label, active, disabled, onClick, children }: { label: string; active?: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+function ToolButton({ label, active, disabled, extra, onClick, children }: { label: string; active?: boolean; disabled?: boolean; extra?: string; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
-      className={`screenshot-overlay__button${active ? " screenshot-overlay__button--active" : ""}`}
+      className={`screenshot-overlay__button${active ? " screenshot-overlay__button--active" : ""}${extra ? ` ${extra}` : ""}`}
       aria-label={label}
       aria-pressed={active}
       title={label}
@@ -43,6 +43,8 @@ export function ScreenshotToolbar({
   onRedact,
   onCopyText,
   onOpenLink,
+  sheetOpen,
+  onSheet,
 }: {
   area: PixelRect;
   view: Size;
@@ -55,6 +57,8 @@ export function ScreenshotToolbar({
   onRedact: () => void;
   onCopyText: (text: string) => void;
   onOpenLink: (url: string) => void;
+  sheetOpen: boolean;
+  onSheet: () => void;
 }) {
   const t = useTranslation().screenshot;
   const box = useRef<HTMLDivElement>(null);
@@ -114,6 +118,9 @@ export function ScreenshotToolbar({
         <ToolButton label={t.longShot} onClick={() => onFinish("long")}>
           <SquareBottomDashedScissors size={18} />
         </ToolButton>
+        <ToolButton label={t.recordArea} onClick={() => onFinish("record")}>
+          <Video size={18} />
+        </ToolButton>
         <ToolButton label={t.redact} onClick={onRedact}>
           <EyeOff size={18} />
         </ToolButton>
@@ -130,6 +137,9 @@ export function ScreenshotToolbar({
         </ToolButton>
         <ToolButton label={isMacOS ? t.saveMac : t.save} onClick={() => onFinish("save")}>
           <Download size={18} />
+        </ToolButton>
+        <ToolButton label={t.showKeys} active={sheetOpen} extra="screenshot-overlay__sheet-toggle" onClick={onSheet}>
+          <Keyboard size={18} />
         </ToolButton>
         <ToolButton label={t.cancel} onClick={onCancel}>
           <X size={18} />

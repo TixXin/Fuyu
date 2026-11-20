@@ -27,7 +27,6 @@ export function useShortcutPanel(sessionId: number | undefined, typing: boolean)
 
   const toggle = useCallback(() => {
     setPrefs((current) => {
-      if (current.state === "off") return current;
       const state = current.state === "open" ? "collapsed" : "open";
       save({ state });
       return { ...current, state };
@@ -53,3 +52,5 @@ export function useShortcutPanel(sessionId: number | undefined, typing: boolean)
 
   return { ...prefs, toggle, moveTo };
 }
+
+export type ShortcutPanelControl = ReturnType<typeof useShortcutPanel>;

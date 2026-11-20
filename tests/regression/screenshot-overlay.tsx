@@ -73,18 +73,39 @@ async function runChecks() {
     for (let tries = 0; tries < 50 && !calls.some((call) => call.command === "screenshot_overlay_ready"); tries += 1) await wait(20);
     check(document.querySelector<HTMLCanvasElement>(".screenshot-overlay__picture")?.width === WIDTH, "The frozen picture is drawn at the monitor's size, then the overlay says it is ready");
     const sheet = () => document.querySelector<HTMLElement>(".screenshot-sheet");
-    check(sheet()?.textContent?.includes("快捷键") && sheet()?.textContent?.includes("复制颜色") && !sheet()?.textContent?.includes("标注工具"), "Before a region is chosen, the cheat sheet lists the selecting keys");
+    check(sheet()?.textContent?.includes("复制颜色") && sheet()?.textContent?.includes("标注工具") && sheet()?.textContent?.includes("删除选中标注"), "The cheat sheet lists the selecting, finishing and tool keys");
+    const sheetBefore = { text: sheet()!.textContent, width: sheet()!.offsetWidth, height: sheet()!.offsetHeight };
     check(sheet()!.offsetLeft === 12 && sheet()!.offsetTop + sheet()!.offsetHeight === HEIGHT - 12, "…in the bottom-left corner by default");
 
     await drag([40, 40], [240, 200]);
-    check(document.querySelectorAll(".screenshot-overlay__toolbar button[aria-pressed]").length === 11, "A chosen region gets the toolbar with the eleven annotation tools");
+    check(document.querySelectorAll(".screenshot-overlay__toolbar button[aria-pressed]:not(.screenshot-overlay__sheet-toggle)").length === 11, "A chosen region gets the toolbar with the eleven annotation tools");
     check(button("撤销（Ctrl+Z）")?.disabled && button("重做（Ctrl+Y）")?.disabled, "Undo and redo start disabled");
-    check(sheet()?.textContent?.includes("标注工具") && sheet()?.textContent?.includes("删除选中标注"), "Once a region is chosen, the cheat sheet switches to finishing keys and the tool keys");
+    check(sheet()!.textContent === sheetBefore.text && sheet()!.offsetWidth === sheetBefore.width && sheet()!.offsetHeight === sheetBefore.height, "Choosing a region leaves the cheat sheet's content and size as they were");
+    const head = sheet()!.querySelector<HTMLElement>(".screenshot-sheet__head")!;
+    const grab = head.getBoundingClientRect();
+    const onHead = (type: string, x: number, y: number) => act(async () => { head.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, button: 0, pointerId: 1, isPrimary: true })); });
+    await pointer("pointermove", grab.left + 40, grab.top + 10);
+    check(!sheet()!.classList.contains("screenshot-sheet--faded"), "With the pointer on its title the sheet stays solid even next to the selection");
+    await onHead("pointerdown", grab.left + 40, grab.top + 10);
+    await onHead("pointermove", WIDTH - 60, 40);
+    await onHead("pointerup", WIDTH - 60, 40);
+    check(JSON.parse(localStorage.getItem("fuyu-screenshot-settings") ?? "{}").shortcutCorner === "tr" && sheet()!.offsetTop === 12, "After a region is chosen the sheet can still be dragged, and it snaps to the top-right corner");
+    check(document.querySelector(".screenshot-overlay__selection")?.getAttribute("style")?.includes("left: 40px"), "…without touching the selection");
+    const back = sheet()!.querySelector<HTMLElement>(".screenshot-sheet__head")!.getBoundingClientRect();
+    await onHead("pointerdown", back.left + 40, back.top + 10);
+    await onHead("pointermove", 30, HEIGHT - 30);
+    await onHead("pointerup", 30, HEIGHT - 30);
+    check(JSON.parse(localStorage.getItem("fuyu-screenshot-settings") ?? "{}").shortcutCorner === "bl", "Dragged back down it returns to the bottom-left corner");
     await key({ key: "?" });
     check(!sheet() && document.querySelector(".screenshot-sheet-pill") && JSON.parse(localStorage.getItem("fuyu-screenshot-settings") ?? "{}").shortcutPanel === "collapsed", "? collapses it to a small button and remembers that");
-    check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]'), "…without picking a tool");
+    check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]:not(.screenshot-overlay__sheet-toggle)'), "…without picking a tool");
     await key({ key: "?" });
     check(sheet() && JSON.parse(localStorage.getItem("fuyu-screenshot-settings") ?? "{}").shortcutPanel === "open", "? again brings it back");
+    check(button("快捷键（?）")?.getAttribute("aria-pressed") === "true", "The toolbar's shortcut button shows the sheet is open");
+    await click("快捷键（?）");
+    check(!sheet() && button("快捷键（?）")?.getAttribute("aria-pressed") === "false", "…and clicking it collapses the sheet");
+    await click("快捷键（?）");
+    check(sheet() && JSON.parse(localStorage.getItem("fuyu-screenshot-settings") ?? "{}").shortcutPanel === "open", "…and clicking again brings it back");
     for (let tries = 0; tries < 50 && !calls.some((call) => call.command === "screenshot_read_qr"); tries += 1) await wait(20);
     check(calls.some((call) => call.command === "screenshot_read_qr") && !document.querySelector(".screenshot-overlay__toolbar svg.lucide-qr-code"), "The settled selection is checked for QR codes; with none, nothing extra shows");
     await key({ key: "Enter" });
@@ -97,6 +118,9 @@ async function runChecks() {
     check(button("贴到屏幕上（T）") && button("保存（Ctrl+S）"), "The toolbar has pin and save buttons");
     await click("识别文字");
     check(last("screenshot_finish")?.headers["x-action"] === "text", "Read text sends the region to OCR");
+    await click("录屏（3 秒后开始录这个区域，标注不会录进去）");
+    const recorded = last("screenshot_finish");
+    check(recorded?.headers["x-action"] === "record" && recorded.headers["x-width"] === "200" && decodeURIComponent(recorded.headers["x-folder-name"]) === "浮屿录屏", "The record button records the chosen region into the recordings folder");
 
     await click("矩形（R）");
     check(button("矩形（R）")?.getAttribute("aria-pressed") === "true" && document.querySelectorAll(".screenshot-overlay__swatch").length === 8, "Choosing the rectangle shows the colours and thicknesses");
@@ -138,7 +162,7 @@ async function runChecks() {
     check(isRed(layerPixel(205, 70)), "A click with the number tool places a badge");
 
     await act(async () => { overlay().dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 150, clientY: 150 })); });
-    check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]') && document.querySelector(".screenshot-overlay__selection"), "A right click turns the tool off and keeps the selection");
+    check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]:not(.screenshot-overlay__sheet-toggle)') && document.querySelector(".screenshot-overlay__selection"), "A right click turns the tool off and keeps the selection");
 
     const isBlue = ([r, g, b, a]: number[]) => a > 200 && r < 60 && g > 100 && b > 200;
     const picked = () => document.querySelector(".screenshot-overlay__picked");
