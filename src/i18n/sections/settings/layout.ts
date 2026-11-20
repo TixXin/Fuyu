@@ -36,6 +36,9 @@ export type SettingsLayoutText = {
   collapsedWidthExtra: string;
   collapsedWidthHint: string;
   panelSizeHint: string;
+  pageSizes: string;
+  pageSizesHint: string;
+  pageSizesReset: string;
   launchAtStartup: string;
   launchAtStartupMac: string;
   trayIcon: string;
@@ -104,7 +107,10 @@ export const zhCN: SettingsLayoutText = {
   panelWidth: "面板宽度",
   collapsedWidthExtra: "折叠岛屿宽度",
   collapsedWidthHint: "在随内容变化的宽度上加宽或收窄。也可以把鼠标移到折叠岛屿的左右边缘，出现提示线后拖动来调。",
-  panelSizeHint: "没单独调过的页面用这个宽度和高度，内容多了在页面里滚动。把鼠标移到展开面板的左右边缘或底边，出现提示线后拖动，只改当前这一页，会记住。",
+  panelSizeHint: "各页面默认都用这个宽度；高度上，待办、日历、剪贴板、消息和 Agent 这类列表页比它高 80，Fuyu 页按 6 列 × 2 行。把鼠标移到展开面板的左右边缘或底边，出现提示线后拖动，只改当前这一页，会记住。",
+  pageSizes: "各页面的尺寸",
+  pageSizesHint: "在岛上拖过的页面各自记着尺寸。恢复后都回到上面的默认值。",
+  pageSizesReset: "全部恢复默认",
   launchAtStartup: "开机自启动",
   launchAtStartupMac: "登录时打开",
   trayIcon: "在托盘显示图标",
@@ -177,7 +183,10 @@ export const en: SettingsLayoutText = {
   panelWidth: "Panel width",
   collapsedWidthExtra: "Collapsed island width",
   collapsedWidthHint: "Widens or narrows the width that follows the content. Or point at the collapsed island's side until a line shows, then drag it.",
-  panelSizeHint: "Pages you have not sized yourself use this width and height and scroll inside when they hold more. Point at the open panel's side or bottom edge until a line shows and drag it to size just that page; it is remembered.",
+  panelSizeHint: "Every page uses this width by default. List pages (to-dos, calendar, clipboard, messages, agents) are 80 taller than this height, and the Fuyu page fits 6 × 2 cells. Point at the open panel's side or bottom edge until a line shows and drag it to size just that page; it is remembered.",
+  pageSizes: "Page sizes",
+  pageSizesHint: "Pages you dragged on the island keep their own size. Resetting puts them all back on the defaults above.",
+  pageSizesReset: "Reset all",
   launchAtStartup: "Launch at startup",
   launchAtStartupMac: "Open at login",
   trayIcon: "Show icon in the system tray",

@@ -1,5 +1,6 @@
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
+import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
@@ -98,6 +99,15 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           defaultValue={DEFAULT_SETTINGS.maxPanelHeight}
           resetLabel={text.resetToDefault}
           onChange={(maxPanelHeight) => change({ ...settings, maxPanelHeight }, true)}
+        />
+        <SettingsRow
+          title={text.pageSizes}
+          description={text.pageSizesHint}
+          control={(
+            <SettingsLinkButton disabled={Object.keys(settings.pageSizes).length === 0} onClick={() => change({ ...settings, pageSizes: {} }, true)}>
+              {text.pageSizesReset}
+            </SettingsLinkButton>
+          )}
         />
       </SettingsGroup>
       <SettingsGroup title={text.dragTitle}>

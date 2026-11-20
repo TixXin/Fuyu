@@ -20,7 +20,6 @@ import { useIslandTucking } from "./useIslandTucking";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
 import { editGrowWidth, PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
-import { FUYU_ISLAND_SIZE } from "./custom-panels/panelSize";
 import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, maxExpandedIslandHeight, panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
@@ -59,7 +58,7 @@ import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
 import { isPageShown } from "./features";
 import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
-import { pagePanelSize } from "../../lib/settings/pageSizes";
+import { islandPageSize } from "./pageSize";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
@@ -126,7 +125,7 @@ export function IslandApp() {
   const hasOpenPopup = openPopup !== undefined;
   const panelEditing = usePanelEditing() !== null && !hasOpenPopup;
   const fuyuPage = page === FUYU_PAGE_ID && !hasOpenPopup;
-  const pageSize = pagePanelSize(settings.pageSizes, page, page === FUYU_PAGE_ID ? FUYU_ISLAND_SIZE : { width: settings.panelWidth, height: settings.maxPanelHeight });
+  const pageSize = islandPageSize(settings, page);
   const panelWidth = pageSize.width;
   const editGrow = panelEditing ? editGrowWidth(panelIslandWidth(panelWidth, settings.expandedScale), settings.expandedScale) : 0;
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
@@ -243,7 +242,7 @@ export function IslandApp() {
         page={page}
         homePage={homePage}
         popup={popup}
-        resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${settings.maxPanelHeight}` : null}
+        resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${pageSize.height}` : null}
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
         hoverGrow={settings.islandMotion !== "none"}
