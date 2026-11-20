@@ -7,28 +7,32 @@ export type SettingsIslandPagesText = {
   showPage: (name: string) => string;
   reset: string;
   loading: string;
+  hidePage: (name: string) => string;
+  moveHint: string;
+  modes: { label: string; bar: string; expanded: string };
+  preview: { builtin: string; off: string; empty: string };
   panels: {
     tag: string;
     create: string;
-    edit: (name: string) => string;
-    editorTitle: (name: string) => string;
-    close: string;
     name: string;
     icon: string;
     iconNames: Record<"layout-grid" | "star" | "briefcase" | "coffee" | "music" | "zap" | "heart" | "home" | "gamepad" | "book", string>;
     remove: string;
     confirmRemove: string;
-    canvasHint: string;
-    empty: string;
+    title: string;
+    hint: string;
+    inPanel: string;
+    available: string;
+    none: string;
+    allAdded: string;
+    add: (name: string) => string;
     removeWidget: (name: string) => string;
     moveWidget: (name: string) => string;
     unavailable: string;
-    library: string;
-    search: string;
-    noMatch: string;
-    addSize: (name: string, size: string) => string;
-    onBar: (name: string) => string;
-    offBar: (name: string) => string;
+    sizeTitle: string;
+    sizeHint: string;
+    sizeCard: (size: string, cols: number, rows: number) => string;
+    oneSize: string;
   };
   page: {
     agents: string;
@@ -46,35 +50,43 @@ export type SettingsIslandPagesText = {
 
 export const zhCN: SettingsIslandPagesText = {
   title: "展开页面",
-  hint: "展开后顶部的页面，按这里的顺序排，Alt+数字和切换上一页、下一页也按这个顺序。隐藏只是不在顶部出现、不进页面切换，功能照常在后台运行，从收起条或通知仍能打开那一页。关掉的功能不会出现在岛上。",
+  hint: "点一下在上面的岛里看这一页。Alt+数字和切换上一页、下一页按这里的顺序。隐藏只是不在顶部出现，功能照常在后台运行，从收起条或通知仍能打开那一页。",
   plugin: "插件",
   off: "功能已关",
   hidden: "已隐藏",
   showPage: (name) => `在顶部显示：${name}`,
   reset: "恢复默认顺序",
   loading: "插件页面要等岛启动后才列出来。",
+  hidePage: (name) => `从顶部隐藏：${name}`,
+  moveHint: "拖动换位置，也可以选中后按住 Alt 加方向键",
+  modes: { label: "预览岛的哪种样子", bar: "收起条", expanded: "展开" },
+  preview: {
+    builtin: "内置页面，内容由功能自己决定；可以换顺序或隐藏。",
+    off: "这个功能关着，岛上不会出现这一页。",
+    empty: "这个面板还没有组件，在下面「可以添加」里点 ＋",
+  },
   panels: {
-    tag: "自定义",
+    tag: "我的",
     create: "新建面板",
-    edit: (name) => `编辑面板：${name}`,
-    editorTitle: (name) => `编辑「${name}」`,
-    close: "完成",
-    name: "名字",
+    name: "面板名字",
     icon: "图标",
     iconNames: { "layout-grid": "网格", star: "星星", briefcase: "公文包", coffee: "咖啡", music: "音乐", zap: "闪电", heart: "爱心", home: "房子", gamepad: "手柄", book: "书" },
-    remove: "删除面板",
+    remove: "删除这个面板",
     confirmRemove: "再点一次删除",
-    canvasHint: "拖动组件换位置，压到别的组件时它会往下挪；选中后也能用方向键移动。岛上最多显示 4 行，再多时在面板里滚动。",
-    empty: "从下面的组件库里点一个尺寸，把组件加进来。",
+    title: "面板里的组件",
+    hint: "点 ＋ 加进来，点 × 拿掉，拖动换顺序。岛上按顺序从左上往右下自动排，最多显示 4 行，再多时在面板里滚动。",
+    inPanel: "面板里",
+    available: "可以添加",
+    none: "还没有组件",
+    allAdded: "都加进来了",
+    add: (name) => `加进面板：${name}`,
     removeWidget: (name) => `从面板拿掉：${name}`,
-    moveWidget: (name) => `${name}，拖动或用方向键移动`,
-    unavailable: "现在不可用",
-    library: "组件库",
-    search: "搜索组件",
-    noMatch: "没有匹配的组件",
-    addSize: (name, size) => `把「${name}」以「${size}」尺寸加到面板`,
-    onBar: (name) => `「${name}」已在收起条上，点一下拿下来`,
-    offBar: (name) => `把「${name}」放到收起条上`,
+    moveWidget: (name) => `${name}，拖动或按住 Alt 加方向键换顺序`,
+    unavailable: "功能已关",
+    sizeTitle: "大小",
+    sizeHint: "点缩略图换大小，上面的岛跟着变。",
+    sizeCard: (size, cols, rows) => `${size} · ${cols}×${rows} 格`,
+    oneSize: "这个组件只有一种大小。",
   },
   page: {
     agents: "AI Agent",
@@ -92,35 +104,43 @@ export const zhCN: SettingsIslandPagesText = {
 
 export const en: SettingsIslandPagesText = {
   title: "Expanded pages",
-  hint: "The pages at the top of the expanded island, in this order. Alt+number and next / previous page follow it too. Hiding a page only takes it off the top and out of page switching: the feature keeps running, and the bar or a notification can still open that page. Features that are off never show on the island.",
+  hint: "Click a page to see it on the island above. Alt+number and next / previous page follow this order. Hiding a page only takes it off the top: the feature keeps running, and the bar or a notification can still open that page.",
   plugin: "Plugin",
   off: "Feature off",
   hidden: "Hidden",
   showPage: (name) => `Show at the top: ${name}`,
   reset: "Restore default order",
   loading: "Plugin pages are listed once the island has started.",
+  hidePage: (name) => `Hide from the top: ${name}`,
+  moveHint: "Drag to move, or select one and press Alt with an arrow key",
+  modes: { label: "Which island to preview", bar: "Collapsed bar", expanded: "Expanded" },
+  preview: {
+    builtin: "A built-in page: the feature decides what is on it. You can move or hide it.",
+    off: "This feature is off, so the page does not show on the island.",
+    empty: "This panel has no widgets yet. Press + under Add below.",
+  },
   panels: {
-    tag: "Custom",
+    tag: "Mine",
     create: "New panel",
-    edit: (name) => `Edit panel: ${name}`,
-    editorTitle: (name) => `Edit "${name}"`,
-    close: "Done",
-    name: "Name",
+    name: "Panel name",
     icon: "Icon",
     iconNames: { "layout-grid": "Grid", star: "Star", briefcase: "Briefcase", coffee: "Coffee", music: "Music", zap: "Bolt", heart: "Heart", home: "Home", gamepad: "Gamepad", book: "Book" },
-    remove: "Delete panel",
+    remove: "Delete this panel",
     confirmRemove: "Click again to delete",
-    canvasHint: "Drag a widget to move it; widgets in the way move down. A selected widget also moves with the arrow keys. The island shows up to 4 rows and scrolls past that.",
-    empty: "Pick a size in the widget library below to add a widget.",
-    removeWidget: (name) => `Remove from panel: ${name}`,
-    moveWidget: (name) => `${name}, drag or use the arrow keys to move`,
-    unavailable: "Not available now",
-    library: "Widgets",
-    search: "Search widgets",
-    noMatch: "No widgets match",
-    addSize: (name, size) => `Add ${name} to the panel at size ${size}`,
-    onBar: (name) => `${name} is on the collapsed bar, click to take it off`,
-    offBar: (name) => `Put ${name} on the collapsed bar`,
+    title: "Widgets in this panel",
+    hint: "Press + to add, × to remove, and drag to reorder. The island lays them out in order from the top left, shows up to 4 rows and scrolls past that.",
+    inPanel: "In the panel",
+    available: "Add",
+    none: "No widgets yet",
+    allAdded: "All widgets are in",
+    add: (name) => `Add to the panel: ${name}`,
+    removeWidget: (name) => `Remove from the panel: ${name}`,
+    moveWidget: (name) => `${name}, drag or press Alt with an arrow key to move`,
+    unavailable: "Feature off",
+    sizeTitle: "Size",
+    sizeHint: "Pick a thumbnail to change the size; the island above follows.",
+    sizeCard: (size, cols, rows) => `${size} · ${cols}×${rows}`,
+    oneSize: "This widget comes in one size only.",
   },
   page: {
     agents: "AI Agent",

@@ -76,3 +76,13 @@ export function setIslandPageHidden(layout: IslandPagesLayout, id: string, hidde
   const rest = layout.hidden.filter((other) => other !== id);
   return { ...layout, hidden: hidden ? [...rest, id] : rest };
 }
+
+export function placeIslandPage(layout: IslandPagesLayout, listed: readonly string[], id: string, before: string | null): IslandPagesLayout {
+  const order = arrangeIslandPages(listed, layout.order);
+  if (!order.includes(id) || before === id) return layout;
+  const rest = order.filter((other) => other !== id);
+  const at = before === null ? rest.length : rest.indexOf(before);
+  if (at < 0) return layout;
+  rest.splice(at, 0, id);
+  return { ...layout, order: rest };
+}

@@ -1,0 +1,57 @@
+import { useState, type ReactNode } from "react";
+import type { BarUsagePage } from "../../../features/plugin-kernel/barUsage";
+import { useTranslation } from "../../../i18n";
+import { createPanel, newPanelId, panelPageId, removePanel, updatePanel, type CustomPanel } from "../../../lib/settings/customPanels";
+import type { IslandSettings } from "../../../lib/settings/types";
+import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
+import { ExpandedPreview } from "./ExpandedPreview";
+import { PageStrip } from "./PageStrip";
+import { PanelEditor } from "./PanelEditor";
+import { SizePicker } from "./SizePicker";
+import { useIslandPageRows } from "./useIslandPageRows";
+import { useWidgetLibrary } from "./useWidgetLibrary";
+import "./ExpandedLayout.css";
+
+type ExpandedLayoutProps = {
+  settings: IslandSettings;
+  pluginPages: readonly BarUsagePage[] | null;
+  stage: (preview: ReactNode) => ReactNode;
+};
+
+export function ExpandedLayout({ settings, pluginPages, stage }: ExpandedLayoutProps) {
+  const t = useTranslation();
+  const { panels, save: savePanels } = useCustomPanels();
+  const { rows, layout, save, pluginsListed } = useIslandPageRows(settings, pluginPages, panels);
+  const library = useWidgetLibrary();
+  const [pageId, setPageId] = useState<string | null>(null);
+  const [widgetId, setWidgetId] = useState<string | null>(null);
+  const current = rows.find((row) => row.id === pageId) ?? rows.find((row) => !row.hidden && !row.off) ?? rows[0];
+  const panel = current?.panel ? panels.find((candidate) => candidate.id === current.panel) : undefined;
+  const selected = (panel?.items.find((item) => item.widget === widgetId) ?? panel?.items[0])?.widget;
+
+  const change = (next: CustomPanel) => savePanels(updatePanel(panels, next.id, () => next));
+  const create = () => {
+    const id = newPanelId(Date.now(), Math.random());
+    savePanels(createPanel(panels, id, t.islandWidgets.panel.defaultName, "layout-grid"));
+    setPageId(panelPageId(id));
+  };
+  const remove = (id: string) => {
+    const page = panelPageId(id);
+    savePanels(removePanel(panels, id));
+    save({ order: layout.order.filter((other) => other !== page), hidden: layout.hidden.filter((other) => other !== page) });
+    setPageId(null);
+  };
+
+  return (
+    <>
+      {stage(<ExpandedPreview rows={rows} current={current} panel={panel} library={library} selected={selected} onPage={setPageId} onWidget={setWidgetId} />)}
+      <PageStrip rows={rows} layout={layout} save={save} current={current?.id} onPick={setPageId} onCreate={create} pluginsListed={pluginsListed} />
+      {panel ? (
+        <div className="panel-editing" key={panel.id}>
+          <PanelEditor panel={panel} library={library} selected={selected} onSelect={setWidgetId} onChange={change} onRemove={() => remove(panel.id)} />
+          <SizePicker panel={panel} library={library} selected={selected} onSelect={setWidgetId} onChange={change} />
+        </div>
+      ) : null}
+    </>
+  );
+}
