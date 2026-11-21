@@ -5,13 +5,21 @@ use std::{
 
 use super::{
     dock,
-    layout::{self, BarEdge, Rect, Want},
-    snapshot::{self, Bar},
+    layout::{self, BarEdge, Rect, Span, Want},
+    snapshot,
 };
 
 const REUSE: Duration = Duration::from_millis(400);
 
-static CACHE: Mutex<Option<(Instant, Vec<Bar>)>> = Mutex::new(None);
+#[derive(Clone)]
+struct Room {
+    bar: Rect,
+    free: Vec<Span>,
+    tray_start: Option<i32>,
+    gap: i32,
+}
+
+static CACHE: Mutex<Option<(Instant, Vec<Room>)>> = Mutex::new(None);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct DropSpot {
@@ -19,10 +27,21 @@ pub(crate) struct DropSpot {
     pub slot: Rect,
 }
 
-fn bars() -> Vec<Bar> {
+fn read_rooms() -> Vec<Room> {
+    snapshot::read()
+        .into_iter()
+        .filter(|bar| bar.edge == BarEdge::Bottom && !bar.hidden)
+        .map(|bar| {
+            let gap = dock::margin(bar.rect, bar.edge);
+            Room { bar: bar.rect, free: bar.free(gap), tray_start: bar.tray_start(), gap }
+        })
+        .collect()
+}
+
+fn rooms() -> Vec<Room> {
     let mut cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
     if cache.as_ref().is_none_or(|(at, _)| at.elapsed() > REUSE) {
-        *cache = Some((Instant::now(), snapshot::read()));
+        *cache = Some((Instant::now(), read_rooms()));
     }
     cache.as_ref().map(|(_, bars)| bars.clone()).unwrap_or_default()
 }
@@ -37,12 +56,11 @@ pub(crate) fn over_bar(bar: Rect, (x, y): (i32, i32)) -> bool {
 }
 
 pub(crate) fn drop_at(point: (i32, i32), size: i32) -> Option<DropSpot> {
-    let bars = bars();
-    let bar = bars.iter().find(|bar| bar.edge == BarEdge::Bottom && !bar.hidden && over_bar(bar.rect, point))?;
-    let gap = dock::margin(bar.rect, bar.edge);
+    let rooms = rooms();
+    let room = rooms.iter().find(|room| over_bar(room.bar, point))?;
     let want = Want { size: size.max(1), prefer: Some(point.0) };
-    let span = layout::arrange(&bar.free(gap), bar.tray_start(), &[want], gap).into_iter().next().flatten()?;
-    Some(DropSpot { bar: bar.rect, slot: layout::place(bar.rect, true, span) })
+    let span = layout::arrange(&room.free, room.tray_start, &[want], room.gap).into_iter().next().flatten()?;
+    Some(DropSpot { bar: room.bar, slot: layout::place(room.bar, true, span) })
 }
 
 #[cfg(test)]
