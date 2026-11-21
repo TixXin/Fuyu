@@ -1,6 +1,6 @@
 @property --island-shell-width {
   syntax: "<length>";
-  inherits: true;
+  inherits: false;
   initial-value: 0px;
 }
 
@@ -24,7 +24,31 @@
 
 @property --island-hover-grow-x {
   syntax: "<length>";
-  inherits: true;
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --island-hover-lift {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --island-shell-edge {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --island-shell-left {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --island-shell-right {
+  syntax: "<length>";
+  inherits: false;
   initial-value: 0px;
 }
 
@@ -132,6 +156,12 @@
 
 .island--detached.island--expanded {
   --island-shell-top-corner: var(--island-shell-radius);
+}
+
+.island__surface,
+.island__collapsed,
+.island__expanded {
+  --island-shell-left: inherit;
 }
 
 .island__collapsed,
