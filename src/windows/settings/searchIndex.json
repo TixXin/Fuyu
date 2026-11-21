@@ -2925,6 +2925,19 @@
       "page": "clipboard",
       "zh-CN": {
         "group": "粘贴与显示",
+        "title": "启动时预先准备剪贴板窗口",
+        "description": "开启后第一次打开剪贴板也是秒开，但窗口会一直留在后台，多占约 40 MB 内存。关闭时第一次打开会慢一点，收起 10 分钟没再用就释放。"
+      },
+      "en": {
+        "group": "Pasting and display",
+        "title": "Prepare the clipboard window at startup",
+        "description": "The clipboard opens instantly even the first time, but its window stays in the background and uses about 40 MB more memory. When off, the first open is a little slower, and the window is freed after 10 minutes unused."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "粘贴与显示",
         "title": "读取链接标题和图标",
         "description": "列表里的网址显示网站图标，宽版里再显示网页标题。会访问那个网址，默认关。"
       },

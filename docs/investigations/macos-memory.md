@@ -46,6 +46,8 @@
 2. `macos/apps.rs` 的每个函数、`macos/pasteboard.rs` 的三个读取（剪贴板每 400 ms 轮询一次）、`macos/dock_badges.rs` 的每一拍都包上 `objc2::rc::autoreleasepool`。
 3. `media_control/adapter_macos.rs`：perl 经 `/bin/sh` 启动，sh 把 perl 放到后台、关掉自己的 stdout、在 stdin 上 `read`。stdin 是岛的管道，岛不管怎么退出（正常退出、崩溃、被开发版重启杀掉），管道一断 sh 就杀掉 perl。停掉适配器时先关 stdin 再等 sh 退出，不再直接 kill（直接 kill sh 会留下 perl）。用一个被 SIGKILL 的父进程实测过 perl 跟着结束。
 
+4. 剪贴板窗口不再默认预热（用户定）：设置 → 剪贴板新开关「启动时预先准备剪贴板窗口」，Mac 默认关、Windows 默认开（保持原来接管 Win+V 的速度），存在 `clipboard-history.json` 设置的 `prewarmWindow`，没有这个字段时按平台取默认值。关着时第一次按快捷键才建窗口，收起后 10 分钟没再打开就销毁；开着时和原来一样启动 2 秒后建好、一直留着。设置里切换立即生效：打开就马上建，关掉就从现在起按 10 分钟释放。开发版实测启动后少了剪贴板那个 WebContent 进程（41–62 MB）。
+
 ## 修之后（开发版，刚启动、新代码）
 
 | 进程 | 修前（开发版） | 修后（开发版） |
@@ -57,7 +59,6 @@
 
 ## 还能做的
 
-- **剪贴板窗口在 Mac 上不预热**，第一次按快捷键时再建：省约 41 MB，代价是第一次打开慢几百毫秒。要先问用户取舍。
 - **开发版定期整页刷新**：`src/devReload.ts` 可以在热更新累计到一定次数、并且岛收起时整页刷新一次，把 HMR 攒下的几百 MB 放掉。只影响开发版。
 - **岛页面的 JS 堆**：正式版 120 MB 里有多少是我们的数据（消息、剪贴板列表、data URL 图片），要用 Safari 的 Web 检查器连正式构建做一次堆快照；资料里提到 `backdrop-filter` 和常驻的 `will-change` 会占屏幕大小的合成层，可以顺带核对液态玻璃和动画。
 - 插件宿主 `node` 45–80 MB，之前测过打包态 35 MB（[platforms.md](../architecture/platforms.md) 插件平台一行），这次偏高，可以单独看是哪个内置插件。

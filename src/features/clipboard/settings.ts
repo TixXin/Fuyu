@@ -73,6 +73,7 @@ export function normalizeClipboardSettings(
     captureHtml: settings.captureHtml !== false,
     ocr: settings.ocr !== false,
     hideFromCapture: settings.hideFromCapture === true,
+    ...(typeof settings.prewarmWindow === "boolean" ? { prewarmWindow: settings.prewarmWindow } : {}),
     linkPreview: settings.linkPreview === true,
     flattenTerminalCommands: settings.flattenTerminalCommands === true,
     localApiRead: settings.localApiRead === true,
