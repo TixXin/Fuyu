@@ -121,9 +121,11 @@ pub struct WindowSettings {
     prewarm_window: bool,
 }
 
+const PREWARM_BY_DEFAULT: bool = cfg!(windows);
+
 impl Default for WindowSettings {
     fn default() -> Self {
-        Self { prewarm_window: cfg!(windows) }
+        Self { prewarm_window: PREWARM_BY_DEFAULT }
     }
 }
 
