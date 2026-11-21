@@ -701,3 +701,15 @@ fn the_collapsed_height_stays_between_the_bar_and_its_ceiling() {
     assert_eq!(grown_collapsed_height(1000.0), MAX_GROWN_COLLAPSED_HEIGHT);
     assert_eq!(grown_collapsed_height(f64::NAN), COLLAPSED_ISLAND_HEIGHT);
 }
+
+#[test]
+fn resize_reach_grows_the_stage_until_it_is_cleared() {
+    let mut panel = IslandWindowState { mode: IslandMode::Expanded, expanded_width: 480.0, expanded_height: 240.0, expanded_scale: 1.0, ..IslandWindowState::default() };
+    let normal = (stage_width_for(panel), stage_height_for(panel));
+    panel.resize_reach = (1040.0, 560.0);
+    assert!(stage_width_for(panel) >= 1040.0, "the widest preset fits in the stage");
+    assert!(stage_height_for(panel) >= 560.0, "the tallest preset fits in the stage");
+    assert!(stage_geometry_inputs_changed(&IslandWindowState { resize_reach: (0.0, 0.0), ..panel }, &panel));
+    panel.resize_reach = (0.0, 0.0);
+    assert_eq!((stage_width_for(panel), stage_height_for(panel)), normal, "clearing the reach gives the stage back its own size");
+}

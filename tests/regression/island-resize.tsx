@@ -18,11 +18,11 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 Object.defineProperty(window.screen, "availWidth", { value: 1920 });
 Object.defineProperty(window.screen, "availHeight", { value: 1080 });
 const automated = new URLSearchParams(location.search).has("test");
-const started: { widthSign: number; height: boolean }[] = [];
+const started: { widthSign: number; height: boolean; reach: { width: number; height: number } | null }[] = [];
 mockIPC((command, args) => {
   if (command === "list_plugin_views") return { views: [], status: [] };
   if (command === "get_qq_mail_state") return [];
-  if (command === "start_island_resize") started.push(args as { widthSign: number; height: boolean });
+  if (command === "start_island_resize") started.push(args as (typeof started)[number]);
 }, { shouldMockEvents: true });
 
 let latest: IslandSettings = { ...DEFAULT_SETTINGS, panelWidth: 800, maxPanelHeight: 306, pageSizes: {}, collapsedWidthExtra: 0 };
@@ -99,7 +99,7 @@ async function runChecks() {
     await hover(edgeX, edgeY + 1);
     check(cursor() === "ew-resize", "亮了之后指针变成左右箭头，上面压着透明层也一样");
     await pressAt(edgeX, edgeY);
-    check(last()?.widthSign === 1 && last()?.height === false, "拖右边只改宽度");
+    check(last()?.widthSign === 1 && last()?.height === false && last()?.reach === null, "拖右边只改宽度，不临时放大窗口");
     await resize(84, 0, false);
     await until(() => size()?.width === 884);
     check(size()?.width === 884 && size()?.height === 306, "拖动按左右一起变算宽度");
@@ -131,6 +131,7 @@ async function runChecks() {
     const knob = q(".island-resize__knob--r")!;
     check(getComputedStyle(knob).pointerEvents === "auto", "鼠标到右下角时出现旋钮");
     await press(knob);
+    check(last()?.reach?.width === 1040 && last()?.reach?.height === 560, "拖旋钮时让窗口临时放大到能装下最大一档（宽大 1040 × 560）");
     await resize(-550, -310, false);
     await until(() => size()?.width === 480);
     check(size()?.width === 480 && size()?.height === 240 && badge().textContent?.includes("紧凑"), "旋钮靠近预设时整档吸到紧凑");

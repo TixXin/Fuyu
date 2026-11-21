@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     thread,
@@ -7,8 +7,8 @@ use std::{
 use tauri::{AppHandle, Emitter, WebviewWindow};
 
 use super::{
-    geometry::stage_width,
-    state::{read_window_state, Edge, IslandMode},
+    geometry::{apply_stage_geometry, stage_width},
+    state::{mutate_window_state, read_window_state, Edge, IslandMode},
 };
 
 const ISLAND_RESIZE_EVENT: &str = "island-resize";
@@ -23,6 +23,22 @@ struct ResizeDelta {
     height: f64,
     collapsed: bool,
     done: bool,
+}
+
+#[derive(Clone, Copy, Deserialize)]
+pub struct ResizeReach {
+    width: f64,
+    height: f64,
+}
+
+fn set_reach(window: &WebviewWindow, reach: (f64, f64)) {
+    let state = mutate_window_state(|state| {
+        state.resize_reach = reach;
+        *state
+    });
+    if let Err(error) = apply_stage_geometry(window, state, false) {
+        eprintln!("Failed to fit the island stage to the resize presets: {error}");
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -80,13 +96,17 @@ fn drag_for(window: &WebviewWindow, width_sign: i8, height: bool) -> Option<(Dra
 }
 
 #[tauri::command]
-pub fn start_island_resize(app: AppHandle, width_sign: i8, height: bool) -> Result<(), String> {
+pub fn start_island_resize(app: AppHandle, width_sign: i8, height: bool, reach: Option<ResizeReach>) -> Result<(), String> {
     let window = super::main_window(&app)?;
     let Some((drag, collapsed)) = drag_for(&window, width_sign, height) else {
         return Ok(());
     };
     if RESIZING.swap(true, Ordering::SeqCst) {
         return Ok(());
+    }
+    let reach = reach.filter(|reach| !collapsed && reach.width.is_finite() && reach.height.is_finite());
+    if let Some(reach) = reach {
+        set_reach(&window, (reach.width.max(0.0), reach.height.max(0.0)));
     }
     thread::spawn(move || {
         let mut last = (0.0, 0.0);
@@ -101,6 +121,9 @@ pub fn start_island_resize(app: AppHandle, width_sign: i8, height: bool) -> Resu
         }
         let (width, height) = now();
         let _ = window.emit(ISLAND_RESIZE_EVENT, ResizeDelta { width, height, collapsed, done: true });
+        if reach.is_some() {
+            set_reach(&window, (0.0, 0.0));
+        }
         RESIZING.store(false, Ordering::SeqCst);
     });
     Ok(())

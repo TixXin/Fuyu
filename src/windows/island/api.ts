@@ -96,8 +96,10 @@ const ISLAND_RESIZE_EVENT = "island-resize";
 
 export type IslandResizeDelta = { width: number; height: number; collapsed: boolean; done: boolean };
 
-export function startIslandResize(widthSign: -1 | 0 | 1, height: boolean): Promise<void> {
-  return invoke("start_island_resize", { widthSign, height });
+export type IslandResizeReach = { width: number; height: number };
+
+export function startIslandResize(widthSign: -1 | 0 | 1, height: boolean, reach?: IslandResizeReach): Promise<void> {
+  return invoke("start_island_resize", { widthSign, height, reach: reach ?? null });
 }
 
 export function listenIslandResize(handler: (delta: IslandResizeDelta) => void): Promise<UnlistenFn> {

@@ -68,7 +68,10 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
   const resetBar = () => model.applyCollapsed(0);
   const start = (next: ResizeSpec) => () => {
     beginResizeDrag(next);
-    void startIslandResize(next.widthSign, next.height).catch((error: unknown) => {
+    const reach = next.preset && expanded
+      ? { width: Math.max(...model.presets.map((preset) => preset.width)), height: Math.max(...model.presets.map((preset) => preset.height)) }
+      : undefined;
+    void startIslandResize(next.widthSign, next.height, reach).catch((error: unknown) => {
       console.error("Failed to start resizing the island", error);
       endResizeDrag();
     });
