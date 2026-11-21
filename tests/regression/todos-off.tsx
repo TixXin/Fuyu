@@ -65,7 +65,9 @@ try {
   if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     check(present(".todo-island"), "During the close transition, the expanded page stays mounted until the shell finishes closing");
   }
-  check(await until(() => !present(".todo-island"), 2000), "After the close transition finishes, the expanded page subtree unmounts again");
+  check(await until(() => present(".island--collapsed"), 2000), "Clicking collapse closes the island");
+  await settle(800);
+  check(present(".island--collapsed") && present(".todo-island"), "After the close transition finishes, the page stays mounted so the next open does not mount it mid-motion");
   await unmount();
 
   await switchOff(["todos"]);

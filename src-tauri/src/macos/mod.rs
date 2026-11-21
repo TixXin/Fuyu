@@ -47,3 +47,4 @@ pub(crate) mod system_stats;
 pub(crate) mod terminal_tabs;
 pub(crate) mod top_space;
 pub(crate) mod tray_panel;
+pub(crate) mod webview_frame_rate;
