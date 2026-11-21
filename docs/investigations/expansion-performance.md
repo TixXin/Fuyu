@@ -90,3 +90,22 @@
 本次只新增此排查文档，运行 `git diff --check`；按仓库约定不需要前端/Tauri 构建，也不更新桌面快捷方式。
 
 参考：[Chromium 动画性能指南](https://web.dev/articles/animations-guide)、[Microsoft WebView2 性能最佳实践](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/performance)。它们支持测量方法和渲染成本的一般判断；本项目的具体瓶颈依据上述本机采样。
+
+## 第二轮：macOS（WebKit）上的展开卡顿（2026-11-21，代码阅读）
+
+用户反馈 Mac 上面板展开仍卡。这一轮只读代码和用户的设置，没有逐帧测量。用户的设置：经典外观（不走液态玻璃和原生玻璃同步）、缩放 1、面板 800 × 360、开合动画「灵动」。
+
+已经排除的：原生窗口改尺寸。`4e34e46d2` 之后不在侧边的岛，舞台宽度一直按展开后的宽度留，高度 `stage_height_for` 也不随形态变，开合不再调 `set_size`。
+
+### 嫌疑（按可能性排）
+
+1. **展开那一刻才挂载页面**。收起时 `IslandPages` 返回 `null`；只有鼠标移上岛（`useCollapsedPrewarm`，保持 1.2 秒）才提前挂上。快捷键、点消息、Agent 提醒这类不经过悬停的打开，等一帧（`deferringOpen`）后才渲染整页，React 挂载、样式、布局和第一次绘制正好落在回弹的前几帧。同一时刻 `setPanelAwake(true)` 让所有 `panelInterval` 同步各跑一次回调。WebKit 里 `@property` 变量的过渡在主线程上逐帧插值，主线程只要卡一下外壳就停一下。在 `pnpm tauri dev` 里 React 是开发模式，挂载更慢，看到的卡比正式版重。
+2. **外壳每帧变形，整块面板跟着重绘**。外壳过渡宽、高、圆角，每帧都要重画外壳这块矩形。展开层淡入结束（「灵动」110ms）后不再有自己的合成层，和外壳画在同一块位图里，于是回弹剩下的约 350ms 里每帧把 800 × 360（Retina 上 1600 × 720 像素）的面板内容整体重画一遍。
+3. **「灵动」的内容模糊**。展开层从 `blur(10px)` 过渡到 `none`，与外壳起步的前 110ms 重叠。模糊的是整块面板，不在合成器上做时就是逐帧软件模糊。
+
+### 优化方向
+
+- **A. 动画期间给展开层单独的合成层**：开合过渡进行中给 `.island__expanded` 加 `will-change: opacity`（或等效的提升），`transitionend` 后去掉，符合 motion.md「不常驻 will-change」。外壳变形只重画外壳的底色，内容层只是被裁剪。内容层的位置已经取整到整设备像素（第四轮），不会回到合成层抖动。收益预计最大、改动最小。
+- **B. 别在动画里挂载和唤醒**：收起时保留最近一页的 DOM（暂停计时器，用 `content-visibility: hidden` 跳过绘制），或在开合动画结束后再 `setPanelAwake`、把各组件的立即刷新错开。代价是收起时多占一些内存，要和 macOS 内存排查（macos-memory.md）一起看。
+- **C. 「灵动」的模糊减半或只在合成层上做**：和 A 一起做时模糊交给合成器；仍卡就把 10px 降到 4–6px，或换成「生长」那种 92% 放大。
+- **D. 先量再改**：Safari 的 Web Inspector 连上开发版岛的 WebView，用 Timelines 录一次展开，看帧里是 Script、Layout 还是 Paint 占时间；或者在开发版里加一个只在 dev 生效的记录（每次开合的最大 rAF 间隔、长任务），比较冷打开、悬停后打开和连续打开。A–C 每一项都按这个前后对比。
