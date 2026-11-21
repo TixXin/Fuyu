@@ -1,103 +1,18 @@
-@property --island-motion-width {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-width-ease {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-height {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-height-ease {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-radius {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-radius-ease {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-ease {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-fade {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-fade-delay {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-collapsed-delay {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-bloom {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-layer {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-width-delay {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-height-delay {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-content-filter {
-  syntax: "*";
-  inherits: false;
-}
-
-@property --island-motion-content-scale {
-  syntax: "*";
-  inherits: false;
-}
-
-.island,
-.island::after,
-.island__surface,
-.island__surface > *,
-.island__glass::after,
-.island__glass > * {
-  --island-motion-width: inherit;
-  --island-motion-width-ease: inherit;
-  --island-motion-height: inherit;
-  --island-motion-height-ease: inherit;
-  --island-motion-radius: inherit;
-  --island-motion-radius-ease: inherit;
-  --island-motion-ease: inherit;
-  --island-motion-fade: inherit;
-  --island-motion-fade-delay: inherit;
-  --island-motion-collapsed-delay: inherit;
-  --island-motion-bloom: inherit;
-  --island-motion-layer: inherit;
-  --island-motion-width-delay: inherit;
-  --island-motion-height-delay: inherit;
-  --island-motion-content-filter: inherit;
-  --island-motion-content-scale: inherit;
+:is(.island__collapsed, .island__expanded, .island-side-column, .island__side-handle) > * {
+  --island-motion-width: initial;
+  --island-motion-width-ease: initial;
+  --island-motion-height: initial;
+  --island-motion-height-ease: initial;
+  --island-motion-radius: initial;
+  --island-motion-radius-ease: initial;
+  --island-motion-ease: initial;
+  --island-motion-fade: initial;
+  --island-motion-fade-delay: initial;
+  --island-motion-collapsed-delay: initial;
+  --island-motion-bloom: initial;
+  --island-motion-layer: initial;
+  --island-motion-width-delay: initial;
+  --island-motion-height-delay: initial;
+  --island-motion-content-filter: initial;
+  --island-motion-content-scale: initial;
 }

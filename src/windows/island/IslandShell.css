@@ -42,7 +42,7 @@
 
 @property --island-shell-left {
   syntax: "<length>";
-  inherits: false;
+  inherits: true;
   initial-value: 0px;
 }
 
@@ -158,10 +158,8 @@
   --island-shell-top-corner: var(--island-shell-radius);
 }
 
-.island__surface,
-.island__collapsed,
-.island__expanded {
-  --island-shell-left: inherit;
+:is(.island__collapsed, .island__expanded) > * {
+  --island-shell-left: initial;
 }
 
 .island__collapsed,
