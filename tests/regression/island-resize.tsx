@@ -169,7 +169,7 @@ async function runChecks() {
     }, 2000);
     const grown = islandBox();
     const capBox = q(".island-resize__cap--r")!.getBoundingClientRect();
-    check(grown.width - box.width > 17 && capBox.right <= box.right - 6 + 0.5, `悬停把岛撑宽时，小拉环留在没撑宽时的范围里，原生侧不会把它当成岛外`);
+    check(grown.width - box.width > 17 && capBox.right <= box.right - 6 + 0.5, `悬停把岛撑宽时，小拉环留在没撑宽时的范围里，原生侧不会把它当成岛外（box.right ${box.right}，box.width ${box.width}，grown.width ${grown.width}，capBox.right ${capBox.right}，capBox.width ${capBox.width}）`);
     await hover(capBox.left + 2, capBox.top + capBox.height / 2);
     await hover(capBox.left + 2, capBox.top + capBox.height / 2 + 1);
     check(root().classList.contains("is-near-cap-r") && cursor() === "ew-resize", "撑宽时鼠标到小拉环上，拉环出现、指针变成左右箭头");
