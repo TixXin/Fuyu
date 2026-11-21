@@ -160,7 +160,13 @@ async function runChecks() {
     check(!q(".island-resize__glow") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", "折叠岛的边亮起时只亮小拉环，不再并排多一条亮线");
     await hover(box.left + box.width / 2, box.top + 15);
     await hover(box.left + box.width / 2, box.top + 15);
-    await until(() => islandBox().width - box.width > 17, 2000);
+    let lastWidth = 0;
+    await until(() => {
+      const width = islandBox().width;
+      const settled = width - box.width > 17 && Math.abs(width - lastWidth) < 0.1;
+      lastWidth = width;
+      return settled;
+    }, 2000);
     const grown = islandBox();
     const capBox = q(".island-resize__cap--r")!.getBoundingClientRect();
     check(grown.width - box.width > 17 && capBox.right <= box.right - 6 + 0.5, `悬停把岛撑宽时，小拉环留在没撑宽时的范围里，原生侧不会把它当成岛外`);
