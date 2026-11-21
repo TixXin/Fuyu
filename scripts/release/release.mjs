@@ -38,6 +38,7 @@ const issueComments = !args.includes("--no-issue-comments");
 const smoke = !args.includes("--no-smoke-test");
 const withMac = upload && !args.includes("--no-mac");
 const local = args.includes("--local");
+const shareImage = !args.includes("--no-share-image");
 const usePrebuild = !args.includes("--no-prebuild");
 
 if (baseFlag >= 0 && (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:")) {
@@ -230,6 +231,13 @@ installLocally();
 updateBetaChannel(revision);
 verifyChannels();
 if (issueComments) await tellShippedIssues(revision);
+if (shareImage) renderShareImage();
+
+function renderShareImage() {
+  const out = join(mainCheckout(), "src-tauri", "target", "release-share", tag);
+  const result = run(process.execPath, [join("scripts", "release", "share-card.mjs"), version, "--out", out], { allowFailure: true });
+  if (result.status !== 0) console.error(`  Could not render the share image for ${tag}; run pnpm release:share ${version} by hand.`);
+}
 
 function installLocally() {
   try {
