@@ -7,7 +7,7 @@ use tauri::{AppHandle, Emitter, WebviewWindow};
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
-    modifier::{self, ModifierTarget},
+    resize,
     geometry::{
         cursor_near_island, cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect,
         hover_inside, passthrough_sleep_duration, should_ignore_cursor, stage_point, DimWakeTracker, IslandOnScreen,
@@ -16,11 +16,9 @@ use super::{
     ISLAND_DIM_WAKE_EVENT,
 };
 use super::screen;
-use crate::macos::input;
 
 const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
 const ISLAND_HOLD_CHANGED_EVENT: &str = "island-hold-changed";
-const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 const ISLAND_CURSOR_MOVED_EVENT: &str = "island-cursor-moved";
 const ISLAND_HIDE_HINTS_EVENT: &str = "island-hide-hints";
 const CURSOR_EVENT_EVERY_TICKS: u32 = 3;
@@ -105,7 +103,6 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut ignoring_cursor = false;
         let mut was_inside = false;
         let mut was_on_banner = false;
-        let mut was_move_armed = ModifierTarget::None;
         let mut was_held = false;
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
@@ -134,7 +131,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 });
                 let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
             }
-            let is_inside = hover_inside(state, raw_inside) || modifier::is_resizing();
+            let is_inside = hover_inside(state, raw_inside) || resize::is_resizing();
             let is_on_banner = pointer.is_some_and(on_banner);
             let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 
@@ -150,20 +147,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
-            let is_move_armed = if modifier::is_resizing() {
-                modifier::resize_target()
-            } else if !is_inside || state.is_tucked {
-                ModifierTarget::None
-            } else if input::is_left_button_down() {
-                was_move_armed
-            } else {
-                modifier::target(&window)
-            };
-            if is_move_armed != was_move_armed {
-                was_move_armed = is_move_armed;
-                let _ = window.emit(ISLAND_MOVE_ARMED_CHANGED_EVENT, is_move_armed);
-            }
-            let held = modifier::is_resizing();
+            let held = resize::is_resizing();
             if held != was_held {
                 was_held = held;
                 let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);

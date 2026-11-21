@@ -135,6 +135,7 @@ pub(crate) struct IslandWindowState {
     pub(super) notch: Option<super::notch::Notch>,
     pub(super) notch_drop: bool,
     pub(super) side_column_height: f64,
+    pub(super) resize_reach: (f64, f64),
 }
 
 impl IslandWindowState {
@@ -294,6 +295,7 @@ impl Default for IslandWindowState {
             notch: None,
             notch_drop: false,
             side_column_height: SIDE_COLUMN_MIN_HEIGHT,
+            resize_reach: (0.0, 0.0),
         }
     }
 }

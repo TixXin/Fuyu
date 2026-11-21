@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useHoverGrow } from "./useHoverGrow";
-import type { AppearanceMode, IslandHover, TuckStyle } from "../../lib/settings/types";
+import { useShellMotionGuard } from "./useShellMotionGuard";
+import type { AppearanceMode, IslandBounce, IslandHover, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
@@ -20,7 +21,6 @@ import "./IslandShell.css";
 import "./islandMotionVars.css";
 import { IslandGlassLayer } from "./IslandGlassLayer";
 import type { IslandGlassView } from "./useIslandGlass";
-import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
 import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
 import { useSidePluginRows } from "./useSidePluginRows";
@@ -45,13 +45,13 @@ export type IslandShellProps = {
   page: IslandPage;
   homePage?: IslandPage;
   popup?: boolean;
-  resizeLabel?: string | null;
   appearanceMode: AppearanceMode;
   nativeGlassState: NativeGlassState;
   glass?: IslandGlassView;
   isTucked: boolean;
   isDimmed?: boolean;
   hoverGrow?: IslandHover;
+  hoverBounce?: IslandBounce;
   tuckStyle?: TuckStyle;
   tuckHint?: TuckHintSettings;
   isDetached: boolean;
@@ -80,6 +80,7 @@ export type IslandShellProps = {
   hoverSwitchDelayMs: number;
   fuyuTabIcon?: boolean;
   overlay?: ReactNode;
+  resize?: ReactNode;
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
 };
@@ -145,13 +146,13 @@ export function IslandShell({
   page,
   homePage = page,
   popup = false,
-  resizeLabel = null,
   appearanceMode,
   nativeGlassState,
   glass,
   isTucked,
   isDimmed = false,
   hoverGrow = "near",
+  hoverBounce = "regular",
   tuckStyle = "edge",
   tuckHint,
   isDetached,
@@ -180,6 +181,7 @@ export function IslandShell({
   hoverSwitchDelayMs,
   fuyuTabIcon = false,
   overlay,
+  resize,
   collapsedSlots,
   children,
 }: IslandShellProps) {
@@ -207,7 +209,8 @@ export function IslandShell({
   const activeAlert = useActiveAlert();
   const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
   useEffect(() => setPanelAwake(isExpanded), [isExpanded]);
-  useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow);
+  useShellMotionGuard(shellRef, mode);
+  useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow, hoverBounce);
   const className = [
     "island",
     `island--${mode}`,
@@ -352,8 +355,8 @@ export function IslandShell({
             onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(homePage))}
           />
         )}
+        {part === undefined && resize}
         {part !== "panel" && <IslandDragHint />}
-        {part !== "bar" && <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />}
         {part !== "panel" && <IconButtonTooltip />}
       </section>
       {showTuckHint && <IslandTuckHint hint={tuckHint} side={side} />}

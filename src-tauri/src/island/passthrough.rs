@@ -8,7 +8,7 @@ use windows::Win32::Foundation::HWND;
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
-    modifier::{self, ModifierTarget},
+    resize,
     geometry::{
         cursor_near_island, cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect,
         hover_inside, passthrough_sleep_duration, should_ignore_cursor, stage_point, DimWakeTracker, IslandOnScreen,
@@ -19,8 +19,6 @@ use super::{
 use crate::win32;
 
 pub(crate) const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
-
-pub(crate) const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 
 pub(crate) const ISLAND_HOLD_CHANGED_EVENT: &str = "island-hold-changed";
 
@@ -45,7 +43,6 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut ignoring_cursor = false;
         let mut was_inside = false;
         let mut was_on_banner = false;
-        let mut was_move_armed = ModifierTarget::None;
         let mut was_held = false;
         let hwnd = window.hwnd().ok();
         let mut tick: u32 = 0;
@@ -66,7 +63,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 });
                 let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
             }
-            let is_inside = hover_inside(state, raw_inside) || modifier::is_resizing();
+            let is_inside = hover_inside(state, raw_inside) || resize::is_resizing();
             let is_on_banner = hwnd.is_some_and(cursor_is_on_banner);
             let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 
@@ -86,17 +83,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
-            let is_move_armed = match hwnd {
-                _ if modifier::is_resizing() => modifier::resize_target(),
-                Some(_) if is_inside && win32::input::is_left_button_down() => was_move_armed,
-                Some(_) if is_inside => modifier::target(&window),
-                _ => ModifierTarget::None,
-            };
-            if is_move_armed != was_move_armed {
-                was_move_armed = is_move_armed;
-                let _ = window.emit(ISLAND_MOVE_ARMED_CHANGED_EVENT, is_move_armed);
-            }
-            let held = modifier::is_resizing();
+            let held = resize::is_resizing();
             if held != was_held {
                 was_held = held;
                 let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);

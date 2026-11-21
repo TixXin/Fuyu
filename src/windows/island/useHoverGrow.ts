@@ -8,7 +8,7 @@ import {
 } from "../../lib/island-cursor/api";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import { advanceHoverSpring, hoverNearness, hoverSettled, islandHoverShape, type HoverSpring } from "../../lib/theme/islandHover";
-import type { IslandHover } from "../../lib/settings/types";
+import type { IslandBounce, IslandHover } from "../../lib/settings/types";
 
 const SETTLE_AFTER_CLOSE_MS = 700;
 
@@ -24,9 +24,9 @@ function islandScale(element: HTMLElement) {
   return Number.isFinite(scale) && scale > 0 ? scale : 1;
 }
 
-export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean, hover: IslandHover) {
+export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean, hover: IslandHover, bounce: IslandBounce = "regular") {
   const reducedMotion = useReducedMotion();
-  const shape = islandHoverShape(hover);
+  const shape = islandHoverShape(hover, bounce);
   const enabled = active && shape !== null && !reducedMotion;
   const wasEnabled = useRef<boolean | null>(null);
 
@@ -41,7 +41,7 @@ export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean
       element.style.setProperty("--island-hover-grow-y", `${(0).toFixed(3)}px`);
       return;
     }
-    const { growX, growY, range, response } = shape;
+    const { growX, growY, range, response, damping } = shape;
     const current = (name: string) => Number.parseFloat(element.style.getPropertyValue(name)) || 0;
     const amount: HoverSpring = { value: current("--island-hover-lift"), velocity: 0 };
     const holdUntil = reopened ? performance.now() + SETTLE_AFTER_CLOSE_MS : 0;
@@ -75,7 +75,7 @@ export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean
       const seconds = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60;
       last = now;
       const target = targetAmount();
-      advanceHoverSpring(amount, target, seconds, response);
+      advanceHoverSpring(amount, target, seconds, response, damping);
       write();
       if (hoverSettled(amount, target)) {
         amount.value = target;

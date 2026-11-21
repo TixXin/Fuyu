@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>发布说明分享图 · 三个方案</title>
+<style>
+  :root { --sans: -apple-system, "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Segoe UI", sans-serif; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: var(--sans); background: #e9ebef; color: #1d2433; padding: 32px 24px 80px; }
+  .bar { position: sticky; top: 0; z-index: 5; display: flex; gap: 12px; align-items: center; justify-content: center; padding: 12px; margin: -32px -24px 24px; background: rgba(233,235,239,.92); backdrop-filter: blur(8px); border-bottom: 1px solid #d6d9df; font-size: 14px; }
+  .bar button { border: 1px solid #c5cad3; background: #fff; border-radius: 8px; padding: 6px 14px; font: inherit; cursor: pointer; }
+  .bar button.on { background: #1d2433; color: #fff; border-color: #1d2433; }
+  .bar .hint { color: #6a7385; }
+  .row { display: flex; gap: 32px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .col h2 { font-size: 16px; font-weight: 600; }
+  .col p.note { font-size: 13px; color: #6a7385; max-width: 420px; text-align: center; line-height: 1.5; }
+  .frame { width: calc(1080px * var(--s)); overflow: hidden; border-radius: 10px; box-shadow: 0 10px 40px rgba(20,30,50,.18); }
+  .frame > .card { transform: scale(var(--s)); transform-origin: 0 0; }
+  .card { width: 1080px; position: relative; overflow: hidden; }
+  .chip { display: inline-block; font-size: 20px; font-weight: 600; padding: 3px 12px; border-radius: 999px; vertical-align: 4px; margin-left: 10px; letter-spacing: .02em; }
+
+  /* A 深海 */
+  .a { background: #03101F; color: #E8F4FF; padding: 88px 88px 72px; }
+  .a::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(900px 700px at 0% 100%, rgba(0,194,255,.35), transparent 70%),
+                radial-gradient(800px 700px at 100% 55%, rgba(45,91,255,.32), transparent 70%),
+                radial-gradient(700px 600px at 90% 0%, rgba(122,61,255,.38), transparent 70%),
+                radial-gradient(500px 400px at 0% 0%, rgba(0,255,200,.12), transparent 70%); }
+  .a > * { position: relative; }
+  .a .brand { display: flex; align-items: center; gap: 24px; }
+  .a .brand .icon { width: 112px; height: 112px; filter: drop-shadow(0 12px 30px rgba(0,120,255,.45)); }
+  .a .brand b { font-size: 44px; font-weight: 700; display: block; }
+  .a .brand span { font-size: 24px; color: #8FB4D9; letter-spacing: .12em; }
+  .a .ver { margin-top: 64px; font-size: 150px; font-weight: 800; line-height: 1; letter-spacing: -.03em;
+    background: linear-gradient(100deg, #DFF6FF 10%, #6CC4FF 55%, #9C7BFF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .a .meta { margin-top: 22px; display: flex; gap: 14px; align-items: center; font-size: 26px; color: #8FB4D9; }
+  .a .meta .chip { margin: 0; background: rgba(255,170,60,.16); color: #FFC46B; border: 1px solid rgba(255,196,107,.4); }
+  .a .sec { margin-top: 56px; }
+  .a .sec h3 { font-size: 22px; font-weight: 700; color: #6FD0FF; letter-spacing: .14em; text-transform: uppercase; display: flex; align-items: center; gap: 16px; }
+  .a .sec h3::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(111,208,255,.4), transparent); }
+  .a ul { list-style: none; padding: 0; margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 40px; }
+  .a li { font-size: 28px; line-height: 1.35; padding-left: 26px; position: relative; color: #E8F4FF; }
+  .a li::before { content: ""; position: absolute; left: 0; top: 15px; width: 10px; height: 10px; border-radius: 50%; background: #6CC4FF; box-shadow: 0 0 12px #6CC4FF; }
+  .a li .chip { font-size: 16px; padding: 1px 9px; background: rgba(255,255,255,.1); color: #BFD8EE; vertical-align: 3px; margin-left: 8px; }
+  .a .more { color: #8FB4D9; font-size: 24px; }
+  .a .foot { margin-top: 72px; padding-top: 32px; border-top: 1px solid rgba(255,255,255,.12); display: flex; justify-content: space-between; font-size: 24px; color: #8FB4D9; }
+  .a .foot b { color: #E8F4FF; font-weight: 600; }
+
+  /* B 纸面 */
+  .b { background: #F6F3EC; color: #15203A; padding: 80px 88px 72px; }
+  .b .top { display: flex; justify-content: space-between; align-items: center; }
+  .b .top .l { display: flex; align-items: center; gap: 18px; font-size: 32px; font-weight: 700; }
+  .b .top .l .icon { width: 72px; height: 72px; }
+  .b .top .r { font-size: 24px; color: #6E6A60; letter-spacing: .06em; }
+  .b .kicker { margin-top: 72px; font-size: 26px; letter-spacing: .3em; color: #2D5BFF; font-weight: 700; }
+  .b .ver { margin-top: 10px; font-family: "Songti SC", "Noto Serif SC", Georgia, serif; font-size: 168px; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+  .b .ver small { font-family: var(--sans); font-size: 40px; font-weight: 600; color: #B4541E; margin-left: 18px; letter-spacing: 0; }
+  .b .rule { margin-top: 40px; height: 6px; background: #15203A; }
+  .b .sec { margin-top: 44px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 32px; }
+  .b .sec h3 { font-size: 26px; font-weight: 700; line-height: 1.4; color: #15203A; }
+  .b .sec h3 span { display: block; font-size: 64px; font-family: "Songti SC", Georgia, serif; color: #2D5BFF; line-height: 1; margin-bottom: 8px; }
+  .b ol { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 16px; border-top: 1px solid #D5CFC2; padding-top: 18px; }
+  .b li { font-size: 27px; line-height: 1.4; }
+  .b li b { font-weight: 700; }
+  .b li .d { display: block; font-size: 21px; color: #6E6A60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .b li .chip { font-size: 16px; padding: 1px 9px; border: 1px solid #B4AC9C; color: #6E6A60; vertical-align: 4px; }
+  .b .more { font-size: 22px; color: #6E6A60; }
+  .b .foot { margin-top: 64px; padding-top: 28px; border-top: 6px solid #15203A; display: flex; justify-content: space-between; font-size: 23px; color: #6E6A60; }
+  .b .foot b { color: #15203A; }
+
+  /* C 岛屿 */
+  .c { background: linear-gradient(160deg, #E9E4FF 0%, #DCEBFF 45%, #D4F5F4 100%); color: #172033; padding: 72px 64px 64px; }
+  .c::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(600px 500px at 85% 8%, rgba(122,61,255,.22), transparent 70%), radial-gradient(700px 600px at 5% 95%, rgba(0,194,255,.22), transparent 70%); }
+  .c > * { position: relative; }
+  .c .island { margin: 0 auto; width: fit-content; display: flex; align-items: center; gap: 22px; background: #0A0C12; color: #fff; border-radius: 999px; padding: 18px 40px 18px 18px; box-shadow: 0 24px 60px rgba(10,12,30,.35), inset 0 0 0 1px rgba(255,255,255,.08); }
+  .c .island .icon { width: 84px; height: 84px; }
+  .c .island .t { font-size: 22px; color: #9AA6BF; }
+  .c .island .v { font-size: 46px; font-weight: 700; letter-spacing: -.01em; }
+  .c .island .v .chip { background: #FFB547; color: #2A1A00; font-size: 18px; }
+  .c .island .dot { width: 16px; height: 16px; border-radius: 50%; background: #39E08F; box-shadow: 0 0 14px #39E08F; margin-left: 18px; }
+  .c .sub { text-align: center; margin-top: 28px; font-size: 26px; color: #4A5672; }
+  .c .grid { margin-top: 48px; columns: 2; column-gap: 24px; }
+  .c .tile { break-inside: avoid; margin-bottom: 24px; background: rgba(255,255,255,.66); border: 1px solid rgba(255,255,255,.9); border-radius: 36px; padding: 32px 32px 28px; box-shadow: 0 10px 30px rgba(40,60,120,.08); }
+  .c .tile h3 { font-size: 22px; font-weight: 700; color: #5B4BD6; letter-spacing: .06em; margin-bottom: 16px; }
+  .c .tile ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .c .tile li { font-size: 26px; line-height: 1.35; font-weight: 600; }
+  .c .tile li .chip { font-size: 15px; padding: 1px 8px; background: #EEF0F6; color: #5A6480; vertical-align: 3px; margin-left: 6px; }
+  .c .tile.fix { margin-bottom: 0; } .c .fixrow { margin-bottom: 24px; } .c .fixrow .tile.fix { background: rgba(23,32,51,.86); color: #E7ECF7; border-color: transparent; }
+  .c .tile.fix h3 { color: #8FE3B8; }
+  .c .tile.fix li { font-weight: 400; font-size: 22px; color: #C8D1E3; }
+  .c .more { font-size: 22px; color: #6B7591; font-weight: 400; }
+  .c .foot { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 24px; color: #4A5672; padding: 0 12px; }
+  .c .foot b { color: #172033; }
+  /* D = A + C */
+  .a.d { padding: 80px 64px 64px; }
+  .d .island { margin: 0 auto; width: fit-content; display: flex; align-items: center; gap: 22px; background: #000; color: #fff; border-radius: 999px; padding: 18px 40px 18px 18px; box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 20px 60px rgba(0,120,255,.35), 0 0 120px rgba(108,196,255,.18); }
+  .d .island .icon { width: 84px; height: 84px; }
+  .d .island .t { font-size: 22px; color: #8FB4D9; }
+  .d .island .v { font-size: 46px; font-weight: 700; letter-spacing: -.01em; }
+  .d .island .v .chip { background: #FFB547; color: #2A1A00; font-size: 18px; }
+  .d .island .dot { width: 16px; height: 16px; border-radius: 50%; background: #39E08F; box-shadow: 0 0 14px #39E08F; margin-left: 18px; }
+  .d .island.big { gap: 34px; padding: 28px 76px 28px 52px; margin-top: 16px; }
+  .d .island.big .icon { width: 132px; height: 132px; }
+  .d .island.big .t { font-size: 28px; }
+  .d .island.big .v { font-size: 76px; line-height: 1.05; }
+  .d .island.big .v .chip { font-size: 24px; padding: 4px 14px; vertical-align: 12px; margin-left: 14px; }
+  .d .island.big .dot { width: 22px; height: 22px; margin-left: 28px; }
+  .d .sub { text-align: center; margin-top: 26px; font-size: 26px; color: #8FB4D9; }
+  .d .hero { padding: 0 24px; }
+  .d .hero .brand { display: flex; align-items: center; gap: 24px; }
+  .d .hero .brand .icon { width: 104px; height: 104px; filter: drop-shadow(0 12px 30px rgba(0,120,255,.45)); }
+  .d .hero .brand b { font-size: 42px; font-weight: 700; display: block; }
+  .d .hero .brand span { font-size: 23px; color: #8FB4D9; letter-spacing: .12em; }
+  .d .hero .ver { margin-top: 48px; font-size: 150px; font-weight: 800; line-height: 1; letter-spacing: -.03em; background: linear-gradient(100deg, #DFF6FF 10%, #6CC4FF 55%, #9C7BFF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .d .hero .meta { margin-top: 22px; display: flex; gap: 14px; align-items: center; font-size: 26px; color: #8FB4D9; }
+  .d .hero .meta .chip { margin: 0; background: rgba(255,170,60,.16); color: #FFC46B; border: 1px solid rgba(255,196,107,.4); }
+  .d .grid { margin-top: 52px; columns: 2; column-gap: 24px; }
+  .d .tile { break-inside: avoid; margin-bottom: 24px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 36px; padding: 32px 32px 28px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+  .d .tile h3 { font-size: 21px; font-weight: 700; color: #6FD0FF; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 16px; }
+  .d .tile ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .d .tile li { font-size: 26px; line-height: 1.35; font-weight: 600; color: #E8F4FF; }
+  .d .tile li .chip { font-size: 15px; padding: 1px 8px; background: rgba(255,255,255,.1); color: #BFD8EE; vertical-align: 3px; margin-left: 6px; }
+  .d .tile.fix { background: rgba(57,224,143,.07); border-color: rgba(127,240,192,.25); }
+  .d .tile.fix h3 { color: #7FF0C0; }
+  .d .tile.fix li { font-weight: 400; font-size: 22px; color: #BFD8EE; }
+  .d .more { font-size: 22px; color: #8FB4D9; font-weight: 400 !important; }
+  .d .foot { margin-top: 24px; padding: 32px 12px 0; border-top: 1px solid rgba(255,255,255,.12); display: flex; justify-content: space-between; font-size: 24px; color: #8FB4D9; }
+  .d .foot b { color: #E8F4FF; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <button data-lang="zh" class="on">中文</button><button data-lang="en">English</button>
+  <span class="hint">｜每节最多</span>
+  <button data-max="4">4 条</button><button data-max="6" class="on">6 条</button><button data-max="99">全部</button>
+  <span class="hint">｜图片宽 1080px，高度随内容；这里按 45% 缩小显示</span>
+</div>
+<div class="row" id="row"></div>
+<script>
+const DATA = {"version":"v0.3.12-beta.2","beta":true,"date":"2026-11-21","zh":[{"title":"Fuyu 组件页","items":[{"title":"展开就是 Fuyu 页","desc":"点岛、悬停展开、从贴边或侧边岛打开，都先落在 Fuyu 页；快捷键、消息、Agent 提醒这些指明了页面的照旧去对应的页。Fuyu 页上是一屏一屏的小组件，一屏放不下就翻页。","platform":null},{"title":"28 个小组件","desc":"今日、番茄钟、打卡、专注统计、习惯、喝水、便签、倒计时、世界时钟、日出日落、年进度、月历、秒表、未读、截图、翻译、系统状态、电池、网络、快速启动、音量亮度等。没摆过的会先放一套默认布局，关掉的功能对应的组件不会出现。","platform":null},{"title":"在岛上摆组件","desc":"点页头的布局按钮进入编辑，长按或直接拖动组件，其他组件实时让开；从底部组件栏拖进来就能添加。「网格」和「自己摆」两种模式，「自己摆」按点阵吸附、对齐旁边的组件，碰到会把它推开；随时可以恢复默认布局。","platform":null},{"title":"每页记住自己的大小","desc":"拖展开面板的边缘调大小，只改当前这一页；设置里的宽高滑块变成「没调过的页面的默认值」。岛和面板的最大宽高按屏幕算，不再卡在 800 × 640；Mac 上也能拖边缘调大小。","platform":null},{"title":"设置 → 岛屿布局","desc":"新页面，给展开页排序、隐藏页面，收起条的样式也挪到这里。","platform":null}],"fix":false},{"title":"截图与录屏","items":[{"title":"新标注工具","desc":"模糊、直线、聚光灯，都有单键快捷键；画好的标注能选中、移动、改颜色粗细、删除，双击文字可以再改。马赛克的单键改成 X，按住 M 照旧是测距离。","platform":null},{"title":"快捷键速查卡","desc":"截图时角落有一张能拖动的速查卡，按 ? 或 F1 收起展开；选好区域后工具栏多了「录屏」和「速查」两个按钮。","platform":null},{"title":"认二维码、按文字搜","desc":"选区里有二维码时能直接打开或复制；截图历史可以按图里的文字搜索（文字在本机识别）。","platform":null},{"title":"贴图更好用","desc":"贴图上能直接标注、识别文字、旋转、折叠和恢复。","platform":null},{"title":"截图送到别处","desc":"截图可以放进今天的笔记，或建成一条带图的待办；发给 Agent 时会带上备注和截图来自哪个窗口、哪个网页。","platform":null},{"title":"截图能吸附到控件","desc":"开了辅助功能权限时，除了整个窗口，也能吸附到按钮、输入框这些控件。","platform":"Mac"},{"title":"全屏游戏不再截成黑屏","desc":"。","platform":"Windows"},{"title":"能录屏了","desc":"区域录屏，能录系统声音和麦克风，也能录成 GIF，存到「影片」文件夹。","platform":"Mac"}],"fix":false},{"title":"岛屿","items":[{"title":"水母标志","desc":"应用图标、托盘 / 菜单栏图标、岛上的状态灯和设置 → 关于都换成了水母；不装中心图案插件时，状态灯也在岛的左边。","platform":null},{"title":"新的开合动画","desc":"默认改成「灵动」，另加「利落」「柔弹」「先横后竖」「生长」，在设置的「开合动画」里选；鼠标靠近时岛会平缓地变大一点。","platform":null},{"title":"页头","desc":"页签换成滑动的胶囊，点一下切换；右侧按钮挪到页签旁边，去掉了「隐藏」和「重置位置」。岛展开时按 Ctrl+,（Mac 上 ⌘,）打开设置，从页头打开设置后岛自动收起。","platform":null},{"title":"点空白处收起","desc":"点展开岛顶栏或内容的空白处就收起；连着快速点，每一下都会开或合。","platform":null},{"title":"默认圆角 24","desc":"收起时和 Mac 的刘海一样圆。","platform":null},{"title":"侧边岛","desc":"默认和面板一样高，歌词竖着显示，也显示插件放在收起条上的内容。","platform":null}],"fix":false},{"title":"其他","items":[{"title":"Apple Music 官方歌词","desc":"设置 → 音乐 → 歌词 新增「Apple Music 官方歌词」，用 Apple Music 播放时先查 Apple 自己的逐字歌词和翻译（需要 Apple Music 订阅，并填上令牌）。","platform":null},{"title":"消息卡片显示 Markdown","desc":"机器人和 Agent 发来的表格、粗体、链接、代码块按格式显示。","platform":null},{"title":"检查更新先问官网","desc":"先从浮屿官网检查更新，GitHub 留作后备，国内更快更稳。","platform":null},{"title":"应用名跟着界面语言","desc":"程序坞和菜单栏里的名字、菜单跟着浮屿的语言；设置窗口开着时有自己的程序坞图标。文本框以外的文字不能选中，输入框不再拼写检查和自动更正。","platform":"Mac"},{"title":"隐藏的窗口更省内存","desc":"翻译、剪贴板这些窗口收起后不再在后台刷新。","platform":"Windows"},{"title":"插件市场","desc":"新增「计算器」（1.1.0：表达式、汇率、单位换算、日期、个税、年龄等）和「图床上传」（把截图传到 S3 兼容的存储并复制链接）；切歌提示 1.3.0 在播放器位于前台时默认也会提示。","platform":null}],"fix":false},{"title":"修复","items":[{"title":"Apple Music 的歌手名后面不再带着专辑名，歌词也能匹配上了。","desc":"","platform":"Windows"},{"title":"切歌提示自己关掉时，消息页的来源图标不再闪一下。","desc":"","platform":null},{"title":"截图建的待办会带上图片。","desc":"","platform":null}],"fix":true}],"en":[{"title":"The Fuyu widget page","items":[{"title":"Opening lands on the Fuyu page","desc":"clicking the island, hover-to-open, the tucked edge and the side island all open on the Fuyu page; shortcuts, messages and agent alerts that name a page still go there. The Fuyu page holds widgets one screen at a time and pages when they don't fit.","platform":null},{"title":"28 widgets","desc":"today, pomodoro, streak, focus stats, habits, water, note, countdown, world clock, sunrise and sunset, year progress, month, stopwatch, unread, screenshot, translate, system status, battery, network, quick launch, volume and brightness, and more. Until you arrange it, the page starts with a default set, leaving out widgets for features you turned off.","platform":null},{"title":"Arrange widgets on the island","desc":"press the layout button in the header, then hold or just drag a widget and the others make room as you go; drag one in from the dock at the bottom to add it. Grid and free modes; free mode snaps to a dot grid, lines up with neighbours and pushes them aside. You can reset to the default layout at any time.","platform":null},{"title":"Every page keeps its own size","desc":"dragging the open panel's edge resizes only that page, and the width and height sliders in Settings become the default for pages you never sized. The island and panel can now grow as large as the screen allows instead of stopping at 800 × 640, and the edges work on Mac too.","platform":null},{"title":"Settings → Island layout","desc":"a new page to order and hide the expanded pages; the collapsed bar styles moved here.","platform":null}],"fix":false},{"title":"Screenshots and recording","items":[{"title":"New annotation tools","desc":"blur, line and spotlight, each with a single-key shortcut. Drawn marks can be selected, moved, restyled and deleted, and double-clicking text edits it again. Mosaic moved to X, so holding M measures as before.","platform":null},{"title":"Shortcut cheat sheet","desc":"a draggable card in a corner lists the keys that work right now; ? or F1 folds it. Once a region is chosen, the toolbar also has Record and Shortcuts buttons.","platform":null},{"title":"QR codes and text search","desc":"open or copy a QR code found in the selection, and search the screenshot history by the text in the pictures (read on your computer).","platform":null},{"title":"Better pins","desc":"annotate, read the text in, rotate, collapse and restore a pin.","platform":null},{"title":"Send shots onwards","desc":"put a screenshot into today's note or make a todo with it; shots sent to an agent carry your note and the window or web page they came from.","platform":null},{"title":"Snap to controls","desc":"with Accessibility permission, the selection snaps to buttons and fields as well as whole windows.","platform":"Mac"},{"title":"Fullscreen games no longer capture as a black screen.","desc":"","platform":"Windows"},{"title":"Screen recording","desc":"record an area with system sound and the microphone, as video or GIF, saved to Movies.","platform":"Mac"}],"fix":false},{"title":"The island","items":[{"title":"The jellyfish","desc":"the app icon, the tray / menu bar icon, the island's status light and Settings → About now show the jellyfish; without the centre pattern plugin the status light sits on the left.","platform":null},{"title":"New open and close motion","desc":"Lively is the new default, with Snappy, Soft spring, Unfold and Grow added; pick one under \"Open and close\" in Settings. The island grows a little, gently, as the pointer comes near.","platform":null},{"title":"Header","desc":"page tabs get a sliding pill and switch on click; the right-hand buttons moved next to the tabs, and Hide and Reset position are gone. Ctrl+, (⌘, on Mac) opens Settings while the island is open, and opening Settings from the header closes the island.","platform":null},{"title":"Click empty space to close","desc":"a click on an empty spot of the open island's top bar or content closes it, and every quick click opens or closes.","platform":null},{"title":"Corner radius 24 by default","desc":", so the collapsed bar matches the Mac notch.","platform":null},{"title":"Side island","desc":"as tall as the panel by default, with the lyric shown vertically and plugins' collapsed-bar items.","platform":null}],"fix":false},{"title":"Other","items":[{"title":"Apple Music lyrics","desc":"Settings → Music → Lyrics adds \"Apple Music lyrics\": while Apple Music plays, Fuyu asks Apple for its own word-by-word lyrics and translations first (needs an Apple Music subscription and a token).","platform":null},{"title":"Markdown in message cards","desc":"tables, bold text, links and code blocks from bots and agents keep their formatting.","platform":null},{"title":"Updates come from the official site first","desc":", with GitHub as the fallback, which is faster and steadier in mainland China.","platform":null},{"title":"The app name follows the language","desc":"the Dock and menu bar name and menus follow Fuyu's language, and the settings window has its own Dock icon. Text outside text fields can't be selected, and text fields no longer spell-check or auto-correct.","platform":"Mac"},{"title":"Hidden windows use less","desc":"translation, clipboard and similar windows stop refreshing in the background once hidden.","platform":"Windows"},{"title":"Plugin market","desc":"new Calculator (1.1.0: expressions, exchange rates, unit conversion, dates, income tax, age and more) and Image host (uploads screenshots to S3-compatible storage and copies the link) plugins; Track change notice 1.3.0 now notifies even when the player is in front by default.","platform":null}],"fix":false},{"title":"Fixes","items":[{"title":"Apple Music no longer shows the album after the artist, so lyrics match again.","desc":"","platform":"Windows"},{"title":"The messages page's source icons no longer flash when a track change notice closes on its own.","desc":"","platform":null},{"title":"Todos made from a screenshot keep the picture.","desc":"","platform":null}],"fix":true}]};
+const ICON = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1024\" height=\"1024\" viewBox=\"0 0 64 64\">\n  <title>浮屿 Fuyu</title>\n  <defs>\n    <clipPath id=\"fy-tile\"><rect x=\"1\" y=\"1\" width=\"62\" height=\"62\" rx=\"15\"/></clipPath>\n    <radialGradient id=\"fy-glow-1\" gradientUnits=\"userSpaceOnUse\" cx=\"10\" cy=\"58\" r=\"34\"><stop offset=\"0\" stop-color=\"#00C2FF\" stop-opacity=\".8\"/><stop offset=\"1\" stop-color=\"#00C2FF\" stop-opacity=\"0\"/></radialGradient>\n    <radialGradient id=\"fy-glow-2\" gradientUnits=\"userSpaceOnUse\" cx=\"52\" cy=\"40\" r=\"32\"><stop offset=\"0\" stop-color=\"#2D5BFF\" stop-opacity=\".75\"/><stop offset=\"1\" stop-color=\"#2D5BFF\" stop-opacity=\"0\"/></radialGradient>\n    <radialGradient id=\"fy-glow-3\" gradientUnits=\"userSpaceOnUse\" cx=\"50\" cy=\"2\" r=\"28\"><stop offset=\"0\" stop-color=\"#7A3DFF\" stop-opacity=\".6\"/><stop offset=\"1\" stop-color=\"#7A3DFF\" stop-opacity=\"0\"/></radialGradient>\n    <radialGradient id=\"fy-glow-4\" gradientUnits=\"userSpaceOnUse\" cx=\"2\" cy=\"8\" r=\"18\"><stop offset=\"0\" stop-color=\"#00FFC8\" stop-opacity=\".3\"/><stop offset=\"1\" stop-color=\"#00FFC8\" stop-opacity=\"0\"/></radialGradient>\n    <linearGradient id=\"fy-body\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"7\" x2=\"0\" y2=\"45\"><stop offset=\"0\" stop-color=\"#DFF6FF\"/><stop offset=\"1\" stop-color=\"#6CC4FF\"/></linearGradient>\n    <linearGradient id=\"fy-sheen\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#FFFFFF\" stop-opacity=\".16\"/><stop offset=\".45\" stop-color=\"#FFFFFF\" stop-opacity=\"0\"/></linearGradient>\n    <filter id=\"fy-halo\" x=\"-40%\" y=\"-40%\" width=\"180%\" height=\"180%\"><feGaussianBlur stdDeviation=\"4\"/></filter>\n  </defs>\n  <g clip-path=\"url(#fy-tile)\">\n    <rect width=\"64\" height=\"64\" fill=\"#03101F\"/>\n    <rect width=\"64\" height=\"64\" fill=\"url(#fy-glow-1)\"/>\n    <rect width=\"64\" height=\"64\" fill=\"url(#fy-glow-2)\"/>\n    <rect width=\"64\" height=\"64\" fill=\"url(#fy-glow-3)\"/>\n    <rect width=\"64\" height=\"64\" fill=\"url(#fy-glow-4)\"/>\n    <g transform=\"translate(4.5 9.4) scale(.86)\">\n      <path d=\"M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H51.88A6.6 6.6 0 0 1 41.35 43.68A6.6 6.6 0 0 1 32 43.63A6.6 6.6 0 0 1 22.65 43.68A6.6 6.6 0 0 1 12.12 36H10.4C7.4 36 5 33.5 5 30.5Z\" fill=\"#6FD0FF\" opacity=\".75\" filter=\"url(#fy-halo)\"/>\n      <path d=\"M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H51.88A6.6 6.6 0 0 1 41.35 43.68A6.6 6.6 0 0 1 32 43.63A6.6 6.6 0 0 1 22.65 43.68A6.6 6.6 0 0 1 12.12 36H10.4C7.4 36 5 33.5 5 30.5Z\" fill=\"url(#fy-body)\"/>\n      <ellipse cx=\"20\" cy=\"14\" rx=\"7.5\" ry=\"3.4\" transform=\"rotate(-26 20 14)\" fill=\"#FFFFFF\" opacity=\".7\"/>\n      <circle cx=\"29\" cy=\"10.2\" r=\"1.5\" fill=\"#FFFFFF\" opacity=\".8\"/>\n      <ellipse cx=\"17.6\" cy=\"31.5\" rx=\"3.6\" ry=\"2.2\" fill=\"#FF7FA5\" opacity=\".8\"/>\n      <ellipse cx=\"46.4\" cy=\"31.5\" rx=\"3.6\" ry=\"2.2\" fill=\"#FF7FA5\" opacity=\".8\"/>\n      <ellipse cx=\"24\" cy=\"25\" rx=\"2.8\" ry=\"4\" fill=\"#0E2340\"/>\n      <ellipse cx=\"40\" cy=\"25\" rx=\"2.8\" ry=\"4\" fill=\"#0E2340\"/>\n      <circle cx=\"25\" cy=\"23.3\" r=\".95\" fill=\"#FFFFFF\"/>\n      <circle cx=\"41\" cy=\"23.3\" r=\".95\" fill=\"#FFFFFF\"/>\n    </g>\n    <rect width=\"64\" height=\"64\" fill=\"url(#fy-sheen)\"/>\n  </g>\n  <rect x=\"1.4\" y=\"1.4\" width=\"61.2\" height=\"61.2\" rx=\"14.6\" fill=\"none\" stroke=\"#FFFFFF\" stroke-opacity=\".16\" stroke-width=\".8\"/>\n</svg>\n";
+const S = 0.45;
+const T = {
+  zh: { name: "浮屿", tag: "更新说明", beta: "测试版", stable: "正式版", update: "在 设置 → 关于 里更新", more: (n) => `还有 ${n} 项`, fixes: (n) => `修好了 ${n} 个问题`, island: "浮屿已更新", kicker: "WHAT'S NEW", sec: "更新" },
+  en: { name: "Fuyu", tag: "Release notes", beta: "Beta", stable: "Stable", update: "Update from Settings → About", more: (n) => `+${n} more`, fixes: (n) => `${n} fixes`, island: "Fuyu updated", kicker: "WHAT'S NEW", sec: "New" },
+};
+let lang = "zh", max = 6;
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const icon = () => `<span class="icon">${ICON.replace("<svg ", '<svg width="100%" height="100%" ')}</span>`;
+const plat = (it) => (it.platform ? `<span class="chip">${it.platform}</span>` : "");
+const ver = DATA.version.replace(/^v/, "");
+const [base, pre] = ver.split("-");
+const t = () => T[lang];
+const secs = () => DATA[lang].map((s, i) => ({ ...s, title: s.title || t().sec, n: i + 1 }));
+const items = (s) => (s.fix ? [] : s.items.slice(0, max));
+const rest = (s) => (s.fix ? 0 : Math.max(0, s.items.length - max));
+const foot = (cls) => `<div class="foot"><span><b>fuyu.ing</b> · github.com/TixXin/fuyu</span><span>${t().update}</span></div>`;
+
+function cardA() {
+  const body = secs().map((s) => `<div class="sec"><h3>${esc(s.title)}</h3>${s.fix ? `<ul><li>${t().fixes(s.items.length)}</li></ul>` : `<ul>${items(s).map((it) => `<li>${esc(it.title)}${plat(it)}</li>`).join("")}${rest(s) ? `<li class="more">${t().more(rest(s))}</li>` : ""}</ul>`}</div>`).join("");
+  return `<div class="card a"><div class="brand">${icon()}<div><b>${t().name}</b><span>${t().tag.toUpperCase()}</span></div></div>
+    <div class="ver">${base}</div>
+    <div class="meta">${pre ? `<span class="chip">${t().beta} · ${pre}</span>` : `<span class="chip" style="color:#7FF0C0;background:rgba(60,220,150,.14);border-color:rgba(127,240,192,.4)">${t().stable}</span>`}<span>${DATA.date}</span></div>
+    ${body}${foot()}</div>`;
+}
+function cardB() {
+  const body = secs().map((s) => `<div class="sec"><h3><span>${String(s.n).padStart(2, "0")}</span>${esc(s.title)}</h3><ol>${s.fix ? `<li><b>${t().fixes(s.items.length)}</b><span class="d">${esc(s.items[0]?.title || "")}</span></li>` : items(s).map((it) => `<li><b>${esc(it.title)}</b>${plat(it)}<span class="d">${esc(it.desc)}</span></li>`).join("")}${rest(s) ? `<li class="more">${t().more(rest(s))}</li>` : ""}</ol></div>`).join("");
+  return `<div class="card b"><div class="top"><div class="l">${icon()}${t().name} Fuyu</div><div class="r">${DATA.date}</div></div>
+    <div class="kicker">${t().kicker}</div>
+    <div class="ver">v${base}${pre ? `<small>${pre}</small>` : ""}</div><div class="rule"></div>
+    ${body}${foot()}</div>`;
+}
+function cardC() {
+  const all = secs(); const fixT = all.filter((s) => s.fix); const tiles = all.filter((s) => !s.fix).map((s) => s.fix
+    ? `<div class="tile fix"><h3>${esc(s.title)} · ${s.items.length}</h3><ul>${s.items.slice(0, max).map((it) => `<li>${esc(it.title)}</li>`).join("")}${rest({ items: s.items }) ? `<li class="more">${t().more(s.items.length - max)}</li>` : ""}</ul></div>`
+    : `<div class="tile"><h3>${esc(s.title)}</h3><ul>${items(s).map((it) => `<li>${esc(it.title)}${plat(it)}</li>`).join("")}${rest(s) ? `<li class="more">${t().more(rest(s))}</li>` : ""}</ul></div>`).join("");
+  return `<div class="card c"><div class="island">${icon()}<div><div class="t">${t().island}</div><div class="v">v${base}${pre ? `<span class="chip">${pre}</span>` : ""}</div></div><span class="dot"></span></div>
+    <div class="sub">${DATA.date} · ${t().tag}</div>
+    <div class="grid">${tiles}</div>${fixT.length ? `<div class="fixrow">${fixT.map((s) => `<div class="tile fix"><h3>${esc(s.title)} · ${s.items.length}</h3><ul>${s.items.slice(0, max).map((it) => `<li>${esc(it.title)}</li>`).join("")}${s.items.length > max ? `<li class="more">${t().more(s.items.length - max)}</li>` : ""}</ul></div>`).join("")}</div>` : ""}${foot()}</div>`;
+}
+function dTiles() {
+  const all = secs();
+  const tile = (s) => `<div class="tile${s.fix ? " fix" : ""}"><h3>${esc(s.title)}${s.fix ? ` · ${s.items.length}` : ""}</h3><ul>${s.items.slice(0, max).map((it) => `<li>${esc(it.title)}${s.fix ? "" : plat(it)}</li>`).join("")}${s.items.length > max ? `<li class="more">${t().more(s.items.length - max)}</li>` : ""}</ul></div>`;
+  return `<div class="grid">${all.filter((s) => !s.fix).map(tile).join("")}</div>${all.filter((s) => s.fix).map(tile).join("")}`;
+}
+function cardD1() {
+  return `<div class="card a d"><div class="island big">${icon()}<div><div class="t">${t().island}</div><div class="v">v${base}${pre ? `<span class="chip">${pre}</span>` : ""}</div></div><span class="dot"></span></div>
+    <div class="sub">${DATA.date} · ${t().tag}</div>${dTiles()}${foot()}</div>`;
+}
+function cardD2() {
+  return `<div class="card a d"><div class="hero"><div class="brand">${icon()}<div><b>${t().name}</b><span>${t().tag.toUpperCase()}</span></div></div>
+    <div class="ver">${base}</div>
+    <div class="meta">${pre ? `<span class="chip">${t().beta} · ${pre}</span>` : `<span class="chip" style="color:#7FF0C0;background:rgba(60,220,150,.14);border-color:rgba(127,240,192,.4)">${t().stable}</span>`}<span>${DATA.date}</span></div></div>
+    ${dTiles()}${foot()}</div>`;
+}
+const VARIANTS = [
+  ["A+C ①  岛在上", "深海底色 + 顶上的黑色岛写版本号，下面是半透明的深色卡片分组，修复一张绿色卡铺满一行。", cardD1],
+  ["A+C ②  大版本号在上", "保留 A 的图标和渐变大版本号，下面换成 C 的卡片分组。版本号更醒目。", cardD2],
+  ["A · 深海（原）", "对照用。", cardA],
+  ["C · 岛屿（原）", "对照用。", cardC],
+];
+function render() {
+  document.getElementById("row").innerHTML = VARIANTS.map(([name, note, fn]) => `<div class="col"><h2>${name}</h2><div class="frame" style="--s:${S}">${fn()}</div><p class="note">${note}</p></div>`).join("");
+  for (const f of document.querySelectorAll(".frame")) f.style.height = `${f.firstElementChild.offsetHeight * S}px`;
+}
+document.querySelectorAll("[data-lang]").forEach((b) => b.onclick = () => { lang = b.dataset.lang; document.querySelectorAll("[data-lang]").forEach((x) => x.classList.toggle("on", x === b)); render(); });
+document.querySelectorAll("[data-max]").forEach((b) => b.onclick = () => { max = +b.dataset.max; document.querySelectorAll("[data-max]").forEach((x) => x.classList.toggle("on", x === b)); render(); });
+render();
+</script>
+</body>
+</html>

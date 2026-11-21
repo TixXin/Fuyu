@@ -49,7 +49,6 @@ const KNOWN_EVENTS: &[&str] = &[
     "island-hide-hints",
     "island-hold-changed",
     "island-hover-changed",
-    "island-move-armed-changed",
     "island-notch-changed",
     "island-outside-click",
     "island-position-changed",

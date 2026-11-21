@@ -80,7 +80,7 @@ pub(super) fn stage_width_for(state: IslandWindowState) -> f64 {
     let need = |width: f64, scale: f64| ((width + 2.0 * MAX_TOP_FILLET_RADIUS) * scale + 4.0).ceil();
     let mut needed = need(width, state.active_scale());
     if state.side().is_none() {
-        needed = needed.max(need(state.expanded_width, state.expanded_scale));
+        needed = needed.max(need(state.expanded_width.max(state.resize_reach.0), state.expanded_scale));
     }
     if needed.is_finite() {
         STAGE_WINDOW_WIDTH.max(needed)
@@ -270,7 +270,7 @@ pub(super) fn stage_height_for(state: IslandWindowState) -> f64 {
         0.0
     };
     STAGE_WINDOW_HEIGHT
-        .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y)
+        .max((state.expanded_height.max(state.resize_reach.1) * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y)
         .max(side_column)
         + super::taskbar::panel_room(state)
 }

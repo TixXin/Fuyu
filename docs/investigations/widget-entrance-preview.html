@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuyu 页小组件的加载动效：方案预览</title>
+<style>
+  @property --r { syntax: '<length>'; inherits: false; initial-value: 0px; }
+  :root {
+    --bg: #1b1d22; --card: #26292f; --line: rgba(255,255,255,.08);
+    --text: #f2f0ea; --muted: rgba(242,240,234,.6); --accent: #7fc8ff; --warm: #ffb36b; --green: #7be0a0; --bad: #ff9a8f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 60px; background: var(--bg); color: var(--text);
+    font: 14px/1.55 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  main { max-width: 1060px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 21px; }
+  h2 { margin: 34px 0 10px; font-size: 16px; }
+  p, li { color: var(--muted); }
+  b, strong { color: var(--text); }
+  code { background: rgba(255,255,255,.07); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; color: var(--text); }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 12px 0; }
+  .bar .group { display: inline-flex; gap: 4px; align-items: center; }
+  .bar .label { color: var(--muted); margin-right: 4px; }
+  button { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+    padding: 4px 10px; font: inherit; cursor: pointer; }
+  button.on { border-color: var(--accent); color: var(--accent); }
+  button:hover { border-color: rgba(255,255,255,.25); }
+  label.chk { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; color: var(--muted); }
+
+  .stage-wrap { width: 100%; overflow: hidden; border-radius: 14px; border: 1px solid var(--line); }
+  .stage { position: relative; width: 880px; height: 372px; transform-origin: 0 0; overflow: hidden;
+    background: radial-gradient(120% 90% at 30% 0%, #4a505a 0%, #2f343b 55%, #1d2025 100%); user-select: none; }
+  .panel { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 800px; height: 325px;
+    background: #000; border-radius: 0 0 30px 30px; overflow: hidden; box-shadow: 0 14px 40px rgba(0,0,0,.45); }
+  .panel.closed { width: 200px; height: 32px; border-radius: 0 0 16px 16px; }
+  .mini { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+    opacity: 0; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.8); }
+  .mini i { width: 7px; height: 7px; border-radius: 50%; background: #5eead4; }
+  .panel.closed .mini { opacity: 1; }
+  .content { position: absolute; top: 0; left: 50%; margin-left: -400px; width: 800px; height: 325px; }
+  .panel.closed .content { opacity: 0; }
+  .tabs { position: absolute; left: 20px; right: 20px; top: 7px; height: 26px; display: flex; align-items: center; gap: 19px;
+    color: rgba(241,240,246,.92); }
+  .tabs .pill { height: 26px; padding: 0 12px; border-radius: 13px; background: rgba(255,255,255,.14);
+    font-size: 13px; font-weight: 700; display: grid; place-items: center; margin-right: -6px; }
+  .tabs svg { width: 16px; height: 16px; flex: none; }
+  .tabs .sp { flex: 1; }
+  .ic { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .grid { position: absolute; left: 20px; top: 54px; display: grid; grid-template-columns: 247px repeat(4, 120px);
+    grid-template-rows: 120px 120px; gap: 8px; }
+  .grid.persp { perspective: 900px; }
+  .grid.persp .w { transform-origin: 50% 0; }
+  .grid.curtain { -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 60%, transparent 66.67%); mask-image: linear-gradient(to bottom, #000 0, #000 60%, transparent 66.67%);
+    -webkit-mask-size: 100% 300%; mask-size: 100% 300%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+  .w { position: relative; min-width: 0; --ac: #fff; }
+  .w.big { grid-row: span 2; }
+  .w .bg { position: absolute; inset: 0; border-radius: 18px; background: #151518; border: 1px solid rgba(255,255,255,.085); }
+  .grid.top .w .bg { transform-origin: 50% 0; }
+  .w .body { position: absolute; inset: 0; padding: 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden;
+    border-radius: 18px; font-size: 12.5px; color: rgba(241,240,246,.95); font-variant-numeric: tabular-nums; }
+  .w .trace { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow: visible; filter: drop-shadow(0 0 4px var(--ac)); }
+  .w .trace rect { fill: none; stroke: var(--ac); stroke-width: 1.5; stroke-linecap: round; }
+  .w .rim { position: absolute; inset: 0; border-radius: 18px; padding: 1.5px; opacity: 0; pointer-events: none;
+    background: radial-gradient(circle at var(--ox) var(--oy), transparent calc(var(--r) - 120px), rgba(255,255,255,.95) calc(var(--r) - 6px), transparent var(--r));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .w .sk { position: absolute; inset: 0; padding: 13px 12px; opacity: 0; border-radius: 18px; overflow: hidden; pointer-events: none;
+    display: flex; flex-direction: column; gap: 9px; }
+  .w .sk i { display: block; height: 9px; border-radius: 5px; background: rgba(255,255,255,.09); }
+  .w .sk i.b { height: 30px; border-radius: 8px; margin-top: auto; }
+  .w.big .sk i.b { height: 44px; margin-top: 0; }
+  .w .sk b { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 0, rgba(255,255,255,.17) 50%, transparent 100%) no-repeat; background-size: 220px 100%; background-position-x: -400px; }
+
+  .head { display: flex; align-items: center; gap: 5px; color: rgba(241,240,246,.48); font-size: 11.5px; flex: none; }
+  .head svg { width: 13px; height: 13px; flex: none; }
+  .head .r { margin-left: auto; font-weight: 600; }
+  .grow { flex: 1; min-height: 0; }
+  .mut { color: rgba(241,240,246,.48); }
+  .sm { font-size: 11px; }
+  .big-n { font-weight: 700; letter-spacing: -.5px; line-height: 1.05; font-size: 30px; }
+  .big-n .unit { margin-left: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0; }
+  [data-count] { display: inline-block; text-align: right; }
+  .date { color: #f0a04b; font-size: 12px; font-weight: 600; }
+  .clock { margin-top: 0; font-size: 44px; font-weight: 700; letter-spacing: -.5px; line-height: 1.05; }
+  .foot { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+  .jelly { width: 52px; height: 38px; flex: none; transform-origin: 50% 100%; }
+  .greet { font-size: 13px; font-weight: 600; }
+  .rings { display: flex; justify-content: space-around; align-items: center; flex: 1; }
+  .ring { position: relative; display: grid; justify-items: center; gap: 3px; color: rgba(241,240,246,.48); font-size: 11px; }
+  .ring svg { width: 40px; height: 40px; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 4.5; }
+  .ring .rt { stroke: rgba(255,255,255,.12); }
+  .ring .rv { stroke-linecap: round; }
+  .ring em { position: absolute; top: 0; left: 0; right: 0; height: 40px; display: grid; place-items: center; font-style: normal;
+    font-size: 11.5px; font-weight: 700; color: rgba(241,240,246,.95); }
+  .pomo { position: relative; flex: 1; display: grid; place-items: center; }
+  .pomo svg { width: 88px; height: 88px; transform: rotate(-90deg); }
+  .pomo circle { fill: none; stroke-width: 7; stroke: rgba(224,138,60,.42); stroke-linecap: round; }
+  .pomo .pc { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 4px; }
+  .pomo .pt { font-size: 18px; font-weight: 700; }
+  .pbtn { width: 20px; height: 20px; border-radius: 50%; background: rgba(224,138,60,.9); display: grid; place-items: center; }
+  .pbtn svg { width: 9px; height: 9px; transform: none; fill: #2a1708; }
+  .dots { display: flex; gap: 3.2px; }
+  .dots i { width: 5px; height: 8px; border-radius: 2.5px; background: rgba(241,240,246,.92); }
+  .dots i.now { background: #f5c84b; }
+  .dots i.off { opacity: .22; }
+  .hbar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+  .hbar i { display: block; width: 60%; height: 100%; border-radius: 3px; background: #34c759; transform-origin: 0 50%; }
+  .net { font-size: 13px; font-weight: 700; }
+  .net span { font-weight: 600; margin-right: 2px; }
+  .spark { width: 96px; height: 18px; margin-top: auto; }
+  .spark path { fill: none; stroke: #5eead4; stroke-width: 1.5; stroke-linecap: round; }
+  .heat { display: grid; grid-template-columns: repeat(7, 9.5px); gap: 4px; margin-top: 4px; }
+  .heat i { width: 9.5px; height: 9.5px; border-radius: 2.5px; background: rgba(255,255,255,.12); }
+  .heat i.today { background: transparent; box-shadow: inset 0 0 0 2px #34c759; }
+  .water { flex: 1; display: flex; align-items: center; gap: 12px; }
+  .cup { width: 32px; height: 48px; }
+  .cup path { fill: none; stroke: #3d8fbd; stroke-width: 1.8; stroke-linejoin: round; }
+  .plus { width: 22px; height: 22px; border-radius: 50%; background: rgba(74,168,216,.3); color: #6cc4f0; display: grid; place-items: center; }
+  .plus svg { width: 12px; height: 12px; }
+
+  .now-line { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; margin: 12px 0 2px; }
+  .now-line b { font-size: 16px; }
+  .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); gap: 10px; margin-top: 12px; }
+  .opt { text-align: left; padding: 10px 12px; border-radius: 12px; display: grid; gap: 5px; align-content: start; }
+  .opt .n { font-weight: 700; font-size: 14.5px; display: flex; gap: 8px; align-items: baseline; }
+  .opt .n small { font-weight: 500; color: var(--muted); font-size: 12px; }
+  .opt .d { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+  .opt.on { background: rgba(127,200,255,.08); }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { font-size: 11px; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--line); color: var(--muted); }
+  .tag.ok { color: var(--green); border-color: rgba(123,224,160,.3); }
+  .tag.warn { color: var(--warm); border-color: rgba(255,179,107,.3); }
+  .tag.bad { color: var(--bad); border-color: rgba(255,154,143,.3); }
+  .tag.pick { color: var(--accent); border-color: rgba(127,200,255,.4); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; color: var(--muted); }
+  th { color: var(--text); font-weight: 600; white-space: nowrap; }
+  td:first-child { color: var(--text); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Fuyu 页小组件的加载动效：方案预览</h1>
+  <p>面板展开时，Fuyu 页的九张小组件现在是跟着内容层一起淡入。这里把「卡片怎么出现」做了 12 种方案，再加一层可以和任何方案叠加的「数据活过来」（圆环扫出来、数字跳到位、进度条灌满、打卡格子一波波亮起）。面板本身用的是刚换好的「弹开」弹簧（宽 530ms，高晚 30ms）。点下面的方案就会重播；<code>←</code> <code>→</code> 切换，空格重播。</p>
+
+  <div class="stage-wrap" id="wrap"><div class="stage" id="stage">
+    <div class="panel closed" id="panel">
+      <div class="mini"><i></i><span>09:43</span></div>
+      <div class="content" id="content">
+        <div class="tabs" id="tabs"></div>
+        <div class="grid" id="grid"></div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="bar">
+    <span class="group"><button id="play">重播</button><button id="shut">收起</button></span>
+    <span class="group"><span class="label">速度</span><button data-speed="1" class="on">1×</button><button data-speed="0.5">0.5×</button><button data-speed="0.2">0.2×</button></span>
+    <label class="chk"><input type="checkbox" id="data" checked> 数据活过来</label>
+    <label class="chk"><input type="checkbox" id="loop" checked> 循环播放</label>
+    <label class="chk"><input type="checkbox" id="tour"> 每轮换下一个方案</label>
+  </div>
+  <div class="now-line"><b id="nowName"></b><span id="nowTags" class="tags"></span><span class="mut" id="nowTime"></span></div>
+  <p id="nowDesc" style="margin:4px 0 0"></p>
+
+  <h2>方案</h2>
+  <div class="opts" id="opts"></div>
+
+  <h2>我的看法</h2>
+  <ul>
+    <li><b>首选「跟着面板撑开」+ 数据活过来。</b>卡片和面板是同一根弹簧、同一个动作，不多花一毫秒，也不排队；文字只淡入不挪位置。数据那一层给了「加载出来了」的感觉，又只动没有文字的图形（数字是原地换字，不挪位置）。</li>
+    <li><b>想要更明显的「加载」感：「幕布」或「光波」。</b>两个都是一个连续的动作扫过去，没有一张张排队的感觉，文字不动。「光波」更有记忆点，代价是每帧重画九个渐变。</li>
+    <li><b>最有浮屿自己性格的是「水母吐泡泡」</b>，但它是明确的依次出场，一天开合几十次可能会腻；适合做成可选项，或者只在当天第一次展开时放。</li>
+    <li><b>不建议：</b>「翻牌」文字跟着一起转，转的过程中发虚；「对焦」每张卡片各起一层模糊，九层同时算，展开那几帧最吃紧。</li>
+  </ul>
+
+  <h2>和现有动效规矩的对照</h2>
+  <table>
+    <tr><th>规矩（docs/design/motion.md）</th><th>这里怎么处理</th></tr>
+    <tr><td>有文字的层只淡入淡出</td><td>除「翻牌」「对焦」外，动的都是卡片底板和图形，文字层只做透明度。每个方案的标签里写了。</td></tr>
+    <tr><td>不做错开出场</td><td>这条是 2026-11-16 你按默认值同意的，理由是「列表一行行飞进来显得拖沓」。标了「依次出场」的方案要用的话得放开这条；我把间隔都压在 30–45ms、整体 350ms 内收完，尽量不拖。标「一个动作」的不受影响。</td></tr>
+    <tr><td>开合在 560ms 内结束</td><td>卡片动效不改面板外壳的时长；每个方案下面写了最后一张卡片内容出现的时间，都在面板弹簧落定之前或同时。</td></tr>
+    <tr><td>减少动画</td><td>系统开了「减少动画」时全部退回整体淡入，数字直接显示终值。</td></tr>
+    <tr><td>不加装饰性的无限循环</td><td>所有方案都只播一次，播完就是静止的现状。</td></tr>
+  </table>
+  <p>挑好之后告诉我用哪个（可以是「某方案 + 数据活过来」，也可以只要数据那一层），我再按真实的小组件去做：数据层要每个小组件自己接（圆环、数字、进度条各自的起始值），卡片层接在面板页的格子上。</p>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const E = 'cubic-bezier(.22,1,.36,1)';
+const stage = $('stage'), panel = $('panel'), content = $('content'), tabs = $('tabs'), grid = $('grid');
+const mini = panel.querySelector('.mini');
+
+const PATHS = {
+  list: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01', music: 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+  cal: 'M4 5h16v16H4zM16 3v4M8 3v4M4 10h16', clip: 'M9 3h6v4H9zM9 5H6v16h12V5h-3M9 12h6M9 16h6', bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',
+  lang: 'M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6', cut: 'M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12',
+  grid: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z', gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1',
+  cpu: 'M5 5h14v14H5zM9 9h6v6H9zM9 2v3M15 2v3M9 19v3M15 19v3M19 9h3M19 15h3M2 9h3M2 15h3', spark: 'M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2zM19 16v4M17 18h4',
+  hour: 'M5 22h14M5 2h14M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2',
+  bat: 'M2 7h17v10H2zM22 11v2M6 11v2M10 11v2M14 11v2', act: 'M22 12h-4l-3 9L9 3l-3 9H2',
+  flame: 'M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z',
+  drop: 'M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5S5 13 5 15a7 7 0 0 0 7 7z', plus: 'M12 5v14M5 12h14',
+};
+const ic = name => `<svg class="ic" viewBox="0 0 24 24"><path d="${PATHS[name]}"/></svg>`;
+const head = (icon, title, right = '') => `<div class="head">${ic(icon)}<span>${title}</span>${right}</div>`;
+const RING = 2 * Math.PI * 16;
+const ring = (v, color, label) => `<div class="ring"><svg viewBox="0 0 40 40"><circle class="rt" cx="20" cy="20" r="16"/><circle class="rv" cx="20" cy="20" r="16" stroke="${color}" stroke-dasharray="${RING}" stroke-dashoffset="${RING * (1 - v / 100)}" data-len="${RING}" data-off="${RING * (1 - v / 100)}"/></svg><em><span data-count="${v}" style="min-width:2ch">${v}</span></em>${label}</div>`;
+const JELLY = `<svg class="jelly" viewBox="0 0 52 38"><path d="M3 27C3 11 13 2 26 2s23 9 23 25c0 5-3.4 6.6-6 4-2.4-2.4-5.6-2.2-7.6.4-2.2 3-5.6 3-7.8 0l-1.6-2-1.6 2c-2.2 3-5.6 3-7.8 0-2-2.6-5.2-2.800-7.600-.400C6.400 33.600 3 32 3 27z" fill="#f8e6d9"/><ellipse cx="13" cy="24.500" rx="4" ry="2.400" fill="#f6a5a5" opacity=".8"/><ellipse cx="39" cy="24.500" rx="4" ry="2.400" fill="#f6a5a5" opacity=".8"/><circle cx="19" cy="20" r="2.600" fill="#1c1210"/><circle cx="33" cy="20" r="2.600" fill="#1c1210"/></svg>`;
+
+const WIDGETS = [
+  { big: true, ac: '#f0a04b', html: `<div class="date">11月21日 周六</div><div class="clock">09:43</div><div class="foot">${JELLY}<div><div class="greet">早上好，今天也顺利</div><div class="mut sm" style="margin-top:3px">已专注 0m · 喝了 0 杯水</div></div></div>` },
+  { ac: '#5eead4', html: head('cpu', '系统状态') + `<div class="rings">${ring(44, '#5eead4', 'CPU')}${ring(70, '#b78cf5', '内存')}</div>` },
+  { ac: '#ff5f9e', html: head('spark', '距离春节') + `<div class="grow"></div><div class="big-n" style="color:#ff5f9e"><span data-count="77" style="min-width:2ch">77</span><span class="unit mut">天</span></div><div class="mut sm">2027年2月6日</div>` },
+  { ac: '#e08a3c', html: `<div class="pomo"><svg viewBox="0 0 88 88"><circle class="draw" cx="44" cy="44" r="38"/></svg><div class="pc"><div class="pt">25:00</div><div class="pbtn popin"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg></div></div></div>` },
+  { ac: '#f5c84b', html: head('hour', '2026') + `<div class="grow"></div><div class="big-n"><span data-count="88" style="min-width:2ch">88</span><span class="unit">%</span></div><div class="dots">${Array.from({ length: 12 }, (_, i) => `<i class="${i === 10 ? 'now' : i === 11 ? 'off' : ''}"></i>`).join('')}</div>` },
+  { ac: '#34c759', html: head('bat', '电池') + `<div class="grow"></div><div class="big-n" style="font-size:24px"><span data-count="60" style="min-width:2ch">60</span><span class="unit" style="font-size:11px">%</span></div><div class="hbar"><i></i></div><div class="mut sm">使用电池</div>` },
+  { ac: '#5eead4', html: head('act', '网速') + `<div class="net" style="margin-top:2px"><span style="color:#5eead4">↓</span><span data-count="121" style="min-width:3ch">121</span> KB/s</div><div class="net"><span style="color:#b78cf5">↑</span><span data-count="77" style="min-width:2ch">77</span> KB/s</div><svg class="spark" viewBox="0 0 96 18"><path class="draw" d="M1 13c8 0 9-6 16-6s8 7 15 7 9-9 17-9 9 6 16 6 9-3 15-3 10 2 15 2"/></svg>` },
+  { ac: '#34c759', html: head('flame', '打卡', '<span class="r" style="color:#34c759">0 天</span>') + `<div class="heat">${Array.from({ length: 35 }, (_, i) => `<i class="${i === 34 ? 'today' : ''}"></i>`).join('')}</div>` },
+  { ac: '#4aa8d8', html: head('drop', '喝水', '<span class="r">0/8</span>') + `<div class="water"><svg class="cup" viewBox="0 0 34 50"><path class="draw" d="M3 3h28v36a8 8 0 0 1-8 8H11a8 8 0 0 1-8-8z"/></svg><div class="plus popin">${ic('plus')}</div></div>` },
+];
+
+tabs.innerHTML = `<div class="pill">Fuyu</div>${['list', 'music', 'cal', 'clip', 'bell', 'lang', 'cut'].map(ic).join('')}<div class="sp"></div>${ic('grid')}${ic('gear')}`;
+grid.innerHTML = WIDGETS.map(w => `<div class="w${w.big ? ' big' : ''}" style="--ac:${w.ac}"><div class="bg"></div><div class="rim"></div><div class="sk"><i style="width:${w.big ? 86 : 52}px"></i><i class="b" style="width:${w.big ? 150 : 62}px"></i><i style="width:${w.big ? 0 : 70}%"></i>${w.big ? '<i style="width:60%;margin-top:auto"></i><i style="width:44%"></i>' : ''}<b></b></div><div class="body">${w.html}</div><svg class="trace"><rect/></svg></div>`).join('');
+
+const cards = [...grid.children].map((el, i) => {
+  const x = 20 + el.offsetLeft, y = 54 + el.offsetTop, w = el.offsetWidth, h = el.offsetHeight;
+  const rect = el.querySelector('.trace rect');
+  rect.setAttribute('x', .75); rect.setAttribute('y', .75); rect.setAttribute('width', w - 1.5); rect.setAttribute('height', h - 1.5); rect.setAttribute('rx', 17.25);
+  const len = 2 * (w - 1.5 + h - 1.5 - 4 * 17.25) + 2 * Math.PI * 17.25;
+  rect.style.strokeDasharray = len;
+  const rim = el.querySelector('.rim');
+  rim.style.setProperty('--ox', `${400 - x}px`); rim.style.setProperty('--oy', `${-y}px`);
+  return { el, i, x, y, w, h, cx: x + w / 2, cy: y + h / 2, big: i === 0, col: i === 0 ? 0 : 1 + (i - 1) % 4, row: i === 0 ? 0 : Math.floor((i - 1) / 4),
+    ac: WIDGETS[i].ac, bg: el.querySelector('.bg'), body: el.querySelector('.body'), sk: el.querySelector('.sk'), band: el.querySelector('.sk b'), trace: el.querySelector('.trace'), rect, len, rim, ready: 0 };
+});
+
+const curves = new Map();
+function spring(z, w, cap = 900) {
+  const ms = Math.min(cap, Math.ceil(620 / (z * w)) * 10), key = `${z}/${w}/${ms}`;
+  if (!curves.has(key)) {
+    const n = 48, s = ms / 1000, wd = w * Math.sqrt(Math.max(0, 1 - z * z)), pts = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n * s;
+      const v = i === n ? 1 : z >= 1 ? 1 - (1 + w * t) * Math.exp(-w * t) : 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t));
+      pts.push(+v.toFixed(4));
+    }
+    curves.set(key, `linear(${pts.join(',')})`);
+  }
+  return { duration: ms, easing: curves.get(key) };
+}
+
+let speed = 1, anims = [], counters = [], timers = [], current = 0;
+function A(el, frames, o) {
+  const a = el.animate(frames, { fill: 'both', easing: E, ...o });
+  a.playbackRate = speed; anims.push(a); return a;
+}
+const later = (fn, ms) => timers.push(setTimeout(fn, ms / speed));
+const fadeIn = (el, delay, duration = 200) => A(el, [{ opacity: 0 }, { opacity: 1 }], { delay, duration });
+
+const OPTIONS = [
+  { id: 'fade', name: '整体淡入', sub: '现在的样子', tags: [['ok', '文字不动'], ['ok', '一个动作'], ['warn', '整层模糊']],
+    desc: '对照组：整个内容层从模糊到清楚，一起出现。',
+    run(cs) { A(grid, [{ opacity: 0, filter: 'blur(14px)' }, { opacity: 1, filter: 'blur(0px)' }], { delay: 20, duration: 260 }); cs.forEach(c => c.ready = 90); } },
+  { id: 'spread', name: '跟着面板撑开', sub: '我的首选', pick: true, tags: [['ok', '文字不动'], ['ok', '一个动作'], ['ok', '开销低']],
+    desc: '卡片底板一开始挤在岛的正下方，和面板用同一根弹簧一起撑到各自的位置，像被外壳拉开的；文字等底板快到位了再淡入。',
+    run(cs) { const s = spring(.6, 19.5); cs.forEach(c => {
+      A(c.bg, [{ transform: `translate(${(400 - c.cx) * .6}px,${(10 - c.cy) * .6}px) scale(.72)` }, { transform: 'none' }], s);
+      A(c.bg, [{ opacity: 0 }, { opacity: 1 }], { delay: 10, duration: 150 });
+      fadeIn(c.body, 190, 220); c.ready = 190; }); } },
+  { id: 'curtain', name: '幕布', sub: '跟着下沿揭开', tags: [['ok', '文字不动'], ['ok', '一个动作'], ['ok', '开销低']],
+    desc: '什么都不挪位置：一条柔和的边从上往下扫过去，跟着面板的下沿把卡片「揭」出来，像内容本来就在那儿，被面板盖住了。',
+    run(cs) { grid.classList.add('curtain');
+      A(grid, [{ maskPosition: '0 100%', webkitMaskPosition: '0 100%' }, { maskPosition: '0 38%', webkitMaskPosition: '0 38%' }], { delay: 60, duration: 420, easing: 'linear' });
+      cs.forEach(c => c.ready = 60 + (c.y - 54 + 30) / .73); } },
+  { id: 'wave', name: '光波', sub: '从岛往外荡', tags: [['ok', '文字不动'], ['ok', '一个动作'], ['warn', '每帧重画渐变']],
+    desc: '底板先暗暗地在那儿，一圈光从岛的位置荡出去，扫到哪张卡片，它的描边亮一下、内容跟着浮出来。',
+    run(cs) { cs.forEach(c => { const d = Math.hypot(c.cx - 400, c.cy), t = 40 + d / 950 * 760;
+      A(c.bg, [{ opacity: 0 }, { opacity: 1 }], { delay: 20, duration: 160 });
+      A(c.rim, [{ opacity: 1, '--r': '0px' }, { opacity: 1, '--r': '950px' }], { delay: 40, duration: 760, easing: 'linear' });
+      A(c.bg, [{ filter: 'brightness(1)' }, { filter: 'brightness(2.4)', offset: .3 }, { filter: 'brightness(1)' }], { delay: t - 90, duration: 420, easing: 'ease-out' });
+      fadeIn(c.body, t, 220); c.ready = t; }); } },
+  { id: 'ripple', name: '涟漪', sub: '由近到远鼓出来', tags: [['ok', '文字不动'], ['bad', '依次出场'], ['ok', '开销低']],
+    desc: '离岛近的卡片先出，远的后出；底板从 82% 弹到原大，带一点回弹，文字随后淡入。',
+    run(cs) { cs.forEach(c => { const t = 30 + Math.hypot(c.cx - 400, c.cy) * .34;
+      A(c.bg, [{ opacity: 0 }, { opacity: 1 }], { delay: t, duration: 140 });
+      A(c.bg, [{ transform: 'scale(.82)' }, { transform: 'scale(1)' }], { delay: t, ...spring(.55, 24) });
+      fadeIn(c.body, t + 90); c.ready = t + 90; }); } },
+  { id: 'skeleton', name: '骨架扫光', sub: '最像「加载」', tags: [['ok', '文字不动'], ['warn', '扫过才出'], ['warn', '多一层骨架']],
+    desc: '卡片先是几块灰色的占位，一道斜光从左扫到右，扫过的卡片换成真内容。读起来最像在加载数据，但数据其实早就在了。',
+    run(cs) { const T0 = 110, DUR = 560; cs.forEach(c => { const skew = c.y * .35, u = c.cx + skew, ready = T0 + (u + 150) / 1100 * DUR, total = ready + 180;
+      A(c.bg, [{ opacity: 0 }, { opacity: 1 }], { delay: 20, duration: 160 });
+      A(c.sk, [{ opacity: 0, offset: 0 }, { opacity: 1, offset: 160 / total }, { opacity: 1, offset: ready / total }, { opacity: 0, offset: 1 }], { delay: 20, duration: total, easing: 'linear' });
+      A(c.band, [{ backgroundPositionX: `${-260 - c.x - skew}px` }, { backgroundPositionX: `${840 - c.x - skew}px` }], { delay: T0, duration: DUR, easing: 'linear' });
+      fadeIn(c.body, ready + 20, 220); c.ready = ready + 20; }); } },
+  { id: 'trace', name: '描边点亮', sub: '光沿着边跑一圈', tags: [['ok', '文字不动'], ['bad', '依次出场'], ['warn', '最慢']],
+    desc: '每张卡片先被一条自己颜色的光描出轮廓（系统是青色，春节是粉色，番茄钟是橙色…），描完底板亮起，内容淡入。',
+    run(cs) { cs.forEach((c, i) => { const t = 20 + i * 30;
+      A(c.trace, [{ opacity: 1, offset: 0 }, { opacity: 1, offset: .7 }, { opacity: 0, offset: 1 }], { delay: t, duration: 640, easing: 'linear' });
+      A(c.rect, [{ strokeDashoffset: c.len }, { strokeDashoffset: 0 }], { delay: t, duration: 380, easing: 'cubic-bezier(.45,0,.2,1)' });
+      A(c.bg, [{ opacity: 0 }, { opacity: 1 }], { delay: t + 250, duration: 240 });
+      fadeIn(c.body, t + 290, 220); c.ready = t + 290; }); } },
+  { id: 'glow', name: '逐个通电', sub: '像一排灯亮起来', tags: [['ok', '文字不动'], ['bad', '依次出场'], ['warn', '阴影重画']],
+    desc: '卡片不按顺序、一张张「通电」：闪一下，带一圈自己颜色的光晕，然后稳住。有点霓虹灯的味道。',
+    run(cs) { const order = [3, 0, 6, 1, 8, 4, 2, 7, 5]; cs.forEach((c, i) => { const t = 40 + order[i] * 42;
+      A(c.bg, [{ opacity: 0, offset: 0 }, { opacity: .95, offset: .22 }, { opacity: .3, offset: .4 }, { opacity: 1, offset: .62 }, { opacity: 1, offset: 1 }], { delay: t, duration: 300, easing: 'linear' });
+      A(c.bg, [{ boxShadow: `0 0 0 1px ${c.ac}, 0 0 26px ${c.ac}aa` }, { boxShadow: `0 0 0 0 ${c.ac}00, 0 0 0 ${c.ac}00` }], { delay: t, duration: 640 });
+      fadeIn(c.body, t + 150, 220); c.ready = t + 150; }); } },
+  { id: 'drop', name: '落位', sub: '从刘海掉下来', tags: [['ok', '文字不动'], ['bad', '依次出场'], ['ok', '开销低']],
+    desc: '底板从上面掉下来，落到位置时轻轻弹一下，从左到右一列列来。',
+    run(cs) { grid.classList.add('top'); cs.forEach(c => { const t = 30 + c.col * 42 + c.row * 36;
+      A(c.bg, [{ opacity: 0 }, { opacity: 1 }], { delay: t, duration: 120 });
+      A(c.bg, [{ transform: 'translateY(-26px) scaleY(.9)' }, { transform: 'none' }], { delay: t, ...spring(.52, 23) });
+      fadeIn(c.body, t + 120); c.ready = t + 120; }); } },
+  { id: 'bubble', name: '水母吐泡泡', sub: '最有浮屿味', tags: [['ok', '文字不动'], ['bad', '依次出场'], ['ok', '开销低']],
+    desc: '今日卡片先出现，水母鼓两下，其余卡片像泡泡一样从它那儿一个个冒出来：先是小圆球，飞到位置上弹开成卡片。',
+    jelly: true,
+    run(cs) { const M = { x: 58, y: 272 }, rest = cs.filter(c => !c.big).sort((a, b) => Math.hypot(a.cx - M.x, a.cy - M.y) - Math.hypot(b.cx - M.x, b.cy - M.y));
+      const big = cs[0];
+      A(big.bg, [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'scale(1)' }], { delay: 20, duration: 260 });
+      fadeIn(big.body, 50); big.ready = 50;
+      A(big.el.querySelector('.jelly'), [{ transform: 'scale(1,1)' }, { transform: 'scale(1.2,.78)' }, { transform: 'scale(.9,1.14)' }, { transform: 'scale(1,1)' }], { delay: 90, duration: 230, iterations: 2, easing: 'ease-in-out' });
+      rest.forEach((c, k) => { const t = 120 + k * 40;
+        A(c.bg, [{ opacity: 0 }, { opacity: 1 }], { delay: t, duration: 100 });
+        A(c.bg, [{ transform: `translate(${(M.x - c.cx) * .72}px,${(M.y - c.cy) * .72}px) scale(.18)` }, { transform: 'none' }], { delay: t, ...spring(.5, 20) });
+        A(c.bg, [{ borderRadius: '60px' }, { borderRadius: '18px' }], { delay: t + 70, duration: 240, easing: 'cubic-bezier(.5,0,.5,1)' });
+        fadeIn(c.body, t + 190); c.ready = t + 190; }); } },
+  { id: 'focus', name: '对焦', sub: '由虚到实', tags: [['warn', '文字被模糊'], ['bad', '依次出场'], ['bad', '九层模糊']],
+    desc: '每张卡片各自从模糊里对上焦，从左到右一列列清楚起来。和面板内容「由模糊变清楚」是一个语言，但开销最大。',
+    run(cs) { cs.forEach(c => { const t = 30 + c.col * 44 + c.row * 22;
+      A(c.el, [{ opacity: 0, filter: 'blur(12px)' }, { opacity: 1, filter: 'blur(0px)' }], { delay: t, duration: 340 });
+      A(c.bg, [{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { delay: t, duration: 420 }); c.ready = t + 100; }); } },
+  { id: 'flip', name: '翻牌', sub: '从上沿翻下来', tags: [['bad', '文字会动'], ['bad', '依次出场'], ['ok', '开销低']],
+    desc: '卡片像挂在上沿的牌子一样翻下来，带回弹，沿对角线依次来。最抢眼，但文字跟着一起转，转的时候是虚的。',
+    run(cs) { grid.classList.add('persp'); cs.forEach(c => { const t = 30 + (c.col + c.row) * 46;
+      A(c.el, [{ opacity: 0 }, { opacity: 1 }], { delay: t, duration: 110 });
+      A(c.el, [{ transform: 'rotateX(-82deg)' }, { transform: 'rotateX(0deg)' }], { delay: t, ...spring(.6, 20) }); c.ready = t + 140; }); } },
+];
+
+function dataAnims(opt) {
+  cards.forEach(c => {
+    const t = c.ready + 40, q = s => c.el.querySelectorAll(s);
+    q('[data-count]').forEach(el => counters.push({ el, to: +el.dataset.count, a: A(el, [{ opacity: 1 }, { opacity: 1 }], { delay: t, duration: 650 }) }));
+    q('.rv').forEach(el => A(el, [{ strokeDashoffset: el.dataset.len }, { strokeDashoffset: el.dataset.off }], { delay: t, duration: 750 }));
+    q('.hbar i').forEach(el => A(el, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { delay: t, duration: 650 }));
+    q('.dots i').forEach((el, k) => A(el, [{ opacity: .12, transform: 'scale(.5)', offset: 0 }], { delay: t + k * 32, duration: 220 }));
+    q('.heat i').forEach((el, k) => A(el, [{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'scale(1)' }], { delay: t + ((k % 7) + Math.floor(k / 7)) * 24, duration: 200 }));
+    q('.draw').forEach(el => { const L = el.getTotalLength(); el.style.strokeDasharray = L; A(el, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { delay: t, duration: 700 }); });
+    q('.popin').forEach(el => A(el, [{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { delay: t + 160, ...spring(.5, 24) }));
+    if (!opt.jelly) q('.jelly').forEach(el => A(el, [{ transform: 'translateY(10px) scale(.6)', opacity: 0 }, { transform: 'none', opacity: 1 }], { delay: t + 60, ...spring(.45, 22) }));
+  });
+}
+
+function tick() {
+  for (const c of counters) {
+    const p = c.a.playState === 'idle' ? 1 : c.a.effect.getComputedTiming().progress ?? 1;
+    const text = String(Math.round(c.to * p));
+    if (c.el.textContent !== text) c.el.textContent = text;
+  }
+  requestAnimationFrame(tick);
+}
+
+function reset() {
+  timers.forEach(clearTimeout); timers = [];
+  anims.forEach(a => a.cancel()); anims = [];
+  counters.forEach(c => c.el.textContent = c.to); counters = [];
+  grid.className = 'grid';
+  panel.classList.add('closed');
+}
+
+function open() {
+  const opt = OPTIONS[current];
+  panel.classList.remove('closed');
+  A(mini, [{ opacity: 1 }, { opacity: 0 }], { duration: 60 });
+  A(panel, [{ width: '200px' }, { width: '800px' }], spring(.6, 19.5));
+  A(panel, [{ height: '32px', borderRadius: '0 0 16px 16px' }, { height: '325px', borderRadius: '0 0 30px 30px' }], { ...spring(.66, 16.5, 530), delay: 30 });
+  A(tabs, [{ opacity: 0, filter: 'blur(14px)' }, { opacity: 1, filter: 'blur(0px)' }], { delay: 20, duration: 220 });
+  opt.run(cards);
+  const last = Math.round(Math.max(...cards.map(c => c.ready)) / 10) * 10;
+  if ($('data').checked) dataAnims(opt);
+  $('nowTime').textContent = `最后一张卡片的内容在 ${last}ms 开始出现${$('data').checked ? `，数据约 ${last + 800}ms 走完` : ''}；面板弹簧 560ms 落定`;
+  if ($('loop').checked) later(close, Math.max(last + ($('data').checked ? 900 : 300), 700) + 1500);
+}
+
+function close() {
+  timers.forEach(clearTimeout); timers = [];
+  if (panel.classList.contains('closed')) return;
+  const s = spring(1, 21.5, 400);
+  A(content, [{ opacity: 1 }, { opacity: 0 }], { duration: 60 });
+  A(panel, [{ width: '800px' }, { width: '200px' }], s);
+  A(panel, [{ height: '325px', borderRadius: '0 0 30px 30px' }, { height: '32px', borderRadius: '0 0 16px 16px' }], { ...s, delay: 18 });
+  A(mini, [{ opacity: 0 }, { opacity: 1 }], { delay: 200, duration: 120 });
+  later(() => {
+    reset();
+    if (!$('loop').checked) return;
+    if ($('tour').checked) select((current + 1) % OPTIONS.length, false);
+    later(open, 520);
+  }, 440);
+}
+
+function play() { reset(); later(open, 260); }
+
+function select(i, replay = true) {
+  current = i;
+  const opt = OPTIONS[i];
+  [...$('opts').children].forEach((b, k) => b.classList.toggle('on', k === i));
+  $('nowName').textContent = `${i + 1}. ${opt.name}`;
+  $('nowTags').innerHTML = tagHtml(opt);
+  $('nowDesc').textContent = opt.desc;
+  if (replay) play();
+}
+
+const tagHtml = opt => (opt.pick ? '<span class="tag pick">推荐</span>' : '') + opt.tags.map(([kind, text]) => `<span class="tag ${kind}">${text}</span>`).join('');
+$('opts').innerHTML = OPTIONS.map((o, i) => `<button class="opt" data-i="${i}"><span class="n">${i + 1}. ${o.name}<small>${o.sub}</small></span><span class="tags">${tagHtml(o)}</span><span class="d">${o.desc}</span></button>`).join('');
+$('opts').onclick = e => { const b = e.target.closest('.opt'); if (b) select(+b.dataset.i); };
+$('play').onclick = play;
+$('shut').onclick = () => { $('loop').checked = false; close(); };
+$('data').onchange = play;
+$('loop').onchange = () => { if ($('loop').checked) play(); };
+document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => {
+  speed = +b.dataset.speed;
+  document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b));
+  play();
+});
+addEventListener('keydown', e => {
+  if (e.target.closest('input, button')) return;
+  if (e.key === 'ArrowRight') select((current + 1) % OPTIONS.length);
+  else if (e.key === 'ArrowLeft') select((current + OPTIONS.length - 1) % OPTIONS.length);
+  else if (e.key === ' ') { e.preventDefault(); play(); }
+});
+function fit() { const s = Math.min(1, $('wrap').clientWidth / 880); stage.style.transform = `scale(${s})`; $('wrap').style.height = `${372 * s}px`; }
+addEventListener('resize', fit);
+fit();
+requestAnimationFrame(tick);
+select(1);
+</script>
+</body>
+</html>

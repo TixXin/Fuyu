@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as islandApi from "./api";
 import { clearIslandPosition, loadIslandPosition, saveIslandPosition, type IslandPosition } from "./storage";
-import { useEdgeResize } from "./useEdgeResize";
+import { useHideHints } from "./useHideHints";
 import { useIslandHoldListener } from "./islandHold";
 
 export function useIslandPosition() {
@@ -16,7 +16,7 @@ export function useIslandPosition() {
     });
   }, [isPositionDetached]);
 
-  useEdgeResize();
+  useHideHints();
   useIslandHoldListener();
 
   useEffect(() => {

@@ -24,7 +24,6 @@ import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
 import { editGrowWidth, PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
 import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, maxExpandedIslandHeight, panelIslandWidth } from "./layout";
-import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
 import { surfaceThemeColors } from "../../lib/theme/themeMode";
 import { islandMotionVariables } from "../../lib/theme/islandMotion";
@@ -60,6 +59,8 @@ import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
 import { isPageShown } from "./features";
 import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
+import { IslandResize } from "./resize/IslandResize";
+import { useIslandResize } from "./resize/useIslandResize";
 import { islandPageSize } from "./pageSize";
 
 const openTranslator = () => {
@@ -137,13 +138,13 @@ export function IslandApp() {
     panelIslandWidth(panelWidth + editGrow, settings.expandedScale),
     openPopup?.wide === true,
   );
+  const resizeModel = useIslandResize(settings, setSettings, page, pageSize);
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
-  const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup, page, pageSize);
   const pageIslandHeight = fuyuPage && !popup ? pageSize.height : getExpandedIslandHeight({ maxPanelHeight: pageSize.height, panel: popups.get(page), popup });
   const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
   const expandedIslandHeight = Math.min(
     maxExpandedIslandHeight(settings.expandedScale),
-    (resizingHeight && !popup ? pageSize.height : pageIslandHeight + editGrowHeight) + notchExpandedExtra(notch, settings.expandedScale, popup),
+    pageIslandHeight + editGrowHeight + notchExpandedExtra(notch, settings.expandedScale, popup),
   );
   const islandNotice = useIslandNotice({ firstHints, v2Upgrade, layer: layerNotice });
   const isDimmed = useIdleDim({
@@ -151,7 +152,6 @@ export function IslandApp() {
     seconds: settings.idleDimSeconds,
     mode,
     isTucked,
-    resizing: resizing !== null,
     demoActive: demo.active,
     hasNotice: islandNotice !== null,
     hasPreview: contributedPreview !== null,
@@ -176,14 +176,14 @@ export function IslandApp() {
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
-      ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
+      ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion, settings.islandBounce),
       ...(collapsedIslandHeight !== COLLAPSED_ISLAND_HEIGHT ? { "--collapsed-island-height": `${collapsedIslandHeight}px` } : {}),
       ...(islandOpacity < 1 ? { "--island-opacity": String(islandOpacity) } : {}),
       ...(settings.islandMotion === "none" ? { "--island-opacity-duration": "0ms" } : {}),
       ...style.vars,
       ...glassStyle,
     }),
-    [collapsedIslandWidth, collapsedIslandHeight, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, islandOpacity, style.vars, glassStyle],
+    [collapsedIslandWidth, collapsedIslandHeight, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, settings.islandBounce, reducedMotion, islandOpacity, style.vars, glassStyle],
   );
 
   const {
@@ -246,10 +246,10 @@ export function IslandApp() {
     page,
     homePage,
     popup,
-    resizeLabel: resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${pageSize.height}` : null,
     appearanceMode: settings.appearanceMode,
     nativeGlassState,
     hoverGrow: settings.islandHover,
+    hoverBounce: settings.islandBounce,
     glass: { ...glass, nativeState: nativeGlassState },
     isTucked,
     isDimmed,
@@ -281,6 +281,7 @@ export function IslandApp() {
     fuyuTabIcon: settings.fuyuTabIcon,
     notice: islandNotice,
     collapsedSlots,
+    resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled && (mode === "expanded" || notch === null)} size={pageSize} extra={settings.collapsedWidthExtra} />,
   };
   const pages = (
     <>

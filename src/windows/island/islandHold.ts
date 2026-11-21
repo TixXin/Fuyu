@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { listenIslandHold } from "./api";
 import { isPanelEditing } from "./custom-panels/panelEditing";
+import { isResizeEditing } from "./resize/session";
 
 let held = false;
 let releasedAt = Number.NEGATIVE_INFINITY;
 
 export function isIslandHeld() {
-  return held || isPanelEditing();
+  return held || isPanelEditing() || isResizeEditing();
 }
 
 export function msSinceIslandRelease() {

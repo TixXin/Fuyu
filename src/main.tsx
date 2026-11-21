@@ -42,6 +42,7 @@ if (windowKind === null) {
   trackIslandTopEdge();
   trackIslandNotch();
   trackAutoIslandForm();
+  if (import.meta.env.DEV) void import("./windows/island/devFrameProbe");
 }
 
 window.addEventListener(

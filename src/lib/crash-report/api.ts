@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 
-export type FrontendErrorKind = "render" | "uncaught" | "startup" | "error" | "rejection" | "slot";
+export type FrontendErrorKind = "render" | "uncaught" | "startup" | "error" | "rejection" | "slot" | "island-frames";
 
 type DataHome = { home: string; crashLog?: string | null };
 

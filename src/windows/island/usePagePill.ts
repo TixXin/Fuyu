@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 const ACTIVE = ".dot-button--active, .island__agent-button--active";
 
@@ -32,8 +32,9 @@ export function usePagePill(headerRef: RefObject<HTMLElement | null>, scrollRef:
     lastLeft.current = left;
   }, [headerRef]);
 
-  useLayoutEffect(() => {
-    place(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => place(false));
+    return () => cancelAnimationFrame(frame);
   }, [place, key]);
 
   useEffect(() => {

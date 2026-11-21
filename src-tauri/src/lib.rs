@@ -68,6 +68,7 @@ mod wallpaper;
 mod webview_recovery;
 #[cfg_attr(not(windows), path = "webview_visibility_unsupported.rs")]
 mod webview_visibility;
+mod webview_frame_rate;
 #[cfg_attr(not(windows), path = "webview_memory_unsupported.rs")]
 mod webview_memory;
 #[cfg_attr(target_os = "macos", path = "wechat_reminders/macos.rs")]
@@ -306,6 +307,7 @@ pub fn run() {
             cc_connect;
             pets;
             platform_support;
+            webview_frame_rate;
             tray;
             tray_menu;
             tray_visibility;

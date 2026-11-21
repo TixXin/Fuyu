@@ -1,5 +1,6 @@
 export const PREWARM_HOLD_MS = 1200;
 export const PREWARM_LEAVE_MS = 260;
+export const KEEP_WARM_AFTER_CLOSE_MS = 120_000;
 
 export type PanelAwakeInput = {
   isExpanded: boolean;

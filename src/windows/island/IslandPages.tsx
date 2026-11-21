@@ -3,7 +3,6 @@ import { useTranslation } from "../../i18n";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import type { IslandSettings } from "../../lib/settings/types";
-import { islandMotionTiming } from "../../lib/theme/islandMotion";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import type { useIslandFeatures } from "./useIslandFeatures";
 import type { useIslandNavigation } from "./useIslandNavigation";
@@ -16,10 +15,12 @@ import {
   finishDeferredOpen,
   initialPanelAwakeState,
   isPanelAwake,
+  KEEP_WARM_AFTER_CLOSE_MS,
   syncPanelAwakeState,
 } from "./panelAwake";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
+import { useFollowDisplayRate } from "./useFollowDisplayRate";
 
 export type IslandPagesProps = {
   page: ReturnType<typeof useIslandNavigation>["page"];
@@ -34,12 +35,6 @@ export type IslandPageProps = IslandPagesProps & {
   extraView?: { label: string; content: ReactNode };
   embedded?: boolean;
 };
-
-function getCloseHoldMs(islandMotion: IslandSettings["islandMotion"], reducedMotion: boolean): number {
-  if (reducedMotion) return 0;
-  const timing = islandMotionTiming(islandMotion, "close", false);
-  return Math.max(timing.width, timing.height, timing.layer);
-}
 
 function usePanelAwake(
   isExpanded: boolean,
@@ -87,8 +82,9 @@ export function IslandPages(props: IslandPagesProps): ReactNode {
     isPreparing,
     isPrewarmed,
     deferColdOpen,
-    getCloseHoldMs(settings.islandMotion, reducedMotion),
+    KEEP_WARM_AFTER_CLOSE_MS,
   );
+  useFollowDisplayRate(mode === "expanded" || isPrewarmed);
   if (!awake) return null;
   const pageProps: IslandPageProps = {
     ...props,

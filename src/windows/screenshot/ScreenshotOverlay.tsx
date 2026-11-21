@@ -318,7 +318,7 @@ export function ScreenshotOverlay() {
       }}
       onContextMenu={onContextMenu}
     >
-      <IconButtonTooltip scope=".screenshot-overlay" delay={200} />
+      <IconButtonTooltip scope=".screenshot-overlay" />
       <canvas ref={canvasRef} className="screenshot-overlay__picture" />
       {bounds && !long.active && <AnnotationLayer picture={canvasRef} bounds={bounds} items={editingItem ? select.items.filter((item) => item !== editingItem) : select.items} draft={annotations.draft} selection={chosen} />}
       {long.active && !long.mine ? (

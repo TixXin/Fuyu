@@ -19,8 +19,6 @@ export type SettingsShortcutsText = {
   collapse: string;
   moveIsland: string;
   longPressDrag: string;
-  resizePanel: string;
-  dragEdge: string;
   inputTitle: string;
   translate: string;
   newLine: string;
@@ -80,8 +78,6 @@ export const zhCN: SettingsShortcutsText = {
   collapse: "收起展开的岛",
   moveIsland: "移动岛屿",
   longPressDrag: "拖动岛或面板顶部",
-  resizePanel: "调整面板宽高",
-  dragEdge: "拖动面板边缘",
   inputTitle: "翻译输入框",
   translate: "翻译",
   newLine: "换行",
@@ -141,8 +137,6 @@ export const en: SettingsShortcutsText = {
   collapse: "Collapse the expanded island",
   moveIsland: "Move the island",
   longPressDrag: "Drag the island or the panel top",
-  resizePanel: "Resize the panel",
-  dragEdge: "Drag the panel's edge",
   inputTitle: "Translation input",
   translate: "Translate",
   newLine: "New line",

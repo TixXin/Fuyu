@@ -19,6 +19,7 @@ import {
 import { IslandGlyph } from "../../../components/settings/IslandGlyph";
 import { IslandMotionRow } from "./IslandMotionRow";
 import { IslandHoverRow } from "./IslandHoverRow";
+import { WidgetEntranceRow } from "./WidgetEntranceRow";
 import type { ExpandTrigger, IslandSettings } from "../../../lib/settings/types";
 
 export function ExpandSettingsSection({
@@ -123,8 +124,21 @@ export function ExpandSettingsSection({
         )}
       </SettingsGroup>
       <SettingsGroup title={expand.motion}>
-        <IslandMotionRow value={settings.islandMotion} onChange={(islandMotion) => update({ islandMotion })} />
-        <IslandHoverRow value={settings.islandHover} onChange={(islandHover) => update({ islandHover })} />
+        <IslandMotionRow
+          value={settings.islandMotion}
+          bounce={settings.islandBounce}
+          bounceDisabled={settings.islandMotion !== "pop" && settings.islandHover !== "bounce"}
+          onChange={(islandMotion) => update({ islandMotion })}
+          onBounceChange={(islandBounce) => update({ islandBounce })}
+        />
+        <IslandHoverRow value={settings.islandHover} bounce={settings.islandBounce} onChange={(islandHover) => update({ islandHover })} />
+        <WidgetEntranceRow value={settings.widgetEntrance} onChange={(widgetEntrance) => update({ widgetEntrance })} />
+        <SettingsToggleRow
+          title={expand.widgetData}
+          description={expand.widgetDataHint}
+          checked={settings.widgetDataMotion}
+          onChange={(widgetDataMotion) => update({ widgetDataMotion })}
+        />
       </SettingsGroup>
     </>
   );
