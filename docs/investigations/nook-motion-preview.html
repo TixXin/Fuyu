@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nook 开合动效逐帧复刻</title>
+<title>Nook 开合与悬浮动效逐帧复刻</title>
 <style>
   :root {
     --bg: #1b1d22; --card: #26292f; --line: rgba(255,255,255,.08);
-    --text: #f2f0ea; --muted: rgba(242,240,234,.6); --accent: #7fc8ff; --warm: #ffb36b;
+    --text: #f2f0ea; --muted: rgba(242,240,234,.6); --accent: #7fc8ff; --warm: #ffb36b; --green: #7be0a0;
   }
   * { box-sizing: border-box; }
   body { margin: 0; padding: 24px 16px 60px; background: var(--bg); color: var(--text);
@@ -25,24 +25,28 @@
     padding: 4px 10px; font: inherit; cursor: pointer; }
   button.on { border-color: var(--accent); color: var(--accent); }
   button:hover { border-color: rgba(255,255,255,.25); }
+  button:disabled { opacity: .45; cursor: default; }
   label.chk { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; color: var(--muted); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
   .stage-wrap { width: 100%; overflow: hidden; }
   .stage { position: relative; width: 1000px; height: 320px; transform-origin: 0 0; overflow: hidden;
-    background: radial-gradient(120% 90% at 30% 10%, #d9dde2 0%, #b9bec5 45%, #8f959d 100%); user-select: none; }
+    background: radial-gradient(120% 90% at 30% 10%, #d9dde2 0%, #b9bec5 45%, #8f959d 100%); user-select: none; touch-action: none; }
   .stage.dark { background: radial-gradient(120% 90% at 30% 10%, #4a505a 0%, #2f343b 55%, #1d2025 100%); }
+  .ov { position: absolute; top: 0; left: 0; width: 1000px; height: 260px; display: none; pointer-events: none; }
   .shell { position: absolute; top: 0; left: 0; width: 1000px; height: 320px; pointer-events: none; }
-  .shadow { position: absolute; top: 0; left: 0; width: 700px; height: 166px; border-radius: 0 0 24px 24px;
-    transform-origin: 50% 0; box-shadow: 0 8px 22px rgba(0,0,0,.35); opacity: 0; pointer-events: none; will-change: transform, opacity; }
-  .content { position: absolute; top: 0; left: 100px; width: 800px; height: 230px; pointer-events: none; clip-path: inset(0 300px 199px 300px); }
-  .content .inner { position: absolute; top: 0; left: 50px; width: 700px; will-change: opacity, filter; height: 166px; padding: 12px 22px 16px;
+  .shadow { position: absolute; top: 0; left: 0; width: 700px; height: 166px; border-radius: 0 0 36px 36px;
+    transform-origin: 0 0; box-shadow: 0 8px 22px rgba(0,0,0,.35); opacity: 0; pointer-events: none; will-change: transform, opacity; }
+  .content { position: absolute; top: 0; left: 0; width: 1000px; height: 320px; pointer-events: none; }
+  .content .inner { position: absolute; top: 0; left: 150px; width: 700px; height: 165px; padding: 12px 22px 16px;
     display: grid; grid-template-rows: 26px 1fr; gap: 12px; }
-  .tabs { display: flex; gap: 10px; align-items: center; }
+  .tabs, .widgets { opacity: 0; will-change: opacity, filter; }
+  .tabs { display: flex; gap: 10px; align-items: center; min-width: 0; }
   .pill { height: 24px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,.1);
-    font-size: 12px; font-weight: 600; display: grid; place-items: center; color: #fff; }
-  .dot { width: 14px; height: 14px; border-radius: 4px; background: rgba(255,255,255,.22); }
+    font-size: 12px; font-weight: 600; display: grid; place-items: center; color: #fff; flex: none; }
+  .dot { width: 14px; height: 14px; border-radius: 4px; background: rgba(255,255,255,.22); flex: none; }
   .tabs .sp { flex: 1; }
-  .widgets { display: grid; grid-template-columns: 110px 120px 1fr 120px; gap: 14px; min-height: 0; }
+  .widgets { display: grid; grid-template-columns: 110px 120px minmax(0, 1fr) 120px; gap: 14px; min-height: 0; min-width: 0; }
+  .widgets > * { min-width: 0; overflow: hidden; }
   .w-clock { display: grid; align-content: center; gap: 2px; }
   .w-clock .t { font: 700 30px/1 ui-rounded, -apple-system, sans-serif; color: #fff; }
   .w-clock .t span { color: var(--warm); }
@@ -60,66 +64,87 @@
   .stage.dark .hud { color: rgba(255,255,255,.75); background: rgba(0,0,0,.35); }
   .hint { position: absolute; right: 12px; bottom: 8px; font-size: 12px; color: rgba(0,0,0,.5); }
   .stage.dark .hint { color: rgba(255,255,255,.5); }
-  video { display: block; width: 100%; background: #000; }
+  .stage.overlay .ov { display: block; }
+  .stage.overlay .shadow, .stage.overlay .content, .stage.overlay .hint { display: none; }
+  .stage.overlay #shape { fill: rgba(64,220,255,.14); stroke: #40dcff; stroke-width: 1.4; }
+  .under { padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; border-top: 1px solid var(--line); }
+  .under input[type=range] { flex: 1; min-width: 200px; accent-color: var(--accent); }
+  .under .time, .vbar .time { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); }
+  #tltime { min-width: 84px; }
+  .under .note { color: var(--muted); font-size: 12.5px; }
+  #ovbar { display: none; }
+  video.orig { display: block; width: 100%; background: #000; }
   .vbar { padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
-  .vbar .time { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); }
   .missing { padding: 18px; color: var(--muted); display: none; }
   .charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
   .chart { padding: 10px 12px 6px; }
-  .chart h3 { margin: 0 0 4px; font-size: 13px; }
+  .chart h3 { margin: 0 0 4px; font-size: 13px; display: flex; justify-content: space-between; gap: 8px; }
+  .chart h3 span { color: var(--muted); font-weight: 400; font-size: 12px; }
   .chart svg { width: 100%; height: auto; display: block; }
-  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
   .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 500; }
+  th { color: var(--muted); font-weight: 500; white-space: nowrap; }
+  td:first-child { white-space: nowrap; }
   td code { white-space: nowrap; }
 </style>
 </head>
 <body>
 <main>
-  <h1>Nook 开合动效 · 逐帧复刻</h1>
-  <p>2026-11-21 在主屏（3840×2160，1 倍缩放，120Hz）上用 ffmpeg 录了 NookX 2026.11.11，实际约 90 帧/秒，鼠标由脚本驱动：移入岛 → 点击展开 → 移出 → 按 Esc 收起。下面的尺寸都是屏幕像素（等于 pt），时间从动作开始算。内容区用的是占位小组件，只复刻形状和节奏，不照搬 Nook 的界面。</p>
+  <h1>Nook 开合与悬浮动效 · 逐帧复刻</h1>
+  <p>2026-11-21 在主屏（3840×2160，1 倍缩放，120Hz）上录了 NookX 2026.11.11，两份：一份用 ffmpeg 录，约 90 帧/秒，鼠标由脚本驱动（移入岛 → 点击展开 → 移出 → 按 Esc 收起），曲线和轮廓都从这份里逐帧量；另一份用 PixPin 手动录，24 帧/秒，开合了 5 次，用来核对。下面的尺寸都是屏幕像素（等于 pt），宽指岛的主体宽（不含顶部往外翻的两个角），时间从动作开始算。内容区用的是占位小组件，只复刻形状和节奏，不照搬 Nook 的界面。</p>
 
   <div class="bar">
     <span class="group"><span class="label">曲线</span>
       <button data-mode="model" class="on">弹簧复刻</button><button data-mode="measured">实测回放</button></span>
     <span class="group"><span class="label">速度</span>
       <button data-speed="1" class="on">1×</button><button data-speed="0.5">0.5×</button><button data-speed="0.25">0.25×</button><button data-speed="0.1">0.1×</button></span>
-    <span class="group"><button id="pause">暂停</button><button id="prev">← 一帧</button><button id="next">一帧 →</button></span>
-    <span class="group"><button id="demo">自动演示一遍</button><button id="close">收起</button></span>
-    <label class="chk"><input type="checkbox" id="pre" checked> 起跳前的 145ms 预备</label>
+    <span class="group"><button id="demo">自动演示一遍</button><button id="pause">暂停</button><button id="prev">← 一帧</button><button id="next">一帧 →</button></span>
+    <label class="chk"><input type="checkbox" id="hitch"> 带上录屏里的那次卡顿</label>
     <label class="chk"><input type="checkbox" id="dark"> 深色壁纸</label>
   </div>
 
   <div class="card">
     <div class="stage-wrap" id="wrap">
       <div class="stage" id="stage">
+        <video class="ov" id="ov" src="../../ai-guide/nook-motion/nook-recording.mp4" muted playsinline preload="auto"></video>
+        <div class="shadow" id="shadow"></div>
+        <svg class="shell" id="shell" width="1000" height="320"><defs><linearGradient id="fill" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="165">
+          <stop offset="0" stop-color="#2a2a2a"/><stop offset="1" stop-color="#303030"/></linearGradient></defs>
+          <path id="shape" fill="url(#fill)"/></svg>
         <div class="content" id="content"><div class="inner" id="inner">
-          <div class="tabs"><div class="pill">Fuyu</div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="sp"></div><div class="dot"></div><div class="dot"></div></div>
-          <div class="widgets">
+          <div class="tabs" id="tabs"><div class="pill">Fuyu</div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="sp"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="widgets" id="widgets">
             <div class="w-clock"><div class="s">☁︎ 多云</div><div class="t">08:<span>16</span></div><div class="s">4° / 19°</div></div>
             <div class="w-grid" id="grid"></div>
             <div class="w-note">点这里记一点此刻想到的内容。</div>
             <div class="w-ring"><div>25:00</div></div>
           </div>
         </div></div>
-        <div class="shadow" id="shadow"></div>
-        <svg class="shell" id="shell" width="1000" height="320"><defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#262626"/><stop offset="1" stop-color="#303030"/></linearGradient></defs>
-          <path id="shape" fill="url(#fill)"/></svg>
         <div class="hud" id="hud"></div>
-        <div class="hint">移到岛上悬停 · 按住看下压 · 松开展开 · Esc 或点空白处收起</div>
+        <div class="hint">移到岛上悬停 · 按住看下压 · 松开展开 · Esc、点空白处或点岛顶收起</div>
       </div>
+    </div>
+    <div class="under" id="tlbar">
+      <span class="time" id="tltime">手动操作中</span>
+      <input type="range" id="scrub" min="0" max="3400" step="1" value="0" aria-label="演示时间轴">
+      <button id="ovon" disabled>叠在原片上对照</button>
+    </div>
+    <div class="under" id="ovbar">
+      <span class="group"><button data-ov="3.35">悬停</button><button data-ov="5.62">点击展开</button><button data-ov="12.42">Esc 收起</button></span>
+      <span class="time" id="ovtime"></span>
+      <span class="note">青色线是复刻的轮廓，底下是 ffmpeg 那份原片，同一时刻逐帧对齐；速度、暂停和一帧按钮控制原片。</span>
+      <button id="ovoff">退出对照</button>
     </div>
   </div>
 
   <h2>原片对照（本机录屏）</h2>
   <div class="card">
-    <video id="video" src="../../ai-guide/nook-motion/nook-recording.mp4" muted playsinline preload="auto"></video>
-    <div class="missing" id="missing">录屏不进仓库，只在录的那台 Mac 的 <code>ai-guide/nook-motion/nook-recording.mp4</code>。</div>
+    <video class="orig" id="video" muted playsinline preload="auto"></video>
+    <div class="missing" id="missing">找不到本机录屏。录屏不进仓库，只在录的那台 Mac 上：<code>ai-guide/nook-motion/pixpin-2026-11-21.mp4</code>（从 PixPin 的 Temp 文件夹里的 <code>PixPin_2026-11-21_08-44-20.mp4</code> 拷过来的）。</div>
     <div class="vbar">
-      <span class="group"><button data-ch="3.45">悬停</button><button data-ch="5.7">按下 → 展开</button><button data-ch="12.5">Esc 收起</button></span>
+      <span class="group"><button data-ch="1.1">悬停</button><button data-ch="4.0">顺滑展开</button><button data-ch="5.7">点岛收起</button><button data-ch="14.0">卡一下的展开</button><button data-ch="19.55">收起</button></span>
       <span class="group"><button data-vs="1">1×</button><button data-vs="0.25" class="on">0.25×</button><button data-vs="0.1">0.1×</button></span>
       <span class="group"><button id="vplay">播放</button><button id="vprev">← 一帧</button><button id="vnext">一帧 →</button></span>
       <span class="time" id="vtime"></span>
@@ -128,37 +153,43 @@
 
   <h2>曲线：实测点 vs 复刻线</h2>
   <div class="charts" id="charts"></div>
-  <div class="legend"><span><i style="background:#ffb36b"></i>实测（每帧一个点）</span><span><i style="background:#7fc8ff"></i>弹簧复刻</span></div>
+  <div class="legend"><span><i style="background:#ffb36b"></i>ffmpeg 那份，每帧一个点</span><span><i style="background:#7be0a0"></i>PixPin 那份里三次顺滑的展开（24 帧/秒，起点按误差最小对齐，约 ±20ms）</span><span><i style="background:#7fc8ff"></i>弹簧复刻</span><span><i style="background:rgba(255,255,255,.18);border-radius:2px"></i>ffmpeg 那次展开卡住的一段</span></div>
 
   <h2>拆出来的参数</h2>
   <table>
     <tr><th>阶段</th><th>实测</th><th>复刻用的参数</th></tr>
-    <tr><td>静止</td><td>主体 200×31，顶部两角往外翻的“耳朵”约 6px，底角约 8px，颜色约 <code>#2b2b2b</code></td><td>耳朵和底角跟着高度一起长：展开时耳朵约 30px、底角约 24px</td></tr>
-    <tr><td>悬停</td><td>鼠标进岛当帧就开始，没有延迟。宽 202 → 222（约 120ms 到顶）→ 回落到 218 → 220；高 31 → 34 → 33；约 350ms 停稳</td><td>弹簧 <code>ζ 0.54, ω 26</code>（约等于 stiffness 676、damping 28）</td></tr>
-    <tr><td>按下</td><td>按住的瞬间往回缩：宽 218 → 156（一帧内）→ 160，高 33 → 30，接近 0.73 倍</td><td>弹簧 <code>ζ 0.75, ω 60</code>，目标 160×30</td></tr>
-    <tr><td>展开</td><td>松开后先“预备”：78ms 内宽 +52、高 +3，停住到 145ms；然后一帧内跳到约 768×147，宽在 +34ms 冲到 778（+6%）后用约 250ms 回落到 732；高慢半拍，+90ms 冲到 177（+8%），约 450ms 落到 164–165</td><td>宽 <code>cubic-bezier(0, 1.7, .1, .9)</code> 220ms，高 <code>cubic-bezier(0, 1.6, .1, .95)</code> 440ms，从预备结束起算</td></tr>
-    <tr><td>展开的内容</td><td>形状跳开的第一帧是空的深色块，下一帧内容就在，但很糊；约 230ms 后完全清楚。内容是完整尺寸摆好再被形状裁出来，不跟着缩放</td><td>透明度 10ms 后 110ms 线性到 1；模糊 14px → 0，<code>ease-out</code> 240ms</td></tr>
-    <tr><td>收起</td><td>按 Esc 当帧内容整块消失，只剩深色形状收缩；宽 732 → 202 约 360ms，先快后慢，不回弹；高晚约 35ms 才开始缩</td><td>宽 <code>cubic-bezier(.33, 1, .68, 1)</code>（ease-out cubic）360ms；高同曲线 280ms，延迟 35ms</td></tr>
+    <tr><td>形状</td><td>静止时主体 200×31，颜色 <code>#2b2b2b</code>。顶部两个往外翻的角是圆弧，半径约 9.5；底角是连续曲率的圆角，约 12。展开后（700×165）分别约 35 和 45，中途跟着高度走</td><td>外翻角半径 <code>9.5 + 25.5·k^1.2</code>，底角 <code>12 + 33·k</code>，<code>k</code> 是高度从 31 到 165 走了多少</td></tr>
+    <tr><td>悬停</td><td>鼠标进岛当帧就开始。宽 200 → 218（约 125ms 到顶）→ 216；高 31 → 34 → 33；约 300ms 停稳。移出时原路弹回，会比 200 多缩 2px</td><td>弹簧 <code>ζ 0.55, ω 26</code>（SwiftUI 的 response 0.24、dampingFraction 0.55），进和出同一根</td></tr>
+    <tr><td>按下</td><td>按下的那一帧缩到约 206×30（0.95 倍），松手才展开。两份录屏都是这个数</td><td>弹簧 <code>ζ 0.8, ω 90</code>，目标 206×30</td></tr>
+    <tr><td>展开</td><td>从松手那一刻起就是一根带回弹的弹簧。宽 216 → 700：约 180ms 冲到 746–775（过头 6%–10%），回摆后约 600ms 停稳。高晚约 30ms 起步、慢一拍：约 250ms 冲到 170–177（过头 4%–9%），约 450ms 落到 165</td><td>宽 <code>ζ 0.6, ω 19.5</code>（response 0.32）；高 <code>ζ 0.65, ω 16.5</code>（response 0.38），延迟 30ms</td></tr>
+    <tr><td>展开时的卡顿</td><td>6 次展开里有 3 次（ffmpeg 那次也是）：松手后岛先鼓到约 240–300 宽、35–40 高，停 150–200ms，然后一帧跳到弹簧此刻本该在的位置（ffmpeg 那次是 736×147）。弹簧没有重新开始，所以看上去像“先预备一下再弹开”。另外 3 次没有这一段</td><td>默认不带。勾上“带上录屏里的那次卡顿”：先鼓到 263×35，到 176ms 接回弹簧</td></tr>
+    <tr><td>展开的内容</td><td>顺滑的那几次，内容从一开始就跟着形状出现：先很糊很淡，约 250ms 基本清楚。排版跟着当时的宽度走（左右两端各贴着边），高度方向被形状裁掉。卡顿的那次，标签栏在跳开那帧已有约六成，小组件晚约 170ms 才开始淡入</td><td>标签栏：透明度 20ms 后 200ms 线性到 1，模糊 14px → 0（ease-out，330ms）；小组件晚 30ms，淡入 260ms</td></tr>
+    <tr><td>收起</td><td>收起的那一帧内容整块消失，只剩深色形状。按 Esc 或移出：宽 700 → 200 先快后慢，约 310ms 到位，不回弹（只多缩 2px）；高晚约 18ms 才开始缩。点岛顶收起（2 次）：会多缩到约 177×25，再弹回 200×31</td><td>Esc：宽和高都是 <code>ζ 1, ω 21.5</code>（response 0.29，临界阻尼），高延迟 18ms。点岛顶：<code>ζ 0.7, ω 19</code></td></tr>
   </table>
-  <p>“实测回放”模式直接按每帧量到的宽高插值，悬停移出和按下没有录到对应的数据，两种模式都用弹簧。展开前那段 145ms 的“预备”可能只是它在等窗口变大，两次录屏都有，所以默认带上，可以取消勾选对比。</p>
+  <p>“弹簧复刻”里每一段都从岛当时的位置和速度接着算，所以悬停到一半移出、展开到一半按 Esc 都不会跳。“实测回放”直接按 ffmpeg 那份每帧量到的宽高插值（展开带着那次卡顿），移出、按下和点岛顶收起那份里没有对应的数据，仍然用弹簧。曲线图标题右边的数字是复刻线和实测点的均方根误差。</p>
+  <p>和上一版的区别：之前把展开前那 145ms 当成 Nook 有意做的“预备”，展开用 220ms 的贝塞尔曲线从预备结束那一刻起算。对照 PixPin 那份后看到一半的展开没有这一段，弹簧是从松手就开始的，停住的那段只是它偶尔卡了一下；按下的缩放也从之前记的 0.73 倍改成两份录屏里都量到的 0.95 倍。</p>
 </main>
 
 <script>
-const TRACKS = {"hover":[[0,202,31],[11,204,31],[34,208,31],[45,210,31],[56,212,32],[67,214,32],[78,218,32],[100,220,33],[123,222,33],[134,222,33],[145,222,33],[156,222,34],[167,222,34],[179,222,34],[190,220,34],[201,220,34],[212,220,34],[223,220,34],[235,220,34],[246,220,34],[268,219,34],[279,218,34],[290,218,34],[302,218,34],[313,218,34],[324,218,34],[335,219,33],[346,219,33],[357,220,33],[369,220,33],[380,220,33],[391,220,33],[402,220,33],[413,220,33],[424,220,33],[435,220,33],[447,220,33]],"expand":[[0,220,31],[78,272,34],[101,272,34],[112,270,34],[123,268,35],[134,268,35],[145,266,35],[157,768,147],[168,764,147],[179,778,164],[201,770,174],[212,770,174],[223,768,176],[235,762,177],[257,754,177],[268,746,177],[279,746,176],[302,750,176],[313,748,175],[324,748,174],[335,740,172],[357,734,169],[369,734,169],[391,734,168],[402,734,168],[425,732,167],[436,732,167],[458,732,165],[480,730,165],[492,730,165],[503,730,165],[525,730,165],[536,730,165],[559,732,165],[570,732,165],[581,732,165],[592,732,164],[603,732,164],[614,732,164],[625,733,164],[648,734,164]],"collapse":[[0,732,164],[11,720,165],[22,668,162],[33,642,158],[44,614,154],[55,532,134],[67,492,124],[78,468,117],[89,414,101],[100,386,92],[111,370,86],[122,338,74],[134,326,69],[156,288,56],[167,276,52],[178,264,48],[189,254,45],[201,250,44],[212,238,40],[223,234,39],[234,228,38],[245,224,37],[256,224,37],[268,216,35],[279,214,35],[301,206,33],[312,204,33],[323,204,33],[335,202,32],[346,202,32],[357,202,32],[379,202,32],[390,202,32],[402,200,31],[413,202,31],[424,202,31]]};
+const TRACKS = {"hover":[[-9,200,31],[2,200,31],[14,201,31],[36,204,31],[47,208,31],[58,210,32],[69,210,32],[81,214,32],[103,216,33],[125,218,33],[136,218,33],[148,218,33],[159,218,33],[170,218,34],[181,218,34],[192,218,34],[203,216,34],[215,216,34],[226,216,34],[237,216,34],[248,216,34],[270,216,34],[282,216,34],[293,216,34],[304,216,33],[315,216,33],[326,216,33],[337,216,33],[349,216,33],[360,216,33],[371,216,33],[382,216,33],[393,216,33],[404,216,33],[416,216,33],[427,216,33],[438,216,33],[449,216,33],[460,216,33]],"expand":[[-58,216,33],[-36,206,32],[-14,206,32],[9,214,31],[20,216,31],[98,268,34],[120,268,34],[132,266,34],[143,264,35],[154,264,35],[165,262,35],[175,262,35],[176,736,147],[187,732,147],[199,746,164],[221,736,174],[232,736,174],[243,734,175],[254,728,177],[277,720,177],[288,712,177],[299,712,176],[321,714,176],[333,712,174],[344,714,174],[355,704,172],[377,700,169],[388,700,169],[411,699,168],[422,699,168],[444,698,166],[455,698,166],[478,696,165],[500,696,165],[511,694,165],[522,694,165],[545,695,165],[556,695,165],[578,696,164],[589,696,164],[601,698,164],[612,698,164],[623,698,164],[634,698,164],[645,698,164],[668,698,164],[679,700,164],[690,700,164],[712,700,164],[723,700,164],[735,700,164],[757,700,165]],"collapse":[[-9,700,165],[2,698,164],[13,686,165],[24,636,162],[35,612,158],[47,586,154],[58,504,134],[69,467,123],[80,448,117],[91,398,101],[102,372,92],[114,357,86],[125,326,74],[136,316,69],[158,280,56],[169,270,52],[181,258,47],[192,250,45],[203,244,43],[214,233,40],[225,230,39],[236,222,38],[248,220,36],[259,220,36],[270,212,35],[281,210,34],[303,204,33],[315,200,33],[326,200,33],[337,199,32],[348,198,32],[359,198,32],[382,198,32],[393,198,31],[404,198,31],[415,198,31],[426,198,31],[449,200,31],[460,200,31]]};
+const SMOOTH = [[[-34,206,29],[7,265,47],[49,306,53],[91,546,72],[132,738,140],[174,738,140],[216,756,156],[257,739,168],[299,739,168],[341,736,168],[382,695,170],[424,695,170],[466,690,168],[507,690,168],[549,695,165],[591,695,165],[632,701,164],[674,701,164]],[[-34,216,35],[7,223,33],[49,283,37],[91,597,75],[132,744,123],[174,760,156],[216,752,158],[257,698,170],[299,704,168],[341,704,168],[382,693,168],[424,703,166],[466,703,166],[507,703,166],[549,699,165],[591,697,165],[632,697,164],[674,697,164]],[[-38,196,31],[4,207,32],[45,296,36],[87,592,71],[129,681,94],[170,775,142],[212,748,163],[254,748,163],[295,715,169],[337,700,169],[379,700,169],[420,694,168],[462,699,167],[504,703,166],[545,701,165],[587,697,165],[629,697,165],[670,697,164]]];
 
-const IDLE = { w: 202, h: 31 }, HOVER = { w: 220, h: 33 }, PRESS = { w: 160, h: 30 }, OPEN = { w: 732, h: 165 };
-const CX = 500, PRE_MS = 145;
+const IDLE = { w: 200, h: 31 }, HOVER = { w: 216, h: 33.4 }, PRESS = { w: 206, h: 30 }, OPEN = { w: 700, h: 164.5 }, POP = { w: 263, h: 35 };
+const SPR = { hover: [.55, 26], press: [.8, 90], openW: [.6, 19.5], openH: [.65, 16.5, 30], close: [1, 21.5], closeH: [1, 21.5, 18], tap: [.7, 19], tapH: [.7, 19, 18], pop: [.5, 52] };
+const CX = 500, HITCH_END = 176, CLOSE_MS = 420, FRAME = 1000 / 120;
+const DEMO = [[250, 'enter'], [1050, 'press'], [1110, 'release'], [1900, 'leave'], [2700, 'close']], DEMO_END = 3400;
+const TAKE = [[3556, 'enter'], [5777, 'press'], [5827, 'release'], [9000, 'leave'], [12579, 'close']];
+const $ = id => document.getElementById(id);
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const outCubic = x => 1 - Math.pow(1 - clamp(x), 3);
-const spring = (z, wn, ms) => { const t = ms / 1000; if (t <= 0) return 0; const wd = wn * Math.sqrt(1 - z * z);
-  return 1 - Math.exp(-z * wn * t) * (Math.cos(wd * t) + (z * wn / wd) * Math.sin(wd * t)); };
-function bezier(x1, y1, x2, y2) {
-  const B = (a, b, s) => 3 * a * s * (1 - s) ** 2 + 3 * b * s * s * (1 - s) + s ** 3;
-  return x => { if (x <= 0) return 0; if (x >= 1) return 1; let lo = 0, hi = 1;
-    for (let i = 0; i < 26; i++) { const m = (lo + hi) / 2; if (B(x1, x2, m) < x) lo = m; else hi = m; }
-    return B(y1, y2, (lo + hi) / 2); };
+const outQuad = x => 1 - Math.pow(1 - clamp(x), 2);
+function axis(x0, v0, to, z, wn) {
+  const a = x0 - to;
+  if (z < 0.999) { const wd = wn * Math.sqrt(1 - z * z), b = (v0 + z * wn * a) / wd;
+    return t => to + Math.exp(-z * wn * t) * (a * Math.cos(wd * t) + b * Math.sin(wd * t)); }
+  const b = v0 + wn * a;
+  return t => to + (a + b * t) * Math.exp(-wn * t);
 }
-const bezW = bezier(0, 1.7, .1, .9), bezH = bezier(0, 1.6, .1, .95), easeOut = bezier(.33, 1, .68, 1);
 function interp(track, ms) {
   if (ms <= track[0][0]) return { w: track[0][1], h: track[0][2] };
   for (let i = 1; i < track.length; i++) if (ms <= track[i][0]) {
@@ -168,164 +199,230 @@ function interp(track, ms) {
   const l = track[track.length - 1]; return { w: l[1], h: l[2] };
 }
 
-let mode = 'model', speed = 1, paused = false, clock = 0, last = performance.now();
-let state = 'idle', anim = null, cur = { w: IDLE.w, h: IDLE.h, op: 0, blur: 0 };
-const pre = document.getElementById('pre');
+const hitch = $('hitch'), scrub = $('scrub'), ov = $('ov'), stage = $('stage');
+let mode = 'model', speed = 1, paused = false, last = performance.now();
+let drive = 'live', T = 0, playing = false;
+let state = 'idle', anim = null, pointerIn = false, opened = null, clock = 0, cur = { ...IDLE, vw: 0, vh: 0 };
 
-function springAnim(to, z, wn) {
-  const from = { ...cur };
-  return { start: clock, sample: te => { const p = spring(z, wn, te);
-    return { w: from.w + (to.w - from.w) * p, h: from.h + (to.h - from.h) * p, op: 0, blur: 0 }; } };
+function springTo(kind, to, pw, ph = pw) {
+  const s = { ...cur }, dh = ph[2] || 0;
+  const fw = axis(s.w, s.vw, to.w, pw[0], pw[1]), fh = axis(s.h + s.vh * dh / 1000, s.vh, to.h, ph[0], ph[1]);
+  const at = te => ({ w: fw(Math.max(0, te) / 1000), h: te > dh ? fh((te - dh) / 1000) : s.h + s.vh * Math.max(0, te) / 1000 });
+  return { kind, start: clock, sample: te => { const p = at(te), q = at(te + 1); return { w: p.w, h: p.h, vw: (q.w - p.w) * 1000, vh: (q.h - p.h) * 1000 }; } };
 }
-function contentAt(tj) { return { op: clamp((tj - 10) / 110), blur: 14 * (1 - outCubic((tj - 10) / 240)) }; }
+function trackAnim(kind, track, offset = 0) {
+  return { kind, start: clock, sample: te => ({ ...interp(track, te + offset), vw: 0, vh: 0 }) };
+}
 function expandAnim() {
-  const from = { ...cur }, withPre = pre.checked;
-  if (mode === 'measured') return { start: clock, end: 700, sample: te => {
-    const s = interp(TRACKS.expand, withPre ? te : te + PRE_MS); const tj = withPre ? te - PRE_MS - 6 : te - 6;
-    return { ...s, ...(tj < 0 ? { op: 0, blur: 14 } : contentAt(tj)) }; } };
-  return { start: clock, end: 700, sample: te => {
-    let base = from, tj = te;
-    if (withPre) {
-      const k = outCubic(te / 78); base = { w: from.w + 52 * k, h: from.h + 3 * k };
-      if (te < PRE_MS) return { ...base, op: 0, blur: 14 };
-      base = { w: from.w + 52, h: from.h + 3 }; tj = te - PRE_MS;
-    }
-    return { w: base.w + (OPEN.w - base.w) * bezW(tj / 220), h: base.h + (OPEN.h - base.h) * bezH(tj / 440), ...contentAt(tj) };
-  } };
+  if (mode === 'measured') return trackAnim('expand', TRACKS.expand);
+  const s = { ...cur }, a = springTo('expand', OPEN, SPR.openW, SPR.openH);
+  if (!hitch.checked) return a;
+  const live = a.sample, pw = axis(s.w, s.vw, POP.w, ...SPR.pop), ph = axis(s.h, s.vh, POP.h, ...SPR.pop);
+  a.sample = te => { if (te >= HITCH_END) return live(te); const t = Math.max(0, te - 20) / 1000; return { w: pw(t), h: ph(t), vw: 0, vh: 0 }; };
+  return a;
 }
-function collapseAnim() {
-  const from = { ...cur };
-  if (mode === 'measured') return { start: clock, end: 430, sample: te => ({ ...interp(TRACKS.collapse, te), op: 0, blur: 0 }) };
-  return { start: clock, end: 430, sample: te => ({ w: from.w + (IDLE.w - from.w) * easeOut(te / 360),
-    h: from.h + (IDLE.h - from.h) * easeOut((te - 35) / 280), op: 0, blur: 0 }) };
+function contentAt(te) {
+  if (mode === 'measured' || hitch.checked) {
+    if (te < HITCH_END) return [0, 14, 0, 14];
+    return [clamp(te / 340), 14 * (1 - outCubic(te / 600)), outQuad((te - 190) / 450), 14 * (1 - outCubic((te - 190) / 480))];
+  }
+  return [clamp((te - 20) / 200), 14 * (1 - outCubic((te - 20) / 330)), clamp((te - 50) / 260), 14 * (1 - outCubic((te - 50) / 330))];
 }
-function hoverAnim() {
-  if (mode === 'measured') { const off = cur.w > 206 ? 60 : 0;
-    return { start: clock, sample: te => ({ ...interp(TRACKS.hover, te + off), op: 0, blur: 0 }) }; }
-  return springAnim(HOVER, .54, 26);
+function go(next, tap) {
+  if (next === 'hover' && state === 'idle') { state = 'hover';
+    anim = mode === 'measured' && cur.w < 203 ? trackAnim('hover', TRACKS.hover) : springTo('hover', HOVER, SPR.hover); }
+  else if (next === 'idle' && state === 'hover') { state = 'idle'; anim = springTo('leave', IDLE, SPR.hover); }
+  else if (next === 'press' && (state === 'idle' || state === 'hover')) { state = 'press'; anim = springTo('press', PRESS, SPR.press); }
+  else if (next === 'open' && state === 'press') { state = 'open'; opened = clock; anim = expandAnim(); }
+  else if (next === 'close' && state === 'open') { state = 'closing'; opened = null;
+    anim = tap ? springTo('collapse', IDLE, SPR.tap, SPR.tapH)
+      : mode === 'measured' && cur.w > 690 ? trackAnim('collapse', TRACKS.collapse) : springTo('collapse', IDLE, SPR.close, SPR.closeH); }
+}
+function fire(name) {
+  if (name === 'enter') { pointerIn = true; go('hover'); }
+  else if (name === 'leave') { pointerIn = false; go('idle'); }
+  else if (name === 'press') go('press');
+  else if (name === 'release') go('open');
+  else go('close');
+}
+function settle(t) {
+  if (anim && state === 'closing' && t - anim.start > CLOSE_MS) {
+    clock = anim.start + CLOSE_MS; Object.assign(cur, anim.sample(CLOSE_MS)); state = 'idle'; if (pointerIn) go('hover');
+  }
+  clock = t;
+  if (anim) Object.assign(cur, anim.sample(clock - anim.start));
+}
+function reset() { state = 'idle'; anim = null; pointerIn = false; opened = null; clock = 0; cur = { ...IDLE, vw: 0, vh: 0 }; }
+function replay(events, t) {
+  reset();
+  for (const [at, name] of events) { if (at > t) break; settle(at); fire(name); }
+  settle(t);
 }
 
-let pointerIn = false;
-function go(next) {
-  if (next === 'hover' && state === 'idle') { state = 'hover'; anim = hoverAnim(); }
-  else if (next === 'idle' && state === 'hover') { state = 'idle'; anim = springAnim(IDLE, .54, 26); }
-  else if (next === 'press' && (state === 'idle' || state === 'hover')) { state = 'press'; anim = springAnim(PRESS, .75, 60); }
-  else if (next === 'open' && state === 'press') { state = 'open'; anim = expandAnim(); }
-  else if (next === 'close' && state === 'open') { state = 'closing'; anim = collapseAnim(); }
-}
-
-const stage = document.getElementById('stage'), shape = document.getElementById('shape'), shell = document.getElementById('shell');
-const content = document.getElementById('content'), inner = document.getElementById('inner'), hud = document.getElementById('hud');
-let geo = { bw: 200, h: 31, left: 400 }, hudFrame = 0, lastD = '', lastClip = '', lastOp = -1, lastBlur = -1;
-const shadow = document.getElementById('shadow');
+const shape = $('shape'), shadow = $('shadow'), content = $('content'), inner = $('inner'), tabs = $('tabs'), widgets = $('widgets'), hud = $('hud');
 const f1 = v => v.toFixed(1);
+let geo = { w: 200, h: 31, left: 400 }, hudFrame = 0, charts = [];
+const seen = {};
+const put = (key, value, apply) => { if (seen[key] !== value) { seen[key] = value; apply(value); } };
+function geom(w, h) {
+  const k = clamp((h - IDLE.h) / (OPEN.h - IDLE.h), 0, 1.15);
+  const ear = Math.min(9.5 + 25.5 * Math.pow(k, 1.2), h * .45), r = Math.max(2, Math.min(12 + 33 * k, h - ear - 1, w / 2));
+  return { k, ear, r, x0: CX - w / 2, x1: CX + w / 2 };
+}
+function layer(el, key, op, blur) {
+  put(key + 'o', Math.round(op * 100) / 100, v => { el.style.opacity = v; });
+  put(key + 'b', Math.round(blur * 4) / 4, v => { el.style.filter = v > 0 ? `blur(${v}px)` : 'none'; });
+}
 function render() {
-  const k = clamp((cur.h - IDLE.h) / (OPEN.h - IDLE.h));
-  const ear = Math.min(6 + 24 * k, Math.max(2, cur.h - 10)), r = Math.min(8 + 16 * k, cur.h / 2);
-  const bw = Math.max(20, cur.w - (2 + 32 * k)), h = cur.h, x0 = CX - bw / 2, x1 = CX + bw / 2;
-  const d = `M${f1(x0 - ear)} 0H${f1(x1 + ear)}Q${f1(x1)} 0 ${f1(x1)} ${f1(ear)}V${f1(h - r)}Q${f1(x1)} ${f1(h)} ${f1(x1 - r)} ${f1(h)}H${f1(x0 + r)}Q${f1(x0)} ${f1(h)} ${f1(x0)} ${f1(h - r)}V${f1(ear)}Q${f1(x0)} 0 ${f1(x0 - ear)} 0Z`;
-  if (d !== lastD) { shape.setAttribute('d', d); lastD = d; }
-  shadow.style.transform = `translate(${CX - 350}px, 0) scale(${bw / 700}, ${h / 166})`;
-  shadow.style.opacity = k.toFixed(3);
-  const side = (800 - bw) / 2, clip = `inset(0 ${f1(side)}px ${f1(230 - h)}px ${f1(side)}px round 0 0 ${f1(r)}px ${f1(r)}px)`;
-  if (clip !== lastClip) { content.style.clipPath = clip; lastClip = clip; }
-  const op = Math.round(cur.op * 100) / 100, blur = Math.round(cur.blur * 4) / 4;
-  if (op !== lastOp) { inner.style.opacity = op; lastOp = op; }
-  if (blur !== lastBlur) { inner.style.filter = blur > 0 ? `blur(${blur}px)` : 'none'; lastBlur = blur; }
-  geo = { bw, h, left: x0 };
-  stage.style.cursor = pointerIn && state !== 'open' ? 'pointer' : '';
-  if (paused || ++hudFrame % 6 === 0) hud.textContent = `t ${Math.round(anim ? clock - anim.start : 0)}ms · ${state} · 宽 ${cur.w.toFixed(0)} · 高 ${cur.h.toFixed(0)} · 模糊 ${cur.blur.toFixed(1)}`;
+  const w = Math.max(40, cur.w), h = Math.max(8, cur.h), { k, ear, r, x0, x1 } = geom(w, h);
+  const body = `V${f1(h - r)}Q${f1(x1)} ${f1(h)} ${f1(x1 - r)} ${f1(h)}H${f1(x0 + r)}Q${f1(x0)} ${f1(h)} ${f1(x0)} ${f1(h - r)}`;
+  put('d', `M${f1(x0 - ear)} 0H${f1(x1 + ear)}A${f1(ear)} ${f1(ear)} 0 0 0 ${f1(x1)} ${f1(ear)}${body}V${f1(ear)}A${f1(ear)} ${f1(ear)} 0 0 0 ${f1(x0 - ear)} 0Z`, v => shape.setAttribute('d', v));
+  put('clip', `path("M${f1(x0)} 0H${f1(x1)}${body}Z")`, v => { content.style.clipPath = v; });
+  shadow.style.transform = `translate(${f1(x0)}px, 0) scale(${(w / 700).toFixed(4)}, ${(h / 166).toFixed(4)})`;
+  put('so', clamp(k).toFixed(2), v => { shadow.style.opacity = v; });
+  const iw = Math.max(380, w);
+  put('iw', f1(iw), v => { inner.style.width = v + 'px'; inner.style.left = f1(CX - iw / 2) + 'px'; });
+  const c = opened == null ? [0, 0, 0, 0] : contentAt(clock - opened);
+  layer(tabs, 't', c[0], c[1]); layer(widgets, 'w', c[2], c[3]);
+  geo = { w, h, left: x0 };
+  put('cursor', drive === 'live' && pointerIn && state !== 'open' ? 'pointer' : '', v => { stage.style.cursor = v; });
+  const te = anim ? clock - anim.start : 0;
+  if (drive !== 'live' || paused || ++hudFrame % 6 === 0) hud.textContent = `t ${Math.round(te)}ms · ${state} · ${cur.w.toFixed(0)}×${cur.h.toFixed(0)} · 模糊 ${c[1].toFixed(1)}`;
+  for (const ch of charts) {
+    const on = anim && anim.kind === ch.kind && te >= ch.tmin && te <= ch.tmax;
+    put('ph' + ch.id, on ? f1(ch.X(te)) : '', v => { ch.line.setAttribute('visibility', v ? 'visible' : 'hidden'); if (v) { ch.line.setAttribute('x1', v); ch.line.setAttribute('x2', v); } });
+  }
+  const running = drive === 'overlay' ? !ov.paused : drive === 'timeline' ? playing : !paused;
+  put('run', running, v => { $('pause').textContent = v ? '暂停' : '继续'; $('pause').classList.toggle('on', !v); });
+  put('tl', drive === 'timeline' ? `演示 ${Math.round(T)}ms` : '手动操作中', v => { $('tltime').textContent = v; });
+  if (drive === 'overlay') $('ovtime').textContent = `原片 ${(ovNow() / 1000).toFixed(3)}s`;
 }
-content.parentNode.insertBefore(shell, content);
-content.parentNode.insertBefore(shadow, shell);
-document.getElementById('grid').innerHTML = Array.from({ length: 28 }, (_, i) => `<i class="${i > 18 ? 'off' : ''}"></i>`).join('');
+$('grid').innerHTML = Array.from({ length: 28 }, (_, i) => `<i class="${i > 18 ? 'off' : ''}"></i>`).join('');
 
+let ovFrame = null;
+const ovNow = () => (ovFrame != null && !ov.seeking ? ovFrame : ov.currentTime) * 1000;
+if (ov.requestVideoFrameCallback) { const each = (_, meta) => { ovFrame = meta.mediaTime; ov.requestVideoFrameCallback(each); }; ov.requestVideoFrameCallback(each); }
+ov.addEventListener('seeking', () => { ovFrame = null; });
 function tick(now) {
-  const dt = paused ? 0 : Math.min(50, now - last) * speed; last = now; advance(dt); requestAnimationFrame(tick);
-}
-let queue = [];
-function advance(dt) {
-  clock += dt;
-  if (queue.length) { const due = queue.filter(q => q.at <= clock); queue = queue.filter(q => q.at > clock); due.forEach(q => q.f()); }
-  if (anim) { cur = anim.sample(clock - anim.start);
-    if (state === 'closing' && clock - anim.start > anim.end) { state = pointerIn ? 'hover' : 'idle'; cur = { ...IDLE, op: 0, blur: 0 }; anim = pointerIn ? hoverAnim() : null; } }
-  render();
+  const dt = Math.min(50, now - last); last = now;
+  if (drive === 'overlay') replay(TAKE, ovNow());
+  else if (drive === 'timeline') {
+    if (playing) { T = Math.min(DEMO_END, T + dt * speed); scrub.value = T; if (T >= DEMO_END) playing = false; }
+    replay(DEMO, T);
+  } else if (!paused) settle(clock + dt * speed);
+  render(); requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
 
 let scale = 1;
-function fit() { const w = document.getElementById('wrap').clientWidth; scale = Math.min(1, w / 1000);
-  stage.style.transform = `scale(${scale})`; document.getElementById('wrap').style.height = 320 * scale + 'px'; }
+function fit() { const w = $('wrap').clientWidth; scale = w / 1000;
+  stage.style.transform = `scale(${scale})`; $('wrap').style.height = 320 * scale + 'px'; }
 addEventListener('resize', fit); fit();
 const local = e => { const r = stage.getBoundingClientRect(); return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale }; };
-function overIsland(p) { return p.x > geo.left - 6 && p.x < geo.left + geo.bw + 6 && p.y < geo.h; }
+const overIsland = p => p.x > geo.left - 6 && p.x < geo.left + geo.w + 6 && p.y < geo.h;
+function takeOver() { if (drive === 'timeline' && !playing) { drive = 'live'; paused = false; } return drive === 'live'; }
 stage.addEventListener('pointermove', e => {
-  const p = local(e);
-  const inside = overIsland(p); if (inside !== pointerIn) { pointerIn = inside; go(inside ? 'hover' : 'idle'); }
+  const inside = overIsland(local(e));
+  if (inside !== pointerIn && takeOver()) { pointerIn = inside; go(inside ? 'hover' : 'idle'); }
 });
-stage.addEventListener('pointerleave', () => { pointerIn = false; go('idle'); });
-stage.addEventListener('pointerdown', e => { const p = local(e);
-  if (state === 'open') { if (!(p.y < geo.h && p.x > geo.left && p.x < geo.left + geo.bw)) go('close'); return; }
-  if (overIsland(p)) go('press'); });
-addEventListener('pointerup', () => { if (state === 'press') go('open'); });
-addEventListener('keydown', e => { if (e.key === 'Escape') go('close'); if (e.key === 'ArrowRight' && paused) step(1); if (e.key === 'ArrowLeft' && paused) step(-1); if (e.key === ' ') { e.preventDefault(); togglePause(); } });
+stage.addEventListener('pointerleave', () => { if (drive === 'live') { pointerIn = false; go('idle'); } });
+stage.addEventListener('pointerdown', e => {
+  const p = local(e), inside = overIsland(p);
+  if (!takeOver()) return;
+  if (state === 'open') { if (!inside) go('close'); else if (p.y < IDLE.h && Math.abs(p.x - CX) < IDLE.w / 2) go('close', true); return; }
+  if (inside) { pointerIn = true; go('press'); }
+});
+addEventListener('pointerup', () => { if (drive === 'live' && state === 'press') go('open'); });
+addEventListener('keydown', e => {
+  if (e.key === 'Escape' && takeOver()) go('close');
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === ' ' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') { e.preventDefault(); togglePause(); }
+});
 
-function step(dir) { advance(dir * 1000 / 120); }
-function togglePause() { paused = !paused; document.getElementById('pause').textContent = paused ? '继续' : '暂停'; document.getElementById('pause').classList.toggle('on', paused); }
-document.getElementById('pause').onclick = togglePause;
-document.getElementById('next').onclick = () => { if (!paused) togglePause(); step(1); };
-document.getElementById('prev').onclick = () => { if (!paused) togglePause(); step(-1); };
-document.getElementById('close').onclick = () => go('close');
-document.getElementById('dark').onchange = e => stage.classList.toggle('dark', e.target.checked);
+function step(dir) {
+  if (drive === 'overlay') { ov.pause(); ov.currentTime = Math.max(0, ov.currentTime + dir / 120); }
+  else if (drive === 'timeline') { playing = false; T = clamp(T + dir * FRAME, 0, DEMO_END); scrub.value = T; }
+  else { paused = true; settle(Math.max(anim ? anim.start : 0, clock + dir * FRAME)); }
+}
+function togglePause() {
+  if (drive === 'overlay') { ov.playbackRate = speed; if (ov.paused) ov.play(); else ov.pause(); }
+  else if (drive === 'timeline') { if (!playing && T >= DEMO_END) T = 0; playing = !playing; }
+  else paused = !paused;
+}
+function setOverlay(on) {
+  stage.classList.toggle('overlay', on); $('ovbar').style.display = on ? 'flex' : 'none'; $('tlbar').style.display = on ? 'none' : 'flex';
+  if (on) { drive = 'overlay'; if (!hitch.checked) { hitch.checked = true; drawCharts(); } ov.playbackRate = speed; ov.currentTime = 5.62; }
+  else { ov.pause(); drive = 'live'; paused = false; reset(); }
+}
+$('pause').onclick = togglePause;
+$('next').onclick = () => step(1);
+$('prev').onclick = () => step(-1);
+$('demo').onclick = () => { if (drive === 'overlay') setOverlay(false); drive = 'timeline'; T = 0; playing = true; };
+scrub.oninput = () => { drive = 'timeline'; playing = false; T = +scrub.value; };
+$('dark').onchange = e => stage.classList.toggle('dark', e.target.checked);
+hitch.onchange = () => drawCharts();
+$('ovon').onclick = () => setOverlay(true);
+$('ovoff').onclick = () => setOverlay(false);
+ov.addEventListener('loadedmetadata', () => { $('ovon').disabled = false; });
+ov.addEventListener('error', () => { $('ovon').title = '找不到 ai-guide/nook-motion/nook-recording.mp4，录屏不进仓库'; });
+document.querySelectorAll('[data-ov]').forEach(b => b.onclick = () => { ov.currentTime = +b.dataset.ov; ov.playbackRate = speed; ov.play(); });
 const group = (sel, fn) => document.querySelectorAll(sel).forEach(b => b.onclick = () => {
   document.querySelectorAll(sel).forEach(x => x.classList.toggle('on', x === b)); fn(b); });
-group('[data-mode]', b => { mode = b.dataset.mode; drawCharts(); });
-group('[data-speed]', b => { speed = +b.dataset.speed; });
+group('[data-mode]', b => { mode = b.dataset.mode; });
+group('[data-speed]', b => { speed = +b.dataset.speed; ov.playbackRate = speed; });
 
-document.getElementById('demo').onclick = () => {
-  queue = []; if (paused) togglePause();
-  state = 'idle'; anim = null; cur = { ...IDLE, op: 0, blur: 0 };
-  const at = (ms, f) => queue.push({ at: clock + ms, f });
-  at(300, () => go('hover')); at(1000, () => go('press'));
-  at(1070, () => go('open')); at(2800, () => go('close'));
-};
-
-const video = document.getElementById('video'), vtime = document.getElementById('vtime');
-let vs = 0.25;
-video.addEventListener('error', () => { video.style.display = 'none'; document.getElementById('missing').style.display = 'block'; });
-video.addEventListener('timeupdate', () => { vtime.textContent = `录屏 ${(video.currentTime + 0.4).toFixed(3)}s`; });
-video.addEventListener('loadedmetadata', () => { video.currentTime = 5.7; });
+const video = $('video'), vtime = $('vtime');
+const sources = ['../../ai-guide/nook-motion/pixpin-2026-11-21.mp4', 'file:///Users/tixxin/Library/Application%20Support/PixPin/Temp/PixPin_2026-11-21_08-44-20.mp4'];
+let vs = 0.25, source = 0;
+video.addEventListener('error', () => { if (++source < sources.length) video.src = sources[source]; else { video.style.display = 'none'; $('missing').style.display = 'block'; } });
+video.src = sources[0];
+video.addEventListener('timeupdate', () => { vtime.textContent = `录屏 ${video.currentTime.toFixed(3)}s`; });
+video.addEventListener('loadedmetadata', () => { video.currentTime = 4.0; });
 document.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { video.currentTime = +b.dataset.ch; video.playbackRate = vs; video.play(); });
 group('[data-vs]', b => { vs = +b.dataset.vs; video.playbackRate = vs; });
-document.getElementById('vplay').onclick = () => { video.playbackRate = vs; video.paused ? video.play() : video.pause(); };
-document.getElementById('vprev').onclick = () => { video.pause(); video.currentTime = Math.max(0, video.currentTime - 1 / 120); };
-document.getElementById('vnext').onclick = () => { video.pause(); video.currentTime += 1 / 120; };
-video.addEventListener('play', () => document.getElementById('vplay').textContent = '暂停');
-video.addEventListener('pause', () => document.getElementById('vplay').textContent = '播放');
+$('vplay').onclick = () => { video.playbackRate = vs; if (video.paused) video.play(); else video.pause(); };
+$('vprev').onclick = () => { video.pause(); video.currentTime = Math.max(0, video.currentTime - 1 / 24); };
+$('vnext').onclick = () => { video.pause(); video.currentTime += 1 / 24; };
+video.addEventListener('play', () => { $('vplay').textContent = '暂停'; });
+video.addEventListener('pause', () => { $('vplay').textContent = '播放'; });
 
 function modelSeries(kind) {
-  const saved = { cur, mode, clock }; mode = 'model'; clock = 0; const out = [];
-  if (kind === 'hover') { cur = { ...IDLE }; const a = springAnim(HOVER, .54, 26); for (let t = 0; t <= 450; t += 4) out.push([t, a.sample(t)]); }
-  if (kind === 'expand') { cur = { w: 220, h: 31 }; const keep = pre.checked; pre.checked = true; const a = expandAnim(); pre.checked = keep; for (let t = 0; t <= 650; t += 4) out.push([t, a.sample(t)]); }
-  if (kind === 'collapse') { cur = { ...OPEN }; cur.w = 732; cur.h = 164; const a = collapseAnim(); for (let t = 0; t <= 430; t += 4) out.push([t, a.sample(t)]); }
-  ({ cur, mode, clock } = saved); return out;
+  const saved = { state, anim, pointerIn, opened, clock, cur, mode };
+  reset(); mode = 'model';
+  let range = [-10, 460];
+  if (kind === 'hover') go('hover');
+  if (kind === 'expand') { state = 'press'; cur = { w: 206, h: 31.5, vw: 0, vh: 0 }; go('open'); range = [-60, 760]; }
+  if (kind === 'collapse') { state = 'open'; cur = { w: 699, h: 164.5, vw: 0, vh: 0 }; go('close'); }
+  const out = [];
+  for (let t = range[0]; t <= range[1]; t += 2) out.push([t, anim.sample(t)]);
+  ({ state, anim, pointerIn, opened, clock, cur, mode } = saved);
+  return out;
 }
 function drawCharts() {
-  const box = document.getElementById('charts'); box.innerHTML = '';
-  const specs = [['hover', 'w', '悬停 · 宽'], ['hover', 'h', '悬停 · 高'], ['expand', 'w', '展开 · 宽（松手起算）'], ['expand', 'h', '展开 · 高'], ['collapse', 'w', '收起 · 宽'], ['collapse', 'h', '收起 · 高']];
-  for (const [kind, key, title] of specs) {
-    const data = TRACKS[kind].map(r => [r[0], key === 'w' ? r[1] : r[2]]), model = modelSeries(kind).map(([t, v]) => [t, v[key]]);
-    const all = data.concat(model), tmax = Math.max(...all.map(d => d[0])), vmin = Math.min(...all.map(d => d[1])), vmax = Math.max(...all.map(d => d[1]));
-    const W = 320, H = 150, P = 26, X = t => P + (t / tmax) * (W - P - 8), Y = v => H - 18 - ((v - vmin) / (vmax - vmin || 1)) * (H - 30);
+  const box = $('charts'); box.innerHTML = ''; charts = [];
+  for (const key of Object.keys(seen)) if (key.startsWith('ph')) delete seen[key];
+  const specs = [['hover', 'w', '悬停 · 宽'], ['hover', 'h', '悬停 · 高'], ['expand', 'w', '展开 · 宽（松手起算）'], ['expand', 'h', '展开 · 高'], ['collapse', 'w', '收起 · 宽（Esc）'], ['collapse', 'h', '收起 · 高']];
+  specs.forEach(([kind, key, title], id) => {
+    const col = key === 'w' ? 1 : 2, pick = rows => rows.map(r => [r[0], r[col]]);
+    const data = pick(TRACKS[kind]), extra = kind === 'expand' ? SMOOTH.map(pick) : [], series = modelSeries(kind), model = series.map(([t, v]) => [t, v[key]]);
+    const all = data.concat(model, ...extra), tmin = model[0][0], tmax = model[model.length - 1][0], vmin = Math.min(...all.map(d => d[1])), vmax = Math.max(...all.map(d => d[1]));
+    const W = 320, H = 150, P = 26, X = t => P + ((t - tmin) / (tmax - tmin)) * (W - P - 8), Y = v => H - 18 - ((v - vmin) / (vmax - vmin || 1)) * (H - 30);
+    const value = t => model[clamp(Math.round((t - tmin) / 2), 0, model.length - 1)][1];
+    const scored = data.filter(d => d[0] >= (kind === 'expand' && !hitch.checked ? HITCH_END : 0) && d[0] <= tmax);
+    const rms = Math.sqrt(scored.reduce((e, d) => e + (value(d[0]) - d[1]) ** 2, 0) / scored.length);
     const line = model.map(([t, v], i) => `${i ? 'L' : 'M'}${X(t).toFixed(1)} ${Y(v).toFixed(1)}`).join('');
-    const dots = data.map(([t, v]) => `<circle cx="${X(t).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2.2" fill="#ffb36b"/>`).join('');
+    const dots = (rows, color, r) => rows.filter(d => d[0] >= tmin && d[0] <= tmax).map(([t, v]) => `<circle cx="${X(t).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${r}" fill="${color}"/>`).join('');
+    const band = kind === 'expand' ? `<rect x="${X(20)}" y="6" width="${X(HITCH_END) - X(20)}" height="${H - 24}" fill="rgba(255,255,255,.07)"/>` : '';
     const grid = [0, .25, .5, .75, 1].map(f => { const t = Math.round(tmax * f); return `<line x1="${X(t)}" x2="${X(t)}" y1="6" y2="${H - 18}" stroke="rgba(255,255,255,.06)"/><text x="${X(t)}" y="${H - 4}" fill="rgba(255,255,255,.4)" font-size="9" text-anchor="middle">${t}</text>`; }).join('');
     const el = document.createElement('div'); el.className = 'card chart';
-    el.innerHTML = `<h3>${title}</h3><svg viewBox="0 0 ${W} ${H}">${grid}<text x="2" y="${Y(vmax) + 3}" fill="rgba(255,255,255,.4)" font-size="9">${Math.round(vmax)}</text><text x="2" y="${Y(vmin) + 3}" fill="rgba(255,255,255,.4)" font-size="9">${Math.round(vmin)}</text><path d="${line}" fill="none" stroke="#7fc8ff" stroke-width="1.6"/>${dots}</svg>`;
+    el.innerHTML = `<h3>${title}<span>误差 ${rms.toFixed(1)}px</span></h3><svg viewBox="0 0 ${W} ${H}">${band}${grid}<text x="2" y="${Y(vmax) + 3}" fill="rgba(255,255,255,.4)" font-size="9">${Math.round(vmax)}</text><text x="2" y="${Y(vmin) + 3}" fill="rgba(255,255,255,.4)" font-size="9">${Math.round(vmin)}</text><path d="${line}" fill="none" stroke="#7fc8ff" stroke-width="1.6"/>${extra.map(rows => dots(rows, '#7be0a0', 1.8)).join('')}${dots(data, '#ffb36b', 2.2)}<line class="ph" y1="6" y2="${H - 18}" stroke="#fff" stroke-opacity=".7" visibility="hidden"/></svg>`;
     box.appendChild(el);
-  }
+    charts.push({ id, kind, tmin, tmax, X, line: el.querySelector('.ph') });
+  });
 }
 drawCharts();
+
 </script>
 </body>
 </html>
