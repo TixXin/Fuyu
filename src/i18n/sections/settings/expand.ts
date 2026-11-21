@@ -58,6 +58,15 @@ export type SettingsExpandText = {
   motionNone: string;
   motionPlay: string;
   motionCurve: string;
+  hoverEffect: string;
+  hoverMotionHint: string;
+  hoverNear: string;
+  hoverSubtle: string;
+  hoverBold: string;
+  hoverDrop: string;
+  hoverTouch: string;
+  hoverNone: string;
+  hoverTry: string;
   clickHint: string;
   hoverHint: string;
   instant: string;
@@ -128,6 +137,15 @@ export const zhCN: SettingsExpandText = {
   motionNone: "无动画",
   motionPlay: "播放一次",
   motionCurve: "动画曲线",
+  hoverEffect: "悬停效果",
+  hoverMotionHint: "鼠标靠近收起的岛时它怎么变：靠近就鼓（默认）进到岛周围就慢慢鼓起、越近越胖；轻轻鼓起幅度小一半；明显变胖幅度更大、更慢；只往下鼓几乎不变宽；碰到才鼓要碰到岛才变；不变化就不动",
+  hoverNear: "靠近就鼓",
+  hoverSubtle: "轻轻鼓起",
+  hoverBold: "明显变胖",
+  hoverDrop: "只往下鼓",
+  hoverTouch: "碰到才鼓",
+  hoverNone: "不变化",
+  hoverTry: "把鼠标移到这里试试",
   clickHint: "点一下小岛才展开",
   hoverHint: "鼠标移上去就展开，移开收起",
   instant: "立即",
@@ -198,6 +216,15 @@ export const en: SettingsExpandText = {
   motionNone: "None",
   motionPlay: "Play it",
   motionCurve: "Animation curve",
+  hoverEffect: "Hover effect",
+  hoverMotionHint: "How the collapsed island reacts as the pointer comes near: Swell nearby (the default) starts swelling as the pointer gets close and grows as it nears; Subtle swells half as much; Bold grows more and slower; Drop down grows downward and barely wider; On touch changes only when the pointer is on the island; None keeps it still",
+  hoverNear: "Swell nearby",
+  hoverSubtle: "Subtle",
+  hoverBold: "Bold",
+  hoverDrop: "Drop down",
+  hoverTouch: "On touch",
+  hoverNone: "None",
+  hoverTry: "Move the pointer here to try it",
   clickHint: "Opens only when you click the island",
   hoverHint: "Opens under the pointer, closes when it leaves",
   instant: "At once",

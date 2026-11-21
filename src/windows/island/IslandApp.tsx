@@ -245,7 +245,7 @@ export function IslandApp() {
         resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${pageSize.height}` : null}
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
-        hoverGrow={settings.islandMotion !== "none"}
+        hoverGrow={settings.islandHover}
         glass={{ ...glass, nativeState: nativeGlassState }}
         isTucked={isTucked}
         isDimmed={isDimmed}

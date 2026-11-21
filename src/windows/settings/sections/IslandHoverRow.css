@@ -1,0 +1,19 @@
+.island-hover-preview {
+  padding-top: 0;
+}
+
+.island-motion-preview__island.island-hover-preview__island {
+  width: calc(132px + var(--hover-grow-x, 0px));
+  height: calc(26px + var(--hover-grow-y, 0px));
+  border-radius: 0 0 13px 13px;
+  transition: none;
+}
+
+.island-hover-preview__hint {
+  position: absolute;
+  left: 12px;
+  bottom: 8px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  pointer-events: none;
+}

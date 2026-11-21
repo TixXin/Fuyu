@@ -1398,6 +1398,19 @@
     {
       "page": "behavior",
       "zh-CN": {
+        "group": "开合动画",
+        "title": "悬停效果",
+        "description": "鼠标靠近收起的岛时它怎么变：靠近就鼓（默认）进到岛周围就慢慢鼓起、越近越胖；轻轻鼓起幅度小一半；明显变胖幅度更大、更慢；只往下鼓几乎不变宽；碰到才鼓要碰到岛才变；不变化就不动"
+      },
+      "en": {
+        "group": "Open and close",
+        "title": "Hover effect",
+        "description": "How the collapsed island reacts as the pointer comes near: Swell nearby (the default) starts swelling as the pointer gets close and grows as it nears; Subtle swells half as much; Bold grows more and slower; Drop down grows downward and barely wider; On touch changes only when the pointer is on the island; None keeps it still"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
         "group": "全屏和游戏",
         "title": "游戏勿扰",
         "description": "不悬停展开，不抢键盘焦点，不弹消息预览，已展开的面板会收起。消息照常接收。"

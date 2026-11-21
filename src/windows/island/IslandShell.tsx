@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useHoverGrow } from "./useHoverGrow";
-import type { AppearanceMode, TuckStyle } from "../../lib/settings/types";
+import type { AppearanceMode, IslandHover, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
@@ -47,7 +47,7 @@ type IslandShellProps = {
   glass?: IslandGlassView;
   isTucked: boolean;
   isDimmed?: boolean;
-  hoverGrow?: boolean;
+  hoverGrow?: IslandHover;
   tuckStyle?: TuckStyle;
   tuckHint?: TuckHintSettings;
   isDetached: boolean;
@@ -145,7 +145,7 @@ export function IslandShell({
   glass,
   isTucked,
   isDimmed = false,
-  hoverGrow = true,
+  hoverGrow = "near",
   tuckStyle = "edge",
   tuckHint,
   isDetached,

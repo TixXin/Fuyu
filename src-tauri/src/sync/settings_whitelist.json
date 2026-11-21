@@ -28,6 +28,7 @@
         "islandCornerRadius": "sync",
         "islandCornerShape": "sync",
         "islandMotion": "sync",
+        "islandHover": "sync",
         "maxPanelHeight": "local",
         "panelWidth": "local",
         "pageSizes": "local",

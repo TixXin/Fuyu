@@ -18,6 +18,7 @@ import {
 } from "../../../lib/settings/settings";
 import { IslandGlyph } from "../../../components/settings/IslandGlyph";
 import { IslandMotionRow } from "./IslandMotionRow";
+import { IslandHoverRow } from "./IslandHoverRow";
 import type { ExpandTrigger, IslandSettings } from "../../../lib/settings/types";
 
 export function ExpandSettingsSection({
@@ -123,6 +124,7 @@ export function ExpandSettingsSection({
       </SettingsGroup>
       <SettingsGroup title={expand.motion}>
         <IslandMotionRow value={settings.islandMotion} onChange={(islandMotion) => update({ islandMotion })} />
+        <IslandHoverRow value={settings.islandHover} onChange={(islandHover) => update({ islandHover })} />
       </SettingsGroup>
     </>
   );

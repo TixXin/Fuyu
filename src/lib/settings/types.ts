@@ -27,6 +27,7 @@ export type TuckHintColor = "contrast" | "island" | "custom";
 
 export type MessageNotice = "line" | "banner" | "panel";
 export type IslandMotion = "lively" | "spring" | "snappy" | "soft" | "unfold" | "grow" | "smooth" | "fast" | "bouncy" | "none";
+export type IslandHover = "near" | "subtle" | "bold" | "drop" | "touch" | "none";
 export type ShelfDoubleClick = "open" | "reveal";
 
 export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentSettingValues & {
@@ -49,6 +50,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   islandCornerRadius: number;
   islandCornerShape: IslandCornerShape;
   islandMotion: IslandMotion;
+  islandHover: IslandHover;
   themeMode: ThemeMode;
   darkBackgroundColor: string;
   darkTextColor: string;
