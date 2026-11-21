@@ -104,9 +104,13 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
 
   return (
     <div ref={rootRef} className={classes.filter(Boolean).join(" ")} aria-hidden={editing ? undefined : true}>
-      <span className="island-resize__glow island-resize__glow--l" />
-      <span className="island-resize__glow island-resize__glow--r" />
-      {expanded && <span className="island-resize__glow island-resize__glow--b" />}
+      {expanded && (
+        <>
+          <span className="island-resize__glow island-resize__glow--l" />
+          <span className="island-resize__glow island-resize__glow--r" />
+          <span className="island-resize__glow island-resize__glow--b" />
+        </>
+      )}
       {!editing && expanded && (
         <>
           <span className={`island-resize__edge island-resize__edge--l${armed === "l" ? " is-armed" : ""}`} onPointerDown={start(spec("edge", -1, false))} />

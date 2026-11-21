@@ -29,12 +29,6 @@
   width: 2px;
 }
 
-.island-resize--bar .island-resize__glow--l,
-.island-resize--bar .island-resize__glow--r {
-  top: 28%;
-  bottom: 28%;
-}
-
 .island-resize__glow--l { left: 3px; }
 .island-resize__glow--r { right: 3px; }
 
@@ -156,6 +150,20 @@
 .island-resize__cap.is-active {
   opacity: 1;
   pointer-events: auto;
+}
+
+.island-resize--bar.glow-l .island-resize__cap--l,
+.island-resize--bar.glow-r .island-resize__cap--r {
+  opacity: 1;
+  pointer-events: auto;
+  background: var(--resize-accent);
+  box-shadow: 0 0 8px var(--resize-soft);
+}
+
+.island-resize--bar.half-l .island-resize__cap--l,
+.island-resize--bar.half-r .island-resize__cap--r {
+  opacity: 0.4;
+  background: var(--resize-accent);
 }
 
 .island-resize__knob {

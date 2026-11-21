@@ -140,6 +140,10 @@ async function runChecks() {
     box = islandBox();
     await hover(box.left + box.width / 2, box.top + 15);
     check(getComputedStyle(q(".island-resize__cap--r")!).opacity === "0", "鼠标在折叠岛中间时不出小拉环");
+    await hover(box.left + 4, box.top + 15);
+    await until(() => root().classList.contains("glow-l") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", 1000);
+    check(!q(".island-resize__glow") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", "折叠岛的边亮起时只亮小拉环，不再并排多一条亮线");
+    await hover(box.left + box.width / 2, box.top + 15);
     await until(() => !badge().classList.contains("is-shown"), 2000);
     check(!badge().classList.contains("is-shown"), "松手一会儿后尺寸标签收起");
 
