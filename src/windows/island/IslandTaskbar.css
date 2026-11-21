@@ -22,3 +22,22 @@
     --island-rim-fade: none;
   }
 }
+
+:root .stage.stage--taskbar-clear .island.island--collapsed {
+  --island-shell-fill: transparent;
+  --island-rim-paint: none;
+  --island-edge-lines: 0 0 transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+:root .stage.stage--taskbar-clear .island.island--collapsed:hover {
+  --island-shell-fill: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+  background: var(--island-shell-fill);
+}
+
+.stage--taskbar-clear .island--collapsed .island__glass-live,
+.stage--taskbar-clear .island--collapsed .island__glass-refraction {
+  display: none;
+}

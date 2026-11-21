@@ -1,15 +1,27 @@
 import { useEffect, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { getIslandTaskbar, listenIslandTaskbar } from "../../lib/settings/api";
+import { getIslandTaskbar, listenIslandTaskbar, type IslandTaskbar } from "../../lib/settings/api";
 
-export function useIslandOnTaskbar() {
-  const [onTaskbar, setOnTaskbar] = useState(false);
+export type IslandOnTaskbar = { placed: boolean; light: boolean };
+
+const OFF: IslandOnTaskbar = { placed: false, light: false };
+
+function read(taskbar: IslandTaskbar | null): IslandOnTaskbar {
+  return taskbar?.docked === true && taskbar.placed ? { placed: true, light: taskbar.light === true } : OFF;
+}
+
+export function useIslandOnTaskbar(): IslandOnTaskbar {
+  const [onTaskbar, setOnTaskbar] = useState(OFF);
 
   useEffect(() => {
     if (!isTauri()) return;
     let didCancel = false;
     let unlisten: (() => void) | null = null;
-    void listenIslandTaskbar((next) => setOnTaskbar(next?.docked === true && next.placed))
+    const apply = (next: IslandTaskbar | null) => {
+      const value = read(next);
+      setOnTaskbar((current) => (current.placed === value.placed && current.light === value.light ? current : value));
+    };
+    void listenIslandTaskbar(apply)
       .then((nextUnlisten) => {
         if (didCancel) {
           nextUnlisten();
@@ -17,7 +29,7 @@ export function useIslandOnTaskbar() {
         }
         unlisten = nextUnlisten;
         return getIslandTaskbar().then((next) => {
-          if (!didCancel) setOnTaskbar(next?.docked === true && next.placed);
+          if (!didCancel) apply(next);
         });
       })
       .catch((error) => {

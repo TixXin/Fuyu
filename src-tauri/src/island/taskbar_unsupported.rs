@@ -8,6 +8,7 @@ use super::state::{IslandPosition, IslandWindowState};
 pub struct IslandTaskbar {
     docked: bool,
     placed: bool,
+    light: bool,
 }
 
 pub(crate) fn supported() -> bool {

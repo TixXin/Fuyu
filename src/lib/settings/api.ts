@@ -18,7 +18,7 @@ export type IslandDockEdge = "top" | "left" | "right" | "bottom";
 
 export type IslandDockTarget = IslandDockEdge | "taskbar";
 
-export type IslandTaskbar = { docked: boolean; placed: boolean };
+export type IslandTaskbar = { docked: boolean; placed: boolean; light: boolean };
 
 const ISLAND_EDGE_CHANGED_EVENT = "island-edge-changed";
 

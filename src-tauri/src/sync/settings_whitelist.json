@@ -148,6 +148,7 @@
         "shelfShowCount": "sync",
         "sideMusicCover": "sync",
         "sideHeightMode": "sync",
+        "taskbarLook": "sync",
         "sideHeight": "local",
         "deviceUseIndicator": "firstMergeOnly",
         "levelPopup": "firstMergeOnly",

@@ -3,7 +3,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { getIslandTaskbar, listenIslandTaskbar, type IslandTaskbar } from "../../../lib/settings/api";
 import { getTaskbarLayout } from "../../../lib/taskbar/api";
 
-const NOT_DOCKED: IslandTaskbar = { docked: false, placed: false };
+const NOT_DOCKED: IslandTaskbar = { docked: false, placed: false, light: false };
 
 export function useIslandTaskbar() {
   const [taskbar, setTaskbar] = useState<IslandTaskbar>(NOT_DOCKED);
