@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "../../../i18n";
 import { startIslandResize } from "../api";
 import type { PanelPageSize } from "../../../lib/settings/types";
 import { beginResizeDrag, endResizeDrag, getResizeState, setResizeEditing, useResizeState, type ResizeLabel, type ResizeSpec } from "./session.ts";
 import type { IslandResizeModel } from "./useIslandResize";
+import { useHandleCapture, type ResizeHandle } from "./useHandleCapture";
 import { useResizeEditing } from "./useResizeEditing";
 import { useResizeZones } from "./useResizeZones";
 import "./IslandResize.css";
@@ -63,12 +64,9 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
     return () => window.clearTimeout(timer);
   }, [drag]);
 
-  if (!enabled) return null;
-
-  const start = (next: ResizeSpec) => (event: ReactPointerEvent<HTMLElement>) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    event.stopPropagation();
+  const resetPanel = () => model.applyPreset("default");
+  const resetBar = () => model.applyCollapsed(0);
+  const start = (next: ResizeSpec) => () => {
     beginResizeDrag(next);
     void startIslandResize(next.widthSign, next.height).catch((error: unknown) => {
       console.error("Failed to start resizing the island", error);
@@ -81,8 +79,11 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
     };
     window.addEventListener("pointerup", release, { once: true });
   };
-  const resetPanel = () => model.applyPreset("default");
-  const resetBar = () => model.applyCollapsed(0);
+  const handles = new Map<string, ResizeHandle>();
+  const handle = (name: string, next: ResizeSpec, reset?: () => void) => {
+    handles.set(name, { start: start(next), reset });
+    return { "data-resize-handle": name };
+  };
 
   const labelText = (value: ResizeLabel) => {
     if (value.preset) return text.preset[value.preset];
@@ -102,7 +103,7 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
 
   const classes = ["island-resize", expanded ? "island-resize--panel" : "island-resize--bar", editing ? "is-editing" : "", drag ? "is-dragging" : "", ...glowClasses(drag, armed, expanded), ...near.map((name) => `is-near-${name}`)];
 
-  return (
+  const view = enabled && (
     <div ref={rootRef} className={classes.filter(Boolean).join(" ")} aria-hidden={editing ? undefined : true}>
       {expanded && (
         <>
@@ -113,32 +114,32 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
       )}
       {!editing && expanded && (
         <>
-          <span className={`island-resize__edge island-resize__edge--l${armed === "l" ? " is-armed" : ""}`} onPointerDown={start(spec("edge", -1, false))} />
-          <span className={`island-resize__edge island-resize__edge--r${armed === "r" ? " is-armed" : ""}`} onPointerDown={start(spec("edge", 1, false))} />
-          <span className={`island-resize__edge island-resize__edge--b${armed === "b" ? " is-armed" : ""}`} onPointerDown={start(spec("edge", 0, true))} />
-          <span className={`island-resize__grab${drag?.kind === "grab" ? " is-active" : ""}`} onPointerDown={start(spec("grab", 1, true))} onDoubleClick={resetPanel} />
-          <span className={`island-resize__knob island-resize__knob--l${drag?.kind === "knob" && drag.widthSign === -1 ? " is-active" : ""}`} onPointerDown={start(spec("knob", -1, true, true))} onDoubleClick={resetPanel} />
-          <span className={`island-resize__knob island-resize__knob--r${drag?.kind === "knob" && drag.widthSign === 1 ? " is-active" : ""}`} onPointerDown={start(spec("knob", 1, true, true))} onDoubleClick={resetPanel} />
+          <span className={`island-resize__edge island-resize__edge--l${armed === "l" ? " is-armed" : ""}`} {...handle("edge-l", spec("edge", -1, false))} />
+          <span className={`island-resize__edge island-resize__edge--r${armed === "r" ? " is-armed" : ""}`} {...handle("edge-r", spec("edge", 1, false))} />
+          <span className={`island-resize__edge island-resize__edge--b${armed === "b" ? " is-armed" : ""}`} {...handle("edge-b", spec("edge", 0, true))} />
+          <span className={`island-resize__grab${drag?.kind === "grab" ? " is-active" : ""}`} {...handle("grab", spec("grab", 1, true), resetPanel)} />
+          <span className={`island-resize__knob island-resize__knob--l${drag?.kind === "knob" && drag.widthSign === -1 ? " is-active" : ""}`} {...handle("knob-l", spec("knob", -1, true, true), resetPanel)} />
+          <span className={`island-resize__knob island-resize__knob--r${drag?.kind === "knob" && drag.widthSign === 1 ? " is-active" : ""}`} {...handle("knob-r", spec("knob", 1, true, true), resetPanel)} />
         </>
       )}
       {!editing && !expanded && (
         <>
-          <span className={`island-resize__edge island-resize__edge--l${armed === "l" ? " is-armed" : ""}`} onPointerDown={start(spec("edge", -1, false, true))} />
-          <span className={`island-resize__edge island-resize__edge--r${armed === "r" ? " is-armed" : ""}`} onPointerDown={start(spec("edge", 1, false, true))} />
-          <span className={`island-resize__cap island-resize__cap--l${drag?.kind === "cap" && drag.widthSign === -1 ? " is-active" : ""}`} onPointerDown={start(spec("cap", -1, false, true))} onDoubleClick={resetBar} />
-          <span className={`island-resize__cap island-resize__cap--r${drag?.kind === "cap" && drag.widthSign === 1 ? " is-active" : ""}`} onPointerDown={start(spec("cap", 1, false, true))} onDoubleClick={resetBar} />
+          <span className={`island-resize__edge island-resize__edge--l${armed === "l" ? " is-armed" : ""}`} {...handle("bar-edge-l", spec("edge", -1, false, true))} />
+          <span className={`island-resize__edge island-resize__edge--r${armed === "r" ? " is-armed" : ""}`} {...handle("bar-edge-r", spec("edge", 1, false, true))} />
+          <span className={`island-resize__cap island-resize__cap--l${drag?.kind === "cap" && drag.widthSign === -1 ? " is-active" : ""}`} {...handle("cap-l", spec("cap", -1, false, true), resetBar)} />
+          <span className={`island-resize__cap island-resize__cap--r${drag?.kind === "cap" && drag.widthSign === 1 ? " is-active" : ""}`} {...handle("cap-r", spec("cap", 1, false, true), resetBar)} />
         </>
       )}
       {editing && (
         <>
           <span className="island-resize__outline" />
-          <span className="island-resize__bead island-resize__bead--l" onPointerDown={start(spec("bead", -1, false, !expanded))} />
-          <span className="island-resize__bead island-resize__bead--r" onPointerDown={start(spec("bead", 1, false, !expanded))} />
+          <span className="island-resize__bead island-resize__bead--l" {...handle("bead-l", spec("bead", -1, false, !expanded))} />
+          <span className="island-resize__bead island-resize__bead--r" {...handle("bead-r", spec("bead", 1, false, !expanded))} />
           {expanded && (
             <>
-              <span className="island-resize__bead island-resize__bead--b" onPointerDown={start(spec("bead", 0, true))} />
-              <span className="island-resize__bead island-resize__bead--bl" onPointerDown={start(spec("bead", -1, true, true))} />
-              <span className="island-resize__bead island-resize__bead--br" onPointerDown={start(spec("bead", 1, true, true))} />
+              <span className="island-resize__bead island-resize__bead--b" {...handle("bead-b", spec("bead", 0, true))} />
+              <span className="island-resize__bead island-resize__bead--bl" {...handle("bead-bl", spec("bead", -1, true, true))} />
+              <span className="island-resize__bead island-resize__bead--br" {...handle("bead-br", spec("bead", 1, true, true))} />
             </>
           )}
           <div ref={chipsRef} className="island-resize__chips">
@@ -175,4 +176,6 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
       </span>
     </div>
   );
+  useHandleCapture(rootRef, handles, enabled);
+  return view || null;
 }

@@ -60,12 +60,20 @@ const islandBox = () => q(".island")!.getBoundingClientRect();
 const root = () => q(".island-resize")!;
 const badge = () => q(".island-resize__badge")!;
 const last = () => started[started.length - 1];
+const topAt = (x: number, y: number) => document.elementFromPoint(x, y) ?? q(".island")!;
 const hover = (x: number, y: number) => act(async () => {
-  q(".island")!.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: x, clientY: y }));
+  topAt(x, y).dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: x, clientY: y }));
 });
-const press = (element: Element) => act(async () => {
-  element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0 }));
-});
+const pressAt = async (x: number, y: number) => {
+  const event = new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, clientX: x, clientY: y });
+  await act(async () => { topAt(x, y).dispatchEvent(event); });
+  return event;
+};
+const press = (element: Element) => {
+  const rect = element.getBoundingClientRect();
+  return pressAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+};
+const cursor = () => document.documentElement.dataset.islandResizeCursor;
 const resize = (width: number, height: number, done: boolean) => act(async () => {
   await emit("island-resize", { width, height, collapsed: false, done });
 });
@@ -81,11 +89,16 @@ async function runChecks() {
     const under = document.elementFromPoint(edgeX, edgeY);
     check(under && !under.closest(".island-resize") && under.closest(".island__expanded"), "鼠标刚碰到右边时，点下去给的是面板内容，不是改尺寸");
     check(!root().classList.contains("glow-r"), "刚碰到时边还没亮");
+    const early = await pressAt(edgeX, edgeY);
+    check(!early.defaultPrevented && started.length === 0, "边还没亮时按下不开始改尺寸");
     await until(() => root().classList.contains("glow-r"), 1000);
     check(root().classList.contains("glow-r") && root().classList.contains("half-l"), "停一下后右边亮、对侧半亮");
-    const edge = document.elementFromPoint(edgeX, edgeY);
-    check(edge?.classList.contains("island-resize__edge--r"), "亮了之后右边接住鼠标");
-    await press(edge!);
+    const cover = document.createElement("div");
+    cover.style.cssText = "position:fixed;inset:0;z-index:9999";
+    document.body.append(cover);
+    await hover(edgeX, edgeY + 1);
+    check(cursor() === "ew-resize", "亮了之后指针变成左右箭头，上面压着透明层也一样");
+    await pressAt(edgeX, edgeY);
     check(last()?.widthSign === 1 && last()?.height === false, "拖右边只改宽度");
     await resize(84, 0, false);
     await until(() => size()?.width === 884);
@@ -137,6 +150,7 @@ async function runChecks() {
 
     await act(async () => setExpanded(false));
     check(!q(".island-resize__grab") && document.querySelectorAll(".island-resize__cap").length === 2, "折叠岛只有两端的小拉环");
+    await until(() => Math.abs(islandBox().width - 340) < 0.5, 2000);
     box = islandBox();
     await hover(box.left + box.width / 2, box.top + 15);
     check(getComputedStyle(q(".island-resize__cap--r")!).opacity === "0", "鼠标在折叠岛中间时不出小拉环");
@@ -144,9 +158,20 @@ async function runChecks() {
     await until(() => root().classList.contains("glow-l") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", 1000);
     check(!q(".island-resize__glow") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", "折叠岛的边亮起时只亮小拉环，不再并排多一条亮线");
     await hover(box.left + box.width / 2, box.top + 15);
+    await hover(box.left + box.width / 2, box.top + 15);
+    await until(() => islandBox().width - box.width > 17, 2000);
+    const grown = islandBox();
+    const capBox = q(".island-resize__cap--r")!.getBoundingClientRect();
+    check(grown.width - box.width > 17 && capBox.right <= box.right - 6 + 0.5, `悬停把岛撑宽时，小拉环留在没撑宽时的范围里，原生侧不会把它当成岛外`);
+    await hover(capBox.left + 2, capBox.top + capBox.height / 2);
+    await hover(capBox.left + 2, capBox.top + capBox.height / 2 + 1);
+    check(root().classList.contains("is-near-cap-r") && cursor() === "ew-resize", "撑宽时鼠标到小拉环上，拉环出现、指针变成左右箭头");
+    await hover(box.left + box.width / 2, 590);
+    await until(() => q(".island")!.style.getPropertyValue("--island-hover-lift") === "0.0000" && !root().className.includes("is-near") && !root().className.includes("glow"), 3000);
     await until(() => !badge().classList.contains("is-shown"), 2000);
     check(!badge().classList.contains("is-shown"), "松手一会儿后尺寸标签收起");
 
+    cover.remove();
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

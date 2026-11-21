@@ -13,6 +13,12 @@
   --resize-radius: var(--island-shell-radius);
 }
 
+.island-resize--bar {
+  --island-hover-grow-x: inherit;
+  left: calc(var(--island-hover-grow-x) / 2);
+  right: calc(var(--island-hover-grow-x) / 2);
+}
+
 .island-resize__glow {
   position: absolute;
   border-radius: var(--radius-pill);
@@ -419,3 +425,14 @@
     animation: none;
   }
 }
+
+:root[data-island-resize-cursor="ew-resize"],
+:root[data-island-resize-cursor="ew-resize"] * { cursor: ew-resize !important; }
+:root[data-island-resize-cursor="ns-resize"],
+:root[data-island-resize-cursor="ns-resize"] * { cursor: ns-resize !important; }
+:root[data-island-resize-cursor="nwse-resize"],
+:root[data-island-resize-cursor="nwse-resize"] * { cursor: nwse-resize !important; }
+:root[data-island-resize-cursor="nesw-resize"],
+:root[data-island-resize-cursor="nesw-resize"] * { cursor: nesw-resize !important; }
+:root[data-island-resize-cursor="move"],
+:root[data-island-resize-cursor="move"] * { cursor: move !important; }

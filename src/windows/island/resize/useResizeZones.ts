@@ -12,7 +12,7 @@ export function useResizeZones(rootRef: RefObject<HTMLDivElement | null>, expand
   const [near, setNear] = useState<string[]>(NONE);
 
   useEffect(() => {
-    const host = rootRef.current?.parentElement;
+    const host = rootRef.current;
     if (!host || !active) return;
     let timer = 0;
     let pending: ResizeEdge | null = null;
@@ -20,6 +20,10 @@ export function useResizeZones(rootRef: RefObject<HTMLDivElement | null>, expand
     const move = (event: PointerEvent) => {
       if (getResizeState().drag) return;
       const rect = host.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) {
+        leave();
+        return;
+      }
       const flipped = document.documentElement.dataset.islandEdge === "bottom";
       const zone = zoneAt(event.clientX - rect.left, event.clientY - rect.top, rect.width, rect.height, expanded, flipped);
       show(zone.near);
@@ -36,12 +40,12 @@ export function useResizeZones(rootRef: RefObject<HTMLDivElement | null>, expand
       show(NONE);
       setArmed(null);
     };
-    host.addEventListener("pointermove", move);
-    host.addEventListener("pointerleave", leave);
+    window.addEventListener("pointermove", move, true);
+    document.documentElement.addEventListener("pointerleave", leave);
     return () => {
       window.clearTimeout(timer);
-      host.removeEventListener("pointermove", move);
-      host.removeEventListener("pointerleave", leave);
+      window.removeEventListener("pointermove", move, true);
+      document.documentElement.removeEventListener("pointerleave", leave);
       show(NONE);
       setArmed(null);
     };
