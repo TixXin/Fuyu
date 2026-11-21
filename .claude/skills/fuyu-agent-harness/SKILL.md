@@ -50,6 +50,6 @@ description: >
 
 ## 4. 验证和文档
 
-- 这家的模块带单元测试（真实样本脱敏后做测试数据）；提交前只跑这家的单元测试文件和改到的那几页回归页，全量检查等用户说要推 PR 时按 `AGENTS.md`「验证」跑。
+- 这家的模块带单元测试（真实样本脱敏后做测试数据）；提交前跑 `pnpm test:changed`，全量检查等用户说要推 PR 时按 `AGENTS.md`「验证」跑。
 - 真机实测：每种形态各开一个会话，核对列表、三态、等你、审批、跳转，以及点「安装/修复」后状态灯卡片里有没有这一家。没测的列进实测清单的 issue。
 - 同一个提交里更新：`docs/architecture/agent/harnesses.md` 的两张表、`docs/features/agent-status-hooks.md` 里这家的一节、`docs/architecture/platforms.md`；新增了文件或 key 的，再更新 `contracts.md` 和 `data-storage.md`。
