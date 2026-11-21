@@ -32,6 +32,7 @@ import type { IslandSide } from "./useIslandSide";
 import { ISLAND_OUTLINE_STYLE } from "./islandOutline";
 import { isBlankClick } from "./blankClick";
 import { usePanelEditing } from "./custom-panels/panelEditing";
+import { setPanelAwake } from "../../components/island-widget/panelAwake";
 import "./IslandOutline.css";
 
 type IslandShellProps = {
@@ -197,6 +198,7 @@ export function IslandShell({
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();
   const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
+  useEffect(() => setPanelAwake(isExpanded), [isExpanded]);
   useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow);
   const className = [
     "island",

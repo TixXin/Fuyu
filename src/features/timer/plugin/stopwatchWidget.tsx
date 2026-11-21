@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Pause, Play, RotateCcw, Watch } from "lucide-react";
 import { WidgetFrame } from "../../../components/island-widget/WidgetFrame";
 import { useTranslation } from "../../../i18n";
-import { visibilityInterval } from "../../../lib/useVisibilityInterval";
+import { panelInterval } from "../../../components/island-widget/panelAwake";
 import { cancelTimer, pauseTimer, resumeTimer, startStopwatch, useTimers } from "../store";
 import { clockText, elapsedOf, isShown } from "../timers";
 import { clickOnly } from "../../../components/island-widget/clickOnly";
@@ -13,7 +13,7 @@ export function StopwatchWidget() {
   const watch = [...timers].reverse().find((timer) => timer.kind === "stopwatch" && isShown(timer)) ?? null;
   const running = watch?.runningSince != null;
   const [now, setNow] = useState(() => Date.now());
-  useEffect(() => (running ? visibilityInterval(() => setNow(Date.now()), 100) : undefined), [running]);
+  useEffect(() => (running ? panelInterval(() => setNow(Date.now()), 100) : undefined), [running]);
   const shown = watch ? elapsedOf(watch, Math.max(now, watch.runningSince ?? 0)) : 0;
   const toggle = () => {
     if (!watch) void startStopwatch();

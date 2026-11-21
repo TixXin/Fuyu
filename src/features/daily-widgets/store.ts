@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { visibilityInterval } from "../../lib/useVisibilityInterval";
+import { panelInterval } from "../../components/island-widget/panelAwake";
 import { dayKey, shiftDays } from "./days.ts";
 import { DAILY_WIDGETS_KEY, KEEP_DAILY_DAYS, POMODORO_MS, readDaily, writeDaily, type DailyData } from "./storage.ts";
 
@@ -37,7 +37,7 @@ export function useDaily(): DailyData {
 
 export function useNow(stepMs: number): Date {
   const [now, setNow] = useState(() => new Date());
-  useEffect(() => visibilityInterval(() => setNow(new Date()), stepMs), [stepMs]);
+  useEffect(() => panelInterval(() => setNow(new Date()), stepMs), [stepMs]);
   return now;
 }
 
