@@ -84,7 +84,7 @@ export function IslandHeader({
   const trailing = dots.filter((item) => !leading.includes(item));
   const dotsRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${dots.map((item) => item.id).join(",")}`);
+  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${fuyuTabIcon}|${dots.map((item) => item.id).join(",")}`);
   useEffect(() => {
     const row = dotsRef.current;
     const active = row?.querySelector<HTMLElement>(".dot-button--active");
