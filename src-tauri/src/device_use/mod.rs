@@ -49,9 +49,13 @@ fn apps_using(device: &str) -> Vec<String> {
     apps
 }
 
-#[tauri::command]
-pub fn get_device_use() -> DeviceUse {
+fn read_device_use() -> DeviceUse {
     DeviceUse { camera: apps_using("webcam"), microphone: apps_using("microphone") }
+}
+
+#[tauri::command]
+pub async fn get_device_use() -> DeviceUse {
+    read_device_use()
 }
 
 #[tauri::command]
@@ -105,7 +109,7 @@ mod tests {
 
     #[test]
     fn reading_the_consent_store_gives_sorted_lists_without_repeats() {
-        let now = get_device_use();
+        let now = read_device_use();
         for list in [&now.camera, &now.microphone] {
             let mut sorted = list.clone();
             sorted.sort_by_key(|app| app.to_lowercase());

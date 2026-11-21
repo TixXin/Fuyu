@@ -39,9 +39,13 @@ fn microphone_apps() -> Vec<String> {
     sorted(names)
 }
 
-#[tauri::command]
-pub fn get_device_use() -> DeviceUse {
+fn read_device_use() -> DeviceUse {
     DeviceUse { camera: in_use_by_someone(camera::in_use()), microphone: microphone_apps() }
+}
+
+#[tauri::command]
+pub async fn get_device_use() -> DeviceUse {
+    read_device_use()
 }
 
 fn privacy_page(device: &str) -> Option<&'static str> {
@@ -93,6 +97,6 @@ mod tests {
     fn probe_this_computer() {
         println!("recording pids: {:?}", audio_devices::recording_pids());
         println!("any input running: {}", audio_devices::any_input_running());
-        println!("{:?}", get_device_use());
+        println!("{:?}", read_device_use());
     }
 }
