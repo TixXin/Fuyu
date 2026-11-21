@@ -99,6 +99,16 @@
 
 本地 `pnpm build:exe` 打出的 `Fuyu.app` 没带 `Resources/plugins-v3`（打包好的宿主和内置插件），node 跑的是仓库里的源码目录。计时器插件的宿主代码 `timer/host/dataFile.mjs` 直接 import `../timers.ts`，Node 因此加载自带的 TypeScript 剥离器 amaro（堆快照里 3.6 MB 源码加 3 MB WebAssembly 缓冲区）。发布用的 `/Applications/Fuyu.app` 带着 esbuild 打好的内置插件，不加载它，之前量到 45–49 MB。所以上一节表里新包 node 的 52–56 MB 不能和旧版比，要量 node 得用 `pnpm tauri build` 的包。剩下和早先 35 MB 的差距，内置插件从 22 个变成 26 个是一部分，没再细查。
 
+### 收起时图形进程留着整窗的图层
+
+岛收着时 WebKit 的 GPU 进程有 49 MB 记在「Owned physical footprint (unmapped) (graphics)」，贴边收起时只有 2 MB，展开时也是 49 MB。胶囊本身只有一小条，这个量相当于整个透明窗口（820×460 点，2 倍屏）好几份位图。
+
+在开发版里往岛的 CSS 末尾临时追加规则（热更新生效，测完删掉），每步轮询 GPU 进程到稳定：关掉毛玻璃、`filter`、`transform` 都不变；关掉全部 `animation` 降到 2 MB；再按组件缩小范围，是中间图案的水母（`JellyfishMark`）的空闲动画。它是 SVG 内部的 `transform` 循环（10 秒一轮的起伏、5.8 秒一次眨眼），元素没有自己的合成层，每一帧都重画它所在的整窗大图层，WebKit 就一直留着那块大图层的位图；没有动画时过几秒就丢掉了。
+
+改法：一直循环的纯图形元素自己成层，`will-change: opacity`（motion.md 只许常驻 `opacity` 这一种，`transform` 实测效果一样）。加在水母、其他中间图案的 `svg`、像素宠物和会话格子正在闪的格子上；带数字的侧边圆环（`island-side-ring--attention`）怕文字发虚没加；液态玻璃的流动动画（`IslandGlassFlow`）本身就是整块的，没动。只给外层 `.center-pattern` 加没用。
+
+开发版实测：收起时 GPU 进程 49 MB → **2 MB**（偶尔回到 49 MB 一两秒又放掉），展开仍是 49 MB，展开再收起回到 2 MB。正式包没重测。
+
 ## 第二轮：展开收起会不会泄漏（2026-11-20 下午）
 
 用开发版和岛屿实验台（`/v1/dev/island/action`）反复展开、收起，读岛页面进程的 `phys_footprint`：

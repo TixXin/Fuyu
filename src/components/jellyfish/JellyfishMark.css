@@ -7,6 +7,7 @@
   height: var(--center-jelly-size);
   width: calc(var(--center-jelly-size) * 58 / 43);
   pointer-events: none;
+  will-change: opacity;
 }
 .center-jelly[data-mood="running"] { --center-jelly-fill: var(--center-jelly-running, #6db6f4); }
 .center-jelly[data-mood="waiting"] { --center-jelly-fill: var(--center-jelly-waiting, #ffcd3c); }
