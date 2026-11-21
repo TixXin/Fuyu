@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import {
   acquireIslandCursor,
   canTrackIslandCursor,
@@ -13,6 +13,7 @@ const GROW_X = 20;
 const GROW_Y = 5;
 const RESPONSE_SECONDS = 0.42;
 const MAX_STEP_SECONDS = 1 / 60;
+const SETTLE_AFTER_CLOSE_MS = 700;
 
 type Spring = { value: number; velocity: number };
 
@@ -46,20 +47,30 @@ function islandScale(element: HTMLElement) {
 export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean, allowed: boolean) {
   const reducedMotion = useReducedMotion();
   const enabled = active && allowed && !reducedMotion;
+  const wasEnabled = useRef<boolean | null>(null);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
+    const reopened = enabled && wasEnabled.current === false;
+    wasEnabled.current = enabled;
+    if (!enabled) {
+      element.style.setProperty("--island-hover-lift", "0");
+      element.style.setProperty("--island-hover-grow-x", "0px");
+      element.style.setProperty("--island-hover-grow-y", "0px");
+      return;
+    }
     const current = (name: string) => Number.parseFloat(element.style.getPropertyValue(name)) || 0;
     const amount: Spring = { value: current("--island-hover-lift"), velocity: 0 };
+    const holdUntil = reopened ? performance.now() + SETTLE_AFTER_CLOSE_MS : 0;
     let pointer: CursorPoint | null = null;
-    let scale = islandScale(element);
+    let scale = 1;
     let frame = 0;
     let last = 0;
     let base: { width: number; height: number } | null = null;
 
     const targetAmount = () => {
-      if (!enabled || !pointer) return 0;
+      if (!pointer) return 0;
       const rect = element.getBoundingClientRect();
       const resized = base !== null && Math.abs(rect.width - base.width) > GROW_X * scale + 1;
       if (base === null || resized || amount.value < 0.001) base = { width: rect.width, height: rect.height };
@@ -102,8 +113,10 @@ export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean
       frame = requestAnimationFrame(step);
     };
 
-    const native = enabled && canTrackIslandCursor();
+    const native = canTrackIslandCursor();
+    const settling = () => performance.now() < holdUntil;
     const onMove = (event: PointerEvent) => {
+      if (settling()) return;
       pointer = { x: event.clientX, y: event.clientY };
       wake();
     };
@@ -114,19 +127,18 @@ export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean
     };
     let unlisten: (() => void) | null = null;
     let disposed = false;
-    if (enabled) {
-      document.addEventListener("pointermove", onMove);
-      document.documentElement.addEventListener("pointerleave", onLeave);
-      if (native) {
-        acquireIslandCursor();
-        void listenIslandCursor((point) => {
-          pointer = point;
-          wake();
-        }).then((stop) => {
-          if (disposed) stop();
-          else unlisten = stop;
-        });
-      }
+    document.addEventListener("pointermove", onMove);
+    document.documentElement.addEventListener("pointerleave", onLeave);
+    if (native) {
+      acquireIslandCursor();
+      void listenIslandCursor((point) => {
+        if (settling()) return;
+        pointer = point;
+        wake();
+      }).then((stop) => {
+        if (disposed) stop();
+        else unlisten = stop;
+      });
     }
     wake();
 
