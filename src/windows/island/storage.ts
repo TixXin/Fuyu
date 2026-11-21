@@ -5,6 +5,7 @@ export type IslandPosition = {
   y: number;
   edge?: IslandEdge;
   along?: number;
+  taskbar?: true;
 };
 
 const ISLAND_EDGES: readonly IslandEdge[] = ["top", "left", "right", "bottom"];
@@ -35,6 +36,9 @@ export function loadIslandPosition(): IslandPosition | null {
     }
     if (typeof position.along === "number" && position.along >= 0 && position.along <= 1) {
       loaded.along = position.along;
+    }
+    if (position.taskbar === true && loaded.edge === "bottom") {
+      loaded.taskbar = true;
     }
     return loaded;
   } catch {

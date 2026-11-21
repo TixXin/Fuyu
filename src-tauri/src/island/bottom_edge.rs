@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Monitor, PhysicalPosition, WebviewWindow};
 
 use super::edge;
@@ -7,6 +8,16 @@ use super::side::{full_rect, is_outer, Rect};
 use super::state::{mutate_window_state, read_window_state, Edge, IslandPosition, IslandWindowState};
 
 const SNAP_DISTANCE: f64 = 16.0;
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum DockTarget {
+    Top,
+    Left,
+    Right,
+    Bottom,
+    Taskbar,
+}
 
 pub(super) fn is_bottom(position: IslandPosition) -> bool {
     position.edge == Some(Edge::Bottom)
@@ -30,7 +41,7 @@ pub(super) fn placed_on(monitor: &Monitor) -> IslandPosition {
     let stage_width = (stage_width() * scale).round() as i32;
     let x = origin.x + (size.width as i32 - stage_width) / 2;
     let y = stage_y(screen::monitor_work_rect(monitor), (STAGE_WINDOW_HEIGHT * scale).round() as i32, 0);
-    IslandPosition { x, y, edge: Some(Edge::Bottom), along: None }
+    IslandPosition { x, y, edge: Some(Edge::Bottom), along: None, taskbar: false }
 }
 
 pub(super) fn snap(window: &WebviewWindow, position: IslandPosition, state: IslandWindowState) -> Option<IslandPosition> {
@@ -55,7 +66,7 @@ pub(super) fn snap(window: &WebviewWindow, position: IslandPosition, state: Isla
         }
     }
     edge::set_attached(window, Some(Edge::Bottom));
-    Some(IslandPosition { x: position.x, y, edge: Some(Edge::Bottom), along: None })
+    Some(IslandPosition { x: position.x, y, edge: Some(Edge::Bottom), along: None, taskbar: false })
 }
 
 pub(super) fn leave(window: &WebviewWindow, position: IslandPosition, state: IslandWindowState) -> IslandPosition {
@@ -75,15 +86,16 @@ pub(super) fn leave(window: &WebviewWindow, position: IslandPosition, state: Isl
 pub(crate) fn dock_to(app: &AppHandle, edge: &str) -> Result<(), String> {
     match edge {
         "top" => super::reset_island_position(app.clone()),
-        "bottom" => set_island_edge(app.clone(), Edge::Bottom),
-        "left" => set_island_edge(app.clone(), Edge::Left),
-        "right" => set_island_edge(app.clone(), Edge::Right),
+        "bottom" => set_island_edge(app.clone(), DockTarget::Bottom),
+        "left" => set_island_edge(app.clone(), DockTarget::Left),
+        "right" => set_island_edge(app.clone(), DockTarget::Right),
+        "taskbar" => set_island_edge(app.clone(), DockTarget::Taskbar),
         _ => Err(format!("Unknown island edge: {edge}")),
     }
 }
 
 #[tauri::command]
-pub fn set_island_edge(app: AppHandle, edge: Edge) -> Result<(), String> {
+pub fn set_island_edge(app: AppHandle, edge: DockTarget) -> Result<(), String> {
     let window = super::main_window(&app)?;
     let current = window.current_monitor().map_err(|error| error.to_string())?;
     let monitor = match current {
@@ -94,10 +106,13 @@ pub fn set_island_edge(app: AppHandle, edge: Edge) -> Result<(), String> {
             .ok_or_else(|| "No monitor is available for island positioning.".to_string())?,
     };
     let position = match edge {
-        Edge::Bottom => placed_on(&monitor),
-        Edge::Left | Edge::Right => super::side::placed_on(&window, &monitor, edge, 0.5, read_window_state())
+        DockTarget::Bottom => placed_on(&monitor),
+        DockTarget::Taskbar if super::taskbar::supported() => IslandPosition { taskbar: true, ..placed_on(&monitor) },
+        DockTarget::Left => super::side::placed_on(&window, &monitor, Edge::Left, 0.5, read_window_state())
             .ok_or_else(|| "This side of the screen touches another monitor.".to_string())?,
-        Edge::Top => return Err(format!("Unsupported island edge: {edge:?}")),
+        DockTarget::Right => super::side::placed_on(&window, &monitor, Edge::Right, 0.5, read_window_state())
+            .ok_or_else(|| "This side of the screen touches another monitor.".to_string())?,
+        DockTarget::Top | DockTarget::Taskbar => return Err(format!("Unsupported island edge: {edge:?}")),
     };
     let state = mutate_window_state(|state| {
         state.custom_position = Some(position);

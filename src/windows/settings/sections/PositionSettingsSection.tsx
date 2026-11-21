@@ -9,9 +9,10 @@ import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRo
 import { useFlash } from "../../../components/settings/useFlash";
 import { useTranslation } from "../../../i18n";
 import { isMacOS } from "../../../lib/platform";
-import { dockIslandTo, type IslandDockEdge } from "../../../lib/settings/api";
+import { dockIslandTo, type IslandDockTarget } from "../../../lib/settings/api";
 import { PositionDiagram } from "./PositionDiagram";
 import { useIslandDockEdge } from "./useIslandDockEdge";
+import { useIslandTaskbar } from "./useIslandTaskbar";
 import { DEFAULT_SETTINGS } from "../../../lib/settings/settings";
 import type { IslandMonitor, IslandSettings, MenuBarPlacement, SideHeightMode } from "../../../lib/settings/types";
 import { MAX_SIDE_HEIGHT, MIN_SIDE_HEIGHT } from "../../../lib/settings/settingsLimits";
@@ -28,9 +29,12 @@ export function PositionSettingsSection({
   const t = useTranslation();
   const [done, flash] = useFlash<true>();
   const monitorOptions = (["primary", "cursor", "foreground"] as const).map((value) => ({ value, label: t.settings.position.monitorOptions[value] }));
-  const dockEdge: IslandDockEdge = useIslandDockEdge() ?? "top";
-  const edgeOptions = (["top", "bottom", "left", "right"] as const).map((value) => ({ value, label: t.settings.position.edgeOptions[value] }));
-  const changeEdge = (edge: IslandDockEdge) => {
+  const edge = useIslandDockEdge() ?? "top";
+  const taskbar = useIslandTaskbar();
+  const dockEdge: IslandDockTarget = taskbar.docked && edge === "bottom" ? "taskbar" : edge;
+  const targets: IslandDockTarget[] = taskbar.available ? ["top", "bottom", "left", "right", "taskbar"] : ["top", "bottom", "left", "right"];
+  const edgeOptions = targets.map((value) => ({ value, label: t.settings.position.edgeOptions[value] }));
+  const changeEdge = (edge: IslandDockTarget) => {
     if (edge === "top") onResetPosition();
     else void dockIslandTo(edge).catch((error) => console.error("Failed to dock the island", error));
   };
@@ -46,13 +50,14 @@ export function PositionSettingsSection({
       <SettingsRow
         title={t.settings.position.edge}
         control={
-          <SettingsSelect<IslandDockEdge>
+          <SettingsSelect<IslandDockTarget>
             value={dockEdge}
             options={edgeOptions}
             ariaLabel={t.settings.position.edge}
             onChange={changeEdge}
           />
         }
+        description={dockEdge === "taskbar" && !taskbar.placed ? t.settings.position.taskbarFallback : undefined}
       />
       {onSide && (
         <SettingsRow
