@@ -71,14 +71,14 @@ test("land runs from local main or any branch, and leaves uncommitted files to w
   assert.equal(uncommittedNote(["?? scratch.txt", ""]), null);
 });
 
-test("a batch is due after ten commits, not after each small change and not by age", () => {
+test("a batch is worth suggesting after thirty commits, not after each small change and not by age", () => {
   const now = Date.parse("2026-11-13T12:00:00Z");
   const at = (hours) => now - hours * 3_600_000;
   const commits = (count, hours) => Array.from({ length: count }, () => ({ subject: "x", at: at(hours) }));
   assert.equal(batchAdvice([], now).due, false);
   assert.equal(batchAdvice([{ subject: "fix: typo", at: at(1) }], now).due, false);
-  assert.equal(batchAdvice(commits(9, 1), now).due, false);
-  assert.match(batchAdvice(commits(10, 1), now).reason, /攒了 10 个提交/);
+  assert.equal(batchAdvice(commits(29, 1), now).due, false);
+  assert.match(batchAdvice(commits(30, 1), now).reason, /攒了 30 个提交/);
   const old = batchAdvice(commits(3, 7), now);
   assert.equal(old.due, false);
   assert.match(old.reason, /3 个提交没推，最早的 420 分钟前/);
@@ -343,8 +343,9 @@ test("land pushes only with --yes; no arguments, --help and unknown options show
   assert.deepEqual(landRequest([]), { help: true });
   assert.match(landRequest(["--body", "x.md"]).error, /--yes/);
   assert.match(landRequest(["--yes", "--dry-run"]).error, /--dry-run/);
-  assert.deepEqual(landRequest(["--yes", "--body", "x.md", "--only", "a1", "b2", "--urgent"]).options, { wait: false, bodyFile: "x.md", title: null, only: ["a1", "b2"], upto: null });
-  assert.deepEqual(landRequest(["--yes"]).options, { wait: false, bodyFile: null, title: null, only: null, upto: null });
+  assert.deepEqual(landRequest(["--yes", "--body", "x.md", "--only", "a1", "b2", "--urgent"]).options, { wait: false, bodyFile: "x.md", title: null, only: ["a1", "b2"], upto: null, unverified: false });
+  assert.deepEqual(landRequest(["--yes"]).options, { wait: false, bodyFile: null, title: null, only: null, upto: null, unverified: false });
+  assert.equal(landRequest(["--yes", "--unverified"]).options.unverified, true);
   for (const argv of [[], ["--help"], ["land"], ["land", "--help"], ["land", "--yes", "-h"], ["sync", "--help"]]) {
     let code;
     const said = await captured(async () => { code = await main(argv); });
