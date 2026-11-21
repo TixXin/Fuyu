@@ -3,7 +3,7 @@ import { isIslandHeld } from "./islandHold";
 import { listenIslandHover } from "./api";
 import type { IslandMode } from "./types";
 
-const OWN_ACTION_SELECTOR = ".island__collapsed button:not(.island__open-button):hover";
+const OWN_ACTION_SELECTOR = ".island__collapsed button:not(.island__open-button):hover, .island:hover .island-taskbar-handle--armed";
 
 type HoverExpandOptions = {
   expandOnHover: boolean;

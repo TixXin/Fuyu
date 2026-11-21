@@ -11,6 +11,12 @@ pub struct IslandTaskbar {
     light: bool,
 }
 
+#[tauri::command]
+pub fn start_island_taskbar_drag() {}
+
+#[tauri::command]
+pub fn end_island_taskbar_drag() {}
+
 pub(crate) fn supported() -> bool {
     false
 }

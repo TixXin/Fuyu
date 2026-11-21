@@ -33,6 +33,7 @@ import { ISLAND_OUTLINE_STYLE } from "./islandOutline";
 import { isBlankClick } from "./blankClick";
 import { usePanelEditing } from "./custom-panels/panelEditing";
 import "./IslandOutline.css";
+import { IslandTaskbarHandle, type TaskbarHandleShow } from "./IslandTaskbarHandle";
 
 type IslandShellProps = {
   mode: IslandMode;
@@ -58,6 +59,7 @@ type IslandShellProps = {
   features: IslandFeatures;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
+  taskbarHandle?: TaskbarHandleShow | null;
   onCollapse: () => void;
   onResetPosition: () => void;
   minimizesToTray: boolean;
@@ -155,6 +157,7 @@ export function IslandShell({
   features,
   onOpenPage,
   onWindowDragStart,
+  taskbarHandle,
   onCollapse,
   onResetPosition,
   minimizesToTray,
@@ -268,6 +271,7 @@ export function IslandShell({
               onWindowDragStart={onWindowDragStart}
             />
           )}
+          {taskbarHandle && !isExpanded && <IslandTaskbarHandle show={taskbarHandle} />}
           <IslandCollapsedBar
             slots={collapsedSlots}
             page={page}

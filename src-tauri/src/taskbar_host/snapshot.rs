@@ -7,6 +7,7 @@ use crate::win32::{
     taskbar_uia::{self, PartKind},
 };
 
+#[derive(Clone)]
 pub(crate) struct Bar {
     pub handle: HWND,
     pub rect: Rect,
@@ -38,6 +39,17 @@ fn part(part: taskbar_uia::TaskbarPart) -> Part {
     Part { role, rect: rect(part.rect) }
 }
 
+fn overlaps(a: Rect, b: Rect) -> bool {
+    a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
+}
+
+fn parts_of(window: &TaskbarWindow, bar_rect: Rect) -> Option<Vec<Part>> {
+    let mut parts: Vec<Part> = taskbar_uia::taskbar_parts(window.handle)?.into_iter().map(part).collect();
+    let widgets = taskbar_shell::widgets_owned_by(window.handle).into_iter().map(rect);
+    parts.extend(widgets.filter(|widget| overlaps(*widget, bar_rect)).map(|widget| Part { role: PartRole::Obstacle, rect: widget }));
+    Some(parts)
+}
+
 fn bar(window: TaskbarWindow) -> Bar {
     let (bar_rect, monitor) = (rect(window.rect), rect(window.monitor));
     let edge = layout::bar_edge(bar_rect, monitor);
@@ -48,7 +60,7 @@ fn bar(window: TaskbarWindow) -> Bar {
         primary: window.primary,
         edge,
         hidden: layout::is_hidden(bar_rect, monitor, edge),
-        parts: taskbar_uia::taskbar_parts(window.handle).map(|parts| parts.into_iter().map(part).collect()),
+        parts: parts_of(&window, bar_rect),
     }
 }
 

@@ -38,7 +38,9 @@ pub(crate) mod screen;
 mod screen_watch;
 mod state;
 #[cfg_attr(not(windows), path = "taskbar_unsupported.rs")]
-mod taskbar;
+pub(crate) mod taskbar;
+#[cfg(windows)]
+mod taskbar_drag;
 pub(crate) mod top_edge;
 mod watch;
 
@@ -492,6 +494,8 @@ macro_rules! tauri_commands {
             crate::island::get_island_top_attachment,
             crate::island::get_island_edge,
             crate::island::get_island_taskbar,
+            crate::island::taskbar::start_island_taskbar_drag,
+            crate::island::taskbar::end_island_taskbar_drag,
             crate::island::bottom_edge::set_island_edge,
             crate::island::side::set_island_side_column,
             crate::island::banner_hit::set_island_side_bubble_rect,

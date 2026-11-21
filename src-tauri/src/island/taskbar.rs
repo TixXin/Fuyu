@@ -37,7 +37,10 @@ pub(super) fn wanted(state: IslandWindowState) -> bool {
 }
 
 pub(super) fn keep_flag(previous: Option<IslandPosition>, next: IslandPosition) -> IslandPosition {
-    IslandPosition { taskbar: previous.is_some_and(|position| position.taskbar), ..next }
+    match previous.filter(|position| position.taskbar) {
+        Some(position) => IslandPosition { taskbar: true, along: position.along, ..next },
+        None => next,
+    }
 }
 
 fn collapsed_size(state: IslandWindowState, scale: f64) -> (i32, i32) {
@@ -113,11 +116,25 @@ pub(super) fn stage_position(
     }
     let island = collapsed_size(state, screen::monitor_scale(monitor));
     sync(window, monitor, island.0);
+    let held = super::taskbar_drag::held_position();
+    if held.is_none() {
+        taskbar_host::set_preferred(window, state.custom_position.and_then(|position| position.along));
+    }
     let dock = taskbar_host::current(window);
-    let placed = dock.and_then(|dock| stage_on_bar(dock, island, stage));
+    let placed = held.or_else(|| dock.and_then(|dock| stage_on_bar(dock, island, stage)));
     taskbar_host::set_raised(window, placed.is_some() && matches!(state.mode, IslandMode::Expanded));
     report(window, IslandTaskbar { docked: true, placed: placed.is_some(), light: dock.is_some_and(|dock| dock.light) });
     placed
+}
+
+#[tauri::command]
+pub fn start_island_taskbar_drag(app: AppHandle) -> Result<(), String> {
+    super::taskbar_drag::start(&super::main_window(&app)?)
+}
+
+#[tauri::command]
+pub fn end_island_taskbar_drag() {
+    super::taskbar_drag::stop();
 }
 
 #[cfg(test)]
@@ -125,7 +142,7 @@ mod tests {
     use super::*;
 
     fn shown(left: i32, right: i32) -> DockState {
-        DockState { status: DockStatus::Shown, rect: Some(Rect::new(left, 2100, right, 2160)), edge: Some(BarEdge::Bottom), light: false }
+        DockState { status: DockStatus::Shown, rect: Some(Rect::new(left, 2100, right, 2160)), edge: Some(BarEdge::Bottom), light: false, bar: None }
     }
 
     #[test]
@@ -140,7 +157,7 @@ mod tests {
         let island = (400, 44);
         let stage = (1200, 900);
         assert!(stage_on_bar(DockState { status: DockStatus::BarHidden, ..shown(0, 400) }, island, stage).is_none());
-        assert!(stage_on_bar(DockState { status: DockStatus::NoRoom, rect: None, edge: Some(BarEdge::Bottom), light: false }, island, stage).is_none());
+        assert!(stage_on_bar(DockState { status: DockStatus::NoRoom, rect: None, edge: Some(BarEdge::Bottom), light: false, bar: None }, island, stage).is_none());
         assert!(stage_on_bar(DockState { edge: Some(BarEdge::Left), ..shown(0, 400) }, island, stage).is_none());
     }
 
@@ -148,6 +165,8 @@ mod tests {
     fn a_taskbar_position_keeps_its_flag_when_the_island_changes_monitor() {
         let previous = IslandPosition { taskbar: true, ..IslandPosition::at(10, 20) };
         assert!(keep_flag(Some(previous), IslandPosition::at(500, 600)).taskbar);
+        let dragged = IslandPosition { taskbar: true, along: Some(0.3), ..IslandPosition::at(10, 20) };
+        assert_eq!(keep_flag(Some(dragged), IslandPosition::at(500, 600)).along, Some(0.3));
         assert!(!keep_flag(None, IslandPosition::at(500, 600)).taskbar);
         let stored: IslandPosition = serde_json::from_str(r#"{"x":1,"y":2,"edge":"bottom","taskbar":true}"#).unwrap();
         assert!(stored.taskbar);

@@ -264,6 +264,7 @@ export function IslandApp() {
         notchWingMax={settings.notchWingMax}
         features={features}
         onOpenPage={openEnabledPage}
+        taskbarHandle={onTaskbar.placed ? (settings.expandTrigger === "hover" ? "modifier" : "hover") : null}
         onWindowDragStart={startIslandDrag}
         onCollapse={collapseIsland}
         onResetPosition={resetIslandPosition}

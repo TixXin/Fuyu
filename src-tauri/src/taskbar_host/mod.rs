@@ -6,7 +6,7 @@ use tauri::WebviewWindow;
 
 use crate::{user_error::UserError, win32::taskbar_shell};
 
-pub(crate) use dock::{current, reserve, resize_reserved, set_raised, undock, DockState, DockStatus};
+pub(crate) use dock::{current, reserve, resize_reserved, set_preferred, set_raised, undock, DockState, DockStatus};
 pub(crate) use layout::{BarEdge, Rect};
 pub use snapshot::TaskbarLayout;
 

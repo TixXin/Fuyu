@@ -140,18 +140,56 @@ fn try_order(free: &[Span], tray_start: Option<i32>) -> Vec<usize> {
     preferred.into_iter().chain(rest).collect()
 }
 
-pub(crate) fn arrange(free: &[Span], tray_start: Option<i32>, sizes: &[i32], spacing: i32) -> Vec<Option<Span>> {
-    let order = try_order(free, tray_start);
-    let mut cursors: Vec<i32> = free.iter().map(|span| span.end).collect();
-    sizes
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct Want {
+    pub size: i32,
+    pub prefer: Option<i32>,
+}
+
+fn take_near(free: &mut Vec<Span>, size: i32, center: i32, spacing: i32) -> Option<Span> {
+    let (index, start) = free
         .iter()
-        .map(|size| {
-            let index = order.iter().copied().find(|index| cursors[*index] - size >= free[*index].start)?;
-            let end = cursors[index];
-            cursors[index] = end - size - spacing;
-            Some(Span { start: end - size, end })
-        })
-        .collect()
+        .enumerate()
+        .filter(|(_, span)| span.len() >= size)
+        .map(|(index, span)| (index, (center - size / 2).clamp(span.start, span.end - size)))
+        .min_by_key(|(_, start)| (start + size / 2 - center).abs())?;
+    let span = free.remove(index);
+    let placed = Span { start, end: start + size };
+    let right = Span { start: placed.end + spacing, end: span.end };
+    let left = Span { start: span.start, end: placed.start - spacing };
+    if right.len() > 0 {
+        free.insert(index, right);
+    }
+    if left.len() > 0 {
+        free.insert(index, left);
+    }
+    Some(placed)
+}
+
+fn take_from_tray(free: &mut Vec<Span>, tray_start: Option<i32>, size: i32, spacing: i32) -> Option<Span> {
+    let index = try_order(free, tray_start).into_iter().find(|index| free[*index].len() >= size)?;
+    let span = &mut free[index];
+    let placed = Span { start: span.end - size, end: span.end };
+    span.end = placed.start - spacing;
+    if span.len() <= 0 {
+        free.remove(index);
+    }
+    Some(placed)
+}
+
+pub(crate) fn arrange(free: &[Span], tray_start: Option<i32>, wants: &[Want], spacing: i32) -> Vec<Option<Span>> {
+    let mut free = free.to_vec();
+    let mut order: Vec<usize> = (0..wants.len()).collect();
+    order.sort_by_key(|index| wants[*index].prefer.is_none());
+    let mut placed = vec![None; wants.len()];
+    for index in order {
+        let want = wants[index];
+        placed[index] = match want.prefer {
+            Some(center) => take_near(&mut free, want.size, center, spacing),
+            None => take_from_tray(&mut free, tray_start, want.size, spacing),
+        };
+    }
+    placed
 }
 
 pub(crate) fn place(bar: Rect, horizontal: bool, span: Span) -> Rect {
@@ -168,6 +206,10 @@ mod tests {
 
     const MONITOR: Rect = Rect::new(0, 0, 3840, 2160);
     const BAR: Rect = Rect::new(0, 2100, 3840, 2160);
+
+    fn fixed(sizes: &[i32]) -> Vec<Want> {
+        sizes.iter().map(|size| Want { size: *size, prefer: None }).collect()
+    }
 
     fn part(role: PartRole, start: i32, end: i32) -> Part {
         Part { role, rect: Rect::new(start, 2100, end, 2160) }
@@ -217,7 +259,7 @@ mod tests {
     fn first_item_sits_next_to_the_tray() {
         let parts = left_aligned();
         let free = free_spans(BAR, &parts, true, 8);
-        let placed = arrange(&free, tray_start(&parts, true), &[400, 300], 8);
+        let placed = arrange(&free, tray_start(&parts, true), &fixed(&[400, 300]), 8);
         assert_eq!(placed, vec![Some(Span { start: 2871, end: 3271 }), Some(Span { start: 2563, end: 2863 })]);
     }
 
@@ -225,7 +267,7 @@ mod tests {
     fn centered_bar_falls_back_to_the_wider_left_gap() {
         let parts = centered();
         let free = free_spans(BAR, &parts, true, 8);
-        let placed = arrange(&free, tray_start(&parts, true), &[900, 1100, 2000], 8);
+        let placed = arrange(&free, tray_start(&parts, true), &fixed(&[900, 1100, 2000]), 8);
         assert_eq!(placed[0], Some(Span { start: 2371, end: 3271 }));
         assert_eq!(placed[1], Some(Span { start: 392, end: 1492 }));
         assert_eq!(placed[2], None);
@@ -235,7 +277,7 @@ mod tests {
     fn without_a_tray_the_last_gap_is_preferred() {
         let parts = vec![part(PartRole::Obstacle, 0, 500)];
         let free = free_spans(BAR, &parts, true, 0);
-        assert_eq!(arrange(&free, tray_start(&parts, true), &[100], 0), vec![Some(Span { start: 3740, end: 3840 })]);
+        assert_eq!(arrange(&free, tray_start(&parts, true), &fixed(&[100]), 0), vec![Some(Span { start: 3740, end: 3840 })]);
     }
 
     #[test]
@@ -246,8 +288,28 @@ mod tests {
             Part { role: PartRole::Tray, rect: Rect::new(0, 1800, 80, 2160) },
         ];
         let free = free_spans(bar, &parts, false, 0);
-        let placed = arrange(&free, tray_start(&parts, false), &[200], 0);
+        let placed = arrange(&free, tray_start(&parts, false), &fixed(&[200]), 0);
         assert_eq!(placed, vec![Some(Span { start: 1600, end: 1800 })]);
         assert_eq!(place(bar, false, Span { start: 1600, end: 1800 }), Rect::new(0, 1600, 80, 1800));
+    }
+
+    #[test]
+    fn a_preferred_item_takes_the_nearest_room_and_the_rest_pack_from_the_tray() {
+        let parts = centered();
+        let free = free_spans(BAR, &parts, true, 8);
+        let wants = [Want { size: 300, prefer: None }, Want { size: 400, prefer: Some(1000) }];
+        let placed = arrange(&free, tray_start(&parts, true), &wants, 8);
+        assert_eq!(placed[1], Some(Span { start: 800, end: 1200 }));
+        assert_eq!(placed[0], Some(Span { start: 2971, end: 3271 }));
+    }
+
+    #[test]
+    fn a_preference_over_an_obstacle_slides_to_the_closest_edge_of_the_free_room() {
+        let parts = centered();
+        let free = free_spans(BAR, &parts, true, 8);
+        let placed = arrange(&free, tray_start(&parts, true), &[Want { size: 400, prefer: Some(1600) }], 8);
+        assert_eq!(placed, vec![Some(Span { start: 1092, end: 1492 })]);
+        let placed = arrange(&free, tray_start(&parts, true), &[Want { size: 400, prefer: Some(2250) }], 8);
+        assert_eq!(placed, vec![Some(Span { start: 2308, end: 2708 })]);
     }
 }

@@ -1,7 +1,7 @@
 use std::{
     sync::{Arc, Condvar, Mutex, PoisonError},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use serde::Serialize;
@@ -16,6 +16,7 @@ use crate::win32::{notification_state, taskbar_shell, window};
 
 pub(crate) const DOCK_CHANGED_EVENT: &str = "taskbar-dock-changed";
 const TICK: Duration = Duration::from_millis(500);
+const REUSE: Duration = Duration::from_millis(400);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,13 +35,14 @@ pub struct DockState {
     pub(crate) rect: Option<Rect>,
     pub(crate) edge: Option<BarEdge>,
     pub(crate) light: bool,
+    pub(crate) bar: Option<Rect>,
 }
 
 type OnChange = Arc<dyn Fn() + Send + Sync>;
 
 enum Kind {
     Window { width: f64, saved_flags: (bool, bool) },
-    Reserved { width: i32, on_change: OnChange },
+    Reserved { width: i32, prefer: Option<f64>, on_change: OnChange },
 }
 
 struct Docked {
@@ -121,7 +123,7 @@ pub(crate) fn dock(window: WebviewWindow, width: f64, order: u8) -> Result<(), S
 
 pub(crate) fn reserve(window: WebviewWindow, monitor: Option<Rect>, width: i32, order: u8, on_change: OnChange) {
     if let Some(hwnd) = handle(&window) {
-        insert(window, hwnd, Kind::Reserved { width: width.max(1), on_change }, order, monitor);
+        insert(window, hwnd, Kind::Reserved { width: width.max(1), prefer: None, on_change }, order, monitor);
     }
 }
 
@@ -131,6 +133,19 @@ pub(crate) fn resize_reserved(window: &WebviewWindow, width: i32) {
     if let Some(Kind::Reserved { width: reserved, .. }) = found.map(|item| &mut item.kind) {
         if *reserved != width.max(1) {
             *reserved = width.max(1);
+            shared.wake = true;
+            WAKE.notify_all();
+        }
+    }
+}
+
+pub(crate) fn set_preferred(window: &WebviewWindow, along: Option<f64>) {
+    let mut shared = shared();
+    let found = shared.docked.iter_mut().find(|item| item.label == window.label());
+    if let Some(Kind::Reserved { prefer, .. }) = found.map(|item| &mut item.kind) {
+        let along = along.filter(|along| along.is_finite()).map(|along| along.clamp(0.0, 1.0));
+        if *prefer != along {
+            *prefer = along;
             shared.wake = true;
             WAKE.notify_all();
         }
@@ -167,19 +182,28 @@ pub(crate) fn undock(window: &WebviewWindow) {
 }
 
 fn run() {
+    let mut cached: Option<(Instant, Vec<Bar>)> = None;
     loop {
-        {
+        let woken = {
             let mut shared = shared();
             if !shared.wake {
                 shared = WAKE.wait_timeout(shared, TICK).unwrap_or_else(PoisonError::into_inner).0;
             }
+            let woken = shared.wake;
             shared.wake = false;
             if shared.docked.is_empty() {
                 shared.running = false;
                 return;
             }
+            woken
+        };
+        let fresh = !woken || cached.as_ref().is_none_or(|(at, _)| at.elapsed() > REUSE);
+        if fresh {
+            cached = Some((Instant::now(), snapshot::read()));
         }
-        tick();
+        if let Some((_, bars)) = &cached {
+            tick(bars);
+        }
     }
 }
 
@@ -190,29 +214,34 @@ fn bar_index(bars: &[Bar], monitor: Option<Rect>) -> Option<usize> {
         .or_else(|| (!bars.is_empty()).then_some(0))
 }
 
-fn width_of(item: &Docked) -> i32 {
+fn want_of(item: &Docked, bar: &Bar) -> layout::Want {
+    let length = if bar.edge.horizontal() { (bar.rect.left, bar.rect.right) } else { (bar.rect.top, bar.rect.bottom) };
     match &item.kind {
-        Kind::Window { width, .. } => (width * taskbar_shell::dpi_scale(HWND(item.hwnd as *mut _))).round() as i32,
-        Kind::Reserved { width, .. } => *width,
+        Kind::Window { width, .. } => {
+            layout::Want { size: (width * taskbar_shell::dpi_scale(HWND(item.hwnd as *mut _))).round() as i32, prefer: None }
+        }
+        Kind::Reserved { width, prefer, .. } => layout::Want {
+            size: *width,
+            prefer: prefer.map(|along| length.0 + (along * f64::from(length.1 - length.0)).round() as i32),
+        },
     }
 }
 
-fn tick() {
-    let bars = snapshot::read();
+fn tick(bars: &[Bar]) {
     let fullscreen = notification_state::fullscreen_app_in_front();
     let light = taskbar_shell::uses_light_theme();
     let mut shared = shared();
     let docked = &mut shared.docked;
-    let targets: Vec<Option<usize>> = docked.iter().map(|item| bar_index(&bars, item.monitor)).collect();
-    let mut states: Vec<DockState> = vec![DockState { status: DockStatus::NoTaskbar, rect: None, edge: None, light }; docked.len()];
+    let targets: Vec<Option<usize>> = docked.iter().map(|item| bar_index(bars, item.monitor)).collect();
+    let mut states: Vec<DockState> = vec![DockState { status: DockStatus::NoTaskbar, rect: None, edge: None, light, bar: None }; docked.len()];
     for (bar_index, bar) in bars.iter().enumerate() {
         let members: Vec<usize> = (0..docked.len()).filter(|index| targets[*index] == Some(bar_index)).collect();
         if members.is_empty() {
             continue;
         }
-        let sizes: Vec<i32> = members.iter().map(|index| width_of(&docked[*index])).collect();
+        let wants: Vec<layout::Want> = members.iter().map(|index| want_of(&docked[*index], bar)).collect();
         let gap = margin(bar.rect, bar.edge);
-        let spans = layout::arrange(&bar.free(gap), bar.tray_start(), &sizes, gap);
+        let spans = layout::arrange(&bar.free(gap), bar.tray_start(), &wants, gap);
         for (slot, index) in members.iter().enumerate() {
             let rect = spans[slot].map(|span| layout::place(bar.rect, bar.edge.horizontal(), span));
             let status = match rect {
@@ -221,7 +250,7 @@ fn tick() {
                 Some(_) => DockStatus::Shown,
                 None => DockStatus::NoRoom,
             };
-            states[*index] = DockState { status, rect, edge: Some(bar.edge), light };
+            states[*index] = DockState { status, rect, edge: Some(bar.edge), light, bar: Some(bar.rect) };
         }
     }
     let changed: Vec<Changed> = docked
