@@ -71,6 +71,7 @@ type IslandShellProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
+  fuyuTabIcon?: boolean;
   overlay?: ReactNode;
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
@@ -168,6 +169,7 @@ export function IslandShell({
   pageDigitModifiers,
   hoverSwitchPage,
   hoverSwitchDelayMs,
+  fuyuTabIcon = false,
   overlay,
   collapsedSlots,
   children,
@@ -321,6 +323,7 @@ export function IslandShell({
               pageDigitModifiers={pageDigitModifiers}
               hoverSwitchPage={hoverSwitchPage}
               hoverSwitchDelayMs={hoverSwitchDelayMs}
+              fuyuTabIcon={fuyuTabIcon}
             />
             <div ref={contentRef} className="island__content">
               <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>

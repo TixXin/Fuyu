@@ -70,6 +70,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     hoverSwitchDelayMs: typeof settings?.hoverSwitchDelayMs === "number" && Number.isFinite(settings.hoverSwitchDelayMs)
       ? clamp(Math.round(settings.hoverSwitchDelayMs), MIN_HOVER_SWITCH_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS)
       : DEFAULT_SETTINGS.hoverSwitchDelayMs,
+    fuyuTabIcon: settings?.fuyuTabIcon === true,
     minimizeAction: settings?.minimizeAction === "tuck" ? "tuck" : "tray",
     tuckedHoverAction: settings?.tuckedHoverAction === "expand" ? "expand" : "reveal",
     tuckStyle: oneOf(TUCK_STYLES, settings?.tuckStyle, DEFAULT_SETTINGS.tuckStyle),

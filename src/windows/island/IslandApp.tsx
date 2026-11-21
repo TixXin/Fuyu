@@ -273,6 +273,7 @@ export function IslandApp() {
         pageDigitModifiers={settings.pageDigitModifiers}
         hoverSwitchPage={settings.hoverSwitchPage}
         hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
+        fuyuTabIcon={settings.fuyuTabIcon}
         notice={islandNotice}
         collapsedSlots={collapsedSlots}
       >

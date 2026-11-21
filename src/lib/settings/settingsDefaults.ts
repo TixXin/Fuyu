@@ -82,6 +82,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   hoverCollapseDelayMs: DEFAULT_HOVER_COLLAPSE_DELAY_MS,
   hoverSwitchPage: false,
   hoverSwitchDelayMs: DEFAULT_HOVER_SWITCH_DELAY_MS,
+  fuyuTabIcon: false,
   minimizeAction: "tuck",
   tuckedHoverAction: "reveal",
   tuckStyle: "edge",

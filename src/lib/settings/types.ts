@@ -100,6 +100,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   hoverCollapseDelayMs: number;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
+  fuyuTabIcon: boolean;
   minimizeAction: MinimizeAction;
   tuckedHoverAction: TuckedHoverAction;
   tuckStyle: TuckStyle;
