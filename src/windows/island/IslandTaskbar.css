@@ -41,3 +41,7 @@
 .stage--taskbar-clear .island--collapsed .island__glass-refraction {
   display: none;
 }
+
+:root[data-island-edge="bottom"][data-island-taskbar="placed"] .island--collapsed {
+  --island-hover-grow-y: 0px !important;
+}
