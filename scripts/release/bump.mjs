@@ -42,12 +42,13 @@ if (existsSync(notes)) {
   const merged = mergeBetaNotes(betas.map((tag) => readFileSync(`docs/releases/${tag}.md`, "utf8")));
   const since = merged ? betas[0] : base;
   const range = since ? `${since}..HEAD` : "HEAD";
-  const commits = git(["log", "--no-merges", "--format=%h%x09%s", range])
-    .split("\n")
+  const commits = git(["log", "--no-merges", "--format=%h%x1f%s%x1f%b%x1e", range])
+    .split("\x1e")
+    .map((entry) => entry.trim())
     .filter(Boolean)
-    .map((line) => {
-      const [hash, ...subject] = line.split("\t");
-      return { hash, subject: subject.join("\t") };
+    .map((entry) => {
+      const [hash, subject = "", body = ""] = entry.split("\x1f");
+      return { hash, subject, body };
     });
   writeFileSync(notes, draftNotes(version, base, commits, merged, since));
   if (merged) console.log(`✓ ${notes}: the notes of ${betas.join(", ")} merged in, and ${commits.length} commits since ${since}.`);
