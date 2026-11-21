@@ -23,6 +23,7 @@ export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onCh
     timer.current = window.setTimeout(() => setOpen(false), islandMotionTiming(motion, "open").width + HOLD_MS);
   };
   const options = [
+    { value: "pop", label: text.motionPop },
     { value: "lively", label: text.motionLively },
     { value: "spring", label: text.motionSpring },
     { value: "snappy", label: text.motionSnappy },

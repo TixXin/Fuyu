@@ -82,10 +82,32 @@ test("the spring opening is what the island did before the setting", () => {
   assert.equal(variables["--island-motion-layer"], "120ms");
 });
 
-test("saved settings without the field, or with an unknown one, open with lively; a saved spring stays spring", () => {
-  assert.equal(DEFAULT_SETTINGS.islandMotion, "lively");
-  assert.equal(normalizeSettings({}).islandMotion, "lively");
-  assert.equal(normalizeSettings({ islandMotion: "wobble" }).islandMotion, "lively");
+test("saved settings without the field, or with an unknown one, open with pop; a saved lively or spring stays", () => {
+  assert.equal(DEFAULT_SETTINGS.islandMotion, "pop");
+  assert.equal(normalizeSettings({}).islandMotion, "pop");
+  assert.equal(normalizeSettings({ islandMotion: "wobble" }).islandMotion, "pop");
+  assert.equal(normalizeSettings({ islandMotion: "lively" }).islandMotion, "lively");
   assert.equal(normalizeSettings({ islandMotion: "spring" }).islandMotion, "spring");
   assert.equal(normalizeSettings({ islandMotion: "fast" }).islandMotion, "fast");
+});
+
+const bezierPeak = (ease) => {
+  const [x1, y1, x2, y2] = ease.slice("cubic-bezier(".length, -1).split(",").map(Number);
+  const at = (a, b, s) => 3 * a * s * (1 - s) ** 2 + 3 * b * s * s * (1 - s) + s ** 3;
+  let peak = 0;
+  for (let i = 0; i <= 1000; i++) peak = Math.max(peak, at(y1, y2, i / 1000));
+  assert.ok(x1 >= 0 && x2 <= 1);
+  return peak;
+};
+
+test("pop snaps the width past its end and back, the height follows later and stays inside the window's 24px", () => {
+  const open = islandMotionTiming("pop", "open");
+  const close = islandMotionTiming("pop", "close");
+  assert.ok(bezierPeak(open.widthEase) > 1.05);
+  assert.ok(open.height > open.width);
+  assert.ok((bezierPeak(open.heightEase) - 1) * (306 - 36) <= 24);
+  assert.equal(open.contentBlur, 14);
+  assert.ok(bezierPeak(close.widthEase) <= 1);
+  assert.ok(close.layer <= 60);
+  assert.equal(close.heightDelay, 35);
 });

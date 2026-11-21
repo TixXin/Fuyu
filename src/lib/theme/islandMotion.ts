@@ -2,7 +2,7 @@ import { landingCurve, springCurve } from "./motionCurves.ts";
 import { MOTION_BASE_MS, MOTION_FAST_MS, MOTION_MEDIUM_MS } from "./motionTokens.ts";
 import type { IslandMotion } from "../settings/types";
 
-export const ISLAND_MOTIONS = ["lively", "spring", "snappy", "soft", "unfold", "grow", "smooth", "fast", "bouncy", "none"] as const satisfies readonly IslandMotion[];
+export const ISLAND_MOTIONS = ["pop", "lively", "spring", "snappy", "soft", "unfold", "grow", "smooth", "fast", "bouncy", "none"] as const satisfies readonly IslandMotion[];
 
 type MotionTiming = {
   width: number;
@@ -28,6 +28,7 @@ const EASE_OUT = "cubic-bezier(0.22, 1, 0.36, 1)";
 const EASE_OUT_EXPO = "cubic-bezier(0.16, 1, 0.3, 1)";
 const SPRING = "cubic-bezier(0.34, 1.36, 0.5, 1)";
 const EASE_IN_OUT = "cubic-bezier(0.4, 0, 0.2, 1)";
+const EASE_OUT_CUBIC = "cubic-bezier(0.33, 1, 0.68, 1)";
 
 const WEBSITE_OPEN: MotionTiming = {
   width: 550, widthEase: SPRING, height: 500, heightEase: EASE_OUT, radius: 450, radiusEase: EASE_OUT, ease: EASE_OUT, bounces: true,
@@ -82,6 +83,19 @@ const LIVELY_CLOSE: MotionTiming = {
   fade: 90, fadeDelay: 0, layer: 120, collapsedDelay: 160, bloom: 280, contentBlur: 10,
 };
 
+const POP_OPEN: MotionTiming = {
+  width: 220, widthEase: "cubic-bezier(0, 1.7, 0.1, 0.9)",
+  height: 440, heightEase: "cubic-bezier(0, 1.5, 0.1, 0.95)",
+  radius: 440, radiusEase: "cubic-bezier(0, 1.5, 0.1, 0.95)", ease: EASE_OUT,
+  fade: 180, fadeDelay: 0, layer: 60, collapsedDelay: 140, bloom: 360, contentBlur: 14, bounces: true,
+};
+const POP_CLOSE: MotionTiming = {
+  width: 360, widthEase: EASE_OUT_CUBIC,
+  height: 280, heightEase: EASE_OUT_CUBIC, heightDelay: 35,
+  radius: 280, radiusEase: EASE_OUT_CUBIC, ease: EASE_OUT_CUBIC,
+  fade: 60, fadeDelay: 0, layer: 60, collapsedDelay: 200, bloom: 300,
+};
+
 const SOFT_OPEN: MotionTiming = {
   width: 480, widthEase: springCurve(0.8), height: 480, heightEase: springCurve(0.8), radius: 480, radiusEase: springCurve(0.8), ease: EASE_OUT,
   fade: 200, fadeDelay: 140, layer: 100, collapsedDelay: 140, bloom: 400,
@@ -110,6 +124,7 @@ const GROW_CLOSE: MotionTiming = {
 };
 
 const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }> = {
+  pop: { open: POP_OPEN, close: POP_CLOSE },
   lively: { open: LIVELY_OPEN, close: LIVELY_CLOSE },
   spring: { open: WEBSITE_OPEN, close: WEBSITE_CLOSE },
   snappy: { open: SNAPPY_OPEN, close: SNAPPY_CLOSE },

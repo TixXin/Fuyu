@@ -46,6 +46,7 @@ export type SettingsExpandText = {
   tuckHintBreatheHint: string;
   motion: string;
   motionHint: string;
+  motionPop: string;
   motionLively: string;
   motionSpring: string;
   motionSnappy: string;
@@ -60,6 +61,7 @@ export type SettingsExpandText = {
   motionCurve: string;
   hoverEffect: string;
   hoverMotionHint: string;
+  hoverBounce: string;
   hoverNear: string;
   hoverSubtle: string;
   hoverBold: string;
@@ -124,7 +126,8 @@ export const zhCN: SettingsExpandText = {
   tuckHintBreathe: "提示呼吸",
   tuckHintBreatheHint: "提示慢慢明暗变化；系统开了减少动画时一直常亮",
   motion: "开合动画",
-  motionHint: "灵动（默认）快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹",
+  motionHint: "弹开（默认）一下子张开、宽度先冲过头再回来，高度慢半拍，内容由模糊变清楚，收起时内容先消失再收拢；灵动快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹",
+  motionPop: "弹开",
   motionLively: "灵动",
   motionSpring: "弹性（同官网）",
   motionSnappy: "利落",
@@ -138,7 +141,8 @@ export const zhCN: SettingsExpandText = {
   motionPlay: "播放一次",
   motionCurve: "动画曲线",
   hoverEffect: "悬停效果",
-  hoverMotionHint: "鼠标靠近收起的岛时它怎么变：靠近就鼓（默认）进到岛周围就慢慢鼓起、越近越胖；轻轻鼓起幅度小一半；明显变胖幅度更大、更慢；只往下鼓几乎不变宽；碰到才鼓要碰到岛才变；不变化就不动",
+  hoverMotionHint: "鼠标靠近收起的岛时它怎么变：碰到弹一下（默认）碰到岛就变宽一点、轻轻弹一下；靠近就鼓进到岛周围就慢慢鼓起、越近越胖；轻轻鼓起幅度小一半；明显变胖幅度更大、更慢；只往下鼓几乎不变宽；碰到才鼓要碰到岛才变；不变化就不动",
+  hoverBounce: "碰到弹一下",
   hoverNear: "靠近就鼓",
   hoverSubtle: "轻轻鼓起",
   hoverBold: "明显变胖",
@@ -203,7 +207,8 @@ export const en: SettingsExpandText = {
   tuckHintBreathe: "Breathing hint",
   tuckHintBreatheHint: "The hint slowly fades in and out; it stays steady when the system reduces motion",
   motion: "Open and close",
-  motionHint: "Lively (the default) shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot",
+  motionHint: "Pop (the default) snaps open, the width overshoots and comes back, the height follows a beat later and the content goes from blurred to sharp, and on closing the content vanishes before the island shrinks; Lively shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot",
+  motionPop: "Pop",
   motionLively: "Lively",
   motionSpring: "Spring (as the website)",
   motionSnappy: "Snappy",
@@ -217,7 +222,8 @@ export const en: SettingsExpandText = {
   motionPlay: "Play it",
   motionCurve: "Animation curve",
   hoverEffect: "Hover effect",
-  hoverMotionHint: "How the collapsed island reacts as the pointer comes near: Swell nearby (the default) starts swelling as the pointer gets close and grows as it nears; Subtle swells half as much; Bold grows more and slower; Drop down grows downward and barely wider; On touch changes only when the pointer is on the island; None keeps it still",
+  hoverMotionHint: "How the collapsed island reacts as the pointer comes near: Bounce on touch (the default) widens a little with a light bounce once the pointer is on the island; Swell nearby starts swelling as the pointer gets close and grows as it nears; Subtle swells half as much; Bold grows more and slower; Drop down grows downward and barely wider; On touch changes only when the pointer is on the island; None keeps it still",
+  hoverBounce: "Bounce on touch",
   hoverNear: "Swell nearby",
   hoverSubtle: "Subtle",
   hoverBold: "Bold",

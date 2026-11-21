@@ -48,7 +48,7 @@ export function IslandHoverRow({ value, onChange }: { value: IslandHover; onChan
       const seconds = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60;
       last = now;
       const goal = target();
-      advanceHoverSpring(spring.current, goal, seconds, shape.response);
+      advanceHoverSpring(spring.current, goal, seconds, shape.response, shape.damping);
       if (hoverSettled(spring.current, goal)) spring.current = { value: goal, velocity: 0 };
       island.style.setProperty("--hover-grow-x", `${(shape.growX * spring.current.value).toFixed(2)}px`);
       island.style.setProperty("--hover-grow-y", `${(shape.growY * spring.current.value).toFixed(2)}px`);
@@ -67,6 +67,7 @@ export function IslandHoverRow({ value, onChange }: { value: IslandHover; onChan
   };
 
   const options = [
+    { value: "bounce", label: text.hoverBounce },
     { value: "near", label: text.hoverNear },
     { value: "subtle", label: text.hoverSubtle },
     { value: "bold", label: text.hoverBold },
