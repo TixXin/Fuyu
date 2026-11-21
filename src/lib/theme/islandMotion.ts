@@ -1,6 +1,7 @@
-import { landingCurve, springCurve } from "./motionCurves.ts";
+import { bounceDamping, ISLAND_BOUNCES } from "./islandBounce.ts";
+import { landingCurve, springCurve, springResponse } from "./motionCurves.ts";
 import { MOTION_BASE_MS, MOTION_FAST_MS, MOTION_MEDIUM_MS } from "./motionTokens.ts";
-import type { IslandMotion } from "../settings/types";
+import type { IslandBounce, IslandMotion } from "../settings/types";
 
 export const ISLAND_MOTIONS = ["pop", "lively", "spring", "snappy", "soft", "unfold", "grow", "smooth", "fast", "bouncy", "none"] as const satisfies readonly IslandMotion[];
 
@@ -83,18 +84,37 @@ const LIVELY_CLOSE: MotionTiming = {
   fade: 90, fadeDelay: 0, layer: 120, collapsedDelay: 160, bloom: 280, contentBlur: 10,
 };
 
-const POP_OPEN: MotionTiming = {
-  width: 220, widthEase: "cubic-bezier(0, 1.7, 0.1, 0.9)",
-  height: 440, heightEase: "cubic-bezier(0, 1.5, 0.1, 0.95)",
-  radius: 440, radiusEase: "cubic-bezier(0, 1.5, 0.1, 0.95)", ease: EASE_OUT,
-  fade: 180, fadeDelay: 0, layer: 60, collapsedDelay: 140, bloom: 360, contentBlur: 14, bounces: true,
-};
-const POP_CLOSE: MotionTiming = {
-  width: 360, widthEase: EASE_OUT_CUBIC,
-  height: 280, heightEase: EASE_OUT_CUBIC, heightDelay: 35,
-  radius: 280, radiusEase: EASE_OUT_CUBIC, ease: EASE_OUT_CUBIC,
-  fade: 60, fadeDelay: 0, layer: 60, collapsedDelay: 200, bloom: 300,
-};
+const POP_WIDTH = { damping: 0.6, omega: 19.5, cap: 680 };
+const POP_HEIGHT = { damping: 0.66, omega: 16.5, cap: 530, floor: 0.62, delay: 30 };
+const POP_CLOSE = { damping: 1, omega: 21.5, ms: 400, delay: 18 };
+const settleMs = (damping: number, omega: number, cap: number) => Math.min(cap, Math.ceil(620 / (damping * omega)) * 10);
+
+function popOpen(bounce: IslandBounce): MotionTiming {
+  const widthDamping = bounceDamping(POP_WIDTH.damping, bounce);
+  const heightDamping = bounceDamping(POP_HEIGHT.damping, bounce, POP_HEIGHT.floor);
+  const width = settleMs(widthDamping, POP_WIDTH.omega, POP_WIDTH.cap);
+  const height = settleMs(heightDamping, POP_HEIGHT.omega, POP_HEIGHT.cap);
+  const heightEase = springResponse(heightDamping, POP_HEIGHT.omega, height);
+  return {
+    width, widthEase: springResponse(widthDamping, POP_WIDTH.omega, width),
+    height, heightEase, heightDelay: POP_HEIGHT.delay,
+    radius: height, radiusEase: heightEase, ease: EASE_OUT,
+    fade: 220, fadeDelay: 20, layer: 60, collapsedDelay: 140, bloom: 360, contentBlur: 14, bounces: true,
+  };
+}
+
+function popClose(bounce: IslandBounce): MotionTiming {
+  const damping = bounceDamping(POP_CLOSE.damping, bounce);
+  const ease = springResponse(damping, POP_CLOSE.omega, POP_CLOSE.ms);
+  return {
+    width: POP_CLOSE.ms, widthEase: ease,
+    height: POP_CLOSE.ms, heightEase: ease, heightDelay: POP_CLOSE.delay,
+    radius: POP_CLOSE.ms, radiusEase: ease, ease: EASE_OUT_CUBIC,
+    fade: 60, fadeDelay: 0, layer: 60, collapsedDelay: damping < 1 ? 260 : 200, bloom: 300,
+  };
+}
+
+const POP = Object.fromEntries(ISLAND_BOUNCES.map((bounce) => [bounce, { open: popOpen(bounce), close: popClose(bounce) }])) as Record<IslandBounce, { open: MotionTiming; close: MotionTiming }>;
 
 const SOFT_OPEN: MotionTiming = {
   width: 480, widthEase: springCurve(0.8), height: 480, heightEase: springCurve(0.8), radius: 480, radiusEase: springCurve(0.8), ease: EASE_OUT,
@@ -124,7 +144,7 @@ const GROW_CLOSE: MotionTiming = {
 };
 
 const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }> = {
-  pop: { open: POP_OPEN, close: POP_CLOSE },
+  pop: POP.regular,
   lively: { open: LIVELY_OPEN, close: LIVELY_CLOSE },
   spring: { open: WEBSITE_OPEN, close: WEBSITE_CLOSE },
   snappy: { open: SNAPPY_OPEN, close: SNAPPY_CLOSE },
@@ -143,8 +163,8 @@ const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }>
   none: { open: NONE, close: NONE },
 };
 
-export function islandMotionTiming(motion: IslandMotion, direction: "open" | "close", reducedMotion = false): MotionTiming {
-  const timing = PRESETS[motion][direction];
+export function islandMotionTiming(motion: IslandMotion, direction: "open" | "close", reducedMotion = false, bounce: IslandBounce = "regular"): MotionTiming {
+  const timing = (motion === "pop" ? POP[bounce] : PRESETS[motion])[direction];
   return reducedMotion ? calmed(timing, direction === "open" ? MOTION_MEDIUM_MS : MOTION_BASE_MS) : timing;
 }
 
@@ -162,8 +182,8 @@ function calmed(timing: MotionTiming, cap: number): MotionTiming {
   };
 }
 
-export function islandMotionVariables(motion: IslandMotion, direction: "open" | "close", reducedMotion = false): Record<string, string> {
-  const timing = islandMotionTiming(motion, direction, reducedMotion);
+export function islandMotionVariables(motion: IslandMotion, direction: "open" | "close", reducedMotion = false, bounce: IslandBounce = "regular"): Record<string, string> {
+  const timing = islandMotionTiming(motion, direction, reducedMotion, bounce);
   return {
     "--island-motion-width": `${timing.width}ms`,
     "--island-motion-width-ease": timing.widthEase,

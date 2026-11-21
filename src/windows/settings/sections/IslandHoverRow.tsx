@@ -4,18 +4,18 @@ import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
 import { advanceHoverSpring, hoverNearness, hoverSettled, islandHoverShape, type HoverSpring } from "../../../lib/theme/islandHover";
-import type { IslandHover } from "../../../lib/settings/types";
+import type { IslandBounce, IslandHover } from "../../../lib/settings/types";
 import "./IslandMotionRow.css";
 import "./IslandHoverRow.css";
 
-export function IslandHoverRow({ value, onChange }: { value: IslandHover; onChange: (value: IslandHover) => void }) {
+export function IslandHoverRow({ value, bounce, onChange }: { value: IslandHover; bounce: IslandBounce; onChange: (value: IslandHover) => void }) {
   const text = useTranslation().settings.expand;
   const reducedMotion = useReducedMotion();
   const islandRef = useRef<HTMLDivElement>(null);
   const pointer = useRef<{ x: number; y: number } | null>(null);
   const frame = useRef(0);
   const spring = useRef<HoverSpring>({ value: 0, velocity: 0 });
-  const shape = reducedMotion ? null : islandHoverShape(value);
+  const shape = reducedMotion ? null : islandHoverShape(value, bounce);
 
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
 

@@ -19,6 +19,16 @@ export function springCurve(damping: number): string {
   });
 }
 
+export function springResponse(damping: number, omega: number, ms: number): string {
+  const seconds = ms / 1000;
+  if (damping >= 1) return toLinear((t) => 1 - (1 + omega * t * seconds) * Math.exp(-omega * t * seconds));
+  const swing = omega * Math.sqrt(1 - damping * damping);
+  return toLinear((t) => {
+    const at = t * seconds;
+    return 1 - Math.exp(-damping * omega * at) * (Math.cos(swing * at) + ((damping * omega) / swing) * Math.sin(swing * at));
+  });
+}
+
 export function landingCurve(reach: number, bounces: readonly { depth: number; length: number }[]): string {
   return toLinear((t) => {
     if (t < reach) return (t / reach) * (1.6 - 0.6 * (t / reach));

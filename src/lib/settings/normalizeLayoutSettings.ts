@@ -10,6 +10,7 @@ import { hasThemeSets, THEME_COLOR_KEYS, THEME_COLORS, THEME_MODES, themeSetsFro
 import { oneOf } from "./settingsLimits.ts";
 import { ISLAND_MOTIONS } from "../theme/islandMotion.ts";
 import { ISLAND_HOVERS } from "../theme/islandHover.ts";
+import { ISLAND_BOUNCES } from "../theme/islandBounce.ts";
 import { normalizeGlassSettings } from "./glassSettings.ts";
 import { storedIslandForm } from "./islandFormMigration.ts";
 import { isMacOS } from "../platform.ts";
@@ -70,6 +71,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     islandCornerShape: settings?.islandCornerShape === "round" ? "round" : "squircle",
     islandMotion: oneOf(ISLAND_MOTIONS, settings?.islandMotion, DEFAULT_SETTINGS.islandMotion),
     islandHover: oneOf(ISLAND_HOVERS, settings?.islandHover, settings?.islandMotion === "none" ? "none" : DEFAULT_SETTINGS.islandHover),
+    islandBounce: oneOf(ISLAND_BOUNCES, settings?.islandBounce, DEFAULT_SETTINGS.islandBounce),
     maxPanelHeight: typeof settings?.maxPanelHeight === "number" && Number.isFinite(settings.maxPanelHeight)
       ? clamp(Math.round(settings.maxPanelHeight), MIN_MAX_PANEL_HEIGHT, MAX_MAX_PANEL_HEIGHT)
       : LEGACY_FALLBACKS.maxPanelHeight,

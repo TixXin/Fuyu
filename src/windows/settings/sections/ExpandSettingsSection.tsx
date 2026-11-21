@@ -123,8 +123,14 @@ export function ExpandSettingsSection({
         )}
       </SettingsGroup>
       <SettingsGroup title={expand.motion}>
-        <IslandMotionRow value={settings.islandMotion} onChange={(islandMotion) => update({ islandMotion })} />
-        <IslandHoverRow value={settings.islandHover} onChange={(islandHover) => update({ islandHover })} />
+        <IslandMotionRow
+          value={settings.islandMotion}
+          bounce={settings.islandBounce}
+          bounceDisabled={settings.islandMotion !== "pop" && settings.islandHover !== "bounce"}
+          onChange={(islandMotion) => update({ islandMotion })}
+          onBounceChange={(islandBounce) => update({ islandBounce })}
+        />
+        <IslandHoverRow value={settings.islandHover} bounce={settings.islandBounce} onChange={(islandHover) => update({ islandHover })} />
       </SettingsGroup>
     </>
   );

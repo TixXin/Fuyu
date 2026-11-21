@@ -31,6 +31,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   islandCornerShape: "squircle",
   islandMotion: "pop",
   islandHover: "bounce",
+  islandBounce: "regular",
   maxPanelHeight: DEFAULT_MAX_PANEL_HEIGHT,
   panelWidth: DEFAULT_PANEL_WIDTH,
   pageSizes: {},

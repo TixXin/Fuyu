@@ -1387,12 +1387,25 @@
       "zh-CN": {
         "group": "开合动画",
         "title": "动画曲线",
-        "description": "弹开（默认）一下子张开、宽度先冲过头再回来，高度慢半拍，内容由模糊变清楚，收起时内容先消失再收拢；灵动快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹"
+        "description": "弹开（默认）像弹簧一样一下子张开、宽度和高度都冲过头一点再回来，高度慢半拍，内容由模糊变清楚，收起时内容先消失、不回弹地收拢；灵动快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹"
       },
       "en": {
         "group": "Open and close",
         "title": "Animation curve",
-        "description": "Pop (the default) snaps open, the width overshoots and comes back, the height follows a beat later and the content goes from blurred to sharp, and on closing the content vanishes before the island shrinks; Lively shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot"
+        "description": "Pop (the default) springs open, the width and height overshoot a little and come back, the height follows a beat later and the content goes from blurred to sharp, and on closing the content vanishes before the island shrinks without a bounce; Lively shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "开合动画",
+        "title": "弹动幅度",
+        "description": "动画结束时回弹多少：轻微几乎不过头，常规（默认）过头一点再回来，弹动过头更多、多晃一下，收起时也会回一下。只对开合动画「弹开」和悬停效果「碰到弹一下」起作用"
+      },
+      "en": {
+        "group": "Open and close",
+        "title": "Bounce strength",
+        "description": "How far the animation swings past its end: Subtle barely overshoots, Regular (the default) overshoots a little and comes back, Bouncy overshoots more, swings once more and also bounces on closing. Only affects the Pop animation and the Bounce on touch hover effect"
       }
     },
     {

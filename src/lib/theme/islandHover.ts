@@ -1,4 +1,5 @@
-import type { IslandHover } from "../settings/types";
+import { bounceDamping, ISLAND_BOUNCES } from "./islandBounce.ts";
+import type { IslandBounce, IslandHover } from "../settings/types";
 
 export const ISLAND_HOVERS = ["bounce", "near", "subtle", "bold", "drop", "touch", "none"] as const satisfies readonly IslandHover[];
 
@@ -19,8 +20,17 @@ const SHAPES: Record<Exclude<IslandHover, "none">, IslandHoverShape> = {
   touch: { growX: 20, growY: 5, range: 0, response: 0.42 },
 };
 
-export function islandHoverShape(hover: IslandHover): IslandHoverShape | null {
-  return hover === "none" ? null : SHAPES[hover];
+type Shapes = typeof SHAPES;
+
+const withBounce = (bounce: IslandBounce) =>
+  Object.fromEntries(
+    Object.entries(SHAPES).map(([hover, shape]) => [hover, shape.damping === undefined ? shape : { ...shape, damping: bounceDamping(shape.damping, bounce) }]),
+  ) as Shapes;
+
+const BOUNCED = Object.fromEntries(ISLAND_BOUNCES.map((bounce) => [bounce, bounce === "regular" ? SHAPES : withBounce(bounce)])) as Record<IslandBounce, Shapes>;
+
+export function islandHoverShape(hover: IslandHover, bounce: IslandBounce = "regular"): IslandHoverShape | null {
+  return hover === "none" ? null : BOUNCED[bounce][hover];
 }
 
 export type HoverSpring = { value: number; velocity: number };

@@ -8,7 +8,7 @@ import {
 } from "../../lib/island-cursor/api";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import { advanceHoverSpring, hoverNearness, hoverSettled, islandHoverShape, type HoverSpring } from "../../lib/theme/islandHover";
-import type { IslandHover } from "../../lib/settings/types";
+import type { IslandBounce, IslandHover } from "../../lib/settings/types";
 
 const SETTLE_AFTER_CLOSE_MS = 700;
 
@@ -24,9 +24,9 @@ function islandScale(element: HTMLElement) {
   return Number.isFinite(scale) && scale > 0 ? scale : 1;
 }
 
-export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean, hover: IslandHover) {
+export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean, hover: IslandHover, bounce: IslandBounce = "regular") {
   const reducedMotion = useReducedMotion();
-  const shape = islandHoverShape(hover);
+  const shape = islandHoverShape(hover, bounce);
   const enabled = active && shape !== null && !reducedMotion;
   const wasEnabled = useRef<boolean | null>(null);
 

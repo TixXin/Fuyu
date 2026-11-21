@@ -91,23 +91,49 @@ test("saved settings without the field, or with an unknown one, open with pop; a
   assert.equal(normalizeSettings({ islandMotion: "fast" }).islandMotion, "fast");
 });
 
-const bezierPeak = (ease) => {
-  const [x1, y1, x2, y2] = ease.slice("cubic-bezier(".length, -1).split(",").map(Number);
-  const at = (a, b, s) => 3 * a * s * (1 - s) ** 2 + 3 * b * s * s * (1 - s) + s ** 3;
-  let peak = 0;
-  for (let i = 0; i <= 1000; i++) peak = Math.max(peak, at(y1, y2, i / 1000));
-  assert.ok(x1 >= 0 && x2 <= 1);
-  return peak;
-};
+const BOUNCES = ["subtle", "regular", "bouncy"];
+const PANEL_TRAVEL = 306 - 36;
+const WINDOW_SPARE = 24;
 
-test("pop snaps the width past its end and back, the height follows later and stays inside the window's 24px", () => {
-  const open = islandMotionTiming("pop", "open");
+test("pop springs the width past its end and back; the height follows later and stays inside the window's 24px at every bounce strength", () => {
+  const widthPeaks = [];
+  for (const bounce of BOUNCES) {
+    const open = islandMotionTiming("pop", "open", false, bounce);
+    const close = islandMotionTiming("pop", "close", false, bounce);
+    const width = points(open.widthEase);
+    const height = points(open.heightEase);
+    widthPeaks.push(Math.max(...width));
+    assert.ok(open.heightDelay > 0, `${bounce} height starts later`);
+    assert.ok(open.height + open.heightDelay <= 560, `${bounce} open ends before the window shrinks`);
+    assert.ok(close.height + close.heightDelay <= 560, `${bounce} close ends before the window shrinks`);
+    assert.ok(open.fadeDelay + open.fade <= open.height, `${bounce} fade`);
+    assert.ok((Math.max(...height) - 1) * PANEL_TRAVEL <= WINDOW_SPARE, `${bounce} height out ${Math.max(...height)}`);
+    assert.ok(Math.max(...points(close.heightEase)) - 1 <= 0.02, `${bounce} close dip`);
+    assert.ok(Math.abs(width.at(-2) - 1) < 0.01 && Math.abs(height.at(-2) - 1) < 0.01, `${bounce} has settled by its last step`);
+    assert.equal(open.contentBlur, 14);
+    assert.ok(close.layer <= 60);
+  }
+  const [subtle, regular, bouncy] = widthPeaks;
+  assert.ok(subtle > 1 && subtle < 1.05, String(subtle));
+  assert.ok(regular > 1.07 && regular < 1.12, String(regular));
+  assert.ok(bouncy > 1.14 && bouncy < 1.2, String(bouncy));
   const close = islandMotionTiming("pop", "close");
-  assert.ok(bezierPeak(open.widthEase) > 1.05);
-  assert.ok(open.height > open.width);
-  assert.ok((bezierPeak(open.heightEase) - 1) * (306 - 36) <= 24);
-  assert.equal(open.contentBlur, 14);
-  assert.ok(bezierPeak(close.widthEase) <= 1);
-  assert.ok(close.layer <= 60);
-  assert.equal(close.heightDelay, 35);
+  assert.equal(Math.max(...points(close.widthEase)), 1);
+  assert.equal(Math.max(...points(close.heightEase)), 1);
+  assert.deepEqual(islandMotionTiming("pop", "open"), islandMotionTiming("pop", "open", false, "regular"));
+});
+
+test("bounce strength leaves the other presets and reduced motion alone", () => {
+  for (const motion of ISLAND_MOTIONS.filter((name) => name !== "pop")) {
+    for (const direction of ["open", "close"]) assert.deepEqual(islandMotionTiming(motion, direction, false, "bouncy"), islandMotionTiming(motion, direction));
+  }
+  assert.equal(islandMotionVariables("pop", "open", true, "bouncy")["--island-motion-width-ease"], "cubic-bezier(0.22, 1, 0.36, 1)");
+});
+
+test("saved settings without a bounce strength, or with an unknown one, use regular", () => {
+  assert.equal(DEFAULT_SETTINGS.islandBounce, "regular");
+  assert.equal(normalizeSettings({}).islandBounce, "regular");
+  assert.equal(normalizeSettings({ islandBounce: "wild" }).islandBounce, "regular");
+  assert.equal(normalizeSettings({ islandBounce: "subtle" }).islandBounce, "subtle");
+  assert.equal(normalizeSettings({ islandBounce: "bouncy" }).islandBounce, "bouncy");
 });

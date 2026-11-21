@@ -172,14 +172,14 @@ export function IslandApp() {
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
-      ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
+      ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion, settings.islandBounce),
       ...(collapsedIslandHeight !== COLLAPSED_ISLAND_HEIGHT ? { "--collapsed-island-height": `${collapsedIslandHeight}px` } : {}),
       ...(islandOpacity < 1 ? { "--island-opacity": String(islandOpacity) } : {}),
       ...(settings.islandMotion === "none" ? { "--island-opacity-duration": "0ms" } : {}),
       ...style.vars,
       ...glassStyle,
     }),
-    [collapsedIslandWidth, collapsedIslandHeight, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, islandOpacity, style.vars, glassStyle],
+    [collapsedIslandWidth, collapsedIslandHeight, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, settings.islandBounce, reducedMotion, islandOpacity, style.vars, glassStyle],
   );
 
   const {
@@ -249,6 +249,7 @@ export function IslandApp() {
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
         hoverGrow={settings.islandHover}
+        hoverBounce={settings.islandBounce}
         glass={{ ...glass, nativeState: nativeGlassState }}
         isTucked={isTucked}
         isDimmed={isDimmed}

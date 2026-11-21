@@ -5,22 +5,34 @@ import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
 import { islandMotionTiming, islandMotionVariables } from "../../../lib/theme/islandMotion";
-import type { IslandMotion } from "../../../lib/settings/types";
+import type { IslandBounce, IslandMotion } from "../../../lib/settings/types";
 import "./IslandMotionRow.css";
 
 const HOLD_MS = 700;
 
-export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onChange: (value: IslandMotion) => void }) {
+export function IslandMotionRow({
+  value,
+  bounce,
+  bounceDisabled,
+  onChange,
+  onBounceChange,
+}: {
+  value: IslandMotion;
+  bounce: IslandBounce;
+  bounceDisabled: boolean;
+  onChange: (value: IslandMotion) => void;
+  onBounceChange: (value: IslandBounce) => void;
+}) {
   const text = useTranslation().settings.expand;
   const reducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const play = (motion: IslandMotion) => {
+  const play = (motion: IslandMotion, strength: IslandBounce) => {
     window.clearTimeout(timer.current);
     setOpen(true);
-    timer.current = window.setTimeout(() => setOpen(false), islandMotionTiming(motion, "open").width + HOLD_MS);
+    timer.current = window.setTimeout(() => setOpen(false), islandMotionTiming(motion, "open", false, strength).width + HOLD_MS);
   };
   const options = [
     { value: "pop", label: text.motionPop },
@@ -35,32 +47,55 @@ export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onCh
     { value: "bouncy", label: text.motionBouncy },
     { value: "none", label: text.motionNone },
   ] as const;
+  const bounces = [
+    { value: "subtle", label: text.bounceSubtle },
+    { value: "regular", label: text.bounceRegular },
+    { value: "bouncy", label: text.bounceBouncy },
+  ] as const;
 
   return (
-    <SettingsRow
-      title={text.motionCurve}
-      description={text.motionHint}
-      control={
-        <SettingsSelect<IslandMotion>
-          value={value}
-          options={options}
-          ariaLabel={text.motion}
-          onChange={(motion) => {
-            onChange(motion);
-            play(motion);
-          }}
-        />
-      }
-    >
-      <div className="island-motion-preview" style={islandMotionVariables(value, open ? "open" : "close", reducedMotion) as CSSProperties}>
-        <div className={`island-motion-preview__island${open ? " island-motion-preview__island--open" : ""}`}>
-          <span className="island-motion-preview__line" />
-          <span className="island-motion-preview__line island-motion-preview__line--short" />
+    <>
+      <SettingsRow
+        title={text.motionCurve}
+        description={text.motionHint}
+        control={
+          <SettingsSelect<IslandMotion>
+            value={value}
+            options={options}
+            ariaLabel={text.motion}
+            onChange={(motion) => {
+              onChange(motion);
+              play(motion, bounce);
+            }}
+          />
+        }
+      >
+        <div className="island-motion-preview" style={islandMotionVariables(value, open ? "open" : "close", reducedMotion, bounce) as CSSProperties}>
+          <div className={`island-motion-preview__island${open ? " island-motion-preview__island--open" : ""}`}>
+            <span className="island-motion-preview__line" />
+            <span className="island-motion-preview__line island-motion-preview__line--short" />
+          </div>
+          <button type="button" className="island-motion-preview__play" aria-label={text.motionPlay} title={text.motionPlay} onClick={() => play(value, bounce)}>
+            <Play size={14} />
+          </button>
         </div>
-        <button type="button" className="island-motion-preview__play" aria-label={text.motionPlay} title={text.motionPlay} onClick={() => play(value)}>
-          <Play size={14} />
-        </button>
-      </div>
-    </SettingsRow>
+      </SettingsRow>
+      <SettingsRow
+        title={text.bounce}
+        description={text.bounceHint}
+        control={
+          <SettingsSelect<IslandBounce>
+            value={bounce}
+            options={bounces}
+            ariaLabel={text.bounce}
+            disabled={bounceDisabled}
+            onChange={(strength) => {
+              onBounceChange(strength);
+              if (value === "pop") play(value, strength);
+            }}
+          />
+        }
+      />
+    </>
   );
 }
