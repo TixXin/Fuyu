@@ -22,7 +22,6 @@ import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
 import { editGrowWidth, PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
 import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, maxExpandedIslandHeight, panelIslandWidth } from "./layout";
-import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
 import { surfaceThemeColors } from "../../lib/theme/themeMode";
 import { islandMotionVariables } from "../../lib/theme/islandMotion";
@@ -137,12 +136,11 @@ export function IslandApp() {
     openPopup?.wide === true,
   );
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
-  const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup, page, pageSize);
   const pageIslandHeight = fuyuPage && !popup ? pageSize.height : getExpandedIslandHeight({ maxPanelHeight: pageSize.height, panel: popups.get(page), popup });
   const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
   const expandedIslandHeight = Math.min(
     maxExpandedIslandHeight(settings.expandedScale),
-    (resizingHeight && !popup ? pageSize.height : pageIslandHeight + editGrowHeight) + notchExpandedExtra(notch, settings.expandedScale, popup),
+    pageIslandHeight + editGrowHeight + notchExpandedExtra(notch, settings.expandedScale, popup),
   );
   const islandNotice = useIslandNotice({ firstHints, v2Upgrade, layer: layerNotice });
   const isDimmed = useIdleDim({
@@ -150,7 +148,6 @@ export function IslandApp() {
     seconds: settings.idleDimSeconds,
     mode,
     isTucked,
-    resizing: resizing !== null,
     demoActive: demo.active,
     hasNotice: islandNotice !== null,
     hasPreview: contributedPreview !== null,
@@ -246,7 +243,6 @@ export function IslandApp() {
         page={page}
         homePage={homePage}
         popup={popup}
-        resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${pageSize.height}` : null}
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
         hoverGrow={settings.islandHover}

@@ -20,7 +20,6 @@ import "./IslandShell.css";
 import "./islandMotionVars.css";
 import { IslandGlassLayer } from "./IslandGlassLayer";
 import type { IslandGlassView } from "./useIslandGlass";
-import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
 import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
 import { useSidePluginRows } from "./useSidePluginRows";
@@ -41,7 +40,6 @@ type IslandShellProps = {
   page: IslandPage;
   homePage?: IslandPage;
   popup?: boolean;
-  resizeLabel?: string | null;
   appearanceMode: AppearanceMode;
   nativeGlassState: NativeGlassState;
   glass?: IslandGlassView;
@@ -139,7 +137,6 @@ export function IslandShell({
   page,
   homePage = page,
   popup = false,
-  resizeLabel = null,
   appearanceMode,
   nativeGlassState,
   glass,
@@ -344,7 +341,6 @@ export function IslandShell({
           />
         )}
         <IslandDragHint />
-        <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />
         <IconButtonTooltip />
       </section>
       {showTuckHint && <IslandTuckHint hint={tuckHint} side={side} />}

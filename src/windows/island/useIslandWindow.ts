@@ -189,7 +189,7 @@ export function useIslandWindow({
       setResizing: (active) => {
         if (active) {
           document.documentElement.classList.add(RESIZING_CLASS);
-        } else if (!document.documentElement.dataset.islandDrag) {
+        } else {
           document.documentElement.classList.remove(RESIZING_CLASS);
         }
       },

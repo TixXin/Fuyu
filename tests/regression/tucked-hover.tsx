@@ -4,12 +4,10 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import { emit } from "@tauri-apps/api/event";
 import {
   ISLAND_DIM_WAKE_EVENT,
-  ISLAND_HOLD_CHANGED_EVENT,
   ISLAND_HOVER_CHANGED_EVENT,
   ISLAND_REVEAL_REQUESTED_EVENT,
   setIslandBannerRect,
 } from "../../src/windows/island/api";
-import { useIslandHoldListener } from "../../src/windows/island/islandHold";
 import { useHoverExpand } from "../../src/windows/island/useHoverExpand";
 import { useIdleDim } from "../../src/windows/island/useIdleDim";
 import { useIdleTuck } from "../../src/windows/island/useIslandAutomation";
@@ -59,7 +57,6 @@ function Harness() {
     agentWaiting,
   });
   useIdleTuck(autoTuckEnabled, 0.28, navigation.isTucked, `${navigation.mode}:${navigation.page}`, () => navigation.idleTuck(RETRACT_MS));
-  useIslandHoldListener();
   useHoverExpand({
     expandOnHover: false,
     collapseOnLeave: hoverCollapseEnabled && (clickCollapseOnLeave || navigation.openedByHover),
@@ -168,16 +165,6 @@ async function runChecks() {
     await act(async () => document.querySelector<HTMLInputElement>("#draft")!.blur());
     await until(() => state() === "collapsed/tucked");
     check(state() === "collapsed/tucked", "输入框失去焦点后再收回");
-
-    await arrive();
-    await until(() => state() === "expanded/out");
-    await act(async () => { await emit(ISLAND_HOLD_CHANGED_EVENT, true); });
-    await hover(false);
-    await wait(450);
-    check(state() === "expanded/out", "外部对话框持有锁时，鼠标移开也不收回");
-    await act(async () => { await emit(ISLAND_HOLD_CHANGED_EVENT, false); });
-    await until(() => state() === "collapsed/tucked");
-    check(state() === "collapsed/tucked", "释放持有锁后再收回");
 
     await act(async () => island.idleTuck(null));
     await arrive();

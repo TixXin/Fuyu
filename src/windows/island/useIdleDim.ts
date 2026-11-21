@@ -4,7 +4,6 @@ import {
   hasActiveIslandBanner,
   listenIslandDimWake,
   listenIslandHover,
-  listenIslandMoveArmed,
   listenIslandPositionChanged,
   listenIslandRevealRequested,
   subscribeIslandBannerPresence,
@@ -138,13 +137,6 @@ export function useIdleDim({
     attachUnlisten(
       listenIslandHover((inside) => {
         if (inside) restart();
-      }),
-      unlistens,
-      cancelled,
-    );
-    attachUnlisten(
-      listenIslandMoveArmed((target) => {
-        if (target !== "none") restart();
       }),
       unlistens,
       cancelled,

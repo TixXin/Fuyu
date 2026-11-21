@@ -80,15 +80,10 @@ async function runChecks() {
     check(near(panel.bottom, stage().getBoundingClientRect().bottom) && near(panel.height, 306), "面板往上展开，下沿不动");
     check(near(box(".island__expanded").bottom, panel.bottom) && near(box(".island__expanded").top, panel.top), "展开层贴着岛的下沿，填满面板");
     check(box(".island__header").top >= panel.top - 0.5, "标签栏在面板顶部，不出岛");
-    const hint = getComputedStyle(document.querySelector(".island-resize-hint--bottom")!);
-    check(hint.maskPosition.endsWith("0%") || hint.maskPosition.endsWith("top"), "Alt 改尺寸的提示线在上边");
-    const label = document.querySelector<HTMLElement>(".island-resize-size");
-    check(!label, "没在拖动时不显示尺寸");
 
     dockTo("top");
     await settled(() => near(island().getBoundingClientRect().top, stage().getBoundingClientRect().top));
     check(near(island().getBoundingClientRect().top, stage().getBoundingClientRect().top), "换回顶边时面板从顶部往下展开");
-    check(getComputedStyle(document.querySelector(".island-resize-hint--bottom")!).maskPosition.split(" ").pop() !== "0%", "顶边时提示线回到下边");
     await set({ expanded: false });
     await settled(() => near(island().getBoundingClientRect().height, 38));
     check(parseFloat(getComputedStyle(island()).borderTopLeftRadius) === 0 && parseFloat(getComputedStyle(island()).borderBottomLeftRadius) > 0, "顶边的造型不变：上直下圆");

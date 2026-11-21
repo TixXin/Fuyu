@@ -27,7 +27,7 @@ function IslandReference() {
   return (
     <ShortcutReferenceGroup
       title={text.islandTitle}
-      rows={[[text.collapse, "Esc"], [text.moveIsland, text.longPressDrag], [text.resizePanel, text.dragEdge]]}
+      rows={[[text.collapse, "Esc"], [text.moveIsland, text.longPressDrag]]}
     />
   );
 }

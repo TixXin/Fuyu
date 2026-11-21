@@ -80,39 +80,12 @@ export function listenIslandDimWake(handler: () => void): Promise<UnlistenFn> {
   return listen(ISLAND_DIM_WAKE_EVENT, () => handler());
 }
 
-export const ISLAND_MOVE_ARMED_CHANGED_EVENT = "island-move-armed-changed";
-
-export type IslandResizeTarget = "none" | "left" | "right" | "bottom" | "bottomLeft" | "bottomRight";
-
-export function listenIslandMoveArmed(
-  handler: (target: IslandResizeTarget) => void,
-): Promise<UnlistenFn> {
-  return listen<IslandResizeTarget>(ISLAND_MOVE_ARMED_CHANGED_EVENT, ({ payload }) => handler(payload));
-}
-
 const ISLAND_HIDE_HINTS_EVENT = "island-hide-hints";
 
 export function listenIslandHideHints(handler: () => void): Promise<UnlistenFn> {
   return listen(ISLAND_HIDE_HINTS_EVENT, () => handler());
 }
 
-export const ISLAND_HOLD_CHANGED_EVENT = "island-hold-changed";
-
-export function listenIslandHold(handler: (held: boolean) => void): Promise<UnlistenFn> {
-  return listen<boolean>(ISLAND_HOLD_CHANGED_EVENT, ({ payload }) => handler(payload));
-}
-
-const ISLAND_RESIZE_EVENT = "island-resize";
-
-export type IslandResizeDelta = { width: number; height: number; collapsed: boolean; done: boolean };
-
-export function setIslandPanelResizable(resizable: boolean): Promise<void> {
-  return invoke("set_island_panel_resizable", { resizable });
-}
-
-export function listenIslandResize(handler: (delta: IslandResizeDelta) => void): Promise<UnlistenFn> {
-  return listen<IslandResizeDelta>(ISLAND_RESIZE_EVENT, ({ payload }) => handler(payload));
-}
 
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
@@ -238,10 +211,6 @@ export function listenForegroundFullscreen(handler: (state: ForegroundFullscreen
 
 export function startIslandDrag() {
   return invoke("start_island_drag");
-}
-
-export function startIslandEdgeResize() {
-  return invoke("start_island_modifier_drag");
 }
 
 export function resetIslandPosition() {
