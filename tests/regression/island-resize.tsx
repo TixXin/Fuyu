@@ -39,7 +39,7 @@ function Fixture() {
     <IslandShell
       mode={expanded ? "expanded" : "collapsed"} page="music" isTucked={false}
       isDetached={false} showTitle={false}
-      showCollapsedText appearanceMode="classic" nativeGlassState="disabled"
+      showCollapsedText appearanceMode="classic" nativeGlassState="disabled" hoverGrow="none"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
@@ -158,17 +158,18 @@ async function runChecks() {
     await hover(box.left + 4, box.top + 15);
     await until(() => root().classList.contains("glow-l") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", 1000);
     check(!q(".island-resize__glow") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", "折叠岛的边亮起时只亮小拉环，不再并排多一条亮线");
-    await hover(box.left + box.width / 2, box.top + 15);
-    await hover(box.left + box.width / 2, box.top + 15);
-    await until(() => islandBox().width - box.width > 17, 2000);
+    const shell = q(".island")!;
+    shell.style.setProperty("--island-hover-grow-x", "18px");
+    await until(() => islandBox().width - box.width > 17.5, 1000);
     const grown = islandBox();
     const capBox = q(".island-resize__cap--r")!.getBoundingClientRect();
-    check(grown.width - box.width > 17 && capBox.right <= box.right - 6 + 0.5, `悬停把岛撑宽时，小拉环留在没撑宽时的范围里，原生侧不会把它当成岛外`);
+    check(grown.width - box.width > 17.5 && capBox.right <= box.right - 6 + 0.5, `悬停把岛撑宽 18px 时，小拉环留在没撑宽时的范围里，原生侧不会把它当成岛外（box.right ${box.right}，grown.width ${grown.width}，capBox.right ${capBox.right}）`);
     await hover(capBox.left + 2, capBox.top + capBox.height / 2);
     await hover(capBox.left + 2, capBox.top + capBox.height / 2 + 1);
     check(root().classList.contains("is-near-cap-r") && cursor() === "ew-resize", "撑宽时鼠标到小拉环上，拉环出现、指针变成左右箭头");
+    shell.style.setProperty("--island-hover-grow-x", "0.000px");
     await hover(box.left + box.width / 2, 590);
-    await until(() => q(".island")!.style.getPropertyValue("--island-hover-lift") === "0.0000" && !root().className.includes("is-near") && !root().className.includes("glow"), 3000);
+    await until(() => Math.abs(islandBox().width - box.width) < 0.5 && !root().className.includes("is-near") && !root().className.includes("glow"), 2000);
     await until(() => !badge().classList.contains("is-shown"), 2000);
     check(!badge().classList.contains("is-shown"), "松手一会儿后尺寸标签收起");
 

@@ -20,6 +20,7 @@ const GROUPED = [
   "",
   "- **新标注工具**：模糊、直线，按 `X` 打码。",
   "- （Mac）**能录屏了**：区域录屏。",
+  "- （Windows）**全屏游戏不再截成黑屏**。",
   "",
   "### 修复",
   "",
@@ -49,10 +50,11 @@ test("grouped notes keep their sections, platforms and fixes in both languages",
   const { zh, en } = parseReleaseNotes(GROUPED);
   assert.deepEqual(zh, [
     { title: "截图", fix: false, items: [
-      { title: "新标注工具", desc: "模糊、直线，按 X 打码。", platform: null },
-      { title: "能录屏了", desc: "区域录屏。", platform: "Mac" },
+      { title: "新标注工具", desc: "模糊、直线，按 X 打码。", platform: null, children: [] },
+      { title: "能录屏了", desc: "区域录屏。", platform: "Mac", children: [] },
+      { title: "全屏游戏不再截成黑屏", desc: "", platform: "Windows", children: [] },
     ] },
-    { title: "", fix: true, items: [{ title: "歌手名不再带着 专辑名。", desc: "", platform: "Windows" }] },
+    { title: "", fix: true, items: [{ title: "歌手名不再带着 专辑名。", desc: "", platform: "Windows", children: [] }] },
   ]);
   assert.deepEqual(en.map((section) => [section.title, section.fix, section.items.map((item) => [item.title, item.platform])]), [
     ["Screenshots", false, [["New markup tools", null], ["Screen recording", "Mac"]]],
@@ -80,5 +82,6 @@ test("flat notes turn the bold 修复 item's sub-items into the fixes section", 
     ["", true, ["歌词不再卡住。", "四指切换桌面时岛不再消失。"]],
   ]);
   assert.equal(zh[1].items[1].platform, "Mac");
+  assert.deepEqual(zh[0].items[1].children, [{ title: "前奏时显示（新）：可以选。", desc: "", platform: null, children: [] }]);
   assert.deepEqual(en, []);
 });
