@@ -30,6 +30,8 @@
         "islandMotion": "sync",
         "islandHover": "sync",
         "islandBounce": "sync",
+        "widgetEntrance": "sync",
+        "widgetDataMotion": "sync",
         "maxPanelHeight": "local",
         "panelWidth": "local",
         "pageSizes": "local",

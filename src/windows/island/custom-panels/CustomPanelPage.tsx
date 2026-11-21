@@ -6,12 +6,15 @@ import { useTranslation } from "../../../i18n";
 import { addPanelItem, cellsToPx, defaultWidgetSize, fuyuPanel, fuyuPanels, GRID_CELL_PX, GRID_GAP_PX, GRID_UNIT_PX, layoutStrip, PANEL_MODES, placeFreeItem, removePanelItem, setPanelMode, stripRightPx, type CustomPanel } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
+import type { WidgetEntrance } from "../../../lib/settings/types";
+import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
 import { dropIncoming, type Board, type IncomingWidget } from "./boardDrag";
 import { PanelBoard, type HeldWidget } from "./PanelBoard";
 import { FUYU_BOARD_TOP_PX, FUYU_COLUMNS, FUYU_ROWS } from "./panelSize";
 import { useWheelScrollsSideways } from "./useWheelScrollsSideways";
 import { editingPanel, startPanelEditing, stopPanelEditing, usePanelEditing } from "./panelEditing";
 import { useIslandWidgets } from "./useIslandWidgets";
+import { useEntranceRun } from "./entrance/useEntranceRun";
 import { useLongPress, type LongPressStart } from "./useLongPress";
 import { WidgetPicker, type PickerDrag } from "./WidgetPicker";
 import "./CustomPanelPage.css";
@@ -88,7 +91,9 @@ function useUndoableRemoval() {
 
 const holdable = (target: Element) => !target.closest("button, a, input, textarea, select, [contenteditable], [role='slider']");
 
-export function CustomPanelPage({ panelId }: { panelId: string }) {
+type CustomPanelPageProps = { panelId: string; entrance?: WidgetEntrance; dataMotion?: boolean; motion?: boolean };
+
+export function CustomPanelPage({ panelId, entrance = "fade", dataMotion = false, motion = true }: CustomPanelPageProps) {
   const t = useTranslation().islandWidgets.panel;
   const { panels, save } = useCustomPanels();
   const library = useIslandWidgets();
@@ -96,6 +101,8 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const sizesOf = (id: string) => library.find(id)?.sizes ?? null;
   const { ref, scale, board, panel, pages, pageStepPx } = useStrip(fuyuPanel(panels, library.widgets.length > 0 ? sizesOf : undefined), editing);
   const empty = panel.items.length === 0;
+  const reducedMotion = useReducedMotion();
+  const entranceRun = useEntranceRun(entrance, dataMotion, motion && !reducedMotion && !editing && !empty);
   const gridRef = useRef<HTMLDivElement>(null);
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
   const { removed, remember, forget } = useUndoableRemoval();
@@ -159,7 +166,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
           </div>
         ) : (
           <div className="custom-panel__zoom" style={{ zoom: scale }}>
-            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} board={board} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
+            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} board={board} incoming={incoming} held={held} entrance={entranceRun} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
             {Array.from({ length: pages }, (_, page) => (
               <span key={page} className="custom-panel__snap" style={{ left: page * pageStepPx }} aria-hidden="true" />
             ))}

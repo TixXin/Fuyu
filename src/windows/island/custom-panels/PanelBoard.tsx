@@ -8,6 +8,8 @@ import { GRID_CELL_PX, GRID_GAP_PX, itemBoxPx, layoutStrip, nextPanelSize, reord
 import { MOTION_MEDIUM_MS } from "../../../lib/theme/motionTokens";
 import { widgetSlot } from "../slots/widget";
 import { draggedTo, freeTarget, keptInside, previewOf, type Board, type IncomingWidget } from "./boardDrag";
+import { EntranceGhosts } from "./entrance/EntranceGhosts";
+import type { EntranceRun } from "./entrance/useEntranceRun";
 import { FUYU_ROWS } from "./panelSize";
 import type { LongPressStart } from "./useLongPress";
 
@@ -57,13 +59,14 @@ type PanelBoardProps = {
   board: Board;
   incoming: IncomingWidget | null;
   held: HeldWidget | null;
+  entrance: EntranceRun | null;
   onHeldTaken: () => void;
   gridRef: Ref<HTMLDivElement>;
   onChange: (panel: CustomPanel) => void;
   onRemove: (widget: string, name: string) => void;
 };
 
-export function PanelBoard({ panel, library, editing, scale, board, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
+export function PanelBoard({ panel, library, editing, scale, board, incoming, held, entrance, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
   const t = useTranslation().islandWidgets.panel;
   const free = panel.mode === "free";
   const [settle, setSettle] = useSettle();
@@ -112,7 +115,18 @@ export function PanelBoard({ panel, library, editing, scale, board, incoming, he
   const last = panel.items.length - 1;
 
   return (
-    <div className="custom-panel__grid" ref={gridRef} style={{ width: board.width, height: board.height }} data-mode={panel.mode} data-editing={editing || undefined}>
+    <div className="custom-panel__grid" ref={gridRef} style={{ width: board.width, height: board.height }} data-mode={panel.mode} data-editing={editing || undefined} data-entrance={entrance?.effect ?? undefined}>
+      {entrance ? (
+        <EntranceGhosts
+          key={entrance.id}
+          run={entrance}
+          cards={shown.items.map((item) => ({ id: item.widget, ...itemBoxPx(shown, item) }))}
+          viewWidth={board.page ? board.page * (GRID_CELL_PX + GRID_GAP_PX) - GRID_GAP_PX : board.width}
+          height={board.height}
+          step={GRID_CELL_PX + GRID_GAP_PX}
+          scale={scale}
+        />
+      ) : null}
       {editing && !free ? <GridSlots {...board} /> : null}
       {target?.guideX != null ? <span className="custom-panel__guide" data-axis="x" style={{ left: target.guideX }} aria-hidden="true" /> : null}
       {target?.guideY != null ? <span className="custom-panel__guide" data-axis="y" style={{ top: target.guideY }} aria-hidden="true" /> : null}

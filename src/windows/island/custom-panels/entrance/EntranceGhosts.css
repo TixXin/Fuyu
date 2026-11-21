@@ -1,0 +1,126 @@
+.custom-panel__entrance {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.custom-panel__ghost {
+  position: absolute;
+}
+
+.custom-panel__ghost-plate {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.065);
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
+  border-radius: 16px;
+}
+
+.custom-panel__ghost[data-idle] > :not(.custom-panel__ghost-plate) {
+  display: none;
+}
+
+.custom-panel__grid[data-entrance]:not([data-entrance="curtain"]) .custom-panel__cell {
+  background: transparent;
+  border-color: transparent;
+}
+
+.custom-panel__grid[data-entrance="curtain"] {
+  -webkit-mask-image: linear-gradient(to bottom, black 0, black 60%, transparent 66.67%);
+  mask-image: linear-gradient(to bottom, black 0, black 60%, transparent 66.67%);
+  -webkit-mask-size: 100% 300%;
+  mask-size: 100% 300%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.custom-panel__grid[data-entrance="flip"] {
+  perspective: 900px;
+}
+
+.custom-panel__grid[data-entrance="flip"] .custom-panel__cell,
+.custom-panel__grid[data-entrance="flip"] .custom-panel__ghost-plate,
+.custom-panel__grid[data-entrance="drop"] .custom-panel__ghost-plate {
+  transform-origin: 50% 0;
+}
+
+.custom-panel__ghost-rim {
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  overflow: hidden;
+  border-radius: 16px;
+  -webkit-mask:
+    linear-gradient(black 0 0) content-box,
+    linear-gradient(black 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.custom-panel__ghost-turn {
+  position: absolute;
+  inset: -60%;
+}
+
+.custom-panel__ghost-band {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 30%, rgba(var(--island-ink-rgb, 241, 240, 246), 0.92) 48%, transparent 50%);
+  transform: translateX(-75%);
+}
+
+.custom-panel__ghost-skeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 13px 12px;
+  overflow: hidden;
+  border-radius: 16px;
+  opacity: 0;
+}
+
+.custom-panel__ghost-skeleton i {
+  display: block;
+  width: 52%;
+  height: 9px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.09);
+  border-radius: 5px;
+}
+
+.custom-panel__ghost-skeleton i:nth-child(2) {
+  width: 62%;
+  height: 30px;
+  margin-top: auto;
+  border-radius: 8px;
+}
+
+.custom-panel__ghost-skeleton i:nth-child(3) {
+  width: 70%;
+}
+
+.custom-panel__ghost-sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 0, rgba(var(--overlay-rgb, 255, 255, 255), 0.17) 50%, transparent 100%) no-repeat;
+  background-position-x: -400px;
+  background-size: 220px 100%;
+}
+
+.custom-panel__ghost-trace {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  opacity: 0;
+  filter: drop-shadow(0 0 4px var(--entrance-accent));
+}
+
+.custom-panel__ghost-trace rect {
+  fill: none;
+  stroke: var(--entrance-accent);
+  stroke-linecap: round;
+  stroke-width: 1.5;
+}

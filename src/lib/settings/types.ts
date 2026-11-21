@@ -31,6 +31,7 @@ export type MessageNotice = "line" | "banner" | "panel";
 export type IslandMotion = "pop" | "lively" | "spring" | "snappy" | "soft" | "unfold" | "grow" | "smooth" | "fast" | "bouncy" | "none";
 export type IslandHover = "bounce" | "near" | "subtle" | "bold" | "drop" | "touch" | "none";
 export type IslandBounce = "subtle" | "regular" | "bouncy";
+export type WidgetEntrance = "shuffle" | "fade" | "spread" | "curtain" | "wave" | "ripple" | "skeleton" | "trace" | "glow" | "drop" | "bubble" | "focus" | "flip";
 export type ShelfDoubleClick = "open" | "reveal";
 
 export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentSettingValues & {
@@ -55,6 +56,8 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   islandMotion: IslandMotion;
   islandHover: IslandHover;
   islandBounce: IslandBounce;
+  widgetEntrance: WidgetEntrance;
+  widgetDataMotion: boolean;
   themeMode: ThemeMode;
   darkBackgroundColor: string;
   darkTextColor: string;

@@ -1424,6 +1424,32 @@
     {
       "page": "behavior",
       "zh-CN": {
+        "group": "开合动画",
+        "title": "小组件出场动效",
+        "description": "面板展开时，Fuyu 页的小组件怎么出现。轮播（默认）每次展开换一种，不会连着两次一样；也可以固定用某一种，或者选「整体淡入」不要额外的动效。下次展开面板时生效"
+      },
+      "en": {
+        "group": "Open and close",
+        "title": "Widget entrance",
+        "description": "How the widgets on the Fuyu page appear when the panel opens. Shuffle (the default) picks a different one each time and never the same twice in a row; you can also keep one, or choose Fade in for no extra motion. Applies the next time the panel opens"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "开合动画",
+        "title": "数据动效",
+        "description": "小组件出现时，圆环扫出来、数字跳到位、进度条灌满、格子一波波亮起"
+      },
+      "en": {
+        "group": "Open and close",
+        "title": "Data motion",
+        "description": "As widgets appear, rings sweep in, numbers count up, bars fill and grids light up in a wave"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
         "group": "全屏和游戏",
         "title": "游戏勿扰",
         "description": "不悬停展开，不抢键盘焦点，不弹消息预览，已展开的面板会收起。消息照常接收。"

@@ -32,6 +32,8 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   islandMotion: "pop",
   islandHover: "bounce",
   islandBounce: "regular",
+  widgetEntrance: "shuffle",
+  widgetDataMotion: true,
   maxPanelHeight: DEFAULT_MAX_PANEL_HEIGHT,
   panelWidth: DEFAULT_PANEL_WIDTH,
   pageSizes: {},
