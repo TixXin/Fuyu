@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { CARD_OFFSET, cardLeft } from "./hoverCardPlacement";
 import "./IslandHoverCard.css";
 
-const DELAY_MS = 1500;
+const DELAY_MS = 400;
 export const HIDE_TOOLTIP_EVENT = "fuyu-hide-tooltip";
 const TARGETS = "[title], [data-tooltip], button, [role='button'], [role='switch']";
 
