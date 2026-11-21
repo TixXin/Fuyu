@@ -55,9 +55,9 @@ export function useHoverGrow(ref: RefObject<HTMLElement | null>, active: boolean
     const reopened = enabled && wasEnabled.current === false;
     wasEnabled.current = enabled;
     if (!enabled) {
-      element.style.setProperty("--island-hover-lift", "0");
-      element.style.setProperty("--island-hover-grow-x", "0px");
-      element.style.setProperty("--island-hover-grow-y", "0px");
+      element.style.setProperty("--island-hover-lift", (0).toFixed(4));
+      element.style.setProperty("--island-hover-grow-x", `${(0).toFixed(3)}px`);
+      element.style.setProperty("--island-hover-grow-y", `${(0).toFixed(3)}px`);
       return;
     }
     const current = (name: string) => Number.parseFloat(element.style.getPropertyValue(name)) || 0;
