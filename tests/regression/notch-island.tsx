@@ -193,14 +193,17 @@ async function runChecks() {
     let removeClocks = () => {};
     await act(async () => { removeClocks = addClocks(); });
     await settleTransitions();
-    const clockWing = () => bar().querySelector<HTMLElement>(".island__notch-wing--right")!;
+    const CITIES = ["TYO", "LON", "NYC", "SYD", "PAR"];
     const clocksShown = () => [...bar().querySelectorAll<HTMLElement>(".test-clock-chip")];
     const chip = () => bar().querySelector<HTMLButtonElement>(".island__more-chip");
-    const whole = (clock: HTMLElement) => Math.abs(box(clock.closest(".island__collapsed-fit")!).width - 44) < 1.5 && box(clock).left >= box(clockWing()).left - 0.5 && box(clock).right <= box(clockWing()).right + 0.5;
-    const shownCities = clocksShown().map((clock) => clock.textContent);
-    check(shownCities.length >= 1 && shownCities.length < 5 && shownCities.join() === ["TYO", "LON", "NYC", "SYD", "PAR"].slice(0, shownCities.length).join(), "两翼放不下五个时钟时，按清单顺序留下前面的");
+    const whole = (clock: HTMLElement) => {
+      const wing = box(clock.closest(".island__notch-wing")!);
+      return Math.abs(box(clock.closest(".island__collapsed-fit")!).width - 44) < 1.5 && box(clock).left >= wing.left - 0.5 && box(clock).right <= wing.right + 0.5;
+    };
+    const shownCities = clocksShown().map((clock) => clock.textContent ?? "").sort((a, b) => CITIES.indexOf(a) - CITIES.indexOf(b));
+    check(shownCities.length >= 1 && shownCities.length < 5 && shownCities.join() === CITIES.slice(0, shownCities.length).join(), "两翼放不下五个时钟时，按清单顺序留下前面的");
     check(chip()?.textContent === `+${5 - shownCities.length}`, "其余的收进「+N」，N 是收起来的个数");
-    check(clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]"), "留下的项目完整显示在右翼里，没有被挤扁");
+    check(clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]"), "留下的项目完整显示在两翼里，没有被挤扁");
     const gapBox = box(bar().querySelector(".island__notch-gap")!);
     check(box(chip()!).right <= gapBox.left + 0.5 || box(chip()!).left >= gapBox.right - 0.5, "「+N」不压刘海");
     check(box(chip()!).left >= box(island()).left && box(chip()!).right <= box(island()).right && chip() === hit(chip()!), "「+N」在岛上看得见、点得到");
@@ -208,7 +211,7 @@ async function runChecks() {
     await act(async () => islandSpotlight.request("@test/clock-par"));
     check(spotlit().length === 1 && spotlit()[0] === chip(), "刚装的插件那一格被收进「+N」时，亮的是「+N」");
     await act(async () => islandSpotlight.request("@test/clock-tyo"));
-    check(spotlit().length === 1 && spotlit()[0] === clocksShown()[0].closest(".island__collapsed-fit"), "它那一格在岛上时亮的是那一格，「+N」不亮");
+    check(spotlit().length === 1 && spotlit()[0] === clocksShown().find((clock) => clock.textContent === "TYO")?.closest(".island__collapsed-fit"), "它那一格在岛上时亮的是那一格，「+N」不亮");
     await act(async () => islandSpotlight.end("@test/clock-tyo"));
     await act(async () => { chip()!.click(); });
     const panel = () => document.querySelector<HTMLElement>(".island-more-panel");
@@ -231,6 +234,7 @@ async function runChecks() {
     await settleTransitions();
     const wideShown = clocksShown().length;
     check(wideShown > shownCities.length && chip()?.textContent === (wideShown === 5 ? undefined : `+${5 - wideShown}`) && clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]"), "两翼最宽调到 170 后能多放几个，留下的仍然完整");
+    check(bar().querySelector(".island__notch-wing--left .test-clock-chip") && bar().querySelector(".island__notch-wing--right .test-clock-chip"), "右翼放不下的时钟先借左翼的空位，两边都满了才收进「+N」");
     check(JSON.parse(localStorage.getItem("fuyu-collapsed-overflow") ?? "[]").length === 5 - wideShown, "放不下的项目记给设置窗口，清单里好标出来");
     await set({ wing: 100 });
     await settleTransitions();

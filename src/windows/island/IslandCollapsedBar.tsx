@@ -41,19 +41,19 @@ const NO_SLOTS: CollapsedSlots = {};
 const NO_SOURCES = {};
 const OPENS_BAR = "data-opens-bar";
 
-type BarUnit = { key: string; ids: string[]; node: ReactNode };
+type BarUnit = { key: string; ids: string[]; node: ReactNode; movable: boolean };
 
-function barUnits(items: readonly CollapsedBarItem[]): BarUnit[] {
+function barUnits(items: readonly CollapsedBarItem[], placed: ReadonlySet<string>): BarUnit[] {
   const units: BarUnit[] = [];
   for (let index = 0; index < items.length; index += 1) {
     const item = items[index];
     if (!item.group) {
-      units.push({ key: item.id, ids: [item.id], node: item.node });
+      units.push({ key: item.id, ids: [item.id], node: item.node, movable: !placed.has(item.id) });
       continue;
     }
     const group = [item];
     while (items[index + 1]?.group === item.group) group.push(items[(index += 1)]);
-    units.push({ key: group[0].id, ids: group.map((member) => member.id), node: <div className="island__gauge-slot">{group.map((member) => <Fragment key={member.id}>{member.node}</Fragment>)}</div> });
+    units.push({ key: group[0].id, ids: group.map((member) => member.id), node: <div className="island__gauge-slot">{group.map((member) => <Fragment key={member.id}>{member.node}</Fragment>)}</div>, movable: group.every((member) => !placed.has(member.id)) });
   }
   return units;
 }
@@ -129,8 +129,9 @@ export function IslandCollapsedBar({
   const rightWingRef = useRef<HTMLDivElement>(null);
   const leftItems = zone("left");
   const rightItems = zone("right");
-  const leftUnits = barUnits(leftItems);
-  const rightUnits = barUnits(rightItems);
+  const placed = new Set(saved.map(({ id }) => id));
+  const leftUnits = barUnits(leftItems, placed);
+  const rightUnits = barUnits(rightItems, placed);
   const pinned = new Set(shelfIds(placements, offered));
   const overflow = useCollapsedOverflow(
     notch !== null && (overflowMore || pinned.size > 0),
@@ -151,7 +152,9 @@ export function IslandCollapsedBar({
   const chipSide = notch !== null ? overflow.chip : pinned.size > 0 ? "end" : null;
   const more = (side: "left" | "right" | "end") => chipSide === side && moreRows.length > 0 && <CollapsedMore rows={moreRows} onOpenPage={onOpenPage} reserve={side === "end"} />;
 
-  const left = <>{renderUnits(leftUnits, overflow)}{more("left")}</>;
+  const stays = (unit: BarUnit) => !overflow.moved.has(unit.key);
+  const crossed = (unit: BarUnit) => overflow.moved.has(unit.key);
+  const left = <>{renderUnits([...leftUnits.filter(stays), ...rightUnits.filter(crossed)], overflow)}{more("left")}</>;
   const message = (
     <>
         <button
@@ -197,7 +200,7 @@ export function IslandCollapsedBar({
   );
   const right = (
     <>
-        {renderUnits(rightUnits, overflow)}
+        {renderUnits([...leftUnits.filter(crossed), ...rightUnits.filter(stays)], overflow)}
         {more("end")}
         {!contributed.hints.has("agents.count") && (
           <button

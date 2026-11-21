@@ -15,15 +15,31 @@ test("nothing is put away and no chip is drawn while both wings fit", () => {
   assert.deepEqual(result.used, { left: 54, right: 52 });
 });
 
-test("items are kept in list order: the first ones stay, the rest go behind the chip", () => {
+test("an item that does not fit is skipped and the narrower ones after it still get its place", () => {
   const result = fit(zone([9]), zone([50, 50, 12]));
-  assert.deepEqual(result.right, [false, true, true]);
+  assert.deepEqual(result.right, [false, true, false]);
   assert.deepEqual(result.left, [false]);
+  assert.equal(result.used.right, 50 + GAP + 12);
 });
 
-test("an item further down the list is not pulled forward past one that did not fit", () => {
+test("a wide item does not take the narrow ones after it behind the chip", () => {
   const result = fit(zone([]), zone([40, 60, 10]));
-  assert.deepEqual(result.right, [false, true, true]);
+  assert.deepEqual(result.right, [false, true, false]);
+});
+
+test("an item that does not fit its own wing moves into the other wing's free room before going behind the chip", () => {
+  const result = fitCollapsedZones(zone([20]), { widths: [28, 48, 40], capacity: 80, movable: [true, true, true] }, GAP, CHIP);
+  assert.deepEqual(result.right, [false, false, false]);
+  assert.deepEqual(result.moved.right, [false, true, false]);
+  assert.equal(result.chip, null);
+  assert.deepEqual(result.used, { left: 20 + GAP + 48, right: 28 + GAP + 40 });
+});
+
+test("an item the user placed stays in its wing and goes behind the chip instead of moving", () => {
+  const result = fitCollapsedZones(zone([28]), { widths: [28, 60], capacity: 80, movable: [false, false] }, GAP, CHIP);
+  assert.deepEqual(result.right, [false, true]);
+  assert.deepEqual(result.moved.right, [false, false]);
+  assert.equal(result.chip, "left");
 });
 
 test("an item that draws nothing is never counted or put away", () => {
@@ -41,14 +57,15 @@ test("the chip goes to the wing with more room left, and to the left on a tie", 
 test("when neither wing has room for the chip, the roomier wing gives up one more item for it", () => {
   const result = fit(zone([70, 30]), zone([40, 30, 30]));
   assert.equal(result.chip, "left");
-  assert.deepEqual(result.left, [true, true]);
+  assert.deepEqual(result.left, [true, false]);
   assert.deepEqual(result.right, [false, false, true]);
   assert.ok(result.used.left <= 80 && result.used.right <= 80);
 });
 
-test("what is drawn never exceeds a wing's room, the chip included", () => {
-  for (const widths of [[30, 30, 30, 30], [80], [81], [10, 10, 10, 10, 10, 10, 10], [79, 1]]) {
-    const result = fit(zone(widths, 60), zone(widths, 80));
+test("what is drawn never exceeds a wing's room, the chip and borrowed items included", () => {
+  for (const widths of [[30, 30, 30, 30], [80], [81], [10, 10, 10, 10, 10, 10, 10], [79, 1], [50, 20, 45, 9]]) {
+    const movable = widths.map(() => true);
+    const result = fitCollapsedZones({ widths, capacity: 60, movable }, { widths, capacity: 80, movable }, GAP, CHIP);
     assert.ok(result.used.left <= 60, `left ${widths}`);
     assert.ok(result.used.right <= 80, `right ${widths}`);
   }
