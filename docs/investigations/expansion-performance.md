@@ -109,3 +109,21 @@
 - **B. 别在动画里挂载和唤醒**：收起时保留最近一页的 DOM（暂停计时器，用 `content-visibility: hidden` 跳过绘制），或在开合动画结束后再 `setPanelAwake`、把各组件的立即刷新错开。代价是收起时多占一些内存，要和 macOS 内存排查（macos-memory.md）一起看。
 - **C. 「灵动」的模糊减半或只在合成层上做**：和 A 一起做时模糊交给合成器；仍卡就把 10px 降到 4–6px，或换成「生长」那种 92% 放大。
 - **D. 先量再改**：Safari 的 Web Inspector 连上开发版岛的 WebView，用 Timelines 录一次展开，看帧里是 Script、Layout 还是 Paint 占时间；或者在开发版里加一个只在 dev 生效的记录（每次开合的最大 rAF 间隔、长任务），比较冷打开、悬停后打开和连续打开。A–C 每一项都按这个前后对比。
+
+### 实测（2026-11-21，开发版，MacBook 外接 4K 120Hz 主屏）
+
+方法：开发版里 `src/windows/island/devFrameProbe.ts`（只在 `import.meta.env.DEV` 下加载）在岛的 `island--expanded` 切换后记 700ms 的 rAF 时间，算首帧、最长一帧、中位数、掉帧（超过中位数 1.5 倍）和页面挂上的时刻，写进数据目录的 `frontend-errors.log`（`kind=island-frames`）。用实验台接口 `POST /v1/dev/island/action` 自动开合，每页 5–8 轮。rAF 只看得到网页主线程；GPU 进程里的栅格化看不到，录屏核对没做成（`screencapture` 要用户点系统权限）。
+
+| 条件 | 700ms 内帧数 | 打开最长一帧（中位数 / 最差） | 每次打开掉帧 | 页面挂上 |
+| --- | ---: | --- | ---: | ---: |
+| 原状（Fuyu 面板页，冷打开） | 40–43 | 28–38 / 55 ms | 2–3（按 60Hz 算） | 32–51 ms |
+| 原状，收起后 150ms 内再开（页面还在） | 84 | 11–17 ms | 0–1 | 6–11 ms |
+| 解除 60fps 上限 + 页面保温（本轮改动后） | 83 | 14 / 29 ms | 1.2（按 120Hz 算） | 已挂好 |
+
+结论：
+
+1. **WebKit 把岛压在 60fps**。屏幕是 120Hz，岛里的 rAF 却一直 16.7ms 一帧：WKWebView 默认开着「页面渲染贴近 60fps」（`PreferPageRenderingUpdatesNear60FPSEnabled`），外壳的宽高圆角是主线程上的注册变量过渡，跟着只走 60fps，在 120Hz 的系统界面旁边显得一顿一顿。关掉后 rAF 是 8.3ms。一直关着的代价：收起的岛闲着时有循环动画，GPU 进程从约 7% 涨到约 17%、WebContent 从约 15% 涨到约 22% CPU。所以只在开合时关：`useFollowDisplayRate` 在展开或鼠标移上收起的岛（预热）时调 `set_webview_follow_display_rate(true)`，收起 700ms 后恢复，闲着时的 CPU 回到原来的水平。这个开关是 `WKPreferences` 的私有接口（`_features`、`_setEnabled:forFeature:`），系统没有这个特性时什么都不做。
+2. **冷挂载是主线程上最大的一块**：同一页，页面已挂好时打开不掉帧，冷挂载时掉 2–3 帧。收起后页面保留 2 分钟（`KEEP_WARM_AFTER_CLOSE_MS`）再卸载：保温期间页面隐藏、不绘制，组件的 `panelInterval` 定时器照旧在收起时暂停；不走 `panelInterval` 的定时器在这 2 分钟里继续跑。超过 2 分钟、从没打开过、或换到别的页时仍是冷挂载。
+3. **A（动画期间给展开层单独合成层）不做**：试了一段不改外观的 `translate` 动画撑合成层，打开首帧和掉帧与不加时差不多（16.7 / 2.7 对 15.5 / 2.3），rAF 看不出收益，又多一个整面板的合成层，撤掉。
+4. **C（减轻「灵动」的模糊）不做**：模糊 10px 和 0 在主线程上分不出差别，模糊交给合成器算，保持用户选的样子。
+5. 收起的岛闲着时开发版 WebContent 仍有约 15% CPU（60fps 下），说明收起条上有东西一直在动，另查。
