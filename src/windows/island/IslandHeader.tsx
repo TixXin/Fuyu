@@ -19,6 +19,8 @@ import { FuyuTextIcon } from "../../components/island-widget/FuyuTextIcon";
 import { JellyfishMark } from "../../components/jellyfish/JellyfishMark";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
 import { useWindowDragGesture } from "./useWindowDragGesture";
+import { useIslandNotch } from "./notch";
+import { useRowOverflow } from "./useRowOverflow";
 import "./IslandHeader.css";
 
 const FUYU_TAB_MARK_HEIGHT = 15;
@@ -83,6 +85,9 @@ export function IslandHeader({
   });
   const trailing = dots.filter((item) => !leading.includes(item));
   const dotsRef = useRef<HTMLDivElement>(null);
+  const notch = useIslandNotch();
+  const notchHeader = Boolean(notch && !notch.simulated);
+  useRowOverflow(dotsRef, notchHeader, dots.length);
   const headerRef = useRef<HTMLElement>(null);
   const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${fuyuTabIcon}|${dots.map((item) => item.id).join(",")}`);
   useEffect(() => {
@@ -152,6 +157,10 @@ export function IslandHeader({
     );
   };
 
+  const leadActions = (
+    <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => !TRAILING_HEADER_IDS.has(item.id) && (item.enabled?.(buttons) ?? true))} />
+  );
+
   const agentStatusIconClassName = [
     "island__agent-status-icon",
     `island__agent-status-icon--${agentVisualState}`,
@@ -203,9 +212,7 @@ export function IslandHeader({
       <div ref={dotsRef} className="editor-dots" aria-label={t.island.editor}>
         {trailing.map(renderDot)}
       </div>
-      <div className="window-actions window-actions--lead">
-        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => !TRAILING_HEADER_IDS.has(item.id) && (item.enabled?.(buttons) ?? true))} />
-      </div>
+      {!notchHeader && <div className="window-actions window-actions--lead">{leadActions}</div>}
       </div>
 
       <button
@@ -221,6 +228,7 @@ export function IslandHeader({
       />
 
       <div className="window-actions">
+        {notchHeader && leadActions}
         <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => TRAILING_HEADER_IDS.has(item.id) && (item.enabled?.(buttons) ?? true))} />
       </div>
     </header>

@@ -137,6 +137,10 @@ async function runChecks() {
     check(Math.abs(box(header).top - box(island()).top) < 1 && Math.abs(box(header).height - NOTCH.height) < 1, "展开页的标签栏和刘海在同一条上，一样高");
     check(start.right <= notchLeft + 0.5 && actions.left >= notchLeft + NOTCH.width - 0.5, "页面图标在刘海左边，按钮在刘海右边，都不压到刘海");
     check(header.scrollWidth <= header.clientWidth + 1 && start.left >= box(island()).left && actions.right <= box(island()).right, "所有页面都开着时也放得下");
+    const tabs = [...document.querySelectorAll<HTMLElement>(".island__header-start button")].map(box);
+    check(tabs.length > 3 && tabs.every((tab, i) => i === 0 || tab.left >= tabs[i - 1].right - 0.5), "刘海左边的页面图标一个挨一个，不叠在一起");
+    const rightButtons = [...document.querySelectorAll<HTMLElement>(".window-actions:not(.window-actions--lead) button")].map(box);
+    check(!document.querySelector(".window-actions--lead") && rightButtons.length > 2 && rightButtons.every((button) => button.left >= notchLeft + NOTCH.width - 0.5 && button.right <= box(island()).right + 0.5), "提醒、翻译、截图这些按钮挪到刘海右边，左边只放页面图标");
     await set({ popup: true });
     await settleTransitions();
     const band = document.querySelector<HTMLElement>(".island__notch-band");
