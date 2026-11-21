@@ -84,11 +84,14 @@ impl ClipboardHistoryService {
         settings: ClipboardHistorySettings,
     ) -> Result<ClipboardHistorySnapshot, String> {
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
+        let windows_before = state.settings.windows;
         state.settings = settings.normalized();
         self.enforce_limit_locked(&mut state);
         self.persist_locked(&state)?;
         let snapshot = Self::snapshot_locked(&state);
+        let windows_after = state.settings.windows;
         drop(state);
+        super::background::follow_prewarm(&self.app, windows_before, windows_after);
 
         self.emit_changed();
         request_hotkey_refresh();

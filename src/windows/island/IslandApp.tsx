@@ -249,7 +249,7 @@ export function IslandApp() {
     resizeLabel: resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${pageSize.height}` : null,
     appearanceMode: settings.appearanceMode,
     nativeGlassState,
-    hoverGrow: settings.islandMotion !== "none",
+    hoverGrow: settings.islandHover,
     glass: { ...glass, nativeState: nativeGlassState },
     isTucked,
     isDimmed,
@@ -278,6 +278,7 @@ export function IslandApp() {
     pageDigitModifiers: settings.pageDigitModifiers,
     hoverSwitchPage: settings.hoverSwitchPage,
     hoverSwitchDelayMs: settings.hoverSwitchDelayMs,
+    fuyuTabIcon: settings.fuyuTabIcon,
     notice: islandNotice,
     collapsedSlots,
   };

@@ -28,6 +28,7 @@ pub(crate) mod microphone;
 pub(crate) mod network;
 pub(crate) mod notch;
 pub(crate) mod ocr;
+pub(crate) mod ocr_worker;
 pub(crate) mod pasteboard;
 pub(crate) mod power;
 pub(crate) mod preview_panel;

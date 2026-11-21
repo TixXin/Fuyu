@@ -145,6 +145,11 @@ async function checkPanelEditing() {
   await act(async () => { pointer("pointerdown", free, 20, 20); pointer("pointermove", window, 20 + 40 * zoom, 20 + 24 * zoom); pointer("pointerup", window, 20 + 40 * zoom, 20 + 24 * zoom); });
   const moved = (JSON.parse(localStorage.getItem("fuyu-custom-panels")!) as { panels: { items: { widget: string; x: number; y: number }[] }[] }).panels[0].items.find((item) => item.widget === "todos");
   check(moved && moved.x === 6 && moved.y === 0, `自由面板里拖动吸附到 16px 点阵、不出两行（${moved?.x},${moved?.y}）`);
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__reset")!.click());
+  check(storedItems()?.mode === "grid" && storedItems()?.items[0]?.widget === "today" && expandedRoot.querySelector(".custom-panel__undo"),
+    `点「恢复默认」换回默认的网格布局，并给出撤销（${storedItems()?.mode}: ${storedItems()?.items.map((item) => item.widget).join()}）`);
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__undo button")!.click());
+  check(storedItems()?.mode === "free" && (storedItems()?.items.find((item) => item.widget === "todos") as { x?: number } | undefined)?.x === 6, "恢复默认后点「撤销」回到刚才自己摆的样子");
   await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__edit")!.click());
   check(!panel()?.classList.contains("custom-panel--editing") && !expandedRoot.querySelector(".custom-panel__remove") && !expandedRoot.querySelector(".custom-panel__dock"), "再点布局按钮（✓）退出编辑模式");
   check(JSON.parse(localStorage.getItem("fuyu-custom-panels")!).panels.map((item: { id: string }) => item.id).join() === "fuyu", "编辑后存成唯一的 fuyu 面板");
@@ -203,6 +208,12 @@ async function runChecks() {
   await act(async () => clock.click());
   await frame();
   check(expandedRoot.querySelector(".test-clock-page") && clock.getAttribute("aria-pressed") === "true", "点页头按钮打开插件页面，按钮变成当前页");
+  const headerBox = expandedRoot.querySelector<HTMLElement>(".island__header")!.getBoundingClientRect();
+  const tab = clock.getBoundingClientRect();
+  const pill = expandedRoot.querySelector<HTMLElement>(".island__page-pill")!;
+  const near = (value: string, expected: number) => Math.abs(parseFloat(value) - expected) < 0.5;
+  check(pill.dataset.shown === "true" && near(pill.style.left, tab.left - headerBox.left) && near(pill.style.right, headerBox.right - tab.right) && near(pill.style.height, tab.height),
+    `页签胶囊盖在当前页的按钮上（胶囊 ${pill.style.left} / ${pill.style.right}，按钮 ${tab.left - headerBox.left} / ${headerBox.right - tab.right}）`);
   const digit = Number(/(?:Alt\+|⌥)(\d)\)/.exec(clock.getAttribute("aria-label") ?? "")?.[1]);
   check(pageForAltDigit(FEATURES, digit) === "world-clock", `Alt+${digit} 切到同一个插件页面`);
   await act(async () => goTo("todo"));

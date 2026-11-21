@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, WebviewWindow, WebviewWindowBuilder};
 
 use crate::plugin_kernel::builtins::{self, Background};
@@ -20,10 +21,12 @@ const LABELS: [&str; 2] = [popup::WINDOW_LABEL, preview_window::WINDOW_LABEL];
 const PREWARM_DELAY: Duration = Duration::from_secs(2);
 const PREVIEW_IDLE_DELAY: Duration = Duration::from_secs(5 * 60);
 const PREVIEW_POPUP_CLOSED_DELAY: Duration = Duration::from_secs(5);
+const POPUP_IDLE_DELAY: Duration = Duration::from_secs(10 * 60);
 
 static WINDOWS_ACTIVE: AtomicBool = AtomicBool::new(false);
 static WINDOWS_GENERATION: AtomicU64 = AtomicU64::new(0);
 static PREVIEW_IDLE_GENERATION: AtomicU64 = AtomicU64::new(0);
+static POPUP_IDLE_GENERATION: AtomicU64 = AtomicU64::new(0);
 static BUILD_LOCK: Mutex<()> = Mutex::new(());
 
 pub(super) fn mirror(enabled: bool) {
@@ -87,8 +90,8 @@ impl Background for Windows {
             if !WINDOWS_ACTIVE.load(Ordering::Acquire) || WINDOWS_GENERATION.load(Ordering::SeqCst) != generation {
                 return;
             }
-            if let Err(error) = ensure_popup_window(&app) {
-                eprintln!("failed to prewarm the clipboard window: {error}");
+            if prewarm_wanted() {
+                prewarm(&app);
             }
         });
         Ok(())
@@ -112,8 +115,69 @@ impl Background for Windows {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WindowSettings {
+    prewarm_window: bool,
+}
+
+const PREWARM_BY_DEFAULT: bool = cfg!(windows);
+
+impl Default for WindowSettings {
+    fn default() -> Self {
+        Self { prewarm_window: PREWARM_BY_DEFAULT }
+    }
+}
+
+fn prewarm_wanted() -> bool {
+    service().and_then(|service| service.snapshot()).is_ok_and(|snapshot| snapshot.settings.windows.prewarm_window)
+}
+
+fn prewarm(app: &AppHandle) {
+    if let Err(error) = ensure_popup_window(app) {
+        eprintln!("failed to prewarm the clipboard window: {error}");
+    }
+}
+
+pub(super) fn follow_prewarm(app: &AppHandle, before: WindowSettings, after: WindowSettings) {
+    if before.prewarm_window == after.prewarm_window || !WINDOWS_ACTIVE.load(Ordering::Acquire) {
+        return;
+    }
+    if after.prewarm_window {
+        cancel_popup_destroy();
+        let app = app.clone();
+        let _ = thread::Builder::new().name("clipboard-prewarm".into()).spawn(move || prewarm(&app));
+    } else {
+        popup_hidden(app);
+    }
+}
+
 pub(super) fn ensure_popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
+    cancel_popup_destroy();
     ensure_window(app, popup::WINDOW_LABEL)
+}
+
+fn cancel_popup_destroy() {
+    POPUP_IDLE_GENERATION.fetch_add(1, Ordering::SeqCst);
+}
+
+pub(super) fn popup_hidden(app: &AppHandle) {
+    if prewarm_wanted() || app.get_webview_window(popup::WINDOW_LABEL).is_none() {
+        return;
+    }
+    let generation = POPUP_IDLE_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
+    let app = app.clone();
+    let _ = thread::Builder::new().name("clipboard-popup-idle".into()).spawn(move || {
+        thread::sleep(POPUP_IDLE_DELAY);
+        if POPUP_IDLE_GENERATION.load(Ordering::SeqCst) != generation || prewarm_wanted() {
+            return;
+        }
+        if let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) {
+            if !window.is_visible().unwrap_or(false) {
+                close(&app, popup::WINDOW_LABEL, window);
+            }
+        }
+    });
 }
 
 pub(super) fn ensure_preview_window(app: &AppHandle) -> Result<WebviewWindow, String> {
@@ -262,5 +326,13 @@ mod tests {
         let clipboard = catalog.iter().find(|plugin| plugin.id == super::PLUGIN_ID).expect("clipboard is a built-in plugin");
         let names = [super::LISTENER.to_owned(), super::WINDOWS.to_owned()];
         assert_eq!(clipboard.background.as_deref(), Some(&names[..]));
+    }
+
+    #[test]
+    fn the_window_is_prewarmed_by_default_only_on_windows() {
+        let stored: super::WindowSettings = serde_json::from_str("{}").unwrap();
+        assert_eq!(stored.prewarm_window, cfg!(windows));
+        let on: super::WindowSettings = serde_json::from_str(r#"{"prewarmWindow":true}"#).unwrap();
+        assert!(on.prewarm_window);
     }
 }

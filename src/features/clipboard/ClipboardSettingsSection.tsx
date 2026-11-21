@@ -122,6 +122,14 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
         )}
         {inWindow && (
           <SettingsToggleRow
+            title={text.prewarmWindow}
+            description={text.prewarmWindowHint}
+            checked={clipboardSettings.prewarmWindow ?? !isMacOS}
+            onChange={(prewarmWindow) => change({ prewarmWindow })}
+          />
+        )}
+        {inWindow && (
+          <SettingsToggleRow
             title={text.linkPreview}
             description={text.linkPreviewHint}
             checked={clipboardSettings.linkPreview === true}

@@ -99,6 +99,7 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     super::preview_window::hide(app, false);
     super::background::schedule_preview_close_after_popup(app);
+    super::background::popup_hidden(app);
     let Some(window) = app.get_webview_window(WINDOW_LABEL) else {
         return Ok(());
     };

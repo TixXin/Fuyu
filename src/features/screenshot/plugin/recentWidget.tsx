@@ -3,7 +3,7 @@ import { Images, Scissors } from "lucide-react";
 import { WidgetFrame } from "../../../components/island-widget/WidgetFrame";
 import { formatAgo } from "../../../components/list/formatAgo";
 import { useTranslation } from "../../../i18n";
-import { visibilityInterval } from "../../../lib/useVisibilityInterval";
+import { panelInterval } from "../../../components/island-widget/panelAwake";
 import { copyHistoryScreenshot, startScreenshot } from "../api";
 import { useScreenshotHistory } from "../useScreenshotHistory";
 import "./recentWidget.css";
@@ -14,7 +14,7 @@ export function RecentScreenshotWidget() {
   const text = t.islandWidgets;
   const { items } = useScreenshotHistory();
   const [now, setNow] = useState(() => Date.now());
-  useEffect(() => visibilityInterval(() => setNow(Date.now()), 30_000), []);
+  useEffect(() => panelInterval(() => setNow(Date.now()), 30_000), []);
   const latest = items?.reduce<(typeof items)[number] | null>((best, item) => (!best || item.takenAt > best.takenAt ? item : best), null) ?? null;
   const take = clickOnly(() => void startScreenshot("region").catch((failure: unknown) => console.error("Failed to start a screenshot", failure)));
   return (

@@ -104,8 +104,8 @@ test("commits already in an open PR are counted apart from the ones not pushed, 
   assert.match(old.find((line) => line.startsWith("没推的提交")), /^没推的提交 3 个，最早的 7 小时前，还不用提 PR$/);
   assert.ok(!old.some((line) => line.includes("落后")));
 
-  const ten = Array.from({ length: 10 }, (_, i) => ({ sha: `t${i}`, subject: `feat: ${i}`, at: NOW - (i + 1) * HOUR / 4 }));
-  assert.match(report({ commits: ten }).find((line) => line.startsWith("没推的提交")), /^没推的提交 10 个，最早的 2 小时前，该提 PR 了（pnpm mq:land/);
+  const many = Array.from({ length: 30 }, (_, i) => ({ sha: `t${i}`, subject: `feat: ${i}`, at: NOW - 2 * HOUR + i }));
+  assert.match(report({ commits: many }).find((line) => line.startsWith("没推的提交")), /^没推的提交 30 个，最早的 2 小时前，攒多了，建议跟用户说推一下/);
 
   const summary = summarize(facts({ commits, behind: 61, ahead: 16, prShas: new Map([[498, new Set(["a"])]]) }));
   assert.deepEqual(summary.commits.inPr, [{ number: 498, count: 1 }]);

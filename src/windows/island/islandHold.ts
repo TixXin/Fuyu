@@ -3,9 +3,14 @@ import { listenIslandHold } from "./api";
 import { isPanelEditing } from "./custom-panels/panelEditing";
 
 let held = false;
+let releasedAt = Number.NEGATIVE_INFINITY;
 
 export function isIslandHeld() {
   return held || isPanelEditing();
+}
+
+export function msSinceIslandRelease() {
+  return performance.now() - releasedAt;
 }
 
 export function useIslandHoldListener() {
@@ -13,6 +18,7 @@ export function useIslandHoldListener() {
     let cancelled = false;
     let stop: (() => void) | undefined;
     void listenIslandHold((next) => {
+      if (held && !next) releasedAt = performance.now();
       held = next;
     })
       .then((unlisten) => {

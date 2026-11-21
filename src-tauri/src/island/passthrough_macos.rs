@@ -134,7 +134,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 });
                 let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
             }
-            let is_inside = hover_inside(state, raw_inside);
+            let is_inside = hover_inside(state, raw_inside) || modifier::is_resizing();
             let is_on_banner = pointer.is_some_and(on_banner);
             let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 

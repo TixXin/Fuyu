@@ -1,4 +1,7 @@
-use objc2::{rc::Retained, runtime::ProtocolObject};
+use objc2::{
+    rc::{autoreleasepool, Retained},
+    runtime::ProtocolObject,
+};
 use objc2_app_kit::{NSPasteboard, NSPasteboardWriting};
 use objc2_foundation::{NSArray, NSData, NSString, NSURL};
 
@@ -12,14 +15,16 @@ const SOURCE_TYPE: &str = "org.nspasteboard.source";
 const REMOTE_TYPE: &str = "com.apple.is-remote-clipboard";
 
 pub(crate) fn change_count() -> isize {
-    NSPasteboard::generalPasteboard().changeCount()
+    autoreleasepool(|_| NSPasteboard::generalPasteboard().changeCount())
 }
 
 pub(crate) fn types() -> Vec<String> {
-    NSPasteboard::generalPasteboard()
-        .types()
-        .map(|types| types.iter().map(|kind| kind.to_string()).collect())
-        .unwrap_or_default()
+    autoreleasepool(|_| {
+        NSPasteboard::generalPasteboard()
+            .types()
+            .map(|types| types.iter().map(|kind| kind.to_string()).collect())
+            .unwrap_or_default()
+    })
 }
 
 pub(crate) fn is_private_type(kind: &str) -> bool {
@@ -31,8 +36,10 @@ pub(crate) fn is_remote_type(kind: &str) -> bool {
 }
 
 pub(crate) fn source_bundle_id() -> Option<String> {
-    let id = NSPasteboard::generalPasteboard().stringForType(&NSString::from_str(SOURCE_TYPE))?;
-    let id = id.to_string().trim().to_string();
+    let id = autoreleasepool(|_| {
+        Some(NSPasteboard::generalPasteboard().stringForType(&NSString::from_str(SOURCE_TYPE))?.to_string())
+    })?;
+    let id = id.trim().to_string();
     (!id.is_empty()).then_some(id)
 }
 
