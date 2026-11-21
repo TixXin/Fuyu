@@ -1,0 +1,61 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import "./islandPageSlot.mjs";
+import { arrangeIslandPages, moveIslandPage, placeIslandPage, readIslandPages, setIslandPageHidden } from "../../src/lib/settings/islandPages.ts";
+import { cycleShortcutPage, headerDotPages, isPageShown, pageForAltDigit, pageShortcutOrder, resolveIslandPage } from "../../src/windows/island/features.ts";
+import { pageSlot } from "../../src/windows/island/slots/pageSlot.ts";
+
+const every = { agents: true, todo: true, calendar: true, music: true, clipboard: true, shelf: true, screenshots: true, timer: true, qq: true, wechat: false, qqMail: false, translation: true };
+const dots = (features) => headerDotPages(pageSlot.items(), features).map((item) => item.id);
+
+test("a missing or broken fuyu-island-pages keeps today's order", () => {
+  for (const raw of [null, "", "{", "[]", JSON.stringify({ version: 2, order: ["timer"] }), JSON.stringify({ version: 1, order: "timer" })]) {
+    assert.deepEqual(readIslandPages(raw), { order: [], hidden: [] }, String(raw));
+  }
+  assert.deepEqual(readIslandPages(JSON.stringify({ version: 1, order: ["timer", 3, "timer", "todo"], hidden: ["music", ""] })), { order: ["timer", "todo"], hidden: ["music"] });
+  assert.deepEqual(pageShortcutOrder({ ...every, pageLayout: { order: [], hidden: [] } }), pageShortcutOrder(every));
+});
+
+test("a page the saved order has not seen goes right after the page before it in the default order", () => {
+  assert.deepEqual(arrangeIslandPages(["a", "b", "c", "d"], ["c", "a"]), ["c", "d", "a", "b"]);
+  assert.deepEqual(arrangeIslandPages(["new", "a", "b"], ["b", "a"]), ["new", "b", "a"]);
+  assert.deepEqual(arrangeIslandPages(["a", "b"], ["gone-plugin", "b", "a"]), ["gone-plugin", "b", "a"]);
+});
+
+test("the header dots, Alt+number and page cycling follow the user's order and skip hidden pages", () => {
+  const order = ["timer", "todo", "agents", "music", "calendar", "clipboard", "shelf", "screenshots", "qq", "translation"];
+  const pageLayout = { order, hidden: ["music", "qq"] };
+  const features = { ...every, pageLayout };
+  assert.deepEqual(dots(features), ["timer", "todo", "calendar", "clipboard", "shelf", "screenshots"]);
+  assert.deepEqual(pageShortcutOrder(features), ["timer", "todo", "agents", "calendar", "clipboard", "shelf", "screenshots", "translation"]);
+  assert.equal(pageForAltDigit(features, 1), "timer");
+  assert.equal(pageForAltDigit(features, 3), "agents");
+  assert.equal(cycleShortcutPage(features, "translation", 1), "timer");
+  assert.equal(isPageShown("music", features), false);
+  assert.equal(isPageShown("qq", features), false);
+  assert.equal(isPageShown("todo", features), true);
+  assert.equal(resolveIslandPage("music", features), "music");
+  assert.equal(isPageShown("calendar", { ...features, calendar: false }), false);
+  const withPlugin = { ...features, pageLayout: { ...pageLayout, order: order.filter((id) => id !== "agents") } };
+  assert.deepEqual(pageShortcutOrder(withPlugin).slice(0, 2), ["agents", "timer"]);
+});
+
+test("moving skips pages that are not listed and hiding toggles one id", () => {
+  const listed = ["agents", "todo", "music"];
+  const layout = { order: ["agents", "plugin-gone", "todo", "music"], hidden: [] };
+  assert.deepEqual(moveIslandPage(layout, listed, "todo", -1).order, ["todo", "plugin-gone", "agents", "music"]);
+  assert.equal(moveIslandPage(layout, listed, "agents", -1), layout);
+  assert.deepEqual(moveIslandPage({ order: [], hidden: [] }, listed, "music", -1).order, ["agents", "music", "todo"]);
+  const hidden = setIslandPageHidden(layout, "music", true);
+  assert.deepEqual(hidden.hidden, ["music"]);
+  assert.deepEqual(setIslandPageHidden(hidden, "music", false).hidden, []);
+});
+
+test("dragging a page puts it before another one or at the end", () => {
+  const listed = ["agents", "todo", "music", "panel:a"];
+  const empty = { order: [], hidden: ["music"] };
+  assert.deepEqual(placeIslandPage(empty, listed, "panel:a", "agents"), { order: ["panel:a", "agents", "todo", "music"], hidden: ["music"] });
+  assert.deepEqual(placeIslandPage(empty, listed, "agents", null).order, ["todo", "music", "panel:a", "agents"]);
+  assert.equal(placeIslandPage(empty, listed, "todo", "todo"), empty);
+  assert.equal(placeIslandPage(empty, listed, "todo", "missing"), empty);
+});

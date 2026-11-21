@@ -22,6 +22,18 @@
   initial-value: 0px;
 }
 
+@property --island-hover-grow-x {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --island-hover-grow-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
 @property --island-shell-fill {
   syntax: "<color>";
   inherits: false;
@@ -55,13 +67,16 @@
   box-shadow: var(--island-edge-lines, inset 0 0 0 1px var(--color-white-a08));
   overflow: visible;
   isolation: isolate;
-  --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px))) + var(--island-pixel-nudge, 0.001px));
-  width: calc(100cqw - 2 * var(--island-shell-left));
-  height: var(--island-shell-height);
+  --island-shell-edge: round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px));
+  --island-shell-left: calc(max(0px, var(--island-shell-edge) - var(--island-hover-grow-x) / 2) + var(--island-pixel-nudge, 0.001px));
+  --island-shell-right: calc(max(0px, var(--island-shell-edge) - var(--island-hover-grow-x) / 2) + var(--island-pixel-nudge, 0.001px));
+  left: calc((var(--island-shell-left) - var(--island-shell-right)) / 2);
+  width: calc(100cqw - var(--island-shell-left) - var(--island-shell-right));
+  height: calc(var(--island-shell-height) + var(--island-hover-grow-y));
   border-radius: var(--island-shell-top-corner) var(--island-shell-top-corner) var(--island-shell-bottom-corner) var(--island-shell-bottom-corner);
   transition:
-    --island-shell-width var(--island-motion-width, 550ms) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)),
-    --island-shell-height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    --island-shell-width var(--island-motion-width, 550ms) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)) var(--island-motion-width-delay, 0ms),
+    --island-shell-height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)) var(--island-motion-height-delay, 0ms),
     --island-shell-top-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-bottom-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-fill var(--motion-slow) var(--motion-ease),
@@ -93,7 +108,7 @@
   --island-shell-top-corner: 0px;
   --island-shell-bottom-corner: var(--island-shell-radius-collapsed);
   cursor: default;
-  box-shadow: none;
+  box-shadow: 0 calc(8px * var(--island-hover-lift, 0)) calc(22px * var(--island-hover-lift, 0)) color-mix(in srgb, var(--island-hover-shadow, rgba(0, 0, 0, 0.32)) calc(var(--island-hover-lift, 0) * 100%), transparent);
 }
 
 .island--collapsed:has(:focus-visible) {
@@ -175,9 +190,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2xl);
-  padding: 18px 20px 20px;
+  padding: 10px 20px 20px;
   pointer-events: none;
   opacity: 0;
+  visibility: hidden;
+  filter: var(--island-motion-content-filter, none);
+  scale: var(--island-motion-content-scale, none);
+  transform-origin: 50% 0;
+  transition:
+    opacity var(--island-motion-layer, 120ms) var(--motion-ease),
+    filter var(--island-motion-layer, 120ms) var(--motion-ease),
+    scale var(--island-motion-layer, 120ms) var(--motion-ease),
+    visibility 0s linear var(--island-motion-layer, 120ms);
 }
 
 .island--preparing.island--collapsed .island__surface {
@@ -186,13 +210,20 @@
 
 .island--preparing.island--collapsed .island__expanded {
   opacity: 0.001;
+  visibility: visible;
   transition: none;
 }
 
 .island--expanded .island__expanded {
   pointer-events: auto;
   opacity: 1;
-  transition: opacity var(--island-motion-fade, 250ms) ease var(--island-motion-fade-delay, 120ms);
+  visibility: visible;
+  filter: none;
+  scale: none;
+  transition:
+    opacity var(--island-motion-fade, 250ms) ease var(--island-motion-fade-delay, 120ms),
+    filter var(--island-motion-fade, 250ms) var(--motion-ease-out) var(--island-motion-fade-delay, 120ms),
+    scale var(--island-motion-fade, 250ms) var(--motion-ease-out) var(--island-motion-fade-delay, 120ms);
 }
 
 .island--popup .island__header {

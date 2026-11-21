@@ -137,7 +137,7 @@ async function runChecks() {
       const tone = stage.dataset.tone;
       const saved = stage.getAttribute("style") ?? "";
       Object.assign(stage.style, { width: "820px", margin: "0 auto" });
-      for (const [name, value] of [["--island-scale", scale], ["--island-expanded-scale", scale], ["--expanded-island-width", `${maxExpandedIslandWidth(scale)}px`]] as const) stage.style.setProperty(name, String(value));
+      for (const [name, value] of [["--island-scale", scale], ["--island-expanded-scale", scale], ["--expanded-island-width", `${maxExpandedIslandWidth(scale, 820)}px`]] as const) stage.style.setProperty(name, String(value));
       await act(async () => { await new Promise((resolve) => setTimeout(resolve, 900)); });
       const box = island.getBoundingClientRect();
       const room = stage.getBoundingClientRect();

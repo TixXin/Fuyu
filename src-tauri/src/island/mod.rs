@@ -27,7 +27,7 @@ pub(crate) mod side;
 pub(crate) mod glass;
 #[cfg(windows)]
 pub(crate) mod glass_capture;
-#[cfg_attr(not(windows), path = "modifier_unsupported.rs")]
+#[cfg_attr(not(any(windows, target_os = "macos")), path = "modifier_unsupported.rs")]
 pub(crate) mod modifier;
 #[cfg_attr(not(windows), path = "outside_click_unsupported.rs")]
 pub(crate) mod outside_click;
@@ -57,8 +57,8 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use geometry::{
-    grown_collapsed_height, max_expanded_width, monitor_for_island_position, out_at_top_after, should_apply_stage_geometry,
-    stage_geometry_synced, COLLAPSED_ISLAND_HEIGHT, DEFAULT_EXPANDED_ISLAND_HEIGHT, EXPANDED_ISLAND_HEIGHT_RANGE,
+    grown_collapsed_height, max_expanded_height, max_expanded_width, monitor_for_island_position, nominal_position,
+    out_at_top_after, should_apply_stage_geometry, stage_geometry_synced, stage_room, COLLAPSED_ISLAND_HEIGHT,
     MAX_ADJUSTED_COLLAPSED_WIDTH, MAX_CORNER_RADIUS, MIN_ADJUSTED_COLLAPSED_WIDTH,
     MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS, MIN_EXPANDED_ISLAND_HEIGHT,
     POSITION_ANIMATION_GENERATION,
@@ -179,6 +179,7 @@ pub fn set_island_interaction(
                 .is_some()
         })
     });
+    let (room_width, room_height) = stage_room(&window);
     let state = mutate_window_state(|state| {
         let (was_tucked, was_expanded) = (state.is_tucked, matches!(state.mode, IslandMode::Expanded));
         state.mode = mode;
@@ -197,12 +198,12 @@ pub fn set_island_interaction(
         if let Some(expanded_height) = expanded_height {
             state.expanded_height = expanded_height.clamp(
                 MIN_EXPANDED_ISLAND_HEIGHT,
-                DEFAULT_EXPANDED_ISLAND_HEIGHT + EXPANDED_ISLAND_HEIGHT_RANGE,
+                max_expanded_height(state.expanded_scale, room_height),
             );
         }
         if let Some(expanded_width) = expanded_width {
             state.expanded_width =
-                expanded_width.clamp(MIN_COLLAPSED_ISLAND_WIDTH, max_expanded_width(state.expanded_scale));
+                expanded_width.clamp(MIN_COLLAPSED_ISLAND_WIDTH, max_expanded_width(state.expanded_scale, room_width));
         }
         if let Some(collapsed_width) = collapsed_width {
             state.collapsed_width =
@@ -266,7 +267,7 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
     let current_state = read_window_state();
 
-    if !matches!(current_state.mode, IslandMode::Collapsed) {
+    if current_state.is_tucked {
         return Ok(());
     }
 
@@ -276,25 +277,8 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
-
-    if !drag_modifier_down() {
-        return Ok(());
-    }
-    if modifier::start_resize(&window) {
-        return Ok(());
-    }
-
-    drag_island(window, read_window_state())
-}
-
-#[cfg(windows)]
-fn drag_modifier_down() -> bool {
-    win32::input::is_alt_key_down()
-}
-
-#[cfg(target_os = "macos")]
-fn drag_modifier_down() -> bool {
-    crate::macos::input::is_only_control_key_down()
+    modifier::start_resize(&window);
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -371,7 +355,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         focus::set_click_activation(&window, matches!(read_window_state().mode, IslandMode::Expanded));
         if did_finish_drag {
             if let Some(position) = final_position {
-                let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, position);
+                let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, nominal_position(&window, position));
             }
         }
     });

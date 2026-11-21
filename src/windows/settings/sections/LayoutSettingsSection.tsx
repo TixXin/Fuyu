@@ -1,11 +1,13 @@
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
+import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../../i18n";
 import { isMacOS } from "../../../lib/platform";
-import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MAX_TOP_FILLET_RADIUS, MIN_COLLAPSED_WIDTH_EXTRA, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "../../../lib/settings/settings";
+import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, MAX_TOP_FILLET_RADIUS, MIN_COLLAPSED_WIDTH_EXTRA, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "../../../lib/settings/settings";
+import { maxPanelHeightFor, maxPanelWidthFor } from "../../../lib/settings/panelRoom";
 import type { IslandCornerShape, IslandForm, IslandSettings } from "../../../lib/settings/types";
 import { useIslandDockEdge } from "./useIslandDockEdge";
 
@@ -52,7 +54,7 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
         />
         <SettingsSliderRow
           title={text.collapsedWidthExtra}
-          description={isMacOS ? text.collapsedWidthHintMac : text.collapsedWidthHint}
+          description={text.collapsedWidthHint}
           value={settings.collapsedWidthExtra}
           min={MIN_COLLAPSED_WIDTH_EXTRA}
           max={MAX_COLLAPSED_WIDTH_EXTRA}
@@ -77,10 +79,10 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
         />
         <SettingsSliderRow
           title={text.panelWidth}
-          description={isMacOS ? text.panelSizeHintMac : text.panelSizeHint}
+          description={text.panelSizeHint}
           value={settings.panelWidth}
           min={MIN_PANEL_WIDTH}
-          max={MAX_PANEL_WIDTH}
+          max={Math.max(settings.panelWidth, maxPanelWidthFor(settings.expandedScale))}
           step={1}
           format={pixels}
           defaultValue={DEFAULT_SETTINGS.panelWidth}
@@ -91,12 +93,21 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           title={text.maxPanelHeight}
           value={settings.maxPanelHeight}
           min={MIN_MAX_PANEL_HEIGHT}
-          max={MAX_MAX_PANEL_HEIGHT}
+          max={Math.max(settings.maxPanelHeight, maxPanelHeightFor(settings.expandedScale))}
           step={1}
           format={pixels}
           defaultValue={DEFAULT_SETTINGS.maxPanelHeight}
           resetLabel={text.resetToDefault}
           onChange={(maxPanelHeight) => change({ ...settings, maxPanelHeight }, true)}
+        />
+        <SettingsRow
+          title={text.pageSizes}
+          description={text.pageSizesHint}
+          control={(
+            <SettingsLinkButton disabled={Object.keys(settings.pageSizes).length === 0} onClick={() => change({ ...settings, pageSizes: {} }, true)}>
+              {text.pageSizesReset}
+            </SettingsLinkButton>
+          )}
         />
       </SettingsGroup>
       <SettingsGroup title={text.dragTitle}>

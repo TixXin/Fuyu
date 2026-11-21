@@ -91,7 +91,7 @@ fn move_to(window: &WebviewWindow, point: (i32, i32)) {
     });
     match placed {
         Some(position) => {
-            let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, position);
+            let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, super::geometry::nominal_position(window, position));
         }
         None if had_dragged_position => {
             let _ = window.emit(ISLAND_POSITION_CLEARED_EVENT, ());

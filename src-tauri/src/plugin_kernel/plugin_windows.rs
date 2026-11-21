@@ -603,6 +603,7 @@ impl WindowDriver for TauriWindowDriver {
             .visible(spec.visible)
             .skip_taskbar(spec.kind == "widget")
             .focused(spec.kind == "overlay" && spec.visible)
+            .accept_first_mouse(true)
             .inner_size(spec.width, spec.height);
         if let (Some(x), Some(y)) = (spec.x, spec.y) {
             builder = builder.position(x, y);

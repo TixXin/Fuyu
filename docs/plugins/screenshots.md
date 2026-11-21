@@ -105,12 +105,13 @@ export default {
 
 ### 没有岛上页面的
 
-`shots` 只会截岛上页面和收起条。离线词典、待办摘要、换歌提示没有岛上页面，它们截的是起作用的地方：翻译窗口、插件详情里的设置、岛上弹出的卡片。做法是回归页那一套：写一个临时的页面，用浮屿自己的窗口组件渲染，数据来自插件自己的代码或一份示例，再用无界面浏览器按 2 倍像素截那个元素，四角透明。
+`shots` 只会截岛上页面和收起条。离线词典、待办摘要、截图图床、换歌提示没有岛上页面，它们截的是起作用的地方：翻译窗口、插件详情里的设置、岛上弹出的卡片。做法是回归页那一套：写一个临时的页面，用浮屿自己的窗口组件渲染，数据来自插件自己的代码或一份示例，再用无界面浏览器按 2 倍像素截那个元素，四角透明。
 
 | 插件 | 截的是什么 | 数据 | 怎么重截 |
 |---|---|---|---|
 | `ecdict` | 快捷翻译窗口（`TranslationWindow`）：查词、变形词还原、中文反查 | 执行插件 `src/host.ts` 的 `apply`，用它登记的引擎查真实词表 | `node docs/investigations/plugin-shots/harness/shoot.mjs ecdict` |
 | `todo-digest` | 插件详情对话框的「设置」页（`PluginDetailModal` 加插件自己的设置组件）、写完后岛上的提示 | 执行插件的 `apply`，给它 7 条示例待办，调它登记的 `state` 和 `writeDigest` | `node docs/investigations/plugin-shots/harness/shoot.mjs todo-digest` |
+| `image-host` | 插件详情对话框的「设置」页 | 执行插件的 `apply`，给它内存里的密钥服务、总是回 200 的 `ctx.http.fetch` 和示例的 R2 设置，用它登记的截图动作传一张图后调 `state` | `node docs/investigations/plugin-shots/harness/shoot.mjs image-host` |
 | `now-playing` | 换歌卡片（`IslandShell` 加 `MessageArrivalsPanel`） | 示例曲目，封面和播放器图标是生成的，不用真实专辑封面和平台图标 | 脚本没进仓库，做法见下 |
 
 `shoot.mjs` 把同目录的页面临时放进 `tests/regression/`、起 vite、截图、删干净，约半分钟；每张图的界面、数据来源和它跟真机的差别写在[那个目录的 README](../investigations/plugin-shots/harness/README.md)。换歌卡片是同样的做法：临时回归页里放真的岛外壳和消息面板，给一条带媒体控制的示例消息，页面渲染完在 `body` 上标 `data-shot-ready`，脚本用 `scripts/run-regression.mjs` 导出的 `withRegressionBrowser` 起浏览器，设 2 倍像素和透明底，取 `.island` 的位置四周留 12 像素截下来。

@@ -86,7 +86,7 @@
   font-size: 11px;
   line-height: 1.45;
   overflow-wrap: anywhere;
-  user-select: text;
+  -webkit-user-select: text; user-select: text;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }

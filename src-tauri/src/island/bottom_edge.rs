@@ -2,7 +2,7 @@ use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Monitor, PhysicalPosition, WebviewWindow};
 
 use super::edge;
-use super::geometry::{apply_stage_geometry, island_rect, monitor_at, STAGE_WINDOW_HEIGHT, STAGE_WINDOW_WIDTH};
+use super::geometry::{apply_stage_geometry, island_rect, monitor_at, nominal_position, stage_width, STAGE_WINDOW_HEIGHT};
 use super::screen;
 use super::side::{full_rect, is_outer, Rect};
 use super::state::{mutate_window_state, read_window_state, Edge, IslandPosition, IslandWindowState};
@@ -38,7 +38,7 @@ pub(super) fn window_height(window: &WebviewWindow) -> f64 {
 pub(super) fn placed_on(monitor: &Monitor) -> IslandPosition {
     let scale = screen::monitor_scale(monitor);
     let (origin, size) = (screen::monitor_origin(monitor), screen::monitor_size(monitor));
-    let stage_width = (STAGE_WINDOW_WIDTH * scale).round() as i32;
+    let stage_width = (stage_width() * scale).round() as i32;
     let x = origin.x + (size.width as i32 - stage_width) / 2;
     let y = stage_y(screen::monitor_work_rect(monitor), (STAGE_WINDOW_HEIGHT * scale).round() as i32, 0);
     IslandPosition { x, y, edge: Some(Edge::Bottom), along: None, taskbar: false }
@@ -120,7 +120,7 @@ pub fn set_island_edge(app: AppHandle, edge: DockTarget) -> Result<(), String> {
         *state
     });
     apply_stage_geometry(&window, state, false)?;
-    let _ = window.emit(super::ISLAND_POSITION_CHANGED_EVENT, position);
+    let _ = window.emit(super::ISLAND_POSITION_CHANGED_EVENT, nominal_position(&window, position));
     Ok(())
 }
 

@@ -1,56 +1,419 @@
 <body>
   <div id="root">
-    <div class="screenshot-overlay screenshot-overlay--long" style="cursor: nwse-resize">
+    <div class="screenshot-overlay" style="cursor: nwse-resize">
       <canvas class="screenshot-overlay__picture" height="813" width="1280"></canvas>
-      <div class="screenshot-overlay__selection screenshot-overlay__selection--long" style="left: 60px; top: 60px; width: 200px; height: 240px">
+      <canvas class="screenshot-overlay__annotations" height="813" width="1280"></canvas>
+      <div class="screenshot-overlay__selection" style="left: 60px; top: 60px; width: 200px; height: 140px">
+        <span class="screenshot-overlay__handle" style="left: 0px; top: 0px"></span>
+        <span class="screenshot-overlay__handle" style="left: 100px; top: 0px"></span>
+        <span class="screenshot-overlay__handle" style="left: 200px; top: 0px"></span>
+        <span class="screenshot-overlay__handle" style="left: 200px; top: 70px"></span>
+        <span class="screenshot-overlay__handle" style="left: 200px; top: 140px"></span>
+        <span class="screenshot-overlay__handle" style="left: 100px; top: 140px"></span>
+        <span class="screenshot-overlay__handle" style="left: 0px; top: 140px"></span>
+        <span class="screenshot-overlay__handle" style="left: 0px; top: 70px"></span>
         <span class="screenshot-overlay__size">
-          200 × 2,400
+          200
+          ×
+          140
         </span>
       </div>
-      <div aria-label="长截图" class="long-shot-bar long-shot-bar--end" role="toolbar" style="left: 272px; top: 60px">
-        <div class="long-shot-bar__head">
-          <svg aria-hidden="true" class="lucide lucide-square-bottom-dashed-scissors" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-          <strong>
-            长截图
-          </strong>
-          <span class="long-shot-bar__height">
-            高 2,400 px
-          </span>
-        </div>
-        <div aria-hidden="true" class="long-shot-bar__film">
-          <span class="long-shot-bar__film-empty"></span>
-          <span class="long-shot-bar__frames">
-            5 屏
-          </span>
-        </div>
-        <div aria-hidden="true" class="long-shot-bar__meter">
-          <span style="transform: scaleX(0.12)"></span>
-        </div>
-        <p class="long-shot-bar__state" role="status">
-          到底了，点 ✓ 复制
-        </p>
-        <div class="long-shot-bar__actions">
-          <button aria-label="继续自动滚动（空格）" class="long-shot-bar__button" title="继续自动滚动（空格）" type="button">
-            <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div aria-label="截图工具栏" class="screenshot-overlay__toolbar" role="toolbar" style="left: 4px; top: 208px">
+        <div class="screenshot-overlay__toolbar-row">
+          <button aria-label="矩形（R）" aria-pressed="false" class="screenshot-overlay__button" title="矩形（R）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-square" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
           </button>
-          <button aria-label="取消（Esc）" class="long-shot-bar__button" title="取消（Esc）" type="button">
-            <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+          <button aria-label="椭圆（E）" aria-pressed="false" class="screenshot-overlay__button" title="椭圆（E）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-circle" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
           </button>
-          <button aria-label="保存（Ctrl+S）" class="long-shot-bar__button" title="保存（Ctrl+S）" type="button">
-            <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+          <button aria-label="直线（按住 Shift 吸附角度）（L）" aria-pressed="false" class="screenshot-overlay__button" title="直线（按住 Shift 吸附角度）（L）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-minus" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
           </button>
-          <button aria-label="完成并复制（Enter）" class="long-shot-bar__button long-shot-bar__button--primary" title="完成并复制（Enter）" type="button">
-            <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+          <button aria-label="箭头（A）" aria-pressed="false" class="screenshot-overlay__button" title="箭头（A）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-move-up-right" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="画笔（P）" aria-pressed="false" class="screenshot-overlay__button" title="画笔（P）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-pencil" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="荧光笔（H）" aria-pressed="false" class="screenshot-overlay__button" title="荧光笔（H）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-highlighter" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="文字（I）" aria-pressed="false" class="screenshot-overlay__button" title="文字（I）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-type" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="马赛克（X）" aria-pressed="false" class="screenshot-overlay__button" title="马赛克（X）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-grid3x3 lucide-grid-3x3" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="模糊（B）" aria-pressed="false" class="screenshot-overlay__button" title="模糊（B）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-droplets" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="聚光灯（框外压暗）（S）" aria-pressed="false" class="screenshot-overlay__button" title="聚光灯（框外压暗）（S）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-focus" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="序号（N）" aria-pressed="false" class="screenshot-overlay__button" title="序号（N）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-hash" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <span class="screenshot-overlay__separator"></span>
+          <button aria-label="撤销（Ctrl+Z）" class="screenshot-overlay__button" disabled="" title="撤销（Ctrl+Z）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-undo2 lucide-undo-2" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="重做（Ctrl+Y）" class="screenshot-overlay__button" disabled="" title="重做（Ctrl+Y）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-redo2 lucide-redo-2" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <span class="screenshot-overlay__separator"></span>
+          <button aria-label="长截图（自动往下滚动拼接，也可以自己滚）" class="screenshot-overlay__button" title="长截图（自动往下滚动拼接，也可以自己滚）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-square-bottom-dashed-scissors" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="录屏（3 秒后开始录这个区域，标注不会录进去）" class="screenshot-overlay__button" title="录屏（3 秒后开始录这个区域，标注不会录进去）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-video" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="自动打码（邮箱、手机号、IP、密钥）" class="screenshot-overlay__button" title="自动打码（邮箱、手机号、IP、密钥）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-eye-off" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="识别文字" class="screenshot-overlay__button" title="识别文字" type="button">
+            <svg aria-hidden="true" class="lucide lucide-scan-text" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="识别到 2 个二维码" aria-pressed="true" class="screenshot-overlay__button screenshot-overlay__button--active" title="识别到 2 个二维码" type="button">
+            <svg aria-hidden="true" class="lucide lucide-qr-code" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="贴到屏幕上（T）" class="screenshot-overlay__button" title="贴到屏幕上（T）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-pin" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="保存（Ctrl+S）" class="screenshot-overlay__button" title="保存（Ctrl+S）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="快捷键（?）" aria-pressed="true" class="screenshot-overlay__button screenshot-overlay__button--active screenshot-overlay__sheet-toggle" title="快捷键（?）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-keyboard" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="取消（Esc）" class="screenshot-overlay__button" title="取消（Esc）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+          <button aria-label="复制（Enter）" class="screenshot-overlay__button screenshot-overlay__button--primary" title="复制（Enter）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
           </button>
         </div>
-        <p class="long-shot-bar__keys">
-          空格 开始 / 暂停 · Enter 完成 · Esc 取消
-        </p>
+        <div aria-label="选区里的二维码" class="screenshot-overlay__qr" role="group">
+          <div class="screenshot-overlay__qr-item">
+            <span class="screenshot-overlay__qr-kind">
+              网址
+            </span>
+            <span class="screenshot-overlay__qr-text">
+              https://example.com/some/long/path?with=query
+            </span>
+            <span class="screenshot-overlay__qr-actions">
+              <button class="screenshot-overlay__qr-button" type="button">
+                <svg aria-hidden="true" class="lucide lucide-external-link" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                打开链接
+              </button>
+              <button class="screenshot-overlay__qr-button" type="button">
+                <svg aria-hidden="true" class="lucide lucide-copy" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                复制
+              </button>
+            </span>
+          </div>
+          <div class="screenshot-overlay__qr-item">
+            <span class="screenshot-overlay__qr-kind">
+              文本
+            </span>
+            <span class="screenshot-overlay__qr-text">
+              浮屿 二维码
+            </span>
+            <span class="screenshot-overlay__qr-actions">
+              <button class="screenshot-overlay__qr-button" type="button">
+                <svg aria-hidden="true" class="lucide lucide-copy" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                复制
+              </button>
+            </span>
+          </div>
+        </div>
       </div>
       <div class="screenshot-overlay__guide screenshot-overlay__guide--h" style="top: 60px"></div>
-      <div class="screenshot-overlay__guide screenshot-overlay__guide--h" style="top: 299px"></div>
+      <div class="screenshot-overlay__guide screenshot-overlay__guide--h" style="top: 199px"></div>
       <div class="screenshot-overlay__guide screenshot-overlay__guide--v" style="left: 60px"></div>
       <div class="screenshot-overlay__guide screenshot-overlay__guide--v" style="left: 259px"></div>
+      <div class="screenshot-sheet screenshot-sheet--faded" style="left: 12px; top: 352px">
+        <div class="screenshot-sheet__head" title="拖动标题栏换到别的角">
+          <svg aria-hidden="true" class="lucide lucide-grip-vertical screenshot-sheet__grip" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+          <span class="screenshot-sheet__title">
+            快捷键
+          </span>
+          <button aria-label="收起（?）" class="screenshot-sheet__collapse" title="收起（?）" type="button">
+            <svg aria-hidden="true" class="lucide lucide-chevron-down" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+        </div>
+        <div class="screenshot-sheet__grid">
+          <div class="screenshot-sheet__section">
+            选区
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              选区域
+            </span>
+            <span class="screenshot-sheet__keys">
+              <span class="screenshot-sheet__word">
+                拖动
+              </span>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              选窗口 / 控件
+            </span>
+            <span class="screenshot-sheet__keys">
+              <span class="screenshot-sheet__word">
+                单击
+              </span>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              换外层 / 内层
+            </span>
+            <span class="screenshot-sheet__keys">
+              <span class="screenshot-sheet__word">
+                滚轮
+              </span>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              复制颜色
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                C
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              测量距离
+            </span>
+            <span class="screenshot-sheet__keys">
+              <span class="screenshot-sheet__word">
+                按住
+              </span>
+              <kbd>
+                M
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__section">
+            截完
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              复制
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                Enter
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              保存
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                Ctrl
+              </kbd>
+              <kbd>
+                S
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              贴到屏幕
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                T
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              撤销 / 重做
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                Ctrl+Z
+              </kbd>
+              <span class="screenshot-sheet__or">
+                /
+              </span>
+              <kbd>
+                Ctrl+Y
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              删除选中标注
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                Delete
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              取消
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                Esc
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              收起说明
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                ?
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__section">
+            标注工具
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              矩形
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                R
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              椭圆
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                E
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              直线
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                L
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              箭头
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                A
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              画笔
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                P
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              荧光笔
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                H
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              文字
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                I
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              马赛克
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                X
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              模糊
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                B
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              聚光灯
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                S
+              </kbd>
+            </span>
+          </div>
+          <div class="screenshot-sheet__row">
+            <span>
+              序号
+            </span>
+            <span class="screenshot-sheet__keys">
+              <kbd>
+                N
+              </kbd>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div aria-hidden="true" class="screenshot-magnifier" style="left: 280px; top: 220px">
+        <canvas class="screenshot-magnifier__zoom" height="120" style="width: 120px; height: 120px" width="120"></canvas>
+        <div class="screenshot-magnifier__color">
+          <span class="screenshot-magnifier__swatch" style="background: rgb(128, 128, 128)"></span>
+          #808080
+        </div>
+        <div class="screenshot-magnifier__line">
+          260, 200
+        </div>
+        <div class="screenshot-magnifier__line">
+          200 × 140
+        </div>
+        <div class="screenshot-magnifier__line">
+          按 C 复制颜色
+        </div>
+        <div class="screenshot-magnifier__line">
+          按住 M 测量距离
+        </div>
+      </div>
     </div>
   </div>
 </body>

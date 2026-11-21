@@ -2,7 +2,7 @@ use serde::Serialize;
 use tauri::{Emitter, WebviewWindow};
 
 use super::bottom_edge;
-use super::geometry::{island_rect, monitor_at, IslandOnScreen, STAGE_WINDOW_WIDTH};
+use super::geometry::{island_rect, monitor_at, stage_width, IslandOnScreen};
 use super::screen;
 use super::side::{full_rect, is_outer, near_side, Rect, SNAP_DISTANCE};
 use super::state::{read_window_state, Edge, IslandMode, IslandWindowState};
@@ -48,7 +48,7 @@ fn current(window: &WebviewWindow, state: IslandWindowState) -> Option<DragEdgeH
     let collapsed = matches!(state.mode, IslandMode::Collapsed);
     let top = top_edge(&monitor, super::notch::under_menu_bar(window, &monitor, state));
     let edge = hint_for(rect, work, top, snap, collapsed, |edge| is_outer(edge, own, &monitors))?;
-    let per_px = width / STAGE_WINDOW_WIDTH;
+    let per_px = width / stage_width();
     let window_origin = (f64::from(position.x), f64::from(position.y));
     Some(DragEdgeHint { edge, offset: offset_in_stage(edge, work, top, window_origin, per_px) })
 }

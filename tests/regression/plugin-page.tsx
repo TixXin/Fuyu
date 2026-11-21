@@ -94,7 +94,7 @@ function LiveStage({ item }: { item: Stage }) {
   useEffect(() => {
     liveViews.set(item.key, setView);
   }, [item.key]);
-  return <PluginsV3View view={view} hostOff={item.hostOff} node={item.node ?? null} builtins={ipc.builtins} initialDetail={item.detail ?? null} barUsage={item.bar} onBarChanged={() => opened.push(`${item.key}:bar-changed`)} onOpenPage={(page) => opened.push(`${item.key}:${page}`)} />;
+  return <PluginsV3View view={view} hostOff={item.hostOff} node={item.node ?? null} builtins={ipc.builtins} initialDetail={item.detail ?? null} barUsage={item.bar} onOpenPage={(page) => opened.push(`${item.key}:${page}`)} />;
 }
 const showView = (key: string, view: PluginHostView) => act(async () => liveViews.get(key)!(view));
 

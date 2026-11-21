@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, FileText, Plus, X } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { MAX_TODO_NOTE_LENGTH, MAX_TODO_SUBTASKS } from "../normalize.ts";
+import { TodoNoteImages } from "./TodoNoteImages";
 import type { TodoItem } from "../types";
 
 export function TodoSubtaskPanel({
@@ -125,6 +126,7 @@ export function TodoSubtaskPanel({
           <span className="todo-subtask-note__text">{todo.note}</span>
         </div>
       ) : null}
+      <TodoNoteImages text={todo.note} />
     </div>
   );
 }

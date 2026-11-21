@@ -1,0 +1,87 @@
+{
+  "name": "@fuyu/image-host",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Uploads a screenshot to your own S3-compatible storage (R2, S3, OSS, COS or MinIO) and copies the link.",
+  "keywords": [
+    "图床",
+    "截图",
+    "上传",
+    "链接",
+    "对象存储",
+    "image host",
+    "screenshot",
+    "upload",
+    "S3",
+    "R2",
+    "OSS",
+    "MinIO"
+  ],
+  "author": "TixXin",
+  "license": "MIT",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.12-beta.2"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev",
+    "build": "fuyu-plugin build",
+    "check": "fuyu-plugin check --market",
+    "package": "fuyu-plugin pack",
+    "typecheck": "tsc"
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "截图图床",
+      "en": "Image host"
+    },
+    "description": {
+      "zh-CN": "把截图传到你自己的 S3 兼容存储（R2、S3、OSS、COS 或 MinIO），并复制链接。",
+      "en": "Uploads a screenshot to your own S3-compatible storage (R2, S3, OSS, COS or MinIO) and copies the link."
+    },
+    "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/settings.png",
+        "caption": {
+          "zh-CN": "设置：服务地址、桶、密钥和链接格式；密钥存在系统凭据里",
+          "en": "Settings: endpoint, bucket, keys and link format; the keys live in the system credential store"
+        }
+      }
+    ],
+    "categories": [
+      "utilities",
+      "productivity"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "settings": "dist/settings.js"
+    },
+    "inject": {
+      "required": [
+        "http",
+        "screenshot.actions",
+        "secrets/v1"
+      ],
+      "optional": [
+        "clipboard/v1",
+        "settings"
+      ]
+    },
+    "slots": [
+      "settings.section/v1"
+    ],
+    "network": [
+      "*.r2.cloudflarestorage.com",
+      "*.amazonaws.com",
+      "*.aliyuncs.com",
+      "*.myqcloud.com",
+      "localhost"
+    ]
+  }
+}

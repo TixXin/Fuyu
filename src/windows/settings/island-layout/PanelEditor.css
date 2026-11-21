@@ -1,0 +1,221 @@
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.panel-head__label {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.layout-chip__action:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.panel-buckets {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .panel-buckets {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel-bucket {
+  min-width: 0;
+  padding: 10px 12px 12px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: 12px;
+}
+
+.panel-bucket header {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.panel-bucket header span {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.panel-bucket__group {
+  display: grid;
+  gap: 6px;
+}
+
+.panel-bucket__label,
+.panel-bucket__none {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.size-picker {
+  display: grid;
+  gap: 12px;
+}
+
+.size-picker__tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.size-picker__tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.size-picker__tabs button[aria-selected="true"] {
+  color: var(--color-text);
+  font-weight: 600;
+  background: var(--color-white-a08);
+}
+
+.size-picker__cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .size-picker__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.size-card {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 0;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.size-card__stage {
+  position: relative;
+  width: 100%;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  background: var(--preview-fill, var(--island-preview-fill, #000000));
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px var(--color-white-a08);
+  transition: box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.size-card__shape {
+  --cell: 26px;
+  width: calc(var(--cols) * var(--cell) + (var(--cols) - 1) * 3px);
+  height: calc(var(--rows) * var(--cell) + (var(--rows) - 1) * 3px);
+  display: grid;
+  place-items: center;
+  color: var(--island-preview-ink, rgba(255, 255, 255, 0.8));
+  background: var(--island-preview-tile-on, rgba(255, 255, 255, 0.14));
+  border-radius: 8px;
+}
+
+.size-card__check {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border-radius: 999px;
+}
+
+.size-card[aria-pressed="true"] {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.size-card[aria-pressed="true"] .size-card__stage {
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.size-card:focus-visible,
+.size-picker__tabs button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .size-card__stage {
+    transition: none;
+  }
+}
+
+.panel-head__modes {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: 8px;
+}
+
+.panel-head__modes button {
+  padding: 4px 10px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.panel-head__modes button[aria-checked="true"] {
+  color: var(--color-text);
+  background: var(--color-white-a08);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.panel-head__modes button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.panel-bucket__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-bucket__tag {
+  padding: 0 6px;
+  font-size: 10.5px;
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-pill);
+}

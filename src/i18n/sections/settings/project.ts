@@ -37,9 +37,6 @@ export type SettingsProjectText = {
   quitAction: string;
   website: string;
   websiteHint: string;
-  logoCall: string;
-  logoCallLink: string;
-  logoCallUrl: string;
   releases: string;
   releasesHint: string;
   issues: string;
@@ -187,9 +184,6 @@ export const zhCN: SettingsProjectText = {
   quitAction: "退出",
   website: "官网",
   websiteHint: "fuyu.ing：功能介绍和下载",
-  logoCall: "Logo 征集中，被采用的设计者署名在这里",
-  logoCallLink: "Logo 征集中，来画一个 →",
-  logoCallUrl: "https://fuyu.ing/logo/",
   releases: "版本历史",
   releasesHint: "在官网查看每个版本的更新说明和下载",
   issues: "反馈与社区",
@@ -338,9 +332,6 @@ export const en: SettingsProjectText = {
   quitAction: "Quit",
   website: "Website",
   websiteHint: "fuyu.ing: features and downloads",
-  logoCall: "Logo call is open: the chosen designer is credited here",
-  logoCallLink: "Logo call is open, draw one →",
-  logoCallUrl: "https://fuyu.ing/en/logo/",
   releases: "Version history",
   releasesHint: "Every version's notes and downloads on the website",
   issues: "Feedback and community",

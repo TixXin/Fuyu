@@ -47,7 +47,7 @@ export function useSideColumnRows(context: SideRowContext, gauges: readonly { id
 
 export function IslandSideColumn({ label, hot, layout, probes = null, onOpen, onWindowDragStart }: IslandSideColumnProps) {
   const t = useTranslation();
-  const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } = useWindowDragGesture(false, onWindowDragStart);
+  const { didDragRef, prepareWindowDrag, cancelWindowDrag } = useWindowDragGesture(false, onWindowDragStart);
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -61,7 +61,6 @@ export function IslandSideColumn({ label, hot, layout, probes = null, onOpen, on
       tabIndex={0}
       aria-label={label}
       onPointerDown={prepareWindowDrag}
-      onPointerMove={handleWindowDragMove}
       onPointerUp={cancelWindowDrag}
       onPointerCancel={cancelWindowDrag}
       onClick={() => {

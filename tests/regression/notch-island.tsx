@@ -132,7 +132,7 @@ async function runChecks() {
     await settleTransitions();
     const header = document.querySelector<HTMLElement>(".island__header")!;
     const start = box(document.querySelector(".island__header-start")!);
-    const actions = box(document.querySelector(".window-actions")!);
+    const actions = box(document.querySelector(".window-actions:not(.window-actions--lead)")!);
     const notchLeft = box(island()).left + (box(island()).width - NOTCH.width) / 2;
     check(Math.abs(box(header).top - box(island()).top) < 1 && Math.abs(box(header).height - NOTCH.height) < 1, "展开页的标签栏和刘海在同一条上，一样高");
     check(start.right <= notchLeft + 0.5 && actions.left >= notchLeft + NOTCH.width - 0.5, "页面图标在刘海左边，按钮在刘海右边，都不压到刘海");

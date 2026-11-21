@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Play } from "lucide-react";
 import { useTranslation } from "../../../i18n";
-import { SettingsChoice } from "../../../components/settings/SettingsChoice";
+import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
 import { islandMotionTiming, islandMotionVariables } from "../../../lib/theme/islandMotion";
@@ -23,7 +23,12 @@ export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onCh
     timer.current = window.setTimeout(() => setOpen(false), islandMotionTiming(motion, "open").width + HOLD_MS);
   };
   const options = [
+    { value: "lively", label: text.motionLively },
     { value: "spring", label: text.motionSpring },
+    { value: "snappy", label: text.motionSnappy },
+    { value: "soft", label: text.motionSoft },
+    { value: "unfold", label: text.motionUnfold },
+    { value: "grow", label: text.motionGrow },
     { value: "smooth", label: text.motionSmooth },
     { value: "fast", label: text.motionFast },
     { value: "bouncy", label: text.motionBouncy },
@@ -35,7 +40,7 @@ export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onCh
       title={text.motionCurve}
       description={text.motionHint}
       control={
-        <SettingsChoice<IslandMotion>
+        <SettingsSelect<IslandMotion>
           value={value}
           options={options}
           ariaLabel={text.motion}

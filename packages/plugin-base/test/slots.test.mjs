@@ -290,3 +290,18 @@ test("switching off the owner of a replacement shows the item it replaced", () =
   assert.equal(item.label, undefined);
   assert.deepEqual(item.replaces, []);
 });
+
+test("island.widget/v1 takes widgets from built-in and other plugins, eight per plugin", () => {
+  const slots = createSlots({ "island.widget/v1": SLOTS["island.widget/v1"] });
+  slots.add("island.widget/v1", { id: "todos", sizes: ["m", "l"], component: View });
+  slots.add("island.widget/v1", { id: "clock", sizes: ["s"], icon: View, component: View }, "@someone/clock");
+  assert.deepEqual(ids(slots.items("island.widget/v1")), ["todos", "clock"]);
+  for (let index = 0; index < 7; index += 1) slots.add("island.widget/v1", { id: `more-${index}`, sizes: ["s"], component: View }, "@someone/clock");
+  assert.throws(() => slots.add("island.widget/v1", { id: "one-too-many", sizes: ["s"], component: View }, "@someone/clock"), failsWith("too-many", /island\.widget\/v1/));
+});
+
+test("a slot rule with builtinOnly still refuses other plugins", () => {
+  const slots = createSlots({ "x.only/v1": { kind: "list", perPlugin: 1, meta: [], builtinOnly: true } });
+  slots.add("x.only/v1", { id: "mine", component: View });
+  assert.throws(() => slots.add("x.only/v1", { id: "theirs", component: View }, "@someone/x"), failsWith("forbidden", /x\.only\/v1/));
+});

@@ -13,8 +13,28 @@ export type SettingsCollapsedItemsText = {
   inPanel: string;
   noRoom: string;
   show: string;
+  showItem: (name: string) => string;
   reset: string;
+  center: string;
+  centerHint: string;
+  previewLabel: string;
+  previewHint: string;
+  more: (count: number) => string;
+  styleOf: (name: string) => string;
+  onIsland: string;
+  adjust: string;
+  place: {
+    left: (position: number) => string;
+    right: (position: number) => string;
+    panel: string;
+    hidden: string;
+    text: string;
+    center: string;
+    absent: string;
+  };
   item: {
+    center: string;
+    todoCount: string;
     statusLight: string;
     mail: string;
     update: string;
@@ -41,9 +61,29 @@ export const zhCN: SettingsCollapsedItemsText = {
   inPanel: "在小面板里",
   noRoom: "刘海旁放不下",
   show: "显示",
+  showItem: (name) => `显示：${name}`,
   reset: "恢复默认",
+  center: "中间",
+  centerHint: "收起条中间的图案和文字，位置固定，只能改样式。",
+  previewLabel: "收起条预览",
+  previewHint: "点一项，下面清单定位到它",
+  more: (count) => `+${count}`,
+  styleOf: (name) => `样式：${name}`,
+  onIsland: "在岛上",
+  adjust: "调整",
+  place: {
+    left: (position) => `左侧第 ${position} 个`,
+    right: (position) => `右侧第 ${position} 个`,
+    panel: "在「+N」小面板里",
+    hidden: "不显示",
+    text: "文字位",
+    center: "中间",
+    absent: "没在岛上",
+  },
   item: {
-    statusLight: "Agent 状态灯",
+    center: "中心图案",
+    todoCount: "剩余待办数",
+    statusLight: "浮屿水母",
     mail: "新邮件提醒",
     update: "更新提醒",
     deviceUse: "摄像头 / 麦克风",
@@ -69,9 +109,29 @@ export const en: SettingsCollapsedItemsText = {
   inPanel: "In the +N panel",
   noRoom: "No room beside the notch",
   show: "Show",
+  showItem: (name) => `Show: ${name}`,
   reset: "Reset to default",
+  center: "Middle",
+  centerHint: "The pattern and text in the middle of the bar. Their place is fixed; only their style changes.",
+  previewLabel: "Collapsed bar preview",
+  previewHint: "Click an item to find it in the list below",
+  more: (count) => `+${count}`,
+  styleOf: (name) => `Style: ${name}`,
+  onIsland: "On the island",
+  adjust: "Adjust",
+  place: {
+    left: (position) => `left, no. ${position}`,
+    right: (position) => `right, no. ${position}`,
+    panel: "behind +N",
+    hidden: "hidden",
+    text: "text slot",
+    center: "middle",
+    absent: "not on the island",
+  },
   item: {
-    statusLight: "Agent status light",
+    center: "Center pattern",
+    todoCount: "Todos left",
+    statusLight: "Fuyu jellyfish",
     mail: "New mail",
     update: "Update available",
     deviceUse: "Camera / microphone",

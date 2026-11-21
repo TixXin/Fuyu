@@ -41,6 +41,19 @@ export type SettingsLyricsText = {
     manual: (folder: string) => string;
     releasePage: string;
   };
+  appleMusic: {
+    title: string;
+    hint: string;
+    token: string;
+    tokenHint: string;
+    tokenIsSaved: string;
+    tokenPlaceholder: string;
+    tokenReplace: string;
+    save: string;
+    clear: string;
+    tokenSaved: string;
+    tokenCleared: string;
+  };
   karaoke: {
     title: string;
     highlightTitle: string;
@@ -117,6 +130,19 @@ export const zhCN: SettingsLyricsText = {
     manual: (folder) => `也可以手动安装：打开 Release 页，下载 .plugin 文件，放进 ${folder}，再重启网易云。`,
     releasePage: "Release 页",
   },
+  appleMusic: {
+    title: "Apple Music 官方歌词",
+    hint: "用 Apple Music 播放时，先查 Apple 自己的逐字歌词和翻译，要 Apple Music 订阅。只在播放器是 Apple Music 时才问 Apple，会把歌名、歌手和时长发过去。",
+    token: "Apple Music 令牌",
+    tokenHint: "还没有保存令牌。取法：在浏览器登录 music.apple.com，打开开发者工具 → 应用（Application）→ Cookie，复制 media-user-token 的值贴到这里。只存在系统凭据里，过期了重新贴一次。",
+    tokenIsSaved: "令牌已保存在系统凭据里。歌词拿不到时可能是过期了，重新贴一次。",
+    tokenPlaceholder: "media-user-token 的值",
+    tokenReplace: "贴新的令牌替换",
+    save: "保存",
+    clear: "清除",
+    tokenSaved: "已保存，正在重新查歌词。",
+    tokenCleared: "已清除。",
+  },
   karaoke: {
     title: "岛上的歌词样式",
     highlightTitle: "高亮与外观",
@@ -192,6 +218,19 @@ export const en: SettingsLyricsText = {
     failed: (error) => `Install failed: ${error}`,
     manual: (folder) => `To install by hand: open the Releases page, download the .plugin file, put it in ${folder}, then restart NetEase Cloud Music.`,
     releasePage: "Releases",
+  },
+  appleMusic: {
+    title: "Apple Music lyrics",
+    hint: "While Apple Music plays, Apple's own word-by-word lyrics and translations are tried first; needs an Apple Music subscription. Apple is asked only when the player is Apple Music, and gets the title, artist and length.",
+    token: "Apple Music token",
+    tokenHint: "No token saved yet. To get one, sign in at music.apple.com in a browser, open the developer tools → Application → Cookies, and paste the value of media-user-token here. It is kept only in the system's credential store; paste it again when it expires.",
+    tokenIsSaved: "The token is saved in the system's credential store. If lyrics stop coming, it may have expired: paste it again.",
+    tokenPlaceholder: "Value of media-user-token",
+    tokenReplace: "Paste a new token to replace it",
+    save: "Save",
+    clear: "Clear",
+    tokenSaved: "Saved; looking up the lyrics again.",
+    tokenCleared: "Cleared.",
   },
   karaoke: {
     title: "Lyrics on the island",

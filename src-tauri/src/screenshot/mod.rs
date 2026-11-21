@@ -11,9 +11,14 @@ mod history;
 mod history_text;
 #[cfg_attr(target_os = "macos", path = "hotkeys_macos.rs")]
 mod hotkeys;
+mod kept;
 mod long;
 mod output;
 mod pin;
+pub(crate) mod pin_commands;
+mod pin_edit;
+mod pin_store;
+pub(crate) mod qr;
 mod session;
 mod shortcuts;
 mod source;
@@ -26,7 +31,6 @@ mod tests;
 use tauri::{AppHandle, Emitter, WebviewWindow};
 
 pub(crate) use output::is_screenshot_file;
-#[cfg(windows)]
 pub(crate) use output::sanitized_name;
 pub(crate) use pin::{forget as forget_pin, WINDOW_PREFIX as PIN_PREFIX};
 pub(crate) use session::WINDOW_PREFIX;
@@ -355,7 +359,8 @@ pub async fn screenshot_history_copy(app: AppHandle, path: String) -> Result<(),
 
 #[tauri::command]
 pub async fn screenshot_history_pin(app: AppHandle, path: String) -> Result<(), String> {
-    let path = history::history_file(&history_dir(&app)?, &path)?;
+    let dir = history_dir(&app)?;
+    let path = history::history_file(&dir, &path).or_else(|_| kept::kept_file(&dir, &path))?;
     let picture = tauri::async_runtime::spawn_blocking(move || history::read_picture(&path))
         .await
         .map_err(|error| format!("Failed to read the screenshot: {error}"))??;
@@ -381,6 +386,23 @@ pub async fn screenshot_history_delete(app: AppHandle, path: String) -> Result<(
     history_text::remove(&path);
     let _ = app.emit(HISTORY_EVENT, ());
     Ok(())
+}
+
+#[tauri::command]
+pub async fn screenshot_keep(app: AppHandle, path: String) -> Result<String, String> {
+    let dir = history_dir(&app)?;
+    let source = card_file(&path)?;
+    tauri::async_runtime::spawn_blocking(move || kept::keep(&dir, &source).map(|kept| kept.display().to_string()))
+        .await
+        .map_err(|error| format!("Failed to keep the screenshot: {error}"))?
+}
+
+#[tauri::command]
+pub async fn screenshot_kept_image(app: AppHandle, path: String) -> Result<Option<String>, String> {
+    let path = kept::kept_file(&history_dir(&app)?, &path)?;
+    tauri::async_runtime::spawn_blocking(move || history::read_picture(&path).ok().and_then(|picture| output::thumbnail(&picture)))
+        .await
+        .map_err(|error| format!("Failed to read the picture: {error}"))
 }
 
 pub(crate) fn offset_words(lines: Vec<Vec<crate::platform::ocr::OcrWord>>, left: u32, top: u32) -> Vec<Vec<crate::platform::ocr::OcrWord>> {
@@ -539,6 +561,7 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_shortcut_status,
             crate::screenshot::screenshot_start,
             crate::screenshot::screenshot_find_words,
+            crate::screenshot::qr::screenshot_read_qr,
             crate::screenshot::screenshot_long_bar,
             crate::screenshot::screenshot_long_pause,
             crate::screenshot::screenshot_long_end,
@@ -546,6 +569,8 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_history_copy,
             crate::screenshot::screenshot_history_pin,
             crate::screenshot::screenshot_history_delete,
+            crate::screenshot::screenshot_keep,
+            crate::screenshot::screenshot_kept_image,
             crate::screenshot::screenshot_session,
             crate::screenshot::screenshot_frame,
             crate::screenshot::screenshot_targets,
@@ -562,6 +587,13 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_pin_close,
             crate::screenshot::screenshot_pins_toggle,
             crate::screenshot::screenshot_pins_close_all,
+            crate::screenshot::pin_commands::screenshot_pin_turn,
+            crate::screenshot::pin_commands::screenshot_pin_collapse,
+            crate::screenshot::pin_commands::screenshot_pin_reserve,
+            crate::screenshot::pin_commands::screenshot_pin_replace,
+            crate::screenshot::pin_commands::screenshot_pin_opacity,
+            crate::screenshot::pin_commands::screenshot_pin_text,
+            crate::screenshot::pin_commands::screenshot_pins_remember,
             crate::screenshot::screenshot_drag,
             crate::screenshot::screenshot_paste_to_front,
         ] $($rest)*)

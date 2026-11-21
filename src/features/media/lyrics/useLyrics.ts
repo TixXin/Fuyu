@@ -3,9 +3,10 @@ import { lyricsV1 } from "@fuyu/plugin-services";
 import { windowServices } from "../../plugin-kernel/services";
 import "../plugin/services";
 import type { MediaState } from "../api";
+import { onAppleMusicTokenChanged } from "./api";
 import { parseLrc, trackKey, withTranslations, type LyricLine } from "./lrc";
 
-export type LyricsSettings = { lyricsFolder: string; lyricsOnline: boolean; lyricsChinese?: boolean };
+export type LyricsSettings = { lyricsFolder: string; lyricsOnline: boolean; lyricsChinese?: boolean; lyricsAppleMusic?: boolean };
 
 export function useLyrics(mediaState: MediaState, settings: LyricsSettings): { lines: LyricLine[] | null; notFound: boolean } {
   const key = trackKey(mediaState);
@@ -13,13 +14,20 @@ export function useLyrics(mediaState: MediaState, settings: LyricsSettings): { l
   const active = Boolean(key) && (folder !== "" || settings.lyricsOnline);
   const [found, setFound] = useState<{ key: string; lines: LyricLine[] } | null>(null);
   const [sourceRevision, setSourceRevision] = useState(0);
-  const { title, artist, album, durationMs, trackId } = mediaState;
+  const { title, artist, album, durationMs, trackId, sourceApp } = mediaState;
+  const appleMusic = settings.lyricsAppleMusic === true;
   const chinese = settings.lyricsOnline && settings.lyricsChinese === true;
 
   useEffect(() => {
-    const stop = windowServices.get(lyricsV1).on("changed", () => setSourceRevision((rev) => rev + 1));
+    const refetch = () => {
+      setFound(null);
+      setSourceRevision((rev) => rev + 1);
+    };
+    const stop = windowServices.get(lyricsV1).on("changed", refetch);
+    const stopToken = onAppleMusicTokenChanged(refetch);
     return () => {
       void stop();
+      void stopToken.then((unlisten) => unlisten()).catch(() => {});
     };
   }, []);
 
@@ -28,7 +36,7 @@ export function useLyrics(mediaState: MediaState, settings: LyricsSettings): { l
     let cancelled = false;
     void windowServices
       .get(lyricsV1)
-      .lookup({ title, artist: artist ?? "", album: album ?? "", durationMs, folder, online: settings.lyricsOnline, chinese, trackId: trackId ?? null })
+      .lookup({ title, artist: artist ?? "", album: album ?? "", durationMs, folder, online: settings.lyricsOnline, chinese, trackId: trackId ?? null, sourceApp: sourceApp ?? null })
       .then((lyrics) => {
         const parsed = lyrics ? parseLrc(lyrics.lrc).filter((line, index, all) => line.text || index < all.length - 1) : [];
         const lines = withTranslations(parsed, lyrics?.translation ? parseLrc(lyrics.translation) : []);
@@ -42,7 +50,7 @@ export function useLyrics(mediaState: MediaState, settings: LyricsSettings): { l
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, key, folder, settings.lyricsOnline, chinese, sourceRevision]);
+  }, [active, key, folder, settings.lyricsOnline, chinese, appleMusic, sourceApp, sourceRevision]);
 
   if (!active || !found || found.key !== key) return { lines: null, notFound: false };
   return found.lines.length === 0 ? { lines: null, notFound: true } : { lines: found.lines, notFound: false };

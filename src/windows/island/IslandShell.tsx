@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useHoverGrow } from "./useHoverGrow";
 import type { AppearanceMode, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
@@ -29,11 +30,14 @@ import { IslandTuckHint, type TuckHintSettings } from "./IslandTuckHint";
 import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
 import { ISLAND_OUTLINE_STYLE } from "./islandOutline";
+import { isBlankClick } from "./blankClick";
+import { usePanelEditing } from "./custom-panels/panelEditing";
 import "./IslandOutline.css";
 
 type IslandShellProps = {
   mode: IslandMode;
   page: IslandPage;
+  homePage?: IslandPage;
   popup?: boolean;
   resizeLabel?: string | null;
   appearanceMode: AppearanceMode;
@@ -41,6 +45,7 @@ type IslandShellProps = {
   glass?: IslandGlassView;
   isTucked: boolean;
   isDimmed?: boolean;
+  hoverGrow?: boolean;
   tuckStyle?: TuckStyle;
   tuckHint?: TuckHintSettings;
   isDetached: boolean;
@@ -129,6 +134,7 @@ function useCollapsedPrewarm(isExpanded: boolean) {
 export function IslandShell({
   mode,
   page,
+  homePage = page,
   popup = false,
   resizeLabel = null,
   appearanceMode,
@@ -136,6 +142,7 @@ export function IslandShell({
   glass,
   isTucked,
   isDimmed = false,
+  hoverGrow = true,
   tuckStyle = "edge",
   tuckHint,
   isDetached,
@@ -177,6 +184,7 @@ export function IslandShell({
     [isExpanded, isPreparing, prewarm.isPrewarmed],
   );
   const contentRef = usePageFadeIn<HTMLDivElement>(page, mode);
+  const shellRef = useRef<HTMLElement | null>(null);
   const contributed = useIslandContributed();
   const { status } = contributed;
   const agentVisualState = status?.state ?? "idle";
@@ -187,6 +195,7 @@ export function IslandShell({
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();
   const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
+  useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow);
   const className = [
     "island",
     `island--${mode}`,
@@ -208,18 +217,21 @@ export function IslandShell({
   const { lines } = contributed;
   const collapsedLabel = (showCollapsedText ? labelLine(lines)?.label : null) ?? t.island.appName;
   const lead = leadLine(lines);
+  const blankDownRef = useRef<EventTarget | null>(null);
+  const editingPanel = usePanelEditing();
   const leadPage = (lead?.page ?? page) as IslandPage;
   const showTuckHint = isTucked && tuckStyle === "hidden" && !notch && !isExpanded && tuckHint !== undefined && tuckHint.tuckHintStyle !== "none";
 
   return (
     <>
       <section
+        ref={shellRef}
         className={className}
         style={side ? ({ ...ISLAND_OUTLINE_STYLE, "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : (ISLAND_OUTLINE_STYLE as CSSProperties)}
         aria-label={collapsedLabel}
         onClick={(event) => {
           if (!isExpanded && event.target === event.currentTarget) {
-            onOpenPage(leadPage);
+            onOpenPage(homePage);
           }
         }}
         onPointerEnter={prewarm.wake}
@@ -242,7 +254,7 @@ export function IslandShell({
               label={collapsedLabel}
               agentVisualState={agentVisualState}
               badge={contributed.hints.has("side.badge")}
-              onOpen={() => onOpenPage(lead?.handle ? leadPage : page)}
+              onOpen={() => onOpenPage(lead?.handle ? leadPage : homePage)}
               onWindowDragStart={onWindowDragStart}
             />
           )}
@@ -252,13 +264,14 @@ export function IslandShell({
               hot={sideBubble ? sideHot : null}
               layout={sideLayout}
               probes={sidePlugins.probes}
-              onOpen={() => onOpenPage(page)}
+              onOpen={() => onOpenPage(homePage)}
               onWindowDragStart={onWindowDragStart}
             />
           )}
           <IslandCollapsedBar
             slots={collapsedSlots}
             page={page}
+            homePage={homePage}
             isExpanded={isExpanded}
             isTucked={isTucked}
             showTitle={showTitle}
@@ -278,6 +291,15 @@ export function IslandShell({
             className="island__expanded"
             aria-hidden={!isExpanded}
             inert={!isExpanded}
+            onPointerDown={(event) => {
+              blankDownRef.current = event.button === 0 ? event.target : null;
+            }}
+            onClick={(event) => {
+              const down = blankDownRef.current;
+              blankDownRef.current = null;
+              if (!isExpanded || editingPanel !== null || down !== event.target) return;
+              if (isBlankClick(event.target, event.currentTarget, event.clientX, event.clientY)) onCollapse();
+            }}
           >
             <DevWatermark place="panel" />
             {popup && notch && <NotchPopupBand page={page} heading={contributed.popups.get(page)} agentVisualState={agentVisualState} onCollapse={onCollapse} />}
@@ -293,6 +315,7 @@ export function IslandShell({
               onOpenSettings={onOpenSettings}
               onOpenTranslator={onOpenTranslator}
               onResetPosition={onResetPosition}
+              onWindowDragStart={onWindowDragStart}
               minimizesToTray={minimizesToTray}
               onMinimize={onMinimize}
               pageDigitModifiers={pageDigitModifiers}
@@ -311,7 +334,7 @@ export function IslandShell({
             summary={contributed.summary}
             previewing={contributed.preview !== null}
             alert={activeAlert && <AlertPopup alert={activeAlert} sources={NO_SOURCES} />}
-            onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(page))}
+            onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(homePage))}
           />
         )}
         <IslandDragHint />

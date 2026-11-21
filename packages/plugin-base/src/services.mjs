@@ -57,6 +57,10 @@ export const pluginConfigV1 = defineService("plugin-config/v1", {
   events: { changed: true },
 });
 
+export const secretsV1 = defineService("secrets/v1", {
+  methods: { list: true, get: true, set: true, remove: true },
+});
+
 export const pluginWindowsV1 = defineService("plugin-windows/v1", {
   methods: { getRules: true, setRules: true, list: true },
   events: { changed: true },

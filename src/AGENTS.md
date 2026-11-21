@@ -21,7 +21,9 @@ src/
 │   ├── todos/               # 待办、每日笔记、归档、Markdown 导出
 │   ├── calendar/            # 日历页、收起时的会前倒计时与加入按钮、设置里添加日历
 │   ├── media/               # 媒体控制、波形；lyrics/ 为同步歌词（解析 LRC、跟随进度、设置项）
-│   ├── system-levels/       # 音量、亮度变化时收起的小岛上显示的提示、设置项
+│   ├── system-levels/       # 音量、亮度变化时收起的小岛上显示的提示、设置项；Fuyu 面板的音量亮度组件（读当前值、拖动调音量）
+│   ├── system-widgets/      # Fuyu 面板的系统状态（CPU、内存）、电池、网速和快捷启动组件，几个组件共用一个 2 秒的轮询（statsStore.ts）
+│   ├── daily-widgets/       # Fuyu 面板的「日常」组件：今日、番茄钟、打卡、专注统计、习惯、喝水、便签、倒数日、世界时钟、日出日落、年进度，数据在 fuyu-daily-widgets
 │   ├── device-events/       # 耳机与蓝牙音频连接断开、蓝牙电量低、插拔电源时收起的小岛上显示的提示、设置项
 │   ├── device-use/          # 摄像头、麦克风使用提示：折叠岛上的图标、设置项
 │   ├── clipboard/           # 剪贴板历史、快捷键
@@ -43,7 +45,7 @@ src/
 │   ├── voice-input/         # 第 3 版内置插件 voice-input：收起条上的录音和识别结果（存待办、追加笔记、复制）、设置页（下载语音模型、快捷键）
 │   ├── sync/                # 跨设备同步的设置：后端（文件夹、WebDAV）、同步哪些类别、端到端加密、设备列表和状态；页面入口是 windows/settings/SyncSettingsPage.tsx
 │   └── updater/             # 自动更新
-├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览；window-crash/ 是每个窗口根上的错误边界和兜底界面）
+├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览；window-crash/ 是每个窗口根上的错误边界和兜底界面；jellyfish/ 是浮屿水母的 SVG 和各状态动作，收起条的水母状态灯和中心图案的「水母」共用）
 ├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，日历、歌词、Agent 会话列表和提醒的设置字段与默认值在 calendarSettings.ts、lyricsSettings.ts、agentSettings.ts，待办项目列表在 lib/todo-projects/，新设置加在这几个文件里，settings.ts 只做入口；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key，并经 registerBackupSwitches 桥接内置插件开关）、升级前的备份；plugin-roster/ 是已装市场插件的名单（fuyu-market-plugins，进备份和同步）和它与本机状态的对账；system-permissions/ 是系统权限的查询；crash-report/ 是窗口出错时的上报（写数据目录的 frontend-errors.log）和「先重载一次还是显示兜底界面」的判断
 ├── utils/                   # 无副作用的纯函数（文本测量、颜色、日期、数值）
 ├── i18n/                    # 类型化多语言字典与 Provider；sections/ 按分区放文案（settings/ 再按设置页分），types.ts 与 locales/ 只做汇总

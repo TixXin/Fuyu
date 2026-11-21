@@ -24,7 +24,7 @@
   --resize-hint-top: var(--island-shell-radius);
 }
 
-html.island-move-armed .island-resize-hints {
+html.island-resize-armed .island-resize-hints {
   opacity: 1;
 }
 
@@ -75,7 +75,7 @@ html.island-resizing .island--expanded .island__expanded {
     max(0px, calc(var(--resize-hint-bottom) - var(--resize-hint-inset)))
     max(0px, calc(var(--resize-hint-bottom) - var(--resize-hint-inset)));
   corner-shape: var(--island-corner-shape, round);
-  opacity: 0.45;
+  opacity: 0;
   mask-image: linear-gradient(#000 0 0);
   mask-repeat: no-repeat;
   transition: opacity var(--motion-fast) var(--motion-ease);

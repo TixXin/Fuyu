@@ -1,6 +1,6 @@
 import type { ServiceDefinition } from "../define.mjs";
 
-export type LyricsSourceKind = "local" | "lrclib" | "kugou" | "kugou-local" | "netease" | "qq" | (string & {});
+export type LyricsSourceKind = "local" | "lrclib" | "kugou" | "kugou-local" | "netease" | "qq" | "apple-music" | (string & {});
 
 export type LyricsResult = {
   source: LyricsSourceKind;
@@ -17,6 +17,7 @@ export type LyricsQuery = {
   online?: boolean;
   chinese?: boolean;
   trackId?: string | null;
+  sourceApp?: string | null;
 };
 
 export type LyricsSourceInfo = {

@@ -10,7 +10,7 @@ src-tauri/src/
 ├── lib.rs                   # 只有 mod 声明和 run()：插件、setup、托盘、collect_commands!（汇总各模块的 tauri_commands!）
 ├── tray.rs                  # 托盘图标与事件：左键、右键都开关托盘卡片（tray_menu/），卡片窗口打不开时才弹原生精简菜单（显示 / 隐藏岛屿、设置、退出），文字跟随岛屿语言（命令 set_tray_language）
 ├── tray_menu/               # 托盘卡片（C99.2）：窗口 tray-menu 的创建、显示、失焦关闭（window.rs），弹出位置的纯函数（place.rs），命令 tray_menu_state / tray_menu_action / tray_menu_resize；Mac 上的面板在 macos/tray_panel.rs
-├── tray_mark.rs             # 只在 macOS 上编译：菜单栏用的单色模板图，按 mark.svg 的胶囊在代码里画
+├── tray_mark.rs             # 只在 macOS 上编译：菜单栏用的单色模板图，按 docs/assets/logo/menubar-template.svg 的水母剪影在代码里画
 ├── tray_visibility.rs       # 托盘 / 菜单栏图标显示与否（tray-icon.json，建托盘时页面还没加载所以放原生侧）；隐藏后再次打开浮屿时显示岛并打开设置
 ├── taskbar_host/            # 把窗口挂到 Win11 任务栏上（C154）：窗口所有者设成任务栏、加 NOACTIVATE | TOOLWINDOW（dock.rs，每 500ms 跟随任务栏位置、自动隐藏、全屏和 Explorer 重启，发 taskbar-dock-changed）；空白区域和排位的纯计算在 layout.rs，读任务栏在 snapshot.rs；命令 get_taskbar_layout / taskbar_dock / taskbar_undock；Mac 上是 unsupported.rs
 ├── island/                  # 主窗口：命令、窗口状态、几何计算、毛玻璃、鼠标穿透（banner_hit.rs：新消息横幅的可点区域）、贴边动画
@@ -39,7 +39,8 @@ src-tauri/src/
 ├── media_control/
 ├── calendar/                # 日历：CalDAV（caldav.rs）和 ICS 订阅链接，iCalendar 解析和重复日程展开（ics.rs，rrule），会议链接识别（meeting_link.rs），来源配置与凭据（sources.rs）
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/
-├── system_levels/           # 音量、亮度变化提示：后台线程读默认输出的音量和静音、笔记本屏幕亮度（win32/brightness.rs，WMI），变化时发 system-level-changed 事件
+├── system_levels/           # 音量、亮度变化提示：后台线程读默认输出的音量和静音、笔记本屏幕亮度（win32/brightness.rs，WMI），变化时发 system-level-changed 事件；命令 get_system_levels / set_system_volume 给面板的音量亮度组件
+├── system_widgets/          # 面板的系统组件：命令 get_system_stats（CPU 占用、内存、网速、电池；CPU 和网速是和上一次调用的差，stats.rs 是纯计算）和 launch_quick_app（只认 files、terminal、calculator、settings 四项，launch.rs）；读数在 win32/、macos/ 的 system_stats.rs
 ├── device_events/           # 设备提示：后台线程列出在用的耳机和蓝牙音频输出（win32/audio_outputs.rs）、读蓝牙电量（win32/devnode.rs）和电源（win32/power.rs），变化时发 device-alert 事件；判断规则在 tracker.rs
 ├── device_use/              # 摄像头、麦克风正在被哪些程序使用（读注册表 CapabilityAccessManager\ConsentStore），打开系统隐私设置；Mac 上整个模块换成 device_use/macos.rs
 ├── mail/                    # 邮箱（命令名仍为 *_qq_mail）：附件（attachments.rs）、命令、每个邮箱一个后台服务（accounts.rs）及其崩溃后重启（supervisor.rs）、IMAP 会话、正文与内嵌图片解析、凭据
@@ -52,6 +53,7 @@ src-tauri/src/
 ├── voice_input/             # 语音输入：快捷键、录音（capture.rs）、下载识别组件和模型并核对 SHA-256（download.rs、packs.rs）、经 crates/sherpa-runtime 离线识别（engine.rs）；Mac 上换成 `*_macos.rs`
 ├── timer/                   # 内置插件 timer 的全局快捷键（默认 Ctrl+Alt+K，配置在 plugins.yml），按下时打开岛的计时器页；Mac 上是 hotkey_macos.rs
 ├── settings_window/         # 设置窗口：按需创建与显示（mod.rs）
+├── app_identity/            # 只在 macOS 上编译：应用菜单栏（menu.rs）、Dock 上的应用名和设置窗口标题，都跟岛的语言（set_tray_language）走；设置窗口开着时应用进 Dock（settings_window/dock_icon.rs），改名用 macos/display_name.rs 的 LaunchServices 私有接口，失败时退回包里按系统语言的名字
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
 ├── webview_recovery.rs      # 窗口的 WebView2 渲染进程崩溃或无响应后自动重载（D66）：on_page_load 时给每个 WebView 挂一次，同一窗口 1 分钟内崩 3 次后停在崩溃页，记 webview-crashes.log；Mac 上是 webview_recovery_unsupported.rs
 ├── webview_memory.rs        # 隐藏的翻译、剪贴板、截图选区窗口把 WebView2 的 MemoryUsageTargetLevel 设成 Low、显示前改回 Normal（D48，默认关，设 FUYU_WEBVIEW_LOW_MEMORY=1 才生效）；Mac 上是 webview_memory_unsupported.rs
@@ -161,5 +163,5 @@ src-tauri/src/
 - 修改 `tauri.conf.json` 中的窗口配置时，同步检查 `capabilities/default.json`、前端 `main.tsx` 的窗口分发，以及 Rust 中的 label 常量。
 - `agent_status/hooks/fuyu-agent-*.{cmd,ps1}` 和 `qq_notifications/repair-qq-notification-registration.ps1` 通过 `include_str!` 编入二进制，修改后需要完整的 Rust 验证。
 - clippy lint 在 `Cargo.toml` 的 `[lints.clippy]` 中声明（`unwrap_used`、`expect_used` 为 deny），测试代码的放行写在 `clippy.toml`；不要在源文件中用 `#![warn]` / `#[allow]` 重复声明这些 lint。`cargo clippy --all-targets` 保持 0 告警；个别确实无法消除的默认 lint（例如参数即 IPC 契约的命令触发 `too_many_arguments`）在该项上用带 `reason` 的 `#[expect(...)]`。
-- 验证：`cargo test --manifest-path src-tauri/Cargo.toml` + `pnpm build:exe`。涉及窗口、托盘、注册表行为的改动，在风险需要时请用户在 `pnpm tauri dev` 里手动检查折叠态、展开态、贴边收起和托盘隐藏。
+- 验证（开发中不跑，推 PR 前跑，见根 `AGENTS.md`「验证」）：`cargo test --manifest-path src-tauri/Cargo.toml` + `pnpm build:exe`。涉及窗口、托盘、注册表行为的改动，在风险需要时请用户在 `pnpm tauri dev` 里手动检查折叠态、展开态、贴边收起和托盘隐藏。
 - 成功生成 release 可执行文件后，桌面快捷方式按根目录规则处理（默认不动）。

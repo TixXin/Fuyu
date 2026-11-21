@@ -30,6 +30,7 @@
 │           toast_notifications（系统通知的共享轮询）· translation · settings_window  │
 │           tray_menu · onboarding_window · device_use · system_levels · device_events │
 │           system · rename_migration · taskbar_host（把窗口挂到 Win11 任务栏上）      │
+│           system_widgets（面板组件的 CPU、内存、网速、电池和快捷启动）               │
 │  后台服务：IMAP IDLE 收信、剪贴板监听、通知监听、微信窗口闪烁检测、鼠标穿透循环        │
 └────────────┬─────────────────────────────────────────────────────────────────────────┘
              ▼

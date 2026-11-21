@@ -1,9 +1,10 @@
-import { arrowGeometry, mosaicBlock, normalizedRect, TEXT_LINE_HEIGHT, type Annotation } from "./annotations";
+import { arrowGeometry, blurRadius, mosaicBlock, normalizedRect, TEXT_LINE_HEIGHT, type Annotation } from "./annotations";
 import type { PixelRect } from "./selection";
 
 export { TEXT_LINE_HEIGHT };
 export const ANNOTATION_FONT = '"Microsoft YaHei UI", "Segoe UI", sans-serif';
 const HIGHLIGHTER_ALPHA = 0.38;
+export const SPOTLIGHT_DIM = "rgba(0, 0, 0, 0.55)";
 
 function strokePath(context: CanvasRenderingContext2D, points: readonly { x: number; y: number }[]) {
   context.beginPath();
@@ -29,6 +30,48 @@ function drawMosaic(context: CanvasRenderingContext2D, picture: CanvasImageSourc
   context.save();
   context.imageSmoothingEnabled = false;
   context.drawImage(mosaicScratch, 0, 0, mosaicScratch.width, mosaicScratch.height, x, y, width, height);
+  context.restore();
+}
+
+const blurScratch = document.createElement("canvas");
+
+function drawBlur(context: CanvasRenderingContext2D, picture: CanvasImageSource, rect: PixelRect, radius: number) {
+  const x = Math.round(rect.x);
+  const y = Math.round(rect.y);
+  const width = Math.round(rect.width);
+  const height = Math.round(rect.height);
+  if (width < 1 || height < 1) return;
+  const pad = radius * 2;
+  const step = Math.max(2, radius);
+  blurScratch.width = Math.max(1, Math.ceil((width + pad * 2) / step));
+  blurScratch.height = Math.max(1, Math.ceil((height + pad * 2) / step));
+  const shrink = blurScratch.getContext("2d");
+  if (!shrink) return;
+  shrink.imageSmoothingEnabled = true;
+  shrink.imageSmoothingQuality = "high";
+  shrink.drawImage(picture, x - pad, y - pad, width + pad * 2, height + pad * 2, 0, 0, blurScratch.width, blurScratch.height);
+  context.save();
+  context.beginPath();
+  context.rect(x, y, width, height);
+  context.clip();
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(blurScratch, 0, 0, blurScratch.width, blurScratch.height, x - pad, y - pad, width + pad * 2, height + pad * 2);
+  context.restore();
+}
+
+function drawSpotlights(context: CanvasRenderingContext2D, items: readonly Annotation[], clip: PixelRect | null) {
+  const area = clip ?? { x: 0, y: 0, width: context.canvas.width, height: context.canvas.height };
+  context.save();
+  context.beginPath();
+  context.rect(area.x, area.y, area.width, area.height);
+  for (const item of items) {
+    if (item.kind !== "spotlight") continue;
+    const rect = normalizedRect(item.from, item.to);
+    context.rect(rect.x, rect.y, rect.width, rect.height);
+  }
+  context.fillStyle = SPOTLIGHT_DIM;
+  context.fill("evenodd");
   context.restore();
 }
 
@@ -67,6 +110,16 @@ function drawOne(context: CanvasRenderingContext2D, item: Annotation, picture: C
       context.fill();
       break;
     }
+    case "line":
+      context.strokeStyle = item.color;
+      context.lineWidth = item.width;
+      strokePath(context, [item.from, item.to]);
+      break;
+    case "blur":
+      if (picture) drawBlur(context, picture, normalizedRect(item.from, item.to), blurRadius(item.width));
+      break;
+    case "spotlight":
+      break;
     case "pen":
     case "highlighter":
       context.strokeStyle = item.color;
@@ -111,7 +164,11 @@ export function drawAnnotations(
     context.rect(clip.x, clip.y, clip.width, clip.height);
     context.clip();
   }
-  for (const item of items) drawOne(context, item, picture);
+  const firstSpot = items.findIndex((item) => item.kind === "spotlight");
+  items.forEach((item, index) => {
+    if (index === firstSpot) drawSpotlights(context, items, clip);
+    drawOne(context, item, picture);
+  });
   context.restore();
 }
 

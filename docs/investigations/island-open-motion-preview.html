@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>面板展开候选</title>
+<style>
+  :root {
+    --bg: #1b1d22;
+    --card: #26292f;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #f2f0ea;
+    --muted: rgba(242, 240, 234, 0.6);
+    --accent: #7fc8ff;
+    --wall: linear-gradient(160deg, #c9cdd3, #9aa1aa 60%, #7d848e);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  }
+  header, .grid, footer { max-width: 1240px; margin-left: auto; margin-right: auto; }
+  h1 { margin: 0 0 6px; font-size: 20px; }
+  header p { margin: 0 0 12px; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  .controls label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .controls select, .controls button {
+    background: var(--card); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 4px 10px; font: inherit; cursor: pointer;
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(580px, 1fr)); margin-top: 18px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .stage { zoom: 0.78; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .stage { position: relative; height: 330px; background: var(--wall); cursor: pointer; overflow: hidden; }
+  .stage.dark { background: linear-gradient(160deg, #3a3f48, #23262c); }
+  .island {
+    position: absolute; top: 0; left: 50%; translate: -50% 0;
+    width: 280px; height: 36px; background: #000; color: #fff;
+    border-radius: 0 0 20px 20px;
+  }
+  .island::before, .island::after {
+    content: ""; position: absolute; top: 0; width: 10px; height: 10px;
+    background: radial-gradient(circle at 0 100%, transparent 9.5px, #000 10px);
+  }
+  .island::before { left: -10px; }
+  .island::after { right: -10px; transform: scaleX(-1); }
+  .clip { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+  .layer { position: absolute; top: 0; left: 50%; pointer-events: none; }
+  .collapsed { width: 280px; height: 36px; margin-left: -140px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 13px; }
+  .collapsed .dot { width: 8px; height: 8px; border-radius: 50%; background: #f5d34a; }
+  .collapsed .badge { display: inline-flex; gap: 7px; align-items: center; font-variant-numeric: tabular-nums; }
+  .collapsed .badge b { width: 18px; height: 18px; border-radius: 50%; background: #17325a; color: #cfe3ff; display: inline-grid; place-items: center; font-size: 10px; }
+  .expanded { width: 520px; height: 270px; margin-left: -260px; padding: 14px 18px 18px; display: grid; grid-template-rows: auto 1fr; gap: 14px; opacity: 0; }
+  .bar { display: flex; align-items: center; gap: 12px; }
+  .pill { background: #2a2a2e; border-radius: 999px; padding: 4px 12px; font-weight: 600; font-size: 13px; }
+  .icon { width: 18px; height: 18px; border-radius: 5px; background: #4a4a50; }
+  .bar .spacer { flex: 1; }
+  .body { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 12px; }
+  .tile { border-radius: 14px; background: #161618; border: 1px solid #2a2a2e; padding: 12px; font-size: 12px; color: #d8d6d0; display: grid; align-content: start; gap: 8px; }
+  .tile .big { font-size: 26px; font-weight: 700; color: #ffb35c; font-variant-numeric: tabular-nums; }
+  .tile .grid7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .tile .grid7 i { aspect-ratio: 1; border-radius: 3px; background: #2fbf5b; }
+  .tile .grid7 i.off { background: #3a3a3f; }
+  .tile .ring { width: 92px; height: 92px; border-radius: 50%; border: 12px solid #6a3a10; display: grid; place-items: center; font-weight: 700; font-size: 16px; color: #fff; margin: 6px auto 0; }
+  .meta { padding: 12px 14px 14px; display: grid; gap: 4px; }
+  .meta .title { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .meta .letter { font-weight: 700; color: #000; background: var(--accent); border-radius: 6px; padding: 0 7px; font-size: 13px; }
+  .meta .letter.ref { background: #ffd36b; }
+  .meta .name { font-weight: 600; }
+  .meta .desc { color: var(--muted); font-size: 13px; }
+  .meta code { color: var(--muted); font-size: 12px; }
+  .warn { color: #ffb38a; font-size: 12px; }
+  footer { margin-top: 22px; color: var(--muted); font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) {
+    .island, .layer { transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>面板展开：候选动画</h1>
+  <p>点卡片上的灰色区域展开，再点一下收起。黄色字母是录屏照着 Nook X 做的那一版。挑中了告诉我字母，也可以说「C 的展开 + A 的收起」这样组合。</p>
+  <div class="controls">
+    <label>速度
+      <select id="speed">
+        <option value="1">原速</option>
+        <option value="2">慢 2 倍</option>
+        <option value="4">慢 4 倍</option>
+      </select>
+    </label>
+    <button id="all">全部展开 / 收起</button>
+    <label><input type="checkbox" id="auto"> 自动演示（每 1.8 秒开合一次）</label>
+    <label><input type="checkbox" id="dark"> 深色桌面</label>
+  </div>
+</header>
+<main class="grid" id="grid"></main>
+<footer>预览里收起的岛 280×36、展开的面板 520×270，比真岛小一点好放进卡片。A、D、E 是设置里现有的预设，B 是今天加的「利落」，C 是 Nook X 复刻，F–H 是新的写法。真岛还要守一条：外壳开合要在 560ms 内结束（原生窗口 600ms 后缩小）。</footer>
+<script>
+function springCurve(damping) {
+  const settle = Math.log(1000);
+  const swing = Math.sqrt(1 - damping * damping);
+  const w = settle / damping;
+  const pts = [];
+  for (let i = 0; i <= 72; i++) {
+    const t = i / 72;
+    const decay = Math.exp(-damping * w * t);
+    const v = i === 72 ? 1 : 1 - decay * (Math.cos(swing * w * t) + (damping / swing) * Math.sin(swing * w * t));
+    pts.push(Math.round(v * 10000) / 10000);
+  }
+  return `linear(${pts.join(", ")})`;
+}
+function landingCurve(reach, bounces) {
+  const pts = [];
+  for (let i = 0; i <= 72; i++) {
+    const t = i / 72;
+    let v = 1;
+    if (t < reach) v = (t / reach) * (1.6 - 0.6 * (t / reach));
+    else {
+      let start = reach;
+      for (const { depth, length } of bounces) {
+        if (t < start + length) { const u = (t - start) / length; v = 1 - depth * 4 * u * (1 - u); break; }
+        start += length;
+      }
+    }
+    pts.push(Math.round(v * 10000) / 10000);
+  }
+  return `linear(${pts.join(", ")})`;
+}
+
+const EASE_OUT = "cubic-bezier(0.22, 1, 0.36, 1)";
+const EXPO = "cubic-bezier(0.16, 1, 0.3, 1)";
+const SPRING = "cubic-bezier(0.34, 1.36, 0.5, 1)";
+const IN_OUT = "cubic-bezier(0.4, 0, 0.2, 1)";
+
+const OPTIONS = [
+  { key: "A", name: "弹性（现在的默认）", desc: "宽度带一点冲过头，高度和圆角缓出，内容 120ms 后淡入。",
+    open: { w: [550, SPRING], h: [500, EASE_OUT], r: [450, EASE_OUT], fade: [250, 120], out: 120 },
+    close: { w: [550, SPRING], h: [500, EASE_OUT], r: [450, EASE_OUT], fade: [250, 0], back: [250, 220] } },
+  { key: "B", name: "利落（今天加的）", desc: "宽度阻尼 0.7 的弹簧，约 150ms 冲到最宽、多出约 4.6%；高度落到位后轻轻回一下。",
+    open: { w: [340, springCurve(0.7)], h: [380, landingCurve(0.42, [{ depth: 0.03, length: 0.2 }])], r: [340, springCurve(0.75)], fade: [180, 60], out: 100 },
+    close: { w: [240, springCurve(0.85)], h: [260, EASE_OUT], r: [240, EASE_OUT], fade: [100, 0], back: [100, 140] } },
+  { key: "C", ref: true, name: "Nook X 复刻", desc: "照录屏：宽度阻尼 0.53 的弹簧，约 100ms 冲到最宽、多出增长量的约 14%，再微微回弹，约 450ms 停稳；高度晚一点、略冲过头；内容一开始就在，是模糊的，约 100ms 变清楚。收起没录到（它会固定在展开态），按原路反着走、快一点。",
+    warn: "内容先模糊再清楚，和我们「文字只淡入淡出」的规矩冲突，选它的话要你点头。",
+    open: { w: [450, springCurve(0.53)], h: [480, springCurve(0.75)], hDelay: 30, r: [450, springCurve(0.6)], fade: [110, 0], blur: 10, out: 80 },
+    close: { w: [300, springCurve(0.9)], h: [280, IN_OUT], r: [280, IN_OUT], fade: [90, 0], blur: 10, back: [120, 160] } },
+  { key: "D", name: "Q 弹（现有预设）", desc: "宽度阻尼 0.55 的弹簧，高度落到位后弹两下，最有果冻感。",
+    open: { w: [680, springCurve(0.55)], h: [560, landingCurve(0.5, [{ depth: 0.06, length: 0.24 }, { depth: 0.015, length: 0.16 }])], r: [578, springCurve(0.5)], fade: [250, 160], out: 120 },
+    close: { w: [600, springCurve(0.64)], h: [540, landingCurve(0.42, [{ depth: 0.05, length: 0.24 }, { depth: 0.0125, length: 0.16 }])], r: [510, springCurve(0.55)], fade: [120, 0], back: [200, 287] } },
+  { key: "E", name: "平滑（现有预设）", desc: "不回弹的 expo 缓出，一开始很快、后面慢慢贴上去。",
+    open: { w: [560, EXPO], h: [560, EXPO], r: [560, EXPO], fade: [260, 160], out: 120 },
+    close: { w: [400, EXPO], h: [380, EXPO], r: [340, EXPO], fade: [120, 0], back: [120, 100] } },
+  { key: "F", name: "苹果式：一个弹簧管到底", desc: "宽、高、圆角用同一个阻尼 0.8 的弹簧一起走（像灵动岛），冲过头不到 1.5%，几乎看不出弹；内容在外壳走到一半时淡入。收起同一个弹簧、快 30%。",
+    open: { w: [480, springCurve(0.8)], h: [480, springCurve(0.8)], r: [480, springCurve(0.8)], fade: [200, 140], out: 100 },
+    close: { w: [340, springCurve(0.85)], h: [340, springCurve(0.85)], r: [340, springCurve(0.85)], fade: [100, 0], back: [140, 180] } },
+  { key: "G", name: "先横后竖", desc: "先往两边拉开（280ms），高度晚 90ms 再往下长（380ms），像先拉开再落下；内容等高度长到一半再淡入。收起反过来：先收高度，再收宽度。",
+    open: { w: [300, EASE_OUT], h: [380, EASE_OUT], hDelay: 90, r: [380, EASE_OUT], fade: [200, 200], out: 90 },
+    close: { w: [260, EASE_OUT], wDelay: 120, h: [240, IN_OUT], r: [260, EASE_OUT], fade: [90, 0], back: [140, 300] } },
+  { key: "H", name: "利落 + 内容跟着长出来", desc: "外壳用 C 那样的快弹簧，但内容不模糊：内容层从 92% 等比例放大到原大小的同时淡入（只在 140ms 里动，动完就是整像素），配合外壳揭开，像从岛里长出来。",
+    warn: "内容有放大，同样碰「文字不缩放」的规矩，选它要你点头。",
+    open: { w: [420, springCurve(0.6)], h: [440, springCurve(0.68)], r: [420, springCurve(0.65)], fade: [160, 20], grow: true, out: 80 },
+    close: { w: [280, springCurve(0.9)], h: [280, IN_OUT], r: [280, IN_OUT], fade: [90, 0], grow: true, back: [120, 150] } },
+];
+
+const grid = document.getElementById("grid");
+const speed = document.getElementById("speed");
+const entries = [];
+
+function render(opt) {
+  const card = document.createElement("section");
+  card.className = "card";
+  const ms = (p) => `${opt[p].w[0]} / ${opt[p].h[0]}ms`;
+  card.innerHTML = `
+    <div class="stage">
+      <div class="island"><div class="clip">
+      <div class="layer collapsed"><span class="dot"></span><span class="badge"><b>3</b>03:15</span></div>
+      <div class="layer expanded">
+        <div class="bar"><span class="pill">Fuyu</span><span class="icon"></span><span class="icon"></span><span class="icon"></span><span class="icon"></span><span class="spacer"></span><span class="icon"></span></div>
+        <div class="body">
+          <div class="tile"><span>今天</span><span class="big">11:37</span><span>晴 · 3° / 17°</span></div>
+          <div class="tile"><span>本月打卡</span><div class="grid7">${Array.from({ length: 28 }, (_, i) => `<i class="${i > 19 ? "off" : ""}"></i>`).join("")}</div></div>
+          <div class="tile"><span>专注</span><div class="ring">25:00</div></div>
+        </div>
+      </div>
+    </div></div>
+    </div>
+    <div class="meta">
+      <div class="title"><span class="letter${opt.ref ? " ref" : ""}">${opt.key}</span><span class="name">${opt.name}</span></div>
+      <div class="desc">${opt.desc}</div>
+      ${opt.warn ? `<div class="warn">${opt.warn}</div>` : ""}
+      <code>展开 宽/高 ${ms("open")} · 收起 ${ms("close")}</code>
+    </div>`;
+  grid.appendChild(card);
+  const stage = card.querySelector(".stage");
+  const entry = { opt, stage, island: card.querySelector(".island"), small: card.querySelector(".collapsed"), big: card.querySelector(".expanded"), open: false };
+  stage.addEventListener("click", () => toggle(entry, !entry.open));
+  entries.push(entry);
+}
+
+function toggle(e, open) {
+  e.open = open;
+  const f = Number(speed.value);
+  const t = (pair, delay = 0) => `${Math.round(pair[0] * f)}ms ${pair[1]} ${Math.round(delay * f)}ms`;
+  const p = open ? e.opt.open : e.opt.close;
+  e.island.style.transition = [
+    `width ${t(p.w, p.wDelay || 0)}`,
+    `height ${t(p.h, p.hDelay || 0)}`,
+    `border-radius ${t(p.r)}`,
+  ].join(", ");
+  e.island.style.width = open ? "540px" : "280px";
+  e.island.style.height = open ? "286px" : "36px";
+  e.island.style.borderRadius = open ? "0 0 30px 30px" : "0 0 20px 20px";
+  const [fadeMs, fadeDelay] = p.fade;
+  const bigParts = [`opacity ${Math.round(fadeMs * f)}ms ${IN_OUT} ${Math.round(fadeDelay * f)}ms`];
+  if (p.blur) bigParts.push(`filter ${Math.round(fadeMs * 1.4 * f)}ms ${EASE_OUT} ${Math.round(fadeDelay * f)}ms`);
+  if (p.grow) bigParts.push(`transform ${Math.round(140 * f)}ms ${EASE_OUT} ${Math.round(fadeDelay * f)}ms`);
+  e.big.style.transition = bigParts.join(", ");
+  e.big.style.opacity = open ? "1" : "0";
+  if (p.blur) e.big.style.filter = open ? "blur(0px)" : `blur(${p.blur}px)`;
+  if (p.grow) { e.big.style.transformOrigin = "50% 0"; e.big.style.transform = open ? "scale(1)" : "scale(0.92)"; }
+  const back = p.back || [120, 0];
+  e.small.style.transition = open ? `opacity ${Math.round((p.out || 100) * f)}ms ${IN_OUT}` : `opacity ${Math.round(back[0] * f)}ms ${IN_OUT} ${Math.round(back[1] * f)}ms`;
+  e.small.style.opacity = open ? "0" : "1";
+}
+
+OPTIONS.forEach(render);
+entries.forEach((e) => {
+  if (e.opt.open.blur) e.big.style.filter = `blur(${e.opt.open.blur}px)`;
+  if (e.opt.open.grow) { e.big.style.transformOrigin = "50% 0"; e.big.style.transform = "scale(0.92)"; }
+});
+
+document.getElementById("all").addEventListener("click", () => {
+  const open = !entries.every((e) => e.open);
+  entries.forEach((e) => toggle(e, open));
+});
+let timer = 0;
+document.getElementById("auto").addEventListener("change", (ev) => {
+  clearInterval(timer);
+  if (!ev.target.checked) return;
+  const tick = () => { const open = !entries.every((e) => e.open); entries.forEach((e) => toggle(e, open)); };
+  tick();
+  timer = setInterval(tick, 1800 * Number(speed.value));
+});
+document.getElementById("dark").addEventListener("change", (ev) => {
+  entries.forEach(({ stage }) => stage.classList.toggle("dark", ev.target.checked));
+});
+</script>
+</body>
+</html>

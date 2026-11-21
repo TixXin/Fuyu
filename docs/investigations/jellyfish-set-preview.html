@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>水母全套动效（issue #281）</title>
+<style>
+  :root {
+    --bg: #faf7f2; --card: #ffffff; --line: #ece6dc; --text: #2a2a2e; --sub: #8a8790; --stage: #f4efe7;
+    --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+    --motion-fast: 120ms;
+    --motion-base: 160ms;
+    --motion-medium: 240ms;
+    --motion-slow: 420ms;
+  }
+  body[data-bg="dark"] { --bg: #111214; --card: #1b1c1f; --line: #2c2d32; --text: #e8e8ea; --sub: #8d8e95; --stage: #0b0b0c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 80px; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; overflow-x: hidden; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 36px 0 4px; }
+  h3.sub { font-size: 13.5px; margin: 18px 0 8px; color: var(--sub); font-weight: 600; }
+  p.note { color: var(--sub); margin: 0 0 12px; max-width: 980px; }
+  p.note b, ul.plain b { color: var(--text); font-weight: 600; }
+  ul.plain { margin: 0; padding-left: 20px; color: var(--sub); max-width: 980px; }
+  ul.plain li { margin: 4px 0; }
+  code { font: 12.5px/1.4 ui-monospace, Menlo, monospace; }
+  .controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; padding: 10px 14px; margin: 12px 0 0; border-radius: 10px; background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--line); backdrop-filter: blur(8px); max-width: 1180px; }
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .group > span { color: var(--sub); }
+  button.seg { font: inherit; cursor: pointer; padding: 2px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+  button.seg.on { background: #2f4a3f; border-color: #6abf9b; color: #fff; }
+  details { max-width: 1180px; margin: 8px 0; color: var(--sub); }
+  details > summary { cursor: pointer; }
+  .final { display: flex; flex-wrap: wrap; gap: 14px; max-width: 1180px; }
+  .final figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+  .final figcaption { font-size: 12px; color: var(--sub); text-align: center; margin-top: 6px; }
+  .fin-stage { display: flex; align-items: center; justify-content: center; gap: 12px; height: 180px; padding: 0 14px; border-radius: 10px; background: var(--stage); }
+  .fin-dark { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; background: #1e1e1e; }
+  .fin-dark img { filter: invert(1); }
+  details img { display: block; width: 100%; max-width: 760px; margin-top: 8px; border-radius: 12px; }
+
+  .stagebox { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 14px; max-width: 1180px; }
+  .big { display: flex; align-items: center; justify-content: center; height: 280px; border-radius: 14px; background: var(--stage); border: 1px solid var(--line); cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  .big svg { height: 132px; width: auto; }
+  .side { display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
+  .track { position: relative; height: 62px; border-radius: 12px; overflow: hidden; background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .bar { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 19px; background: #000; color: #f4f2ec; font-size: 12.5px; white-space: nowrap; box-shadow: 0 6px 24px #0008; }
+  .track .bar { position: absolute; top: 12px; left: 16px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .track .bar.dragging { cursor: grabbing; }
+  .bar svg.jl { height: 24px; width: auto; }
+  .bar .ring { width: 22px; height: 22px; flex: none; }
+  .bar .badge { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #6abf9b; color: #0c0d12; font-size: 11px; font-weight: 600; line-height: 16px; text-align: center; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .bar .badge.on { opacity: 1; }
+  .hint { margin: 0; min-height: 22px; color: #3fa37a; font-size: 13px; }
+  .side ul { margin: 0; padding-left: 18px; color: var(--sub); font-size: 13px; }
+  .side li b { color: var(--text); font-weight: 600; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; max-width: 1180px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; cursor: pointer; }
+  .card b { font-size: 14px; }
+  .card em { font-style: normal; font-size: 11.5px; color: var(--sub); margin-left: 6px; }
+  .card .stage { display: flex; align-items: center; justify-content: center; height: 190px; margin: 8px 0 10px; border-radius: 12px; background: var(--stage); }
+  .card .stage svg { height: 104px; width: auto; }
+  .card ul { margin: 0; padding-left: 16px; color: var(--sub); font-size: 12.5px; }
+  .card li { margin: 2px 0; }
+  .card li i { font-style: normal; color: var(--text); }
+
+  .pills { display: grid; gap: 10px; max-width: 1180px; }
+  .pillrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .pillrow > span { width: 7em; color: var(--sub); font-size: 12.5px; }
+  .pill { --z: 1; display: inline-flex; align-items: center; gap: calc(20px * var(--z)); height: calc(38px * var(--z)); padding: 0 calc(24px * var(--z)) 0 calc(14px * var(--z)); border-radius: 999px; background: #000; }
+  .pill.light { background: #f1ede5; box-shadow: inset 0 0 0 1px #e2ddd2; }
+  .pill svg { height: calc(24px * var(--z)); width: auto; }
+  .pill.z3 { --z: 3; }
+  .scroll { overflow-x: auto; max-width: 1180px; padding-bottom: 4px; }
+
+  .icons { display: flex; align-items: flex-end; gap: 26px; flex-wrap: wrap; max-width: 1180px; }
+  .icons figure, .dock figure { margin: 0; text-align: center; color: var(--sub); font-size: 12px; }
+  .icons figure svg, .icons figure canvas { display: block; margin: 0 auto 6px; }
+  .icons canvas { image-rendering: pixelated; border-radius: 4px; }
+  .menubar { display: flex; margin: 0 0 6px; align-items: center; gap: 14px; height: 30px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; }
+  .menubar svg { height: 18px; width: auto; display: block; }
+  .cmp { display: grid; gap: 14px; max-width: 1180px; }
+  .cmp > div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .cmp > div > b { display: block; margin-bottom: 10px; }
+  .cmp > div > b span { font-weight: 400; color: var(--sub); margin-left: 8px; font-size: 12.5px; }
+  .dock { display: flex; align-items: flex-end; gap: 34px; flex-wrap: wrap; padding: 22px 28px; border-radius: 14px; max-width: 1180px; background: linear-gradient(135deg, #b9b4ad, #8f8a86 60%, #a7a29c); }
+  .dock figure { color: #fff; font-size: 13px; font-weight: 600; text-shadow: 0 1px 3px #0006; }
+  .dock svg { display: block; margin: 0 auto 6px; filter: drop-shadow(0 4px 10px #0004); }
+
+  .jl { overflow: visible; --c: #f6e3d3; --eye: #1d1b22; --cheek: #ff8fa0; }
+  .jl[data-state="running"] { --c: #6db6f4; }
+  .jl[data-state="waiting"] { --c: #ffcd3c; }
+  .jl[data-state="failed"] { --c: #f2554c; }
+  .jl[data-state="done"] { --c: #5ed69e; }
+  .jl[data-state="stale"] { --c: #a9adb8; }
+  .jl.on-light[data-state="idle"] { --c: #ecdcc8; }
+  .jl * { transform-box: view-box; }
+  .jl .fill, .jl .ghost, .jl .ol { fill: var(--c); transition: fill var(--motion-medium) var(--motion-ease), opacity var(--motion-medium) var(--motion-ease); }
+  .jl .ol { stroke: none; }
+  .jl.on-light[data-state="idle"] .ol { stroke: #b49d82; stroke-width: 1.6; }
+  .jl .eye { fill: var(--eye); }
+  .jl .line { fill: none; stroke: var(--eye); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .jl .cheek { fill: var(--cheek); opacity: .72; }
+  .jl .speed { fill: none; stroke: var(--c); stroke-width: 3; stroke-linecap: round; opacity: .5; }
+  .jl .ghost { opacity: 0; transform: translate(4px, 0); }
+  .jl[data-a="running"] .ghost { opacity: .22; }
+  .jl[data-a="waiting"] .ghost { opacity: .16; }
+  .jl .tick { fill: none; stroke: #f5b800; stroke-width: 2.4; stroke-linecap: round; }
+  .jl .anger { fill: none; stroke: #e5352b; stroke-width: 2; stroke-linecap: round; }
+  .jl .spark { fill: #ffd23f; }
+  .jl .zz { fill: none; stroke: #8a7ad6; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .jl .bub, .jl .paper { fill: #fff; stroke: #cfc8bd; stroke-width: 1.2; }
+  .jl .ink { fill: none; stroke: #6f7280; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .jl .ink.bad { stroke: #e5352b; }
+  .jl .drop { fill: #7cc7ff; }
+  .jl .note { fill: #8a7ad6; }
+  .jl .note path { fill: none; stroke: #8a7ad6; stroke-width: 1.6; stroke-linecap: round; }
+  .jl .note.pink { fill: #ff7fa5; }
+  .jl .note.pink path { stroke: #ff7fa5; }
+  .jl .ok { fill: none; stroke: #2fb873; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 10; }
+  .jl .steam { fill: none; stroke: #c9c4bb; stroke-width: 1.4; stroke-linecap: round; }
+  .jl.small .tick, .jl.small .anger, .jl.small .ink { stroke-width: 3.2; }
+  .jl.small .speed { stroke-width: 4; }
+
+  .jl .pose, .jl .body, .jl .head { transform-origin: 32px 40px; }
+  .jl .pose { transition: transform var(--motion-medium) var(--motion-ease); }
+  .jl[data-a="running"] .pose { transform: rotate(-5deg); }
+  .jl[data-a="waiting"] .pose { transform: rotate(-6deg); }
+  .jl[data-a="failed"] .pose { transform: scale(1.03, .94); }
+  .jl[data-a="stale"] .pose { transform: rotate(4deg) translateY(.6px); }
+  .jl .eyes, .jl .lids { transform-origin: 32px 25px; }
+  .jl .lids { transition: transform var(--motion-fast) var(--motion-ease); }
+  .pressed .jl .lids { transform: scaleY(.1); }
+  .jl .gaze { transition: transform var(--motion-base) var(--motion-ease); }
+  .jl .trail, .jl .lobes { transform-origin: 32px 33px; }
+  .jl .trail { transform: skewX(var(--drag, 0deg)); }
+  .jl .lobe { transform-origin: var(--ox) 33px; }
+  .jl .fx > * { transform-origin: 59px 6px; }
+  .jl.morph .sw { opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .jl.morph .sw.on { opacity: 1; }
+  body:not(.motion) .jl .pose, body:not(.motion) .jl .gaze, body:not(.motion) .jl .lids { transition: none; }
+
+  body.motion .jl.live :is(.body, .head, .eyes, .lids, .lobe, .lobes, .spin, .ghost, .speed), body.motion .jl.live .fx > * { animation-iteration-count: infinite; animation-timing-function: var(--motion-ease-in-out); }
+
+  body.motion .jl.live[data-a="idle"] .body { animation-name: idle-lift; animation-duration: 10s; }
+  body.motion .jl.live[data-a="idle"] .head { animation-name: idle-squash; animation-duration: 10s; }
+  body.motion .jl.live[data-a="idle"] .lobe { animation-name: idle-kick; animation-duration: 10s; }
+  body.motion .jl.live[data-a="idle"] .eyes, body.motion .jl.live[data-a="waiting"] .eyes { animation-name: blink; animation-duration: 5.8s; }
+
+  body.motion .jl.live[data-a="running"] .body { animation-name: bob; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="running"] .lobe { animation-name: paddle; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="running"] .lobe:nth-child(2) { animation-delay: .15s; }
+  body.motion .jl.live[data-a="running"] .lobe:nth-child(3) { animation-delay: .3s; }
+  body.motion .jl.live[data-a="running"] .lobe:nth-child(4) { animation-delay: .45s; }
+  body.motion .jl.live[data-a="running"] .speed { animation-name: stream; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="running"] .speed:nth-child(2) { animation-delay: .4s; }
+  body.motion .jl.live[data-a="running"] .speed:nth-child(3) { animation-delay: .8s; }
+  body.motion .jl.live[data-a="running"] .ghost { animation-name: ghost; animation-duration: 1.2s; }
+
+  body.motion .jl.live[data-a="waiting"] .body { animation-name: hop; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="waiting"] .fx > * { animation-name: pop-loop; animation-duration: 2.4s; }
+
+  body.motion .jl.live[data-a="failed"] .body { animation: shake var(--motion-slow) var(--motion-ease) 1; }
+  body.motion .jl.live[data-a="failed"] .fx > * { animation: throb var(--motion-slow) var(--motion-ease-in-out) 2; }
+  body.motion .jl.live[data-a="done"] .body { animation: rise var(--motion-slow) var(--motion-ease-out) 1; }
+  body.motion .jl.live[data-a="done"] .fx > * { animation: pop-in var(--motion-slow) var(--motion-ease-out) 1 both; }
+  body.motion .jl.live[data-a="done"] .fx > *:nth-child(2) { animation-delay: var(--motion-fast); }
+  body.motion .jl.live[data-a="stale"] .fx > * { animation: pop-in var(--motion-medium) var(--motion-ease-out) 1 both; }
+
+  body.motion .jl.live[data-a="compact"] .head { animation-name: squeeze; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="compact"] .fx > *:nth-child(1) { animation-name: nudge-r; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="compact"] .fx > *:nth-child(2) { animation-name: nudge-l; animation-duration: 1.2s; }
+
+  body.motion .jl.live[data-a="blink"] .eyes { animation-name: blink2; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="wink"] .body { animation: nod var(--motion-slow) var(--motion-ease) 1; }
+  body.motion .jl.live[data-a="wink"] .fx > *, body.motion .jl.live[data-a="surprised"] .fx > * { animation: pop-in var(--motion-medium) var(--motion-ease-out) 1 both; }
+  body.motion .jl.live[data-a="pressed"] .lids { animation-name: hold-close; animation-duration: 2.4s; animation-timing-function: var(--motion-ease); }
+  body.motion .jl.live[data-a="left"] .eyes { animation-name: look-left; animation-duration: 2.4s; animation-timing-function: var(--motion-ease); }
+  body.motion .jl.live[data-a="right"] .eyes { animation-name: look-right; animation-duration: 2.4s; animation-timing-function: var(--motion-ease); }
+  body.motion .jl.live[data-a="surprised"] .body { animation: jolt var(--motion-slow) var(--motion-ease-out) 1; }
+
+  body.motion .jl.live[data-a="think"] .fx > * { animation-name: dot; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="think"] .fx > *:nth-child(2) { animation-delay: .2s; }
+  body.motion .jl.live[data-a="think"] .fx > *:nth-child(3) { animation-delay: .4s; }
+  body.motion .jl.live[data-a="sleep"] .head { animation-name: breathe; animation-duration: 4s; }
+  body.motion .jl.live[data-a="sleep"] .fx > * { animation: pop-in var(--motion-slow) var(--motion-ease-out) 1 both; }
+  body.motion .jl.live[data-a="sleep"] .fx > *:nth-child(2) { animation-delay: var(--motion-medium); }
+  body.motion .jl.live[data-a="party"] .body { animation: jolt var(--motion-slow) var(--motion-ease-out) 1; }
+  body.motion .jl.live[data-a="party"] .fx > * { animation: fall var(--motion-slow) var(--motion-ease) 1 both; }
+  body.motion .jl.live[data-a="party"] .fx > *:nth-child(2n) { animation-delay: var(--motion-fast); }
+  body.motion .jl.live[data-a="party"] .fx > *:nth-child(3n) { animation-delay: var(--motion-medium); }
+  body.motion .jl.live[data-a="party"] .fx > *:nth-child(5n) { animation-delay: var(--motion-slow); }
+  body.motion .jl.live[data-a="drag"] .lobes { animation-name: skew; animation-duration: 1.2s; }
+
+  body.motion .jl.live[data-a="search"] .fx > * { animation-name: scan; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="search"] .eyes, body.motion .jl.live[data-a="translate"] .eyes { animation-name: follow; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="type"] .lobe { animation-name: tap; animation-duration: .4s; }
+  body.motion .jl.live[data-a="type"] .lobe:nth-child(even) { animation-delay: .2s; }
+  body.motion .jl.live[data-a="type"] .fx > * { animation-name: typebar; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="type"] .fx > *:nth-child(2) { animation-delay: .3s; }
+  body.motion .jl.live[data-a="type"] .fx > *:nth-child(3) { animation-delay: .6s; }
+  body.motion .jl.live[data-a="sweat"] .fx > * { animation-name: drip; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="offline"] .fx > *:nth-child(-n+3) { animation-name: dot; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="offline"] .fx > *:nth-child(2) { animation-delay: .3s; }
+  body.motion .jl.live[data-a="offline"] .fx > *:nth-child(3) { animation-delay: .6s; }
+  body.motion .jl.live[data-a="dizzy"] .body { animation-name: wobble; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="dizzy"] .spin { animation-name: spin; animation-duration: 1.2s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="dizzy"] .fx > * { animation-name: orbit; animation-duration: 1.2s; animation-timing-function: linear; }
+  body.motion .jl.live[data-a="dizzy"] .fx > *:nth-child(2) { animation-delay: -.6s; }
+  body.motion .jl.live[data-a="music"] .body { animation-name: sway; animation-duration: 1.2s; }
+  body.motion .jl.live[data-a="music"] .fx > *, body.motion .jl.live[data-a="shy"] .fx > * { animation-name: notefloat; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="music"] .fx > *:nth-child(2) { animation-delay: 1.2s; }
+  body.motion .jl.live[data-a="meeting"] .fx > * { animation-name: ring; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="mail"] .fx > * { animation-name: mailin; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="copy"] .fx > *:nth-child(2) { animation-name: checkdraw; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="shot"] .fx > *:nth-child(2) { animation-name: flash; animation-duration: 2.4s; animation-timing-function: var(--motion-ease-out); }
+  body.motion .jl.live[data-a="shot"] .eyes { animation-name: flinch; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="translate"] .fx > * { animation-name: alt; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="translate"] .fx > *:nth-child(2) { animation-delay: 1.2s; }
+  body.motion .jl.live[data-a="peek"] .body { animation-name: peek; animation-duration: 3.6s; }
+  body.motion .jl.live[data-a="birthday"] .fx > * { animation-name: sway; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="coffee"] .head { animation-name: breathe; animation-duration: 4s; }
+  body.motion .jl.live[data-a="coffee"] .fx > *:nth-child(n+2) { animation-name: steam; animation-duration: 2.4s; }
+  body.motion .jl.live[data-a="coffee"] .fx > *:nth-child(3) { animation-delay: 1.2s; }
+  body:not(.motion) .jl[data-a="peek"] .body { transform: translateX(-16px); }
+
+  @keyframes idle-lift { 0%, 86%, 100% { transform: translateY(0); } 91% { transform: translateY(-1.6px); } }
+  @keyframes idle-squash { 0%, 86%, 96%, 100% { transform: scale(1, 1); } 89.5% { transform: scale(1.04, .93); } }
+  @keyframes idle-kick { 0%, 86%, 97%, 100% { transform: scaleY(1); } 90% { transform: scaleY(.7); } }
+  @keyframes blink { 0%, 93%, 97%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.08); } }
+  @keyframes blink2 { 0%, 40%, 48%, 56%, 64%, 100% { transform: scaleY(1); } 44%, 60% { transform: scaleY(.08); } }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.2px); } }
+  @keyframes paddle { 0%, 60%, 100% { transform: scaleY(1); } 30% { transform: scaleY(.6); } }
+  @keyframes stream { 0% { transform: translateX(-4px); opacity: 0; } 30% { opacity: .55; } 100% { transform: translateX(8px); opacity: 0; } }
+  @keyframes ghost { 0%, 100% { opacity: .24; } 50% { opacity: .08; } }
+  @keyframes hop { 0%, 40%, 100% { transform: translateY(0); } 10%, 30% { transform: translateY(-3px); } 20% { transform: translateY(-.3px); } }
+  @keyframes pop-loop { 0%, 55%, 100% { opacity: 0; transform: scale(.7); } 8%, 40% { opacity: 1; transform: scale(1); } }
+  @keyframes pop-in { 0% { opacity: 0; transform: scale(.5); } 100% { opacity: 1; transform: scale(1); } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-2.4px); } 45% { transform: translateX(2px); } 70% { transform: translateX(-1.2px); } }
+  @keyframes throb { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+  @keyframes rise { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-4px); } }
+  @keyframes squeeze { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(.9, 1.06); } }
+  @keyframes nudge-r { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(2.4px); } }
+  @keyframes nudge-l { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-2.4px); } }
+  @keyframes nod { 0%, 100% { transform: rotate(0); } 45% { transform: rotate(-5deg); } }
+  @keyframes hold-close { 0%, 25%, 65%, 100% { transform: scaleY(1); } 30%, 60% { transform: scaleY(.1); } }
+  @keyframes look-left { 0%, 15%, 75%, 100% { transform: translateX(0); } 22%, 68% { transform: translateX(-2.6px); } }
+  @keyframes look-right { 0%, 15%, 75%, 100% { transform: translateX(0); } 22%, 68% { transform: translateX(2.6px); } }
+  @keyframes jolt { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-4px) scale(.97, 1.04); } }
+  @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, .97); } }
+  @keyframes dot { 0%, 100% { opacity: .2; } 25%, 70% { opacity: 1; } }
+  @keyframes fall { 0% { opacity: 0; transform: translate(0, -4px) rotate(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(3px, 30px) rotate(260deg); } }
+  @keyframes skew { 0%, 100% { transform: skewX(-22deg); } 50% { transform: skewX(14deg); } }
+  @keyframes scan { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-22px); } }
+  @keyframes follow { 0%, 100% { transform: translateX(1.4px); } 50% { transform: translateX(-1.6px); } }
+  @keyframes tap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.72); } }
+  @keyframes typebar { 0% { transform: scaleX(0); opacity: 1; } 30%, 80% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+  @keyframes drip { 0% { transform: translateY(-2px); opacity: 0; } 20% { opacity: 1; } 60%, 100% { transform: translateY(8px); opacity: 0; } }
+  @keyframes wobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes orbit { 0%, 100% { transform: translate(-12px, 0) scale(.8); } 25% { transform: translate(0, 2.6px) scale(1); } 50% { transform: translate(12px, 0) scale(.8); } 75% { transform: translate(0, -2.6px) scale(.55); } }
+  @keyframes sway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  @keyframes notefloat { 0% { opacity: 0; transform: translate(0, 4px); } 25%, 60% { opacity: 1; } 100% { opacity: 0; transform: translate(5px, -9px); } }
+  @keyframes ring { 0%, 30%, 100% { transform: rotate(0); } 4%, 12%, 20% { transform: rotate(14deg); } 8%, 16%, 24% { transform: rotate(-14deg); } }
+  @keyframes mailin { 0% { opacity: 0; transform: translateX(10px); } 15%, 75% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(0); } }
+  @keyframes checkdraw { 0%, 10% { stroke-dashoffset: 10; opacity: 1; } 40%, 85% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+  @keyframes flash { 0% { opacity: 1; transform: scale(.4); } 25%, 100% { opacity: 0; transform: scale(1.6); } }
+  @keyframes flinch { 0%, 14%, 100% { transform: scaleY(1); } 3%, 10% { transform: scaleY(.15); } }
+  @keyframes alt { 0%, 52%, 100% { opacity: 0; } 6%, 44% { opacity: 1; } }
+  @keyframes peek { 0%, 100% { transform: translateX(-42px); } 25%, 75% { transform: translateX(-16px); } }
+  @keyframes steam { 0% { opacity: 0; transform: translateY(2px); } 40% { opacity: .9; } 100% { opacity: 0; transform: translateY(-5px); } }
+
+  @media (prefers-reduced-motion: reduce) { .jl, .jl * { animation: none !important; } }
+  body:not(.motion) .jl * { animation: none !important; }
+
+  @media (max-width: 760px) {
+    body { padding: 16px 16px 60px; }
+    .controls { margin-left: -16px; margin-right: -16px; border-radius: 0; }
+    .stagebox { grid-template-columns: 1fr; }
+    .big { height: 200px; }
+    .big svg { height: 96px; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .card .stage { height: 140px; }
+    .card .stage svg { height: 72px; }
+    .pillrow > span { width: 100%; }
+  }
+</style>
+</head>
+<body class="motion" data-bg="light">
+<h1>水母全套动效</h1>
+<p class="note">照 GPT 生成的那一套画成 SVG，每个都是真动画，不要光环。这一版按上次列的问题改过：<b>运行中不再皱眉</b>、<b>按下改回闭眼不压扁</b>、<b>只有「在跑」和「等你」一直循环</b>、<b>时长对齐到 120 / 160 / 240 / 420ms 四档</b>、补了<b>可能中断</b>和<b>压缩上下文</b>两个状态、加了能切换状态的互动台、图标试过把水母换成米白，最后选定蓝色那版。</p>
+<details><summary>参考图（GPT 生成）</summary><img src="assets/jellyfish-set-reference.webp" alt="水母全套参考图" /></details>
+
+<div class="controls">
+  <div class="group" id="ctl-bg"><span>背景</span></div>
+  <div class="group" id="ctl-speed"><span>速度</span></div>
+  <div class="group" id="ctl-motion"><span>动画</span></div>
+  <div class="group" id="ctl-replay"><span>只播一次的动效</span></div>
+</div>
+
+<h2>1. 互动台</h2>
+<p class="note">左边是放大的，右边是岛上实际大小（24 像素高）。切换状态时颜色 240ms 渐变、表情和道具 160ms 淡入淡出、姿态 240ms 转过去。</p>
+<div class="stagebox">
+  <div class="big" id="big"></div>
+  <div class="side">
+    <div class="group" id="ctl-state"></div>
+    <div class="track" id="track"></div>
+    <p class="hint" id="hint">把鼠标移过来试试。</p>
+    <ul>
+      <li><b>鼠标靠近</b>：空闲和等你时眼睛看向鼠标，160ms 跟过去。</li>
+      <li><b>按下</b>：闭眼，松开睁开（120ms）。不缩放、不压扁。</li>
+      <li><b>拖动右边的收起条</b>：触手往反方向甩，跟手、不加过渡，松手回正。</li>
+      <li><b>完成</b>停 3 秒后自己回到空闲。</li>
+    </ul>
+    <div class="group"><button class="seg" id="btn-auto">自动演示</button><button class="seg" id="btn-msg">来一条消息</button></div>
+  </div>
+</div>
+
+<h2>2. 七种状态</h2>
+<p class="note">对应代码里的 idle、running、waiting、failed、completed、stale，加上压缩上下文。标「一直循环」的只有表示正在进行的三个；其余进场播一次就停。预览里只播一次的会自动重播，可以在上面关掉。</p>
+<div class="cards" id="states"></div>
+
+<h2>3. 放进岛里</h2>
+<p class="note">实际大小是 24 像素高。小尺寸去掉残影和高光小点，道具线条加粗。浅色岛上空闲换成暖米色加一圈描边，不再用灰色，灰色留给「可能中断」。</p>
+<div class="pills scroll" id="pills"></div>
+
+<h2>4. 补充表情</h2>
+<p class="note">交互时用，颜色跟当时的状态走，这里都用空闲的米白。眨眼、看左右、按下在真岛上跟着鼠标走，这里循环播放只是为了看清。</p>
+<div class="cards" id="extras"></div>
+
+<h2>5. 更多状态</h2>
+<p class="note">第一版只做下面四个：它们不靠道具，24 像素也看得出来，触发信号也现成。</p>
+<div class="cards" id="more-v1"></div>
+<details>
+  <summary>以后的彩蛋（15 个草稿，道具只在 40 像素以上看得清，时长还没逐个对齐）</summary>
+  <h3 class="sub">Agent 干活时</h3>
+  <div class="cards" id="more-agent"></div>
+  <h3 class="sub">岛上的功能</h3>
+  <div class="cards" id="more-app"></div>
+  <h3 class="sub">互动和彩蛋</h3>
+  <div class="cards" id="more-fun"></div>
+</details>
+
+<h2>6. 应用图标</h2>
+<p class="note"><b>选定：深海背景配蓝色水母。</b>试过把水母换成岛上空闲时的米白（收在下面），没有采用。选蓝色要知道两件事：图标里的蓝和岛上「运行中」的蓝是同一个色系，岛上空闲时是米白，两处的水母颜色不一样；深色炫彩底上的蓝色圆团和 MagIsland 的图标接近，定稿重画时靠触手的波浪边、腮红和黑眼睛拉开。</p>
+<div class="group" id="ctl-icon" style="margin-bottom:12px"><span>背景配色</span></div>
+<div class="cmp">
+  <div><b>选定<span>蓝色水母</span></b><div class="icons" id="icons-old"></div></div>
+</div>
+<details style="margin-top:12px">
+  <summary>没采用的：米白水母，小尺寸三瓣触手、保留腮红</summary>
+  <div class="cmp" style="margin-top:10px"><div><div class="icons" id="icons-new"></div></div></div>
+</details>
+<p class="note" style="margin-top:14px">「真实像素」是把图标按 16、32 像素真的画出来再放大 6 倍，能看到 Windows 任务栏 100% 缩放下每个像素的样子。</p>
+<p class="note" style="margin-top:18px">放在桌面壁纸上：</p>
+<div class="dock" id="dock"></div>
+<p class="note" style="margin-top:18px">Mac 菜单栏的单色模板图（18 像素高），形状和选定的图标一致：</p>
+<div class="icons" id="menus"></div>
+
+<h2>7. 定稿文件</h2>
+<p class="note"><b>矢量定稿（2026-11-20）。</b>文件在 <code>docs/assets/logo/</code>，规格写在 <code>docs/design/logo.md</code>。头和四瓣触手合成了一条轮廓，图标和菜单栏模板图都用它；岛上的分层母版保留头和四个圆，方便触手各自动。</p>
+<div class="final">
+  <figure><div class="fin-stage"><img src="../assets/logo/app-icon.svg" width="160"></div><figcaption>app-icon<br>应用图标母版</figcaption></figure>
+  <figure><div class="fin-stage"><img src="../assets/logo/app-icon-macos.svg" width="160"></div><figcaption>app-icon-macos<br>.icns 用，留边加投影</figcaption></figure>
+  <figure><div class="fin-stage"><img src="../assets/logo/app-icon-small.svg" width="16"><img src="../assets/logo/app-icon-small.svg" width="24"><img src="../assets/logo/app-icon-small.svg" width="32"><img src="../assets/logo/app-icon-small.svg" width="96"></div><figcaption>app-icon-small<br>32 像素及以下</figcaption></figure>
+  <figure><div class="fin-stage"><img src="../assets/logo/menubar-template.svg" height="18"><img src="../assets/logo/menubar-template.svg" height="54"><span class="fin-dark"><img src="../assets/logo/menubar-template.svg" height="18"><img src="../assets/logo/menubar-template.svg" height="54"></span></div><figcaption>menubar-template<br>Mac 菜单栏，18 像素高</figcaption></figure>
+  <figure><div class="fin-stage"><img src="../assets/logo/jellyfish.svg" height="24"><img src="../assets/logo/jellyfish.svg" height="110"></div><figcaption>jellyfish<br>岛上状态灯的分层母版</figcaption></figure>
+</div>
+
+<h2>8. 落地前还要做的</h2>
+<ul class="plain">
+  <li><b>在真岛上看 24 像素</b>：速度线、感叹线、怒气符号在这页上看得清，但真岛有缩放和半透明，要实际看一眼再定留哪些。</li>
+  <li><b>量性能</b>：岛是常驻置顶的透明窗口，SVG 子元素的动画在 WebView 里不一定走 GPU。运行中、等你两个循环要量一下 CPU 占用；岛贴边收起或隐藏时暂停（现有的 <code>data-paused</code>）。</li>
+  <li><b>替换进产品</b>：矢量定稿已经画好（第 7 节），还要导出 <code>src-tauri/icons/</code> 的全部尺寸、换掉 Rust 画的菜单栏模板图和 README 里的图，要换的位置列在 <code>docs/design/logo.md</code>「还没替换的地方」。</li>
+  <li><b>状态灯的设置项</b>：在「悬岛 / 圆点」之外加「水母」并设为新默认，还是直接替换；老用户已选的保持原样。</li>
+  <li><b>issue #281 的署名</b>：造型已经离 ShengLin1001 的原稿很远，想好怎么回复和署名。</li>
+  <li><b>撞脸检查</b>：选定的蓝色水母在深色炫彩底上和 MagIsland 的图标接近，定稿前把两个图标按 16、32、128 像素并排放一次，确认触手、腮红和眼睛足够把它们分开；Phantom 钱包的图标也一起看。</li>
+</ul>
+
+<script>
+const DOME = "M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z";
+const LOBES = [18, 27.3, 36.7, 46];
+const LR = 6.6;
+const LOBES3 = [19.5, 32, 44.5];
+const DONE_HOLD_MS = 3000;
+let uid = 0;
+
+const STATES = [
+  { a: "idle", name: "空闲", face: "open", notes: [["眼睛", "5.8 秒眨一次，会看鼠标"], ["身体", "每 10 秒游一下，其余时间不动"]] },
+  { a: "running", name: "运行中", tag: "一直循环", face: "side", fx: "speed", notes: [["表情", "眼睛看向前进的方向，不皱眉"], ["身体", "前倾 5°，1.2 秒一轮上下颠"], ["触手", "四瓣依次收缩，像在划水"], ["速度线和残影", "跟着同一个节奏"]] },
+  { a: "waiting", name: "等你", tag: "一直循环", face: "smile", fx: "ticks", notes: [["身体", "歪头，跳两下停一下（2.4 秒一轮）"], ["感叹线", "跟着跳的节奏闪出来"], ["表情", "张嘴笑，照常眨眼"]] },
+  { a: "failed", name: "失败", tag: "播一次", once: true, face: "brows", fx: "anger", notes: [["身体", "压扁，左右晃一次（420ms）"], ["怒气符号", "鼓两下就停"], ["表情", "皱眉，只有失败皱眉"]] },
+  { a: "done", name: "完成", tag: "播一次", once: true, face: "happy", fx: "sparks", notes: [["身体", "上浮 4 像素再落回（420ms），不回弹"], ["星星", "先后弹出来，停住不闪"], ["之后", "3 秒后回到空闲"]] },
+  { a: "stale", name: "可能中断", tag: "播一次", once: true, face: "blank", fx: "q", notes: [["用在", "会话很久没动静（stale）"], ["样子", "灰色，发呆的小圆眼，身体歪着"], ["问号", "弹出来一次就停"]] },
+  { a: "compact", name: "压缩上下文", tag: "一直循环", state: "running", face: "squeeze", fx: "squeeze", notes: [["用在", "compacting，算运行中的一种"], ["身体", "被两边往中间挤，1.2 秒一轮"], ["表情", "使劲闭眼"]] },
+];
+const EXTRAS = [
+  { a: "blink", name: "眨眼", face: "open", notes: [["眼睛", "连眨两下，空闲时偶尔出现"]] },
+  { a: "wink", name: "单眼眨", tag: "播一次", once: true, face: "wink", fx: "ticks", notes: [["用在", "设置里点到水母、彩蛋"], ["身体", "点一下头（420ms）"]] },
+  { a: "pressed", name: "被按下", face: "open", notes: [["用在", "鼠标按住状态灯"], ["眼睛", "闭上，松手睁开（120ms）"], ["身体", "不缩放、不压扁"]] },
+  { a: "left", name: "向左看", face: "open", notes: [["用在", "鼠标在左边、消息从左边来"], ["眼睛", "平移 2.6 像素（160ms）"]] },
+  { a: "right", name: "向右看", face: "open", notes: [["用在", "鼠标在右边、消息从右边来"]] },
+  { a: "surprised", name: "惊讶", tag: "播一次", once: true, face: "o", fx: "ticks", notes: [["用在", "来了一条新消息"], ["身体", "往上一蹦（420ms）"]] },
+];
+const MORE = [
+  ["v1", [
+    { a: "think", name: "思考中", tag: "一直循环", state: "running", face: "up", fx: "think", notes: [["用在", "模型在想、还没开始动手"], ["眼睛", "往右上看，嘴抿成一条线"], ["气泡", "三个圆点依次亮起（1.2 秒一轮）"]] },
+    { a: "sleep", name: "睡着", once: true, face: "sleep", fx: "zz", notes: [["用在", "长时间没有会话、勿扰模式"], ["Z", "先后冒出来，停住"], ["身体", "4 秒一轮慢慢呼吸，和现在悬岛的呼吸同一档"]] },
+    { a: "party", name: "庆祝", tag: "播一次", once: true, state: "done", face: "cheer", fx: "confetti", notes: [["用在", "今天的待办全部做完、发版成功"], ["彩纸", "撒一次（不到 1 秒）"], ["身体", "蹦一下"]] },
+    { a: "drag", name: "被拖着走", face: "o", notes: [["用在", "拖动岛的时候"], ["触手", "往反方向甩，跟着鼠标速度走"]] },
+  ]],
+  ["agent", [
+    { a: "search", name: "翻文件 / 搜索", state: "running", face: "open", fx: "lens", notes: [["用在", "读文件、grep、联网搜索"], ["放大镜", "从右往左扫过脸，眼睛跟着走"]] },
+    { a: "type", name: "敲代码", state: "running", face: "focus", fx: "code", notes: [["用在", "正在改文件"], ["触手", "两两交替快速敲"], ["代码行", "一行行打出来再消失"]] },
+    { a: "sweat", name: "额度快用完", face: "worried", fx: "drop", notes: [["用在", "用量环超过 90%"], ["表情", "八字眉、波浪嘴，汗珠往下滑"]] },
+    { a: "offline", name: "连不上", face: "worried", fx: "wifi", notes: [["用在", "远程会话断线、钩子没回音"], ["信号", "三格依次闪，红线划掉"]] },
+  ]],
+  ["app", [
+    { a: "music", name: "在放歌", face: "hum", fx: "notes", notes: [["用在", "媒体控制在播放"], ["身体", "跟着拍子左右摇"], ["音符", "两个交替飘出来"]] },
+    { a: "meeting", name: "会议要开始", face: "o", fx: "clock", notes: [["用在", "日历提醒前 5 分钟"], ["闹钟", "抖一阵、停一下"]] },
+    { a: "mail", name: "新邮件", face: "cheer", fx: "mail", notes: [["用在", "邮箱、QQ、微信来消息"], ["信封", "从右边滑进来，红点表示未读"]] },
+    { a: "copy", name: "复制好了", state: "done", face: "hum", fx: "copy", notes: [["用在", "剪贴板记下一条、文件中转完成"], ["对勾", "在纸上一笔画出来"]] },
+    { a: "shot", name: "截图", face: "open", fx: "camera", notes: [["用在", "按下截图快捷键"], ["闪光", "一闪而过，眼睛被闪得一眯"]] },
+    { a: "translate", name: "翻译中", face: "open", fx: "bubbles", notes: [["用在", "快捷翻译"], ["气泡", "「文」和「A」轮流冒出，眼睛跟着看"]] },
+  ]],
+  ["fun", [
+    { a: "peek", name: "贴边偷看", face: "peek", fx: "edge", clip: true, notes: [["用在", "岛贴边收起时偶尔探头"], ["身体", "从屏幕边上露出半个头，看一会儿缩回去"]] },
+    { a: "shy", name: "害羞", face: "shy", fx: "heart", notes: [["用在", "鼠标在它身上停很久"], ["表情", "腮红变大，冒一颗心"]] },
+    { a: "dizzy", name: "被戳晕了", face: "spiral", fx: "orbit", notes: [["用在", "连点 5 下以上的彩蛋"], ["眼睛", "蚊香眼在转，星星绕着头转"]] },
+    { a: "birthday", name: "生日 / 节日", face: "cheer", fx: "hat", notes: [["用在", "用户生日、安装一周年、春节"], ["帽子", "左右晃"]] },
+    { a: "coffee", name: "熬夜陪跑", state: "running", face: "focus", fx: "cup", notes: [["用在", "半夜还有会话在跑"], ["表情", "眯着眼，慢慢呼吸，咖啡冒热气"]] },
+  ]],
+];
+const TITLES = { idle: "Claude Code · 空闲", running: "Claude Code · 正在改 3 个文件", waiting: "Claude Code · 等你确认", failed: "Claude Code · 出错了", done: "Claude Code · 已完成", stale: "Claude Code · 可能中断了", compact: "Claude Code · 正在压缩上下文" };
+const AUTO_STEPS = [["idle", 2200], ["running", 3600], ["compact", 2600], ["running", 2000], ["waiting", 4200], ["running", 2400], ["done", 3000], ["idle", 1600], ["running", 2400], ["stale", 3000], ["failed", 3200]];
+
+function faceSvg(face, small) {
+  const glint = small ? "" : `<circle cx="25" cy="23.4" r=".9" fill="#fff"/><circle cx="41" cy="23.4" r=".9" fill="#fff"/>`;
+  const eyes = `<ellipse class="eye" cx="24" cy="25" rx="2.7" ry="3.9"/><ellipse class="eye" cx="40" cy="25" rx="2.7" ry="3.9"/>${glint}`;
+  const arcs = `<path class="line" d="M20.6 26.4a3.4 3.4 0 0 1 6.8 0M36.6 26.4a3.4 3.4 0 0 1 6.8 0"/>`;
+  const E = (inner, shift = "") => `<g${shift ? ` transform="${shift}"` : ""}><g class="lids"><g class="eyes">${inner}</g></g></g>`;
+  const flat = `<path class="line" style="stroke-width:2" d="M29.6 31.8h4.8"/>`;
+  const wavy = `<path class="line" style="stroke-width:1.8" d="M27.6 32.4q1.1-1.4 2.2 0t2.2 0t2.2 0t2.2 0"/>`;
+  const grin = `<path class="eye" d="M28.2 30.4h7.6a3.8 3.8 0 0 1-7.6 0Z"/><ellipse cx="32" cy="33.1" rx="2" ry="1.1" fill="#ff6b7a"/>`;
+  const parts = {
+    open: E(eyes),
+    side: E(eyes, "translate(-2.2 .6)") + `<path class="line" style="stroke-width:2" d="M27.4 31.8h4"/>`,
+    smile: E(eyes, "translate(0 -1)") + grin,
+    brows: E(eyes) + `<path class="line" d="M18.5 17.2l8 3.2M45.5 17.2l-8 3.2"/>`,
+    happy: E(arcs),
+    blank: E(`<circle class="eye" cx="24" cy="25.4" r="2.1"/><circle class="eye" cx="40" cy="25.4" r="2.1"/>`) + flat,
+    squeeze: E(`<path class="line" style="stroke-width:2.2" d="M21.4 22.4l4.8 2.6-4.8 2.6M42.6 22.4l-4.8 2.6 4.8 2.6"/>`) + wavy,
+    wink: E(`<ellipse class="eye" cx="24" cy="25" rx="2.7" ry="3.9"/><path class="line" d="M43 22l-5 3 5 3"/>`),
+    o: E(`<ellipse class="eye" cx="24" cy="24.5" rx="3" ry="4.3"/><ellipse class="eye" cx="40" cy="24.5" rx="3" ry="4.3"/>${glint}`) + `<ellipse class="eye" cx="32" cy="32.4" rx="2.1" ry="2.6"/><ellipse cx="32" cy="33.4" rx="1.2" ry="1" fill="#ff6b7a"/>`,
+    sleep: E(`<path class="line" d="M20.6 25a3.4 3.4 0 0 0 6.8 0M36.6 25a3.4 3.4 0 0 0 6.8 0"/>`),
+    up: E(`<ellipse class="eye" cx="24" cy="25" rx="2.5" ry="3.6"/><ellipse class="eye" cx="40" cy="25" rx="2.5" ry="3.6"/>${glint}`, "translate(2 -2.6)") + flat,
+    focus: E(`<path class="eye" d="M21.2 23.4h5.6v2a2.8 2.8 0 0 1-5.6 0Z"/><path class="eye" d="M37.2 23.4h5.6v2a2.8 2.8 0 0 1-5.6 0Z"/>`) + flat,
+    worried: E(eyes) + `<path class="line" style="stroke-width:2.2" d="M19 19.8l7-2.6M45 19.8l-7-2.6"/>` + wavy,
+    spiral: [24, 40].map((x) => `<g class="spin" style="transform-origin:${x}px 25px"><path class="line" style="stroke-width:1.8" d="M${x} 25a1 1 0 0 1 1 1a2 2 0 0 1-2 2a3 3 0 0 1-3-3a4 4 0 0 1 4-4a5 5 0 0 1 5 5"/></g>`).join("") + `<path class="line" style="stroke-width:1.8" d="M28 32.6q2-1.6 4 0t4 0"/>`,
+    shy: `<ellipse class="cheek" cx="17.6" cy="31" rx="5" ry="3" style="opacity:.95"/><ellipse class="cheek" cx="46.4" cy="31" rx="5" ry="3" style="opacity:.95"/>` + E(arcs) + `<path class="line" style="stroke-width:2" d="M29.8 31.6q2.2 1.6 4.4 0"/>`,
+    cheer: E(arcs) + grin,
+    hum: E(arcs) + `<ellipse class="eye" cx="32" cy="32" rx="1.5" ry="1.8"/>`,
+    peek: E(eyes, "translate(2.6 0)"),
+  };
+  return parts[face];
+}
+
+function star(cx, cy, r) {
+  return `<path class="spark" d="M${cx} ${cy - r}Q${cx} ${cy} ${cx + r} ${cy}Q${cx} ${cy} ${cx} ${cy + r}Q${cx} ${cy} ${cx - r} ${cy}Q${cx} ${cy} ${cx} ${cy - r}Z" style="transform-origin:${cx}px ${cy}px"/>`;
+}
+
+const zed = (x, y, w) => `<path class="zz" style="transform-origin:${x + w / 2}px ${y + w / 2}px" d="M${x} ${y}h${w}l${-w} ${w}h${w}"/>`;
+
+function fxSvg(fx) {
+  const g = (inner) => `<g class="fx">${inner}</g>`;
+  if (fx === "ticks") return g(`<path class="tick" d="M55 6l1.4-5M59 9.5l4.2-3.4M61 15l5-1"/>`);
+  if (fx === "anger") return g(`<path class="anger" style="transform-origin:59px 5.5px" d="M55.5 3.5c1.6 0 2.5-.9 2.5-2.5M62.5 3.5c-1.6 0-2.5-.9-2.5-2.5M55.5 7.5c1.6 0 2.5.9 2.5 2.5M62.5 7.5c-1.6 0-2.5.9-2.5 2.5"/>`);
+  if (fx === "sparks") return g(star(59, 3, 4.6) + star(65.5, 11, 3));
+  if (fx === "q") return g(`<g style="transform-origin:59px 6px"><path class="ink" style="stroke-width:2.2" d="M56 3.4a3 3 0 1 1 4.4 2.6c-1 .5-1.4 1.1-1.4 2.2"/><circle cx="59" cy="11.6" r="1.2" fill="#6f7280"/></g>`);
+  if (fx === "squeeze") return g(`<path class="ink" d="M-4 24h6m-2.6-2.6L2 24l-2.6 2.6"/><path class="ink" d="M68 24h-6m2.6-2.6L62 24l2.6 2.6"/>`);
+  if (fx === "zz") return g(zed(54, 7, 3.4) + zed(59.5, -1.5, 5));
+  if (fx === "think") return g(`<circle class="bub" cx="53" cy="7" r="1.6"/><circle class="bub" cx="58" cy="2.6" r="2.3"/><circle class="bub" cx="64.5" cy="-3" r="3.2"/>`);
+  if (fx === "confetti") return g([[12, -2, "#ff5b4f"], [22, -7, "#ffcd3c"], [33, -4, "#6db6f4"], [44, -8, "#5ed69e"], [53, -2, "#b38cff"], [6, 4, "#ff8fa0"], [60, 4, "#ffcd3c"]].map(([x, y, c]) => `<rect x="${x}" y="${y}" width="2.6" height="4" rx=".8" fill="${c}" style="transform-origin:${x + 1.3}px ${y + 2}px"/>`).join(""));
+  if (fx === "lens") return g(`<g><circle cx="46" cy="25" r="6" fill="#fff" fill-opacity=".4" stroke="#5a5866" stroke-width="2.2"/><path d="M50.3 29.3l5 5" stroke="#5a5866" stroke-width="3" stroke-linecap="round"/></g>`);
+  if (fx === "code") return g([[14, 9], [19.5, 12], [25, 6]].map(([y, w]) => `<path class="ink" style="transform-origin:62px ${y}px" d="M62 ${y}h${w}"/>`).join(""));
+  if (fx === "drop") return g(`<path class="drop" d="M54 6c2 3 3 4.6 3 6a3 3 0 0 1-6 0c0-1.4 1-3 3-6Z"/>`);
+  if (fx === "wifi") return g(`<circle cx="61" cy="15" r="1.5" fill="#6f7280"/><path class="ink" d="M57.5 12a5 5 0 0 1 7 0"/><path class="ink" d="M55 9a9 9 0 0 1 12 0"/><path class="ink bad" d="M55.5 3.5l11 13.5"/>`);
+  if (fx === "orbit") return g(star(32, 1, 2.8) + star(32, 1, 2.2));
+  if (fx === "notes") return g([[54, 11, ""], [61, 5, " pink"]].map(([x, y, c]) => `<g class="note${c}"><ellipse cx="${x}" cy="${y}" rx="2.3" ry="1.7" transform="rotate(-20 ${x} ${y})"/><path d="M${x + 2} ${y}V${y - 8}q3 .6 3.6 3.6"/></g>`).join(""));
+  if (fx === "clock") return g(`<g style="transform-origin:59px 26px"><path d="M53.6 20.4l2.4-2.2M64.4 20.4l-2.4-2.2" stroke="#e5352b" stroke-width="2.4" stroke-linecap="round"/><circle cx="59" cy="26" r="6" fill="#fff" stroke="#e5352b" stroke-width="1.8"/><path class="ink" style="stroke-width:1.5" d="M59 22.8V26l2.2 1.4"/></g>`);
+  if (fx === "mail") return g(`<g><rect class="paper" x="51" y="20" width="14" height="10" rx="2"/><path class="ink" style="stroke-width:1.4" d="M51.8 21l6.2 4.6 6.2-4.6"/><circle cx="64.6" cy="20.4" r="2.4" fill="#ff453a"/></g>`);
+  if (fx === "copy") return g(`<g><rect class="paper" x="54.5" y="13" width="10" height="13" rx="1.8"/><rect class="paper" x="51" y="16.5" width="10" height="13" rx="1.8"/></g><path class="ok" d="M53.2 23.2l2.2 2.3 3.8-4.6"/>`);
+  if (fx === "camera") return g(`<g><rect x="54.5" y="19.6" width="5" height="3" rx="1" fill="#5a5866"/><rect x="51" y="21.6" width="14" height="10" rx="2.4" fill="#5a5866"/><circle cx="58" cy="26.6" r="3" fill="#fff"/><circle cx="58" cy="26.6" r="1.6" fill="#5a5866"/></g><path style="transform-origin:58px 14px" fill="#fff3a8" d="M58 4l1.8 7 7 1.8-7 1.8L58 22l-1.8-7.4-7-1.8 7-1.8Z"/>`);
+  if (fx === "bubbles") return g(`<g><rect class="paper" x="44" y="-7" width="11" height="9" rx="3"/><path class="ink" style="stroke-width:1.2" d="M49.5 -5.4v.8M46.8 -3.8h5.4M51.4 -3.6l-4 4M47.6 -3.6l4 4"/></g><g><rect class="paper" x="56" y="0" width="11" height="9" rx="3"/><path class="ink" style="stroke-width:1.3" d="M59.2 7l2.3-5.2L63.8 7M60 5.2h3"/></g>`);
+  if (fx === "edge") return g(`<rect x="-3" y="-6" width="3" height="58" rx="1.5" fill="#cfc8bd"/>`);
+  if (fx === "heart") return g(`<path fill="#ff7fa5" d="M56 8c-1.6-2.4-5-1.2-4.4 1.4.4 1.8 2.8 3.2 4.4 4.4 1.6-1.2 4-2.6 4.4-4.4.6-2.6-2.8-3.8-4.4-1.4Z"/>`);
+  if (fx === "hat") return g(`<g style="transform-origin:32px 8px"><path d="M25.5 9L32 -8l6.5 17Z" fill="#b38cff"/><path d="M27.6 3.6l7.4 2.2M29.6 -1.6l4.8 1.4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/><circle cx="32" cy="-8.4" r="2.3" fill="#ffcd3c"/></g>`);
+  if (fx === "cup") return g(`<g><path d="M52 24h10v6a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4Z" fill="#fff" stroke="#cfc8bd" stroke-width="1.2"/><path d="M62 26h1.4a2 2 0 0 1 0 4H62" fill="none" stroke="#cfc8bd" stroke-width="1.4"/><path d="M53.2 25.6h7.6" stroke="#8b5a3c" stroke-width="1.6"/></g><path class="steam" d="M55 21q-1.4-2 0-4t0-4"/><path class="steam" d="M59 21q-1.4-2 0-4t0-4"/>`);
+  return "";
+}
+
+function jelly({ a = "idle", state = a, face = "open", fx = "", small = false, light = false, live = true, clip = false, morph = false, follow = false, gaze = false } = {}) {
+  const n = ++uid;
+  const shade = `url(#s${n})`;
+  const defs = `<defs><linearGradient id="s${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient></defs>`;
+  const sw = (k, inner) => (morph ? `<g class="sw${k === a ? " on" : ""}" data-k="${k}">${inner}</g>` : inner);
+  const shape = `${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}<path d="${DOME}"/>`;
+  const speedSvg = `<g>${[[17, 62, 76], [25, 64, 82], [33, 62, 74]].map(([y, x1, x2]) => `<path class="speed" d="M${x1} ${y}H${x2}"/>`).join("")}</g>`;
+  const back = morph ? sw("running", speedSvg) : fx === "speed" ? speedSvg : "";
+  const ghost = small ? "" : `<g class="ghost">${shape}</g>`;
+  const outline = light ? `<g class="ol">${shape}</g>` : "";
+  const lobes = LOBES.map((x) => `<g class="lobe" style="--ox:${x}px"><circle class="fill" cx="${x}" cy="39" r="${LR}"/><circle cx="${x}" cy="39" r="${LR}" fill="${shade}"/></g>`).join("");
+  const hl = `<ellipse cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)" fill="#fff" opacity=".6"/>${small ? "" : `<circle cx="28.5" cy="10" r="1.5" fill="#fff" opacity=".7"/>`}`;
+  const cheeks = `<ellipse class="cheek" cx="17.6" cy="31.5" rx="3.6" ry="2.2"/><ellipse class="cheek" cx="46.4" cy="31.5" rx="3.6" ry="2.2"/>`;
+  const faces = morph ? STATES.map((s) => sw(s.a, faceSvg(s.face, small))).join("") : faceSvg(face, small);
+  const fxs = morph ? STATES.filter((s) => s.fx && s.fx !== "speed").map((s) => sw(s.a, fxSvg(s.fx))).join("") : fxSvg(fx);
+  const cls = `jl${live ? " live" : ""}${light ? " on-light" : ""}${small ? " small" : ""}${morph ? " morph" : ""}`;
+  const flags = `${follow ? " data-follow" : ""}${gaze ? " data-gaze" : ""}`;
+  const body = `<g class="pose"><g class="body">${ghost}${outline}<g class="trail"><g class="lobes">${lobes}</g></g><g class="head"><path class="fill" d="${DOME}"/><path d="${DOME}" fill="${shade}"/>${hl}${cheeks}<g class="gaze">${faces}</g></g></g></g>`;
+  const clipped = clip ? `<clipPath id="c${n}"><rect x="0" y="-30" width="120" height="120"/></clipPath><g clip-path="url(#c${n})">${body}</g>` : body;
+  return `<svg class="${cls}" data-a="${a}" data-state="${state}"${flags} viewBox="0 0 64 48">${defs}${back}${clipped}${fxs}</svg>`;
+}
+
+function cardHtml(item) {
+  return `<div class="card"${item.once ? " data-once" : ""}><b>${item.name}</b>${item.tag ? `<em>${item.tag}</em>` : ""}<div class="stage">${jelly({ ...item, state: item.state || (STATES.includes(item) ? item.a : "idle") })}</div><ul>${item.notes.map(([k, v]) => `<li><i>${k}</i>：${v}</li>`).join("")}</ul></div>`;
+}
+
+const PALETTES = {
+  ocean: { name: "深海", base: "#03101f", blobs: [["#00c2ff", 10, 58, 34, .8], ["#2d5bff", 52, 40, 32, .75], ["#7a3dff", 50, 2, 28, .6], ["#00ffc8", 2, 8, 18, .3]], jelly: ["#dff6ff", "#6cc4ff"], glow: "#6fd0ff", eye: "#0e2340" },
+  aurora: { name: "极光", base: "#0c0a22", blobs: [["#3d6bff", 14, 54, 34, .9], ["#9b3dff", 34, 22, 30, .75], ["#ff3d7f", 58, 6, 26, .7], ["#ff9a3d", 4, 4, 18, .45]], jelly: ["#f1dcff", "#8fb8ff"], glow: "#9cc0ff", eye: "#211a4d" },
+  neon: { name: "霓虹", base: "#14061f", blobs: [["#ff2fb3", 58, 56, 34, .75], ["#7a2dff", 6, 50, 32, .85], ["#ff7a3d", 60, 0, 24, .55], ["#3d8bff", 6, 4, 20, .5]], jelly: ["#ffe4f6", "#c08cff"], glow: "#ff9ee0", eye: "#2a1240" },
+};
+
+function iconSvg(size, { key = "ocean", simple = false, old = false } = {}) {
+  const n = ++uid;
+  const pal = PALETTES[key];
+  const three = simple && !old;
+  const shape = three
+    ? `${LOBES3.map((x) => `<circle cx="${x}" cy="38.6" r="8.2"/>`).join("")}<path d="${DOME}"/>`
+    : `${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}<path d="${DOME}"/>`;
+  const fill = old ? pal.jelly : ["#fffaf2", "#f6dcc6"];
+  const eye = old ? pal.eye : "#2a2230";
+  const blobs = pal.blobs.map(([c, x, y, r, o], i) => `<radialGradient id="r${n}-${i}" cx="${x}" cy="${y}" r="${r}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${c}" stop-opacity="${o}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`).join("");
+  const face = simple
+    ? old
+      ? `<ellipse cx="24" cy="25" rx="3.8" ry="5.2" fill="${eye}"/><ellipse cx="40" cy="25" rx="3.8" ry="5.2" fill="${eye}"/>`
+      : `<ellipse cx="15.5" cy="31" rx="5" ry="3.4" fill="#ff7fa5"/><ellipse cx="48.5" cy="31" rx="5" ry="3.4" fill="#ff7fa5"/><ellipse cx="24.5" cy="23.5" rx="3.3" ry="4.6" fill="${eye}"/><ellipse cx="39.5" cy="23.5" rx="3.3" ry="4.6" fill="${eye}"/>`
+    : `<ellipse cx="20" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 20 14)" fill="#fff" opacity=".7"/><circle cx="29" cy="10.2" r="1.5" fill="#fff" opacity=".8"/><ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fa5" opacity=".8"/><ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2" fill="#ff7fa5" opacity=".8"/><ellipse cx="24" cy="25" rx="2.8" ry="4" fill="${eye}"/><ellipse cx="40" cy="25" rx="2.8" ry="4" fill="${eye}"/><circle cx="25" cy="23.3" r=".95" fill="#fff"/><circle cx="41" cy="23.3" r=".95" fill="#fff"/>`;
+  const glow = simple ? "" : `<g fill="${pal.glow}" opacity=".75" filter="url(#f${n})">${shape}</g>`;
+  const place = three ? "translate(3.2 8.2) scale(.9)" : "translate(4.5 9.4) scale(.86)";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64"><defs>${blobs}<clipPath id="k${n}"><rect x="1" y="1" width="62" height="62" rx="15"/></clipPath><linearGradient id="l${n}" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="${fill[0]}"/><stop offset="1" stop-color="${fill[1]}"/></linearGradient><linearGradient id="g${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="f${n}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter></defs><g clip-path="url(#k${n})"><rect width="64" height="64" fill="${pal.base}"/>${pal.blobs.map((_, i) => `<rect width="64" height="64" fill="url(#r${n}-${i})"/>`).join("")}<g transform="${place}">${glow}<g fill="url(#l${n})">${shape}</g>${face}</g><rect width="64" height="64" fill="url(#g${n})"/></g><rect x="1.4" y="1.4" width="61.2" height="61.2" rx="14.6" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width=".8"/></svg>`;
+}
+
+function monoSvg(color) {
+  const n = ++uid;
+  return `<svg viewBox="0 0 64 48"><defs><mask id="m${n}"><rect x="0" y="0" width="64" height="48" fill="#fff"/><ellipse cx="24" cy="25" rx="3.4" ry="4.8" fill="#000"/><ellipse cx="40" cy="25" rx="3.4" ry="4.8" fill="#000"/></mask></defs><g fill="${color}" mask="url(#m${n})">${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}<path d="${DOME}"/></g></svg>`;
+}
+
+function pixelCanvas(host, svg, px) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = px;
+    canvas.height = px;
+    canvas.getContext("2d").drawImage(img, 0, 0, px, px);
+    canvas.style.width = `${px * 6}px`;
+    canvas.style.height = `${px * 6}px`;
+    host.prepend(canvas);
+  };
+  img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function renderIcons() {
+  const key = view.icon;
+  const fig = (svg, label, attrs = "") => `<figure${attrs}>${svg}${label}</figure>`;
+  for (const old of [false, true]) {
+    const host = document.getElementById(old ? "icons-old" : "icons-new");
+    host.innerHTML = fig(iconSvg(128, { key, old }), "128") + fig(iconSvg(48, { key, old }), "48") + fig(iconSvg(32, { key, old, simple: true }), "32") + fig(iconSvg(16, { key, old, simple: true }), "16") + fig("", "32 真实像素 ×6", ' data-px="32"') + fig("", "16 真实像素 ×6", ' data-px="16"');
+    for (const el of host.querySelectorAll("[data-px]")) pixelCanvas(el, iconSvg(Number(el.dataset.px), { key, old, simple: true }), Number(el.dataset.px));
+  }
+  document.getElementById("dock").innerHTML = `<figure>${iconSvg(72, { key, old: true })}<span>选定</span></figure><figure>${iconSvg(36, { key, old: true })}<span>选定 · 小</span></figure><figure>${iconSvg(72, { key })}<span>没采用</span></figure><figure>${iconSvg(36, { key })}<span>没采用 · 小</span></figure>`;
+}
+
+function ringSvg() {
+  return `<svg class="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="rgba(128,128,128,.3)" stroke-width="3"/><circle cx="12" cy="12" r="8.5" fill="none" stroke="#6abf9b" stroke-width="3" stroke-linecap="round" stroke-dasharray="34 54" transform="rotate(-90 12 12)"/></svg>`;
+}
+
+function build() {
+  document.getElementById("big").innerHTML = jelly({ morph: true, follow: true, gaze: true });
+  document.getElementById("track").innerHTML = `<div class="bar" id="dragbar">${jelly({ morph: true, follow: true, gaze: true, small: true })}<span data-title></span><span class="badge">1</span>${ringSvg()}</div>`;
+  document.getElementById("states").innerHTML = STATES.map(cardHtml).join("");
+  document.getElementById("extras").innerHTML = EXTRAS.map(cardHtml).join("");
+  for (const [id, items] of MORE) document.getElementById(`more-${id}`).innerHTML = items.map(cardHtml).join("");
+  const row = (label, opts, z = "") => `<div class="pillrow"><span>${label}</span><div class="pill${opts.light ? " light" : ""}${z}">${STATES.map((s) => jelly({ ...s, state: s.state || s.a, small: !z, light: opts.light, live: opts.live })).join("")}</div></div>`;
+  document.getElementById("pills").innerHTML = row("深色岛", { live: true }) + row("浅色岛", { light: true, live: true }) + row("减少动画", { live: false }) + row("深色岛 · 放大 3 倍", { live: true }, " z3") + row("浅色岛 · 放大 3 倍", { light: true, live: true }, " z3");
+  const bar = (bg, fg, label) => `<figure><div class="menubar" style="background:${bg};color:${fg}">${monoSvg(fg)}<span>周四 12:55</span></div>${label}</figure>`;
+  document.getElementById("menus").innerHTML = bar("#e6e6ea", "#1d1d1f", "浅色") + bar("#2a2b31", "#f2f2f4", "深色");
+}
+
+const view = { bg: "light", speed: 1, motion: true, replay: true, icon: "ocean", state: "idle", auto: false };
+let doneTimer = 0;
+let autoTimer = 0;
+let autoStep = 0;
+let glanceUntil = 0;
+
+function applySpeed() {
+  requestAnimationFrame(() => { for (const anim of document.getAnimations()) anim.playbackRate = view.speed; });
+}
+
+function segs(id, options, onPick) {
+  const host = document.getElementById(id);
+  for (const [value, text] of options) {
+    const b = document.createElement("button");
+    b.className = "seg";
+    b.textContent = text;
+    b.dataset.v = String(value);
+    b.addEventListener("click", () => onPick(value));
+    host.append(b);
+  }
+}
+
+function syncSegs(id, value) {
+  for (const b of document.getElementById(id).querySelectorAll("button")) b.classList.toggle("on", b.dataset.v === String(value));
+}
+
+function sync() {
+  document.body.dataset.bg = view.bg;
+  document.body.classList.toggle("motion", view.motion);
+  syncSegs("ctl-bg", view.bg);
+  syncSegs("ctl-speed", view.speed);
+  syncSegs("ctl-motion", view.motion);
+  syncSegs("ctl-replay", view.replay);
+  syncSegs("ctl-icon", view.icon);
+  document.getElementById("btn-auto").classList.toggle("on", view.auto);
+  if (!view.motion) resetGaze();
+  applySpeed();
+}
+
+function setState(a) {
+  view.state = a;
+  const item = STATES.find((s) => s.a === a);
+  window.clearTimeout(doneTimer);
+  if (a === "done" && !view.auto) doneTimer = window.setTimeout(() => setState("idle"), DONE_HOLD_MS);
+  for (const svg of document.querySelectorAll(".jl[data-follow]")) {
+    svg.dataset.a = a;
+    svg.dataset.state = item.state || a;
+    for (const el of svg.querySelectorAll(".sw")) el.classList.toggle("on", el.dataset.k === a);
+  }
+  for (const el of document.querySelectorAll("[data-title]")) el.textContent = TITLES[a];
+  if (!gazeAllowed()) resetGaze();
+  syncSegs("ctl-state", a);
+  applySpeed();
+}
+
+function runAuto() {
+  window.clearTimeout(autoTimer);
+  if (!view.auto) return;
+  const [a, ms] = AUTO_STEPS[autoStep % AUTO_STEPS.length];
+  autoStep += 1;
+  setState(a);
+  autoTimer = window.setTimeout(runAuto, ms / view.speed);
+}
+
+function gazeAllowed() {
+  return view.motion && (view.state === "idle" || view.state === "waiting");
+}
+
+function setGaze(svg, x, y) {
+  svg.querySelector(".gaze").style.transform = x || y ? `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px)` : "";
+}
+
+function resetGaze() {
+  for (const svg of document.querySelectorAll(".jl[data-gaze]")) setGaze(svg, 0, 0);
+}
+
+function lookAt(x, y) {
+  if (!gazeAllowed() || performance.now() < glanceUntil) return;
+  for (const svg of document.querySelectorAll(".jl[data-gaze]")) {
+    const box = svg.getBoundingClientRect();
+    if (!box.height) continue;
+    const dx = x - (box.left + box.width / 2);
+    const dy = y - (box.top + box.height * 0.52);
+    const distance = Math.hypot(dx, dy);
+    if (distance < 0.5) { setGaze(svg, 0, 0); continue; }
+    const length = 2.4 * Math.min(1, distance / Math.max(90, box.height * 1.5));
+    setGaze(svg, (dx / distance) * length, (dy / distance) * length * 0.7);
+  }
+}
+
+function glance() {
+  const badge = document.querySelector("#dragbar .badge");
+  badge.classList.add("on");
+  document.getElementById("hint").textContent = "来了一条消息：眼睛朝右边看一眼，0.8 秒后回来。";
+  if (gazeAllowed()) {
+    glanceUntil = performance.now() + 800;
+    for (const svg of document.querySelectorAll(".jl[data-gaze]")) setGaze(svg, 2.4, 0.2);
+    window.setTimeout(resetGaze, 800);
+  }
+  window.setTimeout(() => badge.classList.remove("on"), 2400);
+}
+
+function pressable(el) {
+  el.addEventListener("pointerdown", () => el.classList.add("pressed"));
+  for (const type of ["pointerup", "pointerleave", "pointercancel"]) el.addEventListener(type, () => el.classList.remove("pressed"));
+}
+
+function draggable(barEl, trackEl) {
+  const hint = document.getElementById("hint");
+  let dragging = false;
+  let startX = 0;
+  let startLeft = 0;
+  let left = 16;
+  let lastX = 0;
+  let velocity = 0;
+  let skew = 0;
+  let moved = 0;
+  const tick = () => {
+    const target = dragging && view.motion ? Math.max(-26, Math.min(26, -velocity * 2.2)) : 0;
+    skew += (target - skew) * 0.22;
+    velocity *= 0.7;
+    const value = Math.abs(skew) < 0.05 ? "0deg" : `${skew.toFixed(2)}deg`;
+    for (const svg of document.querySelectorAll(".jl[data-follow]")) svg.style.setProperty("--drag", value);
+    window.requestAnimationFrame(tick);
+  };
+  window.requestAnimationFrame(tick);
+  barEl.addEventListener("pointerdown", (event) => {
+    dragging = true;
+    moved = 0;
+    startX = lastX = event.clientX;
+    startLeft = left;
+    barEl.classList.add("dragging", "pressed");
+    barEl.setPointerCapture(event.pointerId);
+  });
+  barEl.addEventListener("pointermove", (event) => {
+    if (!dragging) return;
+    velocity = event.clientX - lastX;
+    lastX = event.clientX;
+    moved = Math.max(moved, Math.abs(event.clientX - startX));
+    const max = Math.max(16, trackEl.clientWidth - barEl.offsetWidth - 16);
+    left = Math.max(16, Math.min(max, startLeft + event.clientX - startX));
+    barEl.style.left = `${left}px`;
+    if (moved > 4) {
+      barEl.classList.remove("pressed");
+      hint.textContent = "拖动中：触手往反方向甩，跟手、不加过渡。";
+    }
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    barEl.classList.remove("dragging", "pressed");
+    hint.textContent = moved > 4 ? "松手：触手回正。" : "点击：打开 Agent 页。";
+  };
+  barEl.addEventListener("pointerup", end);
+  barEl.addEventListener("pointercancel", end);
+}
+
+function replay(stage) {
+  stage.innerHTML = stage.innerHTML;
+}
+
+document.addEventListener("click", (event) => {
+  const card = event.target.closest(".card");
+  if (!card) return;
+  replay(card.querySelector(".stage"));
+  applySpeed();
+});
+
+build();
+segs("ctl-bg", [["light", "浅"], ["dark", "深"]], (v) => { view.bg = v; sync(); });
+segs("ctl-speed", [[1, "1×"], [0.5, "0.5×"], [0.25, "0.25×"]], (v) => { view.speed = v; sync(); });
+segs("ctl-motion", [[true, "开"], [false, "关"]], (v) => { view.motion = v; sync(); });
+segs("ctl-replay", [[true, "自动重播"], [false, "只播一次"]], (v) => { view.replay = v; sync(); });
+segs("ctl-icon", Object.entries(PALETTES).map(([k, v]) => [k, v.name]), (v) => { view.icon = v; renderIcons(); sync(); });
+segs("ctl-state", STATES.map((s) => [s.a, s.name]), (a) => { view.auto = false; window.clearTimeout(autoTimer); sync(); setState(a); });
+document.getElementById("btn-auto").addEventListener("click", () => { view.auto = !view.auto; autoStep = 0; sync(); runAuto(); });
+document.getElementById("btn-msg").addEventListener("click", glance);
+pressable(document.getElementById("big"));
+draggable(document.getElementById("dragbar"), document.getElementById("track"));
+let pending = null;
+window.addEventListener("pointermove", (event) => {
+  if (pending) { pending = event; return; }
+  pending = event;
+  window.requestAnimationFrame(() => { lookAt(pending.clientX, pending.clientY); pending = null; });
+});
+window.setInterval(() => {
+  if (!view.replay || !view.motion) return;
+  for (const stage of document.querySelectorAll(".card[data-once] .stage")) replay(stage);
+  applySpeed();
+}, 3600);
+renderIcons();
+sync();
+setState("idle");
+</script>
+</body>
+</html>

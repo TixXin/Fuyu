@@ -6,6 +6,7 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
+import { IslandPlacementRow } from "../plugin-kernel/IslandPlacementRow";
 import { switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
 import { OWNER } from "./plugin/owner.ts";
 import { SESSION_RING_STYLES, type SessionRingStyle } from "./ringConfig.ts";
@@ -80,13 +81,22 @@ function RingStyleArt({ style }: { style: SessionRingStyle }) {
 export function RingSettingsGroup() {
   const switchId = useId();
   const text = useTranslation().sessionRing.settings;
-  const [config, update] = useRingConfig();
   return (
     <SettingsGroup
       title={text.title}
       action={<SettingsSwitch id={switchId} ariaLabel={text.title} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch(() => undefined)} />}
       footer={<SettingsFootnote text={text.footer} />}
     >
+      <IslandPlacementRow item="session-count" />
+    </SettingsGroup>
+  );
+}
+
+export function RingStyleRows() {
+  const text = useTranslation().sessionRing.settings;
+  const [config, update] = useRingConfig();
+  return (
+    <>
       <SettingsRow title={text.style}>
         <SettingsChoiceCards<SessionRingStyle>
           value={config.style}
@@ -101,6 +111,6 @@ export function RingSettingsGroup() {
         />
       </SettingsRow>
       <SettingsToggleRow title={text.showCount} description={text.showCountHint} checked={config.showCount} onChange={(on) => update("showCount", on)} />
-    </SettingsGroup>
+    </>
   );
 }

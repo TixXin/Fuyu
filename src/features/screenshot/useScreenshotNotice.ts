@@ -1,10 +1,10 @@
 import { agentsV1, fileShelfV1, type AgentSessionEntry } from "@fuyu/plugin-services";
 import { useEffect, useState, useSyncExternalStore, type PointerEvent } from "react";
 import { Menu } from "@tauri-apps/api/menu";
-import { useErrorText, useTranslation } from "../../i18n";
+import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { windowServices } from "../plugin-kernel/services";
 import { dragScreenshot, pasteScreenshotToFront, type ScreenshotTaken } from "./api";
-import { screenshotActions, subscribeScreenshotActions, type ScreenshotActionItem } from "./host/actions.mjs";
+import { cardActions, runCardAction, subscribeCardActions } from "./actionStore";
 import { agentMessage } from "./agentMessage";
 import { serviceFailed } from "./serviceErrors";
 import type { ScreenshotCardState } from "./useScreenshotCard";
@@ -12,20 +12,6 @@ import type { ScreenshotCardState } from "./useScreenshotCard";
 const agents = windowServices.get(agentsV1);
 const shelf = windowServices.get(fileShelfV1);
 const NO_SESSIONS: readonly AgentSessionEntry[] = [];
-const NO_ACTIONS: readonly ScreenshotActionItem[] = [];
-let cachedActions: readonly ScreenshotActionItem[] = NO_ACTIONS;
-let cachedKey = "";
-
-function readActions(): readonly ScreenshotActionItem[] {
-  const list = screenshotActions.list();
-  if (list.length === 0) return NO_ACTIONS;
-  const key = JSON.stringify(list);
-  if (key !== cachedKey) {
-    cachedKey = key;
-    cachedActions = list;
-  }
-  return cachedActions;
-}
 
 function sessionName(session: AgentSessionEntry) {
   const folder = session.cwd?.split(/[\\/]/).filter(Boolean).pop();
@@ -68,6 +54,7 @@ function useLocalSessions(watching: boolean) {
 
 export function useScreenshotNotice(card: ScreenshotCardState, withSource: boolean) {
   const t = useTranslation().screenshot;
+  const { locale } = useLocale();
   const errorText = useErrorText();
   const [message, setMessage] = useState<{ path: string; text: string } | null>(null);
   const [draft, setDraft] = useState<{ path: string; text: string } | null>(null);
@@ -131,11 +118,13 @@ export function useScreenshotNotice(card: ScreenshotCardState, withSource: boole
   };
 
   const text = taken && message?.path === taken.path ? message.text : taken?.saved ? t.card.saved : t.card.copied;
-  const extraActions = useSyncExternalStore(subscribeScreenshotActions, readActions, readActions);
+  const extraActions = useSyncExternalStore(subscribeCardActions, cardActions, cardActions);
 
   const runAction = (id: string) => {
-    if (!taken) return;
-    void screenshotActions.run(id, { path: taken.path, saved: taken.saved, thumbnail: taken.thumbnail ?? null }).then(
+    const action = extraActions.find((item) => item.id === id);
+    if (!taken || !action) return;
+    const context = { path: taken.path, saved: taken.saved, thumbnail: taken.thumbnail ?? null, source: taken.source ?? null, locale };
+    void runCardAction(action, context).then(
       (result) => {
         if (result.message) setMessage({ path: taken.path, text: result.message });
         if (result.dismiss) card.dismiss();

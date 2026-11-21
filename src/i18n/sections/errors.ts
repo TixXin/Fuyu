@@ -43,6 +43,7 @@ export type ErrorCode =
   | "recording.failed"
   | "bark.scheme"
   | "bark.key"
+  | "lyrics.appleToken"
   | "bark.noKey"
   | "bark.unreachable"
   | "bark.unknownKey"
@@ -256,6 +257,9 @@ export type ErrorCode =
   | "notificationVerify.badId"
   | "notificationVerify.unisolated"
   | "notificationVerify.start"
+  | "quickLaunch.target"
+  | "quickLaunch.failed"
+  | "systemLevels.volume"
   | "messenger.notInteractive"
   | "messenger.foreground"
   | "remoteHosts.save"
@@ -422,6 +426,7 @@ export const zhCN: ErrorsText = {
     "recording.failed": "录屏失败。",
     "bark.scheme": "Bark 服务器地址要以 https:// 或 http:// 开头。",
     "bark.key": "这不像 Bark 的设备 Key：在 Bark 里复制推送地址或其中那串字母数字。",
+    "lyrics.appleToken": "这不像 Apple Music 的 media-user-token：复制 Cookie 里 media-user-token 的值，不要带空格。",
     "bark.noKey": "还没有填 Bark 设备 Key。",
     "bark.unreachable": "连不上 Bark 服务器。",
     "bark.unknownKey": "Bark 不认这个设备 Key，请重新复制。",
@@ -635,6 +640,9 @@ export const zhCN: ErrorsText = {
     "notificationVerify.badId": "通知验收必须提供独立的 32 位十六进制运行标识。",
     "notificationVerify.unisolated": "通知验收未隔离应用数据目录。",
     "notificationVerify.start": "无法启动通知验收记录。",
+    "quickLaunch.target": "不认识这个快捷启动项。",
+    "quickLaunch.failed": "没能打开这个程序。",
+    "systemLevels.volume": "没能调整系统音量。",
     "messenger.notInteractive": ({ name }) => `${name}尚未恢复可交互的主窗口，请从系统托盘打开。`,
     "messenger.foreground": ({ name }) => `已找到${name}窗口，但未能切换到前台，请点击任务栏或托盘中的${name}。`,
     "remoteHosts.save": "没能保存远程电脑设置。",
@@ -798,6 +806,7 @@ export const en: ErrorsText = {
     "recording.failed": "The recording failed.",
     "bark.scheme": "The Bark server address must start with https:// or http://.",
     "bark.key": "That does not look like a Bark device key: copy the push URL in Bark, or the letters and digits in it.",
+    "lyrics.appleToken": "That does not look like an Apple Music media-user-token: copy the value of the media-user-token cookie, without spaces.",
     "bark.noKey": "No Bark device key yet.",
     "bark.unreachable": "Could not reach the Bark server.",
     "bark.unknownKey": "Bark does not know this device key; copy it again.",
@@ -1011,6 +1020,9 @@ export const en: ErrorsText = {
     "notificationVerify.badId": "Notification verification requires an isolated 32-digit hex run ID.",
     "notificationVerify.unisolated": "Notification verification did not isolate the app data folder.",
     "notificationVerify.start": "Could not start recording notification verification.",
+    "quickLaunch.target": "Unknown quick launch item.",
+    "quickLaunch.failed": "Could not open the program.",
+    "systemLevels.volume": "Could not change the system volume.",
     "messenger.notInteractive": ({ name }) => `${name} has not restored an interactive main window yet; open it from the system tray.`,
     "messenger.foreground": ({ name }) => `Found the ${name} window, but could not bring it to the front; click ${name} in the taskbar or tray.`,
     "remoteHosts.save": "Could not save the remote computers.",

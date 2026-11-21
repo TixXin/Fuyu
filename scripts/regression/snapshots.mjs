@@ -51,7 +51,7 @@ export const CAPTURE = `(async () => {
     .replace(/blob:[^\\s"')]+/g, "blob:<url>");
   const unstableStyle = /^(transition|animation|will-change)(-|$)|^--wave-/;
   const LIVE_TEXT = [".timer-panel__time", ".timer-chip__time", ".agent-session__elapsed"];
-  const anchored = (el) => ["dialog", "menu", "tooltip", "listbox"].includes(el.getAttribute("role"));
+  const anchored = (el) => ["dialog", "menu", "tooltip", "listbox"].includes(el.getAttribute("role")) || el.classList.contains("island__page-pill");
   const anchoredStyle = (value) => value.split("; ").map((d) => /^(left|top|right|bottom):\\s*-?[\\d.]+px$/.test(d) ? d.replace(/-?[\\d.]+px$/, "#px") : d).join("; ");
   const cleanStyle = (value) => value.split(";").map((d) => d.trim()).filter((d) => d && !unstableStyle.test(d.split(":")[0].trim())).join("; ");
   const escapeText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

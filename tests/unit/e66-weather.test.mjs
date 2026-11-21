@@ -118,8 +118,9 @@ test("E66.9 rain alert: lead time, quiet hours, cool-down", () => {
 
 test("E66.9 weather host: 1.0.0 config kept, settings apply, refresh command registered", async () => {
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });
-  assert.equal(packed.manifest.version, "1.1.0");
+  assert.equal(packed.manifest.version, "1.2.0");
   assert.deepEqual(packed.manifest.fuyu.commands.map((item) => item.id), ["refresh"]);
+  assert.ok(packed.manifest.fuyu.slots.includes("island.widget/v1"));
   assert.equal(packed.manifest.description, packed.manifest.fuyu.description.en);
   const hostDir = join(scratch, "host");
   mkdirSync(hostDir, { recursive: true });

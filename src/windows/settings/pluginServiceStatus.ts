@@ -13,6 +13,7 @@ export const BUILTIN_PROVIDES: Readonly<Partial<Record<BuiltinPluginName, readon
   calendar: ["calendar/v1"],
   music: ["media/v1", "lyrics/v1"],
   clipboard: ["clipboard/v1"],
+  screenshot: ["screenshot.actions/v1"],
   "file-shelf": ["file-shelf/v1"],
   translation: ["translator/v1"],
   timer: ["timers/v1", "reminders/v1"],

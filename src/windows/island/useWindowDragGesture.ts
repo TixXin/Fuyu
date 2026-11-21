@@ -1,67 +1,62 @@
-import { useCallback, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
+
+const HOLD_MS = 300;
+const SLOP_PX = 4;
+const NOT_A_HANDLE =
+  "button:not(.island__open-button, .island__collapse-target), input, textarea, select, a, [contenteditable='true'], [data-window-drag='false']";
 
 export function useWindowDragGesture(isTucked: boolean, onWindowDragStart: () => void) {
   const didDragRef = useRef(false);
-  const windowDragRef = useRef<{
-    pointerId: number;
-    startX: number;
-    startY: number;
-  } | null>(null);
+  const timer = useRef<number | null>(null);
+  const start = useRef<{ x: number; y: number; pointer: number } | null>(null);
+  const latest = useRef(onWindowDragStart);
+  useEffect(() => {
+    latest.current = onWindowDragStart;
+  });
+
+  const cancelWindowDrag = useCallback(() => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+    start.current = null;
+  }, []);
+
+  const beginDrag = useCallback(() => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+    start.current = null;
+    didDragRef.current = true;
+    latest.current();
+  }, []);
+
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      const from = start.current;
+      if (from && event.pointerId === from.pointer && Math.hypot(event.clientX - from.x, event.clientY - from.y) > SLOP_PX) beginDrag();
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", cancelWindowDrag);
+    window.addEventListener("pointercancel", cancelWindowDrag);
+    window.addEventListener("blur", cancelWindowDrag);
+    return () => {
+      cancelWindowDrag();
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", cancelWindowDrag);
+      window.removeEventListener("pointercancel", cancelWindowDrag);
+      window.removeEventListener("blur", cancelWindowDrag);
+    };
+  }, [beginDrag, cancelWindowDrag]);
 
   const prepareWindowDrag = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
       didDragRef.current = false;
-      if (event.button !== 0 || isTucked) {
-        return;
-      }
-
-      const target = event.target;
-      if (
-        target instanceof Element &&
-        target.closest(
-          "button:not(.island__open-button), input, textarea, select, a, [contenteditable='true'], [data-window-drag='false']",
-        )
-      ) {
-        return;
-      }
-
-      windowDragRef.current = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-      };
-      event.currentTarget.setPointerCapture(event.pointerId);
+      cancelWindowDrag();
+      if (event.button !== 0 || isTucked) return;
+      if (event.target instanceof Element && event.target.closest(NOT_A_HANDLE)) return;
+      start.current = { x: event.clientX, y: event.clientY, pointer: event.pointerId };
+      timer.current = window.setTimeout(beginDrag, HOLD_MS);
     },
-    [isTucked],
+    [isTucked, beginDrag, cancelWindowDrag],
   );
 
-  const handleWindowDragMove = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => {
-      const drag = windowDragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId || event.buttons !== 1) {
-        return;
-      }
-
-      if (
-        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 3
-      ) {
-        return;
-      }
-
-      windowDragRef.current = null;
-      didDragRef.current = true;
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
-      event.preventDefault();
-      onWindowDragStart();
-    },
-    [onWindowDragStart],
-  );
-
-  const cancelWindowDrag = useCallback(() => {
-    windowDragRef.current = null;
-  }, []);
-
-  return { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag };
+  return { didDragRef, prepareWindowDrag, cancelWindowDrag };
 }

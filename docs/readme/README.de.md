@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/"><img src="../assets/readme/island-en.svg" alt="Eine kleine Insel, die oben an der Seite hängt, beschriftet mit Fuyu 浮屿; ab und zu klappt sie auf und meldet, dass ein Logo gesucht wird. Darunter steht handschriftlich die Adresse der Website https://fuyu.ing, mit einem kleinen Pfeil, der auf die Insel zeigt" width="540" height="100"></a>
+  <a href="https://fuyu.ing/"><img src="../assets/readme/island-en.svg" alt="Eine kleine Insel, die oben an der Seite hängt, mit einer kleinen Qualle links, beschriftet mit Fuyu 浮屿; ab und zu klappt sie auf und zeigt „Free · Your island up top“. Darunter steht handschriftlich die Adresse der Website https://fuyu.ing, mit einem kleinen Pfeil, der auf die Insel zeigt" width="540" height="100"></a>
 
   <h1>Fuyu</h1>
 
@@ -193,14 +193,11 @@ Fragen, Ideen oder einfach Lust zu plaudern? Tritt unserem [Discord-Server](http
 
 ## Mitmachen
 
-<a href="https://fuyu.ing/logo/"><img src="../assets/logo-placeholder.svg" alt="Ein leerer Platz mit gestricheltem Rand: Fuyu sucht noch ein Logo" width="88" height="88" align="right"></a>
-
 Fuyu machen wir gemeinsam, und es gibt einen Platz für dich:
 
 - **Probleme und Ideen melden**: Eröffne ein [Issue](https://github.com/TixXin/fuyu/issues) und erzähl uns, was dich stört oder was du dir wünschst.
 - **Code, Dokumentation oder Übersetzungen ändern**: Eröffne einen Pull Request. [CONTRIBUTING.md](../../CONTRIBUTING.md) erklärt, wie das geht und welche Prüfungen du vorher laufen lässt; [AGENTS.md](../../AGENTS.md) erklärt, wie der Code aufgebaut ist (auf Chinesisch).
 - **Ein Plugin schreiben**: Dafür musst du die Insel nicht anfassen; wenn es fertig ist, veröffentliche es im [Plugin-Marktplatz](https://github.com/TixXin/fuyu-plugins).
-- **Ein Logo zeichnen**: Fuyu hat noch kein offizielles Logo, und der [Aufruf](https://fuyu.ing/logo/) läuft noch; der leere Platz rechts wartet darauf.
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="Menschen, die zu Fuyu beitragen"></a>
 

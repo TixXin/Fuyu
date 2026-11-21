@@ -57,7 +57,9 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
     return isMacOS && found.problem === "invalid" ? text.shortcutInvalidMac : text.shortcutProblem[found.problem];
   };
 
-  return SHORTCUT_ACTIONS.filter((action) => !(isMacOS && action === "record")).map((action) => {
+  const macHints: Partial<Record<ShortcutAction, string>> = { region: text.regionHintMac, text: text.textHintMac, record: text.recordHintMac };
+
+  return SHORTCUT_ACTIONS.map((action) => {
     const value = settings.shortcuts[action];
     const fallback = DEFAULT_SHORTCUTS[action];
     const problem = problemOf(action);
@@ -86,7 +88,7 @@ export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: 
             </button>
           </div>
         </div>
-        <p className="screenshot-shortcut-hint">{isMacOS && action === "region" ? text.regionHintMac : isMacOS && action === "text" ? text.textHintMac : text.actionHints[action]}</p>
+        <p className="screenshot-shortcut-hint">{(isMacOS && macHints[action]) || text.actionHints[action]}</p>
         {problem && <p className="shortcut-control__error" role="alert">{problem}</p>}
       </div>
     );

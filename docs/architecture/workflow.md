@@ -15,12 +15,9 @@
 
 1. **所有会话都在主工作区、本地 `main` 上工作。** 用户的 `pnpm tauri dev` 也在这里，改动马上就能看到。不开 worktree，不切分支（切分支会冲掉别的会话正在改的文件）。例外只有发版目录 `../Fuyu-release`：主仓库的一个 detached worktree，停在 `origin/main` 上，只用来改版本号和跑 `pnpm release`，这样本地 `main` 上没推的提交和别人没提交的文件都不挡发版、也不会混进去（2026-11-15 起，用户定）。
 2. **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`，别的会话还没提交的改动不要带上。`.githooks/pre-commit` 把关：在 `main` 上不带文件名的 `git commit`（含 `-a`）会被拒绝，合并、cherry-pick、rebase 过程中的提交除外；确实要提交整个暂存区时设 `FUYU_COMMIT_WHOLE_INDEX=1`。同一个文件里还有别的会话的改动时用 `pnpm mq:commit-part` 只带自己的那几处（见下面「同一个文件里只提交自己的改动」），不手写 `GIT_INDEX_FILE`。两个会话不要同时改同一个文件：认领任务时写 `--scope`，`pnpm tasks conflicts` 能查出和别人声明的范围重叠的文件。
-3. **攒着提 PR**，不是一个小改动一个 PR。下面任一条满足时 `pnpm mq:land --yes --body <文件>`，不用问用户：
-   - 一个任务做完（`pnpm tasks done <编号> --commit "<提交标题>"`，和功能改动在同一个提交里）；
-   - 本地没推的提交到 10 个左右（`pnpm mq:pending` 会说），不再等更多会话报验；
-   - 另一台机器或协作者要用到这些改动、要发版、或者用户说「推一下」。
+3. **只在用户说要推时提 PR**（2026-11-20 起，用户定）。用户说「推一下」「提 PR」「合进去」这类话之前不 `pnpm mq:land`：任务做完、提交攒得再多也不自己推，汇报里说一句本地有几个提交没推（`pnpm mq:pending`）。开发过程中也不跑测试、检查、回归页和构建（根 `AGENTS.md`「验证」），这些都攒到推 PR 前一起跑：用户说要推时，先按「验证」的表把这一批跑完、修好，再 `pnpm mq:land --yes --body <文件>`。
 
-   顺手的小修复、文案、文档、任务认领先攒着，跟下一批一起走，但一批不攒过 10 个左右（2026-11-16 起，用户定）：本地 `main` 是一条线，一个提交在 CI 上卡住，后面的全进不去；11-16 一批就这样从 18 个提交滚到 61 个（#640 → #645 → #648）。合入的 PR 卡住超过半小时，照下面「先合入前面的提交」截一刀。
+   本地 `main` 是一条线，一个提交在 CI 上卡住，后面的全进不去；合入的 PR 卡住超过半小时，照下面「先合入前面的提交」截一刀。
 4. land 之后在后台 `pnpm mq:wait`：CI 的 `check` 通过、GitHub 合入后，它把本地 `main` 跟上 `origin/main`。PR 合入才算完成，CI 没过、冲突都不算。
 
 ### `pnpm mq:land` 做了什么
@@ -57,9 +54,9 @@ land 会推送、开 PR 并开启自动合并，所以要写 `--yes` 才执行�
 
 ### 提前看 CI：`pnpm mq:try [--wait]`
 
-大家都在 Mac 上验证，Windows 才有的问题（路径短名、计时秒数）要到 PR 的 CI 才暴露。`mq:try` 把本地 `main`（在仓库内部合上 `origin/main`）推到 `try/<GitHub 用户名>/<机器名>-<分支名>`，CI 在 `try/**` 的推送上照样跑全套检查，不开 PR，不会合入；同一台机器再推一次会取消上一轮。`--wait` 在前台等结果，拿到结果后删掉这个 try 分支（run 的记录还在，`gh run list --branch` 照样查得到）。不带 `--wait` 推的，跑完后 `pnpm mq:try --clean` 删：只删本机名或别名下、这次推送的 CI 已经跑完的 `try/` 分支，还在跑的、找不到 CI 记录的、别的机器的、手推的 `try/<名字>` 只列出来（F59）。一个任务做完、准备 land 一大批之前跑一次（F51）。
+大家都在 Mac 上验证，Windows 才有的问题（路径短名、计时秒数）要到 PR 的 CI 才暴露。`mq:try` 把本地 `main`（在仓库内部合上 `origin/main`）推到 `try/<GitHub 用户名>/<机器名>-<分支名>`，CI 在 `try/**` 的推送上照样跑全套检查，不开 PR，不会合入；同一台机器再推一次会取消上一轮。`--wait` 在前台等结果，拿到结果后删掉这个 try 分支（run 的记录还在，`gh run list --branch` 照样查得到）。不带 `--wait` 推的，跑完后 `pnpm mq:try --clean` 删：只删本机名或别名下、这次推送的 CI 已经跑完的 `try/` 分支，还在跑的、找不到 CI 记录的、别的机器的、手推的 `try/<名字>` 只列出来（F59）。用户说要推、准备 land 之前跑一次（F51），开发过程中不跑。
 
-**改 Rust 的任务，报验前先在这里把 Windows 的 `rust` 跑过**，报验时附上这次 run 的链接（2026-11-16 起，用户定）；新加 `host_service`、Tauri 命令、窗口的尤其要做。Mac 本地的 Rust 测试和 Windows 交叉 clippy 都查不出 Windows 链接期、运行期的问题：11-16 两次 Rust 测试程序一启动就报 0xc0000139，是 `host_service` 的方法体碰了 `AppHandle`（见 [v3-services.md](plugins/v3-services.md)），都到整批 PR 的 CI 才暴露，把整批卡住。`mq:try` 推的是整个本地 `main`，失败的不一定是自己的提交，看清失败的测试属于谁再报。run 的链接用 `gh run list --branch <try 分支> --limit 1 --json url -q '.[0].url'` 拿。
+**这一批里有 Rust 改动时，land 前先在这里把 Windows 的 `rust` 跑过**，PR 正文附上这次 run 的链接（2026-11-16 起，用户定）；新加 `host_service`、Tauri 命令、窗口的尤其要做。Mac 本地的 Rust 测试和 Windows 交叉 clippy 都查不出 Windows 链接期、运行期的问题：11-16 两次 Rust 测试程序一启动就报 0xc0000139，是 `host_service` 的方法体碰了 `AppHandle`（见 [v3-services.md](plugins/v3-services.md)），都到整批 PR 的 CI 才暴露，把整批卡住。`mq:try` 推的是整个本地 `main`，失败的不一定是自己的提交，看清失败的测试属于谁再报。run 的链接用 `gh run list --branch <try 分支> --limit 1 --json url -q '.[0].url'` 拿。
 
 ### 同一个文件里只提交自己的改动：`pnpm mq:commit-part`
 
@@ -88,7 +85,8 @@ pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
 
 ### 验证
 
-- 想在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
+- 开发过程中不跑下面这些，推 PR 前一起跑（根 `AGENTS.md`「验证」，2026-11-20 起，用户定）。
+- 在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
 - 多个会话共用一份代码：别的会话改到一半时，`pnpm check` 可能因为它的文件失败。先看失败是不是自己的文件；不是就等一会儿或问对方，不要去改别人的文件。
 - 浏览器回归页 `pnpm test:regression [页面名中的词] [--update-snapshots]`：自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页（给了词就只跑页面名里带它的）并汇总结果。每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败。深色、浅色两轮的 DOM 都和 `tests/regression/snapshots/` 里的快照逐行比对，不一致或没有快照就失败并打印差异；界面本该变时加 `--update-snapshots` 重写，规范化规则见 `scripts/regression/snapshots.mjs`。Mac 上找 `/Applications` 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH` 指向浏览器的可执行文件。
 - 回归页逐行比对 DOM 快照（`tests/regression/snapshots/`，2026-11-15 起，E36.2.2）：改界面的提交要把 `pnpm test:regression <页面名中的词> --update-snapshots` 更新后的快照一起带上，新加的回归页也要带上它的快照；漏了 CI 的 `regression` 会失败，挡住整批 land。更新前看一眼差异，只该有自己改的那几处。

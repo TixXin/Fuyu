@@ -14,9 +14,10 @@ use crate::plugin_kernel::{
     builtins,
     worker::{Stop, Worker},
 };
+use crate::user_error::UserError;
 use readers::{
-    brightness_percent, open_brightness, open_volume, should_reopen_volume, start_thread,
-    volume_reading, OutputVolume,
+    brightness_percent, open_brightness, open_volume, read_now, set_volume_now,
+    should_reopen_volume, start_thread, volume_reading, OutputVolume,
 };
 
 pub(crate) const LEVEL_CHANGED_EVENT: &str = "system-level-changed";
@@ -131,6 +132,33 @@ fn watch(app: &AppHandle, stop: &Stop) {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemLevels {
+    volume: Option<f32>,
+    muted: bool,
+    brightness: Option<f32>,
+}
+
+#[tauri::command]
+pub async fn get_system_levels() -> SystemLevels {
+    let (volume, brightness) = read_now();
+    SystemLevels {
+        volume: volume.map(|(percent, _)| percent as f32 / 100.0),
+        muted: volume.is_some_and(|(_, muted)| muted),
+        brightness: brightness.map(|percent| percent as f32 / 100.0),
+    }
+}
+
+#[tauri::command]
+pub async fn set_system_volume(level: f32) -> Result<(), UserError> {
+    if level.is_finite() && set_volume_now(level.clamp(0.0, 1.0)) {
+        Ok(())
+    } else {
+        Err(UserError::new("systemLevels.volume", "Could not change the system volume."))
+    }
+}
+
 pub(crate) fn init(app: &AppHandle) {
     let app = app.clone();
     let watcher = Worker::new("system-levels", move |stop| watch(&app, &stop));
@@ -138,6 +166,16 @@ pub(crate) fn init(app: &AppHandle) {
         eprintln!("[plugins-v3] {error}");
     }
 }
+
+macro_rules! tauri_commands {
+    ($next:ident [$($done:tt)*] $($rest:tt)*) => {
+        $next!([$($done)*
+            crate::system_levels::get_system_levels,
+            crate::system_levels::set_system_volume,
+        ] $($rest)*)
+    };
+}
+pub(crate) use tauri_commands;
 
 #[cfg(test)]
 mod tests {

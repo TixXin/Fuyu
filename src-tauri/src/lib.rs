@@ -1,4 +1,6 @@
 mod agent_approval;
+#[cfg(target_os = "macos")]
+mod app_identity;
 mod agent_status;
 mod calendar;
 mod cc_connect;
@@ -31,7 +33,6 @@ mod plugin_kernel;
 mod mail;
 #[cfg_attr(target_os = "macos", path = "qq_notifications/macos.rs")]
 mod qq_notifications;
-#[cfg_attr(not(windows), path = "recording/unsupported.rs")]
 mod recording;
 #[cfg_attr(not(windows), path = "rename_migration/unsupported.rs")]
 mod rename_migration;
@@ -44,6 +45,7 @@ mod ssh_tunnel;
 mod sync;
 mod system;
 mod system_levels;
+mod system_widgets;
 mod theme_market;
 #[cfg_attr(not(windows), path = "taskbar_host/unsupported.rs")]
 mod taskbar_host;
@@ -178,6 +180,8 @@ pub fn run() {
             system::update_backup::apply_pending_restore();
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            #[cfg(target_os = "macos")]
+            app_identity::init(app.handle());
             tray::build_tray(app)?;
             plugin_kernel::builtins::init(app.handle());
             coexist::init(app.handle());
@@ -302,6 +306,8 @@ pub fn run() {
             tray_menu;
             tray_visibility;
             taskbar_host;
+            system_levels;
+            system_widgets;
             wallpaper
         ))
         .build(context)

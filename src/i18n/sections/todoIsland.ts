@@ -35,6 +35,8 @@ export type TodoIslandText = {
   projectCount: (project: string, open: number) => string;
   subtaskProgress: (done: number, total: number) => string;
   hasNote: string;
+  noteImagePin: string;
+  noteImageGone: string;
   addSubtaskPlaceholder: string;
   itemNotePlaceholder: string;
   itemNoteLabel: string;
@@ -106,6 +108,8 @@ export const zhCN: TodoIslandText = {
   projectCount: (project, open) => `${project}，${open} 件未完成`,
   subtaskProgress: (done, total) => `子步骤已完成 ${done}/${total}`,
   hasNote: "含备注",
+  noteImagePin: "贴到屏幕上看",
+  noteImageGone: "这张截图已经删了",
   addSubtaskPlaceholder: "添加子步骤，回车继续",
   itemNotePlaceholder: "添加一行简短备注…",
   itemNoteLabel: "任务备注",
@@ -175,6 +179,8 @@ export const en: TodoIslandText = {
   projectCount: (project, open) => `${project}, ${open} open`,
   subtaskProgress: (done, total) => `${done} of ${total} subtasks done`,
   hasNote: "Has note",
+  noteImagePin: "Pin it on screen",
+  noteImageGone: "This screenshot was deleted",
   addSubtaskPlaceholder: "Add a step, press Enter",
   itemNotePlaceholder: "Add a short note…",
   itemNoteLabel: "Task note",

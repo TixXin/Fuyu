@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>截图快捷键说明预览</title>
+<!--
+  Standalone preview for a shortcut cheat sheet inside the screenshot overlay.
+  Panel colours follow src/windows/screenshot/ScreenshotOverlay.css (toolbar rgba(20,20,24,.94),
+  1px rgba(255,255,255,.14) border, 8px radius, accent #74d6ff). Keys follow
+  src/features/screenshot/annotations.ts TOOL_KEYS and docs/features/screenshot.md.
+-->
+<style>
+  :root { color-scheme: dark; --accent: #74d6ff; --ease: cubic-bezier(0.16, 1, 0.3, 1); }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 48px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1000px; }
+  ul.points { color: #c8c8cc; max-width: 1000px; padding-left: 20px; }
+  ul.points li { margin: 4px 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 12px 0; }
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+
+  .stage { position: relative; aspect-ratio: 16 / 9; max-height: 760px; width: 100%; border-radius: 12px; overflow: hidden; user-select: none;
+    background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); cursor: crosshair; }
+  .win { position: absolute; background: #1e1f24; border-radius: 8px; box-shadow: 0 10px 30px #0008; overflow: hidden; }
+  .win .bar { height: 28px; background: #2a2c33; display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: 12px; color: #aaa; }
+  .win .bar i { width: 10px; height: 10px; border-radius: 50%; background: #555; }
+  .win .body { padding: 12px; display: grid; gap: 8px; }
+  .win .line { height: 10px; border-radius: 4px; background: #34363e; }
+  .w1 { left: 6%; top: 8%; width: 46%; height: 56%; }
+  .w2 { left: 48%; top: 22%; width: 44%; height: 62%; background: #f2f3f5; }
+  .w2 .bar { background: #dfe1e6; color: #555; }
+  .w2 .line { background: #d5d8de; }
+  .taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 4.5%; background: #0b0c10cc; }
+
+  .dim { position: absolute; inset: 0; pointer-events: none; }
+  .dim svg { width: 100%; height: 100%; display: block; }
+  .sel { position: absolute; border: 1px solid var(--accent); pointer-events: none; }
+  .sel .size { position: absolute; left: 0; top: -24px; font: 12px/20px Consolas, monospace; color: #fff; background: #000b; padding: 0 6px; border-radius: 4px; white-space: nowrap; }
+  .toolbar { position: absolute; display: flex; gap: 2px; padding: 4px; background: rgba(20,20,24,.94); border: 1px solid rgba(255,255,255,.14); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+  .toolbar b { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: #ddd; font: 600 11px/1 Consolas, monospace; }
+  .toolbar b.on { color: var(--accent); background: rgba(255,255,255,.16); }
+  .toolbar .sep { width: 1px; height: 20px; margin: 3px 4px; background: rgba(255,255,255,.18); }
+  .hint-top { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); padding: 6px 12px; font-size: 13px; color: #fff; background: rgba(20,20,24,.86); border-radius: 8px; pointer-events: none; }
+  .magnifier { position: absolute; width: 120px; pointer-events: none; background: rgba(20,20,24,.94); border: 1px solid rgba(255,255,255,.14); border-radius: 8px; overflow: hidden; font: 11px/1.5 Consolas, monospace; color: #ddd; }
+  .magnifier .zoom { height: 80px; background: repeating-conic-gradient(#2a2c33 0 25%, #34363e 0 50%) 0 0 / 12px 12px; position: relative; }
+  .magnifier .zoom::before, .magnifier .zoom::after { content: ""; position: absolute; background: var(--accent); opacity: .8; }
+  .magnifier .zoom::before { left: 50%; top: 0; bottom: 0; width: 1px; }
+  .magnifier .zoom::after { top: 50%; left: 0; right: 0; height: 1px; }
+  .magnifier div.t { padding: 3px 8px; }
+
+  .drop { position: absolute; width: 18%; height: 22%; border: 2px dashed #74d6ff55; border-radius: 12px; opacity: 0; transition: opacity 160ms, background 160ms, border-color 160ms; pointer-events: none; }
+  .stage.dragging .drop { opacity: 1; }
+  .drop.hot { background: #74d6ff1f; border-color: var(--accent); }
+  .drop.tl { left: 12px; top: 12px; } .drop.tr { right: 12px; top: 12px; }
+  .drop.bl { left: 12px; bottom: 12px; } .drop.br { right: 12px; bottom: 12px; }
+
+  .panel { position: absolute; z-index: 5; color: #e8e8ea; background: rgba(20,20,24,.94); border: 1px solid rgba(255,255,255,.14); border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.4); font-size: 12px; line-height: 1.5; cursor: default; touch-action: none;
+    transition: left 280ms var(--ease), top 280ms var(--ease), opacity 160ms ease, transform 160ms ease; }
+  .panel.dragging { transition: opacity 160ms; box-shadow: 0 12px 32px rgba(0,0,0,.55); cursor: grabbing; }
+  .panel.faded { opacity: .18; }
+  .panel .head { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 10px; border-bottom: 1px solid rgba(255,255,255,.08); cursor: grab; }
+  .panel.dragging .head { cursor: grabbing; }
+  .panel .grip { width: 10px; height: 14px; flex: none; opacity: .5; background: radial-gradient(circle, #fff 1px, transparent 1.5px) 0 0 / 5px 5px; }
+  .panel .title { flex: 1; font-weight: 600; color: #fff; white-space: nowrap; }
+  .panel .x { width: 22px; height: 22px; border-radius: 5px; display: grid; place-items: center; color: #aaa; cursor: pointer; }
+  .panel .x:hover { background: rgba(255,255,255,.12); color: #fff; }
+  .panel .grid { padding: 8px 10px 10px; display: grid; gap: 4px 18px; }
+  .panel.full .grid { grid-template-columns: auto auto; }
+  .panel .sec { grid-column: 1 / -1; color: #8e8e95; font-size: 11px; margin-top: 4px; }
+  .panel .sec:first-child { margin-top: 0; }
+  .panel .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; white-space: nowrap; }
+  .panel .row .k { display: flex; gap: 3px; }
+  kbd { display: inline-block; min-width: 20px; text-align: center; padding: 0 5px; border-radius: 4px; background: #2a2b30; border: 1px solid #44454b; border-bottom-width: 2px; font: 11px/16px Consolas, "SF Mono", monospace; color: #f2f2f4; }
+  .panel .foot { padding: 0 10px 8px; color: #7d7d84; font-size: 11px; white-space: nowrap; }
+  .pill { position: absolute; z-index: 5; display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; font-size: 12px; color: #ddd; background: rgba(20,20,24,.86);
+    border: 1px solid rgba(255,255,255,.14); border-radius: 999px; cursor: pointer; transition: left 280ms var(--ease), top 280ms var(--ease), opacity 160ms; }
+  .pill:hover { color: #fff; }
+  .pill[hidden], .panel[hidden] { display: none; }
+  .status { margin-top: 8px; color: #9a9aa0; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>截图快捷键说明（预览）</h1>
+<p class="note">截图时在屏幕一角放一张快捷键卡片，默认左下角。按住卡片标题栏拖动，松手后吸附到最近的角；位置会记住，下次截图还在那个角。下面是一块模拟的屏幕，可以直接拖动卡片试试。</p>
+
+<div class="controls">
+  <div class="group"><span>阶段</span>
+    <button class="seg on" data-phase="pick">选区前</button>
+    <button class="seg" data-phase="edit">选好区域后</button>
+    <button class="seg" data-phase="record">录屏选区</button>
+  </div>
+  <div class="group"><span>密度</span>
+    <button class="seg on" data-density="full">完整（两列）</button>
+    <button class="seg" data-density="compact">精简（一列）</button>
+  </div>
+  <div class="group"><span>挡住时</span>
+    <button class="seg on" data-dodge="fade">变淡</button>
+    <button class="seg" data-dodge="move">躲到对角</button>
+  </div>
+  <div class="group"><span>系统</span>
+    <button class="seg on" data-os="win">Windows</button>
+    <button class="seg" data-os="mac">macOS</button>
+  </div>
+  <div class="group"><span>语言</span>
+    <button class="seg on" data-lang="zh">中文</button>
+    <button class="seg" data-lang="en">English</button>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="win w1"><div class="bar"><i></i><i></i><i></i>编辑器</div><div class="body"><div class="line" style="width:70%"></div><div class="line" style="width:90%"></div><div class="line" style="width:55%"></div><div class="line" style="width:80%"></div><div class="line" style="width:62%"></div></div></div>
+  <div class="win w2"><div class="bar"><i></i><i></i><i></i>浏览器</div><div class="body"><div class="line" style="width:40%"></div><div class="line" style="width:85%"></div><div class="line" style="width:75%"></div><div class="line" style="width:92%"></div><div class="line" style="width:50%"></div></div></div>
+  <div class="taskbar"></div>
+  <div class="dim" id="dim"></div>
+  <div class="sel" id="sel"><span class="size" id="selSize"></span></div>
+  <div class="toolbar" id="toolbar"></div>
+  <div class="hint-top" id="hintTop"></div>
+  <div class="magnifier" id="mag"><div class="zoom"></div><div class="t" id="magText"></div></div>
+  <div class="drop tl" data-corner="tl"></div><div class="drop tr" data-corner="tr"></div>
+  <div class="drop bl" data-corner="bl"></div><div class="drop br" data-corner="br"></div>
+  <div class="panel full" id="panel">
+    <div class="head" id="head"><span class="grip"></span><span class="title" id="ptitle"></span><span class="x" id="close" title="">✕</span></div>
+    <div class="grid" id="grid"></div>
+    <div class="foot" id="foot"></div>
+  </div>
+  <div class="pill" id="pill" hidden><kbd>?</kbd><span id="pillText"></span></div>
+</div>
+<div class="status" id="status"></div>
+
+<h2>要点</h2>
+<ul class="points">
+  <li><b>内容随阶段变</b>：选区前只列选区相关的键（拖动、单击选窗口、滚轮换层级、取色、测量）；选好区域后换成复制、保存、贴图、撤销和标注工具的单键；录屏选区时多出 <kbd>F</kbd> 整屏、<kbd>G</kbd> 切 GIF。键名和 <code>TOOL_KEYS</code> 用同一份数据，改键时卡片跟着变。</li>
+  <li><b>拖到四个角</b>：只有标题栏能拖（卡片本身挡着的地方不触发选区）；拖的时候四个角显示落点，松手吸附到最近的角，距屏幕边 12 px。位置按「角」记，不记像素，换分辨率、换显示器都不会跑出屏幕。每块显示器都用同一个角；鼠标在哪块屏，卡片就显示在哪块屏上。</li>
+  <li><b>不挡东西</b>：选区、放大镜或鼠标碰到卡片时，二选一：变淡（不改位置，穿透给选区）或躲到对角。截出来的图里永远没有这张卡片（它和工具栏一样是选区窗口里的界面，不在冻结画面上）。</li>
+  <li><b>收起和关闭</b>：<kbd>?</kbd>（或 <kbd>F1</kbd>）收起成一个小药丸，再按展开；点 ✕ 也是收起。设置 → 截图里加一个「截图时显示快捷键说明」开关（默认开），以及「位置」（四个角）。</li>
+  <li><b>新手更友好</b>：前几次截图默认展开，用过 N 次后默认收起成药丸（可选，看你要不要）。</li>
+  <li>存在 <code>fuyu-screenshot-settings</code> 里加两个字段（<code>shortcutPanel</code>: <code>"open" | "collapsed" | "off"</code>，<code>shortcutCorner</code>: <code>"bl" | "br" | "tl" | "tr"</code>），默认 <code>open</code> / <code>bl</code>，进设置备份。</li>
+</ul>
+
+<script>
+const S = { phase: "pick", density: "full", dodge: "fade", os: "win", lang: "zh", corner: "bl", collapsed: false };
+const T = {
+  zh: { title: "快捷键", hide: "收起（?）", pill: "快捷键", foot: "拖动标题栏换到别的角 · ? 收起",
+    secs: { pick: "选区", act: "截完", tool: "标注工具", rec: "录屏" },
+    hintPick: "拖动选择区域，单击选中窗口", hintEdit: "", hintRec: "拖动选择录制区域，或按 F 录整个屏幕",
+    status: (c) => `卡片在${{ tl: "左上角", tr: "右上角", bl: "左下角", br: "右下角" }[c]}` },
+  en: { title: "Shortcuts", hide: "Collapse (?)", pill: "Shortcuts", foot: "Drag the title to another corner · ? to collapse",
+    secs: { pick: "Select", act: "Finish", tool: "Annotate", rec: "Record" },
+    hintPick: "Drag to select an area, click to pick a window", hintEdit: "", hintRec: "Drag to select an area, or press F for the whole screen",
+    status: (c) => `Panel in the ${{ tl: "top-left", tr: "top-right", bl: "bottom-left", br: "bottom-right" }[c]} corner` },
+};
+const L = (zh, en) => ({ zh, en });
+const mod = () => (S.os === "mac" ? "⌘" : "Ctrl");
+const ROWS = {
+  pick: () => [
+    ["sec", "pick"],
+    [L("选区域", "Select area"), ["拖动"], ["Drag"]],
+    [L("选窗口 / 控件", "Pick window"), ["单击"], ["Click"]],
+    [L("换外层 / 内层", "Outer / inner"), ["滚轮"], ["Wheel"]],
+    [L("复制颜色", "Copy colour"), ["C"]],
+    [L("测量距离", "Measure"), ["按住 M"], ["Hold M"]],
+    [L("微调光标", "Nudge cursor"), ["↑↓←→"]],
+    [L("取消", "Cancel"), ["Esc"]],
+  ],
+  edit: () => [
+    ["sec", "act"],
+    [L("复制", "Copy"), ["Enter"]],
+    [L("保存", "Save"), [mod(), "S"]],
+    [L("贴到屏幕", "Pin"), ["T"]],
+    [L("撤销 / 重做", "Undo / Redo"), S.os === "mac" ? ["⌘", "Z", "/", "⇧⌘Z"] : ["Ctrl", "Z", "/", "Y"]],
+    [L("删除选中标注", "Delete mark"), [S.os === "mac" ? "⌫" : "Delete"]],
+    [L("测量距离", "Measure"), ["按住 M"], ["Hold M"]],
+    [L("取消", "Cancel"), ["Esc"]],
+    ["sec", "tool"],
+    [L("矩形", "Rectangle"), ["R"]], [L("椭圆", "Ellipse"), ["E"]],
+    [L("直线", "Line"), ["L"]], [L("箭头", "Arrow"), ["A"]],
+    [L("画笔", "Pen"), ["P"]], [L("荧光笔", "Highlighter"), ["H"]],
+    [L("文字", "Text"), ["I"]], [L("序号", "Number"), ["N"]],
+    [L("马赛克", "Mosaic"), ["X"]], [L("模糊", "Blur"), ["B"]],
+    [L("聚光灯", "Spotlight"), ["S"]],
+  ],
+  record: () => [
+    ["sec", "rec"],
+    [L("选区域", "Select area"), ["拖动"], ["Drag"]],
+    [L("选窗口", "Pick window"), ["单击"], ["Click"]],
+    [L("整个屏幕", "Whole screen"), ["F"]],
+    [L("MP4 / GIF", "MP4 / GIF"), ["G"]],
+    [L("开始录制", "Start"), ["Enter"]],
+    [L("取消", "Cancel"), ["Esc"]],
+  ],
+};
+const COMPACT = { pick: 6, edit: 6, record: 6 };
+
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), panel = $("panel"), pill = $("pill");
+const sel = { x: 0.3, y: 0.3, w: 0.32, h: 0.3 };
+let cursor = { x: 0.5, y: 0.5 };
+
+function kbds(keys) {
+  return keys.map((k) => (k === "/" ? `<span style="color:#777">/</span>` : `<kbd>${k}</kbd>`)).join("");
+}
+function render() {
+  const t = T[S.lang];
+  $("ptitle").textContent = t.title;
+  $("close").title = t.hide;
+  $("pillText").textContent = t.pill;
+  $("foot").textContent = t.foot;
+  panel.classList.toggle("full", S.density === "full");
+  let rows = ROWS[S.phase]();
+  if (S.density === "compact") rows = rows.filter((r) => r[0] !== "sec").slice(0, COMPACT[S.phase]);
+  $("grid").innerHTML = rows.map((r) => {
+    if (r[0] === "sec") return `<div class="sec">${t.secs[r[1]]}</div>`;
+    const keys = S.lang === "en" && r[2] ? r[2] : r[1];
+    return `<div class="row"><span>${r[0][S.lang]}</span><span class="k">${kbds(keys)}</span></div>`;
+  }).join("");
+  const editing = S.phase === "edit";
+  $("sel").style.display = editing ? "" : "none";
+  $("toolbar").style.display = editing ? "" : "none";
+  $("hintTop").style.display = editing ? "none" : "";
+  $("hintTop").textContent = S.phase === "record" ? t.hintRec : t.hintPick;
+  $("mag").style.display = editing ? "none" : "";
+  panel.hidden = S.collapsed;
+  pill.hidden = !S.collapsed;
+  layoutStage();
+  place(false);
+  $("status").textContent = t.status(S.corner) + (S.collapsed ? (S.lang === "zh" ? "（已收起）" : " (collapsed)") : "");
+}
+function layoutStage() {
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const editing = S.phase === "edit";
+  const r = { x: sel.x * W, y: sel.y * H, w: sel.w * W, h: sel.h * H };
+  $("dim").innerHTML = editing
+    ? `<svg><path fill="rgba(0,0,0,.45)" fill-rule="evenodd" d="M0 0H${W}V${H}H0Z M${r.x} ${r.y}h${r.w}v${r.h}h${-r.w}Z"/></svg>`
+    : `<svg><rect width="100%" height="100%" fill="rgba(0,0,0,.3)"/></svg>`;
+  Object.assign($("sel").style, { left: r.x + "px", top: r.y + "px", width: r.w + "px", height: r.h + "px" });
+  $("selSize").textContent = `${Math.round(r.w * 2)} × ${Math.round(r.h * 2)}`;
+  $("toolbar").innerHTML = ["R", "E", "L", "A", "P", "H", "I", "X", "B", "S", "N"].map((k, i) => `<b class="${i === 2 ? "on" : ""}">${k}</b>`).join("")
+    + `<span class="sep"></span><b>↶</b><b>↷</b><span class="sep"></span><b>⤓</b><b>📌</b><b style="color:#74d6ff">✓</b>`;
+  const tb = $("toolbar");
+  tb.style.left = Math.max(8, r.x + r.w - tb.offsetWidth) + "px";
+  tb.style.top = r.y + r.h + 8 + "px";
+  const mg = $("mag");
+  mg.style.left = Math.min(W - 130, cursor.x * W + 18) + "px";
+  mg.style.top = Math.min(H - 120, cursor.y * H + 18) + "px";
+  $("magText").innerHTML = `${Math.round(cursor.x * 3840)}, ${Math.round(cursor.y * 2160)}<br>#1E1F24`;
+}
+function cornerXY(c, el) {
+  const W = stage.clientWidth, H = stage.clientHeight, m = 12;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  return { x: c[1] === "l" ? m : W - w - m, y: c[0] === "t" ? m : H - h - m - (c[0] === "b" ? H * 0.045 : 0) };
+}
+function place(animate = true) {
+  for (const el of [panel, pill]) {
+    if (el.hidden || el.classList.contains("dragging")) continue;
+    if (!animate) el.style.transition = "none";
+    const p = cornerXY(S.corner, el);
+    el.style.left = p.x + "px"; el.style.top = p.y + "px";
+    if (!animate) { el.offsetWidth; el.style.transition = ""; }
+  }
+}
+function rectOf(el) { return { x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight }; }
+function hit(a, b) { return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h; }
+const OPP = { bl: "tr", br: "tl", tl: "br", tr: "bl" };
+let home = null;
+function dodge() {
+  if (panel.hidden || panel.classList.contains("dragging")) return;
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const things = [{ x: cursor.x * W - 4, y: cursor.y * H - 4, w: 8, h: 8 }];
+  if (S.phase === "edit") things.push({ x: sel.x * W, y: sel.y * H, w: sel.w * W, h: sel.h * H }, rectOf($("toolbar")));
+  else things.push(rectOf($("mag")));
+  const corner = home ?? S.corner;
+  const p = cornerXY(corner, panel);
+  const box = { x: p.x, y: p.y, w: panel.offsetWidth, h: panel.offsetHeight };
+  const blocked = things.some((r) => hit(box, r));
+  if (S.dodge === "fade") {
+    panel.classList.toggle("faded", blocked);
+  } else {
+    panel.classList.remove("faded");
+    const want = blocked ? OPP[corner] : corner;
+    if (blocked && home === null) home = S.corner;
+    if (!blocked && home !== null) { S.corner = home; home = null; place(); return; }
+    if (S.corner !== want) { S.corner = want; place(); }
+  }
+}
+
+stage.addEventListener("pointermove", (e) => {
+  if (drag) return;
+  const b = stage.getBoundingClientRect();
+  cursor = { x: (e.clientX - b.left) / b.width, y: (e.clientY - b.top) / b.height };
+  layoutStage();
+  dodge();
+});
+
+let drag = null;
+$("head").addEventListener("pointerdown", (e) => {
+  if (e.target.id === "close") return;
+  e.preventDefault();
+  home = null;
+  panel.classList.remove("faded");
+  drag = { dx: e.clientX - panel.offsetLeft, dy: e.clientY - panel.offsetTop };
+  panel.classList.add("dragging");
+  stage.classList.add("dragging");
+  $("head").setPointerCapture(e.pointerId);
+});
+function nearest() {
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const cx = panel.offsetLeft + panel.offsetWidth / 2, cy = panel.offsetTop + panel.offsetHeight / 2;
+  return (cy < H / 2 ? "t" : "b") + (cx < W / 2 ? "l" : "r");
+}
+$("head").addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  const W = stage.clientWidth, H = stage.clientHeight;
+  panel.style.left = Math.max(0, Math.min(W - panel.offsetWidth, e.clientX - drag.dx)) + "px";
+  panel.style.top = Math.max(0, Math.min(H - panel.offsetHeight, e.clientY - drag.dy)) + "px";
+  const n = nearest();
+  document.querySelectorAll(".drop").forEach((d) => d.classList.toggle("hot", d.dataset.corner === n));
+});
+$("head").addEventListener("pointerup", () => {
+  if (!drag) return;
+  drag = null;
+  S.corner = nearest();
+  panel.classList.remove("dragging");
+  stage.classList.remove("dragging");
+  document.querySelectorAll(".drop").forEach((d) => d.classList.remove("hot"));
+  place();
+  $("status").textContent = T[S.lang].status(S.corner);
+});
+$("close").addEventListener("click", () => { S.collapsed = true; render(); });
+pill.addEventListener("click", () => { S.collapsed = false; render(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "?" || e.key === "F1") { e.preventDefault(); S.collapsed = !S.collapsed; render(); }
+});
+document.querySelectorAll("button.seg").forEach((b) => b.addEventListener("click", () => {
+  const [k, v] = Object.entries(b.dataset)[0];
+  S[k] = v;
+  home = null;
+  document.querySelectorAll(`button[data-${k}]`).forEach((o) => o.classList.toggle("on", o === b));
+  render();
+}));
+window.addEventListener("resize", render);
+render();
+</script>
+</body>
+</html>

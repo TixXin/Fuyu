@@ -1,34 +1,41 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  MAX_COLLAPSED_WIDTH_EXTRA, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MIN_COLLAPSED_WIDTH_EXTRA, MIN_MAX_PANEL_HEIGHT,
-  MIN_PANEL_WIDTH,
+  MAX_COLLAPSED_WIDTH_EXTRA, MIN_COLLAPSED_WIDTH_EXTRA, MIN_PANEL_WIDTH,
 } from "../../lib/settings/settings";
-import type { IslandSettings } from "../../lib/settings/types";
+import { MIN_PAGE_PANEL_HEIGHT, withPageSize } from "../../lib/settings/pageSizes.ts";
+import type { IslandSettings, PanelPageSize } from "../../lib/settings/types";
 import { clamp } from "../../utils/number.ts";
 import { throttle } from "../../utils/throttle.ts";
 import { listenIslandResize, setIslandPanelResizable, type IslandResizeDelta } from "./api";
-import { maxExpandedIslandWidth } from "./layout";
+import { maxExpandedIslandHeight, maxExpandedIslandWidth } from "./layout";
 
 const RESIZING_CLASS = "island-resizing";
 const RESIZE_THROTTLE_MS = 16;
 
-export function useIslandResize(settings: IslandSettings, setSettings: (settings: IslandSettings) => void, popup: boolean) {
+export function useIslandResize(
+  settings: IslandSettings,
+  setSettings: (settings: IslandSettings) => void,
+  popup: boolean,
+  page: string,
+  pageSize: PanelPageSize,
+) {
   const [resizingHeight, setResizingHeight] = useState(false);
   const [resizing, setResizing] = useState<"panel" | "collapsed" | null>(null);
-  const latest = useRef({ settings, setSettings });
+  const latest = useRef({ settings, setSettings, page, pageSize });
   useLayoutEffect(() => {
-    latest.current = { settings, setSettings };
+    latest.current = { settings, setSettings, page, pageSize };
   });
-  const startRef = useRef<{ width: number; height: number; collapsedExtra: number } | null>(null);
+  const startRef = useRef<{ page: string; width: number; height: number; collapsedExtra: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     let stop: (() => void) | undefined;
     const applyDelta = ({ width, height, collapsed, done }: IslandResizeDelta) => {
-      const { settings: current, setSettings: save } = latest.current;
+      const { settings: current, setSettings: save, page: currentPage, pageSize: currentSize } = latest.current;
       const start = (startRef.current ??= {
-        width: current.panelWidth,
-        height: current.maxPanelHeight,
+        page: currentPage,
+        width: currentSize.width,
+        height: currentSize.height,
         collapsedExtra: current.collapsedWidthExtra,
       });
       if (done) startRef.current = null;
@@ -39,11 +46,13 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
         if (collapsedWidthExtra !== current.collapsedWidthExtra) save({ ...current, collapsedWidthExtra });
         return;
       }
-      const maxWidth = Math.min(MAX_PANEL_WIDTH, maxExpandedIslandWidth(current.expandedScale));
-      const panelWidth = clamp(Math.round(start.width + width), MIN_PANEL_WIDTH, maxWidth);
-      const maxPanelHeight = clamp(Math.round(start.height + height), MIN_MAX_PANEL_HEIGHT, MAX_MAX_PANEL_HEIGHT);
-      if (panelWidth !== current.panelWidth || maxPanelHeight !== current.maxPanelHeight) {
-        save({ ...current, panelWidth, maxPanelHeight });
+      const size = {
+        width: clamp(Math.round(start.width + width), MIN_PANEL_WIDTH, maxExpandedIslandWidth(current.expandedScale)),
+        height: clamp(Math.round(start.height + height), MIN_PAGE_PANEL_HEIGHT, maxExpandedIslandHeight(current.expandedScale)),
+      };
+      const saved = current.pageSizes[start.page];
+      if (saved?.width !== size.width || saved?.height !== size.height) {
+        save({ ...current, pageSizes: withPageSize(current.pageSizes, start.page, size) });
       }
       setResizingHeight(!done && height !== 0);
     };

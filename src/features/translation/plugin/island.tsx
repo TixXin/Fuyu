@@ -18,6 +18,7 @@ type HeaderContext = {
   features: { translation: boolean };
   withShortcut: (label: string, target: "translation") => string;
   onOpenTranslator: (() => void) | null;
+  isPageShown: (target: "translation") => boolean;
 };
 
 const headerSlot = defineSlot<HeaderContext, IslandHeaderMeta<HeaderContext>>("island.header/v1");
@@ -41,4 +42,4 @@ function TranslateButton({ page, features, withShortcut, onOpenTranslator }: Hea
 }
 
 pageSlot.add({ ...islandPage, component: TranslationPage }, OWNER);
-headerSlot.add({ id: "translator", order: 30, enabled: ({ onOpenTranslator }) => Boolean(onOpenTranslator), component: TranslateButton }, OWNER);
+headerSlot.add({ id: "translator", order: 30, enabled: ({ onOpenTranslator, features, isPageShown }) => Boolean(onOpenTranslator) && (!features.translation || isPageShown("translation")), component: TranslateButton }, OWNER);

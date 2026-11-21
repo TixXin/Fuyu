@@ -10,7 +10,7 @@ type IslandSideHandleProps = {
 };
 
 export function IslandSideHandle({ label, agentVisualState, badge, onOpen, onWindowDragStart }: IslandSideHandleProps) {
-  const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
+  const { didDragRef, prepareWindowDrag, cancelWindowDrag } =
     useWindowDragGesture(false, onWindowDragStart);
 
   return (
@@ -20,7 +20,6 @@ export function IslandSideHandle({ label, agentVisualState, badge, onOpen, onWin
       className="island__side-handle"
       aria-label={label}
       onPointerDown={prepareWindowDrag}
-      onPointerMove={handleWindowDragMove}
       onPointerUp={cancelWindowDrag}
       onPointerCancel={cancelWindowDrag}
       onClick={() => {

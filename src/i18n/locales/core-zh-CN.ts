@@ -15,6 +15,7 @@ import { zhCN as common } from "../sections/common.ts";
 import { zhCN as errors } from "../sections/errors.ts";
 import { zhCN as fileShelf } from "../sections/fileShelf.ts";
 import { zhCN as island } from "../sections/island.ts";
+import { zhCN as islandWidgets } from "../sections/islandWidgets.ts";
 import { zhCN as mail } from "../sections/mail.ts";
 import { zhCN as messages } from "../sections/messages.ts";
 import { zhCN as music } from "../sections/music.ts";
@@ -54,6 +55,7 @@ export const coreZhCN: Translations = {
   mail,
   translator,
   island,
+  islandWidgets,
   agent,
   agentNotice,
   agentNoticeStack,

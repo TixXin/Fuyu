@@ -9,6 +9,8 @@ export const COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY =
   "fuyu-collapsed-text-default-v1";
 export const GLASS_BACKDROP_DEFAULT_MIGRATION_KEY =
   "fuyu-glass-backdrop-default-v1";
+export const AGENT_LIGHT_JELLYFISH_MIGRATION_KEY =
+  "fuyu-agent-light-jellyfish-v1";
 export const SETTINGS_PRESETS_STORAGE_KEY = "fuyu-setting-presets";
 
 const ONE_TIME_MIGRATIONS: {
@@ -24,6 +26,13 @@ const ONE_TIME_MIGRATIONS: {
     apply: (settings) =>
       settings.glassBackdrop === "wallpaper"
         ? { ...settings, glassBackdrop: "native" }
+        : settings,
+  },
+  {
+    key: AGENT_LIGHT_JELLYFISH_MIGRATION_KEY,
+    apply: (settings) =>
+      settings.agentLightStyle === "dot"
+        ? { ...settings, agentLightStyle: "mark" }
         : settings,
   },
 ];

@@ -26,7 +26,7 @@ export type TuckHintStyle = "none" | "dot" | "glow";
 export type TuckHintColor = "contrast" | "island" | "custom";
 
 export type MessageNotice = "line" | "banner" | "panel";
-export type IslandMotion = "spring" | "smooth" | "fast" | "bouncy" | "none";
+export type IslandMotion = "lively" | "spring" | "snappy" | "soft" | "unfold" | "grow" | "smooth" | "fast" | "bouncy" | "none";
 export type ShelfDoubleClick = "open" | "reveal";
 
 export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentSettingValues & {
@@ -66,6 +66,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   accentColor: string;
   maxPanelHeight: number;
   panelWidth: number;
+  pageSizes: Record<string, PanelPageSize>;
   collapsedWidthExtra: number;
   dragGrid: boolean;
   taskTextColor: string;
@@ -135,6 +136,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   lyricsFolder: string;
   lyricsOnline: boolean;
   lyricsChinese: boolean;
+  lyricsAppleMusic: boolean;
   lyricsOffsetMs: number;
   lyricsOnIsland: boolean;
   lyricsIslandPriority: LyricsIslandPriority;
@@ -164,6 +166,8 @@ export type IslandPreset = {
   createdAt: number;
   isDefault?: boolean;
 };
+
+export type PanelPageSize = { width: number; height: number };
 
 export type LegacyIslandSettings = Partial<IslandSettings> & {
   agentShowClaudeCode?: boolean;

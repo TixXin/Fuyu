@@ -4,7 +4,7 @@ import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
-import { agentsV1, translatorV1, type AgentSessionEntry } from "@fuyu/plugin-services";
+import { agentsV1, screenshotActionsV1, translatorV1, type AgentSessionEntry } from "@fuyu/plugin-services";
 import { windowServices } from "../../src/features/plugin-kernel/services";
 import "../../src/features/file-shelf/plugin/services.ts";
 import { ScreenshotNotice, ScreenshotNoticeActions } from "../../src/features/screenshot/ScreenshotNotice";
@@ -19,6 +19,7 @@ mockIPC((command, payload) => {
   calls.push({ command, payload });
   switch (command) {
     case "add_file_shelf_paths": return { items: [] };
+    case "screenshot_keep": return "C:\\kept\\Fuyu.png";
     default: return null;
   }
 }, { shouldMockEvents: true });
@@ -53,6 +54,17 @@ windowServices.provide(translatorV1, {
   rewrite: async () => ({ text: "", engine: "deepseek" as const }),
   engines: async () => ({ engines: [] }),
 }, { owner: "translation" });
+
+const hostRuns: unknown[] = [];
+windowServices.provide(screenshotActionsV1, {
+  list: async () => ({
+    actions: [{ id: "todos.note", label: { "zh-CN": "放进今日笔记", en: "Add to today's note" }, icon: "notebook" as const, order: 30, disabled: false, keeps: true }],
+  }),
+  run: async (params) => {
+    hostRuns.push(params);
+    return { message: "已放进今日笔记", dismiss: false };
+  },
+}, { owner: "screenshot" });
 
 function Peek() {
   const peek = useScreenshotText();
@@ -101,6 +113,16 @@ async function runChecks() {
 
     await act(async () => { await emit("screenshot-taken", { path: PATH, thumbnail: THUMB, saved: false, source: { app: "Google Chrome", title: "Pull requests", url: "https://github.com/pulls" } }); });
     check(card()?.textContent?.includes("截图已复制") && document.querySelector(".screenshot-notice__thumb"), "A copied screenshot shows the notice with its thumbnail");
+
+    await wait(20);
+    await act(async () => { button("放进今日笔记")!.click(); });
+    await wait(20);
+    check(
+      JSON.stringify(called("screenshot_keep")[0]?.payload) === JSON.stringify({ path: PATH }) &&
+        JSON.stringify(hostRuns[0]) === JSON.stringify({ id: "todos.note", context: { path: "C:\\kept\\Fuyu.png", saved: false, thumbnail: THUMB, source: { app: "Google Chrome", title: "Pull requests", url: "https://github.com/pulls" }, locale: "zh-CN" } }) &&
+        card()?.textContent?.includes("已放进今日笔记"),
+      "A host plugin's action shows on the card; one that keeps the picture gets the kept copy, the source and the locale",
+    );
 
     await act(async () => { button("放进文件中转")!.click(); });
     await wait(10);

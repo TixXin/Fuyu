@@ -85,6 +85,7 @@
 | Rust 方法的生成类型 | `pnpm check:rust-types`（不编译，核对 `#[host_service]` 方法名和 `packages/plugin-services/src/generated/` 的清单一致）；加、改这类方法后 `pnpm gen:rust-types` 重写生成文件（见 `docs/architecture/plugins/v3-services.md`「Rust 那条路」） |
 | 浏览器回归页 | `pnpm test:regression [页面名中的词] [--update-snapshots]`（跑 `tests/regression/` 的回归页并比对 DOM 快照；界面本该变时加 `--update-snapshots`，快照随提交带上；细节见 workflow.md「验证」） |
 | 岛屿实验台 | `pnpm lab`（打开 http://127.0.0.1:5199/，点按钮让正在跑的 `pnpm tauri dev` 的岛弹消息、展开收起、模拟刘海、发起 Agent 审批；不用开本地接口，见 `docs/features/island-lab.md`） |
+| 水母标志预览 | `pnpm logo`（在默认浏览器打开 `docs/investigations/jellyfish-set-preview.html`：状态、动效、岛上实际大小和应用图标） |
 | README 的 SVG | `pnpm readme:assets`（重新生成 `docs/assets/readme/` 里的小岛和下载按钮；改它们改 `scripts/readme/assets.mjs`，不直接改 SVG） |
 | 设置搜索索引 | `pnpm settings:index`（新增、删除或改名设置项后运行，重写 `src/windows/settings/searchIndex.json`；漏跑时 `settings-search` 回归页会失败） |
 | 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 动效检查 + CSS 括号检查 + 密钥字段检查 + Rust 生成类型检查 + 任务检查 + 单元测试） |
@@ -158,9 +159,11 @@
 
 ## 验证
 
-验证范围必须覆盖改动范围。纯搬迁的重构提交同样需要完整验证。
+**开发过程中不跑测试、检查、回归页和构建，攒到推 PR 时一起跑**（2026-11-20 起，用户定）。改完直接提交，汇报里写明「没验证，推 PR 时再跑」。`pnpm test`、`pnpm check`、`pnpm verify`、`pnpm test:regression`、`pnpm build`、`pnpm build:exe`、`cargo test`、`pnpm mq:try` 都算；用户点名要跑某一项时照做。
 
-| 改动范围 | 必须运行 |
+用户说要推 PR 时（见「Git 与协作」），先按这一批改动的范围跑下表，失败的修好再 land。纯搬迁的重构提交同样要跑。
+
+| 改动范围 | 推 PR 前必须运行 |
 |---|---|
 | 仅文档 | 无需构建，确认 Markdown 可读 |
 | 前端逻辑、样式、依赖或脚本 | `pnpm check` + `pnpm build` |
@@ -169,24 +172,24 @@
 
 - 改动岛屿、消息、设置窗口等界面组件或它们的 `api.ts` 类型时，再运行 `pnpm test:regression`；回归页的 mock 落后于代码时页面会失败，要同步更新。其余界面或窗口行为在风险需要时用 `pnpm tauri dev` 手动检查。
 - 这张表只管跑什么。写或改测试、要用 `--update-snapshots`、测试失败或时好时坏时，先加载 `fuyu-testing` skill（要不要写、放哪一层、失败怎么分诊）。
-- 不得因为构建耗时而跳过必要验证。必要构建失败或受环境阻塞时，必须明确报告原因，不得把未完成的验证描述为已验证。
+- 推 PR 时不得因为构建耗时而跳过必要验证。必要构建失败或受环境阻塞时，必须明确报告原因，不得把未完成的验证描述为已验证。
 
 ## 本机更新与桌面快捷方式
 
-- 每次完成应用更新后运行 `pnpm build:exe`，在主工作区的 `src-tauri/target/release/fuyu.exe` 生成最新程序；仅文档改动不需要重新构建。`pnpm release` 发布成功后也会把刚发布的 exe 复制到这里，发布之后不用再跑 `build:exe`。
+- 推 PR 前的验证里顺带跑 `pnpm build:exe`，在主工作区的 `src-tauri/target/release/fuyu.exe` 生成最新程序；开发过程中不跑（见「验证」），仅文档改动不需要重新构建。`pnpm release` 发布成功后也会把刚发布的 exe 复制到这里，发布之后不用再跑 `build:exe`。
 - **不改桌面快捷方式**（2026-11-13 起，用户定）：用户桌面上的快捷方式指向安装的正式版，`build:exe` 和 `pnpm release` 默认都不碰它。只有用户明确要求时，才设环境变量 `FUYU_SYNC_SHORTCUT=1` 再跑，把名字含 Fuyu 或旧名、或目标是 `fuyu.exe` 的快捷方式指向本次构建（都没有时新建 `浮屿.lnk`），并重新读取确认。
 - Mac 上 `pnpm build:exe` 打出 `src-tauri/target/release/bundle/macos/Fuyu.app`，默认不碰 `~/Applications`（那里是安装的正式版）；用户明确要求时设 `FUYU_SYNC_SHORTCUT=1`，先复制成 `~/Applications/Fuyu.app.new` 再换掉旧的 `Fuyu.app`。正在运行的岛屿不受影响，下次启动用新版。
 
 ## Git 与协作
 
 - **谁怎么合入 `main`，看 GitHub 权限**。`main` 上有 GitHub 规则集 `main protection`（仓库 Settings → Rules）：必须通过 PR 合入，CI 的 `check` 必须通过，PR 必须基于最新的 `main`（落后时点 "Update branch" 或 rebase，CI 重跑），禁止强推和删除。仓库管理员（TixXin）只能在 PR 上绕过（`bypass_mode: pull_request`，2026-11-13 起，F30 第 8 步）：紧急时可以 `gh pr merge --admin` 不等 CI，但谁都不能直接推、强推或删除 `main`。
-  - **仓库管理员和协作者的会话**：在本地 `main` 上提交，攒成一批后 `pnpm mq:land --yes`。land 先把最新的 `origin/main` merge 进来，推到自己的 `land/…` 分支，开 PR 并开启自动合并；CI 的 `check` 通过后由 GitHub 合入，所以要有本仓库的 Write 权限（2026-11-13 起，F30）。
+  - **仓库管理员和协作者的会话**：在本地 `main` 上提交，用户说要推时 `pnpm mq:land --yes`。land 先把最新的 `origin/main` merge 进来，推到自己的 `land/…` 分支，开 PR 并开启自动合并；CI 的 `check` 通过后由 GitHub 合入，所以要有本仓库的 Write 权限（2026-11-13 起，F30）。
   - **其他协作者（Write 权限，目前是 ShengLin1001）和外部贡献者**：在自己的分支上开发。协作者把分支直接推到本仓库（`TixXin/fuyu`）再提 PR；外部贡献者从本仓库 fork 后提 PR（上游 fork 网络的历史见 workflow.md「外部 PR」）。不要从上游同步或合并提交；CI 通过、分支跟上最新 `main` 后再合入。协作者可以自己合，也可以等仓库管理员按下面「外部 PR」的做法合。合入用 merge 或 squash，不改写别人已经推送的分支。
   - 开发期间不要求一直跟着 `origin/main`：开工前、land 前各同步一次（`pnpm mq:sync`）。合入那一刻都基于最新的 `main`，这一点由 land 的 merge 和规则集保证。
 - **所有会话都在主工作区、本地 `main` 上工作，攒成一批再经 PR 合入**（2026-11-13 起去掉了 lane，F32）。做法、取舍和排障见 [docs/architecture/workflow.md](docs/architecture/workflow.md)。必须遵守的是这几条：
   - **不开 worktree、不切分支**：用户的 `pnpm tauri dev` 和别的会话都在这份代码上，切分支会冲掉别人正在改的文件。不要 `git stash`、`git reset`、`git checkout -- <文件>` 动别人的改动。唯一的例外是发版目录 `../Fuyu-release`：一个 detached worktree，只用来发版，不在里面开发（见 `fuyu-release` skill）。
   - **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`；同一个文件里有别人没提交的改动时用 `pnpm mq:commit-part`，不手写 `GIT_INDEX_FILE`。两个会话不同时改一个文件：认领时写 `--scope`，开工前可以 `pnpm tasks conflicts`。
-  - **攒着提 PR，不是一个小改动一个 PR**。下面任一条满足时 `pnpm mq:land --yes --body <文件>`，不用问用户：一个任务做完；本地没推的提交到 10 个左右（`pnpm mq:pending` 会说），不等更多报验；另一台机器或协作者要用、要发版、或用户说「推一下」。顺手的小修复、文案、文档先攒着。PR 标题用英文，正文用中文写在文件里，一批几样东西时按功能分节（格式见 workflow.md「PR 的标题和正文」）。land 之后在后台 `pnpm mq:wait`，PR 合入才算完成，冲突或检查没过都不算。别人提的 PR 不走 land，按 workflow.md「外部 PR」合入。
+  - **只在用户说要推时提 PR**（2026-11-20 起，用户定）：用户说「推一下」「提 PR」「合进去」这类话之前不 `pnpm mq:land`，任务做完、提交攒得再多也不自己推，汇报里说一句本地有几个提交没推（`pnpm mq:pending`）。用户说要推时，先按「验证」把这一批跑完、修好，再 `pnpm mq:land --yes --body <文件>`。PR 标题用英文，正文用中文写在文件里，一批几样东西时按功能分节（格式见 workflow.md「PR 的标题和正文」）。land 之后在后台 `pnpm mq:wait`，PR 合入才算完成，冲突或检查没过都不算。别人提的 PR 不走 land，按 workflow.md「外部 PR」合入。
   - `main` 只经 land 或在 GitHub 上合入 PR 移动，不手动推送。
   - 代理的 Rust 构建用共用的 `src-tauri/target/agents`，不要用用户 dev 的 `debug`，也不另开 `agents-<名字>` 目录、不在临时目录的仓库副本里编译；代理不跑 `pnpm tauri dev`，用户自己跑。
   - **重任务排队**：`cargo build/test/check/clippy`、`tauri build` 写成 `pnpm heavy -- <命令>`；名额、自带排队的命令、钩子和会话数上限见 workflow.md「Rust 构建」。
@@ -194,7 +197,7 @@
 - 修改前先查看 `git status --short`，不要覆盖用户或别的会话已有的改动。
 - 不要使用 `git reset --hard`、`git checkout --` 等破坏性命令，除非用户明确要求。
 - 工作区里与当前任务无关的修改（多半是别的会话正在改的），保留它们，只提交本次任务相关的文件。
-- 每完成一个**可验证的功能单元**（一个用户可感知的功能、一个完整的修复，或计划中的一个步骤），按改动范围执行必要验证，再主动创建 Git 提交，无需再次确认。不要每改一处就提交一次；同一功能单元内的多处改动合在一个提交里。只提交当前任务相关的文件，在最终说明中给出提交号和验证结果。
+- 每完成一个**可验证的功能单元**（一个用户可感知的功能、一个完整的修复，或计划中的一个步骤），主动创建 Git 提交，无需再次确认；开发中不跑验证（见「验证」）。不要每改一处就提交一次；同一功能单元内的多处改动合在一个提交里。只提交当前任务相关的文件，在最终说明中给出提交号，并写明没跑验证。
 - 修补自己尚未推送的提交（漏掉的文案、测试、拼写、小 bug）时：`HEAD` 正好是自己刚做的那个提交，就 `git commit --amend -- <文件>`（只带自己的文件）；不是（别的会话在后面提交了），就新开一个小提交，标题写清补的是哪个提交。不要 `git rebase`：本地 `main` 上有别的会话的提交，工作区里还有它们没提交的文件。
 - 改写历史只限于自己创建、尚未推送、也尚未合入 `main` 的提交（即本地 `main` 上还没 land 的自己的提交；别的会话的提交不动）。已经合入 `main` 的提交不再改写，有问题就新开修复提交。
   - 唯一的例外是用户明确要求去掉已推送提交里的 Claude 署名行，要先经用户同意，步骤见 workflow.md「改写已推送的提交」。

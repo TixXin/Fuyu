@@ -1,6 +1,7 @@
 import "../../src/styles/tokens.css";
 import { act, StrictMode, type CSSProperties, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
+import { mockIPC } from "@tauri-apps/api/mocks";
 import { I18nProvider } from "../../src/i18n";
 import { TodoIslandArchive } from "../../src/features/todos/island/TodoIslandArchive";
 import { TodoIslandPage } from "../../src/features/todos/island/TodoIslandPage";
@@ -8,6 +9,14 @@ import type { TodoArchive, TodoItem, TodoPageMode, TodoPageProps } from "../../s
 import { TODO_ROW_HEIGHT } from "../../src/windows/island/layout";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+const KEPT = "/kept/Fuyu_2026-11-20.png";
+const SHOT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+const pinned: unknown[] = [];
+mockIPC((command, payload) => {
+  if (command === "screenshot_kept_image") return (payload as { path: string }).path === KEPT ? SHOT : null;
+  if (command === "screenshot_history_pin") pinned.push(payload);
+  return null;
+});
 type Props = TodoPageProps;
 const todo = (id: string, title: string, completed = false): TodoItem => ({ id, title, completed, createdAt: 0 });
 const TODOS = [
@@ -50,6 +59,7 @@ const FRAMES: { id: string; caption: string; props: Props; light?: boolean; tall
   { id: "today", caption: "今天（进行中、两行、已完成）", props: props("today"), tall: true },
   { id: "empty", caption: "今天：空", props: props("today", { todos: [], activeTodoId: null, saveState: "saved" }) },
   { id: "daily", caption: "笔记", props: props("daily") },
+  { id: "daily-shot", caption: "笔记里的截图（C150.11）", props: props("daily", { dailyNote: `看一下这个报错\n![截图](<${KEPT}>)\n![截图](</kept/gone.png>)` }) },
   { id: "upcoming", caption: "已安排", props: props("upcoming") },
   { id: "archive", caption: "归档", props: props("archive") },
   { id: "week", caption: "归档：本周小结带专注时长（C140.4）", tall: true, props: props("archive", { currentDate: "2026-11-11", archives: WEEK_ARCHIVES, todos: WEEK_TODAY }) },
@@ -186,7 +196,12 @@ try {
   check(text("today") !== text("light") && text("light").startsWith("rgba(28, 27, 31"), "文字颜色跟着岛屿底色：浅底深字");
 
   check($("empty", ".todo-island__empty")?.textContent === "今天还很轻在上面输入一件事，回车添加", "空列表有说明");
-  check(($("daily", ".todo-island__note") as HTMLTextAreaElement).value === "上午评审，下午写测试。", "笔记页");
+  check(($("daily", ".todo-island__note") as HTMLTextAreaElement).value === "上午评审，下午写测试。" && !$("daily", ".todo-note-images"), "笔记页");
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+  const shots = $$("daily-shot", ".todo-note-images__item");
+  check(shots.length === 2 && shots[0].querySelector("img")?.getAttribute("src") === SHOT && shots[1].classList.contains("todo-note-images__item--gone"), "笔记里的截图显示成缩略图，删掉的显示占位");
+  await act(async () => { (shots[0] as HTMLButtonElement).click(); });
+  check(JSON.stringify(pinned[0]) === JSON.stringify({ path: KEPT }), "点缩略图把截图贴到屏幕上");
   check($("upcoming", ".scheduled-list__item")?.textContent === "牙医复诊", "已安排页沿用分日期的列表");
 
   const tagRows = $$("tags", ".todo-list [data-todo-id]");

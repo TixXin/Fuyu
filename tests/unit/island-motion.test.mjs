@@ -7,7 +7,7 @@ test("every preset ends its height before the native side shrinks the window (60
   for (const motion of ISLAND_MOTIONS) {
     for (const direction of ["open", "close"]) {
       const timing = islandMotionTiming(motion, direction);
-      assert.ok(timing.height <= 560, `${motion} ${direction}`);
+      assert.ok(timing.height + (timing.heightDelay ?? 0) <= 560, `${motion} ${direction}`);
       assert.ok(timing.fadeDelay + timing.fade <= timing.height || motion === "none", `${motion} ${direction} fade`);
     }
   }
@@ -82,9 +82,10 @@ test("the spring opening is what the island did before the setting", () => {
   assert.equal(variables["--island-motion-layer"], "120ms");
 });
 
-test("saved settings without the field, or with an unknown one, open with the spring", () => {
-  assert.equal(DEFAULT_SETTINGS.islandMotion, "spring");
-  assert.equal(normalizeSettings({}).islandMotion, "spring");
-  assert.equal(normalizeSettings({ islandMotion: "wobble" }).islandMotion, "spring");
+test("saved settings without the field, or with an unknown one, open with lively; a saved spring stays spring", () => {
+  assert.equal(DEFAULT_SETTINGS.islandMotion, "lively");
+  assert.equal(normalizeSettings({}).islandMotion, "lively");
+  assert.equal(normalizeSettings({ islandMotion: "wobble" }).islandMotion, "lively");
+  assert.equal(normalizeSettings({ islandMotion: "spring" }).islandMotion, "spring");
   assert.equal(normalizeSettings({ islandMotion: "fast" }).islandMotion, "fast");
 });

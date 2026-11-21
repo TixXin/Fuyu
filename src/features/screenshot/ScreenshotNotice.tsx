@@ -1,18 +1,8 @@
-import { Bot, Copy, Inbox, Pin, Share2, Sparkles, WandSparkles, X, type LucideIcon } from "lucide-react";
+import { Bot, Inbox, Sparkles, X } from "lucide-react";
 import { useLocale, useTranslation } from "../../i18n";
-import type { ScreenshotActionIcon } from "./host/actions.mjs";
+import { ACTION_ICONS } from "./actionIcons";
 import type { ScreenshotNoticeState } from "./useScreenshotNotice";
 import "./ScreenshotNotice.css";
-
-const ACTION_ICONS: Record<ScreenshotActionIcon, LucideIcon> = {
-  inbox: Inbox,
-  bot: Bot,
-  sparkles: Sparkles,
-  share: Share2,
-  copy: Copy,
-  pin: Pin,
-  wand: WandSparkles,
-};
 
 export function ScreenshotNotice({ notice }: { notice: ScreenshotNoticeState }) {
   const t = useTranslation().screenshot;

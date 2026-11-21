@@ -2,7 +2,7 @@ import { landingCurve, springCurve } from "./motionCurves.ts";
 import { MOTION_BASE_MS, MOTION_FAST_MS, MOTION_MEDIUM_MS } from "./motionTokens.ts";
 import type { IslandMotion } from "../settings/types";
 
-export const ISLAND_MOTIONS = ["spring", "smooth", "fast", "bouncy", "none"] as const satisfies readonly IslandMotion[];
+export const ISLAND_MOTIONS = ["lively", "spring", "snappy", "soft", "unfold", "grow", "smooth", "fast", "bouncy", "none"] as const satisfies readonly IslandMotion[];
 
 type MotionTiming = {
   width: number;
@@ -18,11 +18,16 @@ type MotionTiming = {
   collapsedDelay: number;
   bloom: number;
   bounces?: true;
+  widthDelay?: number;
+  heightDelay?: number;
+  contentBlur?: number;
+  contentScale?: number;
 };
 
 const EASE_OUT = "cubic-bezier(0.22, 1, 0.36, 1)";
 const EASE_OUT_EXPO = "cubic-bezier(0.16, 1, 0.3, 1)";
 const SPRING = "cubic-bezier(0.34, 1.36, 0.5, 1)";
+const EASE_IN_OUT = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 const WEBSITE_OPEN: MotionTiming = {
   width: 550, widthEase: SPRING, height: 500, heightEase: EASE_OUT, radius: 450, radiusEase: EASE_OUT, ease: EASE_OUT, bounces: true,
@@ -51,8 +56,66 @@ const JELLY_CLOSE: MotionTiming = {
   fade: 120, fadeDelay: 0, layer: 200, collapsedDelay: 287, bloom: 360, bounces: true,
 };
 
+const SNAPPY_OPEN: MotionTiming = {
+  width: 340, widthEase: springCurve(0.7),
+  height: 380, heightEase: landingCurve(0.42, [{ depth: 0.03, length: 0.2 }]),
+  radius: 340, radiusEase: springCurve(0.75), ease: EASE_OUT,
+  fade: 180, fadeDelay: 60, layer: 100, collapsedDelay: 60, bloom: 300, bounces: true,
+};
+const SNAPPY_CLOSE: MotionTiming = {
+  width: 240, widthEase: springCurve(0.85),
+  height: 260, heightEase: EASE_OUT,
+  radius: 240, radiusEase: EASE_OUT, ease: EASE_OUT,
+  fade: 100, fadeDelay: 0, layer: 100, collapsedDelay: 140, bloom: 220,
+};
+
+const LIVELY_OPEN: MotionTiming = {
+  width: 450, widthEase: springCurve(0.53),
+  height: 480, heightEase: springCurve(0.75), heightDelay: 30,
+  radius: 450, radiusEase: springCurve(0.6), ease: EASE_OUT,
+  fade: 110, fadeDelay: 0, layer: 80, collapsedDelay: 140, bloom: 360, contentBlur: 10, bounces: true,
+};
+const LIVELY_CLOSE: MotionTiming = {
+  width: 300, widthEase: springCurve(0.9),
+  height: 280, heightEase: EASE_IN_OUT,
+  radius: 280, radiusEase: EASE_IN_OUT, ease: EASE_IN_OUT,
+  fade: 90, fadeDelay: 0, layer: 120, collapsedDelay: 160, bloom: 280, contentBlur: 10,
+};
+
+const SOFT_OPEN: MotionTiming = {
+  width: 480, widthEase: springCurve(0.8), height: 480, heightEase: springCurve(0.8), radius: 480, radiusEase: springCurve(0.8), ease: EASE_OUT,
+  fade: 200, fadeDelay: 140, layer: 100, collapsedDelay: 140, bloom: 400,
+};
+const SOFT_CLOSE: MotionTiming = {
+  width: 340, widthEase: springCurve(0.85), height: 340, heightEase: springCurve(0.85), radius: 340, radiusEase: springCurve(0.85), ease: EASE_OUT,
+  fade: 100, fadeDelay: 0, layer: 140, collapsedDelay: 180, bloom: 300,
+};
+
+const UNFOLD_OPEN: MotionTiming = {
+  width: 300, widthEase: EASE_OUT, height: 380, heightEase: EASE_OUT, heightDelay: 90, radius: 380, radiusEase: EASE_OUT, ease: EASE_OUT,
+  fade: 200, fadeDelay: 170, layer: 90, collapsedDelay: 140, bloom: 400,
+};
+const UNFOLD_CLOSE: MotionTiming = {
+  width: 260, widthEase: EASE_OUT, widthDelay: 120, height: 240, heightEase: EASE_IN_OUT, radius: 260, radiusEase: EASE_OUT, ease: EASE_OUT,
+  fade: 90, fadeDelay: 0, layer: 140, collapsedDelay: 300, bloom: 300,
+};
+
+const GROW_OPEN: MotionTiming = {
+  width: 420, widthEase: springCurve(0.6), height: 440, heightEase: springCurve(0.68), radius: 420, radiusEase: springCurve(0.65), ease: EASE_OUT,
+  fade: 160, fadeDelay: 20, layer: 80, collapsedDelay: 140, bloom: 380, contentScale: 0.92, bounces: true,
+};
+const GROW_CLOSE: MotionTiming = {
+  width: 280, widthEase: springCurve(0.9), height: 280, heightEase: EASE_IN_OUT, radius: 280, radiusEase: EASE_IN_OUT, ease: EASE_IN_OUT,
+  fade: 90, fadeDelay: 0, layer: 120, collapsedDelay: 150, bloom: 280, contentScale: 0.92,
+};
+
 const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }> = {
+  lively: { open: LIVELY_OPEN, close: LIVELY_CLOSE },
   spring: { open: WEBSITE_OPEN, close: WEBSITE_CLOSE },
+  snappy: { open: SNAPPY_OPEN, close: SNAPPY_CLOSE },
+  soft: { open: SOFT_OPEN, close: SOFT_CLOSE },
+  unfold: { open: UNFOLD_OPEN, close: UNFOLD_CLOSE },
+  grow: { open: GROW_OPEN, close: GROW_CLOSE },
   smooth: {
     open: { width: 560, widthEase: EASE_OUT_EXPO, height: 560, heightEase: EASE_OUT_EXPO, radius: 560, radiusEase: EASE_OUT_EXPO, ease: EASE_OUT_EXPO, fade: 260, fadeDelay: 160, layer: 120, collapsedDelay: 140, bloom: 440 },
     close: { ...QUICK_CLOSE, widthEase: EASE_OUT_EXPO, heightEase: EASE_OUT_EXPO, radiusEase: EASE_OUT_EXPO, ease: EASE_OUT_EXPO },
@@ -99,5 +162,9 @@ export function islandMotionVariables(motion: IslandMotion, direction: "open" | 
     "--island-motion-collapsed-delay": `${timing.collapsedDelay}ms`,
     "--island-motion-bloom": `${timing.bloom}ms`,
     "--island-motion-layer": `${timing.layer}ms`,
+    "--island-motion-width-delay": `${timing.widthDelay ?? 0}ms`,
+    "--island-motion-height-delay": `${timing.heightDelay ?? 0}ms`,
+    "--island-motion-content-filter": timing.contentBlur ? `blur(${timing.contentBlur}px)` : "none",
+    "--island-motion-content-scale": timing.contentScale ? String(timing.contentScale) : "none",
   };
 }

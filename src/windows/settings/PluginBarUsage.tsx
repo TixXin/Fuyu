@@ -1,24 +1,23 @@
 import { useState } from "react";
-import { ArrowLeft, ArrowLeftRight, ArrowRight, Eye, EyeOff, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import { setCollapsedItemHidden, setCollapsedItemZone, type CollapsedPlacement } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { MAX_FITTED_COLLAPSED_WIDTH } from "../island/layout";
-import { barUsageModel, isOnBar, swapBarItems, type BarUsageRow } from "./barUsageRows";
+import { barUsageModel, isOnBar, type BarUsageRow } from "./barUsageRows";
+import { PlacementLink } from "./island-layout/PlacementLinkRow";
 import type { InstalledEntry } from "./pluginEntries";
 import type { BarUsageView } from "./usePluginBarUsage";
 import "./PluginBarUsage.css";
 
 const share = (value: number | null, whole: number) => `${Math.min(100, Math.max(0, ((value ?? 0) / whole) * 100)).toFixed(2)}%`;
 
-export function PluginBarUsage({ entries, usage, onOpenSettings, onChanged }: {
+export function PluginBarUsage({ entries, usage, onOpenSettings }: {
   entries: readonly InstalledEntry[];
   usage: BarUsageView | undefined;
   onOpenSettings: (plugin: string) => void;
-  onChanged?: () => void;
 }) {
   const text = useTranslation().settings.pluginsV3.page.bar;
-  const { placements: saved, save } = useCollapsedPlacements();
+  const { placements: saved } = useCollapsedPlacements();
   const [open, setOpen] = useState<string | null>(null);
   if (usage === undefined) return null;
   const model = barUsageModel(
@@ -29,10 +28,6 @@ export function PluginBarUsage({ entries, usage, onOpenSettings, onChanged }: {
   if (model.rows.length === 0) return null;
   const onBar = model.rows.filter(isOnBar);
   const toggle = (key: string) => setOpen((current) => (current === key ? null : key));
-  const change = (next: CollapsedPlacement[]) => {
-    save(next);
-    onChanged?.();
-  };
   const side = (row: BarUsageRow) => (row.zone === "left" ? text.side.left : text.side.right);
   const stateText = (row: BarUsageRow) => {
     if (row.state === "shown") return `${side(row)} · ${text.width(row.width ?? 0)}`;
@@ -80,7 +75,6 @@ export function PluginBarUsage({ entries, usage, onOpenSettings, onChanged }: {
           const item = row.item;
           const usable = item !== null || row.settings;
           const expanded = usable && open === row.key;
-          const movable = item !== null && (isOnBar(row) || row.state === "unmeasured");
           return (
             <li key={row.key} className="plugin-bar__item" data-bar-row={row.key} data-plugin={row.plugin} data-state={row.state}>
               <button className="plugin-bar__row" type="button" aria-expanded={usable ? expanded : undefined} disabled={!usable} onClick={() => toggle(row.key)}>
@@ -90,27 +84,7 @@ export function PluginBarUsage({ entries, usage, onOpenSettings, onChanged }: {
               </button>
               {expanded ? (
                 <div className="plugin-bar__actions" data-bar-actions>
-                  {movable ? (
-                    <>
-                      <button className="plugin-btn plugin-btn--sm" type="button" data-bar-action="left" disabled={!row.before} onClick={() => change(swapBarItems(model.placements, item, row.before!))}>
-                        <ArrowLeft size={12} strokeWidth={2.4} aria-hidden="true" />{text.actions.left}
-                      </button>
-                      <button className="plugin-btn plugin-btn--sm" type="button" data-bar-action="right" disabled={!row.after} onClick={() => change(swapBarItems(model.placements, item, row.after!))}>
-                        <ArrowRight size={12} strokeWidth={2.4} aria-hidden="true" />{text.actions.right}
-                      </button>
-                    </>
-                  ) : null}
-                  {item !== null && row.zone && row.state !== "hidden" ? (
-                    <button className="plugin-btn plugin-btn--sm" type="button" data-bar-action="zone" onClick={() => change(setCollapsedItemZone(model.placements, item, row.zone === "left" ? "right" : "left"))}>
-                      <ArrowLeftRight size={12} strokeWidth={2.4} aria-hidden="true" />{row.zone === "left" ? text.actions.toRight : text.actions.toLeft}
-                    </button>
-                  ) : null}
-                  {item !== null && row.hideable ? (
-                    <button className="plugin-btn plugin-btn--sm" type="button" data-bar-action={row.state === "hidden" ? "show" : "hide"} onClick={() => change(setCollapsedItemHidden(model.placements, item, row.state !== "hidden"))}>
-                      {row.state === "hidden" ? <Eye size={12} strokeWidth={2.4} aria-hidden="true" /> : <EyeOff size={12} strokeWidth={2.4} aria-hidden="true" />}
-                      {row.state === "hidden" ? text.actions.show : text.actions.hide}
-                    </button>
-                  ) : null}
+                  {item !== null ? <span data-bar-action="island"><PlacementLink item={item} /></span> : null}
                   {row.settings ? (
                     <button className="plugin-btn plugin-btn--sm plugin-btn--ghost" type="button" data-bar-action="settings" onClick={() => onOpenSettings(row.plugin)}>
                       <Settings size={12} strokeWidth={2.4} aria-hidden="true" />{text.actions.settings}

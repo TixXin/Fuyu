@@ -1,7 +1,5 @@
-import { settingsSections } from "../../plugin-kernel/settingsSlots";
+import { islandItemStyleId, islandItemStyles } from "../../plugin-kernel/settingsSlots";
 import { CenterPatternSettingsGroup } from "../CenterPatternSettingsGroup";
 import { OWNER } from "./owner.ts";
 
-const sections = settingsSections<object, "appearanceCollapsed">();
-
-sections.add({ id: "appearance.center-pattern", category: "appearanceCollapsed", order: 35, component: CenterPatternSettingsGroup }, OWNER);
+islandItemStyles.add({ id: islandItemStyleId("center"), category: "islandLayout", order: 10, component: CenterPatternSettingsGroup }, OWNER);

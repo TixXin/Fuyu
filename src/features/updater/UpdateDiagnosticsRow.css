@@ -9,7 +9,7 @@
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  user-select: text;
+  -webkit-user-select: text; user-select: text;
 }
 
 .update-diagnostics__feedback {

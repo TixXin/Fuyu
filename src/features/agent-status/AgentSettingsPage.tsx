@@ -1,17 +1,15 @@
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
-import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
-import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import { LightStyleArt } from "./AgentAppearanceGlyphs";
 import { AgentHooksOptions } from "./AgentHooksOptions";
 import { AgentProviderSwitches } from "./AgentProviderSwitches";
 import { useAgentStatusSettings } from "./useAgentStatusSettings";
-import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../lib/settings/types";
+import type { AgentTitleMode, IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { SlotView } from "../plugin-kernel/SlotView";
 import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { IslandPlacementRow } from "../plugin-kernel/IslandPlacementRow";
 
 type AgentSectionProps = {
   settings: IslandSettings;
@@ -23,28 +21,8 @@ function SessionTitleSection({ settings, onSettingsChange }: AgentSectionProps) 
 
   return (
     <>
-      <SettingsGroup title={text.lightSectionTitle} footer={<SettingsFootnote text={text.lightStyleHint} />}>
-        <SettingsRow title={text.lightStyle}>
-          <SettingsChoiceCards<AgentLightStyle>
-            value={settings.agentLightStyle}
-            ariaLabel={text.lightStyle}
-            options={[
-              {
-                value: "mark",
-                label: text.lightStyleOptions.mark,
-                hint: text.lightStyleHints.mark,
-                art: <LightStyleArt style="mark" />,
-              },
-              {
-                value: "dot",
-                label: text.lightStyleOptions.dot,
-                hint: text.lightStyleHints.dot,
-                art: <LightStyleArt style="dot" />,
-              },
-            ]}
-            onChange={(agentLightStyle) => onSettingsChange({ ...settings, agentLightStyle })}
-          />
-        </SettingsRow>
+      <SettingsGroup title={text.lightSectionTitle} footer={text.lightSectionHint}>
+        <IslandPlacementRow item="status-light" />
       </SettingsGroup>
       <SettingsGroup title={text.sessionTitleSection}>
         <SettingsToggleRow

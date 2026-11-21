@@ -4,11 +4,11 @@ import type { TrayCardProps } from "./types";
 
 function FuyuMark() {
   return (
-    <svg className="tray-card__mark" viewBox="11 21 42 22" aria-hidden="true">
+    <svg className="tray-card__mark" viewBox="3 6 58 40.5" aria-hidden="true">
       <path
         fill="currentColor"
         fillRule="evenodd"
-        d="M22 21h20a11 11 0 0 1 0 22H22a11 11 0 0 1 0-22Z M22 28a4 4 0 1 0 0 8a4 4 0 1 0 0-8Z M33 30h10a2 2 0 0 1 0 4H33a2 2 0 0 1 0-4Z"
+        d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H51.88A6.6 6.6 0 0 1 41.35 43.68A6.6 6.6 0 0 1 32 43.63A6.6 6.6 0 0 1 22.65 43.68A6.6 6.6 0 0 1 12.12 36H10.4C7.4 36 5 33.5 5 30.5ZM24 19.6a3.6 5 0 1 0 0 10a3.6 5 0 1 0 0-10ZM40 19.6a3.6 5 0 1 0 0 10a3.6 5 0 1 0 0-10Z"
       />
     </svg>
   );

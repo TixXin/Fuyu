@@ -5,6 +5,7 @@ export type LyricsSettingValues = {
   lyricsFolder: string;
   lyricsOnline: boolean;
   lyricsChinese: boolean;
+  lyricsAppleMusic: boolean;
   lyricsOffsetMs: number;
   lyricsOnIsland: boolean;
   lyricsIslandPriority: LyricsIslandPriority;
@@ -41,6 +42,7 @@ export const DEFAULT_LYRICS_SETTINGS: LyricsSettingValues = {
   lyricsFolder: "",
   lyricsOnline: true,
   lyricsChinese: chineseLyricsByDefault(systemLanguages()),
+  lyricsAppleMusic: false,
   lyricsOffsetMs: 0,
   lyricsOnIsland: true,
   lyricsIslandPriority: "lyrics",
@@ -62,6 +64,7 @@ export function normalizeLyricsSettings(saved: Partial<Record<keyof LyricsSettin
     lyricsFolder: typeof saved?.lyricsFolder === "string" ? saved.lyricsFolder.trim() : "",
     lyricsOnline: saved?.lyricsOnline === true,
     lyricsChinese: typeof saved?.lyricsChinese === "boolean" ? saved.lyricsChinese : DEFAULT_LYRICS_SETTINGS.lyricsChinese,
+    lyricsAppleMusic: saved?.lyricsAppleMusic === true,
     lyricsOnIsland: saved?.lyricsOnIsland === true,
     lyricsIslandPriority: saved?.lyricsIslandPriority === "agent" ? "agent" : "lyrics",
     lyricsIntro: saved?.lyricsIntro === "song" || saved?.lyricsIntro === "note" ? saved.lyricsIntro : "todo",

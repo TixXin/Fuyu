@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { isIslandHeld } from "./islandHold";
-import { listenIslandHover, listenIslandMoveArmed } from "./api";
+import { listenIslandHover } from "./api";
 import type { IslandMode } from "./types";
 
 const OWN_ACTION_SELECTOR = ".island__collapsed button:not(.island__open-button):hover";
@@ -83,25 +83,6 @@ export function useHoverExpand({ expandOnHover, collapseOnLeave, delayMs, paused
       window.removeEventListener("pointerup", release, true);
       window.removeEventListener("pointercancel", release, true);
       window.removeEventListener("blur", release);
-    };
-  }, []);
-
-  useEffect(() => {
-    let didCancel = false;
-    let unlisten: (() => void) | null = null;
-    void listenIslandMoveArmed((target) => {
-      if (target === "none" || modeRef.current !== "collapsed") return;
-      window.clearTimeout(expandTimerRef.current);
-      armedRef.current = false;
-    })
-      .then((nextUnlisten) => {
-        if (didCancel) nextUnlisten();
-        else unlisten = nextUnlisten;
-      })
-      .catch((error) => console.error("Failed to listen for the island move modifier", error));
-    return () => {
-      didCancel = true;
-      unlisten?.();
     };
   }, []);
 

@@ -1,0 +1,26 @@
+.usage-widget__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.usage-widget__numbers {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 6px;
+  margin: 0;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.usage-widget__numbers dt {
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.55);
+}
+
+.usage-widget__numbers dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}

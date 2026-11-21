@@ -135,7 +135,10 @@ pub(crate) fn pop_up_native_menu(app: &AppHandle) {
 
 #[tauri::command]
 pub fn set_tray_language(app: AppHandle, locale: String) {
-    refresh(&app, Some(TrayLanguage::from_locale(&locale)));
+    let language = TrayLanguage::from_locale(&locale);
+    #[cfg(target_os = "macos")]
+    crate::app_identity::set_language(&app, language);
+    refresh(&app, Some(language));
 }
 
 pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {

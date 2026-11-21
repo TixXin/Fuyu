@@ -308,7 +308,7 @@
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  user-select: text;
+  -webkit-user-select: text; user-select: text;
 }
 
 .about-plugins__prompt[open] {
@@ -365,7 +365,7 @@
   font-size: 12.5px;
   line-height: 1.5;
   overflow-wrap: anywhere;
-  user-select: all;
+  -webkit-user-select: all; user-select: all;
 }
 
 .about-plugins__links .about-plugins__action {

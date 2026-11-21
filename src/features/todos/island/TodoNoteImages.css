@@ -1,0 +1,38 @@
+.todo-note-images {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+
+.todo-note-images__item {
+  display: grid;
+  flex: none;
+  width: 56px;
+  height: 40px;
+  padding: 0;
+  overflow: hidden;
+  place-items: center;
+  color: var(--text-3);
+  background: var(--todo-surface);
+  border: 1px solid var(--todo-line);
+  border-radius: 6px;
+  cursor: zoom-in;
+}
+
+.todo-note-images__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.todo-note-images__item--gone {
+  cursor: default;
+}
+
+.todo-note-images__item:focus-visible {
+  outline: 2px solid var(--todo-accent);
+  outline-offset: 1px;
+}

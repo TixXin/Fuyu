@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://fuyu.ing/zh/"><img src="docs/assets/readme/island-zh.svg" alt="挂在页面顶上的一座小岛，写着「浮屿 Fuyu」，它会不时展开提示 Logo 征集；右下方用连笔手写着官网地址 https://fuyu.ing，一条小箭头指向小岛" width="540" height="100"></a>
+  <a href="https://fuyu.ing/zh/"><img src="docs/assets/readme/island-zh.svg" alt="挂在页面顶上的一座小岛，左边是一只小水母，写着「浮屿 Fuyu」，它会不时展开，写着「开源 · 屏幕顶上的效率小岛」；右下方用连笔手写着官网地址 https://fuyu.ing，一条小箭头指向小岛" width="540" height="100"></a>
 
   <h1>浮屿 Fuyu</h1>
 
@@ -193,14 +193,11 @@ pnpm tauri build    # 打包安装程序
 
 ## 参与贡献
 
-<a href="https://fuyu.ing/zh/logo/"><img src="docs/assets/logo-placeholder.svg" alt="一个虚线画的空位：浮屿的 Logo 征集中" width="88" height="88" align="right"></a>
-
 浮屿是大家一起做的，欢迎你来添一块：
 
 - **提问题和想法**：到 [Issues](https://github.com/TixXin/fuyu/issues) 说说哪里不好用、还想要什么。
 - **改代码、文档或翻译**：直接提 PR。怎么提、提之前跑哪些检查，见 [CONTRIBUTING.md](CONTRIBUTING.md)；代码怎么组织，见 [AGENTS.md](AGENTS.md)。
 - **写插件**：不用改岛屿本体，做好了放进[插件市场](https://github.com/TixXin/fuyu-plugins)。
-- **画一个 Logo**：浮屿还没有正式的 Logo，[征集页](https://fuyu.ing/zh/logo/)一直开着，右边这个空位就是留给它的。
 
 <a href="https://github.com/TixXin/fuyu/graphs/contributors"><img src="https://contrib.rocks/image?repo=TixXin/fuyu" alt="浮屿的贡献者"></a>
 

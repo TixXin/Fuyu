@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fuyu 默认组件页</title>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --ink: 241, 240, 246;
+    --cell: 120px;
+    --gap: 8px;
+    --orange: #ff9f43;
+    --green: #34c759;
+    --blue: #5ac8fa;
+    --purple: #bf8cff;
+    --pink: #ff6b9d;
+    --yellow: #ffd60a;
+    --red: #ff5f57;
+    --teal: #5ee6c8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", "Microsoft YaHei", sans-serif;
+    color: rgb(var(--ink));
+    background:
+      radial-gradient(1200px 600px at 20% 0%, #5b6b8c 0%, transparent 60%),
+      radial-gradient(900px 700px at 90% 30%, #8a6f8f 0%, transparent 55%),
+      linear-gradient(160deg, #2c3546, #1b1f2a 60%, #141720);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 60px;
+  }
+  h1 { font-size: 18px; font-weight: 600; margin: 0 0 4px; }
+  .lead { margin: 0 0 22px; font-size: 13px; color: rgba(var(--ink), .65); text-align: center; max-width: 760px; line-height: 1.6; }
+
+  .island {
+    width: 800px;
+    max-width: 100%;
+    background: #000;
+    border-radius: 0 0 34px 34px;
+    padding: 10px 20px 20px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .04);
+  }
+  .head { display: flex; align-items: center; gap: 2px; height: 34px; margin-bottom: 14px; }
+  .pill { padding: 0 14px; height: 30px; border-radius: 15px; display: grid; place-items: center; font-weight: 700; font-size: 15px; background: rgba(255, 255, 255, .14); }
+  .tab { width: 34px; height: 26px; display: grid; place-items: center; color: rgba(var(--ink), .55); }
+  .tab svg { width: 17px; height: 17px; stroke-width: 1.6; }
+  .head .spacer { flex: 1; }
+  .round { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .08); color: rgba(var(--ink), .7); margin-left: 8px; }
+  .round svg { width: 16px; height: 16px; }
+
+  .viewport { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+  .viewport::-webkit-scrollbar { display: none; }
+  .board { position: relative; height: calc(var(--cell) * 2 + var(--gap)); }
+  .snap { position: absolute; top: 0; width: 1px; height: 1px; scroll-snap-align: start; }
+
+  .w {
+    position: absolute;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .065);
+    border: 1px solid rgba(255, 255, 255, .06);
+    padding: 11px 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .t { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: rgba(var(--ink), .5); white-space: nowrap; }
+  .t svg { width: 13px; height: 13px; stroke-width: 2; flex: none; }
+  .t .r { margin-left: auto; color: rgba(var(--ink), .4); }
+  .big { font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -.5px; }
+  .mut { color: rgba(var(--ink), .5); }
+  .sm { font-size: 11px; }
+  .fill { flex: 1; min-height: 0; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .btn { width: 26px; height: 26px; border-radius: 50%; border: 0; display: grid; place-items: center; background: rgba(255, 255, 255, .1); color: rgb(var(--ink)); cursor: pointer; padding: 0; }
+  .btn svg { width: 13px; height: 13px; }
+  .btn:hover { background: rgba(255, 255, 255, .18); }
+  .ellipsis { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+  .dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+  .dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .22); transition: width .24s, background .24s; cursor: pointer; }
+  .dot.on { width: 18px; background: rgba(255, 255, 255, .75); }
+
+  .legend { width: 800px; max-width: 100%; margin-top: 26px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .legend section { background: rgba(0, 0, 0, .28); border-radius: 14px; padding: 12px 14px; }
+  .legend h3 { margin: 0 0 6px; font-size: 12.5px; font-weight: 600; }
+  .legend ol { margin: 0; padding-left: 18px; font-size: 12px; color: rgba(var(--ink), .72); line-height: 1.75; }
+  .legend li span { color: rgba(var(--ink), .4); margin-left: 4px; }
+  .notes { width: 800px; max-width: 100%; margin-top: 14px; font-size: 12.5px; color: rgba(var(--ink), .7); line-height: 1.75; background: rgba(0, 0, 0, .28); border-radius: 14px; padding: 12px 16px; }
+  .notes b { color: rgb(var(--ink)); font-weight: 600; }
+  @media (max-width: 860px) { .legend { grid-template-columns: repeat(2, 1fr); } }
+
+  .ring { transform: rotate(-90deg); }
+  .heat { display: grid; grid-template-columns: repeat(7, 10px); gap: 3.5px; margin-top: 7px; }
+  .heat i { width: 10px; height: 10px; border-radius: 3px; background: rgba(255, 255, 255, .1); display: block; }
+  .check { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(var(--ink), .35); flex: none; display: grid; place-items: center; cursor: pointer; }
+  .check.done { background: var(--green); border-color: var(--green); }
+  .check.done::after { content: ""; width: 6px; height: 3px; border: 2px solid #000; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+  .todo { display: flex; align-items: center; gap: 8px; font-size: 12.5px; height: 22px; }
+  .todo.done span { color: rgba(var(--ink), .35); text-decoration: line-through; }
+  .bar { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+  .bar b { display: block; height: 100%; border-radius: 2px; }
+  .status { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .pulse { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .float { animation: float 3.2s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-4px); } }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px 0; text-align: center; font-size: 11px; font-variant-numeric: tabular-nums; margin-top: 6px; }
+  .cal b { font-weight: 500; color: rgba(var(--ink), .35); font-size: 10px; }
+  .cal span { height: 21px; line-height: 21px; border-radius: 50%; position: relative; color: rgba(var(--ink), .82); }
+  .cal span.out { color: rgba(var(--ink), .2); }
+  .cal span.today { background: var(--red); color: #fff; font-weight: 700; width: 21px; margin: 0 auto; }
+  .cal span.ev::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 3px; height: 3px; margin-left: -1.5px; border-radius: 50%; background: var(--blue); }
+  textarea { width: 100%; flex: 1; resize: none; border: 0; outline: 0; background: transparent; color: rgb(var(--ink)); font: inherit; font-size: 13px; line-height: 1.55; padding: 0; margin-top: 6px; }
+  textarea::placeholder { color: rgba(var(--ink), .38); }
+  .app { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; color: #fff; }
+  .app svg { width: 19px; height: 19px; }
+  .slider { width: 26px; height: 74px; border-radius: 13px; background: rgba(255, 255, 255, .1); position: relative; overflow: hidden; }
+  .slider b { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, .85); }
+  .slider svg { position: absolute; left: 50%; bottom: 7px; width: 13px; height: 13px; margin-left: -6.5px; color: #000; z-index: 1; }
+  @media (prefers-reduced-motion: reduce) { .pulse, .float { animation: none; } .viewport { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<h1>Fuyu 默认组件页 · 预览</h1>
+<p class="lead">岛宽 800，首屏 6 × 2，组件只往右加。滚轮或触控板往右滑，点下面的圆点翻屏。一共 28 个组件，分 4 屏，每屏一个主题；时钟、番茄钟、秒表、网速是活的，待办、喝水、习惯、播放可以点。</p>
+
+<div class="island">
+  <div class="head">
+    <div class="pill">Fuyu</div>
+    <span class="tab"><i data-lucide="bot"></i></span>
+    <span class="tab"><i data-lucide="list-todo"></i></span>
+    <span class="tab"><i data-lucide="music"></i></span>
+    <span class="tab"><i data-lucide="calendar-days"></i></span>
+    <span class="tab"><i data-lucide="clipboard-list"></i></span>
+    <span class="tab"><i data-lucide="inbox"></i></span>
+    <span class="tab"><i data-lucide="timer"></i></span>
+    <span class="tab"><i data-lucide="bell"></i></span>
+    <span class="spacer"></span>
+    <span class="round"><i data-lucide="layout-dashboard"></i></span>
+    <span class="round"><i data-lucide="settings"></i></span>
+  </div>
+  <div class="viewport" id="viewport"><div class="board" id="board"></div></div>
+</div>
+<div class="dots" id="dots"></div>
+
+<div class="legend" id="legend"></div>
+<div class="notes">
+  <b>设计取舍</b>（依据见 docs/research/widget-design.md）：
+  一个组件只讲一件事，主信息大而亮，标题行小而淡；每个组件只用一种强调色，其余是灰阶；内容随时间变（今日组件按时段换问候和水母表情）；
+  首屏放每天都看的东西，往右依次是「工作与 Agent」「记录与习惯」「系统与工具」。卡片沿用岛上的 6% 白底，圆角从 14 调到 16，内边距 11 × 12。
+</div>
+
+<script>
+const SIZES = { s: [1, 1], m: [2, 1], l: [2, 2], w: [4, 1] };
+const CELL = 120, GAP = 8, STEP = CELL + GAP;
+const icon = (name) => `<i data-lucide="${name}"></i>`;
+const title = (name, text, right = "") => `<div class="t">${icon(name)}<span>${text}</span>${right ? `<span class="r">${right}</span>` : ""}</div>`;
+const pad = (n) => String(n).padStart(2, "0");
+const now = () => new Date();
+
+function jelly(mood) {
+  const eyes = mood === "sleep" ? `<path d="M22 31q3 2 6 0M36 31q3 2 6 0" stroke="#3a2f5c" stroke-width="2" fill="none" stroke-linecap="round"/>` : `<circle cx="25" cy="31" r="2.6" fill="#3a2f5c"/><circle cx="39" cy="31" r="2.6" fill="#3a2f5c"/>`;
+  return `<svg class="float" width="64" height="64" viewBox="0 0 64 64">
+    <defs><linearGradient id="jg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8c8ff"/><stop offset="1" stop-color="#9ad8ff"/></linearGradient></defs>
+    <path d="M10 38C10 20 20 12 32 12s22 8 22 26c0 3-3 4-5 2-2 2-5 2-7 0-2 2-6 2-8 0-2 2-6 2-8 0-2 2-5 2-7 0-2 2-7 1-7-2z" fill="url(#jg)"/>
+    ${eyes}<ellipse cx="20" cy="36" rx="3" ry="1.6" fill="#ff9fc4" opacity=".7"/><ellipse cx="44" cy="36" rx="3" ry="1.6" fill="#ff9fc4" opacity=".7"/>
+    <path d="M18 44q-2 8 1 14M27 45q-1 7 1 12M37 45q1 7-1 12M46 44q2 8-1 14" stroke="#b9c9ff" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/>
+  </svg>`;
+}
+
+function greeting() {
+  const h = now().getHours();
+  if (h < 6 || h >= 23) return ["夜深啦，早点休息", "sleep"];
+  if (h < 11) return ["早上好，今天也顺利", "awake"];
+  if (h < 14) return ["记得吃午饭", "awake"];
+  if (h < 18) return ["下午也要专注", "awake"];
+  return ["辛苦了，放松一下", "awake"];
+}
+
+const W = {
+  today: { name: "今日", size: "l", render: () => {
+    const [text, mood] = greeting();
+    const d = now();
+    return `<div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><div class="sm" style="color:var(--orange);display:flex;gap:5px;align-items:center">${icon("cloud-sun")}<span>多云 · 上海</span></div>
+      <div class="big" style="font-size:46px;line-height:1.05;margin-top:8px" data-live="clock"></div>
+      <div class="mut sm" style="margin-top:2px">${d.getMonth() + 1}月${d.getDate()}日 周${"日一二三四五六"[d.getDay()]}</div></div>
+      <div style="text-align:right"><div class="big" style="font-size:26px">12°</div><div class="sm" style="margin-top:2px"><span style="color:var(--blue)">↓4°</span> <span style="color:var(--pink)">↑18°</span></div></div>
+    </div>
+    <div class="fill"></div>
+    <div class="row" style="gap:10px">${jelly(mood)}<div><div style="font-size:13px;font-weight:600">${text}</div><div class="mut sm" style="margin-top:3px">今天 3 个会议 · 5 件待办</div></div></div>`;
+  } },
+  meeting: { name: "下一个会议", size: "m", render: () => `${title("calendar-clock", "下一个会议", "14:30")}
+    <div class="fill"></div>
+    <div style="font-size:16px;font-weight:650" class="ellipsis">Fuyu 设计评审</div>
+    <div class="row" style="margin-top:6px"><span class="sm" style="color:var(--blue)">还有 38 分钟</span><span class="sm mut">· 腾讯会议</span>
+    <button class="btn" style="margin-left:auto;width:auto;padding:0 10px;border-radius:13px;font-size:11.5px;background:var(--blue);color:#001018">加入</button></div>` },
+  todo: { name: "今天的待办", size: "m", render: () => `${title("list-checks", "今天的待办", `<span data-live="todoCount"></span>`)}
+    <div style="margin-top:4px">${[["回复设计稿的评论", true], ["整理发布说明", false], ["给水母画三个新表情", false]].map(([text, done]) => `<div class="todo ${done ? "done" : ""}"><i class="check ${done ? "done" : ""}" data-toggle="todo"></i><span class="ellipsis">${text}</span></div>`).join("")}</div>` },
+  music: { name: "正在播放", size: "m", render: () => `<div class="row" style="gap:10px">
+      <div style="width:44px;height:44px;border-radius:9px;flex:none;background:conic-gradient(from 210deg,#ff6b9d,#ffb86b,#7a6bff,#ff6b9d)"></div>
+      <div style="min-width:0"><div style="font-size:13.5px;font-weight:600" class="ellipsis">夜航星</div><div class="sm mut ellipsis">不才 · 夜航星</div></div></div>
+    <div class="fill"></div>
+    <div class="bar"><b style="width:42%;background:rgba(255,255,255,.8)"></b></div>
+    <div class="row" style="justify-content:center;gap:14px;margin-top:6px">
+      <button class="btn" style="background:none">${icon("skip-back")}</button>
+      <button class="btn" data-toggle="play">${icon("pause")}</button>
+      <button class="btn" style="background:none">${icon("skip-forward")}</button></div>` },
+  pomodoro: { name: "番茄钟", size: "s", render: () => `<div style="position:relative;width:92px;height:92px;margin:auto">
+      <svg class="ring" width="92" height="92"><circle cx="46" cy="46" r="38" stroke="rgba(255,159,67,.18)" stroke-width="8" fill="none"/>
+      <circle cx="46" cy="46" r="38" stroke="var(--orange)" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="238.8" data-live="pomoRing"/></svg>
+      <div style="position:absolute;inset:0;display:grid;place-items:center;text-align:center">
+        <div><div class="big" style="font-size:19px" data-live="pomo">25:00</div>
+        <button class="btn" data-toggle="pomo" style="width:22px;height:22px;margin:3px auto 0;background:rgba(255,159,67,.25);color:var(--orange)">${icon("play")}</button></div></div></div>` },
+  streak: { name: "打卡", size: "s", render: () => {
+    const d = now().getDate();
+    const cells = Array.from({ length: 35 }, (_, i) => i < d - 1 ? (Math.sin(i * 7.3) > -.55 ? "var(--green)" : "rgba(52,199,89,.35)") : i === d - 1 ? "today" : "");
+    return `${title("flame", "打卡", `<span style="color:var(--green)">${d - 3} 天</span>`)}
+      <div class="heat">${cells.map((c) => c === "today" ? `<i style="background:#bdf5c9;box-shadow:inset 0 0 0 2.5px #1d6b33"></i>` : `<i style="${c ? `background:${c}` : ""}"></i>`).join("")}</div>`;
+  } },
+  lyrics: { name: "歌词", size: "w", render: () => `${title("mic-vocal", "夜航星 · 不才")}
+    <div class="fill" style="display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:19px;font-weight:650;letter-spacing:.3px">我是这耀眼的瞬息，是划过天边的刹那火焰</div>
+      <div class="mut" style="font-size:13px;margin-top:4px">我为你来看我不顾一切</div></div>` },
+  agent: { name: "Agent 会话", size: "m", render: () => `${title("bot", "Agent 会话", "3 个进行中")}
+    <div style="margin-top:6px;display:grid;gap:5px">
+      ${[["var(--blue)", "Fuyu 面板页重新设计", true], ["var(--yellow)", "等你批准：pnpm land", false], ["var(--green)", "官网原型 · 已完成", false]].map(([c, t, p]) => `<div class="row" style="gap:7px;font-size:12.5px"><span class="status ${p ? "pulse" : ""}" style="background:${c}"></span><span class="ellipsis">${t}</span></div>`).join("")}</div>` },
+  system: { name: "系统状态", size: "s", render: () => {
+    const ring = (v, c, label) => `<div style="text-align:center"><div style="position:relative;width:42px;height:42px"><svg class="ring" width="42" height="42"><circle cx="21" cy="21" r="17" stroke="rgba(255,255,255,.1)" stroke-width="5" fill="none"/><circle cx="21" cy="21" r="17" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="${(v / 100) * 106.8} 106.8"/></svg><div style="position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700">${v}</div></div><div class="sm mut" style="margin-top:4px">${label}</div></div>`;
+    return `${title("cpu", "系统")}<div class="fill row" style="justify-content:space-around">${ring(23, "var(--teal)", "CPU")}${ring(61, "var(--purple)", "内存")}</div>`;
+  } },
+  battery: { name: "电池", size: "s", render: () => `${title("battery-charging", "电池")}
+    <div class="fill"></div><div class="big" style="font-size:30px">86<span style="font-size:15px">%</span></div>
+    <div class="bar" style="height:6px;margin-top:6px"><b style="width:86%;background:var(--green)"></b></div>
+    <div class="sm mut" style="margin-top:5px">充电中 · 40 分钟充满</div>` },
+  calendar: { name: "月历", size: "l", render: () => {
+    const d = now(), y = d.getFullYear(), m = d.getMonth();
+    const first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < 35; i += 1) {
+      const n = i - first + 1;
+      const inMonth = n >= 1 && n <= days;
+      const cls = !inMonth ? "out" : n === d.getDate() ? "today" : [3, 8, 12, 17, 21, 26].includes(n) ? "ev" : "";
+      cells.push(`<span class="${cls}">${inMonth ? n : n < 1 ? new Date(y, m, n).getDate() : n - days}</span>`);
+    }
+    return `<div class="row"><span style="font-size:14px;font-weight:650;color:var(--red)">${m + 1}月</span><span class="sm mut">${y}</span><span class="sm mut" style="margin-left:auto">3 个日程</span></div>
+      <div class="cal">${"日一二三四五六".split("").map((w) => `<b>${w}</b>`).join("")}${cells.join("")}</div>
+      <div class="fill"></div>
+      <div class="row sm" style="gap:6px"><span class="status" style="background:var(--blue)"></span><span>14:30 设计评审</span><span class="mut" style="margin-left:auto">16:00 周会</span></div>`;
+  } },
+  note: { name: "便签", size: "m", render: () => `${title("sticky-note", "便签")}<textarea placeholder="点这里，记下此刻想到的…"></textarea>` },
+  clipboard: { name: "剪贴板", size: "m", render: () => `${title("clipboard", "最近复制", "3")}
+    <div style="margin-top:5px;display:grid;gap:4px;font-size:12px">
+      <div class="row"><span class="mut sm" style="width:30px">文本</span><span class="ellipsis">pnpm mq:land --yes --body pr.md</span></div>
+      <div class="row"><span class="mut sm" style="width:30px">链接</span><span class="ellipsis" style="color:var(--blue)">github.com/TixXin/fuyu/pull/812</span></div>
+      <div class="row"><span class="mut sm" style="width:30px">颜色</span><span class="status" style="background:#ff9f43;width:10px;height:10px;border-radius:3px"></span><span>#FF9F43</span></div></div>` },
+  countdown: { name: "倒数日", size: "s", render: () => {
+    const d = now(), target = new Date(2027, 1, 6);
+    const left = Math.max(0, Math.ceil((target - d) / 864e5));
+    return `${title("party-popper", "距离春节")}<div class="fill"></div><div class="big" style="font-size:38px;color:var(--pink)">${left}<span style="font-size:13px;color:rgba(var(--ink),.5);margin-left:3px">天</span></div><div class="sm mut">2027 年 2 月 6 日</div>`;
+  } },
+  world: { name: "世界时钟", size: "s", render: () => `${title("globe", "世界时钟")}
+    <div class="fill" style="display:grid;align-content:center;gap:5px;font-size:12.5px">
+      ${[["东京", 9], ["伦敦", 0], ["纽约", -5]].map(([city, off]) => `<div class="row"><span>${city}</span><span class="big" style="margin-left:auto;font-size:13px" data-live="zone" data-off="${off}"></span></div>`).join("")}</div>` },
+  water: { name: "喝水", size: "s", render: () => `${title("droplets", "喝水", `<span data-live="water"></span>`)}
+    <div class="fill row" style="gap:10px">
+      <div style="width:34px;height:52px;border-radius:5px 5px 10px 10px;border:2px solid rgba(90,200,250,.6);position:relative;overflow:hidden"><b data-live="waterFill" style="position:absolute;left:0;right:0;bottom:0;background:var(--blue);transition:height .3s"></b></div>
+      <button class="btn" data-toggle="water" style="background:rgba(90,200,250,.2);color:var(--blue)">${icon("plus")}</button></div>` },
+  sun: { name: "日出日落", size: "s", render: () => {
+    const h = now().getHours() + now().getMinutes() / 60, t = Math.min(1, Math.max(0, (h - 6.7) / (17 - 6.7)));
+    const x = 10 + t * 76, y = 46 - Math.sin(t * Math.PI) * 32;
+    return `${title("sunrise", "日出日落")}<svg width="84" height="38" viewBox="0 6 96 44" style="margin:4px auto 0;display:block"><path d="M10 46 Q48 -18 86 46" stroke="rgba(255,214,10,.3)" stroke-width="2" fill="none" stroke-dasharray="3 4"/><line x1="4" y1="46" x2="92" y2="46" stroke="rgba(255,255,255,.15)"/><circle cx="${x}" cy="${y}" r="6" fill="var(--yellow)"/></svg>
+      <div class="row sm"><span>06:42</span><span class="mut" style="margin-left:auto">17:01</span></div>`;
+  } },
+  habit: { name: "习惯", size: "m", render: () => `${title("repeat", "习惯", "本周")}
+    <div style="margin-top:7px;display:grid;gap:6px">
+      ${[["阅读", "var(--purple)", [1, 1, 0, 1, 1, 0, 0]], ["运动", "var(--orange)", [1, 0, 1, 1, 0, 0, 0]], ["早睡", "var(--teal)", [0, 1, 1, 0, 1, 0, 0]]].map(([name, c, days]) => `<div class="row" style="gap:6px;font-size:12px"><span style="width:30px">${name}</span>${days.map((v) => `<i data-toggle="habit" data-color="${c}" style="width:14px;height:14px;border-radius:4px;cursor:pointer;background:${v ? c : "rgba(255,255,255,.1)"}"></i>`).join("")}</div>`).join("")}</div>` },
+  focus: { name: "专注统计", size: "s", render: () => {
+    const bars = [3.2, 2.1, 4.0, 1.4, 2.8, 0.6, 2.25];
+    return `${title("target", "今日专注")}<div class="big" style="font-size:22px;margin-top:4px">2h 15m</div>
+      <div class="fill row" style="align-items:flex-end;gap:5px">${bars.map((v, i) => `<b style="flex:1;height:${(v / 4) * 100}%;min-height:3px;border-radius:3px;background:${i === 6 ? "var(--orange)" : "rgba(255,159,67,.3)"}"></b>`).join("")}</div>`;
+  } },
+  year: { name: "年进度", size: "s", render: () => {
+    const d = now(), start = new Date(d.getFullYear(), 0, 1), end = new Date(d.getFullYear() + 1, 0, 1);
+    const p = Math.floor(((d - start) / (end - start)) * 100);
+    return `${title("hourglass", `${d.getFullYear()}`)}<div class="fill"></div><div class="big" style="font-size:30px">${p}<span style="font-size:14px">%</span></div>
+      <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:6px">${Array.from({ length: 12 }, (_, i) => `<i style="height:8px;border-radius:2px;background:${i < d.getMonth() ? "rgba(255,255,255,.7)" : i === d.getMonth() ? "var(--yellow)" : "rgba(255,255,255,.12)"}"></i>`).join("")}</div>`;
+  } },
+  translate: { name: "翻译", size: "m", render: () => `${title("languages", "翻译", "中 → 英")}
+    <div style="font-size:13px;margin-top:7px">把岛放在屏幕顶部</div>
+    <div class="fill"></div><div style="font-size:13px;color:var(--teal)">Put the island at the top of the screen</div>` },
+  unread: { name: "未读消息", size: "s", render: () => `${title("message-circle", "未读")}<div class="fill"></div>
+    <div class="big" style="font-size:34px">12</div>
+    <div class="row sm" style="gap:6px;margin-top:3px"><span class="status" style="background:#12b7f5"></span>5<span class="status" style="background:#07c160;margin-left:4px"></span>4<span class="status" style="background:var(--orange);margin-left:4px"></span>3</div>` },
+  files: { name: "文件中转", size: "s", render: () => `${title("inbox", "文件中转")}
+    <div class="fill" style="position:relative">${["#5ac8fa", "#ff9f43", "#bf8cff"].map((c, i) => `<div style="position:absolute;left:${14 + i * 14}px;top:${10 - i * 3}px;width:38px;height:46px;border-radius:6px;background:${c};opacity:${0.55 + i * 0.2};transform:rotate(${(i - 1) * 8}deg);box-shadow:0 4px 10px rgba(0,0,0,.4)"></div>`).join("")}</div>
+    <div class="sm"><b>3</b> <span class="mut">个文件</span></div>` },
+  network: { name: "网速", size: "s", render: () => `${title("activity", "网速")}
+    <div style="margin-top:6px;font-size:12.5px"><div class="row"><span style="color:var(--teal)">↓</span><span class="big" data-live="down"></span></div><div class="row"><span style="color:var(--purple)">↑</span><span class="big" data-live="up"></span></div></div>
+    <div class="fill"></div><svg width="96" height="20" viewBox="0 0 96 26" preserveAspectRatio="none" data-live="spark"></svg>` },
+  launcher: { name: "快捷启动", size: "s", render: () => `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;place-items:center;margin:auto">
+      ${[["terminal", "#2b2b2b"], ["folder", "#3b82f6"], ["code-xml", "#7c3aed"], ["globe", "#f97316"]].map(([n, c]) => `<div class="app" style="background:${c}">${icon(n)}</div>`).join("")}</div>` },
+  levels: { name: "音量亮度", size: "s", render: () => `<div class="row" style="justify-content:center;gap:14px;margin:auto">
+      <div class="slider"><b style="height:62%"></b>${icon("volume-2")}</div><div class="slider"><b style="height:80%"></b>${icon("sun")}</div></div>` },
+  screenshot: { name: "截图", size: "s", render: () => `${title("scissors", "截图", "刚刚")}
+    <div class="fill" style="margin-top:6px;border-radius:8px;background:linear-gradient(135deg,#334155,#1e293b);position:relative;overflow:hidden">
+      <div style="position:absolute;left:8px;top:8px;right:20px;height:6px;border-radius:3px;background:rgba(255,255,255,.25)"></div>
+      <div style="position:absolute;left:8px;top:20px;right:36px;height:6px;border-radius:3px;background:rgba(255,255,255,.15)"></div>
+      <div style="position:absolute;right:8px;bottom:8px;width:30px;height:20px;border-radius:5px;background:var(--orange)"></div></div>` },
+  stopwatch: { name: "秒表", size: "s", render: () => `${title("timer", "秒表")}<div class="fill"></div>
+    <div class="big" style="font-size:24px" data-live="watch">00:00.0</div>
+    <div class="row" style="gap:6px;margin-top:6px"><button class="btn" data-toggle="watch" style="background:rgba(52,199,89,.22);color:var(--green)">${icon("play")}</button><button class="btn" data-toggle="watchReset">${icon("rotate-ccw")}</button></div>` },
+};
+
+const PAGES = [
+  ["每天都看", ["today", "meeting", "todo", "music", "pomodoro", "streak"]],
+  ["工作与 Agent", ["lyrics", "agent", "system", "battery", "calendar"]],
+  ["记录与习惯", ["note", "clipboard", "countdown", "world", "water", "sun", "habit", "focus", "year"]],
+  ["系统与工具", ["translate", "unread", "files", "network", "launcher", "screenshot", "levels", "stopwatch"]],
+];
+
+function flow(ids) {
+  const taken = [];
+  const hit = (a, b) => a.col < b.col + b.cols && b.col < a.col + a.cols && a.row < b.row + b.rows && b.row < a.row + a.rows;
+  return ids.map((id) => {
+    const [cols, rows] = SIZES[W[id].size];
+    for (let col = 0; ; col += 1) for (let row = 0; row + rows <= 2; row += 1) {
+      const box = { col, row, cols, rows };
+      if (!taken.some((other) => hit(box, other))) { taken.push(box); return { id, ...box }; }
+    }
+  });
+}
+
+const board = document.getElementById("board");
+const order = PAGES.flatMap(([, ids]) => ids);
+const placed = flow(order);
+const columns = Math.max(...placed.map((p) => p.col + p.cols));
+board.style.width = `${columns * STEP - GAP}px`;
+board.innerHTML = placed.map((p) => `<div class="w" style="left:${p.col * STEP}px;top:${p.row * STEP}px;width:${p.cols * STEP - GAP}px;height:${p.rows * STEP - GAP}px">${W[p.id].render()}</div>`).join("")
+  + Array.from({ length: Math.ceil(columns / 6) }, (_, i) => `<span class="snap" style="left:${i * 6 * STEP}px"></span>`).join("");
+
+const viewport = document.getElementById("viewport");
+const dots = document.getElementById("dots");
+const pageCount = Math.ceil(columns / 6);
+dots.innerHTML = Array.from({ length: pageCount }, (_, i) => `<span class="dot" data-page="${i}" title="${PAGES[i]?.[0] ?? ""}"></span>`).join("");
+const syncDots = () => {
+  const at = Math.round(viewport.scrollLeft / (6 * STEP));
+  dots.querySelectorAll(".dot").forEach((d, i) => d.classList.toggle("on", i === at));
+};
+viewport.addEventListener("scroll", syncDots);
+dots.addEventListener("click", (e) => { const p = e.target.dataset.page; if (p) viewport.scrollTo({ left: p * 6 * STEP }); });
+viewport.addEventListener("wheel", (e) => {
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  e.preventDefault();
+  viewport.scrollBy({ left: e.deltaY > 0 ? 6 * STEP : -6 * STEP });
+}, { passive: false });
+syncDots();
+
+document.getElementById("legend").innerHTML = PAGES.map(([name, ids], i) => `<section><h3>第 ${i + 1} 屏 · ${name}</h3><ol start="${PAGES.slice(0, i).reduce((n, [, x]) => n + x.length, 1)}">${ids.map((id) => `<li>${W[id].name}<span>${SIZES[W[id].size].join("×")}</span></li>`).join("")}</ol></section>`).join("");
+
+const live = (key) => [...document.querySelectorAll(`[data-live="${key}"]`)];
+const state = { pomo: 25 * 60, pomoRun: false, water: 5, watch: 0, watchRun: false, net: [] };
+const fmt = (s) => `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+const speed = (kb) => kb > 1024 ? `${(kb / 1024).toFixed(1)} MB/s` : `${Math.round(kb)} KB/s`;
+
+function tick() {
+  const d = now();
+  live("clock").forEach((el) => { el.innerHTML = `${pad(d.getHours())}<span style="color:var(--orange);opacity:${d.getSeconds() % 2 ? 1 : 0.35}">:</span>${pad(d.getMinutes())}`; });
+  live("zone").forEach((el) => { const u = new Date(d.getTime() + d.getTimezoneOffset() * 6e4 + Number(el.dataset.off) * 36e5); el.textContent = `${pad(u.getHours())}:${pad(u.getMinutes())}`; });
+  if (state.pomoRun && state.pomo > 0) state.pomo -= 1;
+  live("pomo").forEach((el) => { el.textContent = fmt(state.pomo); });
+  live("pomoRing").forEach((el) => { el.setAttribute("stroke-dashoffset", String(238.8 * (1 - state.pomo / 1500))); });
+  const down = 800 + Math.random() * 2600, up = 80 + Math.random() * 420;
+  state.net = [...state.net.slice(-23), down];
+  live("down").forEach((el) => { el.textContent = speed(down); });
+  live("up").forEach((el) => { el.textContent = speed(up); });
+  live("spark").forEach((el) => {
+    const pts = state.net.map((v, i) => `${(i / 23) * 96},${24 - (v / 3400) * 22}`).join(" ");
+    el.innerHTML = `<polyline points="${pts}" fill="none" stroke="var(--teal)" stroke-width="1.6" stroke-linejoin="round"/>`;
+  });
+}
+
+function sync() {
+  live("water").forEach((el) => { el.textContent = `${state.water}/8 杯`; });
+  live("waterFill").forEach((el) => { el.style.height = `${(state.water / 8) * 100}%`; });
+  live("todoCount").forEach((el) => { const all = document.querySelectorAll('[data-toggle="todo"]'); el.textContent = `${[...all].filter((c) => c.classList.contains("done")).length}/${all.length}`; });
+}
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-toggle]");
+  if (!el) return;
+  const kind = el.dataset.toggle;
+  if (kind === "todo") { el.classList.toggle("done"); el.parentElement.classList.toggle("done"); }
+  if (kind === "water") state.water = state.water >= 8 ? 0 : state.water + 1;
+  if (kind === "habit") el.style.background = el.style.background.includes("255") ? el.dataset.color : "rgba(255,255,255,.1)";
+  if (kind === "pomo") { state.pomoRun = !state.pomoRun; el.innerHTML = icon(state.pomoRun ? "pause" : "play"); lucide.createIcons(); }
+  if (kind === "play") { el.dataset.paused = el.dataset.paused ? "" : "1"; el.innerHTML = icon(el.dataset.paused ? "play" : "pause"); lucide.createIcons(); }
+  if (kind === "watch") { state.watchRun = !state.watchRun; el.innerHTML = icon(state.watchRun ? "pause" : "play"); lucide.createIcons(); }
+  if (kind === "watchReset") { state.watch = 0; state.watchRun = false; }
+  sync();
+});
+
+setInterval(() => {
+  if (state.watchRun) state.watch += 1;
+  live("watch").forEach((el) => { const t = state.watch; el.textContent = `${pad(Math.floor(t / 600))}:${pad(Math.floor(t / 10) % 60)}.${t % 10}`; });
+}, 100);
+setInterval(tick, 1000);
+tick();
+sync();
+lucide.createIcons();
+</script>
+</body>
+</html>

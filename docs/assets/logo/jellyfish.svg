@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="96" viewBox="0 0 64 48">
+  <title>浮屿水母（岛上状态灯，空闲）</title>
+  <defs>
+    <linearGradient id="jf-shade" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="48"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".5"/><stop offset=".5" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity=".14"/></linearGradient>
+  </defs>
+  <g id="body">
+    <g id="lobes" fill="#F6E3D3">
+      <circle id="lobe-1" cx="18" cy="39" r="6.6"/>
+      <circle id="lobe-2" cx="27.3" cy="39" r="6.6"/>
+      <circle id="lobe-3" cx="36.7" cy="39" r="6.6"/>
+      <circle id="lobe-4" cx="46" cy="39" r="6.6"/>
+    </g>
+    <g id="lobes-shade" fill="url(#jf-shade)">
+      <circle cx="18" cy="39" r="6.6"/>
+      <circle cx="27.3" cy="39" r="6.6"/>
+      <circle cx="36.7" cy="39" r="6.6"/>
+      <circle cx="46" cy="39" r="6.6"/>
+    </g>
+    <g id="head">
+      <path id="bell" d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z" fill="#F6E3D3"/>
+      <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z" fill="url(#jf-shade)"/>
+      <g id="highlight" fill="#FFFFFF">
+        <ellipse cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)" opacity=".6"/>
+        <circle cx="28.5" cy="10" r="1.5" opacity=".7"/>
+      </g>
+      <g id="cheeks" fill="#FF8FA0" opacity=".72">
+        <ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2"/>
+        <ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2"/>
+      </g>
+      <g id="eyes">
+        <ellipse cx="24" cy="25" rx="2.7" ry="3.9" fill="#1D1B22"/>
+        <ellipse cx="40" cy="25" rx="2.7" ry="3.9" fill="#1D1B22"/>
+        <circle cx="25" cy="23.4" r=".9" fill="#FFFFFF"/>
+        <circle cx="41" cy="23.4" r=".9" fill="#FFFFFF"/>
+      </g>
+    </g>
+  </g>
+</svg>

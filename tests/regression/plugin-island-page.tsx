@@ -5,6 +5,7 @@ import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { IslandPages } from "../../src/windows/island/IslandPages";
+import { useCustomPanelPages } from "../../src/windows/island/custom-panels/useCustomPanelPages";
 import { useCollapsedGauges } from "../../src/windows/island/useCollapsedGauges";
 import { useCollapsedWidth } from "../../src/windows/island/useCollapsedWidth";
 import { pageForAltDigit, type IslandFeatures } from "../../src/windows/island/features";
@@ -59,10 +60,16 @@ console.warn = (...args: unknown[]) => {
   warn(...args);
 };
 
+function CustomPanelPages() {
+  useCustomPanelPages();
+  return null;
+}
+
 function Expanded() {
   const [page, setPage] = useState<IslandPage>("todo");
   goTo = setPage;
   return <div className="stage stage--expanded">
+    <CustomPanelPages />
     <IslandShell
       mode="expanded" page={page} isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled" features={FEATURES}
@@ -101,6 +108,78 @@ const collapsedRoot = document.getElementById("collapsed")!;
 
 async function frame() {
   await act(async () => { await new Promise(requestAnimationFrame); });
+}
+
+const setPanels = async (value: unknown) => {
+  await act(async () => {
+    if (value === null) localStorage.removeItem("fuyu-custom-panels");
+    else localStorage.setItem("fuyu-custom-panels", JSON.stringify(value));
+    window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-custom-panels" }));
+  });
+  await frame();
+};
+
+const storedItems = () => (JSON.parse(localStorage.getItem("fuyu-custom-panels") ?? "null") as { panels: { mode: string; items: { widget: string; size: string }[] }[] } | null)?.panels[0];
+const pointer = (type: string, target: EventTarget, x = 20, y = 20) =>
+  target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, button: 0, buttons: type === "pointerup" ? 0 : 1, pointerId: 7, clientX: x, clientY: y }));
+
+async function checkPanelEditing() {
+  const panel = () => expandedRoot.querySelector<HTMLElement>(".custom-panel");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__edit")!.click());
+  check(panel()?.classList.contains("custom-panel--editing") && panel()?.dataset.windowDrag === "false" && expandedRoot.querySelectorAll(".custom-panel__remove").length === 3
+    && expandedRoot.querySelectorAll(".custom-panel__strip").length === 3 && expandedRoot.querySelector(".custom-panel__edit")?.getAttribute("aria-pressed") === "true"
+    && expandedRoot.querySelector(".custom-panel__dock .custom-panel__picker"), "点布局按钮进入编辑模式：面板不再拖岛，每个组件有 × 和标签条，底部常驻组件栏");
+  const shield = expandedRoot.querySelector<HTMLElement>(".custom-panel__cell[data-widget='next-meeting'] .custom-panel__shield")!;
+  await act(async () => { pointer("pointerdown", shield); pointer("pointerup", window); });
+  check(storedItems()?.items.find((item) => item.widget === "next-meeting")?.size === "l", "网格面板里点一下组件，换到它的下一档大小");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__cell[data-widget='gone'] .custom-panel__remove")!.click());
+  check(storedItems()?.items.map((item) => item.widget).join() === "todos,next-meeting", "点 × 拿掉组件");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__undo button")!.click());
+  check(storedItems()?.items.length === 3 && !expandedRoot.querySelector(".custom-panel__undo"), "点「撤销」把拿掉的组件放回去");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__cell[data-widget='gone'] .custom-panel__remove")!.click());
+  check(expandedRoot.querySelector(".custom-panel__picker [data-widget]") && !expandedRoot.querySelector(".custom-panel__picker [data-widget='todos']"), "组件栏列出还没加的组件");
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__modes [role='radio']:not([aria-checked='true'])")!.click());
+  check(storedItems()?.mode === "free" && expandedRoot.querySelectorAll(".custom-panel__stretch").length === 2, "切到「自己摆」，组件右下角有拉伸角");
+  const free = expandedRoot.querySelector<HTMLElement>(".custom-panel__cell[data-widget='todos'] .custom-panel__shield")!;
+  const zoom = Number(expandedRoot.querySelector<HTMLElement>(".custom-panel__zoom")?.style.zoom) || 1;
+  await act(async () => { pointer("pointerdown", free, 20, 20); pointer("pointermove", window, 20 + 40 * zoom, 20 + 24 * zoom); pointer("pointerup", window, 20 + 40 * zoom, 20 + 24 * zoom); });
+  const moved = (JSON.parse(localStorage.getItem("fuyu-custom-panels")!) as { panels: { items: { widget: string; x: number; y: number }[] }[] }).panels[0].items.find((item) => item.widget === "todos");
+  check(moved && moved.x === 6 && moved.y === 0, `自由面板里拖动吸附到 16px 点阵、不出两行（${moved?.x},${moved?.y}）`);
+  await act(async () => expandedRoot.querySelector<HTMLButtonElement>(".custom-panel__edit")!.click());
+  check(!panel()?.classList.contains("custom-panel--editing") && !expandedRoot.querySelector(".custom-panel__remove") && !expandedRoot.querySelector(".custom-panel__dock"), "再点布局按钮（✓）退出编辑模式");
+  check(JSON.parse(localStorage.getItem("fuyu-custom-panels")!).panels.map((item: { id: string }) => item.id).join() === "fuyu", "编辑后存成唯一的 fuyu 面板");
+  await setPanels({ version: 1, panels: [{ id: "fuyu", name: "", icon: "star", mode: "grid", items: [] }] });
+  const workbench = expandedRoot.querySelector<HTMLButtonElement>(".panel-templates__button[data-template='workbench']");
+  check(workbench && expandedRoot.querySelector(".panel-templates__button[data-template='fun']"), "空面板里有「工作台」「娱乐」两个模板按钮");
+  await act(async () => workbench!.click());
+  check(storedItems()?.items.map((item) => `${item.widget}:${item.size}`).slice(0, 2).join() === "todos:l,next-meeting:m", `点「工作台」按模板加组件（${storedItems()?.items.map((item) => item.widget).join()}）`);
+}
+
+async function checkCustomPanel() {
+  const dotOf = () => expandedRoot.querySelector<HTMLButtonElement>('.dot-button[data-page="panel:fuyu"]');
+  const first = () => expandedRoot.querySelector<HTMLElement>(".island__header-start button");
+  check(dotOf() && first() === dotOf() && dotOf()?.querySelector(".panel-text-icon")?.textContent === "Fuyu", "没有 fuyu-custom-panels 时页头最左边（Agent 按钮前面）也是 Fuyu 页面，按钮是文字 Fuyu");
+  await setPanels({ version: 1, panels: [{ id: "desk", name: "工作台", icon: "star", mode: "grid", items: [
+    { widget: "todos", size: "l", x: 0, y: 0, w: 31, h: 31 },
+    { widget: "next-meeting", size: "m", x: 32, y: 0, w: 31, h: 15 },
+    { widget: "gone", size: "s", x: 32, y: 16, w: 15, h: 15 },
+  ] }] });
+  const dot = dotOf();
+  const allDots = [...expandedRoot.querySelectorAll<HTMLElement>(".island__header-start .dot-button")];
+  const firstPlugin = allDots.findIndex((button) => button.classList.contains("dot-button--plugin"));
+  check(dot && /^Fuyu/.test(dot.getAttribute("aria-label") ?? "") && allDots.indexOf(dot) === 0 && allDots.indexOf(dot) < firstPlugin, `Fuyu 页面排在页头第一个，名字是 Fuyu（${dot?.getAttribute("aria-label")}）`);
+  await act(async () => dot!.click());
+  await frame();
+  const cells = [...expandedRoot.querySelectorAll<HTMLElement>(".custom-panel__cell")];
+  const todos = cells.find((cell) => cell.dataset.widget === "todos");
+  check(cells.length === 3 && todos && todos.offsetWidth === 248 && todos.offsetHeight === 248 && todos.querySelector(".island-widget__empty")?.textContent === "今天没有待办",
+    "打开面板按网格画出组件：大尺寸 248×248，内置的待办组件在没有数据时显示空状态");
+  check(cells.find((cell) => cell.dataset.widget === "gone")?.childElementCount === 0, "找不到的组件留一个空格子，不报错");
+  check(cells.length === 3, "存过的旧面板（id 不是 fuyu）照样显示在 Fuyu 页面里");
+  await checkPanelEditing();
+  await setPanels(null);
+  check(dotOf(), "清空 fuyu-custom-panels 后 Fuyu 页面还在");
+  await act(async () => goTo("todo"));
 }
 
 async function runChecks() {
@@ -204,6 +283,7 @@ async function runChecks() {
   check(cell().offsetWidth === cellWidth && getComputedStyle(cell()).outlineStyle === "solid", "亮的是一圈描边，那一格不变宽");
   for (let waited = 0; marked().length > 0 && waited < 180; waited += 1) await frame();
   check(marked().length === 0 && islandSpotlight.owner() === null, "亮完两下就结束，之后展开或收起都不再亮");
+  await checkCustomPanel();
   results.textContent = `${messages.join("\n")}\n\nALL PASS (${messages.length})`;
   results.dataset.result = "passed";
 }

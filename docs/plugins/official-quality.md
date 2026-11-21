@@ -62,6 +62,7 @@
 | `countdown` | `#6f7dfa` | `calendar-clock` |
 | `ecdict` | `#3b94f5` | `book-a` |
 | `github-issues` | `#9575f5` | `circle-dot` |
+| `image-host` | `#9cb52a` | `image-up` |
 | `launcher` | `#e0a020` | `rocket` |
 | `now-playing` | `#f0559a` | `music-2` |
 | `pomodoro` | `#f25a4c` | 自己画的番茄钟（lucide 没有） |

@@ -7,7 +7,6 @@ import type { IslandSettings } from "../../lib/settings/types";
 import { AboutHero } from "../../features/updater/AboutHero";
 import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRow";
 import { WhatsNew } from "../../features/updater/WhatsNew";
-import { useOpenInBrowser } from "../../features/updater/useOpenInBrowser";
 import { getUpdateState, subscribeToUpdate } from "../../features/updater/updaterController";
 import { useTranslation } from "../../i18n";
 import { openOnboardingWindow } from "../onboarding/api";
@@ -81,17 +80,7 @@ function SystemSection({ onSettingsChange }: AboutSectionProps) {
 function Colophon() {
   const text = useTranslation().settings.project;
   const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
-  const { failed, onClick } = useOpenInBrowser();
-  return (
-    <>
-      <p className="about-colophon">
-        {text.colophon(version)}
-        {" · "}
-        <a href={text.logoCallUrl} target="_blank" rel="noopener noreferrer" title={text.logoCall} onClick={onClick}>{text.logoCallLink}</a>
-      </p>
-      {failed && <p className="project-link-error" role="alert">{text.openFailed}</p>}
-    </>
-  );
+  return <p className="about-colophon">{text.colophon(version)}</p>;
 }
 
 const sections = settingsSections<AboutSectionProps, AboutTabPage>();

@@ -7,14 +7,20 @@ import { PluginIcon } from "../../features/plugin-kernel/PluginIcon";
 import { usePluginNames } from "../../features/plugin-kernel/pluginNames";
 import { localizedTitle, packageLabel } from "../../features/plugin-kernel/slotTitle";
 import { useLocale, useTranslation } from "../../i18n";
-import { headerDotPages, isPageEnabled, type IslandFeatures } from "./features";
-import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
+import { headerDotPages, isPageEnabled, isPageShown, pageShortcutOrder, type IslandFeatures } from "./features";
+import { headerSlot, TRAILING_HEADER_IDS, withShortcut, type IslandHeaderContext } from "./slots/header";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
 import type { HeaderDotPage, IslandPage } from "./types";
+import { usePanelEditing } from "./custom-panels/panelEditing";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
+import { usePagePill } from "./usePagePill";
+import { FuyuTextIcon } from "../../components/island-widget/FuyuTextIcon";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
+import { useWindowDragGesture } from "./useWindowDragGesture";
 import "./IslandHeader.css";
+
+const INTERACTIVE = "button, a, input, textarea, select, label, [role='button'], [contenteditable='true']";
 
 type IslandHeaderProps = {
   page: IslandPage;
@@ -33,6 +39,7 @@ type IslandHeaderProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
+  onWindowDragStart: () => void;
 };
 
 export function IslandHeader({
@@ -52,16 +59,28 @@ export function IslandHeader({
   pageDigitModifiers,
   hoverSwitchPage,
   hoverSwitchDelayMs,
+  onWindowDragStart,
 }: IslandHeaderProps) {
   const t = useTranslation();
   const { locale } = useLocale();
   const pluginNames = usePluginNames();
   const { hints } = useIslandContributed();
-  const hoverSwitch = usePageHoverSwitch(hoverSwitchPage, hoverSwitchDelayMs, page, onPageChange);
+  const editing = usePanelEditing() !== null;
+  const hoverSwitch = usePageHoverSwitch(hoverSwitchPage && !editing, hoverSwitchDelayMs, page, onPageChange);
   const spotlightOf = useHeaderSpotlight();
+  const { didDragRef, prepareWindowDrag, cancelWindowDrag } = useWindowDragGesture(false, onWindowDragStart);
   const pages = useSlotEntries(pageSlot);
   const dots = headerDotPages(pages, features);
+  const shortcutOrder = pageShortcutOrder(features);
+  const agentsAt = isPageShown("agents", features) ? shortcutOrder.indexOf("agents") : -1;
+  const leading = dots.filter((item) => {
+    const at = shortcutOrder.indexOf(item.id as IslandPage);
+    return at >= 0 && at < agentsAt;
+  });
+  const trailing = dots.filter((item) => !leading.includes(item));
   const dotsRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${dots.map((item) => item.id).join(",")}`);
   useEffect(() => {
     const row = dotsRef.current;
     const active = row?.querySelector<HTMLElement>(".dot-button--active");
@@ -83,6 +102,7 @@ export function IslandHeader({
     pageDigitModifiers,
     withShortcut: (label, target) => withShortcut({ features, pageDigitModifiers }, label, target),
     isPageEnabled: (target) => isPageEnabled(target, features),
+    isPageShown: (target) => isPageShown(target, features),
   };
   const builtinLabels: Record<HeaderDotPage, string> = {
     todo: t.island.todoList,
@@ -98,16 +118,57 @@ export function IslandHeader({
     ?? localizedTitle(item.title, locale)
     ?? localizedTitle(pluginNames.get(item.owner), locale)
     ?? packageLabel(item.owner === "builtin" ? item.id : item.owner);
+  const renderDot = (item: (typeof dots)[number]) => {
+    const target: IslandPage = item.id;
+    const Icon = item.icon;
+    const label = pageLabel(item);
+    const named = item.external || !(target in builtinLabels);
+    const kind = item.external ? "dot-button--plugin" : named ? "dot-button--custom" : `dot-button--${target}`;
+    return (
+      <button
+        key={target}
+        className={`dot-button ${kind}${page === target ? " dot-button--active" : ""}`}
+        type="button"
+        data-page={named ? target : undefined}
+        {...spotlightOf(item)}
+        aria-label={withShortcut(buttons, label, target)}
+        aria-pressed={page === target}
+        {...hoverSwitch(target)}
+        onClick={(event) => {
+          event.stopPropagation();
+          onPageChange(target);
+        }}
+      >
+        {item.external
+          ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
+          : Icon && <Icon size={Icon === FuyuTextIcon ? 18 : 15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
+      </button>
+    );
+  };
+
   const agentStatusIconClassName = [
     "island__agent-status-icon",
     `island__agent-status-icon--${agentVisualState}`,
   ].join(" ");
 
   return (
-    <header className="island__header">
+    <header
+      ref={headerRef}
+      className="island__header"
+      onPointerDown={prepareWindowDrag}
+      onPointerUp={cancelWindowDrag}
+      onPointerCancel={cancelWindowDrag}
+      onClick={(event) => {
+        if (didDragRef.current) return;
+        if (event.target instanceof Element && event.target.closest(INTERACTIVE)) return;
+        onCollapse();
+      }}
+    >
+      <span ref={pillRef} className="island__page-pill" aria-hidden="true" />
       <div className="island__header-start">
       <div className="island__title">
-        {features.agents ? (
+        {leading.map(renderDot)}
+        {isPageShown("agents", features) ? (
           <button
             className={`island__agent-button${page === "agents" ? " island__agent-button--active" : ""}`}
             type="button"
@@ -134,32 +195,10 @@ export function IslandHeader({
       </div>
 
       <div ref={dotsRef} className="editor-dots" aria-label={t.island.editor}>
-        {dots.map((item) => {
-          const target: IslandPage = item.id;
-          const Icon = item.icon;
-          const label = pageLabel(item);
-          const kind = item.external ? "dot-button--plugin" : `dot-button--${target}`;
-          return (
-            <button
-              key={target}
-              className={`dot-button ${kind}${page === target ? " dot-button--active" : ""}`}
-              type="button"
-              data-page={item.external ? target : undefined}
-              {...spotlightOf(item)}
-              aria-label={withShortcut(buttons, label, target)}
-              aria-pressed={page === target}
-              {...hoverSwitch(target)}
-              onClick={(event) => {
-                event.stopPropagation();
-                onPageChange(target);
-              }}
-            >
-              {item.external
-                ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
-                : Icon && <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
-            </button>
-          );
-        })}
+        {trailing.map(renderDot)}
+      </div>
+      <div className="window-actions window-actions--lead">
+        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => !TRAILING_HEADER_IDS.has(item.id) && (item.enabled?.(buttons) ?? true))} />
       </div>
       </div>
 
@@ -168,12 +207,15 @@ export function IslandHeader({
         type="button"
         aria-label={t.island.collapseIsland}
         data-tooltip=""
-        data-window-drag="false"
-        onClick={onCollapse}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (event.detail > 0 && didDragRef.current) return;
+          onCollapse();
+        }}
       />
 
       <div className="window-actions">
-        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.enabled?.(buttons) ?? true)} />
+        <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => TRAILING_HEADER_IDS.has(item.id) && (item.enabled?.(buttons) ?? true))} />
       </div>
     </header>
   );

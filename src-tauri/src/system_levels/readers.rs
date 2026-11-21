@@ -90,3 +90,25 @@ pub(super) fn open_brightness() -> Option<DisplayBrightness> {
 pub(super) fn brightness_percent(brightness: &DisplayBrightness) -> Option<u32> {
     brightness.percent()
 }
+
+fn default_volume() -> Option<crate::win32::audio::OutputVolume> {
+    AudioDevices::open().ok()?.default_render_output().ok()?.volume().ok()
+}
+
+pub(super) fn read_now() -> (Option<(u32, bool)>, Option<u32>) {
+    let Ok(_apartment) = ComApartment::multithreaded() else {
+        return (None, None);
+    };
+    let volume = default_volume().and_then(|volume| {
+        let level = volume.level().ok()?.clamp(0.0, 1.0);
+        Some(((level * 100.0).round() as u32, volume.muted().ok()?))
+    });
+    (volume, open_brightness().as_ref().and_then(brightness_percent))
+}
+
+pub(super) fn set_volume_now(level: f32) -> bool {
+    let Ok(_apartment) = ComApartment::multithreaded() else {
+        return false;
+    };
+    default_volume().is_some_and(|volume| volume.set_level(level).is_ok())
+}

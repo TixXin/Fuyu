@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
@@ -19,7 +19,8 @@ import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTucking } from "./useIslandTucking";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
-import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, panelIslandWidth } from "./layout";
+import { editGrowWidth, PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
+import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, maxExpandedIslandHeight, panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
 import { surfaceThemeColors } from "../../lib/theme/themeMode";
@@ -47,7 +48,7 @@ import { useAutoIslandForm } from "./autoIslandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
-import { LINE_PRIORITY, leadLine } from "../../features/plugin-kernel/islandContributions";
+import { LINE_PRIORITY } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { effectiveIslandOpacity } from "./idleDim";
@@ -55,6 +56,9 @@ import { useIdleDim } from "./useIdleDim";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
+import { isPageShown } from "./features";
+import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
+import { islandPageSize } from "./pageSize";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
@@ -116,19 +120,29 @@ export function IslandApp() {
     setPage,
     openIslandPage,
   });
+  const homePage: IslandPage = isPageShown(FUYU_PAGE_ID, features) ? FUYU_PAGE_ID : page;
   const openPopup = [...popups.values()].find((entry) => entry.open === true);
   const hasOpenPopup = openPopup !== undefined;
+  const panelEditing = usePanelEditing() !== null && !hasOpenPopup;
+  const fuyuPage = page === FUYU_PAGE_ID && !hasOpenPopup;
+  const pageSize = islandPageSize(settings, page);
+  const panelWidth = pageSize.width;
+  const editGrow = panelEditing ? editGrowWidth(panelIslandWidth(panelWidth, settings.expandedScale), settings.expandedScale) : 0;
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
     hasOpenPopup,
     null,
-    panelIslandWidth(settings.panelWidth, settings.expandedScale),
+    panelIslandWidth(panelWidth + editGrow, settings.expandedScale),
     openPopup?.wide === true,
   );
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
-  const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
-  const pageIslandHeight = getExpandedIslandHeight({ maxPanelHeight: settings.maxPanelHeight, panel: popups.get(page), popup });
-  const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
+  const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup, page, pageSize);
+  const pageIslandHeight = fuyuPage && !popup ? pageSize.height : getExpandedIslandHeight({ maxPanelHeight: pageSize.height, panel: popups.get(page), popup });
+  const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
+  const expandedIslandHeight = Math.min(
+    maxExpandedIslandHeight(settings.expandedScale),
+    (resizingHeight && !popup ? pageSize.height : pageIslandHeight + editGrowHeight) + notchExpandedExtra(notch, settings.expandedScale, popup),
+  );
   const islandNotice = useIslandNotice({ firstHints, v2Upgrade, layer: layerNotice });
   const isDimmed = useIdleDim({
     enabled: settings.idleDim,
@@ -196,12 +210,18 @@ export function IslandApp() {
     settings,
     navigation,
     quiet: game.quiet,
-    leadPage: (leadLine(contributedLines, { reserved: true })?.page ?? null) as IslandPage | null,
+    homePage,
     openEnabledPage,
   });
 
+  const openSettingsFromPanel = useCallback((section?: "updates") => {
+    openSettingsWindow(section);
+    collapseIsland();
+  }, [collapseIsland]);
+
   useIslandKeyboard(
     collapseIsland,
+    openSettingsFromPanel,
     mode,
     features,
     page,
@@ -220,10 +240,12 @@ export function IslandApp() {
       <IslandShell
         mode={mode}
         page={page}
+        homePage={homePage}
         popup={popup}
-        resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${settings.maxPanelHeight}` : null}
+        resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${pageSize.height}` : null}
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
+        hoverGrow={settings.islandMotion !== "none"}
         glass={{ ...glass, nativeState: nativeGlassState }}
         isTucked={isTucked}
         isDimmed={isDimmed}
@@ -244,7 +266,7 @@ export function IslandApp() {
         minimizesToTray={settings.minimizeAction === "tray"}
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
         onOpenTranslator={features.translation ? openTranslator : null}
-        onOpenSettings={openSettingsWindow}
+        onOpenSettings={openSettingsFromPanel}
         onTuck={tuckIsland}
         onReveal={hoverTucked}
         onPageChange={setPage}

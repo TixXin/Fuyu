@@ -256,7 +256,7 @@ async function runChecks() {
     await act(async () => changeAgent({ provider: "claudeCode", label: "Claude Code", title: "插件市场功能" }));
     await settle();
     await act(async () => button().click());
-    check(openedPage === "agents", "显示 Agent 标题时点击小岛打开 Agent 页");
+    check(openedPage === "todo", "显示 Agent 标题时点击小岛也打开首页，不进 Agent 页");
     const agentCount = () => document.querySelector<HTMLButtonElement>(".island-agent-count");
     const tuckDot = () => document.querySelector(".island__quiet-button");
     check(!agentCount() && !tuckDot(), "AI Agent 开启且没有运行中的会话时不显示灰点和数量");
@@ -331,7 +331,7 @@ async function runChecks() {
     await act(async () => join()!.click());
     check(openedPage === null && commands.includes("plugin:opener|open_url"), "点加入打开会议链接，不展开岛屿");
     await act(async () => button().click());
-    check(openedPage === "calendar", "显示会议时点击小岛打开日历页");
+    check(openedPage === "todo", "显示会议时点击小岛也打开首页，不进日历页");
     await act(async () => changeMeeting(null));
     await settle();
     check(!document.querySelector(".island-meeting") && !join(), "没有会议时恢复原来的文字");
