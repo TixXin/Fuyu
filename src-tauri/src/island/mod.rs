@@ -27,6 +27,8 @@ pub(crate) mod side;
 pub(crate) mod glass;
 #[cfg(windows)]
 pub(crate) mod glass_capture;
+#[cfg_attr(not(any(windows, target_os = "macos")), path = "resize_unsupported.rs")]
+pub(crate) mod resize;
 #[cfg_attr(not(windows), path = "outside_click_unsupported.rs")]
 pub(crate) mod outside_click;
 #[cfg_attr(target_os = "macos", path = "passthrough_macos.rs")]
@@ -495,6 +497,7 @@ macro_rules! tauri_commands {
             crate::island::focus::release_island_hover_focus,
             crate::island::focus::island_is_foreground,
             crate::island::passthrough::set_island_cursor_tracking,
+            crate::island::resize::start_island_resize,
             crate::island::banner_hit::set_island_banner_rect,
             crate::island::banner_hit::set_island_overflow_rect,
             crate::island::outside_click::set_island_outside_click_watch,

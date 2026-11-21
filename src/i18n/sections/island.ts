@@ -14,6 +14,15 @@ export type IslandText = {
   resetPosition: string;
   resetPositionLabel: string;
   arrangeItems: string;
+  resize: {
+    menu: string;
+    reset: string;
+    done: string;
+    keys: string;
+    collapsedWidth: (extra: string) => string;
+    detent: Record<"min" | "compact" | "default" | "wide" | "tall" | "max" | "plus60" | "plus120", string>;
+    preset: Record<"compact" | "default" | "large", string>;
+  };
   screenshot: string;
   editor: string;
   todoList: string;
@@ -71,6 +80,15 @@ export const zhCN: IslandText = {
   resetPosition: "复位",
   resetPositionLabel: "回到主屏顶部居中",
   arrangeItems: "排列…",
+  resize: {
+    menu: "调整大小…",
+    reset: "恢复默认尺寸",
+    done: "完成",
+    keys: "方向键微调",
+    collapsedWidth: (extra) => `折叠宽度 ${extra}`,
+    detent: { min: "最小", compact: "适中", default: "默认", wide: "宽", tall: "高", max: "最大", plus60: "+60", plus120: "+120" },
+    preset: { compact: "紧凑", default: "默认", large: "宽大" },
+  },
   screenshot: "截图",
   editor: "岛屿编辑",
   todoList: "任务清单",
@@ -134,6 +152,15 @@ export const en: IslandText = {
   resetPosition: "Reset",
   resetPositionLabel: "Reset island to the top center of the primary screen",
   arrangeItems: "Arrange…",
+  resize: {
+    menu: "Resize…",
+    reset: "Reset size",
+    done: "Done",
+    keys: "Arrow keys nudge",
+    collapsedWidth: (extra) => `Bar width ${extra}`,
+    detent: { min: "Min", compact: "Medium", default: "Default", wide: "Wide", tall: "Tall", max: "Max", plus60: "+60", plus120: "+120" },
+    preset: { compact: "Compact", default: "Default", large: "Large" },
+  },
   screenshot: "Screenshot",
   editor: "Island editor",
   todoList: "Tasks",

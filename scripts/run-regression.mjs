@@ -31,6 +31,7 @@ export const PAGES = [
   "bottom-island.html?test=1",
   "side-island.html?test=1",
   "tuck-hint.html?test=1",
+  "island-resize.html?test=1",
   "island-colors.html?test=1",
   "message-banner.html?test=1",
   "message-panel.html?test=1",

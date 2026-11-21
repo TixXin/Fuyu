@@ -73,6 +73,7 @@ type IslandShellProps = {
   hoverSwitchDelayMs: number;
   fuyuTabIcon?: boolean;
   overlay?: ReactNode;
+  resize?: ReactNode;
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
 };
@@ -170,6 +171,7 @@ export function IslandShell({
   hoverSwitchDelayMs,
   fuyuTabIcon = false,
   overlay,
+  resize,
   collapsedSlots,
   children,
 }: IslandShellProps) {
@@ -340,6 +342,7 @@ export function IslandShell({
             onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(homePage))}
           />
         )}
+        {resize}
         <IslandDragHint />
         <IconButtonTooltip />
       </section>

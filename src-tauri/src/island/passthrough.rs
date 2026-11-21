@@ -8,6 +8,7 @@ use windows::Win32::Foundation::HWND;
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
+    resize,
     geometry::{
         cursor_near_island, cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect,
         hover_inside, passthrough_sleep_duration, should_ignore_cursor, stage_point, DimWakeTracker, IslandOnScreen,
@@ -18,6 +19,8 @@ use super::{
 use crate::win32;
 
 pub(crate) const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
+
+pub(crate) const ISLAND_HOLD_CHANGED_EVENT: &str = "island-hold-changed";
 
 pub(crate) const ISLAND_CURSOR_MOVED_EVENT: &str = "island-cursor-moved";
 const CURSOR_EVENT_EVERY_TICKS: u32 = 3;
@@ -40,6 +43,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut ignoring_cursor = false;
         let mut was_inside = false;
         let mut was_on_banner = false;
+        let mut was_held = false;
         let hwnd = window.hwnd().ok();
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
@@ -59,7 +63,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 });
                 let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
             }
-            let is_inside = hover_inside(state, raw_inside);
+            let is_inside = hover_inside(state, raw_inside) || resize::is_resizing();
             let is_on_banner = hwnd.is_some_and(cursor_is_on_banner);
             let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 
@@ -79,6 +83,12 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_BANNER_HOVER_CHANGED_EVENT, is_on_banner);
             }
 
+            let held = resize::is_resizing();
+            if held != was_held {
+                was_held = held;
+                let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);
+            }
+
             let near = hwnd.is_none_or(cursor_is_near_stage);
             tick = tick.wrapping_add(1);
             let tracking = CURSOR_TRACKING.load(Ordering::Relaxed);
@@ -92,7 +102,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 }
             }
 
-            let active = is_inside || is_on_banner || near;
+            let active = is_inside || is_on_banner || held || near;
             thread::sleep(passthrough_sleep_duration(true, active));
         }
     });

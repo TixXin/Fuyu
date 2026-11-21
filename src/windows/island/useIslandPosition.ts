@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as islandApi from "./api";
 import { clearIslandPosition, loadIslandPosition, saveIslandPosition, type IslandPosition } from "./storage";
 import { useHideHints } from "./useHideHints";
+import { useIslandHoldListener } from "./islandHold";
 
 export function useIslandPosition() {
   const [isPositionDetached, setIsPositionDetached] = useState(() => loadIslandPosition() !== null);
@@ -16,6 +17,7 @@ export function useIslandPosition() {
   }, [isPositionDetached]);
 
   useHideHints();
+  useIslandHoldListener();
 
   useEffect(() => {
     let didCancel = false;

@@ -10,6 +10,7 @@ import { loadCollapsedPlacements, type CollapsedPlacement } from "../../lib/sett
 import { openSettingsWindow } from "../settings/api";
 import { collapsedItemName, collapsedMenuRows, toggleCollapsedMenuItem, type CollapsedNameSources } from "./collapsedMenu";
 import { collapsedBarSlot } from "./slots/collapsed";
+import { setResizeEditing } from "./resize/session";
 
 export function builtinNames(t: Translations): Record<string, string> {
   const item = t.settings.collapsedItems.item;
@@ -67,6 +68,7 @@ export function useCollapsedContextMenu(enabled: boolean, save: (next: Collapsed
         })),
         { item: "Separator" as const },
         { id: "collapsed-items-arrange", text: t.island.arrangeItems, action: () => openSettingsWindow("islandLayout") },
+        { id: "collapsed-resize", text: t.island.resize.menu, action: () => setResizeEditing(true) },
       ],
     })
       .then((menu) => menu.popup())

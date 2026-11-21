@@ -58,6 +58,8 @@ import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
 import { isPageShown } from "./features";
 import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
+import { IslandResize } from "./resize/IslandResize";
+import { useIslandResize } from "./resize/useIslandResize";
 import { islandPageSize } from "./pageSize";
 
 const openTranslator = () => {
@@ -135,6 +137,7 @@ export function IslandApp() {
     panelIslandWidth(panelWidth + editGrow, settings.expandedScale),
     openPopup?.wide === true,
   );
+  const resizeModel = useIslandResize(settings, setSettings, page, pageSize);
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
   const pageIslandHeight = fuyuPage && !popup ? pageSize.height : getExpandedIslandHeight({ maxPanelHeight: pageSize.height, panel: popups.get(page), popup });
   const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
@@ -276,6 +279,7 @@ export function IslandApp() {
         fuyuTabIcon={settings.fuyuTabIcon}
         notice={islandNotice}
         collapsedSlots={collapsedSlots}
+        resize={<IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && (mode === "expanded" || notch === null)} size={pageSize} extra={settings.collapsedWidthExtra} />}
       >
         <PluginSlot window="island" name="island.dev/v1" />
         <IslandPages

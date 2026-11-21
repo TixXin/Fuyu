@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>岛屿与面板改尺寸：四合一</title>
+<style>
+  :root {
+    --bg: #1b1d22;
+    --card: #26292f;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #f2f0ea;
+    --muted: rgba(242, 240, 234, 0.62);
+    --accent: #74d6ff;
+    --wall: linear-gradient(160deg, #c9cdd3, #9aa1aa 60%, #7d848e);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --spring: cubic-bezier(0.34, 1.45, 0.5, 1);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 56px; background: var(--bg); color: var(--text);
+    font: 14px/1.55 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  }
+  header, .grid, .rules { max-width: 1180px; margin-left: auto; margin-right: auto; }
+  header { margin-bottom: 16px; }
+  h1 { margin: 0 0 6px; font-size: 20px; }
+  header p { margin: 0 0 10px; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 10px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .controls .group { display: flex; gap: 6px; align-items: center; }
+  .controls .group > span { color: var(--muted); margin-right: 2px; }
+  .chk { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; padding: 3px 10px 3px 4px; border-radius: 999px; border: 1px solid var(--line); }
+  .chk:has(input:checked) { border-color: rgba(116, 214, 255, 0.45); background: rgba(116, 214, 255, 0.08); }
+  .chk .k { font-size: 11px; font-weight: 700; color: #002233; background: var(--accent); border-radius: 50%; width: 18px; height: 18px; display: inline-grid; place-items: center; }
+  .chk input { display: none; }
+  .chk:not(:has(input:checked)) .k { background: rgba(255, 255, 255, 0.2); color: var(--muted); }
+  .sep { width: 1px; height: 20px; background: var(--line); }
+  button.ui { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; font: inherit; cursor: pointer; }
+  button.ui:hover { border-color: rgba(255, 255, 255, 0.2); }
+  .grid { display: grid; gap: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) 330px; }
+  @media (max-width: 980px) { .card { grid-template-columns: 1fr; } }
+  .stage { position: relative; height: 520px; background: var(--wall); overflow: hidden; user-select: none; touch-action: none; }
+  .stage.short { height: 230px; }
+  body.dark-wall .stage { background: linear-gradient(160deg, #3a3f48, #23262c); }
+  .stage .bar { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 6px; z-index: 6; }
+  .stage .try { position: absolute; left: 14px; bottom: 12px; font-size: 12px; color: rgba(0, 0, 0, 0.55); background: rgba(255, 255, 255, 0.55); padding: 3px 9px; border-radius: 999px; pointer-events: none; max-width: calc(100% - 220px); }
+  body.dark-wall .stage .try { color: rgba(255, 255, 255, 0.7); background: rgba(0, 0, 0, 0.35); }
+
+  .isl { position: absolute; top: 0; left: 50%; translate: -50% 0; background: #000; color: #fff; border-radius: 0 0 var(--r, 18px) var(--r, 18px); transition: width 520ms var(--spring), height 520ms var(--spring); }
+  .isl.dragging { transition: none; }
+  .isl.expanded { --r: 22px; }
+  .fil { position: absolute; top: 0; width: 10px; height: 10px; background: radial-gradient(circle at 0 100%, transparent 9.5px, #000 10px); pointer-events: none; }
+  .fil.l { left: -10px; } .fil.r { right: -10px; transform: scaleX(-1); }
+  .view { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; transition: opacity 240ms var(--ease); }
+  .col { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 100%; font-size: 12.5px; white-space: nowrap; }
+  .col .jelly { width: 20px; height: 18px; border-radius: 10px 10px 6px 6px; background: #bfe9ff; flex: none; }
+  .col .txt { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .col .eq { display: flex; gap: 2px; align-items: flex-end; height: 14px; flex: none; }
+  .col .eq i { width: 3px; background: #ff5a4e; border-radius: 1px; }
+  .col .n { width: 18px; height: 18px; border-radius: 50%; background: #17325a; color: #cfe3ff; display: grid; place-items: center; font-size: 10px; flex: none; }
+  .isl:not(.expanded) .exp, .isl.expanded .col { opacity: 0; pointer-events: none; }
+  .exp { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .exp .tabs { display: flex; gap: 6px; flex: none; }
+  .exp .tabs span { padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); font-size: 11.5px; white-space: nowrap; }
+  .exp .tabs span:first-child { background: rgba(116, 214, 255, 0.2); color: var(--accent); }
+  .exp .rows { display: flex; flex-direction: column; gap: 8px; }
+  .exp .row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); flex: none; }
+  .exp .row b { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid rgba(255, 255, 255, 0.4); flex: none; }
+  .exp .row i { height: 7px; border-radius: 4px; background: rgba(255, 255, 255, 0.22); }
+  .exp .row u { margin-left: auto; width: 18px; height: 18px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); flex: none; }
+  .isl.editing .view { opacity: 0.4; }
+
+  .badge { position: absolute; left: 50%; translate: -50% 0; padding: 3px 10px; border-radius: 999px; background: rgba(0, 0, 0, 0.82); color: #fff; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; opacity: 0; transition: opacity 160ms var(--ease), top 520ms var(--spring); pointer-events: none; z-index: 4; }
+  .badge.show { opacity: 1; }
+  .badge.dragging { transition: opacity 160ms var(--ease); }
+  .badge em { font-style: normal; color: var(--accent); margin-left: 6px; }
+  .badge.tick { animation: tick 220ms var(--ease); }
+  @keyframes tick { 40% { scale: 1.12; } }
+
+  .fx { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 160ms var(--ease); }
+  .fx.show { opacity: 1; }
+  .fx .t { position: absolute; top: 0; height: 10px; width: 1px; background: rgba(0, 0, 0, 0.35); }
+  .fx .t.y { left: auto; height: 1px; width: 10px; }
+  .fx .t.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .fx .t span { position: absolute; top: 100%; left: 50%; translate: -50% 2px; font-size: 10px; color: rgba(0, 0, 0, 0.55); white-space: nowrap; }
+  .fx .t.y span { top: 50%; left: 100%; translate: 4px -50%; }
+  body.dark-wall .fx .t { background: rgba(255, 255, 255, 0.3); }
+  body.dark-wall .fx .t span, body.dark-wall .ghost span { color: rgba(255, 255, 255, 0.6); }
+  .ghost { position: absolute; top: 0; left: 50%; translate: -50% 0; border: 1px dashed rgba(0, 0, 0, 0.3); border-top: none; border-radius: 0 0 22px 22px; }
+  .ghost.pill { border-radius: 0 0 18px 18px; }
+  body.dark-wall .ghost { border-color: rgba(255, 255, 255, 0.28); }
+  .ghost.on { border: 1.5px solid var(--accent); border-top: none; box-shadow: 0 0 10px rgba(116, 214, 255, 0.5); }
+  .ghost span { position: absolute; right: 8px; bottom: -17px; font-size: 10px; color: rgba(0, 0, 0, 0.55); white-space: nowrap; }
+
+  .h { position: absolute; z-index: 2; }
+  .grab { z-index: 3; left: 50%; bottom: 6px; width: 40px; height: 5px; translate: -50% 0; border-radius: 3px; background: rgba(255, 255, 255, 0.4); cursor: move; opacity: 0; scale: 0.6; transition: opacity 200ms var(--ease), scale 260ms var(--spring), width 200ms var(--ease), background 160ms; }
+  .grab::after { content: ""; position: absolute; inset: -10px -16px; }
+  .isl.near-b .grab, .isl.dragging .grab.active { opacity: 1; scale: 1; }
+  .grab:hover, .grab.active { width: 64px; background: var(--accent); box-shadow: 0 0 10px rgba(116, 214, 255, 0.6); }
+  .cap { z-index: 3; top: 50%; width: 4px; height: 16px; translate: 0 -50%; border-radius: 2px; background: rgba(255, 255, 255, 0.45); cursor: ew-resize; opacity: 0; transition: opacity 200ms var(--ease), height 220ms var(--spring), background 160ms; }
+  .cap::after { content: ""; position: absolute; inset: -12px -8px; }
+  .cap.l { left: 7px; } .cap.r { right: 7px; }
+  .isl.near-l .cap.l, .isl.near-r .cap.r, .cap.active { opacity: 1; }
+  .cap:hover, .cap.active { height: 22px; background: var(--accent); box-shadow: 0 0 8px rgba(116, 214, 255, 0.6); }
+  .edge.l { left: -3px; top: 0; bottom: 26px; width: 12px; cursor: ew-resize; }
+  .edge.r { right: -3px; top: 0; bottom: 26px; width: 12px; cursor: ew-resize; }
+  .edge.b { left: 26px; right: 26px; bottom: -3px; height: 12px; cursor: ns-resize; }
+  .edge:not(.armed) { cursor: default; }
+  .glow { position: absolute; pointer-events: none; background: var(--accent); border-radius: 3px; opacity: 0; box-shadow: 0 0 14px 2px rgba(116, 214, 255, 0.55); transition: opacity 200ms var(--ease), top 260ms var(--spring), bottom 260ms var(--spring), left 260ms var(--spring), right 260ms var(--spring); }
+  .glow.l, .glow.r { top: 42%; bottom: 42%; width: 2.5px; }
+  .glow.l { left: 3px; } .glow.r { right: 3px; }
+  .glow.b { left: 42%; right: 42%; height: 2.5px; bottom: 3px; }
+  .isl.g-l .glow.l, .isl.g-r .glow.r { opacity: 1; top: 18%; bottom: 18%; }
+  .isl.g-b .glow.b { opacity: 1; left: 18%; right: 18%; }
+  .isl.h-l .glow.l, .isl.h-r .glow.r { opacity: 0.4; top: 30%; bottom: 30%; }
+  .isl:not(.expanded) .glow.l, .isl:not(.expanded) .glow.r { top: 26% !important; bottom: 26% !important; }
+  .knob { z-index: 3; bottom: 4px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); background: #000; opacity: 0; scale: 0.5; transition: opacity 200ms var(--ease), scale 260ms var(--spring); }
+  .knob.br { right: 4px; cursor: nwse-resize; } .knob.bl { left: 4px; cursor: nesw-resize; }
+  .knob::after { content: ""; position: absolute; inset: -10px; }
+  .isl.near-kr .knob.br, .isl.near-kl .knob.bl, .knob.active { opacity: 1; scale: 1; }
+  .knob:hover, .knob.active { scale: 1.3; background: var(--accent); }
+  .outline { position: absolute; inset: 0 -5px -5px; border: 1.5px dashed var(--accent); border-top: none; border-radius: 0 0 calc(var(--r) + 5px) calc(var(--r) + 5px); pointer-events: none; opacity: 0; transition: opacity 200ms var(--ease); }
+  .isl.editing .outline { opacity: 1; animation: breathe 1.8s ease-in-out infinite; }
+  @keyframes breathe { 50% { opacity: 0.45; } }
+  .bead { z-index: 3; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid #000; box-shadow: 0 0 0 1px var(--accent); animation: pop 320ms var(--spring) both; }
+  .bead::after { content: ""; position: absolute; inset: -9px; }
+  @keyframes pop { from { scale: 0; } }
+  .bead.l { left: -6px; top: 50%; translate: 0 -50%; cursor: ew-resize; }
+  .bead.r { right: -6px; top: 50%; translate: 0 -50%; cursor: ew-resize; }
+  .bead.b { left: 50%; bottom: -6px; translate: -50% 0; cursor: ns-resize; }
+  .bead.bl { left: -4px; bottom: -4px; cursor: nesw-resize; }
+  .bead.br { right: -4px; bottom: -4px; cursor: nwse-resize; }
+  .chips { position: absolute; left: 50%; translate: -50% 0; display: flex; gap: 6px; padding: 5px; border-radius: 999px; background: rgba(0, 0, 0, 0.85); opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease), top 520ms var(--spring); white-space: nowrap; z-index: 5; }
+  .chips.show { opacity: 1; pointer-events: auto; }
+  .chips button { border: none; background: rgba(255, 255, 255, 0.08); color: #fff; font: 12px/1 inherit; padding: 6px 11px; border-radius: 999px; cursor: pointer; }
+  .chips button.on { background: rgba(116, 214, 255, 0.22); color: var(--accent); }
+  .chips button.done { background: var(--accent); color: #002233; font-weight: 600; }
+  .chips .kbd { color: rgba(255, 255, 255, 0.45); font-size: 11px; align-self: center; padding: 0 4px; }
+  .menu { position: absolute; z-index: 7; background: rgba(28, 28, 30, 0.96); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 4px; display: none; min-width: 150px; }
+  .menu.show { display: block; }
+  .menu div { padding: 6px 10px; border-radius: 6px; font-size: 12.5px; color: #fff; cursor: pointer; }
+  .menu div:hover { background: rgba(116, 214, 255, 0.2); }
+  .menu div.dim { color: rgba(255, 255, 255, 0.4); pointer-events: none; }
+  .press { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 2px solid var(--accent); pointer-events: none; opacity: 0; z-index: 6; }
+  .press.go { animation: press 450ms linear forwards; }
+  @keyframes press { from { opacity: 0.9; scale: 1.6; } to { opacity: 0.9; scale: 0.6; } }
+  .toast { position: absolute; left: 50%; bottom: 46px; translate: -50% 0; background: rgba(0, 0, 0, 0.8); color: #fff; font-size: 12px; padding: 4px 12px; border-radius: 999px; opacity: 0; transition: opacity 200ms; pointer-events: none; z-index: 6; }
+  .toast.show { opacity: 1; }
+
+  body.zones .grab::after, body.zones .cap::after { background: rgba(116, 214, 255, 0.35); }
+  body.zones .edge { background: rgba(255, 196, 0, 0.45); }
+  body.zones .knob::after { background: rgba(190, 120, 255, 0.45); border-radius: 50%; }
+  body.zones .bead::after { background: rgba(116, 214, 255, 0.3); border-radius: 50%; }
+  body.zones .grab, body.zones .cap, body.zones .knob { opacity: 1; scale: 1; }
+
+  .meta { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; border-left: 1px solid var(--line); }
+  .meta h2 { margin: 0; font-size: 16px; }
+  .meta ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 7px; color: var(--muted); }
+  .meta li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; }
+  .meta li .k { font-size: 11px; font-weight: 700; color: #002233; background: var(--accent); border-radius: 50%; width: 18px; height: 18px; display: inline-grid; place-items: center; margin-top: 2px; }
+  .meta li b { color: var(--text); font-weight: 600; }
+  .meta .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--muted); }
+  .meta .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+  .rules { margin-top: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .rules h2 { margin: 0 0 8px; font-size: 16px; }
+  .rules ol { margin: 0; padding-left: 20px; color: var(--muted); display: grid; gap: 6px; }
+  .rules b { color: var(--text); }
+  @media (prefers-reduced-motion: reduce) {
+    .isl, .badge, .chips, .glow, .grab, .cap, .knob { transition-duration: 1ms !important; }
+    .isl.editing .outline, .badge.tick, .bead, .press.go { animation: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>岛屿与面板改尺寸：四合一</h1>
+  <p>A 拉环、B 捏边、C 调整大小模式、D 角落旋钮放在同一个岛上，各管一块地方、共用一套反馈：拖任何一处，正在变的边都会亮，顶上出刻度，经过档位会吸一下，拖出范围有橡皮筋。上面一块是展开的面板，下面一块是折叠的岛，都能直接拖。可以在下面关掉某一项，看少了它会怎样；打开「显示热区」能看到每一块谁管。</p>
+  <div class="controls">
+    <div class="group"><span>开启</span>
+      <label class="chk"><input type="checkbox" data-f="A" checked><span class="k">A</span>拉环</label>
+      <label class="chk"><input type="checkbox" data-f="B" checked><span class="k">B</span>捏边</label>
+      <label class="chk"><input type="checkbox" data-f="C" checked><span class="k">C</span>调整模式</label>
+      <label class="chk"><input type="checkbox" data-f="D" checked><span class="k">D</span>角落旋钮</label>
+    </div>
+    <span class="sep"></span>
+    <label class="chk"><input type="checkbox" id="zones"><span class="k">⌗</span>显示热区</label>
+    <label class="chk"><input type="checkbox" id="darkWall"><span class="k">◐</span>深色墙纸</label>
+    <button class="ui" id="resetAll">全部重置</button>
+  </div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<section class="rules">
+  <h2>四个怎么一起用（冲突和优先级）</h2>
+  <ol>
+    <li><b>各占一块：</b>拉环在底边正中，旋钮在两个下角，捏边只管左右两边和底边的其余部分（离角 26px 起，底边避开中间的拉环）。几块不重叠，鼠标在哪就是谁。</li>
+    <li><b>先出现再能拖：</b>拉环、旋钮平时看不见，鼠标进到底部 40px、角落 70px 才淡入；捏边要在边上停 180ms 才亮起、才能拖，停之前的点击照常传给下面的按钮，这一条专门治旧版的误触。</li>
+    <li><b>拉环自由、旋钮整档：</b>拉环和捏边经过档位轻吸（±10px），可以停在任何尺寸；旋钮拖动时浮出「紧凑 / 标准 / 宽大 / 满屏」轮廓，28px 以内整档吸住，适合一下子换一档。</li>
+    <li><b>调整模式是兜底：</b>右键「调整大小…」或长按半秒进入。进去后拉环、旋钮、捏边都收起，换成五个圆点和档位条，方向键每次 10px（Shift 40px），Enter 或「完成」退出，Esc 撤销这次的改动。不会拖、或用触控板不方便的人走这条路。</li>
+    <li><b>双击复原：</b>双击拉环或旋钮回到「标准」，双击折叠岛两端的小拉环回到默认宽度。</li>
+    <li><b>同一套反馈：</b>正在变的那条边全亮、对侧半亮；宽度变时顶上出刻度，高度变时右边出刻度；尺寸标签在岛下面，碰到档位跳一下并写出档位名。</li>
+    <li><b>折叠岛：</b>两端靠近时出现小拉环（A），贴着两端停一下也能捏（B），拖动时浮出各档宽度的虚线胶囊（D 的轮廓），右键同样能进调整模式（C）。</li>
+  </ol>
+</section>
+
+<template id="cardTpl">
+  <section class="card">
+    <div class="stage"><span class="try"></span><div class="bar"><button class="ui tog">折叠 / 展开</button><button class="ui reset">重置</button></div><div class="toast"></div></div>
+    <div class="meta"></div>
+  </section>
+</template>
+
+<script>
+const S = 0.75;
+const LIM = { w: [480, 800], h: [240, 560], c: [-60, 180] };
+const BASE_COLLAPSED = 300;
+const DET = { w: [480, 560, 680, 800], h: [240, 306, 420, 560], c: [-60, 0, 60, 120, 180] };
+const NAMES = {
+  w: { 480: "最窄", 560: "标准宽", 680: "宽", 800: "最宽" },
+  h: { 240: "最矮", 306: "标准高", 420: "高", 560: "最高" },
+  c: { "-60": "最窄", 0: "默认", 60: "宽一档", 120: "宽两档", 180: "最宽" },
+};
+const PRESETS = [
+  { name: "紧凑", w: 480, h: 240 },
+  { name: "标准", w: 560, h: 306 },
+  { name: "宽大", w: 680, h: 420 },
+  { name: "满屏", w: 800, h: 560 },
+];
+const DEFAULT = { w: 560, h: 306, c: 0 };
+const ARM_MS = 180;
+const features = { A: true, B: true, C: true, D: true };
+
+const clamp = (v, [a, b]) => Math.min(b, Math.max(a, v));
+const rubber = (v, [a, b]) => (v < a ? a - Math.min(36, (a - v) * 0.3) : v > b ? b + Math.min(36, (v - b) * 0.3) : v);
+function snap1(v, axis, radius) {
+  for (const d of DET[axis]) if (Math.abs(v - d) <= radius) return { v: d, label: NAMES[axis][d] };
+  return { v, label: null };
+}
+
+const demos = [];
+
+function makeDemo({ expanded, title, tryText, items }) {
+  const card = document.getElementById("cardTpl").content.firstElementChild.cloneNode(true);
+  const stage = card.querySelector(".stage");
+  if (!expanded) stage.classList.add("short");
+  const toast = card.querySelector(".toast");
+  card.querySelector(".try").textContent = tryText;
+  card.querySelector(".meta").innerHTML = `<h2>${title}</h2><ul>${items.map(([k, t]) => `<li><span class="k">${k}</span><span>${t}</span></li>`).join("")}</ul>
+    <div class="legend"><span><i style="background:rgba(116,214,255,.6)"></i>A 拉环</span><span><i style="background:rgba(255,196,0,.7)"></i>B 捏边</span><span><i style="background:rgba(190,120,255,.7)"></i>D 旋钮</span></div>`;
+  const widths = [72, 54, 86, 40, 66, 58, 78, 48];
+  const isl = document.createElement("div");
+  isl.className = "isl";
+  isl.innerHTML = `<div class="fil l"></div><div class="fil r"></div>
+    <div class="view col"><span class="jelly"></span><span class="txt">♪ El Tiempo Transforma 2 — Mabel Caamal</span><span class="eq"><i style="height:8px"></i><i style="height:13px"></i><i style="height:6px"></i><i style="height:11px"></i></span><span class="n">1</span></div>
+    <div class="view exp"><div class="tabs"><span>待办</span><span>日历</span><span>音乐</span><span>剪贴板</span><span>Agent</span></div><div class="rows">${widths.map((w) => `<div class="row"><b></b><i style="width:${w}%"></i><u></u></div>`).join("")}</div></div>
+    <div class="outline"></div>`;
+  stage.prepend(isl);
+  const mk = (cls) => { const el = document.createElement("div"); el.className = cls; stage.append(el); return el; };
+  const fx = mk("fx"), badge = mk("badge"), chips = mk("chips"), menu = mk("menu"), press = mk("press");
+
+  const st = { ...DEFAULT, expanded, editing: false, before: null };
+  const dims = (v = st) => (st.expanded ? { W: v.w, H: v.h } : { W: BASE_COLLAPSED + v.c, H: 38 });
+  function render(v = st) {
+    const { W, H } = dims(v);
+    isl.style.width = `${W * S}px`;
+    isl.style.height = `${H * S}px`;
+    badge.style.top = `${H * S + 12}px`;
+    chips.style.top = `${H * S + 44}px`;
+  }
+  function badgeText(v, label) {
+    const text = st.expanded ? `${Math.round(v.w)} × ${Math.round(v.h)}` : `折叠宽度 ${v.c >= 0 ? "+" : ""}${Math.round(v.c)}`;
+    badge.innerHTML = label ? `${text}<em>${label}</em>` : text;
+  }
+  function flashBadge() { badge.classList.remove("tick"); void badge.offsetWidth; badge.classList.add("tick"); }
+  let toastTimer = 0;
+  function say(text) { toast.textContent = text; toast.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 1400); }
+
+  function setGlow(axis, sign) {
+    isl.classList.remove("g-l", "g-r", "g-b", "h-l", "h-r");
+    if (!axis) return;
+    if (axis.includes("w") || axis === "c") {
+      if (sign === 0) isl.classList.add("g-l", "g-r");
+      else isl.classList.add(sign < 0 ? "g-l" : "g-r", sign < 0 ? "h-r" : "h-l");
+    }
+    if (axis.includes("h")) isl.classList.add("g-b");
+  }
+
+  function showFx(spec, raw, activeW, activeH, activePreset) {
+    fx.innerHTML = "";
+    const cx = stage.clientWidth / 2;
+    if (spec.preset) {
+      const list = st.expanded ? PRESETS : DET.c.map((c) => ({ name: NAMES.c[c], w: BASE_COLLAPSED + c, h: 38, c }));
+      for (const p of list) {
+        const g = document.createElement("div");
+        g.className = `ghost${st.expanded ? "" : " pill"}${activePreset === p.name ? " on" : ""}`;
+        g.style.width = `${p.w * S}px`;
+        g.style.height = `${p.h * S}px`;
+        g.innerHTML = st.expanded ? `<span>${p.name}</span>` : "";
+        fx.append(g);
+      }
+    }
+    const wAxis = spec.axis === "c" ? "c" : spec.axis.includes("w") ? "w" : null;
+    if (wAxis) {
+      for (const d of DET[wAxis]) {
+        const W = wAxis === "w" ? d : BASE_COLLAPSED + d;
+        for (const side of [-1, 1]) {
+          const t = document.createElement("div");
+          t.className = `t${activeW === d ? " on" : ""}`;
+          t.style.left = `${cx + (side * W * S) / 2}px`;
+          if (side === 1) t.innerHTML = `<span>${NAMES[wAxis][d]}</span>`;
+          fx.append(t);
+        }
+      }
+    }
+    if (spec.axis.includes("h")) {
+      const right = cx + (raw.w * S) / 2 + 14;
+      for (const d of DET.h) {
+        const t = document.createElement("div");
+        t.className = `t y${activeH === d ? " on" : ""}`;
+        t.style.left = `${right}px`;
+        t.style.top = `${d * S}px`;
+        t.innerHTML = `<span>${NAMES.h[d]}</span>`;
+        fx.append(t);
+      }
+    }
+  }
+
+  function startDrag(e, spec, el) {
+    if (e.button !== 0) return;
+    if (spec.needsArm && !el.classList.contains("armed")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    el.setPointerCapture(e.pointerId);
+    const s0 = { x: e.clientX, y: e.clientY, w: st.w, h: st.h, c: st.c };
+    isl.classList.add("dragging");
+    el.classList.add("active");
+    badge.classList.add("show", "dragging");
+    fx.classList.add("show");
+    setGlow(spec.axis, spec.axis === "wh" && spec.sign === 0 ? 0 : spec.sign);
+    let lastLabel = null;
+    const move = (ev) => {
+      const dx = (ev.clientX - s0.x) / S;
+      const dy = (ev.clientY - s0.y) / S;
+      const raw = { w: s0.w, h: s0.h, c: s0.c };
+      const k = spec.sign === 0 ? 1 : spec.sign;
+      if (spec.axis.includes("w")) raw.w = s0.w + 2 * dx * k;
+      if (spec.axis.includes("h")) raw.h = s0.h + dy;
+      if (spec.axis === "c") raw.c = s0.c + 2 * dx * k;
+      let label = null, aw = null, ah = null, ap = null;
+      if (spec.preset && st.expanded) {
+        let best = null;
+        for (const p of PRESETS) { const d = Math.hypot(raw.w - p.w, raw.h - p.h); if (d <= 28 && (!best || d < best.d)) best = { p, d }; }
+        if (best) { raw.w = best.p.w; raw.h = best.p.h; label = best.p.name; ap = label; aw = raw.w; ah = raw.h; }
+      } else if (spec.preset) {
+        const r = snap1(raw.c, "c", 16); raw.c = r.v; if (r.label) { label = r.label; aw = r.v; ap = r.label; }
+      } else {
+        const parts = [];
+        if (spec.axis.includes("w")) { const r = snap1(raw.w, "w", 10); raw.w = r.v; if (r.label) { parts.push(r.label); aw = r.v; } }
+        if (spec.axis.includes("h")) { const r = snap1(raw.h, "h", 10); raw.h = r.v; if (r.label) { parts.push(r.label); ah = r.v; } }
+        if (spec.axis === "c") { const r = snap1(raw.c, "c", 10); raw.c = r.v; if (r.label) { parts.push(r.label); aw = r.v; } }
+        label = parts.length ? parts.join(" · ") : null;
+      }
+      if (label && label !== lastLabel) flashBadge();
+      lastLabel = label;
+      st.w = clamp(raw.w, LIM.w); st.h = clamp(raw.h, LIM.h); st.c = clamp(raw.c, LIM.c);
+      const visual = { w: rubber(raw.w, LIM.w), h: rubber(raw.h, LIM.h), c: rubber(raw.c, LIM.c) };
+      render(visual);
+      showFx(spec, visual, aw, ah, ap);
+      badgeText(st, label);
+      syncChips();
+    };
+    const up = () => {
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      isl.classList.remove("dragging");
+      el.classList.remove("active");
+      badge.classList.remove("dragging");
+      fx.classList.remove("show");
+      if (!st.editing) setTimeout(() => { if (!isl.classList.contains("dragging") && !st.editing) badge.classList.remove("show"); }, 700);
+      setGlow(null);
+      render();
+    };
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    badgeText(st, null);
+  }
+
+  function resetSize(label) {
+    if (st.expanded) { st.w = DEFAULT.w; st.h = DEFAULT.h; } else st.c = DEFAULT.c;
+    render(); badgeText(st, label); badge.classList.add("show"); flashBadge();
+    setTimeout(() => { if (!st.editing) badge.classList.remove("show"); }, 900);
+  }
+
+  function handles() {
+    isl.querySelectorAll(".h, .glow").forEach((el) => el.remove());
+    const add = (cls, spec) => {
+      const el = document.createElement("div");
+      el.className = `h ${cls}`;
+      el.addEventListener("pointerdown", (e) => startDrag(e, spec, el));
+      if (spec.dbl) el.addEventListener("dblclick", () => resetSize(spec.dbl));
+      if (spec.needsArm) {
+        let t = 0;
+        el.addEventListener("pointerenter", () => { t = setTimeout(() => { el.classList.add("armed"); setGlow(spec.axis, spec.sign); }, ARM_MS); });
+        el.addEventListener("pointerleave", () => { clearTimeout(t); el.classList.remove("armed"); if (!isl.classList.contains("dragging")) setGlow(null); });
+        el.addEventListener("click", () => { if (!el.classList.contains("armed")) say("还没亮就点：点击传给了下面的按钮"); });
+      }
+      isl.append(el);
+    };
+    for (const side of ["l", "r", "b"]) { const g = document.createElement("div"); g.className = `glow ${side}`; isl.append(g); }
+    const ex = st.expanded;
+    if (st.editing) {
+      if (ex) {
+        add("bead l", { axis: "w", sign: -1 });
+        add("bead r", { axis: "w", sign: 1 });
+        add("bead b", { axis: "h", sign: 1 });
+        add("bead bl", { axis: "wh", sign: -1, preset: true });
+        add("bead br", { axis: "wh", sign: 1, preset: true });
+      } else {
+        add("bead l", { axis: "c", sign: -1 });
+        add("bead r", { axis: "c", sign: 1 });
+      }
+      return;
+    }
+    if (features.B) {
+      if (ex) {
+        add("edge l", { axis: "w", sign: -1, needsArm: true });
+        add("edge r", { axis: "w", sign: 1, needsArm: true });
+        add("edge b", { axis: "h", sign: 1, needsArm: true });
+      } else {
+        add("edge l", { axis: "c", sign: -1, needsArm: true, preset: features.D });
+        add("edge r", { axis: "c", sign: 1, needsArm: true, preset: features.D });
+      }
+    }
+    if (features.A) {
+      if (ex) add("grab", { axis: "wh", sign: 0, dbl: "标准" });
+      else { add("cap l", { axis: "c", sign: -1, dbl: "默认", preset: features.D }); add("cap r", { axis: "c", sign: 1, dbl: "默认", preset: features.D }); }
+    }
+    if (features.D && ex) {
+      add("knob bl", { axis: "wh", sign: -1, preset: true, dbl: "标准" });
+      add("knob br", { axis: "wh", sign: 1, preset: true, dbl: "标准" });
+    }
+  }
+
+  stage.addEventListener("pointermove", (e) => {
+    const r = isl.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const inside = x >= -8 && x <= r.width + 8 && y >= 0 && y <= r.height + 8;
+    const ex = st.expanded;
+    isl.classList.toggle("near-b", inside && ex && y > r.height - 40 && Math.abs(x - r.width / 2) < r.width / 2 - 60);
+    isl.classList.toggle("near-kl", inside && ex && x < 70 && y > r.height - 70);
+    isl.classList.toggle("near-kr", inside && ex && x > r.width - 70 && y > r.height - 70);
+    isl.classList.toggle("near-l", inside && !ex && x < 44);
+    isl.classList.toggle("near-r", inside && !ex && x > r.width - 44);
+  });
+  stage.addEventListener("pointerleave", () => isl.classList.remove("near-b", "near-kl", "near-kr", "near-l", "near-r"));
+
+  function chipList() { return st.expanded ? PRESETS.map((p) => p.name) : DET.c.map((c) => NAMES.c[c]); }
+  function syncChips() {
+    chips.querySelectorAll("button[data-i]").forEach((b) => {
+      const i = Number(b.dataset.i);
+      b.classList.toggle("on", st.expanded ? PRESETS[i].w === st.w && PRESETS[i].h === st.h : DET.c[i] === st.c);
+    });
+  }
+  function buildChips() {
+    const list = chipList();
+    chips.innerHTML = list.map((n, i) => `<button data-i="${i}">${n}</button>`).join("") + `<span class="kbd">← → ↑ ↓ 微调</span><button class="done">完成</button>`;
+    chips.querySelectorAll("button[data-i]").forEach((b) => b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const i = Number(b.dataset.i);
+      if (st.expanded) { st.w = PRESETS[i].w; st.h = PRESETS[i].h; } else st.c = DET.c[i];
+      render(); badgeText(st, list[i]); flashBadge(); syncChips();
+    }));
+    chips.querySelector(".done").addEventListener("click", (e) => { e.stopPropagation(); setEditing(false); });
+    syncChips();
+  }
+  function setEditing(on, revert = false) {
+    if (on) st.before = { w: st.w, h: st.h, c: st.c };
+    if (!on && revert && st.before) { Object.assign(st, st.before); say("已撤销这次的改动"); }
+    st.editing = on;
+    isl.classList.toggle("editing", on);
+    chips.classList.toggle("show", on);
+    badge.classList.toggle("show", on);
+    if (on) { buildChips(); badgeText(st, null); }
+    handles();
+    render();
+  }
+
+  isl.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (!features.C) return;
+    const r = stage.getBoundingClientRect();
+    menu.style.left = `${e.clientX - r.left}px`;
+    menu.style.top = `${e.clientY - r.top}px`;
+    menu.innerHTML = `<div class="dim">打开设置</div><div class="dim">贴边收起</div><div data-act="resize">调整大小…</div><div data-act="reset">恢复${st.expanded ? "标准尺寸" : "默认宽度"}</div>`;
+    menu.classList.add("show");
+    menu.querySelector('[data-act="resize"]').addEventListener("click", (ev) => { ev.stopPropagation(); menu.classList.remove("show"); setEditing(true); });
+    menu.querySelector('[data-act="reset"]').addEventListener("click", (ev) => { ev.stopPropagation(); menu.classList.remove("show"); resetSize(st.expanded ? "标准" : "默认"); });
+  });
+  let pressTimer = 0;
+  isl.addEventListener("pointerdown", (e) => {
+    if (!features.C || e.button !== 0 || st.editing || e.target.closest(".h")) return;
+    const r = stage.getBoundingClientRect();
+    press.style.left = `${e.clientX - r.left}px`;
+    press.style.top = `${e.clientY - r.top}px`;
+    press.classList.remove("go"); void press.offsetWidth; press.classList.add("go");
+    pressTimer = setTimeout(() => { press.classList.remove("go"); setEditing(true); }, 450);
+  });
+  const cancelPress = () => { clearTimeout(pressTimer); press.classList.remove("go"); };
+  isl.addEventListener("pointerup", cancelPress);
+  isl.addEventListener("pointerleave", cancelPress);
+  stage.addEventListener("pointerdown", (e) => {
+    if (!e.target.closest(".menu")) menu.classList.remove("show");
+    if (st.editing && !e.target.closest(".isl") && !e.target.closest(".chips") && !e.target.closest(".bar")) setEditing(false);
+  });
+
+  const demo = {
+    st,
+    refresh() { if (!features.C && st.editing) setEditing(false); else { handles(); render(); } },
+    setExpanded(ex) { st.expanded = ex; isl.classList.toggle("expanded", ex); if (st.editing) buildChips(); handles(); render(); },
+    reset() { Object.assign(st, DEFAULT); if (st.editing) setEditing(false); render(); },
+    key(e) {
+      if (!st.editing) return false;
+      if (e.key === "Escape") { setEditing(false, true); return true; }
+      if (e.key === "Enter") { setEditing(false); return true; }
+      const step = e.shiftKey ? 40 : 10;
+      const map = { ArrowLeft: ["w", -step], ArrowRight: ["w", step], ArrowUp: ["h", -step], ArrowDown: ["h", step] };
+      const m = map[e.key];
+      if (!m) return false;
+      if (st.expanded) st[m[0]] = clamp(st[m[0]] + m[1], LIM[m[0]]);
+      else if (m[0] === "w") st.c = clamp(st.c + m[1], LIM.c);
+      render(); badgeText(st, null); syncChips();
+      return true;
+    },
+  };
+  isl.classList.toggle("expanded", expanded);
+  card.querySelector(".tog").addEventListener("click", () => demo.setExpanded(!st.expanded));
+  card.querySelector(".reset").addEventListener("click", () => demo.reset());
+  handles();
+  render();
+  document.getElementById("grid").append(card);
+  demos.push(demo);
+}
+
+makeDemo({
+  expanded: true,
+  title: "展开的面板",
+  tryText: "底部中间抓拉环、下角抓旋钮、贴着边停一下再拖；右键或长按进调整模式",
+  items: [
+    ["A", "<b>拉环</b>：鼠标进到底部那一条才出现。上下拖改高，左右拖改宽，斜着拖一起改；经过档位轻吸。双击回到标准。"],
+    ["B", "<b>捏边</b>：贴着左右边或底边停 180ms，那段边亮起、对侧半亮，才能拖；没亮之前点击照常给下面的按钮。"],
+    ["C", "<b>调整模式</b>：右键「调整大小…」或长按半秒。五个圆点、档位条、方向键微调，Enter 完成、Esc 撤销。"],
+    ["D", "<b>旋钮</b>：两个下角各一个，靠近才出现。拖动时浮出四档轮廓，28px 内整档吸住；双击回到标准。"],
+  ],
+});
+makeDemo({
+  expanded: false,
+  title: "折叠的岛",
+  tryText: "移到两端抓小拉环，或贴着两端停一下再拖；右键进调整模式",
+  items: [
+    ["A", "<b>小拉环</b>：靠近两端出现竖着的小拉环，拖它改折叠宽度，双击回到默认。"],
+    ["B", "<b>捏边</b>：贴着两端停一下也能拖，和小拉环效果一样，给不想瞄准的人。"],
+    ["C", "<b>调整模式</b>：右键或长按进入，左右两个圆点和五档宽度。"],
+    ["D", "<b>档位轮廓</b>：折叠岛没有旋钮，拖动时浮出各档宽度的虚线胶囊，靠近就吸住。"],
+  ],
+});
+
+document.addEventListener("keydown", (e) => { if (demos.some((d) => d.key(e))) e.preventDefault(); });
+document.querySelectorAll("[data-f]").forEach((input) => input.addEventListener("change", () => {
+  features[input.dataset.f] = input.checked;
+  demos.forEach((d) => d.refresh());
+}));
+document.getElementById("zones").addEventListener("change", (e) => document.body.classList.toggle("zones", e.target.checked));
+document.getElementById("darkWall").addEventListener("change", (e) => document.body.classList.toggle("dark-wall", e.target.checked));
+document.getElementById("resetAll").addEventListener("click", () => demos.forEach((d) => d.reset()));
+</script>
+</body>
+</html>
