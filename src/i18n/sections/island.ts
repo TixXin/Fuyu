@@ -11,6 +11,7 @@ export type IslandText = {
   minimizeToTray: string;
   minimizeToMenuBar: string;
   tuckToTop: string;
+  taskbarHandle: string;
   resetPosition: string;
   resetPositionLabel: string;
   arrangeItems: string;
@@ -76,6 +77,7 @@ export const zhCN: IslandText = {
   collapseIsland: "收起岛屿",
   minimizeToTray: "最小化到托盘",
   minimizeToMenuBar: "最小化到菜单栏",
+  taskbarHandle: "拖动以在任务栏上移动",
   tuckToTop: "收起到屏幕顶部",
   resetPosition: "复位",
   resetPositionLabel: "回到主屏顶部居中",
@@ -148,6 +150,7 @@ export const en: IslandText = {
   collapseIsland: "Collapse island",
   minimizeToTray: "Minimize to tray",
   minimizeToMenuBar: "Minimize to the menu bar",
+  taskbarHandle: "Drag to move along the taskbar",
   tuckToTop: "Tuck to top edge",
   resetPosition: "Reset",
   resetPositionLabel: "Reset island to the top center of the primary screen",

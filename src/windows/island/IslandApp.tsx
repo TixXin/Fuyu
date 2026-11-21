@@ -7,6 +7,8 @@ import { islandHost } from "./islandHost";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useMigrateLegacySwitches, useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { IslandShell } from "./IslandShell";
+import { IslandTaskbarParts, type IslandShellBase } from "./IslandTaskbarParts";
+import { useTaskbarParts } from "./useTaskbarParts";
 import { useIslandWindow } from "./useIslandWindow";
 import { useNativeGlassSync } from "./useNativeGlassSync";
 import { getExpandedIslandHeight } from "./expandedHeight";
@@ -29,7 +31,6 @@ import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import { useIslandGlass } from "./useIslandGlass";
 import { useIslandGlassStatus } from "./useIslandGlassStatus";
 import { useAccentColor } from "../../lib/theme/useAccentColor";
-import { isLightIsland } from "../../utils/color";
 import { useCollapsedGauges } from "./useCollapsedGauges";
 import { mergeIslandDecor, useIslandDecor } from "../../features/plugin-kernel/islandDecor";
 import { useTrayLanguage } from "./useTrayLanguage";
@@ -167,8 +168,11 @@ export function IslandApp() {
   const reducedMotion = useReducedMotion();
   const { glass, glassStyle, layerState } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
   const onTaskbar = useIslandOnTaskbar();
-  const taskbarClear = onTaskbar.placed && settings.taskbarLook === "transparent" && mode === "collapsed";
-  const lightStage = taskbarClear ? onTaskbar.light : isLightIsland(look.islandBackgroundColor);
+  const taskbarParts = useTaskbarParts({
+    onTaskbar, settings, look, mode, docked: side === null && notch === null, accent, devicePixelRatio,
+    collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth,
+  });
+  const { taskbarClear, lightStage } = taskbarParts;
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
@@ -238,58 +242,71 @@ export function IslandApp() {
 
   useSettleIslandContributions();
 
+  const shell: IslandShellBase = {
+    page,
+    homePage,
+    popup,
+    appearanceMode: settings.appearanceMode,
+    nativeGlassState,
+    hoverGrow: settings.islandHover,
+    hoverBounce: settings.islandBounce,
+    glass: { ...glass, nativeState: nativeGlassState },
+    isTucked,
+    isDimmed,
+    tuckStyle: settings.tuckStyle,
+    tuckHint: settings,
+    isDetached: isPositionDetached || islandMarginY(settings, autoForm) > 0,
+    side,
+    sideHeight: sideColumnTarget({ mode: settings.sideHeightMode, custom: settings.sideHeight, maxPanelHeight: settings.maxPanelHeight, expandedScale: settings.expandedScale, collapsedScale: settings.collapsedScale }),
+    showTitle: settings.showTitle,
+    showCollapsedText: barText,
+    overflowMore: settings.collapsedOverflowMore,
+    notchWingMax: settings.notchWingMax,
+    features,
+    onOpenPage: openEnabledPage,
+    taskbarHandle: onTaskbar.placed ? (settings.expandTrigger === "hover" ? "modifier" : "hover") : null,
+    onWindowDragStart: startIslandDrag,
+    onCollapse: collapseIsland,
+    onResetPosition: resetIslandPosition,
+    minimizesToTray: settings.minimizeAction === "tray",
+    onMinimize: settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge,
+    onOpenTranslator: features.translation ? openTranslator : null,
+    onOpenSettings: openSettingsFromPanel,
+    onTuck: tuckIsland,
+    onReveal: hoverTucked,
+    onPageChange: setPage,
+    pageDigitModifiers: settings.pageDigitModifiers,
+    hoverSwitchPage: settings.hoverSwitchPage,
+    hoverSwitchDelayMs: settings.hoverSwitchDelayMs,
+    fuyuTabIcon: settings.fuyuTabIcon,
+    notice: islandNotice,
+    collapsedSlots,
+    resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled && (mode === "expanded" || notch === null)} size={pageSize} extra={settings.collapsedWidthExtra} />,
+  };
+  const pages = (
+    <>
+      <PluginSlot window="island" name="island.dev/v1" />
+      <IslandPages
+        page={page}
+        mode={mode}
+        settings={settings}
+        features={features}
+      />
+    </>
+  );
+
   return (
     <main className={`stage stage--font-${settings.fontFamily}${lightStage ? " island-light" : ""}${taskbarClear ? " stage--taskbar-clear" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
       <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
-      <IslandShell
-        mode={mode}
-        page={page}
-        homePage={homePage}
-        popup={popup}
-        appearanceMode={settings.appearanceMode}
-        nativeGlassState={nativeGlassState}
-        hoverGrow={settings.islandHover}
-        hoverBounce={settings.islandBounce}
-        glass={{ ...glass, nativeState: nativeGlassState }}
-        isTucked={isTucked}
-        isDimmed={isDimmed}
-        tuckStyle={settings.tuckStyle}
-        tuckHint={settings}
-        isDetached={isPositionDetached || islandMarginY(settings, autoForm) > 0}
-        side={side}
-        sideHeight={sideColumnTarget({ mode: settings.sideHeightMode, custom: settings.sideHeight, maxPanelHeight: settings.maxPanelHeight, expandedScale: settings.expandedScale, collapsedScale: settings.collapsedScale })}
-        showTitle={settings.showTitle}
-        showCollapsedText={barText}
-        overflowMore={settings.collapsedOverflowMore}
-        notchWingMax={settings.notchWingMax}
-        features={features}
-        onOpenPage={openEnabledPage}
-        onWindowDragStart={startIslandDrag}
-        onCollapse={collapseIsland}
-        onResetPosition={resetIslandPosition}
-        minimizesToTray={settings.minimizeAction === "tray"}
-        onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
-        onOpenTranslator={features.translation ? openTranslator : null}
-        onOpenSettings={openSettingsFromPanel}
-        onTuck={tuckIsland}
-        onReveal={hoverTucked}
-        onPageChange={setPage}
-        pageDigitModifiers={settings.pageDigitModifiers}
-        hoverSwitchPage={settings.hoverSwitchPage}
-        hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
-        fuyuTabIcon={settings.fuyuTabIcon}
-        notice={islandNotice}
-        collapsedSlots={collapsedSlots}
-        resize={<IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && (mode === "expanded" || notch === null)} size={pageSize} extra={settings.collapsedWidthExtra} />}
-      >
-        <PluginSlot window="island" name="island.dev/v1" />
-        <IslandPages
-          page={page}
-          mode={mode}
-          settings={settings}
-          features={features}
-        />
-      </IslandShell>
+      {taskbarParts.panelled ? (
+        <IslandTaskbarParts shell={shell} mode={mode} parts={taskbarParts} lift={onTaskbar.lift}>
+          {pages}
+        </IslandTaskbarParts>
+      ) : (
+        <IslandShell mode={mode} {...shell}>
+          {pages}
+        </IslandShell>
+      )}
       <SlotView slot={overlaySlot} props={{}} />
     </main>
   );

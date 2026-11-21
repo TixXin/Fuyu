@@ -24,9 +24,19 @@ pub struct DragGridState {
     visible: bool,
     lines: bool,
     snap: Option<Edge>,
+    slot: Option<GridSlot>,
 }
 
-static STATE: Mutex<DragGridState> = Mutex::new(DragGridState { visible: false, lines: true, snap: None });
+#[cfg_attr(not(windows), allow(dead_code))]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+pub struct GridSlot {
+    pub(super) left: f64,
+    pub(super) top: f64,
+    pub(super) width: f64,
+    pub(super) height: f64,
+}
+
+static STATE: Mutex<DragGridState> = Mutex::new(DragGridState { visible: false, lines: true, snap: None, slot: None });
 static PLACED: Mutex<Option<Rect>> = Mutex::new(None);
 static GENERATION: AtomicU64 = AtomicU64::new(0);
 static LINES: AtomicBool = AtomicBool::new(true);
@@ -40,8 +50,16 @@ pub(super) fn lines() -> bool {
 }
 
 pub(super) fn present(app: &AppHandle, work: Rect, snap: Option<Edge>) {
+    show(app, work, DragGridState { visible: true, lines: lines(), snap, slot: None });
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(super) fn present_slot(app: &AppHandle, area: Rect, slot: Option<GridSlot>) {
+    show(app, area, DragGridState { visible: true, lines: false, snap: None, slot });
+}
+
+fn show(app: &AppHandle, work: Rect, state: DragGridState) {
     GENERATION.fetch_add(1, Ordering::SeqCst);
-    let state = DragGridState { visible: true, lines: lines(), snap };
     let state_changed = {
         let mut slot = STATE.lock().unwrap_or_else(PoisonError::into_inner);
         let changed = *slot != state;
@@ -60,6 +78,10 @@ pub(super) fn present(app: &AppHandle, work: Rect, snap: Option<Edge>) {
         };
         place(&window, work);
         reveal(&handle, &window);
+        #[cfg(windows)]
+        if state.slot.is_some() {
+            raise_over_taskbar(&handle, &window);
+        }
         if !existed || state_changed {
             let _ = window.emit_to(WINDOW_LABEL, STATE_EVENT, state);
         }
@@ -127,6 +149,16 @@ fn place(window: &WebviewWindow, (left, top, width, height): Rect) {
     let _ = screen::set_window_size(window, size);
     let _ = screen::set_window_position(window, PhysicalPosition::new(left, top));
     *placed = Some((left, top, width, height));
+}
+
+#[cfg(windows)]
+fn raise_over_taskbar(app: &AppHandle, window: &WebviewWindow) {
+    if let Ok(grid) = window.hwnd() {
+        crate::win32::taskbar_shell::raise(grid);
+    }
+    if let Some(Ok(island)) = app.get_webview_window(super::WINDOW_LABEL).map(|island| island.hwnd()) {
+        crate::win32::taskbar_shell::raise(island);
+    }
 }
 
 #[cfg(windows)]

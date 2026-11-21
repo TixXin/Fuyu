@@ -229,6 +229,14 @@ export function listenForegroundFullscreen(handler: (state: ForegroundFullscreen
   return listen<ForegroundFullscreen>(FOREGROUND_FULLSCREEN_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
+export function startIslandTaskbarDrag() {
+  return invoke<void>("start_island_taskbar_drag");
+}
+
+export function endIslandTaskbarDrag() {
+  return invoke<void>("end_island_taskbar_drag");
+}
+
 export function startIslandDrag() {
   return invoke("start_island_drag");
 }

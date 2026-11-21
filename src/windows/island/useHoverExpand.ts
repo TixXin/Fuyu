@@ -4,7 +4,7 @@ import { listenIslandHover } from "./api";
 import type { IslandMode } from "./types";
 
 const RELEASE_GRACE_MS = 1000;
-const OWN_ACTION_SELECTOR = ".island__collapsed button:not(.island__open-button):hover";
+const OWN_ACTION_SELECTOR = ".island__collapsed button:not(.island__open-button):hover, .island:hover .island-taskbar-handle--armed";
 
 type HoverExpandOptions = {
   expandOnHover: boolean;
