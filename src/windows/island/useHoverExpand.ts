@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { isIslandHeld } from "./islandHold";
+import { isIslandHeld, msSinceIslandRelease } from "./islandHold";
 import { listenIslandHover } from "./api";
 import type { IslandMode } from "./types";
 
+const RELEASE_GRACE_MS = 1000;
 const OWN_ACTION_SELECTOR = ".island__collapsed button:not(.island__open-button):hover";
 
 type HoverExpandOptions = {
@@ -135,6 +136,11 @@ export function useHoverExpand({ expandOnHover, collapseOnLeave, delayMs, paused
     const close = () => {
       if (pressingRef.current || isEditingText() || hasTextSelection() || isIslandHeld()) {
         timer = window.setTimeout(close, Math.max(collapseDelayMs, 200));
+        return;
+      }
+      const grace = Math.max(RELEASE_GRACE_MS, collapseDelayMs) - msSinceIslandRelease();
+      if (grace > 0) {
+        timer = window.setTimeout(close, grace);
         return;
       }
       onCollapse();
