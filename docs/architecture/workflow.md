@@ -13,7 +13,7 @@
 
 ## 现在怎么做
 
-1. **所有会话都在主工作区、本地 `main` 上工作。** 用户的 `pnpm tauri dev` 也在这里，改动马上就能看到。不开 worktree，不切分支（切分支会冲掉别的会话正在改的文件）。例外只有发版目录 `../Fuyu-release`：主仓库的一个 detached worktree，停在 `origin/main` 上，只用来改版本号和跑 `pnpm release`，这样本地 `main` 上没推的提交和别人没提交的文件都不挡发版、也不会混进去（2026-11-15 起，用户定）。
+1. **所有会话都在主工作区、本地 `main` 上工作。** 用户的 `pnpm tauri dev` 也在这里，改动马上就能看到。不开 worktree，不切分支（切分支会冲掉别的会话正在改的文件）。例外只有两个 detached worktree：发版目录 `../Fuyu-release`，停在 `origin/main` 上，只用来改版本号和跑 `pnpm release`，这样本地 `main` 上没推的提交和别人没提交的文件都不挡发版、也不会混进去（2026-11-15 起，用户定）；验证目录 `../Fuyu-verify`，推 PR 前在本地 `main` 的某个固定提交上跑验证（见下面「验证」，2026-11-20 起，用户定）。
 2. **只提交自己的文件**：`git add <具体文件>` 或 `git commit -- <文件>`，不用 `git add -A` / `git add .`，别的会话还没提交的改动不要带上。`.githooks/pre-commit` 把关：在 `main` 上不带文件名的 `git commit`（含 `-a`）会被拒绝，合并、cherry-pick、rebase 过程中的提交除外；确实要提交整个暂存区时设 `FUYU_COMMIT_WHOLE_INDEX=1`。同一个文件里还有别的会话的改动时用 `pnpm mq:commit-part` 只带自己的那几处（见下面「同一个文件里只提交自己的改动」），不手写 `GIT_INDEX_FILE`。两个会话不要同时改同一个文件：认领任务时写 `--scope`，`pnpm tasks conflicts` 能查出和别人声明的范围重叠的文件。
 3. **只在用户说要推时提 PR**（2026-11-20 起，用户定）。用户说「推一下」「提 PR」「合进去」这类话之前不 `pnpm mq:land`：任务做完、提交攒得再多也不自己推，汇报里说一句本地有几个提交没推（`pnpm mq:pending`）。开发过程中也不跑测试、检查、回归页和构建（根 `AGENTS.md`「验证」），这些都攒到推 PR 前一起跑：用户说要推时，先按「验证」的表把这一批跑完、修好，再 `pnpm mq:land --yes --body <文件>`。
 
@@ -85,7 +85,12 @@ pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
 
 ### 验证
 
-- 开发过程中不跑下面这些，推 PR 前一起跑（根 `AGENTS.md`「验证」，2026-11-20 起，用户定）。
+- 开发过程中不跑下面这些的全量，推 PR 前一起跑（根 `AGENTS.md`「验证」，2026-11-20 起，用户定）。例外是改到哪就跑哪：提交前跑改到的界面那几页 `pnpm test:regression <页面名中的词>` 和对应的单元测试文件 `node --test <文件>`。
+- **推 PR 前在固定提交上验证**（2026-11-20 起，用户定）。验证要几十分钟，这期间主工作区里别的会话还在提交和改文件：在会动的代码上跑，挂了分不清是谁的，回归页还会被 Vite 热更新打断（报 `Snapshot capture failed`），只能一遍遍重跑。所以在验证目录里跑：
+  1. 第一次：`git worktree add --detach ../Fuyu-verify main`，进去 `pnpm install --frozen-lockfile`。
+  2. 每次推：记下要验的提交 `<提交>`（本地 `main` 当前的 `HEAD`），在 `../Fuyu-verify` 里 `git checkout --detach <提交>`、`pnpm install --frozen-lockfile`，再按根 `AGENTS.md`「验证」的表跑 `pnpm verify`、`pnpm test:regression`、`pnpm build:exe`。Rust 的构建目录由脚本按主工作区算（`scripts/build-dirs.mjs` 的 `mainCheckout`），验证目录里跑也用主工作区的 `src-tauri/target/agents` 和 `release`，不会从零编译。
+  3. 挂了的在主工作区改、提交；快照可以在验证目录里 `--update-snapshots`，看过差异后把那几份复制回主工作区提交。验证目录不提交（`mq:land` 只认本地 `main` 上的提交）。改完把验证目录换到新的 `HEAD`，只重跑挂过的那几项。
+  4. 都过了 `pnpm mq:land --yes --upto <验过的提交> --body <文件>`。之后别的会话提交的跟下一批走。
 - 在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
 - 多个会话共用一份代码：别的会话改到一半时，`pnpm check` 可能因为它的文件失败。先看失败是不是自己的文件；不是就等一会儿或问对方，不要去改别人的文件。
 - 浏览器回归页 `pnpm test:regression [页面名中的词] [--update-snapshots]`：自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页（给了词就只跑页面名里带它的）并汇总结果。每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败。深色、浅色两轮的 DOM 都和 `tests/regression/snapshots/` 里的快照逐行比对，不一致或没有快照就失败并打印差异；界面本该变时加 `--update-snapshots` 重写，规范化规则见 `scripts/regression/snapshots.mjs`。Mac 上找 `/Applications` 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH` 指向浏览器的可执行文件。
