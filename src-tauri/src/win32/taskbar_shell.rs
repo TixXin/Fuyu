@@ -59,6 +59,19 @@ fn describe(handle: HWND, primary: bool) -> Option<TaskbarWindow> {
     })
 }
 
+pub(crate) fn widgets_owned_by(taskbar: HWND) -> Vec<RECT> {
+    let own = std::process::id();
+    let mut found = Vec::new();
+    let _ = window::for_each_top_level_window(|handle| {
+        if owner(handle) == Some(taskbar) && window::is_visible(handle) && window::process_id(handle) != own {
+            if let Some(rect) = window::window_rect(handle) {
+                found.push(rect);
+            }
+        }
+    });
+    found
+}
+
 pub(crate) fn is_windows_11() -> bool {
     registry::read_string(windows::Win32::System::Registry::HKEY_LOCAL_MACHINE, VERSION_KEY, "CurrentBuild")
         .and_then(|build| build.trim().parse::<u32>().ok())

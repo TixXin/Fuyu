@@ -175,7 +175,8 @@ fn read_pointer_state(hwnd: Option<HWND>) -> (IslandWindowState, bool, bool, Opt
     let height = (window_rect.bottom - window_rect.top).max(1) as f64;
     let cx = cursor.x as f64;
     let cy = cursor.y as f64;
-    let inside = cursor_on_island(left, top, width, height, cx, cy, state);
+    let inside = super::taskbar::cursor_on_bar_or_panel((left, top, width, height), (cx, cy), state)
+        .unwrap_or_else(|| cursor_on_island(left, top, width, height, cx, cy, state));
     let near = inside || cursor_near_island(left, top, width, height, cx, cy, state);
     (state, inside, near, Some((cx, cy)))
 }

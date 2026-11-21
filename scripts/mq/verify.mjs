@@ -10,7 +10,7 @@ const COMMANDS = {
   exe: ["pnpm", "build:exe"],
 };
 const DOCS_ONLY = /(^docs\/|\.md$)/;
-const PNPM = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const WINDOWS = process.platform === "win32";
 
 export function verifyDirOf(main) {
   return path.join(path.dirname(main), `${path.basename(main)}-verify`);
@@ -122,7 +122,7 @@ function prepare(dir, sha, force) {
     if (force) tryGit(["clean", "-fdq"], dir);
   }
   console.log(`[verify] 验证目录停在 ${sha.slice(0, 9)}，安装依赖…`);
-  const install = spawnSync(PNPM, ["install", "--frozen-lockfile"], { cwd: dir, stdio: ["ignore", "ignore", "inherit"] });
+  const install = spawnSync("pnpm", ["install", "--frozen-lockfile"], { cwd: dir, shell: WINDOWS, stdio: ["ignore", "ignore", "inherit"] });
   return install.status === 0;
 }
 
@@ -165,7 +165,7 @@ function runStep(step, dir, pages, logDir, running) {
     const state = { step, start: Date.now(), lastLine: "" };
     running.set(step, state);
     console.log(`▶ ${step} 开始（日志 ${file}）`);
-    const child = spawn(command === "pnpm" ? PNPM : command, [...args, ...extra], { cwd: dir, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(command, [...args, ...extra], { cwd: dir, shell: WINDOWS, stdio: ["ignore", "pipe", "pipe"] });
     const take = (chunk) => {
       output += chunk;
       log.write(chunk);

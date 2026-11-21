@@ -1,7 +1,7 @@
 use std::{
     sync::{Arc, Condvar, Mutex, PoisonError},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use serde::Serialize;
@@ -12,10 +12,11 @@ use super::{
     layout::{self, BarEdge, Rect},
     snapshot::{self, Bar},
 };
-use crate::win32::{notification_state, taskbar_shell, window};
+use crate::win32::{notification_state, taskbar_shell, taskbar_slot, window};
 
 pub(crate) const DOCK_CHANGED_EVENT: &str = "taskbar-dock-changed";
 const TICK: Duration = Duration::from_millis(500);
+const REUSE: Duration = Duration::from_millis(400);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,13 +35,14 @@ pub struct DockState {
     pub(crate) rect: Option<Rect>,
     pub(crate) edge: Option<BarEdge>,
     pub(crate) light: bool,
+    pub(crate) bar: Option<Rect>,
 }
 
 type OnChange = Arc<dyn Fn() + Send + Sync>;
 
 enum Kind {
     Window { width: f64, saved_flags: (bool, bool) },
-    Reserved { width: i32, on_change: OnChange },
+    Reserved { width: i32, prefer: Option<f64>, on_change: OnChange, slot: Option<isize> },
 }
 
 struct Docked {
@@ -120,9 +122,15 @@ pub(crate) fn dock(window: WebviewWindow, width: f64, order: u8) -> Result<(), S
 }
 
 pub(crate) fn reserve(window: WebviewWindow, monitor: Option<Rect>, width: i32, order: u8, on_change: OnChange) {
-    if let Some(hwnd) = handle(&window) {
-        insert(window, hwnd, Kind::Reserved { width: width.max(1), on_change }, order, monitor);
-    }
+    let Some(hwnd) = handle(&window) else {
+        return;
+    };
+    let previous = take(&mut shared().docked, window.label()).and_then(|item| match item.kind {
+        Kind::Reserved { slot, .. } => slot,
+        Kind::Window { .. } => None,
+    });
+    let slot = previous.or_else(|| taskbar_slot::create().map(|slot| slot.0 as isize));
+    insert(window, hwnd, Kind::Reserved { width: width.max(1), prefer: None, on_change, slot }, order, monitor);
 }
 
 pub(crate) fn resize_reserved(window: &WebviewWindow, width: i32) {
@@ -137,17 +145,44 @@ pub(crate) fn resize_reserved(window: &WebviewWindow, width: i32) {
     }
 }
 
+pub(crate) fn set_preferred(window: &WebviewWindow, along: Option<f64>) {
+    let mut shared = shared();
+    let found = shared.docked.iter_mut().find(|item| item.label == window.label());
+    if let Some(Kind::Reserved { prefer, .. }) = found.map(|item| &mut item.kind) {
+        let along = along.filter(|along| along.is_finite()).map(|along| along.clamp(0.0, 1.0));
+        if *prefer != along {
+            *prefer = along;
+            shared.wake = true;
+            WAKE.notify_all();
+        }
+    }
+}
+
+fn slot_of(item: &Docked) -> Option<HWND> {
+    match item.kind {
+        Kind::Reserved { slot: Some(slot), .. } => Some(HWND(slot as *mut _)),
+        _ => None,
+    }
+}
+
+fn raise_chain(slot: Option<HWND>, hwnd: HWND) {
+    if let Some(slot) = slot {
+        taskbar_shell::raise(slot);
+    }
+    taskbar_shell::raise(hwnd);
+}
+
 pub(crate) fn set_raised(window: &WebviewWindow, raised: bool) {
-    let hwnd = {
+    let (slot, hwnd) = {
         let mut shared = shared();
         let Some(item) = shared.docked.iter_mut().find(|item| item.label == window.label()) else {
             return;
         };
         item.raised = raised;
-        HWND(item.hwnd as *mut _)
+        (slot_of(item), HWND(item.hwnd as *mut _))
     };
     if raised {
-        taskbar_shell::raise(hwnd);
+        raise_chain(slot, hwnd);
     }
 }
 
@@ -160,26 +195,37 @@ pub(crate) fn undock(window: &WebviewWindow) {
     if let Some(item) = removed {
         let hwnd = HWND(item.hwnd as *mut _);
         taskbar_shell::set_owner(hwnd, None);
-        if let Kind::Window { saved_flags, .. } = item.kind {
-            taskbar_shell::set_extended_style_flags(hwnd, saved_flags.0, saved_flags.1);
+        match item.kind {
+            Kind::Window { saved_flags, .. } => taskbar_shell::set_extended_style_flags(hwnd, saved_flags.0, saved_flags.1),
+            Kind::Reserved { slot: Some(slot), .. } => taskbar_slot::close(HWND(slot as *mut _)),
+            Kind::Reserved { .. } => {}
         }
     }
 }
 
 fn run() {
+    let mut cached: Option<(Instant, Vec<Bar>)> = None;
     loop {
-        {
+        let woken = {
             let mut shared = shared();
             if !shared.wake {
                 shared = WAKE.wait_timeout(shared, TICK).unwrap_or_else(PoisonError::into_inner).0;
             }
+            let woken = shared.wake;
             shared.wake = false;
             if shared.docked.is_empty() {
                 shared.running = false;
                 return;
             }
+            woken
+        };
+        let fresh = !woken || cached.as_ref().is_none_or(|(at, _)| at.elapsed() > REUSE);
+        if fresh {
+            cached = Some((Instant::now(), snapshot::read()));
         }
-        tick();
+        if let Some((_, bars)) = &cached {
+            tick(bars);
+        }
     }
 }
 
@@ -190,29 +236,34 @@ fn bar_index(bars: &[Bar], monitor: Option<Rect>) -> Option<usize> {
         .or_else(|| (!bars.is_empty()).then_some(0))
 }
 
-fn width_of(item: &Docked) -> i32 {
+fn want_of(item: &Docked, bar: &Bar) -> layout::Want {
+    let length = if bar.edge.horizontal() { (bar.rect.left, bar.rect.right) } else { (bar.rect.top, bar.rect.bottom) };
     match &item.kind {
-        Kind::Window { width, .. } => (width * taskbar_shell::dpi_scale(HWND(item.hwnd as *mut _))).round() as i32,
-        Kind::Reserved { width, .. } => *width,
+        Kind::Window { width, .. } => {
+            layout::Want { size: (width * taskbar_shell::dpi_scale(HWND(item.hwnd as *mut _))).round() as i32, prefer: None }
+        }
+        Kind::Reserved { width, prefer, .. } => layout::Want {
+            size: *width,
+            prefer: prefer.map(|along| length.0 + (along * f64::from(length.1 - length.0)).round() as i32),
+        },
     }
 }
 
-fn tick() {
-    let bars = snapshot::read();
+fn tick(bars: &[Bar]) {
     let fullscreen = notification_state::fullscreen_app_in_front();
     let light = taskbar_shell::uses_light_theme();
     let mut shared = shared();
     let docked = &mut shared.docked;
-    let targets: Vec<Option<usize>> = docked.iter().map(|item| bar_index(&bars, item.monitor)).collect();
-    let mut states: Vec<DockState> = vec![DockState { status: DockStatus::NoTaskbar, rect: None, edge: None, light }; docked.len()];
+    let targets: Vec<Option<usize>> = docked.iter().map(|item| bar_index(bars, item.monitor)).collect();
+    let mut states: Vec<DockState> = vec![DockState { status: DockStatus::NoTaskbar, rect: None, edge: None, light, bar: None }; docked.len()];
     for (bar_index, bar) in bars.iter().enumerate() {
         let members: Vec<usize> = (0..docked.len()).filter(|index| targets[*index] == Some(bar_index)).collect();
         if members.is_empty() {
             continue;
         }
-        let sizes: Vec<i32> = members.iter().map(|index| width_of(&docked[*index])).collect();
+        let wants: Vec<layout::Want> = members.iter().map(|index| want_of(&docked[*index], bar)).collect();
         let gap = margin(bar.rect, bar.edge);
-        let spans = layout::arrange(&bar.free(gap), bar.tray_start(), &sizes, gap);
+        let spans = layout::arrange(&bar.free(gap), bar.tray_start(), &wants, gap);
         for (slot, index) in members.iter().enumerate() {
             let rect = spans[slot].map(|span| layout::place(bar.rect, bar.edge.horizontal(), span));
             let status = match rect {
@@ -221,7 +272,7 @@ fn tick() {
                 Some(_) => DockStatus::Shown,
                 None => DockStatus::NoRoom,
             };
-            states[*index] = DockState { status, rect, edge: Some(bar.edge), light };
+            states[*index] = DockState { status, rect, edge: Some(bar.edge), light, bar: Some(bar.rect) };
         }
     }
     let changed: Vec<Changed> = docked
@@ -229,9 +280,14 @@ fn tick() {
         .enumerate()
         .filter_map(|(index, item)| apply(item, targets[index].map(|bar| bars[bar].handle), states[index]))
         .collect();
-    let raised: Vec<isize> = shared.docked.iter().filter(|item| item.raised).map(|item| item.hwnd).collect();
+    let raised: Vec<(Option<isize>, isize)> = shared
+        .docked
+        .iter()
+        .filter(|item| item.raised)
+        .map(|item| (slot_of(item).map(|slot| slot.0 as isize), item.hwnd))
+        .collect();
     drop(shared);
-    raised.into_iter().for_each(|hwnd| taskbar_shell::raise(HWND(hwnd as *mut _)));
+    raised.into_iter().for_each(|(slot, hwnd)| raise_chain(slot.map(|slot| HWND(slot as *mut _)), HWND(hwnd as *mut _)));
     for change in changed {
         match change {
             Changed::Emit(emit) => {
@@ -243,12 +299,38 @@ fn tick() {
     }
 }
 
+fn keep_owner(handle: HWND, owner: HWND) {
+    if taskbar_shell::owner(handle) != Some(owner) {
+        taskbar_shell::set_owner(handle, Some(owner));
+    }
+}
+
+fn place_slot(slot: HWND, state: DockState) {
+    match (state.status, state.rect) {
+        (DockStatus::Shown, Some(rect)) => {
+            let target = RECT { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+            if window::window_rect(slot).is_none_or(|current| current != target) {
+                taskbar_shell::move_to(slot, target);
+            }
+            if !window::is_visible(slot) {
+                taskbar_slot::show(slot, true);
+                taskbar_shell::raise(slot);
+            }
+        }
+        _ if window::is_visible(slot) => taskbar_slot::show(slot, false),
+        _ => {}
+    }
+}
+
 fn apply(item: &mut Docked, taskbar: Option<HWND>, state: DockState) -> Option<Changed> {
     let hwnd = HWND(item.hwnd as *mut _);
+    let slot = slot_of(item);
     if let Some(taskbar) = taskbar {
-        if taskbar_shell::owner(hwnd) != Some(taskbar) {
-            taskbar_shell::set_owner(hwnd, Some(taskbar));
-        }
+        keep_owner(slot.unwrap_or(hwnd), taskbar);
+    }
+    if let Some(slot) = slot {
+        keep_owner(hwnd, slot);
+        place_slot(slot, state);
     }
     let changed = item.last.replace(state) != Some(state);
     if let Kind::Reserved { on_change, .. } = &item.kind {

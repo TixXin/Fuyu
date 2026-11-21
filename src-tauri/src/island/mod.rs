@@ -38,7 +38,9 @@ pub(crate) mod screen;
 mod screen_watch;
 mod state;
 #[cfg_attr(not(windows), path = "taskbar_unsupported.rs")]
-mod taskbar;
+pub(crate) mod taskbar;
+#[cfg(windows)]
+mod taskbar_drag;
 pub(crate) mod top_edge;
 mod watch;
 
@@ -308,6 +310,9 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
     if current_state.attached_edge == Some(state::Edge::Top) {
         top_edge::set_attached(&window, false);
     }
+    if taskbar::wanted(current_state) {
+        taskbar::lift(&window);
+    }
 
     focus::set_click_activation(&window, true);
     let mut follow = match drag_follow::DragFollow::start(&window) {
@@ -326,18 +331,28 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
     thread::spawn(move || {
         let mut hints = drag_hint::DragHints::new();
         let mut grid = drag_grid::DragGrid::start(&window, read_window_state());
+        let mut on_taskbar = taskbar::TaskbarDrop::start(&window, read_window_state());
         while left_button_down() {
-            follow.poll(&window, |next| grid.align(next));
+            let over_taskbar = on_taskbar.active();
+            follow.poll(&window, |next| if over_taskbar { next } else { grid.align(next) });
             hints.poll(&window);
-            grid.poll(&window);
+            if on_taskbar.poll(&window) {
+                grid.forget();
+            }
+            if !on_taskbar.active() {
+                grid.poll(&window);
+            }
             thread::sleep(Duration::from_millis(8));
         }
         hints.finish(&window);
         grid.finish();
         thread::sleep(Duration::from_millis(8));
 
-        let final_position = screen::window_position(&window).ok().map(|position| {
-            side::snap_after_drag(&window, IslandPosition::at(position.x, position.y), read_window_state())
+        let dropped = on_taskbar.finish(&window);
+        let final_position = dropped.or_else(|| {
+            screen::window_position(&window).ok().map(|position| {
+                side::snap_after_drag(&window, IslandPosition::at(position.x, position.y), read_window_state())
+            })
         });
         let did_finish_drag = {
             let mut state = window_state().lock().unwrap_or_else(PoisonError::into_inner);
@@ -356,6 +371,11 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         if did_finish_drag {
             if let Some(position) = final_position {
                 let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, nominal_position(&window, position));
+            }
+            if dropped.is_some() {
+                if let Err(error) = apply_stage_geometry(&window, read_window_state(), true) {
+                    eprintln!("Failed to drop the island into the taskbar: {error}");
+                }
             }
         }
     });
@@ -492,6 +512,8 @@ macro_rules! tauri_commands {
             crate::island::get_island_top_attachment,
             crate::island::get_island_edge,
             crate::island::get_island_taskbar,
+            crate::island::taskbar::start_island_taskbar_drag,
+            crate::island::taskbar::end_island_taskbar_drag,
             crate::island::bottom_edge::set_island_edge,
             crate::island::side::set_island_side_column,
             crate::island::banner_hit::set_island_side_bubble_rect,

@@ -1,0 +1,30 @@
+.island-taskbar-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  width: 12px;
+  display: none;
+  cursor: grab;
+}
+
+.island-taskbar-handle::before {
+  content: "";
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  left: 5px;
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.7);
+}
+
+.island--collapsed:hover .island-taskbar-handle--armed,
+.island-taskbar-handle--dragging {
+  display: block;
+}
+
+.island-taskbar-handle--dragging {
+  cursor: grabbing;
+}

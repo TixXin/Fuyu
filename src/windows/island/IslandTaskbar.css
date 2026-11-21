@@ -23,7 +23,7 @@
   }
 }
 
-:root .stage.stage--taskbar-clear .island.island--collapsed {
+:root .stage.stage--taskbar-clear .island.island--collapsed:not(.island--taskbar-panel) {
   --island-shell-fill: transparent;
   --island-rim-paint: none;
   --island-edge-lines: 0 0 transparent;
@@ -32,12 +32,16 @@
   backdrop-filter: none;
 }
 
-:root .stage.stage--taskbar-clear .island.island--collapsed:hover {
+:root .stage.stage--taskbar-clear .island.island--collapsed:not(.island--taskbar-panel):hover {
   --island-shell-fill: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
   background: var(--island-shell-fill);
 }
 
-.stage--taskbar-clear .island--collapsed .island__glass-live,
-.stage--taskbar-clear .island--collapsed .island__glass-refraction {
+.stage--taskbar-clear .island--collapsed:not(.island--taskbar-panel) .island__glass-live,
+.stage--taskbar-clear .island--collapsed:not(.island--taskbar-panel) .island__glass-refraction {
   display: none;
+}
+
+:root[data-island-edge="bottom"][data-island-taskbar="placed"] .island--collapsed {
+  --island-hover-grow-y: 0px !important;
 }

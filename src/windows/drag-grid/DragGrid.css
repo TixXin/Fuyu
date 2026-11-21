@@ -74,3 +74,14 @@
 .island-light .drag-grid {
   --drag-grid-halo: rgba(255, 255, 255, 0.85);
 }
+
+.drag-grid__slot {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 4px 0;
+  max-height: calc(100% - 8px);
+  border: 1.5px dashed rgba(var(--overlay-rgb, 255, 255, 255), 0.55);
+  border-radius: 6px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
+  transition: left var(--motion-fast) var(--motion-ease), width var(--motion-fast) var(--motion-ease);
+}
