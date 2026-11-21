@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useHoverGrow } from "./useHoverGrow";
+import { useShellMotionGuard } from "./useShellMotionGuard";
 import type { AppearanceMode, IslandBounce, IslandHover, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
@@ -201,6 +202,7 @@ export function IslandShell({
   const activeAlert = useActiveAlert();
   const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
   useEffect(() => setPanelAwake(isExpanded), [isExpanded]);
+  useShellMotionGuard(shellRef, mode);
   useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow, hoverBounce);
   const className = [
     "island",
