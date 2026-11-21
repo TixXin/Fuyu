@@ -145,7 +145,7 @@ export function ClipboardWindow() {
 
   return (
     <div className={`clipboard-window${light ? " island-light" : ""}`}>
-      <IconButtonTooltip scope="body" delay={300} />
+      <IconButtonTooltip scope="body" />
       <ClipboardTitleBar pinned={pinned} expanded={expanded} onTogglePin={togglePin} onToggleExpanded={toggleExpanded} onClose={close} />
       {expanded ? (
         <ClipboardManager
