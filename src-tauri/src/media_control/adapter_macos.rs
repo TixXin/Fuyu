@@ -155,7 +155,7 @@ fn stopping(stopped: &Receiver<()>) -> bool {
     !matches!(stopped.try_recv(), Err(TryRecvError::Empty))
 }
 
-fn keep(mut child: Child, stopped: &Receiver<()>) -> bool {
+fn keep(child: Child, stopped: &Receiver<()>) -> bool {
     let mut slot = CHILD.lock().unwrap_or_else(PoisonError::into_inner);
     if stopping(stopped) {
         finish(child);
