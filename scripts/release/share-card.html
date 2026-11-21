@@ -22,16 +22,19 @@
   .island .v .chip { background: #FFB547; color: #2A1A00; font-size: 24px; padding: 4px 14px; vertical-align: 12px; margin-left: 14px; }
   .island .dot { width: 22px; height: 22px; border-radius: 50%; background: #39E08F; box-shadow: 0 0 14px #39E08F; margin-left: 28px; flex: none; }
   .sub { text-align: center; margin-top: 26px; font-size: 26px; color: #8FB4D9; }
-  .grid { margin-top: 52px; columns: 2; column-gap: 24px; }
-  .grid.one { columns: 1; }
+  .grid { margin-top: 52px; }
   .tile { break-inside: avoid; margin-bottom: 24px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 36px; padding: 32px 32px 28px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
   .tile h3 { font-size: 21px; font-weight: 700; color: #6FD0FF; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 16px; }
   .tile ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
   .tile li { font-size: 26px; line-height: 1.35; font-weight: 600; color: #E8F4FF; padding-left: 26px; position: relative; }
   .tile li::before { content: ""; position: absolute; left: 0; top: 14px; width: 10px; height: 10px; border-radius: 50%; background: #6CC4FF; box-shadow: 0 0 12px #6CC4FF; }
+  .tile li .d { display: block; margin-top: 6px; font-size: 22px; line-height: 1.55; font-weight: 400; color: #A9C4DE; }
+  .tile ul.kids { margin-top: 10px; gap: 8px; }
+  .tile ul.kids li { font-size: 22px; line-height: 1.5; font-weight: 400; color: #C9DCEE; padding-left: 22px; }
+  .tile ul.kids li::before { width: 7px; height: 7px; top: 13px; box-shadow: none; background: #8FB4D9; }
+  .tile ul.kids li .t { font-weight: 600; color: #E8F4FF; }
+  .tile ul.top { gap: 22px; }
   .tile li .chip { font-size: 15px; padding: 1px 8px; background: rgba(255,255,255,.1); color: #BFD8EE; vertical-align: 3px; margin-left: 6px; }
-  .tile li.more { font-size: 22px; color: #8FB4D9; font-weight: 400; }
-  .tile li.more::before { display: none; }
   .tile.fix { background: rgba(57,224,143,.07); border-color: rgba(127,240,192,.25); }
   .tile.fix h3 { color: #7FF0C0; }
   .tile.fix li { font-weight: 400; font-size: 22px; color: #BFD8EE; }
@@ -49,18 +52,18 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const L = DATA.labels;
 const [base, pre] = DATA.version.split(/-(.*)/s);
 const chip = (it) => (it.platform ? `<span class="chip">${it.platform}</span>` : "");
+const kids = (it) => (it.children.length ? `<ul class="kids">${it.children.map((c) => `<li>${c.desc ? `<span class="t">${esc(c.title)}</span>：${esc(c.desc)}` : esc(c.title)}${chip(c)}</li>`).join("")}</ul>` : "");
+const line = (it, fix) => (fix ? `<li>${esc(it.title)}${it.desc ? ` ${esc(it.desc)}` : ""}</li>` : `<li>${esc(it.title)}${chip(it)}${it.desc ? `<span class="d">${esc(it.desc)}</span>` : ""}${kids(it)}</li>`);
 const tile = (s) => {
-  const shown = s.items.slice(0, DATA.max);
-  const hidden = s.items.length - shown.length;
   const title = s.fix ? `${L.fixes} · ${s.items.length}` : s.title || L.section;
-  return `<div class="tile${s.fix ? " fix" : ""}"><h3>${esc(title)}</h3><ul>${shown.map((it) => `<li>${esc(it.title)}${s.fix ? "" : chip(it)}</li>`).join("")}${hidden > 0 ? `<li class="more">${esc(L.more.replace("{n}", hidden))}</li>` : ""}</ul></div>`;
+  return `<div class="tile${s.fix ? " fix" : ""}"><h3>${esc(title)}</h3><ul class="top">${s.items.map((it) => line(it, s.fix)).join("")}</ul></div>`;
 };
 const normal = DATA.sections.filter((s) => !s.fix);
 const fixes = DATA.sections.filter((s) => s.fix);
 document.getElementById("card").innerHTML = `
   <div class="island"><span class="icon">${ICON}</span><div><div class="t">${esc(L.updated)}</div><div class="v">v${esc(base)}${pre ? `<span class="chip">${esc(pre)}</span>` : ""}</div></div><span class="dot"></span></div>
   <div class="sub">${esc(DATA.date)} · ${esc(L.notes)}</div>
-  <div class="grid${normal.length < 2 ? " one" : ""}">${normal.map(tile).join("")}</div>${fixes.map(tile).join("")}
+  <div class="grid">${normal.map(tile).join("")}</div>${fixes.map(tile).join("")}
   <div class="foot"><span><b>fuyu.ing</b> · github.com/TixXin/fuyu</span><span>${esc(L.update)}</span></div>`;
 document.body.dataset.height = String(Math.ceil(document.getElementById("card").getBoundingClientRect().height));
 </script>

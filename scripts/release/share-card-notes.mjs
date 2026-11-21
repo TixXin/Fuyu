@@ -33,7 +33,8 @@ function parseItem(raw) {
     platform ??= inner[1];
     title = title.replace(PLATFORM, "");
   }
-  return { title: plain(title), desc: plain(rest.slice(bold[0].length)), platform };
+  const desc = plain(rest.slice(bold[0].length));
+  return { title: plain(title), desc: /^[。.，,；;！!]*$/.test(desc) ? "" : desc, platform };
 }
 
 function parseSections(text) {
@@ -79,7 +80,7 @@ function splitFixes(sections) {
     }
     if (kept.length) result.push({ title: section.title, fix: false, items: kept });
   }
-  const strip = ({ title, desc, platform }) => ({ title, desc, platform });
+  const strip = ({ title, desc, platform, children = [] }) => ({ title, desc, platform, children: children.map(strip) });
   const out = result.map((section) => ({ ...section, items: section.items.map(strip) }));
   if (fixes.length) out.push({ title: "", fix: true, items: fixes.map(strip) });
   return out;

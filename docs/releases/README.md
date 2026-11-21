@@ -46,8 +46,8 @@
 
 ## 分享图
 
-`pnpm release:share` 把最新一版说明（`docs/releases` 里版本号最大的那份）画成一张分享图，中英文各一张，写到 `src-tauri/target/release-share/v<版本号>/`，画完把中文那张（只出英文时是英文那张）复制进剪贴板，再打开这个文件夹，直接粘贴就能发。图宽 1080 的两倍（2160px），高度随内容：顶上一座黑色的岛写版本号，下面按「更新内容」的 `###` 分组，每条只取加粗的短语，修复单独一块。没分组的旧说明合成一块，`**修复**：` 下面的子项进修复那块。
+`pnpm release:share` 把最新一版说明（`docs/releases` 里版本号最大的那份）画成一张分享图，中英文各一张，写到 `src-tauri/target/release-share/v<版本号>/`，画完把中文那张复制进剪贴板（英文的不复制），再打开这个文件夹，直接粘贴就能发。图宽 1080 的两倍（2160px），高度随内容，说明有多长图就多长，每一条都画出来、不省略：顶上一座黑色的岛写版本号，下面按「更新内容」的 `###` 分组，每条是加粗的短语加完整说明，子项照样列出，修复单独一块。没分组的旧说明合成一块，`**修复**：` 下面的子项进修复那块。
 
-- 指定版本：`pnpm release:share 0.3.9`；只要一种语言：`--lang zh`；每组最多几条（默认 6，多的写「还有 N 项」）：`--max 8`；倍率：`--scale 1`；不复制：`--no-copy`；不打开文件夹：`--no-open`。
+- 指定版本：`pnpm release:share 0.3.9`；只要一种语言：`--lang zh`；倍率：`--scale 1`；不复制：`--no-copy`；不打开文件夹：`--no-open`。
 - 用本机的 Chrome 或 Edge 无界面截图，找不到时设 `CHROME_PATH`。复制图片在 Mac 上用 `osascript`，Windows 上用 PowerShell，Linux 上要装 `xclip`；复制失败只提示，不影响出图。日期取版本 tag 的提交日期，还没打 tag 时用今天。
 - 样式在 `scripts/release/share-card.html`，解析在 `scripts/release/share-card-notes.mjs`；三个方案的对比见 [release-share-card-preview.html](../investigations/release-share-card-preview.html)。
