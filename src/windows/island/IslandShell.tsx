@@ -35,8 +35,11 @@ import { usePanelEditing } from "./custom-panels/panelEditing";
 import "./IslandOutline.css";
 import { IslandTaskbarHandle, type TaskbarHandleShow } from "./IslandTaskbarHandle";
 
-type IslandShellProps = {
+export type IslandShellPart = "bar" | "panel";
+
+export type IslandShellProps = {
   mode: IslandMode;
+  part?: IslandShellPart;
   page: IslandPage;
   homePage?: IslandPage;
   popup?: boolean;
@@ -135,6 +138,7 @@ function useCollapsedPrewarm(isExpanded: boolean) {
 
 export function IslandShell({
   mode,
+  part,
   page,
   homePage = page,
   popup = false,
@@ -214,6 +218,7 @@ export function IslandShell({
     isLiquidGlass ? `island--glass-${nativeGlassState}` : "",
     isLiquidGlass && glass ? glass.className : "",
     showTitle ? "" : "island--title-hidden",
+    part ? `island--taskbar-${part}` : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -271,8 +276,8 @@ export function IslandShell({
               onWindowDragStart={onWindowDragStart}
             />
           )}
-          {taskbarHandle && !isExpanded && <IslandTaskbarHandle show={taskbarHandle} />}
-          <IslandCollapsedBar
+          {taskbarHandle && !isExpanded && part !== "panel" && <IslandTaskbarHandle show={taskbarHandle} />}
+          {part !== "panel" && <IslandCollapsedBar
             slots={collapsedSlots}
             page={page}
             homePage={homePage}
@@ -288,9 +293,9 @@ export function IslandShell({
             notice={notice}
             onWindowDragStart={onWindowDragStart}
             onTuck={onTuck}
-          />
+          />}
 
-          <div
+          {part !== "bar" && <div
             id="island-panel"
             className="island__expanded"
             aria-hidden={!isExpanded}
@@ -329,7 +334,7 @@ export function IslandShell({
             <div ref={contentRef} className="island__content">
               <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>
             </div>
-          </div>
+          </div>}
           {overlay}
         </div>
         {sideBubble && (
@@ -341,9 +346,9 @@ export function IslandShell({
             onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(homePage))}
           />
         )}
-        <IslandDragHint />
-        <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />
-        <IconButtonTooltip />
+        {part !== "panel" && <IslandDragHint />}
+        {part !== "bar" && <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />}
+        {part !== "panel" && <IconButtonTooltip />}
       </section>
       {showTuckHint && <IslandTuckHint hint={tuckHint} side={side} />}
     </>

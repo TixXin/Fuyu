@@ -268,6 +268,7 @@ pub(super) fn stage_height_for(state: IslandWindowState) -> f64 {
     STAGE_WINDOW_HEIGHT
         .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y)
         .max(side_column)
+        + super::taskbar::panel_room(state)
 }
 
 fn side_stage_height_key(state: IslandWindowState) -> Option<(Edge, u64)> {

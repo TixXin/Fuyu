@@ -25,6 +25,15 @@ pub(super) fn wanted(_state: IslandWindowState) -> bool {
     false
 }
 
+pub(super) fn panel_room(_state: IslandWindowState) -> f64 {
+    0.0
+}
+
+#[cfg_attr(target_os = "macos", allow(dead_code))]
+pub(super) fn cursor_on_bar_or_panel(_window: (f64, f64, f64, f64), _cursor: (f64, f64), _state: IslandWindowState) -> Option<bool> {
+    None
+}
+
 pub(super) fn keep_flag(_previous: Option<IslandPosition>, next: IslandPosition) -> IslandPosition {
     next
 }
