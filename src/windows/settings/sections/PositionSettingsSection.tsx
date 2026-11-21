@@ -14,7 +14,7 @@ import { PositionDiagram } from "./PositionDiagram";
 import { useIslandDockEdge } from "./useIslandDockEdge";
 import { useIslandTaskbar } from "./useIslandTaskbar";
 import { DEFAULT_SETTINGS } from "../../../lib/settings/settings";
-import type { IslandMonitor, IslandSettings, MenuBarPlacement, SideHeightMode } from "../../../lib/settings/types";
+import type { IslandMonitor, IslandSettings, MenuBarPlacement, SideHeightMode, TaskbarLook } from "../../../lib/settings/types";
 import { MAX_SIDE_HEIGHT, MIN_SIDE_HEIGHT } from "../../../lib/settings/settingsLimits";
 
 export function PositionSettingsSection({
@@ -59,6 +59,19 @@ export function PositionSettingsSection({
         }
         description={dockEdge === "taskbar" && !taskbar.placed ? t.settings.position.taskbarFallback : undefined}
       />
+      {dockEdge === "taskbar" && (
+        <SettingsRow
+          title={t.settings.position.taskbarLook}
+          control={
+            <SettingsChoice<TaskbarLook>
+              value={settings.taskbarLook}
+              options={(["transparent", "theme"] as const).map((value) => ({ value, label: t.settings.position.taskbarLookOptions[value] }))}
+              ariaLabel={t.settings.position.taskbarLook}
+              onChange={(taskbarLook) => onSettingsChange({ ...settings, taskbarLook })}
+            />
+          }
+        />
+      )}
       {onSide && (
         <SettingsRow
           title={t.settings.position.sideHeight}

@@ -7,6 +7,8 @@ export type SettingsPositionText = {
   edge: string;
   edgeOptions: Record<"top" | "bottom" | "left" | "right" | "taskbar", string>;
   taskbarFallback: string;
+  taskbarLook: string;
+  taskbarLookOptions: Record<"transparent" | "theme", string>;
   sideMusicCover: string;
   sideHeight: string;
   sideHeightOptions: Record<"panel" | "content" | "custom", string>;
@@ -27,6 +29,8 @@ export const zhCN: SettingsPositionText = {
   edge: "吸附到",
   edgeOptions: { top: "顶边", bottom: "底边", left: "左侧", right: "右侧", taskbar: "任务栏" },
   taskbarFallback: "任务栏现在放不下或藏起来了，岛暂时贴在屏幕底边，有空位后自动回到任务栏。",
+  taskbarLook: "任务栏上的外观",
+  taskbarLookOptions: { transparent: "透明", theme: "跟随岛屿主题" },
   sideMusicCover: "侧边时音乐显示封面",
   sideHeight: "侧边时的高度",
   sideHeightOptions: { panel: "同面板", content: "按内容", custom: "自定义" },
@@ -47,6 +51,8 @@ export const en: SettingsPositionText = {
   edge: "Dock to",
   edgeOptions: { top: "Top edge", bottom: "Bottom edge", left: "Left side", right: "Right side", taskbar: "Taskbar" },
   taskbarFallback: "The taskbar has no room right now or is hidden, so the island sits on the bottom edge until there is space again.",
+  taskbarLook: "Look on the taskbar",
+  taskbarLookOptions: { transparent: "Transparent", theme: "Island theme" },
   sideMusicCover: "Show album art on the side",
   sideHeight: "Height on the side",
   sideHeightOptions: { panel: "Panel", content: "Fit", custom: "Custom" },

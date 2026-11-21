@@ -18,6 +18,7 @@ use super::{registry, window};
 const SECONDARY_CLASS: &str = "Shell_SecondaryTrayWnd";
 const VERSION_KEY: &str = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
 const FIRST_WINDOWS_11_BUILD: u32 = 22000;
+const PERSONALIZE_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct TaskbarWindow {
@@ -69,6 +70,10 @@ pub(crate) fn dpi_scale(handle: HWND) -> f64 {
         0 => 1.0,
         dpi => f64::from(dpi) / 96.0,
     }
+}
+
+pub(crate) fn uses_light_theme() -> bool {
+    registry::read_u32(windows::Win32::System::Registry::HKEY_CURRENT_USER, PERSONALIZE_KEY, "SystemUsesLightTheme") == Some(1)
 }
 
 pub(crate) fn auto_hide_enabled() -> bool {

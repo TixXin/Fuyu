@@ -16,6 +16,7 @@ const ISLAND_ORDER: u8 = 0;
 pub struct IslandTaskbar {
     docked: bool,
     placed: bool,
+    light: bool,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -25,7 +26,7 @@ struct Reservation {
 }
 
 static RESERVED: Mutex<Option<Reservation>> = Mutex::new(None);
-static REPORTED: Mutex<IslandTaskbar> = Mutex::new(IslandTaskbar { docked: false, placed: false });
+static REPORTED: Mutex<IslandTaskbar> = Mutex::new(IslandTaskbar { docked: false, placed: false, light: false });
 
 pub(crate) fn supported() -> bool {
     taskbar_host::supported()
@@ -112,9 +113,10 @@ pub(super) fn stage_position(
     }
     let island = collapsed_size(state, screen::monitor_scale(monitor));
     sync(window, monitor, island.0);
-    let placed = taskbar_host::current(window).and_then(|dock| stage_on_bar(dock, island, stage));
+    let dock = taskbar_host::current(window);
+    let placed = dock.and_then(|dock| stage_on_bar(dock, island, stage));
     taskbar_host::set_raised(window, placed.is_some() && matches!(state.mode, IslandMode::Expanded));
-    report(window, IslandTaskbar { docked: true, placed: placed.is_some() });
+    report(window, IslandTaskbar { docked: true, placed: placed.is_some(), light: dock.is_some_and(|dock| dock.light) });
     placed
 }
 
@@ -123,7 +125,7 @@ mod tests {
     use super::*;
 
     fn shown(left: i32, right: i32) -> DockState {
-        DockState { status: DockStatus::Shown, rect: Some(Rect::new(left, 2100, right, 2160)), edge: Some(BarEdge::Bottom) }
+        DockState { status: DockStatus::Shown, rect: Some(Rect::new(left, 2100, right, 2160)), edge: Some(BarEdge::Bottom), light: false }
     }
 
     #[test]
@@ -138,7 +140,7 @@ mod tests {
         let island = (400, 44);
         let stage = (1200, 900);
         assert!(stage_on_bar(DockState { status: DockStatus::BarHidden, ..shown(0, 400) }, island, stage).is_none());
-        assert!(stage_on_bar(DockState { status: DockStatus::NoRoom, rect: None, edge: Some(BarEdge::Bottom) }, island, stage).is_none());
+        assert!(stage_on_bar(DockState { status: DockStatus::NoRoom, rect: None, edge: Some(BarEdge::Bottom), light: false }, island, stage).is_none());
         assert!(stage_on_bar(DockState { edge: Some(BarEdge::Left), ..shown(0, 400) }, island, stage).is_none());
     }
 

@@ -17,6 +17,7 @@ import { useIslandKeyboard } from "./useIslandKeyboard";
 import { useIslandFeatures } from "./useIslandFeatures";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTucking } from "./useIslandTucking";
+import { useIslandOnTaskbar } from "./useIslandOnTaskbar";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
 import { editGrowWidth, PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
@@ -165,6 +166,9 @@ export function IslandApp() {
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
   const { glass, glassStyle, layerState } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
+  const onTaskbar = useIslandOnTaskbar();
+  const taskbarClear = onTaskbar.placed && settings.taskbarLook === "transparent" && mode === "collapsed";
+  const lightStage = taskbarClear ? onTaskbar.light : isLightIsland(look.islandBackgroundColor);
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
@@ -235,7 +239,7 @@ export function IslandApp() {
   useSettleIslandContributions();
 
   return (
-    <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
+    <main className={`stage stage--font-${settings.fontFamily}${lightStage ? " island-light" : ""}${taskbarClear ? " stage--taskbar-clear" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
       <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
         mode={mode}

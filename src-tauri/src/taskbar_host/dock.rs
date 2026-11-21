@@ -33,6 +33,7 @@ pub struct DockState {
     pub(crate) status: DockStatus,
     pub(crate) rect: Option<Rect>,
     pub(crate) edge: Option<BarEdge>,
+    pub(crate) light: bool,
 }
 
 type OnChange = Arc<dyn Fn() + Send + Sync>;
@@ -199,10 +200,11 @@ fn width_of(item: &Docked) -> i32 {
 fn tick() {
     let bars = snapshot::read();
     let fullscreen = notification_state::fullscreen_app_in_front();
+    let light = taskbar_shell::uses_light_theme();
     let mut shared = shared();
     let docked = &mut shared.docked;
     let targets: Vec<Option<usize>> = docked.iter().map(|item| bar_index(&bars, item.monitor)).collect();
-    let mut states: Vec<DockState> = vec![DockState { status: DockStatus::NoTaskbar, rect: None, edge: None }; docked.len()];
+    let mut states: Vec<DockState> = vec![DockState { status: DockStatus::NoTaskbar, rect: None, edge: None, light }; docked.len()];
     for (bar_index, bar) in bars.iter().enumerate() {
         let members: Vec<usize> = (0..docked.len()).filter(|index| targets[*index] == Some(bar_index)).collect();
         if members.is_empty() {
@@ -219,7 +221,7 @@ fn tick() {
                 Some(_) => DockStatus::Shown,
                 None => DockStatus::NoRoom,
             };
-            states[*index] = DockState { status, rect, edge: Some(bar.edge) };
+            states[*index] = DockState { status, rect, edge: Some(bar.edge), light };
         }
     }
     let changed: Vec<Changed> = docked

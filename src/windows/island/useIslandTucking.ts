@@ -15,7 +15,7 @@ type IslandTuckingOptions = {
 export function useIslandTucking({ settings, navigation }: IslandTuckingOptions) {
   const { mode, page, isTucked, tuckSource, isPeeking, peekRetractDelayMs, idleTuck, revealIsland, endPeek } = navigation;
   const { reveal, hold } = useIslandContributed();
-  const onTaskbar = useIslandOnTaskbar();
+  const onTaskbar = useIslandOnTaskbar().placed;
   const tuckWhenIdle = useCallback(
     () => idleTuck(settings.autoTuckRetract ? settings.autoTuckRetractDelayMs : null),
     [idleTuck, settings.autoTuckRetract, settings.autoTuckRetractDelayMs],
