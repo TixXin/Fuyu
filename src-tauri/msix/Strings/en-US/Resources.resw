@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="DisplayName" xml:space="preserve"><value>Fuyu</value></data>
+  <data name="DisplayName" xml:space="preserve"><value>Fuyu - Island</value></data>
   <data name="Description" xml:space="preserve"><value>A floating island for todos, calendar, media, clipboard, screenshots and AI agent status.</value></data>
   <data name="PluginPackage" xml:space="preserve"><value>Fuyu plugin package</value></data>
 </root>
