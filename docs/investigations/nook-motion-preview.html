@@ -100,6 +100,8 @@
       <button data-mode="model" class="on">弹簧复刻</button><button data-mode="measured">实测回放</button></span>
     <span class="group"><span class="label">速度</span>
       <button data-speed="1" class="on">1×</button><button data-speed="0.5">0.5×</button><button data-speed="0.25">0.25×</button><button data-speed="0.1">0.1×</button></span>
+    <span class="group" title="动画结束时的回弹强度"><span class="label">弹动幅度</span>
+      <button data-bounce="1.25">轻微</button><button data-bounce="1" class="on">常规</button><button data-bounce="0.8">弹动</button></span>
     <span class="group"><button id="demo">自动演示一遍</button><button id="pause">暂停</button><button id="prev">← 一帧</button><button id="next">一帧 →</button></span>
     <label class="chk"><input type="checkbox" id="hitch"> 带上录屏里的那次卡顿</label>
     <label class="chk"><input type="checkbox" id="dark"> 深色壁纸</label>
@@ -165,8 +167,9 @@
     <tr><td>展开时的卡顿</td><td>6 次展开里有 3 次（ffmpeg 那次也是）：松手后岛先鼓到约 240–300 宽、35–40 高，停 150–200ms，然后一帧跳到弹簧此刻本该在的位置（ffmpeg 那次是 736×147）。弹簧没有重新开始，所以看上去像“先预备一下再弹开”。另外 3 次没有这一段</td><td>默认不带。勾上“带上录屏里的那次卡顿”：先鼓到 263×35，到 176ms 接回弹簧</td></tr>
     <tr><td>展开的内容</td><td>顺滑的那几次，内容从一开始就跟着形状出现：先很糊很淡，约 250ms 基本清楚。排版跟着当时的宽度走（左右两端各贴着边），高度方向被形状裁掉。卡顿的那次，标签栏在跳开那帧已有约六成，小组件晚约 170ms 才开始淡入</td><td>标签栏：透明度 20ms 后 200ms 线性到 1，模糊 14px → 0（ease-out，330ms）；小组件晚 30ms，淡入 260ms</td></tr>
     <tr><td>收起</td><td>收起的那一帧内容整块消失，只剩深色形状。按 Esc 或移出：宽 700 → 200 先快后慢，约 310ms 到位，不回弹（只多缩 2px）；高晚约 18ms 才开始缩。点岛顶收起（2 次）：会多缩到约 177×25，再弹回 200×31</td><td>Esc：宽和高都是 <code>ζ 1, ω 21.5</code>（response 0.29，临界阻尼），高延迟 18ms。点岛顶：<code>ζ 0.7, ω 19</code></td></tr>
+    <tr><td>弹动幅度</td><td>动画结束时回弹多少。“常规”就是上面量到的 Nook 原样：展开时宽过头约 10%、高约 7%，悬停过头约 13%，按 Esc 收起不回弹</td><td>只改阻尼，弹簧的快慢（<code>ω</code>）不变。轻微：<code>ζ × 1.25</code>，展开时宽过头约 3%、高约 1%；弹动：<code>ζ × 0.8</code>，宽过头约 18%、高约 15%，收起也会多缩约 1.5% 再回来。<code>ζ</code> 最大到 1</td></tr>
   </table>
-  <p>“弹簧复刻”里每一段都从岛当时的位置和速度接着算，所以悬停到一半移出、展开到一半按 Esc 都不会跳。“实测回放”直接按 ffmpeg 那份每帧量到的宽高插值（展开带着那次卡顿），移出、按下和点岛顶收起那份里没有对应的数据，仍然用弹簧。曲线图标题右边的数字是复刻线和实测点的均方根误差。</p>
+  <p>“弹簧复刻”里每一段都从岛当时的位置和速度接着算，所以悬停到一半移出、展开到一半按 Esc 都不会跳。“实测回放”直接按 ffmpeg 那份每帧量到的宽高插值（展开带着那次卡顿），移出、按下和点岛顶收起那份里没有对应的数据，仍然用弹簧。曲线图标题右边的数字是复刻线和实测点的均方根误差，换弹动幅度后这个数字就是它和原片差多少。</p>
   <p>和上一版的区别：之前把展开前那 145ms 当成 Nook 有意做的“预备”，展开用 220ms 的贝塞尔曲线从预备结束那一刻起算。对照 PixPin 那份后看到一半的展开没有这一段，弹簧是从松手就开始的，停住的那段只是它偶尔卡了一下；按下的缩放也从之前记的 0.73 倍改成两份录屏里都量到的 0.95 倍。</p>
 </main>
 
@@ -200,13 +203,14 @@ function interp(track, ms) {
 }
 
 const hitch = $('hitch'), scrub = $('scrub'), ov = $('ov'), stage = $('stage');
-let mode = 'model', speed = 1, paused = false, last = performance.now();
+let mode = 'model', speed = 1, bounce = 1, paused = false, last = performance.now();
+const damp = z => Math.min(1, z * bounce);
 let drive = 'live', T = 0, playing = false;
 let state = 'idle', anim = null, pointerIn = false, opened = null, clock = 0, cur = { ...IDLE, vw: 0, vh: 0 };
 
 function springTo(kind, to, pw, ph = pw) {
   const s = { ...cur }, dh = ph[2] || 0;
-  const fw = axis(s.w, s.vw, to.w, pw[0], pw[1]), fh = axis(s.h + s.vh * dh / 1000, s.vh, to.h, ph[0], ph[1]);
+  const fw = axis(s.w, s.vw, to.w, damp(pw[0]), pw[1]), fh = axis(s.h + s.vh * dh / 1000, s.vh, to.h, damp(ph[0]), ph[1]);
   const at = te => ({ w: fw(Math.max(0, te) / 1000), h: te > dh ? fh((te - dh) / 1000) : s.h + s.vh * Math.max(0, te) / 1000 });
   return { kind, start: clock, sample: te => { const p = at(te), q = at(te + 1); return { w: p.w, h: p.h, vw: (q.w - p.w) * 1000, vh: (q.h - p.h) * 1000 }; } };
 }
@@ -217,7 +221,7 @@ function expandAnim() {
   if (mode === 'measured') return trackAnim('expand', TRACKS.expand);
   const s = { ...cur }, a = springTo('expand', OPEN, SPR.openW, SPR.openH);
   if (!hitch.checked) return a;
-  const live = a.sample, pw = axis(s.w, s.vw, POP.w, ...SPR.pop), ph = axis(s.h, s.vh, POP.h, ...SPR.pop);
+  const live = a.sample, pw = axis(s.w, s.vw, POP.w, damp(SPR.pop[0]), SPR.pop[1]), ph = axis(s.h, s.vh, POP.h, damp(SPR.pop[0]), SPR.pop[1]);
   a.sample = te => { if (te >= HITCH_END) return live(te); const t = Math.max(0, te - 20) / 1000; return { w: pw(t), h: ph(t), vw: 0, vh: 0 }; };
   return a;
 }
@@ -371,6 +375,7 @@ const group = (sel, fn) => document.querySelectorAll(sel).forEach(b => b.onclick
   document.querySelectorAll(sel).forEach(x => x.classList.toggle('on', x === b)); fn(b); });
 group('[data-mode]', b => { mode = b.dataset.mode; });
 group('[data-speed]', b => { speed = +b.dataset.speed; ov.playbackRate = speed; });
+group('[data-bounce]', b => { bounce = +b.dataset.bounce; drawCharts(); });
 
 const video = $('video'), vtime = $('vtime');
 const sources = ['../../ai-guide/nook-motion/pixpin-2026-11-21.mp4', 'file:///Users/tixxin/Library/Application%20Support/PixPin/Temp/PixPin_2026-11-21_08-44-20.mp4'];
