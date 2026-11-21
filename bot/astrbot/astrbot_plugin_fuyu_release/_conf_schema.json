@@ -7,7 +7,7 @@
     },
     "targets": {
         "description": "额外的推送会话",
-        "hint": "会话 ID，例如 default:GroupMessage:123456 或 default:FriendMessage:123456，可以在会话里用 /sid 查看。",
+        "hint": "会话 ID，格式是 平台 ID:消息类型:对象，例如 default:GroupMessage:123456，微信个人号是 <机器人名>:FriendMessage:<用户>@im.wechat；在会话里发 /sid 查看。",
         "type": "list",
         "default": []
     },

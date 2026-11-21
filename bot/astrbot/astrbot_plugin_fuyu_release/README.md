@@ -1,6 +1,6 @@
 # 浮屿发版推送
 
-浮屿发版后，把版本更新分享图推到 QQ。发版机把图片和 `fuyu-v<版本号>.json` 放进 `data/plugin_data/astrbot_plugin_fuyu_release/inbox/`，插件自动私聊发给管理员，也可以在配置里加群。
+浮屿发版后，把版本更新分享图推到 QQ。发版机把图片和 `fuyu-v<版本号>.json` 放进 `data/plugin_data/astrbot_plugin_fuyu_release/inbox/`，插件自动私聊发给管理员，也可以在配置里改成或加上别的会话，比如微信个人号机器人的私聊。
 
 管理员命令：
 
