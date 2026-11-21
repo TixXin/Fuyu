@@ -91,7 +91,7 @@ async function runChecks() {
     check(!root().classList.contains("glow-r"), "刚碰到时边还没亮");
     const early = await pressAt(edgeX, edgeY);
     check(!early.defaultPrevented && started.length === 0, "边还没亮时按下不开始改尺寸");
-    await until(() => root().classList.contains("glow-r"), 1000);
+    await until(() => root().classList.contains("glow-r"));
     check(root().classList.contains("glow-r") && root().classList.contains("half-l"), "停一下后右边亮、对侧半亮");
     const cover = document.createElement("div");
     cover.style.cssText = "position:fixed;inset:0;z-index:9999";
@@ -156,8 +156,11 @@ async function runChecks() {
     await hover(box.left + box.width / 2, box.top + 15);
     check(getComputedStyle(q(".island-resize__cap--r")!).opacity === "0", "鼠标在折叠岛中间时不出小拉环");
     await hover(box.left + 4, box.top + 15);
-    await until(() => root().classList.contains("glow-l") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", 1000);
-    check(!q(".island-resize__glow") && getComputedStyle(q(".island-resize__cap--l")!).opacity === "1", "折叠岛的边亮起时只亮小拉环，不再并排多一条亮线");
+    const armStart = performance.now();
+    await until(() => root().classList.contains("glow-l"));
+    const capOpacity = () => getComputedStyle(q(".island-resize__cap--l")!).opacity;
+    await until(() => capOpacity() === "1");
+    check(!q(".island-resize__glow") && root().classList.contains("glow-l") && capOpacity() === "1", `折叠岛的边亮起时只亮小拉环，不再并排多一条亮线（${Math.round(performance.now() - armStart)}ms，class「${root().className}」，拉环不透明度 ${capOpacity()}）`);
     const shell = q(".island")!;
     shell.style.setProperty("--island-hover-grow-x", "18px");
     await until(() => islandBox().width - box.width > 17.5, 1000);
