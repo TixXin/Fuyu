@@ -78,6 +78,27 @@
 
 同一晚另外两次启动，新包 4 分钟内岛的 WebContent 涨到 630–670 MB，旧版不到 2 分钟涨到 470 MB，都是一次跳一百多 MB；模拟内存紧张后新包那次立刻降到 107 MB。那段时间 `sample` 看到页面在收着时一直在排版、重绘（CSS 动画计时器、`fetch` 调后端、`MessagePort` 消息）。上面 6 分钟那次没有出现。所以这是 WebKit 不急着回收的垃圾、旧版就有，触发条件没查清（猜测和当时岛上有没有动画、鼠标有没有经过岛预热面板有关），要找就得在出现时用 Web 检查器看堆和计时器。
 
+## 第三轮：主进程的图形内存和插件宿主（2026-11-20 夜）
+
+### 文字识别的模型一直留在主进程
+
+正式包主进程 `IOAccelerator` 55–59 MB，`vmmap` 是一块 128 MB 的私有 Metal 堆里 55 MB 脏页；同一进程有两个 `ANEServicesThread`，`heap` 里几千个 `Espresso::*`（Core ML 的推理引擎）对象和 26 个 `VNRecognizedTextObservation`。来源是剪贴板历史给新复制的图片做文字识别（`clipboard_history/service.rs` → `macos/ocr.rs`，用 Vision 的 `VNRecognizeTextRequest`）：当时剪贴板里正好是一张图，岛一启动就记进历史、识别了一遍。截图存进历史时也会识别（`screenshot/history_text.rs`）。
+
+用一个小 Swift 程序单独试：识别三次、每次都包在 `autoreleasepool` 里，进程仍从 4 MB 涨到 133 MB 并一直留着。Vision 没有公开的释放接口，模型缓存跟进程走。
+
+改法：Mac 上的 `ocr::recognize` / `recognize_words` 改成起一个子进程，就是浮屿自己的可执行文件加 `--fuyu-ocr text|words <宽> <高>`，从 stdin 读 RGBA、往 stdout 写 JSON，识别完就退出（`macos/ocr_worker.rs`；`lib.rs` 的 `run()` 在最前面认这个参数，早于单实例插件）。调用方不变。
+
+| | 修前 | 修后 |
+|---|---|---|
+| 主进程，启动 50 秒 | 110 MB（IOAccelerator 55 MB） | **55 MB**（IOAccelerator 25 MB） |
+| 一次识别耗时 | 冷启动约 0.5 秒，之后约 0.37 秒 | 每次约 0.35 秒（含起进程） |
+
+修后那次启动剪贴板里的图已在历史里、没有触发识别，所以 55 MB 是「没识别过」的数；子进程单独用一张中英文混排的图试过，`text`、`words` 两种结果都对，输入长度不对时返回空。在岛里实际复制一张新图、看子进程起落还没做。
+
+### 插件宿主 node：多出来的主要是量法问题
+
+本地 `pnpm build:exe` 打出的 `Fuyu.app` 没带 `Resources/plugins-v3`（打包好的宿主和内置插件），node 跑的是仓库里的源码目录。计时器插件的宿主代码 `timer/host/dataFile.mjs` 直接 import `../timers.ts`，Node 因此加载自带的 TypeScript 剥离器 amaro（堆快照里 3.6 MB 源码加 3 MB WebAssembly 缓冲区）。发布用的 `/Applications/Fuyu.app` 带着 esbuild 打好的内置插件，不加载它，之前量到 45–49 MB。所以上一节表里新包 node 的 52–56 MB 不能和旧版比，要量 node 得用 `pnpm tauri build` 的包。剩下和早先 35 MB 的差距，内置插件从 22 个变成 26 个是一部分，没再细查。
+
 ## 第二轮：展开收起会不会泄漏（2026-11-20 下午）
 
 用开发版和岛屿实验台（`/v1/dev/island/action`）反复展开、收起，读岛页面进程的 `phys_footprint`：
@@ -101,4 +122,5 @@
 
 - ~~开发版定期整页刷新~~：试过，不做。做法是热更新攒够 20 次、岛收着且 5 秒没人碰时整页刷新，实测确实刷新了（实验台诊断里窗口连接编号 1 → 2 → 3），但内存没有因此变少：刷新本身让页面进程从 154 MB 冲到 289 MB；模拟内存紧张后，一个刚启动、热更新过二十来次的页面能降到 134 MB，而前面反复展开收起、热更新很多次的页面也能降到 173 MB。HMR 真正留住的只有二三十 MB，看到的五六百 MB 几乎全是没回收的垃圾，系统内存紧张时会自己放掉。代码没提交。
 - **岛页面的 JS 堆**：正式版 120 MB 里有多少是我们的数据（消息、剪贴板列表、data URL 图片），要用 Safari 的 Web 检查器连正式构建做一次堆快照；资料里提到 `backdrop-filter` 和常驻的 `will-change` 会占屏幕大小的合成层，可以顺带核对液态玻璃和动画。
-- 插件宿主 `node` 45–80 MB，之前测过打包态 35 MB（[platforms.md](../architecture/platforms.md) 插件平台一行），这次偏高，可以单独看是哪个内置插件。
+- 插件宿主 `node`：见第三轮，本地包偏高是没带打包好的内置插件；要比就用 `pnpm tauri build` 的包。
+- Windows 的文字识别（WinRT `OcrEngine`）是不是也把模型留在进程里，没量。

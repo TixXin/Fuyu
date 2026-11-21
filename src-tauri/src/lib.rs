@@ -92,6 +92,10 @@ macro_rules! collect_commands {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "macos")]
+    if let Some(code) = macos::ocr_worker::run_from_args() {
+        std::process::exit(code);
+    }
     if uninstall_cleanup::maybe_run_from_args() {
         std::process::exit(0);
     }
