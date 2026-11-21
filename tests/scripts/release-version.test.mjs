@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { channelProblems, finishedIssues, parseTask, RELEASED_MARKER, releasedComment, shippedIssues } from "../../scripts/release/after-release.mjs";
 import { commandLine, quoteArg } from "../../scripts/release/command-line.mjs";
-import { baseTag, commitPlatform, downloadLinks, DRAFT_MARKER, draftNotes, userFacingCommits } from "../../scripts/release/notes-draft.mjs";
+import { baseTag, commitNotes, commitPlatform, downloadLinks, DRAFT_MARKER, draftNotes, userFacingCommits } from "../../scripts/release/notes-draft.mjs";
 import { bumpProblem, readVersion, VERSION_FILES, writeVersion } from "../../scripts/release/versions.mjs";
 
 test("the four version files of this repository agree and can be read", () => {
@@ -108,4 +108,21 @@ test("release notes drafts cover both systems and tag commits that change only o
   assert.ok(notes.includes("- a1 [Mac] feat(macos): QQ unread counts") && notes.includes("- b2 feat(clipboard): previews"));
   assert.ok(notes.includes("Fuyu_0.3.9-beta.1_x64-setup.exe") && notes.includes("Fuyu_0.3.9-beta.1_aarch64.dmg"));
   assert.ok(notes.includes("Mac 把新的 Fuyu 拖进「应用程序」") && notes.includes("仍要打开") && notes.includes("Open Anyway"));
+});
+
+test("Release note and Manual check lines in commit bodies seed the draft", () => {
+  const commits = [
+    { hash: "aaa1111", subject: "feat(island): widgets", body: "Body text.\nRelease note: **组件页**：展开后是一页小组件。\nRelease note (en): **Widget page**: the island opens on widgets.\nManual check: drag a widget on Windows" },
+    { hash: "bbb2222", subject: "fix(ui): spacing", body: "No note here." },
+  ];
+  assert.deepEqual(commitNotes(commits), {
+    zh: ["**组件页**：展开后是一页小组件。"],
+    en: ["**Widget page**: the island opens on widgets."],
+    checks: ["aaa1111 drag a widget on Windows"],
+  });
+  const notes = draftNotes("0.3.4-beta.2", "v0.3.4-beta.1", commits);
+  assert.match(notes, /## 更新内容\n\n- \*\*组件页\*\*：展开后是一页小组件。/);
+  assert.match(notes, /## What's New\n\n- \*\*Widget page\*\*/);
+  assert.match(notes, /Manual checks the commits asked for[^\n]*\n- aaa1111 drag a widget on Windows/);
+  assert.match(draftNotes("0.3.4-beta.2", "v0.3.4-beta.1", [commits[1]]), /## 更新内容\n\n-\n/);
 });

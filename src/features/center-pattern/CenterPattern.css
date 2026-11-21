@@ -18,6 +18,7 @@
   width: auto;
   height: 100%;
   overflow: visible;
+  will-change: opacity;
 }
 
 .center-pattern svg * {

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { visibilityInterval } from "../../lib/useVisibilityInterval";
+import { panelInterval } from "../../components/island-widget/panelAwake";
 import { getSystemStats, type SystemStats } from "./api";
 
 const POLL_MS = 2000;
@@ -25,7 +25,7 @@ function subscribe(listener: () => void) {
   listeners.add(listener);
   if (!stop) {
     poll();
-    stop = visibilityInterval(poll, POLL_MS);
+    stop = panelInterval(poll, POLL_MS);
   }
   return () => {
     listeners.delete(listener);

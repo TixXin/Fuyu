@@ -1,6 +1,6 @@
 @property --island-shell-width {
   syntax: "<length>";
-  inherits: true;
+  inherits: false;
   initial-value: 0px;
 }
 
@@ -24,7 +24,31 @@
 
 @property --island-hover-grow-x {
   syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --island-hover-lift {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --island-shell-edge {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --island-shell-left {
+  syntax: "<length>";
   inherits: true;
+  initial-value: 0px;
+}
+
+@property --island-shell-right {
+  syntax: "<length>";
+  inherits: false;
   initial-value: 0px;
 }
 
@@ -80,7 +104,9 @@
     --island-shell-top-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-bottom-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-fill var(--motion-slow) var(--motion-ease),
-    --island-shell-opacity var(--island-opacity-duration, var(--motion-base)) var(--motion-ease);
+    --island-shell-opacity var(--island-opacity-duration, var(--motion-base)) var(--motion-ease),
+    --island-hover-grow-x var(--island-hover-settle, 0s) var(--island-motion-width-ease, cubic-bezier(0.34, 1.36, 0.5, 1)) var(--island-motion-width-delay, 0ms),
+    --island-hover-grow-y var(--island-hover-settle, 0s) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)) var(--island-motion-height-delay, 0ms);
 }
 
 .island__surface {
@@ -123,6 +149,7 @@
   --island-shell-height: calc(var(--expanded-island-height, 306px) * var(--island-scale, 1));
   --island-shell-top-corner: 0px;
   --island-shell-bottom-corner: var(--island-shell-radius);
+  --island-hover-settle: var(--island-motion-width, 550ms);
   cursor: default;
 }
 
@@ -132,6 +159,10 @@
 
 .island--detached.island--expanded {
   --island-shell-top-corner: var(--island-shell-radius);
+}
+
+:is(.island__collapsed, .island__expanded) > * {
+  --island-shell-left: initial;
 }
 
 .island__collapsed,

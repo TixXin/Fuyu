@@ -16,10 +16,12 @@ import { usePanelEditing } from "./custom-panels/panelEditing";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import { usePagePill } from "./usePagePill";
 import { FuyuTextIcon } from "../../components/island-widget/FuyuTextIcon";
+import { JellyfishMark } from "../../components/jellyfish/JellyfishMark";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import "./IslandHeader.css";
 
+const FUYU_TAB_MARK_HEIGHT = 15;
 const INTERACTIVE = "button, a, input, textarea, select, label, [role='button'], [contenteditable='true']";
 
 type IslandHeaderProps = {
@@ -39,6 +41,7 @@ type IslandHeaderProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
+  fuyuTabIcon?: boolean;
   onWindowDragStart: () => void;
 };
 
@@ -59,6 +62,7 @@ export function IslandHeader({
   pageDigitModifiers,
   hoverSwitchPage,
   hoverSwitchDelayMs,
+  fuyuTabIcon = false,
   onWindowDragStart,
 }: IslandHeaderProps) {
   const t = useTranslation();
@@ -80,7 +84,7 @@ export function IslandHeader({
   const trailing = dots.filter((item) => !leading.includes(item));
   const dotsRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${dots.map((item) => item.id).join(",")}`);
+  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${fuyuTabIcon}|${dots.map((item) => item.id).join(",")}`);
   useEffect(() => {
     const row = dotsRef.current;
     const active = row?.querySelector<HTMLElement>(".dot-button--active");
@@ -141,7 +145,9 @@ export function IslandHeader({
       >
         {item.external
           ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
-          : Icon && <Icon size={Icon === FuyuTextIcon ? 18 : 15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
+          : Icon === FuyuTextIcon && fuyuTabIcon
+            ? <JellyfishMark mood="idle" paused height={FUYU_TAB_MARK_HEIGHT} />
+            : Icon && <Icon size={Icon === FuyuTextIcon ? 18 : 15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
       </button>
     );
   };

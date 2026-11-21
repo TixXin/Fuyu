@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useHoverGrow } from "./useHoverGrow";
-import type { AppearanceMode, TuckStyle } from "../../lib/settings/types";
+import type { AppearanceMode, IslandHover, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
@@ -17,6 +17,7 @@ import { useIslandPreparing } from "./useIslandPreparing";
 import { usePageFadeIn } from "./usePageFadeIn";
 import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandShell.css";
+import "./islandMotionVars.css";
 import { IslandGlassLayer } from "./IslandGlassLayer";
 import type { IslandGlassView } from "./useIslandGlass";
 import { IslandResizeHints } from "./IslandResizeHints";
@@ -32,6 +33,7 @@ import type { IslandSide } from "./useIslandSide";
 import { ISLAND_OUTLINE_STYLE } from "./islandOutline";
 import { isBlankClick } from "./blankClick";
 import { usePanelEditing } from "./custom-panels/panelEditing";
+import { setPanelAwake } from "../../components/island-widget/panelAwake";
 import "./IslandOutline.css";
 
 type IslandShellProps = {
@@ -45,7 +47,7 @@ type IslandShellProps = {
   glass?: IslandGlassView;
   isTucked: boolean;
   isDimmed?: boolean;
-  hoverGrow?: boolean;
+  hoverGrow?: IslandHover;
   tuckStyle?: TuckStyle;
   tuckHint?: TuckHintSettings;
   isDetached: boolean;
@@ -71,6 +73,7 @@ type IslandShellProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
+  fuyuTabIcon?: boolean;
   overlay?: ReactNode;
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
@@ -142,7 +145,7 @@ export function IslandShell({
   glass,
   isTucked,
   isDimmed = false,
-  hoverGrow = true,
+  hoverGrow = "near",
   tuckStyle = "edge",
   tuckHint,
   isDetached,
@@ -168,6 +171,7 @@ export function IslandShell({
   pageDigitModifiers,
   hoverSwitchPage,
   hoverSwitchDelayMs,
+  fuyuTabIcon = false,
   overlay,
   collapsedSlots,
   children,
@@ -195,6 +199,7 @@ export function IslandShell({
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();
   const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
+  useEffect(() => setPanelAwake(isExpanded), [isExpanded]);
   useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow);
   const className = [
     "island",
@@ -321,6 +326,7 @@ export function IslandShell({
               pageDigitModifiers={pageDigitModifiers}
               hoverSwitchPage={hoverSwitchPage}
               hoverSwitchDelayMs={hoverSwitchDelayMs}
+              fuyuTabIcon={fuyuTabIcon}
             />
             <div ref={contentRef} className="island__content">
               <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>

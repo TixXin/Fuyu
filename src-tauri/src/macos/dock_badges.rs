@@ -8,6 +8,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+use objc2::rc::autoreleasepool;
 use objc2_app_kit::NSRunningApplication;
 use objc2_foundation::NSString;
 
@@ -305,7 +306,7 @@ fn run_loop(stop: Stop) {
         let due_poll = forced || last_poll.is_none_or(|at| at.elapsed() >= POLL);
         let due_tick = due_poll || last_tick.is_none_or(|at| at.elapsed() >= TICK);
         if due_tick {
-            step_watcher(watcher(), due_poll);
+            autoreleasepool(|_| step_watcher(watcher(), due_poll));
             let now = Instant::now();
             if due_poll {
                 last_poll = Some(now);

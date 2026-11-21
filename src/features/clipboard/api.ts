@@ -36,7 +36,7 @@ export type ClipboardHistorySettings = {
   previewSize?: ClipboardPreviewSize;
   previewWidth?: number;
   previewHeight?: number;
-} & ClipboardPrivacySettings;
+} & ClipboardPrivacySettings & { prewarmWindow?: boolean };
 
 export type ClipboardPrivacySettings = {
   forgetCleared: boolean;

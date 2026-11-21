@@ -35,6 +35,7 @@
     "progress": "node scripts/progress/progress.mjs",
     "task:claim": "node scripts/tasks/tasks.mjs claim",
     "verify": "node scripts/heavy/heavy.mjs --label verify --lane target:agents -- node scripts/land-check.mjs",
+    "test:changed": "node scripts/test-changed.mjs",
     "test:regression": "node scripts/heavy/heavy.mjs --label test:regression -- node scripts/run-regression.mjs",
     "lab": "node scripts/island-lab/server.mjs",
     "logo": "node scripts/logo/open.mjs",
@@ -49,6 +50,7 @@
     "mq:sync": "node scripts/mq/mq.mjs sync",
     "mq:try": "node scripts/mq/mq.mjs try",
     "mq:pending": "node scripts/mq/mq.mjs pending",
+    "mq:verify": "node scripts/mq/mq.mjs verify",
     "mq:commit-part": "node scripts/mq/mq.mjs commit-part"
   },
   "dependencies": {

@@ -45,6 +45,27 @@ export function commitPlatform(subject) {
   return PLATFORM_SCOPES[scope] ?? null;
 }
 
+const NOTE_LINE = /^Release note( \(en\))?:\s*(.+)$/;
+const CHECK_LINE = /^Manual check:\s*(.+)$/;
+
+export function commitNotes(commits) {
+  const zh = [];
+  const en = [];
+  const checks = [];
+  for (const { hash, body = "" } of commits) {
+    for (const raw of body.split("\n")) {
+      const line = raw.trim();
+      const note = NOTE_LINE.exec(line);
+      if (note) (note[1] ? en : zh).push(note[2].trim());
+      const check = CHECK_LINE.exec(line);
+      if (check) checks.push(`${hash} ${check[1].trim()}`);
+    }
+  }
+  return { zh, en, checks };
+}
+
+const bullets = (lines) => lines.map((line) => `- ${line}`).join("\n");
+
 function betaNumber(version) {
   const number = Number(/-beta\.(\d+)$/.exec(version)?.[1]);
   return Number.isInteger(number) && number > 0 ? number : null;
@@ -67,15 +88,21 @@ export function draftNotes(version, base, commits, merged = null, since = base) 
   const links = downloadLinks(version);
   const listed = userFacingCommits(commits);
   const changes = listed.length > 0 ? listed.map(({ hash, subject }) => `- ${hash} ${commitPlatform(subject) ? `[${commitPlatform(subject)}] ` : ""}${subject}`).join("\n") : "- (no feat/fix/perf commits found)";
+  const written = commitNotes(commits);
+  const checks = written.checks.length ? `\nManual checks the commits asked for (show them to the user before releasing):\n${bullets(written.checks)}\n` : "";
+  const zhChanges = [merged?.zh, bullets(written.zh)].filter(Boolean).join("\n\n") || "-";
+  const enChanges = [merged?.en, bullets(written.en)].filter(Boolean).join("\n\n") || "-";
   return `${DRAFT_MARKER}
 <!-- Rewrite the commits below into lines for users in both languages, then delete this
 comment, the marker above and the commit list. pnpm release refuses to publish while the
 marker is here. Commits tagged [Mac] or [Windows] change only that system: start their
 lines with （Mac） / （Windows） (English: (Mac) / (Windows)), see docs/releases/README.md.${merged ? MERGED_HINT : ""}
+Lines already under 更新内容 / What's New come from the commits' "Release note:" lines:
+merge, reorder and fill in the commits that wrote none.
 Commits since ${since ?? "the first commit"}: -->
 <!--
 ${changes}
--->
+${checks}-->
 
 ## 关于这个版本
 
@@ -85,7 +112,7 @@ ${zhAbout}
 
 ## 更新内容
 
-${merged?.zh || "-"}
+${zhChanges}
 
 ---
 
@@ -97,7 +124,7 @@ ${enAbout}
 
 ## What's New
 
-${merged?.en || "-"}
+${enChanges}
 
 ## Downloads
 

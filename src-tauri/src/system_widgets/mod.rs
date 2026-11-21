@@ -3,7 +3,7 @@ mod stats;
 
 use std::{
     sync::{Mutex, PoisonError},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 use serde::Serialize;
@@ -12,10 +12,13 @@ use crate::platform::{power, system_stats};
 use crate::user_error::UserError;
 use stats::{cpu_share, network_rate, Counters};
 
+const MIN_SPAN: Duration = Duration::from_millis(500);
+
 struct Sample {
     at: Instant,
     cpu: Option<(u64, u64)>,
     network: Counters,
+    rates: (Option<f32>, Option<Network>),
 }
 
 static LAST: Mutex<Option<Sample>> = Mutex::new(None);
@@ -51,20 +54,27 @@ pub struct SystemStats {
 }
 
 fn read_stats() -> SystemStats {
-    let now = Sample {
-        at: Instant::now(),
-        cpu: system_stats::cpu_times(),
-        network: system_stats::network_counters().into_iter().map(|(name, received, sent)| (name, (received, sent))).collect(),
-    };
     let mut last = LAST.lock().unwrap_or_else(PoisonError::into_inner);
     let (cpu, network) = match last.as_ref() {
-        Some(before) => (
-            before.cpu.zip(now.cpu).and_then(|(before, after)| cpu_share(before, after)),
-            network_rate(&before.network, &now.network, now.at.duration_since(before.at).as_secs_f64()).map(|(down, up)| Network { down, up }),
-        ),
-        None => (None, None),
+        Some(before) if before.at.elapsed() < MIN_SPAN => before.rates,
+        _ => {
+            let now = Sample {
+                at: Instant::now(),
+                cpu: system_stats::cpu_times(),
+                network: system_stats::network_counters().into_iter().map(|(name, received, sent)| (name, (received, sent))).collect(),
+                rates: (None, None),
+            };
+            let rates = match last.as_ref() {
+                Some(before) => (
+                    before.cpu.zip(now.cpu).and_then(|(before, after)| cpu_share(before, after)),
+                    network_rate(&before.network, &now.network, now.at.duration_since(before.at).as_secs_f64()).map(|(down, up)| Network { down, up }),
+                ),
+                None => (None, None),
+            };
+            *last = Some(Sample { rates, ..now });
+            rates
+        }
     };
-    *last = Some(now);
     SystemStats {
         cpu,
         memory: system_stats::memory().map(|(used, total)| Memory { used, total }),

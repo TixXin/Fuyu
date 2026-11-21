@@ -1349,6 +1349,19 @@
       "page": "behavior",
       "zh-CN": {
         "group": "展开",
+        "title": "Fuyu 页标签用图标",
+        "description": "展开后顶部最左边的 Fuyu 页标签换成水母图标，不显示文字"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Icon for the Fuyu tab",
+        "description": "Show the jellyfish instead of the word Fuyu on the first page tab at the top of the open island"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "展开",
         "title": "悬停切换页面",
         "description": "鼠标停在展开后顶部的页面图标上，就切到那一页，不用点击；划过的图标不会切换"
       },
@@ -1380,6 +1393,19 @@
         "group": "Open and close",
         "title": "Animation curve",
         "description": "Lively (the default) shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "开合动画",
+        "title": "悬停效果",
+        "description": "鼠标靠近收起的岛时它怎么变：靠近就鼓（默认）进到岛周围就慢慢鼓起、越近越胖；轻轻鼓起幅度小一半；明显变胖幅度更大、更慢；只往下鼓几乎不变宽；碰到才鼓要碰到岛才变；不变化就不动"
+      },
+      "en": {
+        "group": "Open and close",
+        "title": "Hover effect",
+        "description": "How the collapsed island reacts as the pointer comes near: Swell nearby (the default) starts swelling as the pointer gets close and grows as it nears; Subtle swells half as much; Bold grows more and slower; Drop down grows downward and barely wider; On touch changes only when the pointer is on the island; None keeps it still"
       }
     },
     {
@@ -2919,6 +2945,19 @@
         "group": "Pasting and display",
         "title": "Hide while sharing the screen",
         "description": "Screen sharing, recordings and other apps' screenshots show the clipboard window as blank; Fuyu's own screenshots still include it."
+      }
+    },
+    {
+      "page": "clipboard",
+      "zh-CN": {
+        "group": "粘贴与显示",
+        "title": "启动时预先准备剪贴板窗口",
+        "description": "开启后第一次打开剪贴板也是秒开，但窗口会一直留在后台，多占约 40 MB 内存。关闭时第一次打开会慢一点，收起 10 分钟没再用就释放。"
+      },
+      "en": {
+        "group": "Pasting and display",
+        "title": "Prepare the clipboard window at startup",
+        "description": "The clipboard opens instantly even the first time, but its window stays in the background and uses about 40 MB more memory. When off, the first open is a little slower, and the window is freed after 10 minutes unused."
       }
     },
     {

@@ -188,6 +188,8 @@ pub struct ClipboardHistorySettings {
     privacy: privacy::PrivacySettings,
     #[serde(flatten, default)]
     preview: preview_size::PreviewSettings,
+    #[serde(flatten, default)]
+    windows: background::WindowSettings,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -295,6 +297,7 @@ impl Default for ClipboardHistorySettings {
             pin_favorites: true,
             privacy: privacy::PrivacySettings::default(),
             preview: preview_size::PreviewSettings::default(),
+            windows: background::WindowSettings::default(),
         }
     }
 }

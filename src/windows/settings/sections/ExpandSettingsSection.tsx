@@ -18,6 +18,7 @@ import {
 } from "../../../lib/settings/settings";
 import { IslandGlyph } from "../../../components/settings/IslandGlyph";
 import { IslandMotionRow } from "./IslandMotionRow";
+import { IslandHoverRow } from "./IslandHoverRow";
 import type { ExpandTrigger, IslandSettings } from "../../../lib/settings/types";
 
 export function ExpandSettingsSection({
@@ -87,6 +88,12 @@ export function ExpandSettingsSection({
           />
         )}
         <SettingsToggleRow
+          title={expand.fuyuTabIcon}
+          description={expand.fuyuTabIconHint}
+          checked={settings.fuyuTabIcon}
+          onChange={(fuyuTabIcon) => update({ fuyuTabIcon })}
+        />
+        <SettingsToggleRow
           title={expand.hoverSwitchPage}
           description={expand.hoverSwitchPageHint}
           checked={settings.hoverSwitchPage}
@@ -117,6 +124,7 @@ export function ExpandSettingsSection({
       </SettingsGroup>
       <SettingsGroup title={expand.motion}>
         <IslandMotionRow value={settings.islandMotion} onChange={(islandMotion) => update({ islandMotion })} />
+        <IslandHoverRow value={settings.islandHover} onChange={(islandHover) => update({ islandHover })} />
       </SettingsGroup>
     </>
   );

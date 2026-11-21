@@ -6,12 +6,14 @@ use objc2_vision::{
     VNImageRequestHandler, VNRecognizeTextRequest, VNRecognizedText, VNRecognizedTextObservation, VNRectangleObservation, VNRequest,
     VNRequestTextRecognitionLevel,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+use super::ocr_worker::Mode;
 
 const MAX_SIDE: u32 = 16_384;
 const LANGUAGES: [&str; 4] = ["zh-Hans", "zh-Hant", "en-US", "ja-JP"];
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub(crate) struct OcrWord {
     pub(crate) text: String,
     pub(crate) x: f32,
@@ -27,6 +29,14 @@ struct Line {
 }
 
 pub(crate) fn recognize(width: u32, height: u32, rgba: &[u8]) -> Option<String> {
+    super::ocr_worker::ask(Mode::Text, width, height, rgba).flatten()
+}
+
+pub(crate) fn recognize_words(width: u32, height: u32, rgba: &[u8]) -> Option<Vec<Vec<OcrWord>>> {
+    super::ocr_worker::ask(Mode::Words, width, height, rgba).flatten()
+}
+
+pub(super) fn recognize_here(width: u32, height: u32, rgba: &[u8]) -> Option<String> {
     let lines: Vec<String> = read_lines(width, height, rgba)?
         .into_iter()
         .map(|line| line.string)
@@ -35,7 +45,7 @@ pub(crate) fn recognize(width: u32, height: u32, rgba: &[u8]) -> Option<String> 
     (!lines.is_empty()).then(|| lines.join("\n"))
 }
 
-pub(crate) fn recognize_words(width: u32, height: u32, rgba: &[u8]) -> Option<Vec<Vec<OcrWord>>> {
+pub(super) fn recognize_words_here(width: u32, height: u32, rgba: &[u8]) -> Option<Vec<Vec<OcrWord>>> {
     let size = (f64::from(width), f64::from(height));
     let lines = read_lines(width, height, rgba)?
         .into_iter()

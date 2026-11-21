@@ -54,6 +54,8 @@ export type SettingsClipboardText = {
   flattenTerminalCommandsHint: string;
   hideFromCapture: string;
   hideFromCaptureHint: string;
+  prewarmWindow: string;
+  prewarmWindowHint: string;
   linkPreview: string;
   linkPreviewHint: string;
   copyCard: string;
@@ -164,6 +166,8 @@ export const zhCN: SettingsClipboardText = {
   flattenTerminalCommandsHint: "带 \ 续行的多行命令粘贴到终端时去掉续行，合成一行；剪贴板窗口的「转换后粘贴」里也能手动选。",
   hideFromCapture: "共享屏幕时隐藏",
   hideFromCaptureHint: "开会共享屏幕、录屏、用别的软件截图时，剪贴板窗口显示为空白，不露出历史；浮屿自己的截图照样截得到它。",
+  prewarmWindow: "启动时预先准备剪贴板窗口",
+  prewarmWindowHint: "开启后第一次打开剪贴板也是秒开，但窗口会一直留在后台，多占约 40 MB 内存。关闭时第一次打开会慢一点，收起 10 分钟没再用就释放。",
   linkPreview: "读取链接标题和图标",
   linkPreviewHint: "列表里的网址显示网站图标，宽版里再显示网页标题。会访问那个网址，默认关。",
   copyCard: "岛上的复制卡片",
@@ -274,6 +278,8 @@ export const en: SettingsClipboardText = {
   flattenTerminalCommandsHint: "A command continued over lines with \ goes into a terminal as one line. Also available by hand under \"Paste transformed\" in the clipboard window.",
   hideFromCapture: "Hide while sharing the screen",
   hideFromCaptureHint: "Screen sharing, recordings and other apps' screenshots show the clipboard window as blank; Fuyu's own screenshots still include it.",
+  prewarmWindow: "Prepare the clipboard window at startup",
+  prewarmWindowHint: "The clipboard opens instantly even the first time, but its window stays in the background and uses about 40 MB more memory. When off, the first open is a little slower, and the window is freed after 10 minutes unused.",
   linkPreview: "Read link titles and icons",
   linkPreviewHint: "Copied links show the site's icon in the list, and the page title in the wide window. This visits the address; off by default.",
   copyCard: "Copy card on the island",

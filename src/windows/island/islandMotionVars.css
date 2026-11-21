@@ -1,0 +1,18 @@
+:is(.island__collapsed, .island__expanded, .island-side-column, .island__side-handle) > * {
+  --island-motion-width: initial;
+  --island-motion-width-ease: initial;
+  --island-motion-height: initial;
+  --island-motion-height-ease: initial;
+  --island-motion-radius: initial;
+  --island-motion-radius-ease: initial;
+  --island-motion-ease: initial;
+  --island-motion-fade: initial;
+  --island-motion-fade-delay: initial;
+  --island-motion-collapsed-delay: initial;
+  --island-motion-bloom: initial;
+  --island-motion-layer: initial;
+  --island-motion-width-delay: initial;
+  --island-motion-height-delay: initial;
+  --island-motion-content-filter: initial;
+  --island-motion-content-scale: initial;
+}

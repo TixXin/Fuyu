@@ -332,6 +332,8 @@ fn focus_overlay(window: &WebviewWindow) {
         if !crate::macos::island_panel::make_panel_key(&app, &label) {
             let _ = target.set_focus();
         }
+        let webview: &tauri::Webview = target.as_ref();
+        let _ = webview.set_focus();
     });
 }
 
