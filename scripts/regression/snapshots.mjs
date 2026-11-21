@@ -51,8 +51,11 @@ export const CAPTURE = `(async () => {
     .replace(/blob:[^\\s"')]+/g, "blob:<url>");
   const unstableStyle = /^(transition|animation|will-change)(-|$)|^--wave-/;
   const LIVE_TEXT = [".timer-panel__time", ".timer-chip__time", ".agent-session__elapsed"];
-  const anchored = (el) => ["dialog", "menu", "tooltip", "listbox"].includes(el.getAttribute("role")) || el.classList.contains("island__page-pill");
+  const MEASURED = ["island__page-pill", "clipboard-popup__spacer"];
+  const anchored = (el) => ["dialog", "menu", "tooltip", "listbox"].includes(el.getAttribute("role"));
+  const measured = (el) => MEASURED.some((name) => el.classList.contains(name));
   const anchoredStyle = (value) => value.split("; ").map((d) => /^(left|top|right|bottom):\\s*-?[\\d.]+px$/.test(d) ? d.replace(/-?[\\d.]+px$/, "#px") : d).join("; ");
+  const measuredStyle = (value) => value.split("; ").map((d) => /^(left|top|right|bottom|width|height):\\s*-?[\\d.]+px$/.test(d) ? d.replace(/-?[\\d.]+px$/, "#px") : d).join("; ");
   const cleanStyle = (value) => value.split(";").map((d) => d.trim()).filter((d) => d && !unstableStyle.test(d.split(":")[0].trim())).join("; ");
   const escapeText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const escapeAttr = (s) => escapeText(s).replace(/"/g, "&quot;");
@@ -75,6 +78,7 @@ export const CAPTURE = `(async () => {
       let value = volatile(stableId(a.value));
       if (a.name === "style") value = cleanStyle(value);
       if (a.name === "style" && anchored(node)) value = anchoredStyle(value);
+      if (a.name === "style" && measured(node)) value = measuredStyle(value);
       if (a.name === "class") value = value.split(/\\s+/).filter(Boolean).join(" ");
       return [a.name, value];
     }).filter(([name, value]) => !(name === "style" && value === "")).sort((a, b) => a[0] < b[0] ? -1 : 1);
