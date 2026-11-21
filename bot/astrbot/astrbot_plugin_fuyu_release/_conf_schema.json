@@ -1,0 +1,26 @@
+{
+    "notify_admins": {
+        "description": "推送给管理员",
+        "hint": "把分享图私聊发给 AstrBot 配置里的每个管理员（admins_id）。管理员要先加机器人为好友。",
+        "type": "bool",
+        "default": true
+    },
+    "targets": {
+        "description": "额外的推送会话",
+        "hint": "会话 ID，例如 default:GroupMessage:123456 或 default:FriendMessage:123456，可以在会话里用 /sid 查看。",
+        "type": "list",
+        "default": []
+    },
+    "platform_id": {
+        "description": "管理员私聊用的平台 ID",
+        "hint": "消息平台的 ID，NapCat 接入的 aiocqhttp 默认是 default。",
+        "type": "string",
+        "default": "default"
+    },
+    "poll_seconds": {
+        "description": "检查收件箱的间隔（秒）",
+        "hint": "最少 5 秒。",
+        "type": "int",
+        "default": 10
+    }
+}

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { latestNotesVersion, parseReleaseNotes } from "./share-card-notes.mjs";
+import { BOT_INBOX_ENV, pushToBot } from "./share-push.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const NOTES_DIR = join(ROOT, "docs/releases");
@@ -27,18 +28,19 @@ const LABELS = {
 
 function usage() {
   return [
-    "Usage: pnpm release:share [<version>] [--lang zh|en] [--scale <n>] [--out <dir>] [--no-copy] [--no-open]",
+    "Usage: pnpm release:share [<version>] [--lang zh|en] [--scale <n>] [--out <dir>] [--no-copy] [--no-open] [--push]",
     "  <version>   0.3.12-beta.2 or v0.3.12-beta.2; defaults to the newest docs/releases/v*.md",
     "  --lang      only one language (default: both)",
     "  --scale     pixel ratio of the PNG (default 2, i.e. 2160px wide)",
     "  --out       output folder (default src-tauri/target/release-share/v<version>)",
     "  --no-copy   do not copy the image to the clipboard (only the Chinese image is copied)",
     "  --no-open   do not open the folder afterwards",
+    `  --push      upload the Chinese image to the QQ bot inbox in ${BOT_INBOX_ENV} (bot/astrbot/astrbot_plugin_fuyu_release)`,
   ].join("\n");
 }
 
 export function parseArgs(argv) {
-  const options = { version: null, langs: ["zh", "en"], scale: 2, out: null, open: true, copy: true };
+  const options = { version: null, langs: ["zh", "en"], scale: 2, out: null, open: true, copy: true, push: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const value = () => {
@@ -52,6 +54,7 @@ export function parseArgs(argv) {
     else if (arg === "--out") options.out = value();
     else if (arg === "--no-open") options.open = false;
     else if (arg === "--no-copy") options.copy = false;
+    else if (arg === "--push") options.push = true;
     else if (!arg.startsWith("-") && !options.version) options.version = arg.replace(/^v/, "");
     else throw new Error(`Unknown argument ${arg}.\n${usage()}`);
   }
@@ -174,6 +177,11 @@ async function main() {
   }
   if (options.copy && chinese && copyImage(chinese)) console.log(`Copied to the clipboard: ${chinese}`);
   if (options.open) openFolder(outDir);
+  if (options.push) {
+    if (!chinese) throw new Error("No Chinese image to push.");
+    pushToBot(chinese, version);
+    console.log(`Uploaded to the QQ bot inbox: ${chinese}`);
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

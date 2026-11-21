@@ -1,0 +1,7 @@
+name: astrbot_plugin_fuyu_release
+display_name: 浮屿发版推送
+desc: 浮屿发版后，把版本更新分享图推送到 QQ 私聊或群。
+help: 发版机把分享图和说明文件放进插件的 inbox 目录，插件自动推送。管理员命令：/浮屿分享图（重发最近一张）、/浮屿推送状态。
+version: v0.1.0
+author: TixXin
+repo: https://github.com/TixXin/fuyu

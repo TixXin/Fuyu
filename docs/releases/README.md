@@ -50,4 +50,5 @@
 
 - 指定版本：`pnpm release:share 0.3.9`；只要一种语言：`--lang zh`；倍率：`--scale 1`；不复制：`--no-copy`；不打开文件夹：`--no-open`。
 - 用本机的 Chrome 或 Edge 无界面截图，找不到时设 `CHROME_PATH`。复制图片在 Mac 上用 `osascript`，Windows 上用 PowerShell，Linux 上要装 `xclip`；复制失败只提示，不影响出图。日期取版本 tag 的提交日期，还没打 tag 时用今天。
+- 推到 QQ：`--push` 把中文图和一份说明文件（`fuyu-v<版本号>.json`）用 `scp` 传到环境变量 `FUYU_BOT_INBOX` 指的机器人收件箱（`主机:/路径/inbox/`），QQ 机器人插件随后私聊发出，插件见 [bot/README.md](../../bot/README.md)。`pnpm release` 在设了这个变量时自动带上 `--push`；推送失败只提示，不影响发布。收件箱地址写在本机环境变量里，不进仓库。
 - 样式在 `scripts/release/share-card.html`，解析在 `scripts/release/share-card-notes.mjs`；三个方案的对比见 [release-share-card-preview.html](../investigations/release-share-card-preview.html)。
