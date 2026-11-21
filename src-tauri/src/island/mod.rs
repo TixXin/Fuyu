@@ -37,6 +37,8 @@ pub(crate) mod screen;
 #[cfg(target_os = "macos")]
 mod screen_watch;
 mod state;
+#[cfg_attr(not(windows), path = "taskbar_unsupported.rs")]
+mod taskbar;
 pub(crate) mod top_edge;
 mod watch;
 
@@ -470,6 +472,11 @@ pub fn get_island_edge() -> Option<state::Edge> {
     edge::attached()
 }
 
+#[tauri::command]
+pub fn get_island_taskbar() -> taskbar::IslandTaskbar {
+    taskbar::reported()
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -484,6 +491,7 @@ macro_rules! tauri_commands {
             crate::island::reset_island_position,
             crate::island::get_island_top_attachment,
             crate::island::get_island_edge,
+            crate::island::get_island_taskbar,
             crate::island::bottom_edge::set_island_edge,
             crate::island::side::set_island_side_column,
             crate::island::banner_hit::set_island_side_bubble_rect,

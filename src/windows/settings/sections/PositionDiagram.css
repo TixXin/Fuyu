@@ -160,3 +160,27 @@
 .position-diagram--right .position-diagram__island::after {
   left: 2.5px;
 }
+
+.position-diagram__taskbar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 10px;
+  background: var(--color-white-a16);
+}
+
+.position-diagram--taskbar .position-diagram__screen {
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.position-diagram--taskbar .position-diagram__island {
+  height: 6px;
+  margin: 0 18px 2px 0;
+  border-radius: 3px;
+}
+
+.position-diagram--taskbar .position-diagram__island::after {
+  top: 1.5px;
+}
