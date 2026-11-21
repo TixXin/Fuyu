@@ -10,13 +10,14 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, WebviewWindow};
 
 use super::drag_grid_window::{self, GridSlot};
-use super::geometry::apply_stage_geometry;
+use super::geometry::{apply_stage_geometry, island_rect, monitor_at};
 use super::screen;
-use super::state::{mutate_window_state, read_window_state};
+use super::state::{mutate_window_state, read_window_state, Edge, IslandMode, IslandPosition, IslandWindowState};
 use crate::taskbar_host::{self, DockState, Rect};
 use crate::win32::{input, window as win};
 
 const STEP: Duration = Duration::from_millis(16);
+const DROP_POLL_EVERY: u32 = 6;
 
 #[derive(Clone, Copy)]
 struct Drag {
@@ -125,6 +126,64 @@ fn finish(window: &WebviewWindow) {
     }
     if let Err(error) = apply_stage_geometry(window, state, true) {
         eprintln!("Failed to drop the island on the taskbar: {error}");
+    }
+}
+
+pub(crate) struct TaskbarDrop {
+    state: IslandWindowState,
+    enabled: bool,
+    polls: u32,
+    target: Option<taskbar_host::DropSpot>,
+}
+
+impl TaskbarDrop {
+    pub(crate) fn start(_window: &WebviewWindow, state: IslandWindowState) -> Self {
+        taskbar_host::forget_preview();
+        let enabled = super::taskbar::supported() && matches!(state.mode, IslandMode::Collapsed);
+        Self { state, enabled, polls: 0, target: None }
+    }
+
+    pub(crate) fn active(&self) -> bool {
+        self.target.is_some()
+    }
+
+    fn center(&self, window: &WebviewWindow) -> Option<((i32, i32), i32)> {
+        let position = screen::window_position(window).ok()?;
+        let size = screen::window_size(window).ok()?;
+        let rect = island_rect(f64::from(position.x), f64::from(position.y), f64::from(size.width), f64::from(size.height), self.state);
+        let center = ((rect.left + rect.width / 2.0).round() as i32, (rect.top + rect.height / 2.0).round() as i32);
+        let scale = screen::window_scale(window).unwrap_or(1.0);
+        Some((center, super::taskbar::collapsed_size(self.state, scale).0))
+    }
+
+    pub(crate) fn poll(&mut self, window: &WebviewWindow) -> bool {
+        if !self.enabled {
+            return false;
+        }
+        self.polls += 1;
+        if !self.polls.is_multiple_of(DROP_POLL_EVERY) {
+            return false;
+        }
+        let next = self.center(window).and_then(|(center, width)| taskbar_host::drop_at(center, width));
+        if next == self.target {
+            return false;
+        }
+        let left = self.target.is_some() && next.is_none();
+        self.target = next;
+        match next {
+            Some(drop) => drag_grid_window::present_slot(window.app_handle(), area(drop.bar), Some(slot_in(drop.bar, drop.slot))),
+            None => drag_grid_window::dismiss(window.app_handle()),
+        }
+        left
+    }
+
+    pub(crate) fn finish(&mut self, window: &WebviewWindow) -> Option<IslandPosition> {
+        let drop = self.target.take()?;
+        drag_grid_window::dismiss(window.app_handle());
+        let center = ((drop.slot.left + drop.slot.right) / 2, (drop.slot.top + drop.slot.bottom) / 2);
+        let monitor = monitor_at(window, center).ok().flatten()?;
+        let placed = super::bottom_edge::placed_on(&monitor);
+        Some(IslandPosition { edge: Some(Edge::Bottom), taskbar: true, along: along(drop.bar, center.0), ..placed })
     }
 }
 

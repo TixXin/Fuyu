@@ -43,7 +43,7 @@ pub(super) fn keep_flag(previous: Option<IslandPosition>, next: IslandPosition) 
     }
 }
 
-fn collapsed_size(state: IslandWindowState, scale: f64) -> (i32, i32) {
+pub(super) fn collapsed_size(state: IslandWindowState, scale: f64) -> (i32, i32) {
     let factor = state.collapsed_scale * scale;
     ((state.collapsed_width * factor).round() as i32, (state.collapsed_height * factor).round() as i32)
 }
@@ -91,6 +91,13 @@ fn report(window: &WebviewWindow, next: IslandTaskbar) {
         let _ = window.emit(TASKBAR_CHANGED_EVENT, next);
     }
 }
+
+pub(super) fn lift(window: &WebviewWindow) {
+    release(window);
+    report(window, IslandTaskbar::default());
+}
+
+pub(super) use super::taskbar_drag::TaskbarDrop;
 
 pub(crate) fn reported() -> IslandTaskbar {
     *REPORTED.lock().unwrap_or_else(PoisonError::into_inner)

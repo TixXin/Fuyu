@@ -165,6 +165,10 @@ impl DragGrid {
         self.shown = wanted;
     }
 
+    pub(super) fn forget(&mut self) {
+        self.shown = None;
+    }
+
     pub(super) fn finish(&mut self) {
         if self.shown.take().is_some() {
             drag_grid_window::dismiss(&self.app);

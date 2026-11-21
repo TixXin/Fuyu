@@ -29,6 +29,28 @@ pub(super) fn keep_flag(_previous: Option<IslandPosition>, next: IslandPosition)
     next
 }
 
+pub(super) fn lift(_window: &WebviewWindow) {}
+
+pub(super) struct TaskbarDrop;
+
+impl TaskbarDrop {
+    pub(super) fn start(_window: &WebviewWindow, _state: IslandWindowState) -> Self {
+        Self
+    }
+
+    pub(super) fn active(&self) -> bool {
+        false
+    }
+
+    pub(super) fn poll(&mut self, _window: &WebviewWindow) -> bool {
+        false
+    }
+
+    pub(super) fn finish(&mut self, _window: &WebviewWindow) -> Option<IslandPosition> {
+        None
+    }
+}
+
 pub(crate) fn reported() -> IslandTaskbar {
     IslandTaskbar::default()
 }

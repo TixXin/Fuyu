@@ -78,6 +78,10 @@ fn show(app: &AppHandle, work: Rect, state: DragGridState) {
         };
         place(&window, work);
         reveal(&handle, &window);
+        #[cfg(windows)]
+        if state.slot.is_some() {
+            raise_over_taskbar(&handle, &window);
+        }
         if !existed || state_changed {
             let _ = window.emit_to(WINDOW_LABEL, STATE_EVENT, state);
         }
@@ -145,6 +149,16 @@ fn place(window: &WebviewWindow, (left, top, width, height): Rect) {
     let _ = screen::set_window_size(window, size);
     let _ = screen::set_window_position(window, PhysicalPosition::new(left, top));
     *placed = Some((left, top, width, height));
+}
+
+#[cfg(windows)]
+fn raise_over_taskbar(app: &AppHandle, window: &WebviewWindow) {
+    if let Ok(grid) = window.hwnd() {
+        crate::win32::taskbar_shell::raise(grid);
+    }
+    if let Some(Ok(island)) = app.get_webview_window(super::WINDOW_LABEL).map(|island| island.hwnd()) {
+        crate::win32::taskbar_shell::raise(island);
+    }
 }
 
 #[cfg(windows)]

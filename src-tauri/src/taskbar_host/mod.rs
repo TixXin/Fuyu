@@ -1,5 +1,6 @@
 mod dock;
 mod layout;
+mod preview;
 mod snapshot;
 
 use tauri::WebviewWindow;
@@ -8,6 +9,7 @@ use crate::{user_error::UserError, win32::taskbar_shell};
 
 pub(crate) use dock::{current, reserve, resize_reserved, set_preferred, set_raised, undock, DockState, DockStatus};
 pub(crate) use layout::{BarEdge, Rect};
+pub(crate) use preview::{drop_at, forget as forget_preview, DropSpot};
 pub use snapshot::TaskbarLayout;
 
 pub(crate) fn supported() -> bool {
