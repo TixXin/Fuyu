@@ -126,24 +126,58 @@ function prepare(dir, sha, force) {
   return install.status === 0;
 }
 
-function runStep(step, dir, pages, logDir) {
+const HEARTBEAT_MS = 30_000;
+const LAST_LINE_MAX = 90;
+
+export function lastLineOf(text, previous = "") {
+  const lines = text.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "").split(/[\r\n]+/).map((line) => line.trim()).filter(Boolean);
+  const line = lines.at(-1);
+  if (!line) return previous;
+  return line.length > LAST_LINE_MAX ? `${line.slice(0, LAST_LINE_MAX - 1)}…` : line;
+}
+
+export function formatElapsed(ms) {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(seconds / 60);
+  return minutes ? `${minutes}分${String(seconds % 60).padStart(2, "0")}秒` : `${seconds}秒`;
+}
+
+export function heartbeatLines(running, now = Date.now()) {
+  return running.map(({ step, start, lastLine }) => `  … ${step} ${formatElapsed(now - start)}${lastLine ? ` · ${lastLine}` : ""}`);
+}
+
+function startHeartbeat(running) {
+  const timer = setInterval(() => {
+    const active = [...running.values()];
+    if (active.length) console.log(heartbeatLines(active).join("\n"));
+  }, HEARTBEAT_MS);
+  timer.unref();
+  return () => clearInterval(timer);
+}
+
+function runStep(step, dir, pages, logDir, running) {
   const [command, ...args] = COMMANDS[step];
   const file = path.join(logDir, `${step}.log`);
   const log = createWriteStream(file);
   const extra = step === "regression" ? pages : [];
   return new Promise((resolve) => {
     let output = "";
+    const state = { step, start: Date.now(), lastLine: "" };
+    running.set(step, state);
+    console.log(`▶ ${step} 开始（日志 ${file}）`);
     const child = spawn(command === "pnpm" ? PNPM : command, [...args, ...extra], { cwd: dir, stdio: ["ignore", "pipe", "pipe"] });
     const take = (chunk) => {
       output += chunk;
       log.write(chunk);
+      state.lastLine = lastLineOf(String(chunk), state.lastLine);
     };
     child.stdout.on("data", take);
     child.stderr.on("data", take);
     child.on("close", (code) => {
       log.end();
+      running.delete(step);
       const ok = code === 0;
-      console.log(`${ok ? "✓" : "✗"} ${step}（日志 ${file}）`);
+      console.log(`${ok ? "✓" : "✗"} ${step} ${formatElapsed(Date.now() - state.start)}（日志 ${file}）`);
       if (!ok) for (const line of output.trimEnd().split("\n").slice(-12)) console.log(`    ${line}`);
       resolve({ step, ok, failedPages: step === "regression" ? failedPages(output) : [] });
     });
@@ -168,7 +202,10 @@ export async function verifyCommand(args) {
   const logDir = path.join(commonDir(main), "fuyu-verify-logs");
   mkdirSync(logDir, { recursive: true });
   console.log(`[verify] 在 ${sha.slice(0, 9)} 上跑 ${request.steps.join("、")}${request.pages.length ? `（页面：${request.pages.join(" ")}）` : ""}，并行，各自排队…`);
-  const results = await Promise.all(request.steps.map((step) => runStep(step, dir, request.pages, logDir)));
+  const running = new Map();
+  const stopHeartbeat = startHeartbeat(running);
+  const results = await Promise.all(request.steps.map((step) => runStep(step, dir, request.pages, logDir, running)));
+  stopHeartbeat();
   const previous = readRecord(main);
   const carry = Boolean(previous && previous.sha !== sha && tryGit(["merge-base", "--is-ancestor", previous.sha, sha], main).ok);
   const record = nextRecord(previous, { sha, carry, results, pages: request.pages });

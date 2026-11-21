@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
-import { failedPages, nextRecord, verificationRefusal, verifiedAt, verifyDirOf, verifyRequest } from "../../scripts/mq/verify.mjs";
+import { failedPages, formatElapsed, heartbeatLines, lastLineOf, nextRecord, verificationRefusal, verifiedAt, verifyDirOf, verifyRequest } from "../../scripts/mq/verify.mjs";
 
 const SHA = "a".repeat(40);
 const NEXT = "b".repeat(40);
@@ -57,4 +57,16 @@ test("land is refused until the commit it carries is verified, except for docs, 
   assert.equal(verificationRefusal({ record: null, target: SHA, files: ["docs/a.md", "AGENTS.md"] }), null);
   assert.equal(verificationRefusal({ record: null, target: SHA, files, unverified: true }), null);
   assert.equal(verificationRefusal({ record: null, target: SHA, files, only: true }), null);
+});
+
+test("the heartbeat shows each running step's elapsed time and its last plain output line", () => {
+  assert.equal(lastLineOf("\x1b[32m✓ settings.html passed\x1b[0m\r\n\n"), "✓ settings.html passed");
+  assert.equal(lastLineOf("  \n\r\n", "keep me"), "keep me");
+  assert.equal(lastLineOf(`${"x".repeat(200)}\n`).length, 90);
+  assert.equal(formatElapsed(5_400), "5秒");
+  assert.equal(formatElapsed(372_000), "6分12秒");
+  assert.deepEqual(heartbeatLines([{ step: "regression", start: 0, lastLine: "✓ a.html" }, { step: "exe", start: 60_000, lastLine: "" }], 90_000), [
+    "  … regression 1分30秒 · ✓ a.html",
+    "  … exe 30秒",
+  ]);
 });
