@@ -68,7 +68,7 @@ Add-AppxPackage -Path .\src-tauri\target\msix\Fuyu.LocalTest_0.3.12.0_x64.msix
 
 ## 提交到商店（只有用户本人能做）
 
-1. 注册 Partner Center 开发者账号，保留「浮屿」和「Fuyu」两个名字（清单的 `DisplayName` 要和保留的名字一致，`Strings` 里的中英文名就是这两个）。
+1. 注册 Partner Center 开发者账号，保留「浮屿」和「Fuyu - Island」两个名字（清单的 `DisplayName` 要和保留的名字一致，`Strings` 里的中英文名就是这两个；「Fuyu」已被别的应用占用，2026-11-20 保留了「Fuyu - Island」）。
 2. 把「产品标识」页的包名、Publisher、发布者显示名、商店产品 ID 填进 `src-tauri/msix/store-identity.json` 并提交。
 3. 准备中英文隐私政策（浮屿读剪贴板、系统通知、邮箱、AI 代理会话，要写清楚只在本机处理、哪些会联网），填年龄分级问卷，说明 `runFullTrust` 和 `userNotificationListener` 的用途。
 4. `pnpm build:exe` 后 `pnpm msix`，在 Partner Center 上传 `.msix`。

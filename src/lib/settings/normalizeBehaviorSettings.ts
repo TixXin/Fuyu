@@ -104,6 +104,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     shelfDoubleClick: settings?.shelfDoubleClick === "reveal" ? "reveal" : "open",
     shelfShowCount: settings?.shelfShowCount === true,
     sideMusicCover: settings?.sideMusicCover === true,
+    taskbarLook: settings?.taskbarLook === "theme" ? "theme" : "transparent",
     sideHeightMode: settings?.sideHeightMode === "content" || settings?.sideHeightMode === "custom" ? settings.sideHeightMode : "panel",
     sideHeight: typeof settings?.sideHeight === "number" && Number.isFinite(settings.sideHeight)
       ? clamp(Math.round(settings.sideHeight), MIN_SIDE_HEIGHT, MAX_SIDE_HEIGHT)

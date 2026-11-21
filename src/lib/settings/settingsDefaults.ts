@@ -116,6 +116,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   shelfShowCount: true,
   sideMusicCover: false,
   sideHeightMode: "panel",
+  taskbarLook: "transparent",
   sideHeight: DEFAULT_SIDE_HEIGHT,
   deviceUseIndicator: true,
   levelPopup: true,
