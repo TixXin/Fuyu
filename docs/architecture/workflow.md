@@ -87,7 +87,7 @@ pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
 
 - 开发过程中不跑下面这些的全量，推 PR 前一起跑（根 `AGENTS.md`「验证」，2026-11-20 起，用户定）。例外是改到哪就跑哪：提交前跑改到的界面那几页 `pnpm test:regression <页面名中的词>` 和对应的单元测试文件 `node --test <文件>`。
 - **推 PR 前在固定提交上验证：`pnpm mq:verify`**（2026-11-20 起，用户定）。验证要几十分钟，这期间主工作区里别的会话还在提交和改文件：在会动的代码上跑，挂了分不清是谁的，回归页还会被 Vite 热更新打断（报 `Snapshot capture failed`），只能一遍遍重跑。
-  - `pnpm mq:verify [提交号]` 在验证目录（主工作区旁的 `<仓库名>-verify`，第一次自动建）切到这个提交（默认本地 `main`）、装依赖，并行跑 `pnpm verify`、`pnpm test:regression`、`pnpm build:exe`，各自经 heavy 排队。日志在 `.git/fuyu-verify-logs/`，结果记在 `.git/fuyu-verify.json`，主工作区读得到。Rust 的构建目录按主工作区算（`scripts/build-dirs.mjs` 的 `mainCheckout`），不会从零编译。
+  - `pnpm mq:verify [提交号]` 在验证目录（主工作区旁的 `<仓库名>-verify`，第一次自动建）切到这个提交（默认本地 `main`）、装依赖，并行跑 `pnpm verify`、`pnpm test:regression --jobs 3`、`pnpm build:exe`，各自经 heavy 排队（回归页的 3 个浏览器只占一个名额）。日志在 `.git/fuyu-verify-logs/`，结果记在 `.git/fuyu-verify.json`，主工作区读得到。Rust 的构建目录按主工作区算（`scripts/build-dirs.mjs` 的 `mainCheckout`），不会从零编译。
   - 挂了：在主工作区修好、提交，再 `pnpm mq:verify` 验新的提交；只重跑挂的用 `--only verify,regression,exe` 或 `--pages <词…>`（覆盖了上次挂的全部页才算回归页过）。上一个提交上已经过的几项会沿用，命令会打出来；拿不准后来的提交有没有影响它们就全跑。
   - 快照可以在验证目录里 `--update-snapshots`，看过差异后复制回主工作区提交；验证目录里留着改动时 `mq:verify` 不会切走，复制完加 `--force`。验证目录不提交（`mq:land` 只认本地 `main` 上的提交）。
   - 全过了 `pnpm mq:land --yes --upto <验过的提交> --body <文件>`。land 检查这份记录：要带上的提交没验完就拒绝，只改了 `docs/` 和 `*.md` 的、`--only` 的紧急修复不查，用户同意这批不验时加 `--unverified`。之后别的会话提交的跟下一批走。
@@ -95,6 +95,7 @@ pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
 - 在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
 - 多个会话共用一份代码：别的会话改到一半时，`pnpm check` 可能因为它的文件失败。先看失败是不是自己的文件；不是就等一会儿或问对方，不要去改别人的文件。
 - 浏览器回归页 `pnpm test:regression [页面名中的词] [--update-snapshots]`：自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页（给了词就只跑页面名里带它的）并汇总结果。每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败。深色、浅色两轮的 DOM 都和 `tests/regression/snapshots/` 里的快照逐行比对，不一致或没有快照就失败并打印差异；界面本该变时加 `--update-snapshots` 重写，规范化规则见 `scripts/regression/snapshots.mjs`。Mac 上找 `/Applications` 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH` 指向浏览器的可执行文件。
+- 回归页分片并行（F63）：`--shard <i>/<n>` 只跑第 i 份，按 `tests/regression/timings.json` 里各页的秒数均分（没记的页按中位数算），CI 的 `regression` 是 3 个分片的矩阵，挂的页在各分片自己的 job 里；`--jobs <n>` 在一个进程里开 n 个无头浏览器、共用一个 Vite，慢的页先跑，只占一个 heavy 名额，`mq:verify` 用 3。新加的页很慢、分片明显不均时，`node scripts/regression/timings.mjs <CI run id…>` 从 CI 日志重写耗时表，随提交带上。
 - 回归页逐行比对 DOM 快照（`tests/regression/snapshots/`，2026-11-15 起，E36.2.2）：改界面的提交要把 `pnpm test:regression <页面名中的词> --update-snapshots` 更新后的快照一起带上，新加的回归页也要带上它的快照；漏了 CI 的 `regression` 会失败，挡住整批 land。更新前看一眼差异，只该有自己改的那几处。
   - 快照存的是页面稳下来之后的样子，所以回归页要等自己最后一步的动画、定时消失的提示都结束了再报通过（D73）。运行器有两道保险：比对不一致时等 1 秒重抓一次，一致就算通过，并打印 `snapshot settled late`，看到这一行要去修那一页；`--update-snapshots` 写入前隔 1.5 秒复抓，两次不一样就不写，报 `DOM is still changing`，没有放行名单（D74）。等定时消失的状态用轮询：每 50 毫秒查一次，等到期望的值再检查，不写固定等待（D76）。
 - 回归页运行器退出时不留进程（D73）：无头 Chrome 用调试管道连接，运行器被杀掉（包括 `kill -9`、工具超时）它自己退出；Vite 在运行器进程里跑。被 `kill -9` 时只会留下临时目录 `fly-regression-*`，下次启动时删掉一天以前的。
