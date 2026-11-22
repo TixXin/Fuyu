@@ -1,0 +1,301 @@
+.focus-layout__body {
+  display: flex;
+  flex: 1;
+  gap: var(--space-lg);
+  min-height: 0;
+}
+
+.focus-card {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 16px 18px 14px;
+  overflow: hidden;
+  background: var(--feed-fill);
+  border-radius: 22px;
+  animation: feed-fade-in var(--motion-base) var(--motion-ease-out) backwards;
+}
+
+.focus-card::before {
+  position: absolute;
+  top: -45%;
+  right: -12%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--feed-brand) 30%, transparent), transparent 70%);
+  border-radius: 50%;
+  content: "";
+  opacity: .55;
+  pointer-events: none;
+}
+
+.focus-card > * {
+  position: relative;
+}
+
+.focus-card__progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-card__bars,
+.focus-card__meter {
+  display: flex;
+  flex: 1;
+  gap: 3px;
+}
+
+.focus-card__bars i,
+.focus-card__meter {
+  flex: 1;
+  height: 3px;
+  background: var(--feed-fill-strong);
+  border-radius: 2px;
+}
+
+.focus-card__bars i[data-state="past"] {
+  background: var(--text-3);
+}
+
+.focus-card__bars i[data-state="current"],
+.focus-card__meter i {
+  background: var(--feed-brand);
+}
+
+.focus-card__meter i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+}
+
+.focus-card__source {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin-top: 14px;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.focus-card__source > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-card__source img {
+  border-radius: 4px;
+}
+
+.focus-card__source .feed-time::before {
+  content: "· ";
+}
+
+.focus-card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 8px 0 0;
+  color: var(--text-1);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.focus-card__title > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-card__text {
+  flex: 1;
+  min-height: 0;
+  margin-top: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.focus-card__text p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-1);
+  font-size: 15.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.focus-card__text .focus-card__hint {
+  margin-top: 6px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.focus-card__otp {
+  display: inline-flex;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.focus-card__otp span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 40px;
+  color: var(--text-1);
+  background: var(--feed-fill-strong);
+  border-radius: 9px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.focus-card__keys {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.focus-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 4px 6px;
+  color: var(--text-1);
+  background: var(--feed-fill-hover);
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.focus-key > span:not(.focus-key__icon) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-key:hover {
+  background: var(--feed-fill-strong);
+}
+
+.focus-key__icon {
+  display: grid;
+  place-items: center;
+  height: 18px;
+}
+
+.focus-key kbd {
+  color: var(--text-3);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+}
+
+.focus-key--primary {
+  color: var(--color-on-accent, #06202c);
+  background: var(--color-accent, #74d6ff);
+}
+
+.focus-key--primary:hover {
+  background: color-mix(in srgb, var(--color-accent, #74d6ff) 86%, var(--text-1));
+}
+
+.focus-key--primary kbd {
+  color: inherit;
+  opacity: .6;
+}
+
+.focus-queue {
+  display: flex;
+  flex: 0 0 188px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.focus-queue__list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.focus-queue__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 11px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease);
+}
+
+.focus-queue__item:hover {
+  background: var(--feed-fill-hover);
+}
+
+.focus-queue__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.focus-queue__text strong,
+.focus-queue__text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-queue__text strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.focus-queue__text span {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.focus-queue__foot {
+  flex: 0 0 auto;
+  padding: 6px 4px 0;
+  border-top: 1px solid var(--feed-line);
+}
+
+@container (max-width: 470px) {
+  .focus-queue {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-card {
+    animation: none;
+  }
+}

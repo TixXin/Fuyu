@@ -8,15 +8,17 @@ export function SettingsChoiceCards<T extends string>({
   value,
   options,
   ariaLabel,
+  columns = 4,
   onChange,
 }: {
   value: T;
   options: readonly SettingsChoiceCard<T>[];
   ariaLabel: string;
+  columns?: number;
   onChange: (value: T) => void;
 }) {
   return (
-    <div className="settings-cards" role="group" aria-label={ariaLabel} style={{ "--cards-columns": Math.min(options.length, 4) } as CSSProperties}>
+    <div className="settings-cards" role="group" aria-label={ariaLabel} style={{ "--cards-columns": Math.min(options.length, columns) } as CSSProperties}>
       {options.map((option) => {
         const active = option.value === value;
         return (

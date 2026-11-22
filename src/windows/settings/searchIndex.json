@@ -3925,6 +3925,17 @@
       }
     },
     {
+      "page": "messages",
+      "zh-CN": {
+        "group": "消息页布局",
+        "title": "消息页布局"
+      },
+      "en": {
+        "group": "Messages page layout",
+        "title": "Messages page layout"
+      }
+    },
+    {
       "page": "agents",
       "zh-CN": {
         "group": "钩子设置",

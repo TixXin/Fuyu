@@ -41,6 +41,7 @@ export const PAGES = [
   "track-notice.html?test=1",
   "i18n.html?test=1",
   "mail-reader.html?run=1",
+  "messages-layouts.html?test=1",
   "music-lyrics.html",
   "cover-edge.html?test=1",
   "notification-startup.html",

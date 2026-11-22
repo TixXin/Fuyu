@@ -3,6 +3,7 @@ import { setBuiltinConfig } from "../../plugin-kernel/builtinSwitches";
 import { useBuiltinConfig, useBuiltinPlugins } from "../../plugin-kernel/useBuiltinPlugins";
 import { isQQAutoClearEnabled, isQQNotificationsEnabled } from "../qq-notifications/storage";
 import { isWeChatAutoClearEnabled, isWeChatRemindersEnabled } from "../wechat/storage";
+import { MESSAGE_LAYOUT_CONFIG_KEY, normalizeMessageLayout, type MessageLayout } from "../feed/messageLayout";
 import { OWNER } from "./owner.ts";
 import {
   imSourceEnabled,
@@ -44,6 +45,15 @@ export function useMessageOtpCopyEnabled(): boolean {
 
 export async function setMessageOtpCopyEnabled(on: boolean): Promise<void> {
   await setBuiltinConfig(OWNER, "otpCopy", on);
+}
+
+export function useMessageLayout(): MessageLayout {
+  const config = useBuiltinConfig(OWNER);
+  return normalizeMessageLayout(config[MESSAGE_LAYOUT_CONFIG_KEY]);
+}
+
+export async function setMessageLayout(layout: MessageLayout): Promise<void> {
+  await setBuiltinConfig(OWNER, MESSAGE_LAYOUT_CONFIG_KEY, layout);
 }
 
 function write(source: MessageSource, on: boolean) {

@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>消息面板重新设计 · 六个方案</title>
+<style>
+:root {
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --doc-bg: #0c0d0f;
+  --doc-card: #16181c;
+  --doc-line: rgba(255,255,255,.08);
+  --doc-t1: rgba(248,246,240,.95);
+  --doc-t2: rgba(248,246,240,.68);
+  --doc-t3: rgba(248,246,240,.48);
+  --accent: #74d6ff;
+  --qq: #12b7f5;
+  --wechat: #07c160;
+  --mail: #4c7dff;
+  --warn: #ffc857;
+  --ok: #35e985;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: var(--font-ui); font-size: 14px; line-height: 1.55; color: var(--doc-t1); background: var(--doc-bg); }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+svg.i { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.topbar { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; padding: 12px 28px; background: rgba(12,13,15,.86); backdrop-filter: blur(14px); border-bottom: 1px solid var(--doc-line); }
+.topbar h1 { font-size: 15px; margin: 0; font-weight: 650; }
+.topbar nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.topbar nav a { color: var(--doc-t2); text-decoration: none; padding: 4px 10px; border-radius: 99px; font-size: 13px; }
+.topbar nav a:hover { background: rgba(255,255,255,.07); color: var(--doc-t1); }
+.seg { display: inline-flex; padding: 3px; border-radius: 10px; background: rgba(255,255,255,.06); gap: 2px; }
+.seg button { padding: 4px 10px; border-radius: 7px; font-size: 12.5px; color: var(--doc-t2); }
+.seg button[aria-pressed="true"] { background: rgba(255,255,255,.14); color: var(--doc-t1); }
+.ctl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--doc-t3); }
+
+main { max-width: 1240px; margin: 0 auto; padding: 28px 28px 80px; }
+.intro { color: var(--doc-t2); max-width: 900px; margin: 0 0 8px; }
+.intro b { color: var(--doc-t1); }
+.problems { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin: 18px 0 34px; }
+.problems div { background: var(--doc-card); border: 1px solid var(--doc-line); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--doc-t2); }
+.problems b { display: block; color: var(--doc-t1); margin-bottom: 2px; font-size: 13.5px; }
+
+section.opt { margin: 0 0 56px; scroll-margin-top: 70px; }
+.opt-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.opt-head .letter { font: 700 13px var(--font-mono); color: #06202c; background: var(--accent); border-radius: 7px; padding: 2px 8px; }
+.opt-head h2 { margin: 0; font-size: 20px; font-weight: 650; }
+.opt-head p { margin: 0; color: var(--doc-t2); }
+.opt-row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.notes { flex: 1 1 280px; min-width: 260px; background: var(--doc-card); border: 1px solid var(--doc-line); border-radius: 14px; padding: 14px 16px; font-size: 13px; color: var(--doc-t2); }
+.notes h3 { font-size: 12px; letter-spacing: .04em; color: var(--doc-t3); margin: 12px 0 4px; font-weight: 600; }
+.notes h3:first-child { margin-top: 0; }
+.notes ul { margin: 0; padding-left: 18px; }
+.notes li { margin: 2px 0; }
+.notes .new { color: var(--warn); }
+.try { margin-top: 10px; font-size: 12px; color: var(--doc-t3); }
+
+/* ---------- island ---------- */
+.stage { flex: none; padding: 18px; border-radius: 20px; background: radial-gradient(120% 120% at 20% 0%, #2b3442 0%, #161a20 55%, #101214 100%); }
+.island {
+  --bg: #000; --fg: rgba(255,255,255,.94); --fg2: rgba(255,255,255,.62); --fg3: rgba(255,255,255,.42);
+  --a04: rgba(255,255,255,.04); --a06: rgba(255,255,255,.065); --a10: rgba(255,255,255,.1); --a14: rgba(255,255,255,.14);
+  --line: rgba(255,255,255,.08); --pop: #1a1b1f;
+  width: 780px; height: 490px; border-radius: 30px; background: var(--bg); color: var(--fg);
+  display: flex; flex-direction: column; overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.09), 0 24px 60px rgba(0,0,0,.55);
+  font-size: 13px;
+}
+body.light .island {
+  --bg: #f6f6f8; --fg: rgba(18,18,24,.92); --fg2: rgba(18,18,24,.62); --fg3: rgba(18,18,24,.42);
+  --a04: rgba(0,0,0,.035); --a06: rgba(0,0,0,.05); --a10: rgba(0,0,0,.08); --a14: rgba(0,0,0,.11);
+  --line: rgba(0,0,0,.08); --pop: #ffffff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 24px 60px rgba(0,0,0,.35);
+}
+.ibar { flex: none; height: 54px; display: flex; align-items: center; padding: 0 18px 0 26px; gap: 4px; }
+.ibar .brand { font-weight: 700; font-size: 15px; margin-right: 12px; letter-spacing: .01em; }
+.ibar .pg { width: 30px; height: 30px; display: grid; place-items: center; color: var(--fg2); font-size: 17px; border-radius: 9px; }
+.ibar .sp { flex: 1; }
+.ibar .rb { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; color: var(--fg2); font-size: 17px; }
+.ibar .rb.on { background: var(--a14); color: var(--fg); }
+.ibody { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+
+.logo { display: inline-grid; place-items: center; border-radius: 7px; color: #fff; font-weight: 800; flex: none; line-height: 1; }
+.logo svg { width: 62%; height: 62%; }
+.av { display: grid; place-items: center; border-radius: 50%; font-weight: 650; color: #fff; flex: none; position: relative; }
+.av .badge { position: absolute; right: -3px; bottom: -3px; border: 2px solid var(--bg); border-radius: 6px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: #ff4d4f; color: #fff; font-size: 11px; font-weight: 650; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #ff4d4f; display: inline-block; }
+.otp { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px 2px 8px; border-radius: 7px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--fg); font: 600 12.5px var(--font-mono); letter-spacing: .08em; }
+body.light .otp { background: rgba(10,127,209,.12); }
+.otp button { display: inline-flex; align-items: center; gap: 3px; font: 500 11.5px var(--font-ui); letter-spacing: 0; padding: 2px 6px; border-radius: 5px; background: var(--a10); color: var(--fg2); }
+.tbtn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; color: var(--fg2); font-size: 12.5px; }
+.tbtn:hover { background: var(--a06); color: var(--fg); }
+.tbtn.solid { background: var(--a10); color: var(--fg); }
+.ibtn { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 8px; color: var(--fg2); font-size: 15px; }
+.ibtn:hover { background: var(--a06); color: var(--fg); }
+.muted { color: var(--fg3); }
+.ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--a14) transparent; }
+.banner { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; padding: 8px 10px 8px 12px; border-radius: 12px; background: var(--a04); border: 1px solid var(--line); font-size: 12.5px; color: var(--fg2); }
+.banner b { color: var(--fg); font-weight: 600; }
+.banner.warn { background: color-mix(in srgb, var(--warn) 10%, transparent); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+.banner .sp { flex: 1; }
+.status { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--fg3); }
+.status i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.status.off i { background: var(--fg3); box-shadow: none; }
+.status.warn i { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+.switch { width: 30px; height: 18px; border-radius: 99px; background: var(--a14); position: relative; flex: none; transition: background .2s; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .2s var(--ease); }
+.switch.on { background: var(--ok); }
+.switch.on::after { transform: translateX(12px); }
+.menu { position: absolute; z-index: 5; min-width: 180px; padding: 5px; border-radius: 12px; background: var(--pop); box-shadow: 0 0 0 1px var(--line), 0 12px 30px rgba(0,0,0,.4); display: none; }
+.menu.open { display: block; animation: pop .16s var(--ease); }
+.menu button { display: flex; width: 100%; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 8px; font-size: 12.5px; color: var(--fg); text-align: left; }
+.menu button:hover { background: var(--a06); }
+.menu hr { border: 0; height: 1px; background: var(--line); margin: 4px 6px; }
+.menu .k { margin-left: auto; color: var(--fg3); font-size: 11px; }
+@keyframes pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+
+/* empty */
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px; animation: rise .3s var(--ease); }
+.empty .trio { display: flex; margin-bottom: 4px; position: relative; }
+.empty .trio .logo { box-shadow: 0 0 0 3px var(--bg); }
+.empty .trio .logo + .logo { margin-left: -8px; }
+.empty .ok { position: absolute; right: -10px; bottom: -6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ok); color: #04210f; font-size: 13px; box-shadow: 0 0 0 3px var(--bg); }
+.empty h4 { margin: 0; font-size: 16px; font-weight: 650; }
+.empty p { margin: 0; color: var(--fg3); font-size: 12.5px; }
+.empty .srcs { display: flex; gap: 14px; margin-top: 6px; }
+
+/* ---------- A 统一收件箱 ---------- */
+.A-head { display: flex; align-items: center; gap: 6px; padding: 2px 18px 10px 22px; position: relative; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 8px; border-radius: 99px; color: var(--fg2); font-size: 12.5px; transition: background .15s; }
+.chip:hover { background: var(--a06); }
+.chip[aria-pressed="true"] { background: var(--a14); color: var(--fg); }
+.chip .n { font-size: 11.5px; color: var(--fg3); font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] .n { color: var(--fg2); }
+.chip.off { opacity: .5; text-decoration: line-through; }
+.chip.all { padding-left: 11px; }
+.A-list { flex: 1; padding: 0 14px 14px 14px; }
+.grp { font-size: 11.5px; color: var(--fg3); padding: 10px 10px 4px; font-weight: 600; letter-spacing: .03em; }
+.row { display: flex; gap: 12px; align-items: flex-start; padding: 9px 10px; border-radius: 14px; position: relative; cursor: pointer; transition: background .15s; animation: rise .28s var(--ease) both; }
+.row:hover { background: var(--a06); }
+.row .main { flex: 1; min-width: 0; }
+.row .l1 { display: flex; align-items: baseline; gap: 6px; }
+.row .l1 strong { font-weight: 620; font-size: 13.5px; }
+.row .l1 .who2 { color: var(--fg3); font-size: 12px; }
+.row .l1 .sp { flex: 1; }
+.row .l1 time { color: var(--fg3); font-size: 11.5px; font-variant-numeric: tabular-nums; flex: none; }
+.row .l2 { display: flex; align-items: center; gap: 8px; margin-top: 2px; color: var(--fg2); }
+.row .l2 .ell { flex: 1; }
+.row.read .l1 strong { font-weight: 500; color: var(--fg2); }
+.row.read .l2 { color: var(--fg3); }
+.row .hov { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: none; gap: 2px; padding: 3px; border-radius: 10px; background: var(--pop); box-shadow: 0 0 0 1px var(--line), 0 6px 16px rgba(0,0,0,.35); }
+.row:hover .hov { display: flex; }
+.row.open { background: var(--a06); flex-wrap: wrap; }
+.row.open .hov { display: none; }
+.row .more { width: 100%; padding: 8px 0 2px 46px; display: none; }
+.row.open .more { display: block; animation: rise .22s var(--ease); }
+.row .more .txt { color: var(--fg); line-height: 1.6; white-space: pre-wrap; }
+.row .more .acts { display: flex; gap: 6px; margin-top: 10px; }
+.row.open .l2 .ell { display: none; }
+.A-foot { flex: none; display: flex; align-items: center; gap: 12px; padding: 8px 22px 12px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--fg3); }
+.A-foot .sp { flex: 1; }
+
+/* ---------- B 三栏 ---------- */
+.B { flex: 1; display: flex; min-height: 0; padding: 0 12px 12px 12px; gap: 8px; }
+.rail { flex: none; width: 62px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 2px; }
+.rail button { position: relative; width: 52px; padding: 7px 0 5px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10.5px; color: var(--fg3); transition: background .15s; }
+.rail button:hover { background: var(--a06); }
+.rail button[aria-pressed="true"] { background: var(--a14); color: var(--fg); }
+.rail button .pill { position: absolute; top: 2px; right: 4px; height: 16px; min-width: 16px; font-size: 10px; border: 2px solid var(--bg); box-sizing: content-box; }
+.rail button.off .logo { filter: grayscale(1); opacity: .4; }
+.rail .sp { flex: 1; }
+.rail .allico { width: 26px; height: 26px; border-radius: 8px; background: var(--a10); display: grid; place-items: center; font-size: 15px; color: var(--fg); }
+.Blist { flex: none; width: 272px; display: flex; flex-direction: column; background: var(--a04); border-radius: 18px; min-height: 0; }
+.Blist header { display: flex; align-items: center; gap: 8px; padding: 12px 10px 8px 14px; }
+.Blist header strong { font-size: 14px; }
+.Blist header .sp { flex: 1; }
+.Blist .scroll { flex: 1; padding: 0 6px 8px; }
+.bitem { display: flex; gap: 10px; padding: 9px 9px; border-radius: 12px; cursor: pointer; align-items: flex-start; }
+.bitem:hover { background: var(--a06); }
+.bitem[aria-selected="true"] { background: var(--a14); }
+.bitem .main { flex: 1; min-width: 0; }
+.bitem .l1 { display: flex; gap: 6px; align-items: baseline; }
+.bitem .l1 strong { flex: 1; font-weight: 600; }
+.bitem .l1 time { font-size: 11px; color: var(--fg3); }
+.bitem .l2 { color: var(--fg3); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+.bitem .l2 .ell { flex: 1; }
+.Bdetail { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 8px 8px 0 10px; animation: rise .25s var(--ease); }
+.Bdetail .who { display: flex; gap: 12px; align-items: center; }
+.Bdetail .who h5 { margin: 0; font-size: 15px; font-weight: 650; }
+.Bdetail .who p { margin: 0; font-size: 12px; color: var(--fg3); }
+.Bdetail .body { flex: 1; overflow-y: auto; margin: 14px 0 0; }
+.bubble { display: inline-block; max-width: 92%; padding: 8px 12px; border-radius: 4px 14px 14px 14px; background: var(--a10); margin: 0 0 6px; line-height: 1.55; }
+.bubble small { display: block; color: var(--fg3); font-size: 11px; margin-bottom: 1px; }
+.mailbody h6 { margin: 0 0 8px; font-size: 14px; font-weight: 650; }
+.mailbody p { margin: 0 0 8px; color: var(--fg2); line-height: 1.65; }
+.Bdetail .acts { display: flex; gap: 6px; padding: 10px 0 14px; border-top: 1px solid var(--line); }
+.Bdetail .acts .sp { flex: 1; }
+
+/* ---------- C 叠卡 ---------- */
+.C-head { display: flex; align-items: center; gap: 10px; padding: 0 22px 10px; }
+.C-head .t { font-size: 13px; color: var(--fg2); }
+.C-head .t b { color: var(--fg); font-weight: 650; }
+.C-head .sp { flex: 1; }
+.C-grid { flex: 1; padding: 6px 18px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px 14px; align-content: start; }
+.stack { position: relative; cursor: pointer; animation: rise .3s var(--ease) both; }
+.stack .card { position: relative; z-index: 2; border-radius: 18px; padding: 12px 14px 12px; background: var(--a10); border: 1px solid var(--line); transition: transform .25s var(--ease), background .2s; }
+body:not(.light) .stack .card { background: #17181b; }
+.stack:hover .card { transform: translateY(-2px); }
+.stack .ghost { position: absolute; left: 10px; right: 10px; bottom: -6px; height: 30px; border-radius: 16px; background: var(--a10); z-index: 1; transition: transform .25s var(--ease); }
+body:not(.light) .stack .ghost { background: #121315; border: 1px solid var(--line); }
+.stack .ghost.g2 { left: 20px; right: 20px; bottom: -11px; z-index: 0; opacity: .7; }
+.stack:hover .ghost { transform: translateY(2px); }
+.stack .top { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--fg3); }
+.stack .top .sp { flex: 1; }
+.stack .who { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.stack .who strong { font-size: 14px; font-weight: 650; flex: 1; }
+.stack .txt { color: var(--fg2); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stack .cnt { font-size: 11.5px; color: var(--fg3); margin-top: 6px; }
+.stack .bar { position: absolute; left: 14px; right: 14px; top: 0; height: 2px; border-radius: 0 0 2px 2px; opacity: .9; }
+.stack.wide { grid-column: 1 / -1; cursor: default; }
+.stack.wide .ghost { display: none; }
+.stack .thread { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; animation: rise .25s var(--ease); }
+.stack .thread .bubble { background: var(--a06); }
+.stack .acts { display: flex; gap: 6px; margin-top: 8px; }
+
+/* ---------- D 看板 ---------- */
+.D { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px 12px; min-height: 0; }
+.col { display: flex; flex-direction: column; min-height: 0; border-radius: 18px; background: var(--a04); position: relative; overflow: hidden; }
+.col::before { content: ""; position: absolute; inset: 0 0 auto; height: 70px; background: linear-gradient(to bottom, color-mix(in srgb, var(--c) 14%, transparent), transparent); pointer-events: none; }
+.col header { position: relative; display: flex; align-items: center; gap: 8px; padding: 11px 10px 8px 12px; }
+.col header strong { font-size: 13.5px; }
+.col header .n { color: var(--fg3); font-size: 12px; }
+.col header .sp { flex: 1; }
+.col .scroll { flex: 1; padding: 0 8px 8px; position: relative; }
+.mini { padding: 8px 10px; border-radius: 12px; background: var(--a06); margin-bottom: 6px; cursor: pointer; animation: rise .28s var(--ease) both; }
+.mini:hover { background: var(--a10); }
+.mini .l1 { display: flex; gap: 6px; align-items: baseline; }
+.mini .l1 strong { flex: 1; font-weight: 600; font-size: 12.5px; }
+.mini .l1 time { font-size: 11px; color: var(--fg3); }
+.mini p { margin: 2px 0 0; color: var(--fg2); font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mini .otp { margin-top: 6px; }
+.col footer { position: relative; display: flex; gap: 2px; padding: 4px 6px 6px; border-top: 1px solid var(--line); }
+.col footer .sp { flex: 1; }
+.colstate { margin: 30px 12px 0; text-align: center; color: var(--fg3); font-size: 12.5px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.colstate .big { font-size: 26px; color: var(--fg3); }
+
+/* ---------- E 一次一条 ---------- */
+.E { flex: 1; display: flex; gap: 14px; padding: 0 16px 16px; min-height: 0; }
+.Ecard { flex: 1; min-width: 0; display: flex; flex-direction: column; border-radius: 24px; padding: 18px 20px; position: relative; overflow: hidden; background: var(--a06); }
+.Ecard::before { content: ""; position: absolute; inset: -40% -10% auto auto; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--c) 35%, transparent), transparent 70%); opacity: .55; pointer-events: none; }
+.Ecard .prog { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--fg3); position: relative; }
+.Ecard .prog .bars { display: flex; gap: 3px; flex: 1; }
+.Ecard .prog .bars i { flex: 1; height: 3px; border-radius: 2px; background: var(--a14); }
+.Ecard .prog .bars i.done { background: var(--fg2); }
+.Ecard .prog .bars i.cur { background: var(--c); }
+.Ecard .src { display: flex; align-items: center; gap: 8px; margin-top: 18px; color: var(--fg2); font-size: 12.5px; position: relative; }
+.Ecard h5 { margin: 10px 0 0; font-size: 22px; font-weight: 700; position: relative; letter-spacing: -.01em; }
+.Ecard .big { margin-top: 10px; font-size: 17px; line-height: 1.6; color: var(--fg); position: relative; flex: 1; overflow: hidden; }
+.Ecard .big .otpbig { display: inline-flex; gap: 6px; margin-top: 12px; }
+.Ecard .big .otpbig span { width: 34px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--a10); font: 700 22px var(--font-mono); }
+.Ecard .acts { display: flex; gap: 8px; position: relative; }
+.kbtn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 7px; border-radius: 14px; background: var(--a06); color: var(--fg); font-size: 12.5px; transition: background .15s, transform .15s; }
+.kbtn:hover { background: var(--a14); }
+.kbtn:active { transform: scale(.97); }
+.kbtn .ic { font-size: 17px; }
+.kbtn kbd { font: 500 10px var(--font-mono); color: var(--fg3); }
+.kbtn.primary { background: var(--fg); color: var(--bg); }
+.kbtn.primary kbd { color: var(--bg); opacity: .6; }
+.Eq { flex: none; width: 230px; display: flex; flex-direction: column; min-height: 0; }
+.Eq h6 { margin: 2px 4px 8px; font-size: 11.5px; color: var(--fg3); font-weight: 600; display: flex; }
+.Eq h6 .sp { flex: 1; }
+.qi { display: flex; gap: 9px; align-items: center; padding: 7px 8px; border-radius: 11px; cursor: pointer; opacity: calc(1 - var(--k) * .12); }
+.qi:hover { background: var(--a06); opacity: 1; }
+.qi .main { flex: 1; min-width: 0; }
+.qi strong { font-size: 12.5px; font-weight: 600; display: block; }
+.qi span { font-size: 11.5px; color: var(--fg3); display: block; }
+.slide-out { animation: out .22s var(--ease) forwards; }
+@keyframes out { to { opacity: 0; transform: translateX(-30px) rotate(-1.5deg); } }
+
+/* ---------- F 时间轴 ---------- */
+.F-sum { flex: none; padding: 0 22px 10px; }
+.F-sum .t { display: flex; align-items: baseline; gap: 10px; }
+.F-sum .t b { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.F-sum .t .sp { flex: 1; }
+.lg { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--fg2); padding: 2px 8px; border-radius: 99px; }
+.lg i { width: 8px; height: 8px; border-radius: 3px; }
+.lg:hover { background: var(--a06); }
+.lg[aria-pressed="false"] { opacity: .4; }
+.strip { position: relative; height: 26px; margin-top: 8px; border-radius: 8px; background: var(--a04); }
+.strip .tk { position: absolute; bottom: -15px; font-size: 10px; color: var(--fg3); transform: translateX(-50%); }
+.strip .m { position: absolute; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg); transition: transform .15s; }
+.strip .m:hover { transform: scale(1.6); }
+.strip .now { position: absolute; right: 0; top: -3px; bottom: -3px; width: 2px; border-radius: 1px; background: var(--fg2); }
+.F-list { flex: 1; padding: 18px 18px 16px 0; position: relative; }
+.tl { position: relative; display: grid; grid-template-columns: 74px 26px 1fr; align-items: start; animation: rise .28s var(--ease) both; }
+.tl .tm { text-align: right; padding: 7px 10px 0 0; font-size: 11.5px; color: var(--fg3); font-variant-numeric: tabular-nums; }
+.tl .nd { position: relative; display: flex; justify-content: center; padding-top: 6px; align-self: stretch; }
+.tl .nd::before { content: ""; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.tl:first-child .nd::before { top: 12px; }
+.tl:last-child .nd::before { bottom: auto; height: 12px; }
+.tl .nd .logo { position: relative; box-shadow: 0 0 0 3px var(--bg); }
+.tl .ct { padding: 4px 0 12px 8px; min-width: 0; }
+.tl .ct .who { display: flex; gap: 8px; align-items: baseline; }
+.tl .ct .who strong { font-weight: 620; }
+.tl .ct .msgs { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; align-items: flex-start; }
+.tl .ct .bubble { margin: 0; background: var(--a06); }
+.tl.day .tm { color: var(--fg); font-weight: 650; padding-top: 0; }
+.tl.day .ct { padding-bottom: 6px; }
+.tl.day .nd { padding-top: 4px; }
+.tl.day .nd i { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--fg3); box-shadow: 0 0 0 3px var(--bg); }
+
+/* comparison */
+.cmp { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--doc-card); border-radius: 14px; overflow: hidden; }
+.cmp th, .cmp td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--doc-line); vertical-align: top; }
+.cmp th { color: var(--doc-t3); font-weight: 600; font-size: 12px; }
+.cmp td:first-child { white-space: nowrap; font-weight: 600; }
+.rec { margin-top: 18px; padding: 14px 16px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); background: color-mix(in srgb, var(--accent) 7%, transparent); color: var(--doc-t2); }
+.rec b { color: var(--doc-t1); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>消息面板 · 六个方案</h1>
+  <nav>
+    <a href="#A">A 统一收件箱</a><a href="#B">B 三栏</a><a href="#C">C 按人叠卡</a><a href="#D">D 来源看板</a><a href="#E">E 一次一条</a><a href="#F">F 时间轴</a><a href="#cmp">对比</a>
+  </nav>
+  <span style="flex:1"></span>
+  <div class="ctl">状态
+    <div class="seg" id="stateSeg">
+      <button data-v="full" aria-pressed="true">有消息</button>
+      <button data-v="empty" aria-pressed="false">全看完了</button>
+      <button data-v="off" aria-pressed="false">微信关了</button>
+      <button data-v="perm" aria-pressed="false">QQ 缺权限</button>
+    </div>
+  </div>
+  <div class="ctl">岛
+    <div class="seg" id="themeSeg">
+      <button data-v="dark" aria-pressed="true">深色</button>
+      <button data-v="light" aria-pressed="false">浅色</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <p class="intro">现在的消息页是「<b>先选来源，再看这个来源的列表</b>」。下面六个方案换了不同的组织方式，岛的尺寸都按默认的 <b>780 × 490</b>。每个方案都能点：切筛选、点开一条、悬停出操作。顶上的「状态」切换四种情况，看空状态、来源关着、缺权限时各方案怎么处理。</p>
+  <div class="problems">
+    <div><b>空状态太空</b>一只企鹅加「暂无消息」，占满整个面板，看不出另外两个来源有没有消息、接收是否正常。</div>
+    <div><b>右上四个图标认不出</b>电源、↗、刷新、垃圾桶都是纯图标，接收开关伪装成按钮，清空和刷新放在一样显眼的位置。</div>
+    <div><b>来回切标签</b>想知道「有没有新消息」要点三次；验证码、账单这类要马上用的东西和群聊混在一起。</div>
+  </div>
+
+  <section class="opt" id="A">
+    <div class="opt-head"><span class="letter">A</span><h2>统一收件箱</h2><p>所有来源按时间合成一条列表，来源变成筛选。</p></div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" data-opt="A"></div></div>
+      <div class="notes">
+        <h3>怎么用</h3>
+        <ul>
+          <li>打开就是「全部」，按「刚刚 / 今天早些 / 昨天」分段；来源胶囊带条数，点了只看那一个。</li>
+          <li>头像右下角压来源小图标；验证码直接在行里显示，带「复制」。</li>
+          <li>悬停一行浮出「已读、复制、打开」；点一行原地展开全文。</li>
+          <li>刷新、打开应用、接收开关、清空收进右上角「⋯」，底栏一行写各来源是否在接收。</li>
+        </ul>
+        <h3>适合</h3>
+        <ul><li>消息不多、大部分只扫一眼的日常；改动最小，现有的来源标签能直接变成胶囊。</li></ul>
+        <h3>代价</h3>
+        <ul><li>邮件详情只能原地展开，看长邮件要点进去单独一页（沿用现在的邮件阅读）。</li><li class="new">「已读」对 QQ、微信只是岛里标记，不会让对方软件变已读。</li></ul>
+        <p class="try">试试：点「⋯」；点一行展开；状态切到「微信关了」。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="opt" id="B">
+    <div class="opt-head"><span class="letter">B</span><h2>三栏：来源栏 · 列表 · 详情</h2><p>像邮件客户端，左边竖排来源，右边直接读。</p></div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" data-opt="B"></div></div>
+      <div class="notes">
+        <h3>怎么用</h3>
+        <ul>
+          <li>左边一列来源图标带角标，最上面是「全部」，底下是「管理来源」。</li>
+          <li>中间列表头写来源名和「接收中」开关，状态一眼能看到，不再是电源图标。</li>
+          <li>右边是选中那条的详情：聊天用气泡，同一会话的几条连起来；邮件显示主题和正文。底部是带文字的按钮。</li>
+        </ul>
+        <h3>适合</h3>
+        <ul><li>邮件多、常要读正文的人；来源多（Telegram、飞书……）时竖排也放得下。</li></ul>
+        <h3>代价</h3>
+        <ul><li>780 宽分三栏，列表只剩 270 左右，长标题会截断；面板调窄到 600 以下要退回两栏。</li></ul>
+        <p class="try">试试：左边点「邮箱」，再点验证码那封。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="opt" id="C">
+    <div class="opt-head"><span class="letter">C</span><h2>按人叠卡</h2><p>同一个人、同一个群的消息叠成一摞，像手机的通知堆叠。</p></div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" data-opt="C"></div></div>
+      <div class="notes">
+        <h3>怎么用</h3>
+        <ul>
+          <li>两列卡片，每张是一个对话：最新一条 + 「还有 N 条」，后面露出叠着的卡边。</li>
+          <li>卡顶有一道来源色细线，群聊里显示是谁说的。</li>
+          <li>点卡片横向展开成整行，显示这个对话所有的气泡和操作。</li>
+        </ul>
+        <h3>适合</h3>
+        <ul><li>群聊刷屏的时候：一个群 20 条只占一张卡，私聊不会被淹掉。</li></ul>
+        <h3>代价</h3>
+        <ul><li>看不出先后顺序；只有「有新消息」没有内容的微信提醒没法归到人，单独一张。</li></ul>
+        <p class="try">试试：点「Fuyu 开发群」那摞。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="opt" id="D">
+    <div class="opt-head"><span class="letter">D</span><h2>来源看板</h2><p>QQ、微信、邮箱并排三列，不用切换。</p></div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" data-opt="D"></div></div>
+      <div class="notes">
+        <h3>怎么用</h3>
+        <ul>
+          <li>每列顶上淡淡一层来源色，写条数和接收开关；列底是「打开应用」「清空」。</li>
+          <li>每列各自滚动；某个来源关了或缺权限，只有那一列变成提示卡，另外两列照常。</li>
+          <li>超过三个来源时列可以横向滑，或在设置里选哪三个上板。</li>
+        </ul>
+        <h3>适合</h3>
+        <ul><li>三个来源都常用、想一眼看全的人；把现有三个面板拼在一起，实现最直接。</li></ul>
+        <h3>代价</h3>
+        <ul><li>每列只有约 250 宽，正文两行就截；某列空着时那块就浪费了。</li></ul>
+        <p class="try">试试：状态切到「QQ 缺权限」和「微信关了」。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="opt" id="E">
+    <div class="opt-head"><span class="letter">E</span><h2>一次一条</h2><p>分拣模式：大卡片一次只放一条，处理完自动下一条。</p></div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" data-opt="E"></div></div>
+      <div class="notes">
+        <h3>怎么用</h3>
+        <ul>
+          <li>左边大卡片：来源、联系人、正文大字；验证码拆成一格一格的数字。顶部进度条是剩下几条。</li>
+          <li>下面四个大按钮带快捷键：打开（Enter）、复制（C）、稍后（S）、已读（空格），已读的卡片滑走。</li>
+          <li>右边是「接下来」队列，点哪条跳到哪条。</li>
+        </ul>
+        <h3>适合</h3>
+        <ul><li>快捷键打开岛、一路空格清掉消息的人；也适合做 A 的一个「分拣」开关，而不是唯一的样子。</li></ul>
+        <h3>代价</h3>
+        <ul><li>一次只看一条，扫一眼全局反而慢；<span class="new">「稍后」要新存一个状态。</span></li></ul>
+        <p class="try">试试：连点「已读」把它清空。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="opt" id="F">
+    <div class="opt-head"><span class="letter">F</span><h2>时间轴</h2><p>先看今天的节奏，再顺着时间往下读。</p></div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" data-opt="F"></div></div>
+      <div class="notes">
+        <h3>怎么用</h3>
+        <ul>
+          <li>顶部是今天的条数和一条 12 小时的点阵：每条消息一个彩点，悬停看是谁；图例可以点着筛选。</li>
+          <li>下面是竖线时间轴，来源图标是轴上的节点；同一个人连着发的几条合成一组气泡。</li>
+          <li>跨天的地方插一个日期节点。</li>
+        </ul>
+        <h3>适合</h3>
+        <ul><li>想回看「下午谁找过我」的人；视觉上最有特点，和岛的气质也比较搭。</li></ul>
+        <h3>代价</h3>
+        <ul><li>时间轴吃掉左边约 100 宽；<span class="new">点阵要看一整天的记录，现在清空就没了，要多存一份今天的历史。</span></li></ul>
+        <p class="try">试试：点图例里的「QQ」关掉它。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="opt" id="cmp">
+    <div class="opt-head"><span class="letter">≡</span><h2>对比</h2></div>
+    <table class="cmp">
+      <tr><th>方案</th><th>一眼看全</th><th>读长内容</th><th>群聊刷屏</th><th>窄面板</th><th>改动量</th></tr>
+      <tr><td>A 统一收件箱</td><td>好</td><td>中（原地展开）</td><td>中</td><td>好</td><td>小</td></tr>
+      <tr><td>B 三栏</td><td>中</td><td>好</td><td>中</td><td>差（要退两栏）</td><td>中</td></tr>
+      <tr><td>C 按人叠卡</td><td>好</td><td>中</td><td>好</td><td>中（变一列）</td><td>中</td></tr>
+      <tr><td>D 来源看板</td><td>好</td><td>差</td><td>中</td><td>差</td><td>小</td></tr>
+      <tr><td>E 一次一条</td><td>差</td><td>好</td><td>差</td><td>好</td><td>中</td></tr>
+      <tr><td>F 时间轴</td><td>好</td><td>中</td><td>中（会合并连发）</td><td>中</td><td>中，要存当天历史</td></tr>
+    </table>
+    <div class="rec"><b>我的倾向：A 做底，借 C 和 E 各一点。</b>默认是统一收件箱；同一个群连发的几条在 A 里合成一行「还有 N 条」（C 的好处）；按住快捷键或点「分拣」进入 E 的一次一条。空状态和右上角的「⋯」菜单几个方案通用，可以先单独做。你也可以混搭，比如「A 的列表 + F 的顶部点阵」。</div>
+  </section>
+</main>
+
+<script>
+const P = {
+  bot: '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>',
+  list: '<path d="M13 5h8M13 12h8M13 19h8"/><path d="m3 17 2 2 4-4"/><rect x="3" y="4" width="6" height="6" rx="1"/>',
+  music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>',
+  clip: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  timer: '<path d="M10 2h4M12 14l3-3"/><circle cx="12" cy="14" r="8"/>',
+  bell: '<path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"/>',
+  lang: '<path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/>',
+  scissors: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  power: '<path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>',
+  out: '<path d="M7 7h10v10M7 17 17 7"/>',
+  refresh: '<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>',
+  trash: '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  copy: '<rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  checks: '<path d="M18 6 7 17l-5-5M22 10l-7.5 7.5L13 16"/>',
+  more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  reply: '<path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>',
+  sliders: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
+  bellOff: '<path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7M10.3 21a1.94 1.94 0 0 0 3.4 0M2 2l20 20"/>',
+  key: '<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4M21 2l-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+  layers: '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65M22 12.65l-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+  later: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  paperclip: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+  layout: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>',
+};
+const ic = (n, s) => `<svg class="i" viewBox="0 0 24 24"${s ? ` style="font-size:${s}px"` : ""}>${P[n]}</svg>`;
+
+const SRC = {
+  qq: { name: "QQ", color: "var(--qq)", app: "QQ" },
+  wechat: { name: "微信", color: "var(--wechat)", app: "微信" },
+  mail: { name: "邮箱", color: "var(--mail)", app: "邮件" },
+};
+const GLYPH = {
+  qq: '<svg viewBox="0 0 24 24" fill="#fff"><ellipse cx="12" cy="10" rx="6" ry="7"/><ellipse cx="12" cy="18" rx="8" ry="3.2" fill="#fff"/><circle cx="10" cy="8.5" r="1.2" fill="#12b7f5"/><circle cx="14" cy="8.5" r="1.2" fill="#12b7f5"/><path d="M8.5 13.2c2 1.2 5 1.2 7 0" stroke="#ff5a4e" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
+  wechat: '<svg viewBox="0 0 24 24" fill="#fff"><ellipse cx="9.5" cy="9.5" rx="7" ry="5.8"/><ellipse cx="15.5" cy="14.5" rx="6" ry="5" stroke="#07c160" stroke-width="1.4"/><circle cx="7.3" cy="8.5" r=".95" fill="#07c160"/><circle cx="11.7" cy="8.5" r=".95" fill="#07c160"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>',
+};
+const logo = (src, size = 22) => `<span class="logo" style="width:${size}px;height:${size}px;border-radius:${Math.round(size * .3)}px;background:${SRC[src].color}">${GLYPH[src]}</span>`;
+
+const AVC = ["#e86a5c", "#d9944a", "#7a8cff", "#3fb68b", "#b47be0", "#4aa7d9", "#e0739a", "#8f9aa8"];
+const avColor = (s) => AVC[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % AVC.length];
+const avatar = (m, size = 34, badge = true) => {
+  const label = m.who ? [...m.who][0] : "微";
+  const bg = m.who ? avColor(m.who) : "var(--wechat)";
+  const b = badge ? `<span class="badge">${logo(m.src, Math.round(size * .46))}</span>` : "";
+  return `<span class="av" style="width:${size}px;height:${size}px;background:${bg};font-size:${Math.round(size * .42)}px">${label}${b}</span>`;
+};
+
+const NOW = 15 * 60 + 30;
+function tm(mins, short) {
+  if (mins < 1) return "刚刚";
+  if (mins < 60 && short !== "clock") return `${mins} 分钟前`;
+  let m = NOW - mins; let pre = "";
+  if (m < 0) { m += 1440; pre = "昨天 "; }
+  return pre + `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+const clock = (mins) => tm(mins, "clock");
+
+const ALL = [
+  { id: 1, src: "qq", who: "Fuyu 开发群", from: "小林", text: "PR #912 我合了，晚上发个 beta？", mins: 1, unread: 3, thread: [["阿杰", "刘海那个边框我看了，没问题"], ["小林", "截图贴群里了"], ["小林", "PR #912 我合了，晚上发个 beta？"]] },
+  { id: 2, src: "mail", who: "GitHub", subject: "[TixXin/fuyu] 检查全部通过：land/1122", text: "All checks have passed · 12 项检查，用时 18 分钟。", mins: 4, acct: "工作邮箱" },
+  { id: 3, src: "qq", who: "妈妈", text: "周末回来吃饭吗？买了你爱吃的虾", mins: 9, unread: 1, thread: [["妈妈", "在忙吗"], ["妈妈", "周末回来吃饭吗？买了你爱吃的虾"]] },
+  { id: 4, src: "mail", who: "Apple", subject: "你的 Apple 账户验证码", text: "你的验证码是 482913，10 分钟内有效。如果不是你本人操作，请忽略这封邮件。", otp: "482913", mins: 12, acct: "个人邮箱" },
+  { id: 5, src: "wechat", who: "张三", text: "[图片] 你看这个配色怎么样", mins: 18, unread: 2, thread: [["张三", "[图片]"], ["张三", "你看这个配色怎么样"]] },
+  { id: 6, src: "wechat", who: null, text: "微信有 3 条新消息（没拿到内容）", mins: 35, unread: 3, reminder: true },
+  { id: 7, src: "mail", who: "招商银行", subject: "11 月信用卡电子账单", text: "本期应还 ¥2,380.00，最后还款日 12 月 8 日。", mins: 82, acct: "个人邮箱", read: true },
+  { id: 8, src: "qq", who: "李老师", text: "材料明天上午十点前交到 302 办公室", mins: 140, read: true },
+  { id: 9, src: "wechat", who: "文件传输助手", text: "设计稿 v3.fig", mins: 205, read: true },
+  { id: 10, src: "qq", who: "Fuyu 开发群", from: "阿杰", text: "macOS 那边菜单栏图标我修好了", mins: 300, read: true },
+  { id: 11, src: "mail", who: "Figma", subject: "有人在「浮屿 · 消息面板」里评论了你", text: "“这个空状态太空了，能不能告诉我另外两个来源的情况？”", mins: 60 * 19, acct: "工作邮箱", read: true },
+];
+
+let STATE = "full";
+const srcEnabled = (s) => !(STATE === "off" && s === "wechat") && !(STATE === "perm" && s === "qq");
+function data() {
+  if (STATE === "empty") return [];
+  return ALL.filter((m) => srcEnabled(m.src));
+}
+const countOf = (list, s) => list.filter((m) => m.src === s && !m.read).length;
+const headline = (m) => m.src === "mail" ? m.subject : m.text;
+const whoName = (m) => m.who ?? "微信";
+
+function topbar() {
+  return `<div class="ibar"><span class="brand">Fuyu</span>
+    ${["bot", "list", "music", "cal", "clip", "inbox", "timer"].map((n) => `<span class="pg">${ic(n)}</span>`).join("")}
+    <span class="sp"></span>
+    <span class="rb on">${ic("bell")}</span><span class="rb">${ic("lang")}</span><span class="rb">${ic("scissors")}</span><span class="rb">${ic("gear")}</span></div>`;
+}
+function notices(compact) {
+  if (STATE === "off") return `<div class="banner">${ic("bellOff", 15)}<span><b>微信提醒已关闭</b>${compact ? "" : "，新消息不会出现在这里"}</span><span class="sp"></span><button class="tbtn solid">打开</button></div>`;
+  if (STATE === "perm") return `<div class="banner warn">${ic("key", 15)}<span><b>QQ 需要通知权限</b>${compact ? "" : "，系统没让岛读取 QQ 的通知"}</span><span class="sp"></span><button class="tbtn solid">去授权</button></div>`;
+  return "";
+}
+function srcStatus(s) {
+  if (STATE === "off" && s === "wechat") return `<span class="status off"><i></i>微信 已关闭</span>`;
+  if (STATE === "perm" && s === "qq") return `<span class="status warn"><i></i>QQ 缺权限</span>`;
+  return `<span class="status"><i></i>${s === "mail" ? "邮箱 2 个账户" : SRC[s].name + " 接收中"}</span>`;
+}
+function emptyState(scope) {
+  const srcs = scope ? [scope] : ["qq", "wechat", "mail"];
+  return `<div class="empty"><div class="trio">${srcs.map((s) => logo(s, 34)).join("")}<span class="ok">${ic("check")}</span></div>
+    <h4>${scope ? `${SRC[scope].name}都看完了` : "都看完了"}</h4>
+    <p>上一条 15:12 · QQ「妈妈」· 今天一共 11 条</p>
+    <div class="srcs">${srcs.map(srcStatus).join("")}</div></div>`;
+}
+function otpChip(m) { return m.otp ? `<span class="otp">${m.otp}<button>${ic("copy")}复制</button></span>` : ""; }
+
+/* ---------- A ---------- */
+const A = { filter: "all", open: null, menu: false };
+function renderA(el) {
+  const list = data();
+  const shown = list.filter((m) => A.filter === "all" || m.src === A.filter);
+  const chips = [["all", "全部", list.filter((m) => !m.read).length], ...["qq", "wechat", "mail"].map((s) => [s, SRC[s].name, countOf(list, s)])];
+  const groups = [["刚刚", (m) => m.mins < 15], ["今天早些", (m) => m.mins >= 15 && m.mins < NOW], ["昨天", (m) => m.mins >= NOW]];
+  let i = 0;
+  const rows = groups.map(([g, f]) => {
+    const items = shown.filter(f);
+    if (!items.length) return "";
+    return `<div class="grp">${g}</div>` + items.map((m) => {
+      const open = A.open === m.id;
+      const who2 = m.from ? `<span class="who2">${m.from}</span>` : m.src === "mail" ? `<span class="who2">${m.acct}</span>` : "";
+      const full = m.src === "mail" ? `<b>${m.subject}</b>\n${m.text}` : (m.thread ? m.thread.map(([w, t]) => `${m.from ? w + "：" : ""}${t}`).join("\n") : m.text);
+      return `<div class="row${m.read ? " read" : ""}${open ? " open" : ""}" data-id="${m.id}" style="animation-delay:${i++ * 25}ms">
+        ${avatar(m)}
+        <div class="main"><div class="l1"><strong class="ell">${whoName(m)}</strong>${who2}<span class="sp"></span><time>${tm(m.mins)}</time></div>
+          <div class="l2"><span class="ell">${m.from ? m.from + "：" : ""}${headline(m)}</span>${otpChip(m)}${!m.read && m.unread ? `<span class="pill">${m.unread}</span>` : !m.read ? `<span class="dot"></span>` : ""}</div></div>
+        <div class="hov"><button class="ibtn" title="标为已读">${ic("check")}</button><button class="ibtn" title="复制">${ic("copy")}</button><button class="ibtn" title="打开">${ic("out")}</button></div>
+        <div class="more"><div class="txt">${full}</div><div class="acts"><button class="tbtn solid">${ic("out")}在${SRC[m.src].app}中打开</button><button class="tbtn">${ic("copy")}复制</button><button class="tbtn">${ic("check")}标为已读</button></div></div>
+      </div>`;
+    }).join("");
+  }).join("");
+  const filterSrc = A.filter === "all" ? null : A.filter;
+  const body = shown.length ? `<div class="A-list scroll">${notices()}${rows}</div>` : `${STATE === "empty" ? "" : `<div style="padding:0 22px">${notices()}</div>`}${emptyState(filterSrc)}`;
+  el.innerHTML = topbar() + `<div class="ibody">
+    <div class="A-head">
+      ${chips.map(([k, n, c]) => `<button class="chip${k === "all" ? " all" : ""}${k !== "all" && !srcEnabled(k) ? " off" : ""}" data-f="${k}" aria-pressed="${A.filter === k}">${k === "all" ? "" : logo(k, 18)}${n}${c ? `<span class="n">${c}</span>` : ""}</button>`).join("")}
+      <span style="flex:1"></span>
+      <button class="ibtn" title="搜索">${ic("search")}</button>
+      <button class="tbtn" ${list.some((m) => !m.read) ? "" : "disabled style='opacity:.4'"}>${ic("checks")}全部已读</button>
+      <button class="ibtn" data-menu title="更多">${ic("more")}</button>
+      <div class="menu${A.menu ? " open" : ""}" style="right:18px;top:38px">
+        <button>${ic("refresh")}刷新<span class="k">F5</span></button>
+        <button>${ic("out")}打开 QQ</button><button>${ic("out")}打开微信</button><button>${ic("out")}打开邮件</button>
+        <hr><button>${ic("sliders")}接收哪些来源…</button>
+        <hr><button style="color:#ff8a8a">${ic("trash")}清空${A.filter === "all" ? "全部" : SRC[A.filter].name}记录</button>
+      </div>
+    </div>
+    ${body}
+    ${shown.length ? `<div class="A-foot">${["qq", "wechat", "mail"].map(srcStatus).join("")}<span class="sp"></span><span>点一行展开 · 悬停出操作</span></div>` : ""}
+  </div>`;
+  el.querySelectorAll(".chip").forEach((b) => b.onclick = () => { A.filter = b.dataset.f; A.open = null; renderA(el); });
+  el.querySelectorAll(".row").forEach((r) => r.onclick = (e) => { if (e.target.closest(".hov,.acts,.otp")) return; A.open = A.open === +r.dataset.id ? null : +r.dataset.id; renderA(el); });
+  el.querySelector("[data-menu]").onclick = (e) => { e.stopPropagation(); A.menu = !A.menu; renderA(el); };
+  el.onclick = (e) => { if (A.menu && !e.target.closest(".menu,[data-menu]")) { A.menu = false; renderA(el); } };
+}
+
+/* ---------- B ---------- */
+const B = { src: "all", sel: 1 };
+function renderB(el) {
+  const list = data();
+  const shown = list.filter((m) => B.src === "all" || m.src === B.src);
+  if (!shown.find((m) => m.id === B.sel)) B.sel = shown[0]?.id ?? null;
+  const sel = shown.find((m) => m.id === B.sel);
+  const railBtn = (k) => {
+    const c = k === "all" ? list.filter((m) => !m.read).length : countOf(list, k);
+    const off = k !== "all" && !srcEnabled(k);
+    return `<button data-s="${k}" aria-pressed="${B.src === k}" class="${off ? "off" : ""}">${k === "all" ? `<span class="allico">${ic("layers")}</span>` : logo(k, 26)}${k === "all" ? "全部" : SRC[k].name}${c ? `<span class="pill">${c}</span>` : ""}</button>`;
+  };
+  const curSrc = B.src === "all" ? null : B.src;
+  const head = curSrc
+    ? `<strong>${SRC[curSrc].name}</strong>${srcStatus(curSrc)}<span class="sp"></span><span class="switch${srcEnabled(curSrc) ? " on" : ""}" title="接收"></span><button class="ibtn" title="更多">${ic("more")}</button>`
+    : `<strong>全部</strong><span class="muted" style="font-size:12px">${shown.filter((m) => !m.read).length} 条未读</span><span class="sp"></span><button class="ibtn" title="全部已读">${ic("checks")}</button><button class="ibtn" title="更多">${ic("more")}</button>`;
+  const items = shown.map((m) => `<div class="bitem" data-id="${m.id}" aria-selected="${m.id === B.sel}">
+      ${avatar(m, 32, B.src === "all")}
+      <div class="main"><div class="l1"><strong class="ell">${whoName(m)}</strong><time>${tm(m.mins)}</time></div>
+      <div class="l2"><span class="ell">${m.from ? m.from + "：" : ""}${headline(m)}</span>${!m.read ? (m.unread ? `<span class="pill">${m.unread}</span>` : `<span class="dot"></span>`) : ""}</div></div></div>`).join("");
+  const offHere = curSrc && !srcEnabled(curSrc);
+  let detail;
+  if (offHere) detail = `<div class="empty">${logo(curSrc, 40)}<h4>${STATE === "perm" ? "QQ 需要通知权限" : "微信提醒已关闭"}</h4><p>${STATE === "perm" ? "系统设置里允许岛读取通知后，QQ 消息会出现在这里" : "打开后，微信的新消息提醒会出现在这里"}</p><button class="tbtn solid" style="margin-top:6px">${STATE === "perm" ? "去授权" : "打开微信提醒"}</button></div>`;
+  else if (!sel) detail = emptyState(curSrc);
+  else {
+    const body = sel.src === "mail"
+      ? `<div class="mailbody"><h6>${sel.subject}</h6><p>${sel.text}</p>${sel.otp ? `<p>${otpChip(sel)}</p>` : ""}<p class="muted" style="font-size:12px">收件：${sel.acct}</p></div>`
+      : sel.thread ? sel.thread.map(([w, t]) => `<div><span class="bubble">${sel.from ? `<small>${w}</small>` : ""}${t}</span></div>`).join("") : `<div><span class="bubble">${sel.text}</span></div>`;
+    detail = `<div class="who">${avatar(sel, 40)}<div><h5>${whoName(sel)}</h5><p>${SRC[sel.src].name}${sel.from ? " · 群聊" : ""} · ${clock(sel.mins)}</p></div></div>
+      <div class="body">${body}</div>
+      <div class="acts"><button class="tbtn solid">${ic(sel.src === "mail" ? "reply" : "out")}${sel.src === "mail" ? "回复" : `在${SRC[sel.src].app}中打开`}</button><button class="tbtn">${ic("copy")}复制</button><span class="sp"></span><button class="tbtn">${ic("check")}已读</button></div>`;
+  }
+  el.innerHTML = topbar() + `<div class="ibody"><div class="B">
+    <div class="rail">${railBtn("all")}${["qq", "wechat", "mail"].map(railBtn).join("")}<span class="sp"></span><button title="管理来源">${ic("sliders", 17)}</button></div>
+    <div class="Blist"><header>${head}</header><div class="scroll">${B.src === "all" ? `<div style="padding:0 4px">${notices(true)}</div>` : ""}${items || (offHere ? "" : `<p class="muted" style="text-align:center;margin-top:40px;font-size:12.5px">没有消息</p>`)}</div></div>
+    <div class="Bdetail" ${sel ? `style="--c:${SRC[sel.src].color}"` : ""}>${detail}</div>
+  </div></div>`;
+  el.querySelectorAll(".rail button[data-s]").forEach((b) => b.onclick = () => { B.src = b.dataset.s; renderB(el); });
+  el.querySelectorAll(".bitem").forEach((b) => b.onclick = () => { B.sel = +b.dataset.id; renderB(el); });
+}
+
+/* ---------- C ---------- */
+const C = { open: null };
+function renderC(el) {
+  const list = data();
+  const keyOf = (m) => m.reminder ? "wx-reminder" : `${m.src}:${m.who}`;
+  const groups = [];
+  for (const m of list) {
+    let g = groups.find((x) => x.key === keyOf(m));
+    if (!g) groups.push(g = { key: keyOf(m), items: [] });
+    g.items.push(m);
+  }
+  const unread = list.filter((m) => !m.read).length;
+  const cards = groups.map((g, i) => {
+    const m = g.items[0];
+    const n = g.items.reduce((a, x) => a + (x.unread || 1), 0);
+    const all = g.items.flatMap((x) => x.thread ?? [[x.from ?? whoName(x), headline(x)]]);
+    const wide = C.open === g.key;
+    return `<div class="stack${wide ? " wide" : ""}" data-k="${g.key}" style="animation-delay:${i * 35}ms">
+      ${n > 1 ? `<div class="ghost"></div>` : ""}${n > 2 ? `<div class="ghost g2"></div>` : ""}
+      <div class="card"><div class="bar" style="background:${SRC[m.src].color}"></div>
+        <div class="top">${logo(m.src, 16)}${SRC[m.src].name}${m.from ? " · 群聊" : m.src === "mail" ? " · " + m.acct : ""}<span class="sp"></span>${tm(m.mins)}</div>
+        <div class="who">${avatar(m, 26, false)}<strong class="ell">${whoName(m)}</strong>${!m.read ? (m.unread ? `<span class="pill">${m.unread}</span>` : `<span class="dot"></span>`) : ""}</div>
+        ${wide
+          ? `<div class="thread">${all.map(([w, t]) => `<div><span class="bubble">${m.from ? `<small>${w}</small>` : ""}${t}</span></div>`).join("")}${m.otp ? otpChip(m) : ""}</div>
+             <div class="acts"><button class="tbtn solid">${ic("out")}在${SRC[m.src].app}中打开</button><button class="tbtn">${ic("check")}这组已读</button><span style="flex:1"></span><button class="tbtn" data-close>收起</button></div>`
+          : `<div class="txt">${m.from ? m.from + "：" : ""}${headline(m)}</div>${m.otp ? `<div style="margin-top:6px">${otpChip(m)}</div>` : ""}${n > 1 ? `<div class="cnt">还有 ${n - 1} 条</div>` : ""}`}
+      </div></div>`;
+  }).join("");
+  el.innerHTML = topbar() + `<div class="ibody">
+    ${list.length ? `<div class="C-head"><span class="t"><b>${unread}</b> 条未读 · 来自 ${groups.length} 个对话</span><span class="sp"></span>
+      <div class="seg"><button aria-pressed="true">按人</button><button aria-pressed="false">按来源</button></div>
+      <button class="tbtn">${ic("checks")}全部已读</button><button class="ibtn">${ic("more")}</button></div>` : ""}
+    ${list.length ? `<div class="C-grid scroll"><div style="grid-column:1/-1">${notices()}</div>${cards}</div>` : emptyState()}
+  </div>`;
+  el.querySelectorAll(".stack").forEach((s) => s.onclick = (e) => {
+    if (e.target.closest("[data-close]")) { C.open = null; renderC(el); return; }
+    if (e.target.closest(".acts,.otp")) return;
+    if (C.open !== s.dataset.k) { C.open = s.dataset.k; renderC(el); }
+  });
+}
+
+/* ---------- D ---------- */
+function renderD(el) {
+  const list = STATE === "empty" ? [] : ALL;
+  const col = (s) => {
+    const items = list.filter((m) => m.src === s);
+    const on = srcEnabled(s);
+    let inner;
+    if (!on) inner = `<div class="colstate"><span class="big">${ic(STATE === "perm" ? "key" : "bellOff")}</span>${STATE === "perm" ? "系统没让岛读取 QQ 通知" : "微信提醒已关闭"}<button class="tbtn solid">${STATE === "perm" ? "去授权" : "打开"}</button></div>`;
+    else if (!items.length) inner = `<div class="colstate">${logo(s, 30)}<span>${SRC[s].name}都看完了</span>${srcStatus(s)}</div>`;
+    else inner = items.map((m, i) => `<div class="mini" style="animation-delay:${i * 30}ms"><div class="l1"><strong class="ell">${whoName(m)}</strong>${!m.read ? (m.unread ? `<span class="pill">${m.unread}</span>` : `<span class="dot"></span>`) : ""}<time>${tm(m.mins)}</time></div><p>${m.from ? m.from + "：" : ""}${headline(m)}</p>${otpChip(m)}</div>`).join("");
+    const c = on ? countOf(list, s) : 0;
+    return `<div class="col" style="--c:${SRC[s].color}"><header>${logo(s, 20)}<strong>${SRC[s].name}</strong>${c ? `<span class="n">${c} 未读</span>` : ""}<span class="sp"></span><span class="switch${on ? " on" : ""}" title="接收"></span></header>
+      <div class="scroll">${inner}</div>
+      <footer><button class="tbtn">${ic("out")}打开${SRC[s].app}</button><span class="sp"></span>${s === "mail" ? `<button class="ibtn" title="全部已读">${ic("checks")}</button>` : ""}<button class="ibtn" title="清空">${ic("trash")}</button></footer></div>`;
+  };
+  el.innerHTML = topbar() + `<div class="ibody"><div class="D">${["qq", "wechat", "mail"].map(col).join("")}</div></div>`;
+}
+
+/* ---------- E ---------- */
+const E = { done: [], cur: 0, anim: false };
+function renderE(el) {
+  const list = data().filter((m) => !m.read);
+  const left = list.filter((m) => !E.done.includes(m.id));
+  if (E.cur >= left.length) E.cur = 0;
+  const m = left[E.cur];
+  if (!m) {
+    el.innerHTML = topbar() + `<div class="ibody">${STATE === "empty" ? "" : `<div style="padding:0 22px">${notices()}</div>`}${emptyState()}${list.length ? `<div style="text-align:center;padding-bottom:20px"><button class="tbtn solid" data-reset>再来一遍</button></div>` : ""}</div>`;
+    const r = el.querySelector("[data-reset]"); if (r) r.onclick = () => { E.done = []; E.cur = 0; renderE(el); };
+    return;
+  }
+  const idx = list.indexOf(m);
+  const big = m.src === "mail" ? `<div style="font-weight:600">${m.subject}</div><div style="color:var(--fg2);font-size:15px;margin-top:4px">${m.text}</div>` : m.thread ? m.thread.slice(-2).map(([w, t]) => `<div>${m.from ? `<span class="muted" style="font-size:14px">${w}　</span>` : ""}${t}</div>`).join("") : m.text;
+  el.innerHTML = topbar() + `<div class="ibody">${STATE !== "full" ? `<div style="padding:0 16px">${notices(true)}</div>` : ""}<div class="E">
+    <div class="Ecard" style="--c:${SRC[m.src].color}">
+      <div class="prog"><span>${idx + 1} / ${list.length}</span><div class="bars">${list.map((x) => `<i class="${E.done.includes(x.id) ? "done" : x.id === m.id ? "cur" : ""}"></i>`).join("")}</div></div>
+      <div class="src">${logo(m.src, 18)}${SRC[m.src].name}${m.from ? " · 群聊" : m.src === "mail" ? " · " + m.acct : ""} · ${tm(m.mins)}</div>
+      <h5>${whoName(m)}${m.unread > 1 ? `<span class="pill" style="margin-left:8px;vertical-align:4px">${m.unread}</span>` : ""}</h5>
+      <div class="big">${big}${m.otp ? `<div class="otpbig">${[...m.otp].map((d) => `<span>${d}</span>`).join("")}</div>` : ""}</div>
+      <div class="acts">
+        <button class="kbtn primary"><span class="ic">${ic("out")}</span>打开<kbd>Enter</kbd></button>
+        <button class="kbtn"><span class="ic">${ic("copy")}</span>${m.otp ? "复制验证码" : "复制"}<kbd>C</kbd></button>
+        <button class="kbtn" data-later><span class="ic">${ic("later")}</span>稍后<kbd>S</kbd></button>
+        <button class="kbtn" data-done><span class="ic">${ic("check")}</span>已读<kbd>空格</kbd></button>
+      </div>
+    </div>
+    <div class="Eq"><h6><span>接下来</span><span class="sp"></span><span>${left.length - 1} 条</span></h6><div class="scroll" style="flex:1">
+      ${left.filter((x) => x.id !== m.id).map((x, k) => `<div class="qi" data-id="${x.id}" style="--k:${Math.min(k, 5)}">${avatar(x, 28)}<div class="main"><strong class="ell">${whoName(x)}</strong><span class="ell">${headline(x)}</span></div></div>`).join("")}
+    </div></div>
+  </div></div>`;
+  el.querySelector("[data-done]").onclick = () => {
+    el.querySelector(".Ecard").classList.add("slide-out");
+    setTimeout(() => { E.done.push(m.id); renderE(el); }, 200);
+  };
+  el.querySelector("[data-later]").onclick = () => { E.cur = (E.cur + 1) % left.length; renderE(el); };
+  el.querySelectorAll(".qi").forEach((q) => q.onclick = () => { E.cur = left.findIndex((x) => x.id === +q.dataset.id); renderE(el); });
+}
+
+/* ---------- F ---------- */
+const F = { hide: new Set() };
+function renderF(el) {
+  const list = data();
+  const shown = list.filter((m) => !F.hide.has(m.src));
+  const today = list.filter((m) => m.mins < NOW);
+  const span = 12 * 60;
+  const dots = today.filter((m) => m.mins <= span).map((m) => `<span class="m" title="${whoName(m)} · ${clock(m.mins)}" style="left:${100 - (m.mins / span) * 100}%;background:${SRC[m.src].color};opacity:${F.hide.has(m.src) ? .15 : 1}"></span>`).join("");
+  const ticks = [12, 9, 6, 3].map((h) => `<span class="tk" style="left:${100 - (h * 60 / span) * 100}%">${clock(h * 60)}</span>`).join("") + `<span class="tk" style="left:100%">现在</span>`;
+  const rows = [];
+  let lastDay = null; let i = 0;
+  for (let k = 0; k < shown.length; k++) {
+    const m = shown[k];
+    const day = m.mins >= NOW ? "昨天" : "今天";
+    if (day !== lastDay) { if (lastDay !== null) rows.push(`<div class="tl day" style="animation-delay:${i++ * 25}ms"><div class="tm">${day}</div><div class="nd"><i></i></div><div class="ct"></div></div>`); lastDay = day; }
+    const msgs = m.thread ?? [[m.from ?? "", headline(m)]];
+    rows.push(`<div class="tl" style="animation-delay:${i++ * 25}ms"><div class="tm">${clock(m.mins).replace("昨天 ", "")}</div><div class="nd">${logo(m.src, 20)}</div>
+      <div class="ct"><div class="who"><strong>${whoName(m)}</strong>${m.src === "mail" ? `<span class="muted" style="font-size:11.5px">${m.acct}</span>` : ""}${!m.read ? (m.unread ? `<span class="pill">${m.unread}</span>` : `<span class="dot"></span>`) : ""}</div>
+      <div class="msgs">${msgs.map(([w, t]) => `<span class="bubble">${m.from && w ? `<small>${w}</small>` : ""}${t}</span>`).join("")}${otpChip(m)}</div></div></div>`);
+  }
+  el.innerHTML = topbar() + `<div class="ibody">
+    ${list.length ? `<div class="F-sum"><div class="t"><b>${today.length}</b><span class="muted">条，今天</span><span class="sp"></span>
+      ${["qq", "wechat", "mail"].map((s) => `<button class="lg" data-s="${s}" aria-pressed="${!F.hide.has(s)}"><i style="background:${SRC[s].color}"></i>${SRC[s].name} ${today.filter((m) => m.src === s).length}</button>`).join("")}
+      <button class="ibtn">${ic("more")}</button></div>
+      <div class="strip">${dots}<span class="now"></span>${ticks}</div></div>
+      <div class="F-list scroll"><div style="padding-left:22px">${notices()}</div>${rows.join("")}</div>` : emptyState()}
+  </div>`;
+  el.querySelectorAll(".lg").forEach((b) => b.onclick = () => { const s = b.dataset.s; F.hide.has(s) ? F.hide.delete(s) : F.hide.add(s); renderF(el); });
+}
+
+const R = { A: renderA, B: renderB, C: renderC, D: renderD, E: renderE, F: renderF };
+function renderAll() { document.querySelectorAll(".island[data-opt]").forEach((el) => R[el.dataset.opt](el)); }
+function seg(id, fn) {
+  const s = document.getElementById(id);
+  s.querySelectorAll("button").forEach((b) => b.onclick = () => { s.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); fn(b.dataset.v); });
+}
+seg("stateSeg", (v) => { STATE = v; E.done = []; E.cur = 0; C.open = null; A.open = null; renderAll(); });
+seg("themeSeg", (v) => document.body.classList.toggle("light", v === "light"));
+renderAll();
+</script>
+</body>
+</html>
