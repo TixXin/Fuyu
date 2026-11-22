@@ -6,6 +6,7 @@ import {
   labelLine,
   leadLine,
   lineBelow,
+  GLOW_PRIORITY,
   LINE_PRIORITY,
   measuredLine,
   selectContributed,
@@ -139,4 +140,23 @@ test("updating one contribution reuses unchanged style.vars and slot collections
   const customSelected = selectContributed(first, null, (state) => ({ hold: state.hold, hasMusic: state.hints.has("media.playing") }), (a, b) => a.hold === b.hold && a.hasMusic === b.hasMusic);
   const nextCustomSelected = selectContributed(second, customSelected, (state) => ({ hold: state.hold, hasMusic: state.hints.has("media.playing") }), (a, b) => a.hold === b.hold && a.hasMusic === b.hasMusic);
   assert.equal(nextCustomSelected.value, customSelected.value);
+});
+
+test("the notch glow is the highest-priority one, whoever wrote it first", () => {
+  const glow = (reason, priority, extra = {}) => ({ kind: "glow", color: "#30d158", priority, reason, ...extra });
+  const view = aggregateContributions([[glow("messages.qq", GLOW_PRIORITY.message)], [glow("device-use.camera", GLOW_PRIORITY.camera)], [glow("agent-status.waiting", GLOW_PRIORITY.agentWaiting, { pulse: true })]], true);
+  assert.equal(view.glow.reason, "device-use.camera");
+  assert.equal(aggregateContributions([], true).glow, null);
+  assert.ok(GLOW_PRIORITY.camera > GLOW_PRIORITY.agentWaiting && GLOW_PRIORITY.agentWaiting > GLOW_PRIORITY.message);
+});
+
+test("an unchanged glow and playback keep their identity so the notch ring does not redraw", () => {
+  const lists = [[{ kind: "glow", color: "#ff9f43", priority: 70, reason: "agent-status.waiting", pulse: true }, { kind: "playback", startedAt: 1000, durationMs: 200000 }]];
+  const first = aggregateContributions(lists, true);
+  const second = aggregateContributions([...lists, [line("todo.count", 10)]], true, first);
+  assert.equal(second.glow, first.glow);
+  assert.equal(second.playback, first.playback);
+  const moved = aggregateContributions([[{ kind: "playback", startedAt: 1500, durationMs: 200000 }]], true, second);
+  assert.equal(moved.playback.startedAt, 1500);
+  assert.equal(moved.glow, null);
 });

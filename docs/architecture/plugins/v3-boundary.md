@@ -310,6 +310,8 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | `hint` | `key` | 一个开关量，外壳和别的插槽项的 `shown` / `enabled` 读它（`agents.busy`、`update.reminder`、`shelf.count`、`timer.chip` 这类） |
 | `page` | `page`、`enabled` | 这一页现在开不开（消息按 QQ、微信开关） |
 | `badge` | `target`（现在只有 `settings`）、`label`、`action` | 外壳自己的按钮上挂圆点、换读屏文字，点了调 `action`（更新提示挂在设置按钮上） |
+| `glow` | `color`（`#hex`）、`priority`（`GLOW_PRIORITY`，大的先）、`reason`、`pulse`（闪） | 刘海模式下的边框和摄像头一圈按它变色（C166、C167）：摄像头 / 麦克风开着、新消息、Agent 等你和刚完成时各自写一条，取 `priority` 最高的 |
+| `playback` | `startedAt`（从头播放的时刻，毫秒）、`durationMs` | 正在播放的进度，摄像头一圈的「进度」样式用 CSS 动画按它走，不每秒刷新外壳；暂停时不写 |
 
 外壳只能 import `plugin-kernel` 和第 2 版插件系统（`plugins`、`plugin-views`）这几个功能目录，`tests/unit/feature-boundaries.test.mjs` 检查；第 2 版那两个随第 6 阶段删掉时从检查的名单里去掉。
 

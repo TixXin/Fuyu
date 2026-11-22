@@ -13,6 +13,7 @@ import { usePublishTrackArt } from "../usePublishTrackArt";
 import { demoMediaState } from "./demo";
 import { mediaIsland, useLyricWidgetsShown } from "./islandState";
 import { lyricLineContribution } from "./lyricLine";
+import { playbackContribution } from "./playbackContribution";
 import { OWNER } from "./owner.ts";
 
 type RunnerProps = {
@@ -65,6 +66,8 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   }
   if (features.music && audible) list.push({ kind: "hint", key: "media.audible" });
   if (playing) list.push({ kind: "hint", key: "media.playing" });
+  const playback = features.music ? playbackContribution(mediaState) : null;
+  if (playback) list.push(playback);
   if (coverOn) list.push({ kind: "style", vars: coverAccentVariables(coverColor, background, accent), className: "cover-color" });
   if (glassCover && playing && coverColor) list.push({ kind: "style", tint: coverColor });
   useIslandContributions(OWNER, "media.island", list);

@@ -1,9 +1,10 @@
 import { useRef } from "react";
 import { useTranslation, type Translations } from "../../../i18n";
 import type { IslandNotice } from "../../../lib/island-notices/service";
-import { ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-kernel/islandContributions";
+import { GLOW_PRIORITY, ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-kernel/islandContributions";
 import { runIslandAction, useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { imUnreadTotal, isImSource } from "../im-sources/imSourcesState";
+import { messageGlowColor } from "../messageGlow";
 import { messagePreviewText } from "../messagePreview";
 import type { SummaryGrow } from "../island/summaryFit";
 import { messagesIsland, type MessagesIsland } from "./islandState";
@@ -39,7 +40,7 @@ export function messagesContributions(state: MessagesIsland, flags: MessagesIsla
       hot: preview.source === "qqMail" ? "mail" : "unread",
       action: "messages.preview",
       ...(preview.source !== "plugin" && { open: "messages.open-preview" }),
-    });
+    }, { kind: "glow", color: messageGlowColor(preview.source), priority: GLOW_PRIORITY.message, reason: `messages.${preview.source}` });
   }
   if (qq.snapshot.items.length > 0 || wechat.snapshot.pending || extraUnread > 0) {
     list.push({ kind: "side", item: "unread", height: ISLAND_SIDE_ROW_HEIGHT }, { kind: "hint", key: "side.badge" });

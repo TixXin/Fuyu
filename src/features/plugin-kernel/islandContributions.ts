@@ -34,6 +34,10 @@ export type IslandBusyContribution = { kind: "busy" };
 export type IslandHintContribution = { kind: "hint"; key: string };
 export type IslandPageContribution = { kind: "page"; page: string; enabled: boolean };
 export type IslandBadgeContribution = { kind: "badge"; target: string; label: string; action?: string };
+export type IslandGlowContribution = { kind: "glow"; color: string; priority: number; reason: string; pulse?: boolean };
+export type IslandPlaybackContribution = { kind: "playback"; startedAt: number; durationMs: number };
+export type IslandGlow = Omit<IslandGlowContribution, "kind">;
+export type IslandPlayback = Omit<IslandPlaybackContribution, "kind">;
 
 export type IslandContribution =
   | IslandLineContribution
@@ -51,7 +55,9 @@ export type IslandContribution =
   | IslandBusyContribution
   | IslandHintContribution
   | IslandPageContribution
-  | IslandBadgeContribution;
+  | IslandBadgeContribution
+  | IslandGlowContribution
+  | IslandPlaybackContribution;
 
 export type IslandContributed = {
   lines: readonly IslandLineContribution[];
@@ -71,8 +77,18 @@ export type IslandContributed = {
   hints: ReadonlySet<string>;
   pages: Readonly<Record<string, boolean>>;
   badges: ReadonlyMap<string, IslandBadgeContribution>;
+  glow: IslandGlow | null;
+  playback: IslandPlayback | null;
   settled: boolean;
 };
+
+export const GLOW_PRIORITY = {
+  camera: 90,
+  microphone: 80,
+  agentWaiting: 70,
+  message: 60,
+  agentDone: 50,
+} as const;
 
 export const ISLAND_SIDE_ROW_HEIGHT = 28;
 export const ISLAND_SIDE_COVER_HEIGHT = 40;
@@ -150,6 +166,8 @@ export function aggregateContributions(
   let tint: string | null = null;
   let hold = false;
   let busy = false;
+  let glow: IslandGlow | null = null;
+  let playback: IslandPlayback | null = null;
   for (const list of lists) {
     for (const item of list) {
       switch (item.kind) {
@@ -183,12 +201,16 @@ export function aggregateContributions(
         case "hint": hints.add(item.key); break;
         case "page": pages[item.page] = item.enabled; break;
         case "badge": if (!badges.has(item.target)) badges.set(item.target, item); break;
+        case "glow":
+          if (!glow || item.priority > glow.priority) glow = { color: item.color, priority: item.priority, reason: item.reason, ...(item.pulse && { pulse: true }) };
+          break;
+        case "playback": playback ??= { startedAt: item.startedAt, durationMs: item.durationMs }; break;
       }
     }
   }
   lines.sort((a, b) => b.priority - a.priority);
   if (!prev) {
-    return { lines, trails, alerts, notices, preview, summary, summaryGrow, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, badges, settled };
+    return { lines, trails, alerts, notices, preview, summary, summaryGrow, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, badges, glow, playback, settled };
   }
   const nextLines = sameArray(lines, prev.lines, sameRecord) ? prev.lines : lines;
   const nextTrails = sameArray(trails, prev.trails) ? prev.trails : trails;
@@ -203,6 +225,8 @@ export function aggregateContributions(
   const nextPreview = preview && prev.preview && sameRecord(preview, prev.preview) ? prev.preview : preview;
   const nextSummaryGrow = summaryGrow && prev.summaryGrow && sameRecord(summaryGrow, prev.summaryGrow) ? prev.summaryGrow : summaryGrow;
   const nextStatus = status && prev.status && sameRecord(status, prev.status) ? prev.status : status;
+  const nextGlow = glow && prev.glow && sameRecord(glow, prev.glow) ? prev.glow : glow;
+  const nextPlayback = playback && prev.playback && sameRecord(playback, prev.playback) ? prev.playback : playback;
   const nextVars = sameRecord(vars, prev.style.vars) ? prev.style.vars : vars;
   const nextClassNames = sameArray(classNames, prev.style.classNames) ? prev.style.classNames : classNames;
   const nextStyle = nextVars === prev.style.vars && nextClassNames === prev.style.classNames && tint === prev.style.tint
@@ -226,6 +250,8 @@ export function aggregateContributions(
     hints: nextHints,
     pages: nextPages,
     badges: nextBadges,
+    glow: nextGlow,
+    playback: nextPlayback,
     settled,
   };
   return sameRecord(next, prev) ? prev : next;

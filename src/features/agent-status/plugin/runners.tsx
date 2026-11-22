@@ -17,6 +17,7 @@ import { useIslandAgents } from "../useIslandAgents";
 import { useQuotaAlert } from "../useQuotaAlert";
 import { demoAgentSessions } from "./demo";
 import { agentFeed, agentFeedOf, announceAgentsChanged } from "./agentFeed";
+import { useAgentGlow } from "./agentGlow";
 import { agentLineContribution, pickAgentSession } from "./agentLine";
 import { agentArrange, agentLine, agentPage, agentShell, quotaAlertState, type AgentArrange } from "./islandState";
 import { OWNER } from "./owner.ts";
@@ -94,6 +95,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   const line = agentLineContribution(lineSession, lineSession !== null && lineSession === agentInterjection, iconWidth, lineSession ? t.island.agentSession(lineSession.label, lineSession.title) : "");
   const waiting = agentSessions.some((session) => session.phase === "waiting");
   const busy = agentSessions.some((session) => session.phase === "running" || session.phase === "waiting");
+  const glow = useAgentGlow(agentSessions, features.agents && settings.agentStatusEnabled && !demo.active);
   const list: IslandContribution[] = [
     { kind: "status", state: agentVisualState, label: agentStatusLabel },
     { kind: "popup", page: "agents", height: agentCardHeight !== undefined ? getAgentAlertExpandedHeight(agentCardHeight) : undefined, saving: AGENT_POPUP_LIST_SAVING, open: alertPopup, wide: alertWide },
@@ -105,6 +107,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   if (settings.autoTuckHoldAgent && settings.agentStatusEnabled && waiting) list.push({ kind: "hold", reason: "agent-status.waiting" });
   if (settings.agentStatusEnabled && activeAgentSessionCount > 0) list.push({ kind: "hint", key: "agent" });
   if (busy) list.push({ kind: "hint", key: "agents.busy" });
+  if (glow) list.push(glow);
   useIslandContributions(OWNER, "agent-status.island", list);
   return null;
 }
