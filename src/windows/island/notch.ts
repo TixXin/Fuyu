@@ -48,6 +48,26 @@ export function useIslandNotch(): IslandNotch | null {
   return useSyncExternalStore(subscribe, () => current, () => null);
 }
 
+let wingNeed: number | null = null;
+const wingListeners = new Set<() => void>();
+
+export function reportNotchWing(wing: number | null) {
+  if (wing === wingNeed) return;
+  wingNeed = wing;
+  wingListeners.forEach((listener) => listener());
+}
+
+function subscribeWing(listener: () => void) {
+  wingListeners.add(listener);
+  return () => {
+    wingListeners.delete(listener);
+  };
+}
+
+export function useNotchWingNeed(): number | null {
+  return useSyncExternalStore(subscribeWing, () => wingNeed, () => null);
+}
+
 export const ALERT_NOTCH_WING = 90;
 
 export function notchFittedWidth(width: number, notch: IslandNotch | null, collapsedScale: number, alerted = false, maxWing = MAX_NOTCH_WING) {

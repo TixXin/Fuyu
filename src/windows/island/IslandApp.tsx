@@ -46,7 +46,7 @@ import { sideColumnTarget } from "./sideColumn";
 import { IslandRunners } from "./IslandRunners";
 import { islandMarginY } from "./islandForm";
 import { useAutoIslandForm } from "./autoIslandForm";
-import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
+import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync, useNotchWingNeed } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
 import { LINE_PRIORITY } from "../../features/plugin-kernel/islandContributions";
@@ -113,7 +113,8 @@ export function IslandApp() {
     growWidth: grow?.width ?? 0,
   });
   const collapsedIslandHeight = grownCollapsedHeight(grow?.height ?? COLLAPSED_ISLAND_HEIGHT);
-  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0, settings.notchWingMax);
+  const notchWingNeed = useNotchWingNeed();
+  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0, Math.max(settings.notchWingMax, notchWingNeed ?? 0));
   useIslandTucking({ settings, navigation });
 
 

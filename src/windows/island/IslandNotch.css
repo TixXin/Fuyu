@@ -152,6 +152,10 @@
   padding-left: var(--space-md);
 }
 
+.island__notch-row .island__notch-wing .island__open-button {
+  padding-left: 0;
+}
+
 .island__notch-gap {
   flex: 0 0 calc(var(--island-notch-width) / var(--island-collapsed-scale, 1));
   align-self: stretch;
