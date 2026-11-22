@@ -1,11 +1,10 @@
 import { useId } from "react";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { SettingsRow } from "../../components/settings/SettingsRow";
-import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { useTranslation } from "../../i18n";
 import type { CategoryState, SyncCategory, SyncStatus } from "./api";
 import { SYNC_CATEGORY_ITEMS } from "./syncState";
+import "./SyncCategoriesSection.css";
 
 function stateTone(state: CategoryState): "ok" | "warn" | "error" | "muted" {
   if (state === "ok") return "ok";
@@ -14,18 +13,16 @@ function stateTone(state: CategoryState): "ok" | "warn" | "error" | "muted" {
   return "muted";
 }
 
-function SyncCategoryRow({
+function SyncCategoryTile({
   category,
   state,
   message,
-  folderSet,
   busy,
   onToggle,
 }: {
   category: SyncCategory;
   state: CategoryState;
   message: string | null;
-  folderSet: boolean;
   busy: boolean;
   onToggle: (category: SyncCategory, checked: boolean) => void;
 }) {
@@ -33,38 +30,28 @@ function SyncCategoryRow({
   const text = useTranslation().sync.categories;
   const copy = text.items[category];
   const checked = state !== "off";
-  const showBadge = folderSet && checked;
+  const tone = stateTone(state);
 
   return (
-    <SettingsRow
-      labelFor={id}
-      title={copy.title}
-      description={
-        message ? (
-          <>
-            <span>{copy.description}</span>
-            <span className="sync-category__error">{message}</span>
-          </>
-        ) : (
-          copy.description
-        )
-      }
-      control={
-        <div className="sync-category__control">
-          {showBadge ? (
-            <span className={`sync-badge sync-badge--${stateTone(state)}`}>
-              {text.states[state]}
-            </span>
-          ) : null}
-          <SettingsSwitch
-            id={id}
-            checked={checked}
-            disabled={busy}
-            onChange={(next) => onToggle(category, next)}
-          />
-        </div>
-      }
-    />
+    <div className={`settings-row sync-tile${checked ? " sync-tile--on" : ""}${message ? " sync-tile--error" : ""}`}>
+      <label className="sync-tile__main" htmlFor={id} title={copy.description}>
+        <input
+          id={id}
+          className="sync-tile__box"
+          type="checkbox"
+          checked={checked}
+          disabled={busy}
+          aria-describedby={`${id}-hint`}
+          onChange={(event) => onToggle(category, event.currentTarget.checked)}
+        />
+        <span className="settings-row__text sync-tile__text">
+          <span className="settings-row__title sync-tile__name">{copy.title}</span>
+          <span className="settings-row__description sync-tile__hint" id={`${id}-hint`}>{copy.hint}</span>
+        </span>
+        <span className={`sync-badge sync-badge--${tone}`}>{text.states[state]}</span>
+      </label>
+      {message ? <p className="sync-tile__error" role="alert">{message}</p> : null}
+    </div>
   );
 }
 
@@ -81,24 +68,22 @@ export function SyncCategoriesSection({
   const byCategory = new Map(status.categories.map((entry) => [entry.category, entry]));
 
   return (
-    <SettingsGroup
-      title={text.groupTitle}
-      footer={<SettingsFootnote text={text.footnote} />}
-    >
-      {SYNC_CATEGORY_ITEMS.map((category) => {
-        const current = byCategory.get(category);
-        return (
-          <SyncCategoryRow
-            key={category}
-            category={category}
-            state={current?.state ?? "waiting"}
-            message={current?.message ?? null}
-            folderSet={status.folder !== null}
-            busy={busy}
-            onToggle={onToggle}
-          />
-        );
-      })}
+    <SettingsGroup title={text.groupTitle} footer={<SettingsFootnote text={text.footnote} />}>
+      <div className="sync-tiles">
+        {SYNC_CATEGORY_ITEMS.map((category) => {
+          const current = byCategory.get(category);
+          return (
+            <SyncCategoryTile
+              key={category}
+              category={category}
+              state={current?.state ?? "waiting"}
+              message={current?.message ?? null}
+              busy={busy}
+              onToggle={onToggle}
+            />
+          );
+        })}
+      </div>
     </SettingsGroup>
   );
 }

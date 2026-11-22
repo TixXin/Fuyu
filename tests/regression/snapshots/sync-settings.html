@@ -21,15 +21,31 @@
                   <span>
                     本机改动 5 秒后自动推送，每 5 分钟及打开本页时自动拉取合并。
                   </span>
-                  <span class="sync-status__meta">
-                    上次同步：2026年11月15日 09:30
+                  <span class="sync-status__meta sync-status__facts">
+                    <span>
+                      上次同步：2026年11月15日 09:30
+                    </span>
+                    <span>
+                      2 台设备
+                    </span>
+                    <span class="sync-status__location" title="/Users/demo/iCloud/FuyuSync">
+                      /Users/demo/iCloud/FuyuSync
+                    </span>
+                    <span>
+                      已加密
+                    </span>
                   </span>
                 </div>
                 <div class="sync-status__actions">
-                  <button class="sync-status__button" type="button">
+                  <button class="sync-status__button sync-status__button--primary" type="button">
                     <svg aria-hidden="true" class="lucide lucide-refresh-cw" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
                     <span>
                       立即同步
+                    </span>
+                  </button>
+                  <button aria-expanded="true" class="sync-status__button sync-status__manage" type="button">
+                    <span>
+                      收起
                     </span>
                   </button>
                 </div>
@@ -94,6 +110,121 @@
           <div class="settings-group__footer">
             <p class="settings-footnote">
               请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              同步什么
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="sync-tiles">
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id1_" title="按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。">
+                  <input aria-describedby="_id1_-hint" checked="" class="sync-tile__box" id="_id1_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      待办、每日笔记与归档
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id1_-hint">
+                      按条合并，同一天两边都改留冲突副本
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id2_" title="剪贴板里的常用语与 AI 提示词模板。">
+                  <input aria-describedby="_id2_-hint" checked="" class="sync-tile__box" id="_id2_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      常用短语
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id2_-hint">
+                      常用语和 AI 提示词模板
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on sync-tile--error">
+                <label class="sync-tile__main" for="_id3_" title="剪贴板收藏的常用网址与排列顺序。">
+                  <input aria-describedby="_id3_-hint" checked="" class="sync-tile__box" id="_id3_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      链接书签
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id3_-hint">
+                      收藏的网址和顺序
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--error">
+                    出错
+                  </span>
+                </label>
+                <p class="sync-tile__error" role="alert">
+                  links.json 无法读取：权限不足
+                </p>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id4_" title="按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。">
+                  <input aria-describedby="_id4_-hint" checked="" class="sync-tile__box" id="_id4_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      通用与功能设置
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id4_-hint">
+                      按白名单同步配色、行为和偏好
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id5_" title="已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。">
+                  <input aria-describedby="_id5_-hint" checked="" class="sync-tile__box" id="_id5_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      我的主题预设
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id5_-hint">
+                      去掉显示器、尺寸这些本机的字段
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id6_" title="默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。">
+                  <input aria-describedby="_id6_-hint" class="sync-tile__box" id="_id6_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      剪贴板收藏（仅文字）
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id6_-hint">
+                      只同步收藏的纯文本，图片和打码的留在本机
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              所有凭据与 API 密钥、普通剪贴板历史和图片、截图文件、文件中转及窗口位置/快捷键等本机项永不离开本机。
             </p>
           </div>
         </section>
@@ -198,285 +329,144 @@
         <section class="settings-group">
           <div class="settings-group__header">
             <h2 class="settings-group__title">
-              同步内容
-            </h2>
-          </div>
-          <div class="settings-group__card">
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id1_">
-                    待办、每日笔记与归档
-                  </label>
-                  <span class="settings-row__description">
-                    按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id1_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id2_">
-                    常用短语
-                  </label>
-                  <span class="settings-row__description">
-                    剪贴板里的常用语与 AI 提示词模板。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id2_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id3_">
-                    链接书签
-                  </label>
-                  <span class="settings-row__description">
-                    剪贴板收藏的常用网址与排列顺序。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id3_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id4_">
-                    通用与功能设置
-                  </label>
-                  <span class="settings-row__description">
-                    按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id4_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id5_">
-                    我的主题预设
-                  </label>
-                  <span class="settings-row__description">
-                    已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id5_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id6_">
-                    剪贴板收藏（仅文字）
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="settings-switch">
-                      <input id="_id6_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="settings-group__footer">
-            <p class="settings-footnote">
-              所有凭据与 API 密钥、普通剪贴板历史和图片、截图文件、文件中转及窗口位置/快捷键等本机项永不离开本机。
-            </p>
-          </div>
-        </section>
-        <section class="settings-group">
-          <div class="settings-group__header">
-            <h2 class="settings-group__title">
               可选同步
             </h2>
           </div>
           <div class="settings-group__card">
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id7_">
-                    翻译服务与模型选择
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。
-                  </span>
+            <details class="settings-advanced">
+              <summary class="settings-advanced__toggle">
+                <svg aria-hidden="true" class="lucide lucide-chevron-right settings-advanced__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                已开 1 项（共 7 项）
+              </summary>
+              <div class="settings-advanced__body">
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id7_">
+                        翻译服务与模型选择
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id7_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id7_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id8_">
+                        PrtSc 接管与录屏参数
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id8_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id9_">
+                        Agent 提示音量与音效包
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id9_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id10_">
+                        手机推送开关与通道
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id10_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id11_">
+                        邮箱账号列表（不含密码）
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id11_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id12_">
+                        收起条项目、展开页面的顺序和自定义面板
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：收起条和展开页面可能包含仅在某一台电脑安装的第三方插件或平台专属项。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id12_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id13_">
+                        更新通道（稳定版 / 测试版）
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id13_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id8_">
-                    PrtSc 接管与录屏参数
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id8_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id9_">
-                    Agent 提示音量与音效包
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id9_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id10_">
-                    手机推送开关与通道
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id10_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id11_">
-                    邮箱账号列表（不含密码）
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id11_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id12_">
-                    收起条项目、展开页面的顺序和自定义面板
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：收起条和展开页面可能包含仅在某一台电脑安装的第三方插件或平台专属项。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id12_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id13_">
-                    更新通道（稳定版 / 测试版）
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id13_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
+            </details>
           </div>
           <div class="settings-group__footer">
             <p class="settings-footnote">
@@ -687,15 +677,31 @@
                   <span>
                     本机改动 5 秒后自动推送，每 5 分钟及打开本页时自动拉取合并。
                   </span>
-                  <span class="sync-status__meta">
-                    上次同步：2026年11月15日 09:30
+                  <span class="sync-status__meta sync-status__facts">
+                    <span>
+                      上次同步：2026年11月15日 09:30
+                    </span>
+                    <span>
+                      2 台设备
+                    </span>
+                    <span class="sync-status__location" title="/Users/demo/iCloud/FuyuSync">
+                      /Users/demo/iCloud/FuyuSync
+                    </span>
+                    <span>
+                      已加密
+                    </span>
                   </span>
                 </div>
                 <div class="sync-status__actions">
-                  <button class="sync-status__button" type="button">
+                  <button class="sync-status__button sync-status__button--primary" type="button">
                     <svg aria-hidden="true" class="lucide lucide-refresh-cw" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
                     <span>
                       立即同步
+                    </span>
+                  </button>
+                  <button aria-expanded="true" class="sync-status__button sync-status__manage" type="button">
+                    <span>
+                      收起
                     </span>
                   </button>
                 </div>
@@ -760,6 +766,121 @@
           <div class="settings-group__footer">
             <p class="settings-footnote">
               请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              同步什么
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="sync-tiles">
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id14_" title="按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。">
+                  <input aria-describedby="_id14_-hint" checked="" class="sync-tile__box" id="_id14_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      待办、每日笔记与归档
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id14_-hint">
+                      按条合并，同一天两边都改留冲突副本
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id15_" title="剪贴板里的常用语与 AI 提示词模板。">
+                  <input aria-describedby="_id15_-hint" checked="" class="sync-tile__box" id="_id15_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      常用短语
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id15_-hint">
+                      常用语和 AI 提示词模板
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on sync-tile--error">
+                <label class="sync-tile__main" for="_id16_" title="剪贴板收藏的常用网址与排列顺序。">
+                  <input aria-describedby="_id16_-hint" checked="" class="sync-tile__box" id="_id16_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      链接书签
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id16_-hint">
+                      收藏的网址和顺序
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--error">
+                    出错
+                  </span>
+                </label>
+                <p class="sync-tile__error" role="alert">
+                  links.json 无法读取：权限不足
+                </p>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id17_" title="按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。">
+                  <input aria-describedby="_id17_-hint" checked="" class="sync-tile__box" id="_id17_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      通用与功能设置
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id17_-hint">
+                      按白名单同步配色、行为和偏好
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id18_" title="已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。">
+                  <input aria-describedby="_id18_-hint" checked="" class="sync-tile__box" id="_id18_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      我的主题预设
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id18_-hint">
+                      去掉显示器、尺寸这些本机的字段
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+              <div class="settings-row sync-tile sync-tile--on">
+                <label class="sync-tile__main" for="_id19_" title="默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。">
+                  <input aria-describedby="_id19_-hint" class="sync-tile__box" id="_id19_" type="checkbox">
+                  <span class="settings-row__text sync-tile__text">
+                    <span class="settings-row__title sync-tile__name">
+                      剪贴板收藏（仅文字）
+                    </span>
+                    <span class="settings-row__description sync-tile__hint" id="_id19_-hint">
+                      只同步收藏的纯文本，图片和打码的留在本机
+                    </span>
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    已同步
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              所有凭据与 API 密钥、普通剪贴板历史和图片、截图文件、文件中转及窗口位置/快捷键等本机项永不离开本机。
             </p>
           </div>
         </section>
@@ -856,285 +977,144 @@
         <section class="settings-group">
           <div class="settings-group__header">
             <h2 class="settings-group__title">
-              同步内容
-            </h2>
-          </div>
-          <div class="settings-group__card">
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id14_">
-                    待办、每日笔记与归档
-                  </label>
-                  <span class="settings-row__description">
-                    按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id14_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id15_">
-                    常用短语
-                  </label>
-                  <span class="settings-row__description">
-                    剪贴板里的常用语与 AI 提示词模板。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id15_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id16_">
-                    链接书签
-                  </label>
-                  <span class="settings-row__description">
-                    剪贴板收藏的常用网址与排列顺序。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id16_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id17_">
-                    通用与功能设置
-                  </label>
-                  <span class="settings-row__description">
-                    按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id17_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id18_">
-                    我的主题预设
-                  </label>
-                  <span class="settings-row__description">
-                    已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id18_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id19_">
-                    剪贴板收藏（仅文字）
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="settings-switch">
-                      <input id="_id19_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="settings-group__footer">
-            <p class="settings-footnote">
-              所有凭据与 API 密钥、普通剪贴板历史和图片、截图文件、文件中转及窗口位置/快捷键等本机项永不离开本机。
-            </p>
-          </div>
-        </section>
-        <section class="settings-group">
-          <div class="settings-group__header">
-            <h2 class="settings-group__title">
               可选同步
             </h2>
           </div>
           <div class="settings-group__card">
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id20_">
-                    翻译服务与模型选择
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。
-                  </span>
+            <details class="settings-advanced">
+              <summary class="settings-advanced__toggle">
+                <svg aria-hidden="true" class="lucide lucide-chevron-right settings-advanced__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                已开 1 项（共 7 项）
+              </summary>
+              <div class="settings-advanced__body">
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id20_">
+                        翻译服务与模型选择
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id20_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id20_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id21_">
+                        PrtSc 接管与录屏参数
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id21_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id22_">
+                        Agent 提示音量与音效包
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id22_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id23_">
+                        手机推送开关与通道
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id23_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id24_">
+                        邮箱账号列表（不含密码）
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id24_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id25_">
+                        收起条项目、展开页面的顺序和自定义面板
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：收起条和展开页面可能包含仅在某一台电脑安装的第三方插件或平台专属项。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id25_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id26_">
+                        更新通道（稳定版 / 测试版）
+                      </label>
+                      <span class="settings-row__description">
+                        默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id26_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id21_">
-                    PrtSc 接管与录屏参数
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id21_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id22_">
-                    Agent 提示音量与音效包
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id22_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id23_">
-                    手机推送开关与通道
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id23_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id24_">
-                    邮箱账号列表（不含密码）
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id24_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id25_">
-                    收起条项目、展开页面的顺序和自定义面板
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：收起条和展开页面可能包含仅在某一台电脑安装的第三方插件或平台专属项。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id25_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id26_">
-                    更新通道（稳定版 / 测试版）
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id26_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
+            </details>
           </div>
           <div class="settings-group__footer">
             <p class="settings-footnote">
@@ -1321,6 +1301,101 @@
           <div class="settings-group__footer">
             <p class="settings-footnote">
               多台电脑之间只需指向同一个 WebDAV 目录、云盘同步目录或局域网共享目录即可协同工作。
+            </p>
+          </div>
+        </section>
+      </div>
+      <div id="guide" style="width: 340px; display: grid; gap: 14px">
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              设置跨设备同步
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="sync-guide">
+              <ol class="sync-guide__steps">
+                <li class="settings-row sync-guide__step sync-guide__step--done">
+                  <div class="sync-guide__head">
+                    <span aria-hidden="true" class="sync-guide__num">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <div class="settings-row__main">
+                      <div class="settings-row__text">
+                        <span class="settings-row__title">
+                          选同步方式
+                        </span>
+                        <span class="settings-row__description">
+                          同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV
+                        </span>
+                      </div>
+                      <div class="settings-row__control">
+                        <div aria-label="同步通道" class="settings-choice" role="group">
+                          <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                            同步文件夹
+                          </button>
+                          <button aria-pressed="false" class="settings-choice__option" type="button">
+                            WebDAV
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li aria-current="step" class="settings-row sync-guide__step sync-guide__step--current">
+                  <div class="sync-guide__head">
+                    <span aria-hidden="true" class="sync-guide__num">
+                      2
+                    </span>
+                    <div class="settings-row__main">
+                      <div class="settings-row__text">
+                        <span class="settings-row__title">
+                          选一个文件夹
+                        </span>
+                        <span class="settings-row__description">
+                          空文件夹，或别的电脑已经在用的 fuyu-sync 的上一级
+                        </span>
+                      </div>
+                      <div class="settings-row__control">
+                        <button class="settings-link-button" type="button">
+                          选择文件夹…
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="settings-row sync-guide__step sync-guide__step--next">
+                  <div class="sync-guide__head">
+                    <span aria-hidden="true" class="sync-guide__num">
+                      3
+                    </span>
+                    <div class="settings-row__main">
+                      <div class="settings-row__text">
+                        <span class="settings-row__title">
+                          要不要端到端加密
+                        </span>
+                        <span class="settings-row__description">
+                          网盘看不到内容；忘了口令又没留恢复密钥就找不回来。打开的话，设好同步后接着设口令
+                        </span>
+                      </div>
+                      <div class="settings-row__control">
+                        <span class="settings-switch">
+                          <input aria-label="要不要端到端加密" id="_id27_" role="switch" type="checkbox">
+                          <span aria-hidden="true" class="settings-switch__track"></span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ol>
+              <p class="sync-guide__later">
+                设好后在这里选同步什么
+              </p>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。
             </p>
           </div>
         </section>

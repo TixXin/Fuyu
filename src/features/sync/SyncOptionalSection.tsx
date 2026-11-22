@@ -1,3 +1,4 @@
+import { SettingsAdvanced } from "../../components/settings/SettingsAdvanced";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
@@ -22,19 +23,21 @@ export function SyncOptionalSection({
       title={text.groupTitle}
       footer={<SettingsFootnote text={text.footnote} />}
     >
-      {OPTIONAL_GROUP_ITEMS.map((group) => {
-        const copy = text.items[group];
-        return (
-          <SettingsToggleRow
-            key={group}
-            title={copy.title}
-            description={copy.description}
-            checked={enabled.has(group)}
-            disabled={busy}
-            onChange={(checked) => onToggle(group, checked)}
-          />
-        );
-      })}
+      <SettingsAdvanced label={text.summary(OPTIONAL_GROUP_ITEMS.filter((group) => enabled.has(group)).length, OPTIONAL_GROUP_ITEMS.length)}>
+        {OPTIONAL_GROUP_ITEMS.map((group) => {
+          const copy = text.items[group];
+          return (
+            <SettingsToggleRow
+              key={group}
+              title={copy.title}
+              description={copy.description}
+              checked={enabled.has(group)}
+              disabled={busy}
+              onChange={(checked) => onToggle(group, checked)}
+            />
+          );
+        })}
+      </SettingsAdvanced>
     </SettingsGroup>
   );
 }

@@ -19,6 +19,7 @@ const harness = installSyncSettingsMocks();
 const { calls } = harness;
 
 const { SyncSettingsPage } = await import("../../src/windows/settings/SyncSettingsPage");
+const { renderGuideFixture } = await import("./syncGuideFixture");
 
 const messages: string[] = [];
 const check = (condition: unknown, message: string) => {
@@ -48,6 +49,10 @@ const setInputValue = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event("input", { bubbles: true }));
 };
 
+const overflowing = (root: HTMLElement) => [...root.querySelectorAll<HTMLElement>("*")].filter(
+  (el) => !(el instanceof HTMLInputElement) && el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX !== "hidden" && el.clientWidth > 0,
+);
+
 const groupByTitle = (root: HTMLElement, title: string) =>
   [...root.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.querySelector(".settings-group__title")?.textContent === title);
 
@@ -65,38 +70,33 @@ try {
   const zh = TRANSLATIONS["zh-CN"].sync;
   const en = TRANSLATIONS.en.sync;
 
-  check(wide.textContent?.includes(zh.status.phases.off.headline) && wide.textContent?.includes(zh.backend.folderUnset), "Sync starts off without a pre-filled folder");
-
-  const encGroupInitial = groupByTitle(wide, zh.encryption.groupTitle)!;
-  const openEncInitialBtn = [...encGroupInitial.querySelectorAll<HTMLButtonElement>("button")].find(
-    (btn) => btn.textContent?.includes(zh.encryption.openEnableAction),
-  )!;
+  const guideSteps = [...wide.querySelectorAll<HTMLElement>(".sync-guide__step")];
   check(
-    Boolean(encGroupInitial)
-      && encGroupInitial.textContent?.includes(zh.encryption.badges.off)
-      && openEncInitialBtn.disabled,
-    "End-to-end encryption starts off by default and requires an active backend before enabling",
+    guideSteps.length === 3
+      && guideSteps[0].classList.contains("sync-guide__step--done")
+      && guideSteps[1].getAttribute("aria-current") === "step"
+      && guideSteps[1].textContent?.includes(zh.guide.folderTitle)
+      && wide.textContent?.includes(zh.guide.later),
+    "Without a folder or WebDAV the page shows three setup steps with step 2 current",
+  );
+  check(
+    !groupByTitle(wide, zh.categories.groupTitle)
+      && !groupByTitle(wide, zh.optional.groupTitle)
+      && !groupByTitle(wide, zh.devices.groupTitle)
+      && !groupByTitle(wide, zh.encryption.groupTitle)
+      && !wide.querySelector(".sync-status"),
+    "Before setup, what to sync, optional sync, devices and the encryption group stay hidden",
   );
 
-  const catGroup = groupByTitle(wide, zh.categories.groupTitle)!;
-  const catSwitches = [...catGroup.querySelectorAll<HTMLInputElement>("input[role='switch']")];
-  check(
-    catSwitches.length === 6
-      && catSwitches.slice(0, 5).every((input) => input.checked)
-      && !catSwitches[5].checked
-      && wide.textContent?.includes(zh.categories.items.clipFavorites.title),
-    "Five primary sync categories start enabled while clipboard favorites starts off",
-  );
-
-  const optGroup = groupByTitle(wide, zh.optional.groupTitle)!;
-  const optSwitches = [...optGroup.querySelectorAll<HTMLInputElement>("input[role='switch']")];
-  const optDescs = [...optGroup.querySelectorAll<HTMLElement>(".settings-row__description")].map((el) => el.textContent ?? "");
-  check(optSwitches.length === 7 && optSwitches.every((input) => !input.checked) && optDescs.every((desc) => desc.startsWith("默认关闭：")),
-    "All seven optional sync groups start off and explain why");
+  const wantEncSwitch = guideSteps[2].querySelector<HTMLInputElement>("input[role='switch']")!;
+  check(!wantEncSwitch.checked, "End-to-end encryption starts off in the setup guide");
+  await act(async () => { wantEncSwitch.click(); });
+  await settle();
 
   const webdavChoice = [...wide.querySelectorAll<HTMLButtonElement>(".settings-choice__option")].find((btn) => btn.textContent === zh.backend.methods.webdav)!;
   await act(async () => { webdavChoice.click(); });
   await settle();
+  check(wide.querySelector(".sync-guide__step[aria-current='step']")?.textContent?.includes(zh.guide.webdavTitle), "Choosing WebDAV turns step 2 into the WebDAV form");
 
   const urlInput = wide.querySelector<HTMLInputElement>("#sync-webdav-url")!;
   const userInput = wide.querySelector<HTMLInputElement>("#sync-webdav-username")!;
@@ -122,19 +122,77 @@ try {
   const narrowWebdavChoice = [...narrow.querySelectorAll<HTMLButtonElement>(".settings-choice__option")].find((btn) => btn.textContent === zh.backend.methods.webdav)!;
   await act(async () => { narrowWebdavChoice.click(); });
   await settle();
-  const narrowWebdavOverflow = [...narrow.querySelectorAll<HTMLElement>("*")].filter(
-    (el) => el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX !== "hidden" && el.clientWidth > 0,
-  );
-  check(narrowWebdavOverflow.length === 0 && narrow.scrollWidth <= 340, "WebDAV form fits cleanly inside a 340px narrow container");
+  check(overflowing(narrow).length === 0 && narrow.scrollWidth <= 340, "The WebDAV step of the guide fits cleanly inside a 340px narrow container");
 
   const saveWebdavBtn = [...wide.querySelectorAll<HTMLButtonElement>(".sync-status__button--primary")].find((btn) => btn.textContent?.includes(zh.backend.webdav.saveAction))!;
   await act(async () => { saveWebdavBtn.click(); });
   await settle();
+  await act(async () => { await harness.emitStatus({}); });
+  await settle();
+  const facts = wide.querySelector(".sync-status__facts")?.textContent ?? "";
   check(
     calls.some((call) => call.command === "set_sync_webdav")
-      && passInput.value === ""
-      && wide.textContent?.includes(zh.backend.webdav.activeBadge),
-    "Saving WebDAV enables sync and clears plaintext password from the input",
+      && !wide.querySelector(".sync-guide")
+      && wide.querySelector(".settings-group")?.querySelector(".sync-status")
+      && facts.includes("https://dav.jianguoyun.com/dav/我的坚果云/")
+      && facts.includes(zh.status.devices(2))
+      && facts.includes(zh.status.notEncrypted),
+    "Saving WebDAV leaves the guide and puts the status card first with address, device count and encryption",
+  );
+
+  const encGroup = groupByTitle(wide, zh.encryption.groupTitle)!;
+  check(
+    encGroup.textContent?.includes(zh.encryption.badges.off)
+      && encGroup.textContent?.includes(zh.encryption.warningTitle)
+      && encGroup.textContent?.includes("找不回来")
+      && encGroup.querySelector("#sync-enc-passphrase"),
+    "Turning encryption on in the guide opens the passphrase form, with the can't-recover warning, once sync is set up",
+  );
+
+  const catGroup = groupByTitle(wide, zh.categories.groupTitle)!;
+  const tiles = [...catGroup.querySelectorAll<HTMLElement>(".sync-tile")];
+  const tileBoxes = tiles.map((tile) => tile.querySelector<HTMLInputElement>("input[type='checkbox']")!);
+  check(
+    tiles.length === 6
+      && tileBoxes.slice(0, 5).every((input) => input.checked)
+      && !tileBoxes[5].checked
+      && tiles[0].querySelector(".sync-badge")?.textContent === zh.categories.states.ok
+      && tiles[0].querySelector("label")?.title === zh.categories.items.todos.description
+      && tiles[0].querySelector(".sync-tile__hint")?.textContent === zh.categories.items.todos.hint,
+    "What to sync is six checkbox tiles: five on, clipboard favorites off, with a badge, a one-line hint and the full description on hover",
+  );
+  check(getComputedStyle(catGroup.querySelector(".sync-tiles")!).gridTemplateColumns.split(" ").length === 2, "Tiles sit in two columns in a wide window");
+  const narrowTiles = narrow.querySelector<HTMLElement>(".sync-tiles");
+  check(narrowTiles && getComputedStyle(narrowTiles).gridTemplateColumns.split(" ").length === 1, "Tiles fall back to one column in a narrow window");
+
+  const optGroup = groupByTitle(wide, zh.optional.groupTitle)!;
+  const optFold = optGroup.querySelector<HTMLDetailsElement>("details.settings-advanced")!;
+  const optSwitches = [...optGroup.querySelectorAll<HTMLInputElement>("input[role='switch']")];
+  const optDescs = [...optGroup.querySelectorAll<HTMLElement>(".settings-row__description")].map((el) => el.textContent ?? "");
+  check(
+    !optFold.open
+      && optFold.querySelector("summary")?.textContent === zh.optional.summary(0, 7)
+      && optSwitches.length === 7
+      && optSwitches.every((input) => !input.checked)
+      && optDescs.every((desc) => desc.startsWith("默认关闭：")),
+    "All seven optional groups start off, folded away under a count of how many are on",
+  );
+
+  const narrowManage = narrow.querySelector<HTMLButtonElement>(".sync-status__manage")!;
+  await act(async () => { narrowManage.click(); });
+  await settle();
+  check(narrow.querySelector("#sync-webdav-url") && overflowing(narrow).length === 0 && narrow.scrollWidth <= 340, "The set-up page with Change… open fits cleanly inside a 340px narrow container");
+
+  const manageBtn = wide.querySelector<HTMLButtonElement>(".sync-status__manage")!;
+  check(manageBtn.getAttribute("aria-expanded") === "false" && !groupByTitle(wide, zh.backend.groupTitle), "The sync method stays folded behind Change… once set up");
+  await act(async () => { manageBtn.click(); });
+  await settle();
+  const reopenedPass = wide.querySelector<HTMLInputElement>("#sync-webdav-password");
+  check(
+    manageBtn.getAttribute("aria-expanded") === "true"
+      && wide.textContent?.includes(zh.backend.webdav.activeBadge)
+      && reopenedPass?.value === "",
+    "Change… opens the sync method with WebDAV marked in use and no plaintext password kept",
   );
 
   await act(async () => {
@@ -160,8 +218,12 @@ try {
   const chooseBtn = [...wide.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((btn) => btn.textContent === zh.backend.chooseFolder)!;
   await act(async () => { chooseBtn.click(); });
   await settle();
-  check(wide.querySelector(".sync-folder-path")?.textContent === NEXT_PICKED_FOLDER && wide.textContent?.includes(zh.status.phases.idle.headline),
-    "Picking a folder saves it and switches status to ready");
+  check(
+    wide.querySelector(".sync-folder-path")?.textContent === NEXT_PICKED_FOLDER
+      && wide.textContent?.includes(zh.status.phases.idle.headline)
+      && wide.querySelector(".sync-status__facts")?.textContent?.includes(NEXT_PICKED_FOLDER),
+    "Picking a folder saves it, shows it on the status card and switches status to ready",
+  );
 
   check(wide.textContent?.includes("MacBook Air") && wide.textContent?.includes(zh.devices.thisDevice) && wide.textContent?.includes(zh.devices.stale),
     "Synced devices show this computer and flag devices inactive over 180 days");
@@ -174,10 +236,38 @@ try {
   await act(async () => { syncNowBtn.click(); });
   check(calls.some((call) => call.command === "sync_now"), "Sync now triggers an immediate round");
 
-  await act(async () => { optSwitches[0].click(); });
+  const optSwitchesNow = [...groupByTitle(wide, zh.optional.groupTitle)!.querySelectorAll<HTMLInputElement>("input[role='switch']")];
+  await act(async () => { optSwitchesNow[0].click(); });
   await settle();
   const lastConfigCall = [...calls].reverse().find((call) => call.command === "set_sync_config");
-  check(JSON.stringify(lastConfigCall?.args.optionalGroups) === JSON.stringify(["translationProvider"]), "Turning an optional group on sends its id to set_sync_config");
+  check(
+    JSON.stringify(lastConfigCall?.args.optionalGroups) === JSON.stringify(["translationProvider"])
+      && groupByTitle(wide, zh.optional.groupTitle)?.querySelector("summary")?.textContent === zh.optional.summary(1, 7),
+    "Turning an optional group on sends its id to set_sync_config and updates the folded count",
+  );
+
+  const tileBoxesNow = [...groupByTitle(wide, zh.categories.groupTitle)!.querySelectorAll<HTMLInputElement>(".sync-tile input[type='checkbox']")];
+  await act(async () => { tileBoxesNow[5].click(); });
+  await settle();
+  const lastCategories = [...calls].reverse().find((call) => call.command === "set_sync_config")?.args.categories;
+  check(
+    JSON.stringify(lastCategories) === JSON.stringify(["todos", "snippets", "links", "settings", "presets", "clipFavorites"]),
+    "Ticking a tile turns that category on through set_sync_config",
+  );
+
+  await act(async () => {
+    const cur = harness.getStatus();
+    await harness.emitStatus({
+      categories: cur.categories.map((entry) => (entry.category === "links" ? { ...entry, state: "error", message: "links.json 无法读取：权限不足" } : entry)),
+    });
+  });
+  await settle();
+  const linksTile = [...wide.querySelectorAll<HTMLElement>(".sync-tile")].find((tile) => tile.textContent?.includes(zh.categories.items.links.title));
+  check(
+    linksTile?.querySelector(".sync-tile__error[role='alert']")?.textContent === "links.json 无法读取：权限不足"
+      && linksTile.querySelector(".sync-badge--error")?.textContent === zh.categories.states.error,
+    "A category error shows its full message under the tile with an error badge",
+  );
 
   await act(async () => {
     const cur = harness.getStatus();
@@ -196,18 +286,6 @@ try {
   await settle();
   check(calls.some((call) => call.command === "confirm_sync_deletions") && !wide.querySelector(".sync-confirm"),
     "Confirming deletions calls confirm_sync_deletions and clears the brake");
-
-  const encGroup = groupByTitle(wide, zh.encryption.groupTitle)!;
-  const openEncBtn = [...encGroup.querySelectorAll<HTMLButtonElement>("button")].find(
-    (btn) => btn.textContent?.includes(zh.encryption.openEnableAction),
-  )!;
-  await act(async () => { openEncBtn.click(); });
-  await settle();
-  check(
-    encGroup.textContent?.includes(zh.encryption.warningTitle)
-      && encGroup.textContent?.includes("找不回来"),
-    "Opening E2EE setup prominently warns that forgotten passphrases cannot be recovered",
-  );
 
   const encPassInput = encGroup.querySelector<HTMLInputElement>("#sync-enc-passphrase")!;
   const encConfirmInput = encGroup.querySelector<HTMLInputElement>("#sync-enc-confirm")!;
@@ -286,6 +364,7 @@ try {
   await settle();
   check(
     wide.textContent?.includes(en.optional.groupTitle)
+      && wide.textContent?.includes(en.categories.items.todos.hint)
       && wide.textContent?.includes("Off by default:")
       && wide.textContent?.includes(en.encryption.groupTitle)
       && wide.textContent?.includes(en.help.items.nutstoreWebdav.title),
@@ -299,10 +378,16 @@ try {
   });
   await settle();
 
-  const narrowOverflow = [...narrow.querySelectorAll<HTMLElement>("*")].filter(
-    (el) => el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX !== "hidden" && el.clientWidth > 0,
-  );
-  check(narrowOverflow.length === 0 && narrow.scrollWidth <= 340, "Nothing overflows horizontally in a 340px narrow container");
+  check(overflowing(narrow).length === 0 && narrow.scrollWidth <= 340, "Nothing overflows horizontally in a 340px narrow container");
+
+  const guideFixture = document.createElement("div");
+  guideFixture.id = "guide";
+  guideFixture.style.cssText = "width: 340px; display: grid; gap: 14px;";
+  wide.parentElement!.append(guideFixture);
+  await act(async () => { renderGuideFixture(guideFixture, harness.getStatus()); });
+  await settle();
+  check(guideFixture.querySelectorAll(".sync-guide__step").length === 3 && overflowing(guideFixture).length === 0 && guideFixture.scrollWidth <= 340,
+    "The setup guide fits a 340px narrow container");
 
   results.textContent = messages.join("\n");
   document.documentElement.dataset.testResult = "passed";
