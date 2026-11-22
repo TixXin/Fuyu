@@ -7,7 +7,6 @@ export type SettingsSoundsText = {
   volume: string;
   pack: string;
   builtinPack: string;
-  eventsTitle: string;
   events: Record<SoundEvent, { title: string; hint: string }>;
   preview: string;
   quietTitle: string;
@@ -43,7 +42,6 @@ export const zhCN: SettingsSoundsText = {
   volume: "音量",
   pack: "使用的音效",
   builtinPack: "拇指琴（内置）",
-  eventsTitle: "事件",
   events: {
     start: { title: "会话开始", hint: "新的 Claude Code 或 Codex 会话" },
     complete: { title: "任务完成", hint: "Agent 完成了这一轮回复" },
@@ -90,7 +88,6 @@ export const en: SettingsSoundsText = {
   volume: "Volume",
   pack: "Sounds to use",
   builtinPack: "Thumb piano (built in)",
-  eventsTitle: "Events",
   events: {
     start: { title: "Session starts", hint: "A new Claude Code or Codex session" },
     complete: { title: "Task done", hint: "The agent finished its turn" },

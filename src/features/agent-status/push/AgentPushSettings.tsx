@@ -13,13 +13,15 @@ import { ccConnectReason } from "../../../lib/cc-connect/service";
 import { deleteBarkKey, hasBarkKey, saveBarkKey, sendBarkPush } from "./api";
 import { CcConnectPushTargets } from "./CcConnectPushTargets";
 import { PUSH_GROUP, sendCcConnect } from "./sendPush";
-import { AGENT_PUSH_AWAY_MINUTES, AGENT_PUSH_CHANNELS, AGENT_PUSH_EVENTS, LOCAL_HOST, type AgentPushChannel } from "./storage";
+import { AGENT_PUSH_AWAY_MINUTES, AGENT_PUSH_CHANNELS, LOCAL_HOST, type AgentPushChannel } from "./storage";
 import { isMacOS } from "../../../lib/platform";
 import { useAgentPushSettings } from "./useAgentPushSettings";
 import { useCcConnectTargets } from "./useCcConnectTargets";
 
-export function AgentPushSettings() {
-  const text = useTranslation().settings.agent.push;
+export function AgentPushSettings({ onShowPage }: { onShowPage?: (page: "agentAlerts") => void }) {
+  const t = useTranslation();
+  const text = t.settings.agent.push;
+  const table = t.settings.agentNotice.table;
   const errorText = useErrorText();
   const [settings, setSettings] = useAgentPushSettings();
   const [keySaved, setKeySaved] = useState<boolean | null>(null);
@@ -125,15 +127,13 @@ export function AgentPushSettings() {
               />
             </>
           )}
-          {AGENT_PUSH_EVENTS.map((event) => (
-            <SettingsToggleRow
-              key={event}
+          {onShowPage ? (
+            <SettingsRow
               indent
-              title={text.events[event]}
-              checked={settings.events[event]}
-              onChange={(on) => setSettings({ ...settings, events: { ...settings.events, [event]: on } })}
+              title={table.pushMoved}
+              control={<SettingsLinkButton onClick={() => onShowPage("agentAlerts")}>{table.openTable}</SettingsLinkButton>}
             />
-          ))}
+          ) : null}
           <SettingsRow
             indent
             title={text.away}

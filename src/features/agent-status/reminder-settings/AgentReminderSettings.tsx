@@ -5,23 +5,39 @@ import { activeTone } from "../../../lib/theme/themeMode";
 import { useSystemDark } from "../../../lib/theme/useResolvedTheme";
 import { agentNoticeDefaults } from "../agentNoticeDefaults";
 import { islandHasNotch } from "../api";
+import { useAgentPushSettings } from "../push/useAgentPushSettings";
+import type { AgentSoundEvent } from "../sounds/events";
 import { previewAgentSound } from "../sounds/player";
 import { useAgentSoundSettings } from "../sounds/useAgentSoundSettings";
+import { EventTable, type AlertChannelPage } from "./EventTable";
 import { NoticeLookGroups } from "./NoticeLookGroups";
+import { NoticeStayGroup } from "./NoticeStayGroup";
 import { NoticePreviewStage } from "./NoticePreviewStage";
 import { PREVIEW_SOUND, focusedEvent, type PreviewEvent } from "./previewEvents";
 import { previewSamples } from "./previewSamples";
-import { ReminderEventRows } from "./ReminderEventRows";
 import { useIslandTest } from "./useIslandTest";
 import { useNoticePlayback } from "./useNoticePlayback";
 import "./AgentReminderSettings.css";
 
-export function AgentReminderSettings({ settings, onSettingsChange }: { settings: IslandSettings; onSettingsChange: (settings: IslandSettings) => void }) {
+export type ReminderView = "events" | "look";
+
+export function AgentReminderSettings({
+  view,
+  settings,
+  onSettingsChange,
+  onShowPage,
+}: {
+  view: ReminderView;
+  settings: IslandSettings;
+  onSettingsChange: (settings: IslandSettings) => void;
+  onShowPage?: (page: AlertChannelPage) => void;
+}) {
   const t = useTranslation();
   const [event, setEvent] = useState<PreviewEvent>("approval");
   const [flash, setFlash] = useState(0);
   const [notch, setNotch] = useState(false);
-  const [sounds] = useAgentSoundSettings();
+  const [sounds, setSounds] = useAgentSoundSettings();
+  const [push, setPush] = useAgentPushSettings();
   const tone = activeTone(settings.themeMode, useSystemDark());
 
   useEffect(() => {
@@ -37,12 +53,12 @@ export function AgentReminderSettings({ settings, onSettingsChange }: { settings
   }, []);
 
   const audible = (name: PreviewEvent) => sounds.enabled && sounds.events[PREVIEW_SOUND[name]] && sounds.volume > 0;
-  const audition = (name: PreviewEvent) => void previewAgentSound(PREVIEW_SOUND[name], sounds.pack, sounds.volume);
+  const play = (sound: AgentSoundEvent) => void previewAgentSound(sound, sounds.pack, sounds.volume);
   const playback = useNoticePlayback({
     event,
     settings,
     onSound: () => {
-      if (audible(event)) audition(event);
+      if (audible(event)) play(PREVIEW_SOUND[event]);
     },
   });
 
@@ -85,8 +101,25 @@ export function AgentReminderSettings({ settings, onSettingsChange }: { settings
         islandTest={islandTest}
         onTest={() => islandTest.run(event, samples)}
       />
-      <ReminderEventRows settings={settings} event={event} onUpdate={update} onSelect={select} onAudition={audition} />
-      <NoticeLookGroups settings={settings} event={event} tone={tone} notch={notch} onUpdate={update} onReset={reset} />
+      {view === "events" ? (
+        <EventTable
+          settings={settings}
+          event={event}
+          sounds={sounds}
+          push={push}
+          onUpdate={update}
+          onSounds={(events) => setSounds((current) => ({ ...current, events }))}
+          onPush={(events) => setPush((current) => ({ ...current, events }))}
+          onSelect={select}
+          onAudition={play}
+          onShowPage={onShowPage}
+        />
+      ) : (
+        <>
+          <NoticeStayGroup settings={settings} event={event} onUpdate={update} onSelect={select} />
+          <NoticeLookGroups settings={settings} event={event} tone={tone} notch={notch} onUpdate={update} onReset={reset} />
+        </>
+      )}
     </div>
   );
 }

@@ -1,24 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import { Play } from "lucide-react";
 import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
-import { SettingsSwitch } from "../../../components/settings/SettingsSwitch";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useLocale, useTranslation } from "../../../i18n";
 import { listSoundPacks, soundPackName, type SoundPack } from "./api";
-import { AGENT_SOUND_EVENTS } from "./events";
 import { forgetSoundPacks, previewAgentSound } from "./player";
 import { SoundPacksGroup } from "./SoundPacksGroup";
 import { BUILTIN_PACK, DEFAULT_AGENT_SOUND_SETTINGS, type AgentSoundSettings } from "./storage";
 import { useAgentSoundSettings } from "./useAgentSoundSettings";
 import "./SoundSettingsSection.css";
 
-export function SoundSettingsSection() {
+export function SoundSettingsSection({ onShowPage }: { onShowPage?: (page: "agentAlerts") => void }) {
   const t = useTranslation();
+  const table = t.settings.agentNotice.table;
   const { locale } = useLocale();
   const text = t.settings.sounds;
   const [settings, setSettings] = useAgentSoundSettings();
@@ -79,33 +77,13 @@ export function SoundSettingsSection() {
             />
           </>
         )}
+        {onShowPage ? (
+          <SettingsRow
+            title={table.soundsMoved}
+            control={<SettingsLinkButton onClick={() => onShowPage("agentAlerts")}>{table.openTable}</SettingsLinkButton>}
+          />
+        ) : null}
       </SettingsGroup>
-
-      {settings.enabled && (
-        <SettingsGroup title={text.eventsTitle}>
-          {AGENT_SOUND_EVENTS.map((event) => (
-            <SettingsRow
-              key={event}
-              title={text.events[event].title}
-              description={text.events[event].hint}
-              control={
-                <>
-                  <SettingsLinkButton onClick={() => void previewAgentSound(event, packValue, settings.volume)}>
-                    <Play size={12} strokeWidth={2.4} aria-hidden="true" />
-                    {text.preview}
-                  </SettingsLinkButton>
-                  <SettingsSwitch
-                    id={`agent-sound-${event}`}
-                    checked={settings.events[event]}
-                    onChange={(on) => update({ events: { ...settings.events, [event]: on } })}
-                  />
-                </>
-              }
-              labelFor={`agent-sound-${event}`}
-            />
-          ))}
-        </SettingsGroup>
-      )}
 
       {settings.enabled && (
         <SettingsGroup title={text.quietTitle} footer={<SettingsFootnote text={text.quietFooter} />}>

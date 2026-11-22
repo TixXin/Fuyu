@@ -43,9 +43,25 @@ export type SettingsAgentNoticeText = {
   shortcutsHint: string;
   footer: string;
   eventsTitle: string;
-  eventsFooter: string;
   stayHandled: string;
   audition: (sound: string) => string;
+  stayTitle: string;
+  stayApproval: string;
+  table: {
+    columns: Record<"event" | "island" | "sound" | "push", string>;
+    off: string;
+    turnOn: string;
+    settings: string;
+    volume: (percent: number) => string;
+    na: string;
+    follow: string;
+    twin: Record<"approval" | "question", string>;
+    events: Record<"waiting" | "done" | "failed" | "started" | "ack" | "compact" | "idle" | "quotaLow" | "quotaReset", { title: string; hint: string }>;
+    footer: string;
+    soundsMoved: string;
+    pushMoved: string;
+    openTable: string;
+  };
   preview: {
     label: string;
     events: Record<"approval" | "question" | "yourTurn" | "done" | "failed" | "started" | "stack", string>;
@@ -137,10 +153,36 @@ export const zhCN: SettingsAgentNoticeText = {
   shortcuts: "按钮上显示快捷键",
   shortcutsHint: "窄岛上会自动隐藏",
   footer: "「恢复默认」把这三组、各事件的停留和「开始新一轮时」改回出厂值；弹出开关和「没处理时再提醒」不变。",
-  eventsTitle: "什么时候提醒",
-  eventsFooter: "点一行，上面的预览换成这种提醒。",
+  eventsTitle: "每件事从哪儿提醒你",
   stayHandled: "留到你处理",
   audition: (sound) => `试听：${sound}`,
+  stayTitle: "停留多久",
+  stayApproval: "等你确认的通知",
+  table: {
+    columns: { event: "事件", island: "岛上", sound: "声音", push: "手机" },
+    off: "没开",
+    turnOn: "打开",
+    settings: "设置 ›",
+    volume: (percent) => `音量 ${percent}%`,
+    na: "这个渠道不管这件事",
+    follow: "跟上一行",
+    twin: { approval: "确认", question: "回答" },
+    events: {
+      waiting: { title: "等你确认或回答", hint: "要你允许一个操作，或 Agent 问了你" },
+      done: { title: "完成", hint: "这一轮回复写完了" },
+      failed: { title: "出错", hint: "这一轮失败或接口出错" },
+      started: { title: "开始新一轮", hint: "新会话，或你发了新的提问" },
+      ack: { title: "发出消息", hint: "你给会话发了新的提问" },
+      compact: { title: "上下文快满", hint: "Claude Code 开始压缩上下文" },
+      idle: { title: "闲置等你", hint: "完成 5 分钟后你还没看过" },
+      quotaLow: { title: "额度快用完", hint: "Claude 或 Codex 的 5 小时、7 天用量到提醒线" },
+      quotaReset: { title: "额度已刷新", hint: "到过提醒线的额度重置了" },
+    },
+    footer: "点一行，上面的预览演这件事。「—」是这个渠道不管这件事；声音、手机没开时那一列是灰的。",
+    soundsMoved: "每件事响不响",
+    pushMoved: "推哪些事",
+    openTable: "在事件总表里改 ›",
+  },
   preview: {
     label: "通知预览",
     events: { approval: "等你确认", question: "提问", yourTurn: "等你回复", done: "完成", failed: "出错", started: "开始新一轮", stack: "多个会话" },
@@ -159,9 +201,9 @@ export const zhCN: SettingsAgentNoticeText = {
     },
     shrunk: (percent) => `缩小到 ${percent}%`,
     hidden: {
-      waiting: "「等待你确认或回答时」已关，这种情况不弹出",
-      completed: "「会话完成时」已关，这种情况不弹出",
-      failed: "「会话出错时」已关，这种情况不弹出",
+      waiting: "「等你确认或回答」的岛上提醒已关，这种情况不弹出",
+      completed: "「完成」的岛上提醒已关，这种情况不弹出",
+      failed: "「出错」的岛上提醒已关，这种情况不弹出",
       title: "开始新一轮不弹出，只在收起条显示标题",
       none: "开始新一轮什么都不显示",
     },
@@ -245,10 +287,36 @@ export const en: SettingsAgentNoticeText = {
   shortcuts: "Show shortcuts on buttons",
   shortcutsHint: "Hidden automatically on a narrow island",
   footer: "Reset to default restores these three groups, how long each event stays and \"When a new turn starts\"; the pop-up switches and \"Remind again\" stay as they are.",
-  eventsTitle: "When to notify",
-  eventsFooter: "Click a row to see that notice in the preview above.",
+  eventsTitle: "Where each event reaches you",
   stayHandled: "Stays until handled",
   audition: (sound) => `Play: ${sound}`,
+  stayTitle: "How long notices stay",
+  stayApproval: "Approval requests",
+  table: {
+    columns: { event: "Event", island: "Island", sound: "Sound", push: "Phone" },
+    off: "Off",
+    turnOn: "Turn on",
+    settings: "Settings ›",
+    volume: (percent) => `Volume ${percent}%`,
+    na: "This channel doesn't cover this event",
+    follow: "Same as above",
+    twin: { approval: "Approve", question: "Answer" },
+    events: {
+      waiting: { title: "Needs approval or an answer", hint: "It wants to run something, or the agent asked you" },
+      done: { title: "Finished", hint: "The reply for this turn is done" },
+      failed: { title: "Failed", hint: "The turn failed or the API returned an error" },
+      started: { title: "New turn", hint: "A new session, or you sent a new prompt" },
+      ack: { title: "Message sent", hint: "You sent the session a new prompt" },
+      compact: { title: "Context almost full", hint: "Claude Code starts compacting the context" },
+      idle: { title: "Idle, waiting for you", hint: "Finished 5 minutes ago and you haven't looked" },
+      quotaLow: { title: "Quota running low", hint: "Claude or Codex 5-hour or 7-day usage reached the alert line" },
+      quotaReset: { title: "Quota reset", hint: "A quota that reached the alert line was reset" },
+    },
+    footer: "Click a row to play that event in the preview above. A dash means the channel doesn't cover it; a column is greyed out while sound or phone push is off.",
+    soundsMoved: "Which events play a sound",
+    pushMoved: "Which events are pushed",
+    openTable: "Change in the event table ›",
+  },
   preview: {
     label: "Notice preview",
     events: { approval: "Approval", question: "Question", yourTurn: "Your turn", done: "Finished", failed: "Failed", started: "New turn", stack: "Several" },
@@ -267,9 +335,9 @@ export const en: SettingsAgentNoticeText = {
     },
     shrunk: (percent) => `Shown at ${percent}%`,
     hidden: {
-      waiting: "\"When it waits for your approval or answer\" is off, so nothing pops up here",
-      completed: "\"When a session finishes\" is off, so nothing pops up here",
-      failed: "\"When a session fails\" is off, so nothing pops up here",
+      waiting: "The island alert for \"Needs approval or an answer\" is off, so nothing pops up here",
+      completed: "The island alert for \"Finished\" is off, so nothing pops up here",
+      failed: "The island alert for \"Failed\" is off, so nothing pops up here",
       title: "A new turn doesn't pop up; the collapsed bar shows its title",
       none: "A new turn shows nothing",
     },

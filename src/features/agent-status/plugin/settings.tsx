@@ -8,7 +8,7 @@ import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
 import { ShortcutReferenceGroup } from "../../../components/settings/ShortcutReferenceGroup";
 import { shortcutReferences, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
-import { AgentAlertsSettingsPage } from "../AgentAlertsSettingsPage";
+import { AgentAlertsSettingsPage, type AgentAlertsTab, type AlertsPageLink } from "../AgentAlertsSettingsPage";
 import { AgentConnectSettingsPage } from "../AgentConnectSettingsPage";
 import { AgentRemoteHostsSettings } from "../AgentRemoteHostsSettings";
 import { AgentSessionsSettingsPage } from "../AgentSessionsSettingsPage";
@@ -21,6 +21,7 @@ import { OWNER } from "./owner.ts";
 type PageProps = {
   settings: IslandSettings;
   onSettingsChange(settings: IslandSettings): void;
+  onShowPage?(page: AlertsPageLink): void;
 };
 
 function ApprovalShortcutOwners() {
@@ -54,9 +55,9 @@ const agentPage = (tab: "agents" | "agentAppearance" | "agentRings") =>
     return <AgentSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
   };
 
-const agentAlertsPage = (tab: "agentAlerts" | "agentPush") =>
-  function AgentAlertsTabPage({ settings, onSettingsChange }: PageProps) {
-    return <AgentAlertsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
+const agentAlertsPage = (tab: AgentAlertsTab) =>
+  function AgentAlertsTabPage({ settings, onSettingsChange, onShowPage }: PageProps) {
+    return <AgentAlertsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onShowPage={onShowPage} />;
   };
 
 addSettingsCategory("agents", agentPage("agents"), OWNER);
@@ -64,8 +65,9 @@ addSettingsCategory("agentAppearance", agentPage("agentAppearance"), OWNER);
 addSettingsCategory("agentRings", agentPage("agentRings"), OWNER);
 addSettingsCategory("agentSessions", ({ settings, onSettingsChange }: PageProps) => <AgentSessionsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
 addSettingsCategory("agentAlerts", agentAlertsPage("agentAlerts"), OWNER);
+addSettingsCategory("agentNoticeLook", agentAlertsPage("agentNoticeLook"), OWNER);
 addSettingsCategory("agentPush", agentAlertsPage("agentPush"), OWNER);
-addSettingsCategory("sounds", () => <SoundSettingsSection />, OWNER);
+addSettingsCategory("sounds", ({ onShowPage }: PageProps) => <SoundSettingsSection onShowPage={onShowPage} />, OWNER);
 addSettingsCategory("agentApprovals", () => <AgentApprovalSettings />, OWNER);
 addSettingsCategory("agentConnect", () => <AgentConnectSettingsPage />, OWNER);
 addSettingsCategory("agentRemote", () => <AgentRemoteHostsSettings />, OWNER);

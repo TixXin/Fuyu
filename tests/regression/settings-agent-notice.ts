@@ -25,39 +25,44 @@ export async function checkAgentNoticeSettings(check: (condition: unknown, messa
   const stageNote = () => document.querySelector(".agent-reminder-stage__note")?.textContent ?? "";
   const tests = () => emittedTo.filter((sent) => sent.event === "agent-test-notice").map((sent) => ({ label: sent.label, ...(sent.payload as { id: number; event: string; sessions: unknown[]; request: unknown }) }));
   const toggle = (key: string) => document.querySelector<HTMLInputElement>(`#agent-reminder-${key}`);
+  const soundSwitch = (name: string) => document.querySelector<HTMLInputElement>(`#agent-sound-${name}`);
+  const pushSwitch = (name: string) => document.querySelector<HTMLInputElement>(`#agent-push-${name}`);
+  const storedSounds = () => JSON.parse(localStorage.getItem("fuyu-agent-sounds") ?? "{}") as { events?: Record<string, boolean> };
+  const tableRows = () => [...document.querySelectorAll(".agent-event-table tbody .agent-event-table__title")].map((title) => title.textContent);
+  const head = (index: number) => document.querySelectorAll<HTMLElement>(".agent-event-table thead th")[index];
+  const tab = (name: string) => click(document.querySelector(`.settings-tabs__tab[data-tab='${name}']`));
+  const activeTab = () => document.querySelector<HTMLElement>(".settings-tabs__tab--active")?.dataset.tab;
   const rowTitles = () => [...document.querySelectorAll(".agent-reminder .settings-row__title")].map((title) => title.textContent);
   const resetButton = () =>
     [...document.querySelectorAll<HTMLButtonElement>(".settings-group__header .settings-link-button")].find((button) => button.textContent === "恢复默认");
-  const titles = [...document.querySelectorAll(".settings-group__title")].map((title) => title.textContent).join("|");
+  const groupTitles = () => [...document.querySelectorAll(".settings-group__title")].map((title) => title.textContent).join("|");
   const before = commands.length;
 
-  check(titles.startsWith("什么时候提醒|通知的样子|通知的行为|审批按钮|"),
-    "Agent > Alerts shows one table of events, then the notice look, behavior and approval groups");
+  check(groupTitles() === "每件事从哪儿提醒你" && document.querySelectorAll(".agent-event-table").length === 1,
+    "Agent > Alerts opens on one table of events under the preview");
+  check(tableRows().join("|") === "等你确认或回答|完成|出错|开始新一轮|发出消息|上下文快满|闲置等你|额度快用完|额度已刷新",
+    "The table has one row per event, named the same way for the island, sound and phone");
+  check(document.querySelectorAll(".agent-event-table [id^='agent-sound-']").length === 10 && document.querySelectorAll(".agent-event-table [id^='agent-push-']").length === 3
+    && ["agentAlertWaiting", "agentAlertCompleted", "agentAlertFailed"].every((key) => toggle(key)),
+    "Every sound and push switch and every island switch shows up in the table exactly once");
+  check(document.querySelectorAll(".agent-event-table__row--active").length === 1 && document.querySelector(".agent-event-table__row--active.agent-reminder-row--waiting"),
+    "The row of the notice the preview shows is marked");
   check(document.querySelectorAll(".agent-reminder-stage__chip").length === 7 && shown() === "approval" && deskButton("允许") && deskButton("拒绝"),
     "The preview on top offers seven kinds of notice and starts on the approval card, drawn with the real card");
-  check(["没处理时再提醒", "等你回复的通知", "完成的通知停留", "出错的通知", "开始新一轮时"].every((label) => combo(label)),
-    "Every stay time keeps its own drop-down in the event table");
-  check(combo("开始新一轮时")?.textContent === "每一轮都弹出" && picture("状态优先")?.getAttribute("aria-pressed") === "true" && resetButton()?.disabled === false,
-    "Saved settings from before keep popping up every turn, the style starts on status-first, and reset to default is available");
-  check(!rowTitles().includes("Mac 刘海时"), "Without a notch the notch choice is not offered");
+  check(combo("开始新一轮时")?.textContent === "每一轮都弹出" && combo("额度提醒")?.textContent === "用到 80%",
+    "Saved settings from before keep popping up every turn, and the quota line moved into the table");
+  const pushOn = (JSON.parse(localStorage.getItem("fuyu-agent-push") ?? "{}") as { enabled?: boolean }).enabled === true;
+  check(pushSwitch("completed")?.disabled === !pushOn && head(3)?.textContent?.includes(pushOn ? "设置 ›" : "没开") && soundSwitch("complete")?.disabled === false && head(2)?.textContent?.includes("音量"),
+    `The phone column follows phone push (${pushOn ? "on: shows the channel" : "off: greyed out and says so"}); sound is on and shows its volume`);
 
-  await act(async () => { await wait(700); });
-  check(!commands.slice(before).includes("set_agent_approval_hotkeys"), "The approval card in the preview does not take the global approval shortcuts");
+  await click(soundSwitch("complete"));
+  check(storedSounds().events?.complete === false, "A sound switch in the table saves to the sound settings");
+  await click(soundSwitch("complete"));
+  check(storedSounds().events?.complete === true, "…and turns back on");
 
-  await click(picture("两翼 + 下拉"));
-  check(stored().agentNoticeStyle === "wings" && picture("两翼 + 下拉")?.getAttribute("aria-pressed") === "true", "Picking another style card saves it");
-
-  await click(segment("消息正文最多显示", "8 行"));
-  check(stored().agentNoticeMessageLines === 8 && shown() === "done" && !deskButton("允许"),
-    "Changing the message length saves it and moves the preview to a notice that has a message");
-
-  await click(segment("按钮顺序", "允许 · 到终端 · 拒绝"));
-  const order = [...(desk()?.querySelectorAll("button") ?? [])].map((button) => button.textContent ?? "").filter((label) => /^(允许|拒绝)/.test(label));
-  check(stored().agentNoticeButtonOrder === "allowLeft" && shown() === "approval" && order[0]?.startsWith("允许"),
-    "Changing the button order moves the preview back to the approval card, which shows the new order");
-
-  await click(document.querySelector(".agent-reminder-row--failed .settings-row__title"));
-  check(shown() === "failed" && toggle("agentAlertFailed")?.checked === true, "Clicking an event row shows that notice without flipping its switch");
+  await click(document.querySelector(".agent-reminder-row--failed .agent-event-table__title"));
+  check(shown() === "failed" && toggle("agentAlertFailed")?.checked === true && document.querySelector(".agent-event-table__row--active.agent-reminder-row--failed"),
+    "Clicking an event row shows that notice without flipping its switch");
 
   await click(toggle("agentAlertCompleted"));
   check(stored().agentAlertCompleted === false && shown() === "done" && desk()?.querySelector(".agent-reminder-pill") && !desk()?.querySelector(".agent-reminder-frame"),
@@ -65,6 +70,9 @@ export async function checkAgentNoticeSettings(check: (condition: unknown, messa
   check(tryOnIsland()?.disabled === true, "A kind of notice that is turned off cannot be tried on the island");
   await click(toggle("agentAlertCompleted"));
   check(stored().agentAlertCompleted === true && desk()?.querySelector(".agent-reminder-frame") && tryOnIsland()?.disabled === false, "Turning it back on brings the card back");
+
+  await act(async () => { await wait(700); });
+  check(!commands.slice(before).includes("set_agent_approval_hotkeys"), "The approval card in the preview does not take the global approval shortcuts");
 
   await click(chip("approval"));
   await click(play());
@@ -88,14 +96,39 @@ export async function checkAgentNoticeSettings(check: (condition: unknown, messa
   await click(chip("approval"));
   check(stageNote() === idle, "…and the usual note about this notice is back");
 
+  await click(head(3)?.querySelector(".agent-event-table__go"));
+  check(activeTab() === "agentPush", "The link in the phone column header goes to the push tab");
+
+  await tab("agentNoticeLook");
+  check(groupTitles().startsWith("停留多久|通知的样子|通知的行为|审批按钮"),
+    "Notice look has the stay times first, then the look, behavior and approval groups, with the same preview on top");
+  check(document.querySelectorAll(".agent-reminder-stage").length === 1 && !document.querySelector(".agent-event-table"), "…and no event table");
+  check(["没处理时再提醒", "等你回复的通知", "完成的通知停留", "出错的通知"].every((label) => combo(label)) && !combo("开始新一轮时"),
+    "The stay times moved off the event rows into their own group");
+  check(picture("状态优先")?.getAttribute("aria-pressed") === "true" && resetButton()?.disabled === false, "The style starts on status-first, and reset to default is available");
+  check(!rowTitles().includes("Mac 刘海时"), "Without a notch the notch choice is not offered");
+
+  await click(picture("两翼 + 下拉"));
+  check(stored().agentNoticeStyle === "wings" && picture("两翼 + 下拉")?.getAttribute("aria-pressed") === "true", "Picking another style card saves it");
+
+  await click(segment("消息正文最多显示", "8 行"));
+  check(stored().agentNoticeMessageLines === 8 && shown() === "done" && !deskButton("允许"),
+    "Changing the message length saves it and moves the preview to a notice that has a message");
+
+  await click(segment("按钮顺序", "允许 · 到终端 · 拒绝"));
+  const order = [...(desk()?.querySelectorAll("button") ?? [])].map((button) => button.textContent ?? "").filter((label) => /^(允许|拒绝)/.test(label));
+  check(stored().agentNoticeButtonOrder === "allowLeft" && shown() === "approval" && order[0]?.startsWith("允许"),
+    "Changing the button order moves the preview back to the approval card, which shows the new order");
+
   await click(resetButton());
-  check(stored().agentNoticeStyle === "status" && stored().agentAlertStarted === "off" && stored().agentNoticeButtonOrder === "allowRight"
-    && combo("开始新一轮时")?.textContent === "只在收起条显示标题" && resetButton()?.disabled === true,
+  check(stored().agentNoticeStyle === "status" && stored().agentAlertStarted === "off" && stored().agentNoticeButtonOrder === "allowRight" && resetButton()?.disabled === true,
     "Reset to default puts the notice items back to the recommended set");
 
   islandNotch.value = { width: 200, height: 32 };
-  await click(document.querySelector(".settings-tabs__tab[data-tab='sounds']"));
-  await click(document.querySelector(".settings-tabs__tab[data-tab='agentAlerts']"));
+  await tab("sounds");
+  check(!document.querySelector("[id^='agent-sound-']") && [...document.querySelectorAll(".settings-link-button")].some((button) => button.textContent === "在事件总表里改 ›"),
+    "The sound tab no longer lists the events and links to the event table instead");
+  await tab("agentNoticeLook");
   const notched = await until(() => rowTitles().includes("Mac 刘海时"));
   islandNotch.value = null;
   check(notched && document.querySelector(".agent-reminder-stage [data-notice-notch='on'] .agent-notice-stack__notch"),
