@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { join } from "node:path";
 import test from "node:test";
 import { compareVersions, isPrerelease, shouldUpdateBetaManifest } from "../../scripts/release/channel.mjs";
 import { siteChannelProblems, siteCheckout } from "../../scripts/release/site-import.mjs";
@@ -43,6 +44,6 @@ test("the official site passes once both channels caught up, and an unreachable 
 });
 
 test("the site checkout defaults to fuyu-desktop next to the app checkout", () => {
-  assert.equal(siteCheckout("/x/projects/Fuyu", {}), "/x/projects/fuyu-desktop");
+  assert.equal(siteCheckout(join("/x", "projects", "Fuyu"), {}), join("/x", "projects", "fuyu-desktop"));
   assert.equal(siteCheckout("/x/projects/Fuyu", { FUYU_SITE_DIR: "/elsewhere" }), "/elsewhere");
 });
