@@ -27,9 +27,9 @@ async function until(check, ms = 5000) {
   return check();
 }
 
-test("the built-in list names all 22 plugins, each with a host entry, and only the updater is essential", () => {
-  assert.equal(ids.length, 22);
-  assert.equal(new Set(ids).size, 22);
+test("the built-in list names all 23 plugins, each with a host entry, and only the updater is essential", () => {
+  assert.equal(ids.length, 23);
+  assert.equal(new Set(ids).size, 23);
   for (const plugin of catalog.plugins) {
     assert.ok(existsSync(join(BUILTINS, plugin.root, plugin.host)), `${plugin.id} has no host entry at ${plugin.root}/${plugin.host}`);
     if (plugin.background !== undefined) assert.ok(Array.isArray(plugin.background) && plugin.background.every((name) => typeof name === "string"), plugin.id);

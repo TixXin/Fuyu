@@ -23,6 +23,7 @@ export const COLLAPSED_ITEM_PLUGINS: Readonly<Record<string, string>> = {
   mail: "messages",
   update: "updater",
   "device-use": "device-use",
+  "caps-lock": "caps-lock",
   shelf: "file-shelf",
   music: "music",
   "session-count": "agents",

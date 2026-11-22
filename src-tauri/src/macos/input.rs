@@ -1,5 +1,7 @@
+use std::ffi::c_char;
+
 use objc2_app_kit::NSEvent;
-use objc2_core_foundation::CGPoint;
+use objc2_core_foundation::{CFDictionary, CGPoint};
 use objc2_core_graphics::{
     CGDisplayBounds, CGError, CGEvent, CGEventFlags, CGEventSource, CGEventSourceStateID, CGEventTapLocation, CGKeyCode, CGMainDisplayID,
     CGPreflightPostEventAccess, CGRequestPostEventAccess, CGScrollEventUnit, CGWarpMouseCursorPosition,
@@ -32,6 +34,44 @@ pub(crate) fn is_v_key_down() -> bool {
 
 pub(crate) fn is_shift_key_down() -> bool {
     CGEventSource::flags_state(CGEventSourceStateID::CombinedSessionState).contains(CGEventFlags::MaskShift)
+}
+
+const HID_SYSTEM: &[u8] = b"IOHIDSystem\0";
+const HID_PARAM_CONNECT: u32 = 1;
+const HID_CAPS_LOCK_STATE: i32 = 1;
+
+#[link(name = "IOKit", kind = "framework")]
+extern "C" {
+    fn IOServiceMatching(name: *const c_char) -> *mut CFDictionary;
+    fn IOServiceGetMatchingService(main_port: u32, matching: *mut CFDictionary) -> u32;
+    fn IOServiceOpen(service: u32, owning_task: u32, kind: u32, connect: *mut u32) -> i32;
+    fn IOServiceClose(connect: u32) -> i32;
+    fn IOObjectRelease(object: u32) -> i32;
+    fn IOHIDSetModifierLockState(connect: u32, selector: i32, state: bool) -> i32;
+}
+
+extern "C" {
+    static mach_task_self_: u32;
+}
+
+pub(crate) fn is_caps_lock_on() -> bool {
+    CGEventSource::flags_state(CGEventSourceStateID::CombinedSessionState).contains(CGEventFlags::MaskAlphaShift)
+}
+
+pub(crate) fn turn_off_caps_lock() -> bool {
+    let service = unsafe { IOServiceGetMatchingService(0, IOServiceMatching(HID_SYSTEM.as_ptr().cast())) };
+    if service == 0 {
+        return false;
+    }
+    let mut connect = 0;
+    let opened = unsafe { IOServiceOpen(service, mach_task_self_, HID_PARAM_CONNECT, &mut connect) };
+    unsafe { IOObjectRelease(service) };
+    if opened != 0 {
+        return false;
+    }
+    let result = unsafe { IOHIDSetModifierLockState(connect, HID_CAPS_LOCK_STATE, false) };
+    unsafe { IOServiceClose(connect) };
+    result == 0
 }
 
 pub(crate) fn is_command_key_down() -> bool {

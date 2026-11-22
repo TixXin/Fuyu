@@ -1,4 +1,5 @@
 import { BatteryCharging, Camera, Volume2 } from "lucide-react";
+import { CapsLockSettings } from "../../features/caps-lock/CapsLockSettings";
 import { SettingsIconTitle } from "../../components/settings/SettingsIconTitle";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
@@ -30,6 +31,7 @@ export function SystemAlertsGroup({ settings }: { settings: IslandSettings; onSe
         checked={isBuiltinEnabled(plugins, "device-events", settings.deviceAlerts)}
         onChange={(on) => toggle("device-events", on)}
       />
+      <CapsLockSettings />
       <SettingsToggleRow
         title={<SettingsIconTitle icon={<Camera {...icon} />}>{text.deviceUse.indicator}</SettingsIconTitle>}
         description={text.deviceUse.indicatorHint}

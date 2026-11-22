@@ -1,0 +1,66 @@
+.caps-lock-alert {
+  min-width: 0;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.92);
+}
+
+.caps-lock-alert__icon {
+  flex: none;
+}
+
+.caps-lock-alert--on .caps-lock-alert__icon,
+.caps-lock-alert--on .caps-lock-alert__short {
+  color: var(--caps-lock-on, #ffd60a);
+}
+
+.caps-lock-alert--off .caps-lock-alert__icon,
+.caps-lock-alert--off .caps-lock-alert__short {
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.55);
+}
+
+.caps-lock-alert__text {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caps-lock-alert__short {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.caps-lock-badge {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--caps-lock-on, #ffd60a);
+  background: var(--caps-lock-badge-bg, rgba(255, 214, 10, 0.15));
+  transition: background var(--motion-base) var(--motion-ease);
+}
+
+.caps-lock-badge--clickable {
+  cursor: pointer;
+}
+
+.caps-lock-badge--clickable:hover {
+  background: var(--caps-lock-badge-hover, rgba(255, 214, 10, 0.28));
+}
+
+.island-light {
+  --caps-lock-on: #a86f00;
+  --caps-lock-badge-bg: rgba(168, 111, 0, 0.14);
+  --caps-lock-badge-hover: rgba(168, 111, 0, 0.24);
+}

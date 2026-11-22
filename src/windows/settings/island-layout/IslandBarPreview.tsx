@@ -1,5 +1,6 @@
 import type { CSSProperties, PointerEvent, ReactNode } from "react";
 import { AudioLines, BatteryMedium, Camera, Download, Inbox, LayoutGrid, ListTodo, Mail, Puzzle, Sparkles, Timer } from "lucide-react";
+import { CapsLockIcon } from "../../../features/caps-lock/CapsLockIcon";
 import { USAGE_PROVIDERS } from "../../../features/claude-usage/usageRing";
 import { useTranslation } from "../../../i18n";
 import type { CollapsedPlacement } from "../../../lib/settings/collapsedItems";
@@ -15,6 +16,7 @@ const ICONS: Record<string, ReactNode> = {
   mail: <Mail size={13} strokeWidth={2.2} />,
   update: <Download size={13} strokeWidth={2.2} />,
   "device-use": <Camera size={13} strokeWidth={2.2} />,
+  "caps-lock": <CapsLockIcon on size={13} />,
   shelf: <Inbox size={13} strokeWidth={2.2} />,
   music: <AudioLines size={13} strokeWidth={2.2} />,
   timer: <Timer size={13} strokeWidth={2.2} />,

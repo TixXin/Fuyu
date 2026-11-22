@@ -30,7 +30,7 @@ export function useCollapsedLayout() {
       ["mail", text.item.mail],
       ["update", text.item.update],
     ];
-    entries.push(["device-use", text.item.deviceUse], ["shelf", text.item.shelf], ["music", text.item.music]);
+    entries.push(["device-use", text.item.deviceUse], ["caps-lock", text.item.capsLock], ["shelf", text.item.shelf], ["music", text.item.music]);
     if (usageOn) {
       for (const provider of shownUsageProviders(usageConfig)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
       if (needsHoverOnlyGauge(usageConfig)) entries.push([HOVER_ONLY_ITEM_ID, text.item.usage(hoverOnlyItemName)]);

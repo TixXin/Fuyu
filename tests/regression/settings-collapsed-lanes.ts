@@ -163,7 +163,7 @@ async function checkMirror(check: Check) {
 
 export async function checkCollapsedLanes(check: Check) {
   localStorage.removeItem("fuyu-collapsed-items");
-  check(lane("left") === "浮屿水母" && lane("right").startsWith("新邮件提醒") && lane("right").endsWith("会话数 / 会话环|计时器") && off() === "外设电量" && saved() === null,
+  check(lane("left") === "浮屿水母" && lane("right").startsWith("新邮件提醒") && lane("right").endsWith("会话数 / 会话环|大写锁定|计时器") && off() === "外设电量" && saved() === null,
     "The lanes show the default layout without saving anything, and the peripheral battery, off by default, waits in the list below");
   await checkKeyboard(check);
   await checkButtons(check);

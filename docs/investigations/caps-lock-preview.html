@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>大写锁定提示 · 预览第二版</title>
+<style>
+  :root {
+    --bg: #0f1012; --win: #17181b; --card: #1e1f23; --card-2: #25262b; --line: #2c2d33;
+    --ink: #ecebef; --ink-2: #a9a9b0; --ink-3: #6f7078; --accent: #74d6ff; --on-accent: #06202c;
+    --shadow: 0 18px 50px #0007; --warn: #f5c46e; --good: #5fd38a; --bad: #ff7a7a;
+    --desk: radial-gradient(120% 140% at 15% 0%, #3a4a63 0%, #232a38 50%, #12151c 100%);
+  }
+  :root[data-theme="light"] {
+    --bg: #e9eaee; --win: #f6f6f8; --card: #fff; --card-2: #f2f3f6; --line: #e1e2e7;
+    --ink: #1c1d21; --ink-2: #5d5e66; --ink-3: #9a9ba3; --accent: #0a7fd1; --on-accent: #fff;
+    --shadow: 0 18px 50px #0001; --warn: #a86b00; --good: #1c8c48; --bad: #c42b2b;
+    --desk: radial-gradient(120% 140% at 15% 0%, #c7d6ec 0%, #aab9d0 55%, #8d9bb3 100%);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 110px; background: var(--bg); color: var(--ink); font: 14px/1.6 -apple-system, "PingFang SC", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  kbd { font: 12px/1 ui-monospace, Menlo, Consolas, monospace; padding: 2px 6px; border-radius: 5px; border: 1px solid var(--line); background: var(--card-2); color: var(--ink-2); }
+  code { font: 12px ui-monospace, Menlo, Consolas, monospace; color: var(--ink-2); }
+  .page { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 36px 0 6px; }
+  h2 small { font-size: 13px; color: var(--ink-3); font-weight: 400; margin-left: 8px; }
+  p.lead { color: var(--ink-2); margin: 0 0 8px; max-width: 920px; }
+  .new { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 0 6px; border-radius: 999px; line-height: 17px; background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
+  .changes { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; columns: 2 380px; }
+  .row { display: flex; gap: 8px; align-items: center; margin: 7px 0; flex-wrap: wrap; }
+  .row .lbl { color: var(--ink-3); font-size: 13px; min-width: 86px; }
+  .pill-btn { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 3px 11px; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+  .pill-btn.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+  .pill-btn .rec { font-size: 11px; opacity: .75; }
+  .pill-btn svg.lu { color: inherit !important; }
+  .act-btn { background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 6px 14px; font-size: 13px; }
+  .act-btn.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 600; }
+  .act-btn.on { border-color: var(--accent); color: var(--accent); }
+  .panel { background: var(--win); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .status-line { color: var(--ink-3); font-size: 12.5px; margin-top: 10px; min-height: 20px; }
+  .status-line b { color: var(--ink-2); font-weight: 600; }
+
+  .desk { position: relative; height: 300px; border-radius: 14px; background: var(--desk); overflow: hidden; margin-top: 12px; }
+  .desk.small { height: 210px; }
+  .desk.mini { overflow: visible; height: auto; min-height: 76px; padding: 20px 14px; display: flex; gap: 14px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+  .desk .taskbar { position: absolute; inset: auto 0 0 0; height: 44px; background: #1b1d22e6; display: flex; align-items: center; padding: 0 14px; gap: 10px; }
+  .desk .taskbar i { width: 22px; height: 22px; border-radius: 6px; background: #ffffff26; display: block; }
+  .desk .edge-note { position: absolute; left: 12px; bottom: 8px; color: #fff9; font-size: 11.5px; }
+  .desk .cap { position: absolute; right: 12px; bottom: 8px; color: #fffa; font-size: 11.5px; }
+  .login { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); width: 240px; background: #f4f5f7; color: #222; border-radius: 12px; padding: 12px 14px; box-shadow: 0 14px 40px #0007; font-size: 12px; }
+  .login b { display: block; margin-bottom: 8px; font-size: 13px; }
+  .login .field { height: 28px; border: 1px solid #d4d6dc; border-radius: 7px; margin-top: 6px; display: flex; align-items: center; padding: 0 8px; color: #777; gap: 2px; }
+  .login .field.focus { border-color: #0a7fd1; box-shadow: 0 0 0 2px #0a7fd133; color: #111; }
+  .login .field .caret { width: 1.5px; height: 14px; background: #0a7fd1; animation: blink 1s steps(1) infinite; }
+
+  .isl { position: absolute; background: #000; color: #f1f0f6; display: flex; align-items: center; gap: 8px; box-shadow: 0 12px 40px #0008;
+    transition: width .32s cubic-bezier(.3,1.3,.5,1), height .32s cubic-bezier(.3,1.3,.5,1), transform .3s cubic-bezier(.3,1.2,.5,1), opacity .2s; font-size: 12.5px; white-space: nowrap; overflow: hidden; }
+  .isl.top { left: 50%; top: 0; transform: translateX(-50%); height: 38px; border-radius: 0 0 17px 17px; padding: 0 12px; }
+  .isl.float { left: 50%; top: 40px; transform: translateX(-50%); height: 38px; border-radius: 19px; padding: 0 12px; }
+  .isl.inline { position: relative; left: auto; top: auto; transform: none; height: 36px; border-radius: 18px; padding: 0 12px; overflow: visible; }
+  .isl.bottom { left: 50%; bottom: 0; transform: translateX(-50%); height: 38px; border-radius: 17px 17px 0 0; padding: 0 12px; }
+  .isl.taskbar { left: 50%; bottom: 6px; transform: translateX(-50%); height: 32px; border-radius: 16px; padding: 0 10px; background: #0a0b0d; outline: 1px solid #ffffff1a; }
+  .isl.notch { left: 50%; top: 0; transform: translateX(-50%); height: 34px; border-radius: 0 0 14px 14px; padding: 0 12px; justify-content: space-between; }
+  .isl.notch.inline { border-radius: 0 0 14px 14px; height: 34px; }
+  .isl .cam { flex: none; width: 170px; height: 100%; display: grid; place-items: center; color: #ffffff2a; font-size: 10px; border-left: 1px dashed #ffffff18; border-right: 1px dashed #ffffff18; }
+  .isl .wing { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .isl .wing.r { justify-content: flex-end; }
+  .isl.side { right: 0; top: 50%; transform: translateY(-50%); width: 40px; border-radius: 17px 0 0 17px; flex-direction: column; padding: 12px 0; justify-content: center; gap: 10px; }
+  .isl.side .vtext { writing-mode: vertical-rl; font-size: 12px; letter-spacing: 1px; }
+  .isl.tucked { left: 50%; top: 0; transform: translate(-50%, -32px); height: 38px; border-radius: 0 0 17px 17px; padding: 0 12px; }
+  .isl.tucked.peek { transform: translate(-50%, 0); }
+  .isl.tucked::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 34px; height: 3px; margin-left: -17px; border-radius: 2px; background: #ffffff40; }
+  .isl.tucked.badge-on::after { background: #ffd60a; }
+  .isl.dim { opacity: .35; }
+  .isl.light { background: #f3f3f6; color: #1c1d21; box-shadow: 0 10px 30px #0003, inset 0 0 0 1px #ffffffaa; }
+  .isl.light .chip { background: #0000000f; color: #1c1d21cc; }
+
+  .isl.expanded { left: 50%; top: 0; transform: translateX(-50%); width: 400px; height: 236px; border-radius: 0 0 26px 26px; padding: 0; flex-direction: column; align-items: stretch; gap: 0; }
+  .exp-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px 6px; color: #ffffffaa; font-size: 12px; position: relative; min-height: 40px; }
+  .exp-head .tabs { display: flex; gap: 12px; } .exp-head .tabs b { color: #fff; }
+  .exp-body { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .todo { display: flex; gap: 8px; align-items: center; color: #ffffffcc; font-size: 12.5px; }
+  .todo i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #ffffff66; display: block; }
+  .inp { margin-top: 4px; display: flex; align-items: center; gap: 6px; background: #ffffff14; border-radius: 10px; height: 34px; padding: 0 10px; color: #ffffff60; font-size: 12.5px; }
+  .inp.focus { box-shadow: inset 0 0 0 1.5px #74d6ff88; }
+  .inp .typed { color: #fff; }
+  .inp .caret { width: 1.5px; height: 15px; background: var(--accent); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .inp .capsflag { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: #ffd60a; font-size: 11px; font-weight: 600; }
+  .toast { position: absolute; right: 12px; top: 9px; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px 0 7px; border-radius: 12px; background: #ffffff1f; color: #fff; font-size: 11.5px; font-weight: 600; animation: toastIn .28s cubic-bezier(.3,1.3,.5,1); }
+  @keyframes toastIn { from { transform: translateY(-6px) scale(.9); opacity: 0; } }
+
+  svg.lu { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; display: block; flex: none; overflow: visible; }
+  svg.lu text { font-family: -apple-system, "Segoe UI", "Helvetica Neue", sans-serif; stroke: none; }
+  .ico-on { color: #ffd60a; } .ico-off { color: #ffffff80; }
+  .alert .ico-on { animation: iconIn .34s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes iconIn { from { transform: scale(.5) translateY(4px); } }
+  .led-glow { filter: drop-shadow(0 0 2.5px #ffd60a); }
+  .msg-ico { width: 20px; height: 20px; border-radius: 6px; background: #12b7f5; color: #fff; display: grid; place-items: center; font-size: 10px; font-weight: 700; flex: none; }
+  .chip { height: 24px; min-width: 24px; border-radius: 12px; background: #ffffff1c; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 7px; font-size: 11px; font-weight: 600; color: #ffffffd9; flex: none; font-variant-numeric: tabular-nums; position: relative; }
+  .chip.capsb { background: #ffd60a26; color: #ffd60a; padding: 0 5px; animation: pop .3s cubic-bezier(.3,1.5,.5,1); }
+  .chip.capsb.clickable { cursor: pointer; }
+  .chip.capsb.clickable:hover { background: #ffd60a40; box-shadow: 0 0 0 1.5px #ffd60a88; }
+  @keyframes pop { from { transform: scale(.4); opacity: 0; } }
+  .tip { position: absolute; top: calc(100% + 10px); right: -8px; background: #2a2b30; color: #eee; font-size: 11.5px; font-weight: 500; padding: 4px 9px; border-radius: 7px; white-space: nowrap; box-shadow: 0 6px 16px #0006; }
+  .tip::before { content: ""; position: absolute; top: -4px; right: 16px; width: 8px; height: 8px; background: #2a2b30; transform: rotate(45deg); }
+  .mid { flex: 1; text-align: center; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #ffffffcc; }
+  .alert { flex: 1; display: inline-flex; align-items: center; gap: 8px; justify-content: center; font-weight: 600; font-size: 13px; animation: fadeUp .22s ease-out; min-width: 0; }
+  .alert span { overflow: hidden; text-overflow: ellipsis; }
+  .alert.warn span { color: #ffd60a; }
+  @keyframes fadeUp { from { transform: translateY(5px); opacity: 0; filter: blur(3px); } }
+  .wave { display: flex; gap: 2px; align-items: center; height: 12px; } .wave i { width: 2.5px; border-radius: 2px; background: #fff; display: block; }
+  .isl.light .wave i { background: #1c1d21; }
+  @media (prefers-reduced-motion: reduce) { .alert, .alert .ico-on, .chip.capsb, .toast { animation: none; } .isl { transition: none; } }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 14px; margin-top: 12px; }
+  .grid.three { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .desk.small .isl { zoom: .8; }
+  .desk.small .isl.notch, .desk.small .isl.expanded { zoom: .72; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 12px 14px; }
+  .card h4 { margin: 0 0 2px; font-size: 14px; }
+  .card .note { color: var(--ink-2); font-size: 12.5px; margin: 8px 2px 0; }
+  .card .note b { color: var(--ink); }
+  .card .note .pro { color: var(--good); } .card .note .con { color: var(--bad); }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 7px; border-radius: 999px; line-height: 18px; margin-left: 6px; vertical-align: 1px; }
+  .tag.rec { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
+  .tag.ask { background: color-mix(in srgb, var(--warn) 22%, transparent); color: var(--warn); }
+  .tag.bad { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); }
+
+  .icards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+  .icard { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; cursor: pointer; transition: border-color .15s, transform .15s; }
+  .icard:hover { transform: translateY(-1px); }
+  .icard.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .icard h4 { margin: 0 0 8px; font-size: 14px; display: flex; align-items: center; }
+  .icard h4 .no { color: var(--ink-3); font-weight: 500; margin-right: 6px; font-size: 12px; }
+  .iboard { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .itile { background: #000; border-radius: 10px; height: 74px; display: grid; place-items: center; position: relative; }
+  .itile small { position: absolute; left: 8px; bottom: 4px; color: #ffffff55; font-size: 10.5px; }
+  .isizes { display: flex; align-items: center; gap: 8px; margin-top: 6px; background: #000; border-radius: 10px; padding: 8px 10px; color: #fff; font-size: 12px; font-weight: 600; flex-wrap: wrap; }
+  .isizes .sep { width: 1px; height: 18px; background: #ffffff22; }
+  .icard p { margin: 8px 2px 0; color: var(--ink-2); font-size: 12.5px; }
+
+  .modes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+  .mode { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; cursor: pointer; transition: border-color .15s; }
+  .mode.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .mode h4 { margin: 0 0 4px; font-size: 14px; }
+  .mode p { margin: 0; color: var(--ink-2); font-size: 12.5px; }
+  .timeline { display: flex; height: 18px; border-radius: 5px; overflow: hidden; margin: 10px 0 2px; background: var(--card-2); }
+  .timeline i { display: block; height: 100%; }
+  .timeline .fl { background: #ffd60a; } .timeline .bd { background: color-mix(in srgb, #ffd60a 35%, transparent); } .timeline .nn { background: transparent; } .timeline .ofl { background: #ffffff55; }
+  .tl-cap { display: flex; justify-content: space-between; color: var(--ink-3); font-size: 11px; }
+
+  .set { background: #1c1d21; color: #ecebef; border-radius: 16px; border: 1px solid #2c2d33; padding: 4px 20px; margin-top: 12px; }
+  :root[data-theme="light"] .set { background: #fff; color: #1c1d21; border-color: #e1e2e7; }
+  .set .it { display: flex; gap: 14px; padding: 16px 0; }
+  .set .ib { width: 32px; height: 32px; border-radius: 9px; background: #74d6ff1f; color: #74d6ff; display: grid; place-items: center; flex: none; }
+  .set .ib svg { color: #74d6ff !important; }
+  .set .tx { flex: 1; min-width: 0; }
+  .set .tt { font-size: 15px; font-weight: 600; }
+  .set .ds { font-size: 13px; color: #a9a9b0; margin-top: 4px; }
+  .set .sub { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #ffffff08; }
+  :root[data-theme="light"] .set .sub { background: #0000000a; }
+  .set .sub .sr { display: flex; align-items: center; gap: 12px; font-size: 13.5px; }
+  .set .sub .sr > span:first-child { flex: 1; min-width: 0; }
+  .set .sub .sr small { display: block; color: #8a8a92; font-size: 12px; }
+  .set .sub .sr a { color: #74d6ff; text-decoration: none; }
+  .seg { display: inline-flex; border-radius: 9px; background: #ffffff12; padding: 2px; flex-wrap: wrap; }
+  :root[data-theme="light"] .seg { background: #0000000d; }
+  .seg button { border: 0; background: transparent; border-radius: 7px; padding: 3px 10px; font-size: 12.5px; color: inherit; opacity: .7; display: inline-flex; align-items: center; gap: 4px; }
+  .seg button.on { background: #74d6ff; color: #06202c; opacity: 1; font-weight: 600; }
+  .seg button svg.lu { color: inherit !important; }
+  .dd { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #ffffff22; border-radius: 9px; padding: 4px 10px; font-size: 13px; background: #ffffff08; }
+  :root[data-theme="light"] .dd { border-color: #00000022; }
+  .dd svg.lu { color: inherit !important; }
+  .tg { width: 46px; height: 28px; border-radius: 14px; background: #74d6ff; position: relative; flex: none; border: 0; }
+  .tg::after { content: ""; position: absolute; right: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: right .18s; }
+  .tg.off { background: #3a3b42; } .tg.off::after { right: 21px; }
+  .plat { font-size: 11px; color: #8a8a92; border: 1px solid #ffffff22; border-radius: 5px; padding: 0 5px; margin-left: 6px; font-weight: 400; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; background: var(--card); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--ink-3); font-weight: 600; font-size: 12px; background: var(--card-2); }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+  td .d { color: var(--ink-2); }
+  tr.grp td { background: var(--card-2); color: var(--ink-3); font-size: 12px; font-weight: 700; padding: 6px 12px; }
+  .qs { counter-reset: q; display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .q { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .q h4 { margin: 0 0 6px; font-size: 14px; } .q h4::before { counter-increment: q; content: counter(q) ". "; color: var(--accent); }
+  .q p { margin: 0; color: var(--ink-2); font-size: 13px; }
+  .topbar { position: fixed; right: 16px; bottom: 16px; display: flex; gap: 6px; z-index: 10; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>大写锁定提示 · 预览第二版</h1>
+  <p class="lead">设置 → 计时与提醒 → 系统提示里加一行「大写锁定」。按下 <kbd>Caps Lock</kbd> 时岛上告诉你现在是大写还是小写；可以在大写开着时留一个小角标，免得忘了关。在这页里<b>直接按键盘上的 Caps Lock</b> 也会触发，不想按就点按钮。</p>
+  <p class="lead" style="margin-top:10px"><b>这一版加了：</b></p>
+  <ul class="changes">
+    <li>8 种大写图标，点哪个全页都换成哪个</li>
+    <li>点角标直接关掉大写，悬停有说明</li>
+    <li>别的程序的密码框有焦点时，大写开着就一直提醒（Windows）</li>
+    <li>锁屏、睡眠期间变的不弹，只更新角标</li>
+    <li>开 / 关、中 / 英提示一样宽，岛不跟着来回抖</li>
+    <li>角标的位置、和「+N」收纳的关系、能在「岛屿布局」里摆</li>
+    <li>浅色和液态玻璃岛上黄色看不清，换成深琥珀</li>
+    <li>岛自己的输入框有焦点时不再弹胶囊，只在框尾挂 ⇪</li>
+    <li>设置里打开开关时岛上演示一次</li>
+    <li>按住不放、外接键盘、远程桌面、多显示器等边角情况</li>
+  </ul>
+
+  <h2>试一试</h2>
+  <div class="panel">
+    <div class="row"><span class="lbl">图标</span><span id="iconBtns"></span></div>
+    <div class="row"><span class="lbl">岛的形态</span><span id="formBtns"></span></div>
+    <div class="row"><span class="lbl">提示方式</span><span id="modeBtns"></span></div>
+    <div class="row"><span class="lbl">关掉时</span><span id="offBtns"></span></div>
+    <div class="row"><span class="lbl">碰上消息</span><span id="prioBtns"></span></div>
+    <div class="row"><span class="lbl">角标位置</span><span id="posBtns"></span></div>
+    <div class="row"><span class="lbl">点角标</span><span id="clickBtns"></span></div>
+    <div class="row"><span class="lbl">文案语言</span><span id="langBtns"></span></div>
+    <div class="row" style="margin-top:12px">
+      <button class="act-btn primary" id="capsBtn">切换大写锁定</button>
+      <button class="act-btn" id="msgBtn">来一条 QQ 消息</button>
+      <button class="act-btn" id="volBtn">调一下音量</button>
+      <button class="act-btn" id="pwBtn">别的程序密码框有焦点</button>
+      <button class="act-btn" id="sleepBtn">锁屏回来（期间大写被改了）</button>
+      <button class="act-btn" id="dimBtn">岛闲置变淡</button>
+    </div>
+    <div class="desk" id="stage"></div>
+    <div class="status-line" id="status"></div>
+  </div>
+
+  <h2>图标<span class="new">新</span><small>每张卡：大图开 / 关，下面是岛上实际的 16px 提示和 13px 角标。点卡片全页换成它</small></h2>
+  <div class="icards" id="iconCards"></div>
+
+  <h2>提示方式<small>点卡片和上面「提示方式」同步</small></h2>
+  <div class="modes" id="modeCards"></div>
+
+  <h2>每种形态长什么样<small>上面是「刚按下、大写已开启」那一刻，下面是开着时的常驻角标</small></h2>
+  <div class="grid" id="formGrid"></div>
+
+  <h2>细节<span class="new">新</span></h2>
+  <div class="grid three" id="details"></div>
+
+  <h2>设置里的样子<small>加在「耳机与充电」下面，开关打开后才显示子选项</small></h2>
+  <div class="set" id="settings"></div>
+
+  <h2>各方面的考虑</h2>
+  <table id="considerTable"></table>
+
+  <h2>要你定的</h2>
+  <div class="qs" id="questions"></div>
+</div>
+
+<div class="topbar"><button class="pill-btn" id="themeBtn">浅色</button></div>
+
+<script>
+const T = (s) => `<text x="12" y="17" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor">${s}</text>`;
+const ICONS = {
+  arrow: { name: "实心箭头", rec: true,
+    on: '<path d="M9 19h6" /><path d="M9 15v-3H5l7-7 7 7h-4v3H9z" fill="currentColor" />',
+    off: '<path d="M9 18v-6H5l7-7 7 7h-4v6H9z" />',
+    note: '<span class="pro">和 macOS、键帽上的 ⇪ 一样，谁都认得；开是实心、关是空心，13px 也分得清。</span>' },
+  led: { name: "指示灯键帽", rec: true,
+    on: '<rect x="2.5" y="3.5" width="19" height="17" rx="4.5" /><path d="M12 8 8.2 12.4h2.3V16h3v-3.6h2.3z" fill="currentColor" stroke-width="1.4" /><circle class="led-glow" cx="17.6" cy="7.4" r="1.9" fill="currentColor" stroke="none" />',
+    off: '<rect x="2.5" y="3.5" width="19" height="17" rx="4.5" /><path d="M12 8 8.2 12.4h2.3V16h3v-3.6h2.3z" stroke-width="1.4" /><circle cx="17.6" cy="7.4" r="1.6" stroke-width="1.2" />',
+    note: '<span class="pro">照真键盘上的灯，开关就是灯亮灯灭，最直观。</span><span class="con">13px 时灯只有 2px，角标里不如实心箭头醒目。</span>' },
+  ceiling: { name: "顶到头",
+    on: '<path d="M5 4h14" /><path d="M9 20v-5H5.5L12 8l6.5 7H15v5H9z" fill="currentColor" />',
+    off: '<path d="M9 20v-5H5.5L12 8l6.5 7H15v5H9z" />',
+    note: '<span class="pro">箭头顶住一道横线，有「锁在上档」的意思；开关形状差别大。</span><span class="con">没那么常见，第一次看要想一下。</span>' },
+  keycap: { name: "A 键帽",
+    on: '<rect x="3" y="3" width="18" height="18" rx="5" fill="currentColor" /><text x="12" y="16.6" text-anchor="middle" font-size="12" font-weight="800" fill="#000">A</text>',
+    off: '<rect x="3" y="3" width="18" height="18" rx="5" /><text x="12" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">a</text>',
+    note: '<span class="pro">A 和 a 一眼看出大小写，实心块很醒目。</span><span class="con">13px 时字母会糊；一块黄色方块在岛上有点抢眼。</span>' },
+  letter: { name: "字母 A / a",
+    on: T("A"), off: T("a"),
+    note: '<span class="pro">最简单，不用学。</span><span class="con">不像图标，和时间、电量数字挨着时容易看成文字。</span>' },
+  abc: { name: "ABC 字样", w: 30,
+    on: '<text x="15" y="16" text-anchor="middle" font-size="10.5" font-weight="800" fill="currentColor" letter-spacing=".3">ABC</text><path d="M4 20h22" />',
+    off: '<text x="15" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">abc</text>',
+    note: '<span class="pro">像手机键盘、输入法状态栏，一看就懂。</span><span class="con">宽，刘海两翼、侧边岛和任务栏里放不下。</span>' },
+  lock: { name: "箭头加锁",
+    on: '<path d="M6.5 17v-5H3.3L9 5.5l5.7 6.5h-3.2v5h-5z" fill="currentColor" /><rect x="14.3" y="15" width="7.4" height="6" rx="1.4" fill="currentColor" stroke-width="1.6" /><path d="M15.9 15v-1.5a2.1 2.1 0 0 1 4.2 0V15" stroke-width="1.6" />',
+    off: '<path d="M6.5 17v-5H3.3L9 5.5l5.7 6.5h-3.2v5h-5z" /><rect x="14.3" y="15" width="7.4" height="6" rx="1.4" stroke-width="1.6" /><path d="M15.9 15v-1.5a2.1 2.1 0 0 1 4.2 0" stroke-width="1.6" />',
+    note: '<span class="pro">把「锁定」两个字画出来了。</span><span class="con">元素多，16px 下挤，小锁看不清开没开。</span>' },
+  outline: { name: "线条箭头",
+    on: '<path d="M9 19.5h6" stroke-width="2.6" /><path d="M9 15v-3H5l7-7 7 7h-4v3H9z" stroke-width="2.6" />',
+    off: '<path d="M9 18v-6H5l7-7 7 7h-4v6H9z" />',
+    note: '<span class="pro">和岛上其他线条图标一个风格。</span><span class="con">开 / 关只差一道横线和粗细，小尺寸下要靠颜色分。</span>' },
+};
+function icon(id, on, size, style) {
+  const d = ICONS[id], w = d.w || 24;
+  return `<svg class="lu ${on ? "ico-on" : "ico-off"}" width="${Math.round(size * w / 24)}" height="${size}" viewBox="0 0 ${w} 24"${style ? ` style="${style}"` : ""}>${on ? d.on : d.off}</svg>`;
+}
+const VOL = '<svg class="lu" width="15" height="15" viewBox="0 0 24 24"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>';
+const WAVE = '<span class="wave"><i style="height:6px"></i><i style="height:11px"></i><i style="height:8px"></i><i style="height:12px"></i></span>';
+
+const TEXT = {
+  zh: { on: "大写锁定已开启", off: "大写锁定已关闭", short: "大写", shortOff: "小写", pw: "大写开着 · 正在输密码", tip: "大写锁定开着 · 点一下关掉", tipNo: "大写锁定开着", msg: "张三：晚上一起吃饭吗", vol: "音量 60", time: "周日 10:24", todo: ["交周报", "给猫买粮"] },
+  en: { on: "Caps Lock On", off: "Caps Lock Off", short: "CAPS", shortOff: "caps", pw: "Caps Lock on · password", tip: "Caps Lock is on · click to turn off", tipNo: "Caps Lock is on", msg: "Alex: dinner tonight?", vol: "Volume 60", time: "Sun 10:24", todo: ["Send weekly report", "Buy cat food"] },
+};
+const ALERT_W = { zh: 210, en: 196 };
+const FORMS = [
+  ["top", "贴顶收起", "中间文字位换成提示。开 / 关两句一样宽，岛只在第一次弹出时变宽一次。"],
+  ["notch", "Mac 刘海", "左翼图标，右翼短字，刘海那段不放东西。角标固定在最外侧，不会被收进「+N」。"],
+  ["float", "悬空药丸", "离开顶边的岛，和贴顶一样，只是四角都圆。"],
+  ["expanded", "展开面板", "右上角冒小胶囊；岛自己的输入框有焦点时不弹胶囊，只在框尾挂 ⇪。"],
+  ["tucked", "贴边收起", "滑出来 1.5 秒再收；角标变成露在外面的小条变黄。"],
+  ["side", "侧边竖向岛", "只放图标和竖排短字；角标在最上面。"],
+  ["bottom", "底边吸附", "上下翻过来，内容一样。"],
+  ["taskbar", "任务栏模式", "Windows 实验形态，高度只有 32，用短字。"],
+];
+const MODES = [
+  ["flash", "只一闪", "按下后弹 1.5 秒，之后什么都不留。和音量提示一样。"],
+  ["badge", "只角标", "不弹出来，大写开着时收起条上挂一个黄色角标，关了就消失。最安静。"],
+  ["both", "一闪 + 角标", "按下时弹 1.5 秒，之后留角标，直到关掉。推荐。"],
+];
+
+const s = { icon: "arrow", form: "top", mode: "both", offFlash: true, prio: "yield", badgePos: "end", badgeClick: true, lang: "zh", caps: false, alert: null, msg: false, vol: false, dim: false, pw: false, pwWarn: true, settingOn: true, note: "" };
+let alertTimer = 0, msgTimer = 0, volTimer = 0, msgStart = 0;
+
+function capsContent(on, t, form, st, pw) {
+  const ic = icon(st.icon, on, 16);
+  const short = on ? t.short : t.shortOff;
+  if (form === "side") return `${ic}<span class="vtext">${short}</span>`;
+  if (form === "taskbar") return `<span class="alert${pw ? " warn" : ""}" style="font-size:12px">${ic}<span>${short}</span></span>`;
+  return `<span class="alert${pw ? " warn" : ""}">${ic}<span>${pw ? t.pw : on ? t.on : t.off}</span></span>`;
+}
+function badgeHTML(st, t, withTip) {
+  return `<span class="chip capsb${st.badgeClick ? " clickable" : ""}" data-act="badge" title="${st.badgeClick ? t.tip : t.tipNo}">${icon(st.icon, true, 13)}${withTip ? `<span class="tip">${st.badgeClick ? t.tip : t.tipNo}</span>` : ""}</span>`;
+}
+function islandHTML(form, st, extraCls = "") {
+  const t = TEXT[st.lang];
+  const badge = st.caps && st.mode !== "flash";
+  const pwAlert = st.pw && st.caps && st.pwWarn;
+  const showAlert = st.alert && !(st.prio === "yield" && st.msg);
+  const top = pwAlert ? "pw" : showAlert ? "alert" : st.msg ? "msg" : st.vol ? "vol" : "idle";
+  const hideBadge = top === "alert" || top === "pw";
+  const badgeChip = badge && !hideBadge ? badgeHTML(st, t, false) : "";
+  const dimCls = st.dim && top === "idle" ? " dim" : "";
+  const alertOn = top === "pw" ? true : st.alert && st.alert.on;
+  if (form === "expanded") {
+    const islInputFocus = !!st.inputFocus;
+    const toast = showAlert && !islInputFocus ? `<span class="toast">${icon(st.icon, st.alert.on, 14)}${st.alert.on ? t.on : t.off}</span>` : "";
+    const flag = st.caps ? `<span class="capsflag">${icon(st.icon, true, 13)}${t.short}</span>` : "";
+    return `<div class="isl expanded ${extraCls}"><div class="exp-head"><span class="tabs"><b>待办</b><span>日历</span><span>音乐</span></span>${toast}</div>
+      <div class="exp-body"><div class="todo"><i></i>${t.todo[0]}</div><div class="todo"><i></i>${t.todo[1]}</div>
+      <div class="inp${islInputFocus ? " focus" : ""}"><span class="typed">${st.caps ? "BUY MILK" : "buy milk"}</span><span class="caret"></span>${flag}</div></div></div>`;
+  }
+  if (form === "notch") {
+    let l = `<span class="chip">${WAVE}</span>`, r = `<span>10:24</span>`;
+    if (top === "alert" || top === "pw") { l = icon(st.icon, alertOn, 16); r = `<b style="color:${alertOn ? "#ffd60a" : "#ffffff99"}">${top === "pw" ? (st.lang === "zh" ? "密码" : "PW") : alertOn ? t.short : t.shortOff}</b>`; }
+    else if (top === "msg") { l = `<span class="msg-ico">QQ</span>`; r = `<span style="max-width:90px;overflow:hidden;text-overflow:ellipsis">${t.msg}</span>`; }
+    else if (top === "vol") { l = VOL; r = `<span>60</span>`; }
+    if (badgeChip) { if (st.badgePos === "start") l = badgeChip + l; else r = r + badgeChip; }
+    const w = top === "msg" ? 430 : top === "idle" ? 300 + (badgeChip ? 30 : 0) : 330;
+    return `<div class="isl notch${dimCls} ${extraCls}" style="width:${w}px"><span class="wing">${l}</span><span class="cam">刘海</span><span class="wing r">${r}</span></div>`;
+  }
+  if (form === "side") {
+    let inner = `<span class="chip">${WAVE}</span><span class="vtext" style="opacity:.7">10:24</span>`;
+    if (top === "alert" || top === "pw") inner = capsContent(alertOn, t, "side", st, top === "pw");
+    else if (top === "msg") inner = `<span class="msg-ico">QQ</span><span class="vtext">1 条</span>`;
+    else if (top === "vol") inner = `${VOL}<span class="vtext">60</span>`;
+    return `<div class="isl side${dimCls}" style="height:${badgeChip ? 140 : 116}px">${badgeChip}${inner}</div>`;
+  }
+  let center;
+  if (top === "alert" || top === "pw") center = capsContent(alertOn, t, form, st, top === "pw");
+  else if (top === "msg") center = `<span class="msg-ico">QQ</span><span class="mid" style="text-align:left">${t.msg}</span>`;
+  else if (top === "vol") center = `<span class="alert">${VOL}<span>${t.vol}</span></span>`;
+  else if (badgeChip && st.badgePos === "time") center = `<span class="chip">${WAVE}</span><span class="mid" style="display:inline-flex;gap:6px;justify-content:center;align-items:center">${t.time}${badgeChip}</span><span class="chip">82%</span>`;
+  else center = `<span class="chip">${WAVE}</span><span class="mid">${t.time}</span><span class="chip">82%</span>`;
+  const small = form === "taskbar";
+  const base = small ? 180 : 230;
+  let w = top === "alert" ? (small ? 120 : ALERT_W[st.lang]) : top === "pw" ? (small ? 120 : 250) : top === "msg" ? (small ? 220 : 290) : base;
+  let inner = center;
+  if (badgeChip && st.badgePos !== "time" && top === "idle") { inner = st.badgePos === "start" ? badgeChip + center : center + badgeChip; }
+  if (badgeChip) w += 30;
+  const peek = form === "tucked" && top !== "idle" ? " peek" : "";
+  const bCls = form === "tucked" && badge ? " badge-on" : "";
+  return `<div class="isl ${form}${peek}${bCls}${dimCls} ${extraCls}" style="width:${w}px">${top === "idle" ? inner : (st.badgePos === "start" ? badgeChip + center : center + badgeChip)}</div>`;
+}
+function deskChrome(form) { return form === "taskbar" ? '<div class="taskbar"><i></i><i></i><i></i></div>' : ""; }
+function deskNote(form) {
+  return { tucked: "岛收在顶边外面，只露一道小条", side: "岛吸在屏幕右边", bottom: "岛吸在屏幕底边", taskbar: "岛放进任务栏", float: "岛离开了顶边", expanded: "面板开着，岛自己的输入框有焦点" }[form] || "";
+}
+function loginHTML(st) {
+  if (!st.pw || st.form === "expanded") return "";
+  return `<div class="login" style="${st.form === "side" ? "left:42%" : ""}"><b>登录 · 某个网站</b><div class="field">tixxin</div><div class="field focus">${st.caps ? "PASSW" : "passw"}<span class="caret"></span></div></div>`;
+}
+
+function render() {
+  const stage = document.getElementById("stage");
+  const st = { ...s, inputFocus: s.form === "expanded" };
+  stage.innerHTML = deskChrome(s.form) + loginHTML(s) + islandHTML(s.form, st) + `<span class="edge-note">${deskNote(s.form)}</span><span class="cap">大写锁定：${s.caps ? "开" : "关"}</span>`;
+  const line = [`现在：<b>${s.caps ? "大写开着" : "小写"}</b>`];
+  if (s.pw && s.caps && s.pwWarn && s.form !== "expanded") line.push("密码框有焦点 → 一直提醒，直到关掉大写或离开密码框");
+  else if (s.alert) line.push(s.prio === "yield" && s.msg ? "大写提示让给了消息，只挂角标" : s.form === "expanded" ? "岛自己的输入框有焦点，不弹胶囊，只看框尾" : "正在显示大写提示（1.5 秒）");
+  if (s.msg) line.push("消息预览显示中（4 秒）");
+  if (s.vol) line.push("音量提示（1.5 秒）");
+  if (s.mode !== "flash" && s.caps) line.push(s.badgeClick ? "开着时常驻角标，点它可以关掉大写" : "开着时常驻角标");
+  if (s.note) line.push(s.note);
+  document.getElementById("status").innerHTML = line.join(" · ");
+  renderButtons(); renderIcons(); renderModes(); renderGrid(); renderDetails(); renderSettings();
+}
+function btnGroup(id, list, key) {
+  document.getElementById(id).innerHTML = list.map(([v, label, rec]) => `<button class="pill-btn${s[key] === v ? " on" : ""}" data-k="${key}" data-v="${v}">${label}${rec ? `<span class="rec">${rec}</span>` : ""}</button>`).join(" ");
+}
+function renderButtons() {
+  btnGroup("iconBtns", Object.entries(ICONS).map(([v, d]) => [v, icon(v, true, 13) + d.name]), "icon");
+  btnGroup("formBtns", FORMS.map(([v, l]) => [v, l]), "form");
+  btnGroup("modeBtns", MODES.map(([v, l]) => [v, l, v === "both" ? "推荐" : ""]), "mode");
+  btnGroup("offBtns", [[true, "也弹一下（灰色）", "推荐"], [false, "不弹"]], "offFlash");
+  btnGroup("prioBtns", [["yield", "让位：只挂角标", "推荐"], ["jump", "插队 1.5 秒"]], "prio");
+  btnGroup("posBtns", [["end", "最右边", "推荐"], ["start", "最左边"], ["time", "跟在时间后面"]], "badgePos");
+  btnGroup("clickBtns", [[true, "关掉大写", "推荐"], [false, "没反应"]], "badgeClick");
+  btnGroup("langBtns", [["zh", "中文"], ["en", "English"]], "lang");
+  document.getElementById("pwBtn").classList.toggle("on", s.pw);
+  document.getElementById("dimBtn").classList.toggle("on", s.dim);
+}
+function renderIcons() {
+  const t = TEXT[s.lang];
+  document.getElementById("iconCards").innerHTML = Object.entries(ICONS).map(([id, d], i) => `
+    <div class="icard${s.icon === id ? " on" : ""}" data-k="icon" data-v="${id}">
+      <h4><span class="no">${String.fromCharCode(65 + i)}</span>${d.name}${d.rec ? '<span class="tag rec">推荐</span>' : ""}</h4>
+      <div class="iboard"><div class="itile">${icon(id, true, 40)}<small>开</small></div><div class="itile">${icon(id, false, 40)}<small>关</small></div></div>
+      <div class="isizes">${icon(id, true, 16)}<span>${t.short}</span><span class="sep"></span>${icon(id, false, 16)}<span style="opacity:.6">${t.shortOff}</span><span class="sep"></span><span class="chip capsb">${icon(id, true, 13)}</span><span class="sep"></span><span style="display:inline-flex;padding:4px 6px;border-radius:8px;background:#f3f3f6">${icon(id, true, 16, "color:#a86f00")}</span></div>
+      <p>${d.note}</p>
+    </div>`).join("");
+}
+function renderModes() {
+  document.getElementById("modeCards").innerHTML = MODES.map(([v, l, d]) => {
+    const tl = v === "flash" ? '<i class="fl" style="width:15%"></i><i class="nn" style="width:65%"></i><i class="ofl" style="width:15%"></i>'
+      : v === "badge" ? '<i class="bd" style="width:85%"></i>'
+      : '<i class="fl" style="width:15%"></i><i class="bd" style="width:70%"></i><i class="ofl" style="width:15%"></i>';
+    return `<div class="mode${s.mode === v ? " on" : ""}" data-k="mode" data-v="${v}"><h4>${l}${v === "both" ? '<span class="tag rec">推荐</span>' : ""}</h4><p>${d}</p>
+      <div class="timeline">${tl}</div><div class="tl-cap"><span>按下开</span><span>开着打字…</span><span>按下关</span></div></div>`;
+  }).join("");
+}
+function renderGrid() {
+  document.getElementById("formGrid").innerHTML = FORMS.map(([v, l, d]) => {
+    const base = { ...s, caps: true, msg: false, vol: false, dim: false, pw: false, mode: "both", prio: "yield", inputFocus: false };
+    const a = islandHTML(v, { ...base, alert: { on: true } });
+    const b = islandHTML(v, { ...base, alert: null, inputFocus: v === "expanded" });
+    return `<div class="card"><h4>${l}</h4><div class="desk small">${deskChrome(v)}${a}</div><div class="desk small" style="margin-top:8px">${deskChrome(v)}${b}</div><p class="note">${d}</p></div>`;
+  }).join("");
+}
+function renderDetails() {
+  const base = { ...s, msg: false, vol: false, dim: false, pw: false, mode: "both", prio: "yield" };
+  const inl = (st, form = "float") => islandHTML(form, st, "inline");
+  const tz = TEXT.zh, te = TEXT.en;
+  const lightBar = (color, label) => `<div class="isl inline light" style="width:200px"><span class="alert">${icon(s.icon, true, 16, `color:${color}`)}<span style="color:#1c1d21">${label}</span></span></div>`;
+  const cards = [
+    ["开 / 关一样宽，岛不抖", `${inl({ ...base, lang: "zh", caps: true, alert: { on: true } })}${inl({ ...base, lang: "zh", caps: false, alert: { on: false } })}${inl({ ...base, lang: "en", caps: true, alert: { on: true } })}${inl({ ...base, lang: "en", caps: false, alert: { on: false } })}`,
+      "提示的宽度按这门语言里较长的那句定（中文两句一样长，英文按 Off 那句），连按几下岛不会一宽一窄地来回跳。"],
+    ["角标放哪", `${inl({ ...base, caps: true, alert: null, badgePos: "end" })}${inl({ ...base, caps: true, alert: null, badgePos: "start" })}${inl({ ...base, caps: true, alert: null, badgePos: "time" })}`,
+      "默认最右边（靠电量）。它算收起条上的一项，在「设置 → 岛屿布局」里能拖到别处；刘海两翼放不下时它<b>不进「+N」</b>，挤掉的是别的项目。"],
+    ["点角标关掉大写", `<div style="padding-bottom:34px">${(() => { const st = { ...base, caps: true, alert: null }; const t = TEXT[s.lang]; return `<div class="isl inline float" style="width:260px"><span class="chip">${WAVE}</span><span class="mid">${t.time}</span><span class="chip">82%</span>${badgeHTML(st, t, true)}</div>`; })()}</div>`,
+      "悬停说明，点一下替你按一次 Caps Lock（Windows 用 SendInput；Mac 用 IOKit 改锁定状态，要实测要不要权限）。关掉后照常弹灰色的「已关闭」。"],
+    ["浅色和液态玻璃岛", `${lightBar("#ffd60a", "黄色：看不清")}${lightBar("#a86f00", "深琥珀：看得清")}`,
+      "黑岛用系统黄 #ffd60a；岛底色亮的时候（浅色主题、液态玻璃透出浅色窗口）换成深琥珀 #a86f00，对比度从 1.4 升到 4.6。"],
+    ["密码框里一直提醒", `${inl({ ...base, caps: true, pw: true, alert: null })}`,
+      "<b>只在 Windows</b>：焦点在别的程序的密码框（UI Automation 的 IsPassword）且大写开着时，提示不自动消失，直到关掉大写或离开密码框。Mac 要辅助功能权限才读得到，先不做。"],
+    ["锁屏、睡眠回来", `${inl({ ...base, caps: true, alert: null })}`,
+      "期间大写被改了（外接键盘拔插、登录界面按过）不弹，回来只悄悄更新角标；不然一解锁岛上就冒一句不是你刚按出来的提示。"],
+  ];
+  document.getElementById("details").innerHTML = cards.map(([h, demo, n]) => `<div class="card"><h4>${h}</h4><div class="desk mini">${demo}</div><p class="note">${n}</p></div>`).join("");
+}
+function renderSettings() {
+  const on = s.settingOn;
+  const d = ICONS[s.icon];
+  document.getElementById("settings").innerHTML = `
+    <div class="it"><span class="ib">${icon(s.icon, true, 17)}</span>
+      <div class="tx"><div class="tt">大写锁定</div>
+        <div class="ds">按 Caps Lock 时，收起的小岛显示现在是大写还是小写；可以在大写开着时留一个小角标。电脑自带大写提示的（macOS 14 起、部分笔记本）可以不开。</div>
+        ${on ? `<div class="sub">
+          <div class="sr"><span>提示方式</span><span class="seg">${MODES.map(([v, l]) => `<button class="${s.mode === v ? "on" : ""}" data-k="mode" data-v="${v}">${l}</button>`).join("")}</span></div>
+          <div class="sr"><span>图标</span><span class="dd">${icon(s.icon, true, 15)}${d.name} ▾</span></div>
+          <div class="sr"><span>关掉大写时也提示<small>灰色的「大写锁定已关闭」</small></span><button class="tg${s.offFlash ? "" : " off"}" data-k="offFlash" data-v="${!s.offFlash}"></button></div>
+          <div class="sr"><span>点角标关掉大写<small>角标的位置在 <a href="#">岛屿布局</a> 里摆</small></span><button class="tg${s.badgeClick ? "" : " off"}" data-k="badgeClick" data-v="${!s.badgeClick}"></button></div>
+          <div class="sr"><span>输密码时一直提醒<span class="plat">Windows</span><small>别的程序的密码框有焦点、大写又开着时，提示不自动消失</small></span><button class="tg${s.pwWarn ? "" : " off"}" data-k="pwWarn" data-v="${!s.pwWarn}"></button></div>
+          <div class="sr"><span>数字锁定也提示<span class="plat">Windows</span><small>Num Lock 开关时同样提示</small></span><button class="tg off"></button></div>
+        </div>` : ""}
+      </div>
+      <button class="tg${on ? "" : " off"}" data-k="settingOn" data-v="${!on}" title="打开时岛上演示一次"></button></div>`;
+}
+
+const CONSIDER = [
+  ["读状态和触发"],
+  ["读状态", "<div><b>Windows</b>：已有的低级键盘钩子看到 <kbd>VK_CAPITAL</kbd> 抬起后，用 <code>GetKeyState(VK_CAPITAL) &amp; 1</code> 读开关（按下那一刻读到的是旧值）；没装钩子时退回 250ms 轮询。</div><div><b>Mac</b>：轮询 <code>CGEventSourceFlagsState</code> 的 <code>maskAlphaShift</code>，不要辅助功能权限；全局监听 <code>flagsChanged</code> 要权限，不用它。</div>"],
+  ["按状态变化，不按键", "只在开关真的变了时提示：远程桌面、虚拟机、别的程序用 SendInput 改了也对得上；Mac 短按 Caps Lock 切输入法（状态没变）不弹。"],
+  ["按住不放", "按住时不重复触发；Mac 开了「用大写锁定键切换输入法」时要按住一会儿才开大写，状态变的那一刻才弹。"],
+  ["连按几下", "新状态顶掉正在显示的、重新计时；宽度不变，只换图标和字。不排队一条条放。"],
+  ["刚启动、锁屏、睡眠", "启动时已经是大写：不弹，只挂角标。锁屏 / 睡眠 / 切换用户回来时状态变了：不弹，只更新角标。"],
+  ["外接键盘、多块键盘", "状态是全系统一个，哪块键盘按的都一样。没有指示灯的键盘（不少 60% 配列）正是最需要这个的。"],
+  ["和岛上别的东西"],
+  ["和其他临时提示的先后", "<div>密码框提醒 &gt; 消息预览 &gt; 大写锁定 &gt; 设备提示 &gt; 音量亮度（大写和消息的先后见问题 4）。</div><div class=\"d\">被顶掉的音量提示不补；设备提示剩下的时间接着放；正在滚的歌词让出 1.5 秒后接着滚。</div>"],
+  ["Agent 审批", "Agent 等你点同意时，大写只挂角标，不顶掉审批。"],
+  ["展开时", "面板右上角冒小胶囊 1.5 秒，不动面板布局。岛自己的输入框（待办、翻译、剪贴板搜索）有焦点时不弹胶囊，框尾一直挂 ⇪：你正看着那个框，胶囊多余。"],
+  ["贴边收起", "滑出来 1.5 秒再收（和「收到新消息自动露出」一样）；角标变成露在外面的小条变黄。"],
+  ["竖向、刘海、任务栏", "放不下整句：侧边岛只放图标和竖排「大写」；刘海左翼图标、右翼「大写」；任务栏用短字。"],
+  ["角标和收起条布局", "角标是收起条上的一项「大写锁定」，只在开着时出现，默认最右边，「岛屿布局」里能拖；刘海两翼的「+N」收纳不收它。"],
+  ["岛的宽度", "提示宽度按较长那句预留，开 / 关不来回跳；角标出现时岛只加宽一个角标的宽度（30px），带弹性过渡。"],
+  ["打扰"],
+  ["免打扰、全屏", "游戏免打扰、全屏应用时不弹；角标照样更新（它不弹出来、不改岛的大小以外的东西）。岛被托盘隐藏时什么都不显示。"],
+  ["闲置变淡", "弹提示时恢复不透明，结束后重新计闲置时间；只是角标变了不唤醒。"],
+  ["系统自己的提示", "macOS 14 起光标下有小 ⇪，联想、戴尔、惠普笔记本常有自带屏幕提示，所以整项<b>默认关</b>。"],
+  ["设置里打开时", "开关一打开，岛上按现在的方式演示一次「已开启」，像拖动尺寸滑块时岛跟着预览那样。"],
+  ["外观和可读"],
+  ["颜色", "开 = 黄色（#ffd60a，和设备提示的绿 / 橙分开）；关 = 灰色空心。浅色、玻璃岛换深琥珀 #a86f00。不只靠颜色：形状和文字也不同。"],
+  ["动效", "图标弹进来（缩放 0.5 → 1，弹簧 340ms），文字从下面淡入；系统「减少动态效果」时只换内容、不放动画。具体时长按 <code>--motion-*</code> 档位取。"],
+  ["读屏", "提示 <code>role=\"status\"</code>，念「大写锁定已开启」；角标有名字「大写锁定开着，点击关闭」，能用键盘聚焦。"],
+  ["文案", "中：大写锁定已开启 / 已关闭，短的「大写 / 小写」；英：Caps Lock On / Off，短的「CAPS / caps」。窄处用短的。"],
+  ["平台和实现"],
+  ["Num Lock", "只 Windows 有意义，子选项默认关。Scroll Lock 不做。"],
+  ["点角标关大写", "Windows：SendInput 一次 VK_CAPITAL 按下抬起。Mac：IOKit <code>IOHIDSetModifierLockState</code>，要实测新系统是否需要「输入监控」权限；要的话 Mac 上点角标只打开说明，不强求。"],
+  ["密码框", "Windows：大写开着时才订阅 UI Automation 焦点变化，看 <code>IsPassword</code>，关了就退订，平时零开销。Mac 需要辅助功能权限，先不做。"],
+  ["事件和插件", "Rust 发 <code>caps-lock-changed</code>（带 <code>on</code>、<code>source: key | wake | startup</code>），岛的 host 决定显示什么；第 3 版插件能只读订阅。新事件名写进 contracts.md。"],
+  ["设置和搜索", "开关和子选项存进现有系统提示的设置里；新增设置项后跑 <code>pnpm settings:index</code>；中英文案都加；platforms.md 写清 Mac 没有密码框和 Num Lock。"],
+  ["开销", "Windows 有钩子时零轮询；Mac 250ms 读一个整数，开关关着时不轮询。"],
+];
+document.getElementById("considerTable").innerHTML = `<tr><th style="width:140px">方面</th><th>打算怎么做</th></tr>` + CONSIDER.map((r) => r.length === 1 ? `<tr class="grp"><td colspan="2">${r[0]}</td></tr>` : `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+
+const QUESTIONS = [
+  ["用哪个图标", "rec", "推荐：A 实心箭头", "实心箭头谁都认得，13px 也清楚；喜欢更直观的可以选 B 指示灯键帽。上面「图标」一节点卡片能全页换着看。"],
+  ["默认提示方式", "rec", "推荐：一闪 + 角标", "角标解决「开了忘了关」，一闪解决「按了不知道开没开」。"],
+  ["关掉大写时要不要也弹", "rec", "推荐：要，灰色", "不提示关闭时，没开角标的人不知道按成功没有。"],
+  ["碰上消息预览", "ask", "要你选", "让位：消息照常，大写只挂角标（推荐，不打断你在看的消息）。插队：大写顶上 1.5 秒，消息剩下的时间接着放。"],
+  ["贴边收起时", "rec", "推荐：滑出来", "滑出来 1.5 秒 / 只把露在外面的小条变黄 / 不显示（和音量提示一样）。"],
+  ["点角标关掉大写", "rec", "推荐：要", "省得去找键；Mac 上要实测权限，不行就只在 Windows 上能点。"],
+  ["密码框里一直提醒", "ask", "要你选", "最有用的场景，但只有 Windows 能做，还要用 UI Automation。可以这次做，也可以第二步再做。"],
+  ["要不要顺带做输入法切换（中 / 英）提示", "ask", "建议另开任务", "Mac 用 Caps Lock 切输入法的人更需要；读法完全不同（Mac 读输入源，Windows 读 IME 状态）。"],
+  ["整项默认开还是关", "rec", "推荐：关", "Mac 14+ 和很多笔记本自带提示，默认开会重复；新装引导里不提它。"],
+];
+document.getElementById("questions").innerHTML = QUESTIONS.map(([h, k, tag, p]) => `<div class="q"><h4>${h}<span class="tag ${k}">${tag}</span></h4><p>${p}</p></div>`).join("");
+
+function setCaps(on, source = "key") {
+  if (on === s.caps) return;
+  s.caps = on; s.note = "";
+  clearTimeout(alertTimer);
+  if (source !== "key") { s.alert = null; s.note = "锁屏期间变的：不弹，只更新角标"; render(); return; }
+  const showFlash = s.mode !== "badge" && (on || s.offFlash);
+  if (showFlash) {
+    s.alert = { on };
+    if (s.prio === "jump" && s.msg) { const left = Math.max(0, 4000 - (Date.now() - msgStart)); clearTimeout(msgTimer); msgTimer = setTimeout(endMsg, left + 1500); }
+    s.vol = false; clearTimeout(volTimer);
+    alertTimer = setTimeout(() => { s.alert = null; render(); }, 1500);
+  } else s.alert = null;
+  render();
+}
+function demoOnce() {
+  const prev = s.caps; s.caps = true; s.alert = { on: true }; s.note = "设置里打开开关：演示一次";
+  clearTimeout(alertTimer); render();
+  alertTimer = setTimeout(() => { s.caps = prev; s.alert = null; s.note = ""; render(); }, 1500);
+}
+function endMsg() { s.msg = false; render(); }
+document.getElementById("capsBtn").onclick = () => setCaps(!s.caps);
+document.getElementById("msgBtn").onclick = () => { s.msg = true; msgStart = Date.now(); clearTimeout(msgTimer); msgTimer = setTimeout(endMsg, 4000); render(); };
+document.getElementById("volBtn").onclick = () => { if (s.alert) return; s.vol = true; clearTimeout(volTimer); volTimer = setTimeout(() => { s.vol = false; render(); }, 1500); render(); };
+document.getElementById("pwBtn").onclick = () => { s.pw = !s.pw; render(); };
+document.getElementById("sleepBtn").onclick = () => setCaps(!s.caps, "wake");
+document.getElementById("dimBtn").onclick = () => { s.dim = !s.dim; render(); };
+document.addEventListener("click", (e) => {
+  const b = e.target.closest('[data-act="badge"]');
+  if (b && b.closest("#stage")) { if (s.badgeClick) setCaps(false); return; }
+  const el = e.target.closest("[data-k]");
+  if (!el) return;
+  const k = el.dataset.k; let v = el.dataset.v;
+  if (v === "true") v = true; else if (v === "false") v = false;
+  s[k] = v;
+  if (k === "settingOn" && v) { demoOnce(); return; }
+  render();
+});
+function syncReal(e) { if (e.getModifierState) { const on = e.getModifierState("CapsLock"); if (on !== s.caps) setCaps(on); } }
+document.addEventListener("keydown", syncReal);
+document.addEventListener("keyup", syncReal);
+document.getElementById("themeBtn").onclick = () => {
+  const r = document.documentElement; const light = r.dataset.theme !== "light";
+  r.dataset.theme = light ? "light" : ""; document.getElementById("themeBtn").textContent = light ? "深色" : "浅色";
+};
+render();
+</script>
+</body>
+</html>
