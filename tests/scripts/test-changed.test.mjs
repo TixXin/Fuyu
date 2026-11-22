@@ -3,7 +3,9 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { closure, rustFilters, select, specifiers } from "../../scripts/test-changed.mjs";
+import { closure, rustFilters, rustReaders, select, specifiers } from "../../scripts/test-changed.mjs";
+
+const REPO = path.resolve(import.meta.dirname, "..", "..");
 
 function fixture(files) {
   const root = mkdtempSync(path.join(tmpdir(), "test-changed-"));
@@ -67,4 +69,29 @@ test("Rust changes run the tests of the touched modules, anything else runs the 
   assert.deepEqual(rustFilters(["src-tauri/src/island/geometry.rs", "src-tauri/src/island/tests.rs", "src-tauri/src/tray.rs"]), ["island::", "tray::"]);
   assert.deepEqual(rustFilters(["src-tauri/src/lib.rs"]), []);
   assert.deepEqual(rustFilters(["src-tauri/Cargo.toml"]), []);
+});
+
+test("a data file outside src-tauri runs the tests of the Rust modules that read it", (t) => {
+  const root = fixture({
+    "src/features/builtins.json": "[]",
+    "src/features/timer/island.tsx": "export {};",
+    "packages/generated/rust.mjs": "export {};",
+    "src-tauri/tauri.conf.json": "{}",
+    "src-tauri/src/plugin_kernel/builtins.rs": 'const CATALOG: &str = include_str!("../../../src/features/builtins.json");',
+    "src-tauri/src/plugin_kernel/mod.rs": 'fn dir() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../src/features") }',
+    "src-tauri/src/plugin_kernel/tests.rs": 'const GENERATED: &str = "../packages/generated";\nconst CONF: &str = include_str!("../../tauri.conf.json");',
+    "src-tauri/src/pets/tests.rs": 'assert!(reject("../x.webp"));',
+  });
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const readers = rustReaders(root);
+  const rust = (changed) => select({ changed, pages: [], unitTests: [], root, readers }).rust;
+  assert.deepEqual(rust(["src/features/builtins.json"]), ["plugin_kernel::"]);
+  assert.deepEqual(rust(["packages/generated/rust.mjs"]), ["plugin_kernel::"]);
+  assert.equal(rust(["src/features/timer/island.tsx"]), null);
+  assert.deepEqual(rust(["src/features/builtins.json", "src-tauri/src/pets/mod.rs"]), ["pets::", "plugin_kernel::"]);
+  assert.deepEqual(rust(["src/features/builtins.json", "src-tauri/tauri.conf.json"]), []);
+});
+
+test("in this repo, changing builtins.json runs the plugin_kernel tests (0.3.12 slipped past test:changed)", () => {
+  assert.deepEqual(rustFilters(["src/features/builtins.json"], rustReaders(REPO)), ["plugin_kernel::"]);
 });
