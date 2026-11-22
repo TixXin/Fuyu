@@ -365,9 +365,10 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
             if let Some(position) = final_position {
                 let _ = window.emit(ISLAND_POSITION_CHANGED_EVENT, nominal_position(&window, position));
             }
-            if dropped.is_some() {
-                if let Err(error) = apply_stage_geometry(&window, read_window_state(), true) {
-                    eprintln!("Failed to drop the island into the taskbar: {error}");
+            let settled = read_window_state();
+            if dropped.is_some() || notch::stale_after_drop(settled) {
+                if let Err(error) = apply_stage_geometry(&window, settled, dropped.is_some()) {
+                    eprintln!("Failed to settle the island after a drag: {error}");
                 }
             }
         }
