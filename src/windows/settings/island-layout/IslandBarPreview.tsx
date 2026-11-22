@@ -30,8 +30,9 @@ export function ItemGlyph({ id }: { id: string }) {
   return ICONS[id] ?? <Puzzle size={13} strokeWidth={2.2} />;
 }
 
-export function IslandBarPreview({ settings, names, placements, centers, openItem, dragging, onPick, onDragStart }: {
+export function IslandBarPreview({ settings, notch, names, placements, centers, openItem, dragging, onPick, onDragStart }: {
   settings: IslandSettings;
+  notch: boolean;
   names: ReadonlyMap<string, string>;
   placements: readonly CollapsedPlacement[];
   centers: readonly string[];
@@ -67,23 +68,47 @@ export function IslandBarPreview({ settings, names, placements, centers, openIte
     </span>
   );
   const centerName: Record<string, string> = { center: text.item.center, "todos-count": text.item.todoCount };
-  const style = { "--bar-fill": hexToRgba(settings.islandBackgroundColor, settings.opacity / 100), "--bar-ink": settings.taskTextColor } as CSSProperties;
+  const centerGlyph = (id: string) => id === "center" ? <Sparkles size={13} strokeWidth={2.2} />
+    : notch ? <ListTodo size={13} strokeWidth={2.2} /> : <span className="island-bar-preview__text">{text.place.text}</span>;
+  const center = (
+    <span className="island-bar-preview__center" data-lane="center">
+      {centers.map((id) => chip(id, centerName[id] ?? id, centerGlyph(id), false))}
+    </span>
+  );
+  const more = shelved.length > 0 ? (
+    <button className="island-bar-preview__item island-bar-preview__more" type="button" data-lane="shelf" aria-label={text.place.panel} title={text.place.panel} onClick={() => onPick(shelved[0].id)}>
+      {text.more(shelved.length)}
+    </button>
+  ) : null;
+  const moreLeft = shown("right").length + centers.length < shown("left").length ? null : more;
+  const style = notch
+    ? undefined
+    : { "--bar-fill": hexToRgba(settings.islandBackgroundColor, settings.opacity / 100), "--bar-ink": settings.taskTextColor } as CSSProperties;
 
   return (
-    <figure className="island-bar-preview" aria-label={text.previewLabel}>
-      <div className="island-bar-preview__bar" style={style} data-lane-bar="">
-        {zone("left")}
-        <span className="island-bar-preview__center" data-lane="center">
-          {centers.map((id) => chip(id, centerName[id] ?? id, id === "center" ? <Sparkles size={13} strokeWidth={2.2} /> : <span className="island-bar-preview__text">{text.place.text}</span>, false))}
-        </span>
-        {zone("right")}
-        {shelved.length > 0 ? (
-          <button className="island-bar-preview__item island-bar-preview__more" type="button" data-lane="shelf" aria-label={text.place.panel} title={text.place.panel} onClick={() => onPick(shelved[0].id)}>
-            {text.more(shelved.length)}
-          </button>
-        ) : null}
-      </div>
-      <figcaption className="island-bar-preview__caption">{text.previewHint}</figcaption>
+    <figure className="island-bar-preview" aria-label={text.previewLabel} data-notch={notch || undefined}>
+      {notch ? (
+        <div className="island-bar-preview__bar" data-lane-bar="">
+          <span className="island-bar-preview__wing">
+            {zone("left")}
+            {moreLeft}
+          </span>
+          <span className="island-bar-preview__notch" aria-hidden="true"><i /></span>
+          <span className="island-bar-preview__wing">
+            {moreLeft ? null : more}
+            {center}
+            {zone("right")}
+          </span>
+        </div>
+      ) : (
+        <div className="island-bar-preview__bar" style={style} data-lane-bar="">
+          {zone("left")}
+          {center}
+          {zone("right")}
+          {more}
+        </div>
+      )}
+      <figcaption className="island-bar-preview__caption">{notch ? text.lanes.notchCaption : text.previewHint}</figcaption>
     </figure>
   );
 }

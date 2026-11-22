@@ -39,6 +39,8 @@ export type SettingsCollapsedLanesText = {
   onBar: string;
   name: Record<LaneName, string>;
   laneHint: Record<Exclude<LaneName, "off">, string>;
+  notchHint: Record<"left" | "center" | "right", string>;
+  notchCaption: string;
   offDrop: string;
   allOn: string;
   dropHere: string;
@@ -85,6 +87,8 @@ export const zhCN: SettingsCollapsedItemsText = {
     offDrop: "松手就拿下来",
     allOn: "都放上去了",
     dropHere: "拖到这里",
+    notchHint: { left: "刘海左边", center: "排在刘海右边最前", right: "刘海右边" },
+    notchCaption: "现在是刘海模式：中间被摄像头挡住，不显示文字",
     denyCenter: "中间只放中心图案和剩余待办数",
     fold: "放不下，后面的收进 +N",
     spilled: "刘海旁放不下，收进了 +N",
@@ -150,6 +154,8 @@ export const en: SettingsCollapsedItemsText = {
     offDrop: "Drop to take it off",
     allOn: "Everything is on the bar",
     dropHere: "Drag here",
+    notchHint: { left: "Left of the notch", center: "First on the right of the notch", right: "Right of the notch" },
+    notchCaption: "Notch mode: the camera covers the middle and no text shows",
     denyCenter: "Only the center pattern and the todo count go in the middle",
     fold: "No room from here on, these go behind +N",
     spilled: "No room beside the notch, kept behind +N",

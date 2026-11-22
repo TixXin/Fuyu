@@ -27,8 +27,9 @@ function Pict({ lane }: { lane: BarLane }) {
   );
 }
 
-export function CollapsedLanes({ layout, editor, centers, styled, selected, onSelect, onStyle }: {
+export function CollapsedLanes({ layout, editor, notch, centers, styled, selected, onSelect, onStyle }: {
   layout: CollapsedLayout;
+  notch: boolean;
   editor: CollapsedEditor;
   centers: readonly string[];
   styled: (id: string) => boolean;
@@ -45,6 +46,7 @@ export function CollapsedLanes({ layout, editor, centers, styled, selected, onSe
   const root = useRef<HTMLDivElement>(null);
   const centerName: Record<string, string> = { center: t.item.center, "todos-count": t.item.todoCount };
   const name = (id: string) => names.get(id) ?? centerName[id] ?? id;
+  const hint = (lane: BarLane) => lane === "shelf" || !notch ? text.laneHint[lane] : text.notchHint[lane];
 
   useLayoutEffect(() => {
     const id = editor.takeFocus();
@@ -153,7 +155,7 @@ export function CollapsedLanes({ layout, editor, centers, styled, selected, onSe
 
   return (
     <SettingsGroup title={t.title} footer={t.hint}>
-      <div className="collapsed-lanes" ref={root} data-dragging={drag ? "" : undefined}>
+      <div className="collapsed-lanes" ref={root} data-dragging={drag ? "" : undefined} data-notch={notch || undefined}>
         <p className="collapsed-lanes__keys">{text.keys}</p>
         <div className="collapsed-lanes__bucket">
           <header className="collapsed-lanes__head">
@@ -169,7 +171,7 @@ export function CollapsedLanes({ layout, editor, centers, styled, selected, onSe
                   <div className="collapsed-lanes__lane-head">
                     <Pict lane={lane} />
                     <b>{text.name[lane]}</b>
-                    <span className="collapsed-lanes__lane-hint">{drag?.lane === lane && lane === "center" ? text.denyCenter : text.laneHint[lane]}</span>
+                    <span className="collapsed-lanes__lane-hint" title={hint(lane)}>{drag?.lane === lane && lane === "center" ? text.denyCenter : hint(lane)}</span>
                   </div>
                   <div className="collapsed-lanes__list" role="listbox" aria-label={text.name[lane]}>
                     {chips.length > 0 ? chips : <span className="collapsed-lanes__none">{text.dropHere}</span>}

@@ -4,6 +4,7 @@ import { useSlotEntries } from "../../../features/plugin-kernel/useSlotEntries";
 import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { DisplaySettingsSection } from "../sections/DisplaySettingsSection";
+import { useIslandNotchShown } from "../useIslandNotchShown";
 import { CENTER_ITEMS } from "./centerItems";
 import { CollapsedLanes } from "./CollapsedLanes";
 import { laneOf } from "./laneMoves";
@@ -25,6 +26,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
   const layout = useCollapsedLayout();
   const { names, listed } = layout;
   const editor = useCollapsedEditor(layout);
+  const notch = useIslandNotchShown();
   const text = useTranslation().settings.collapsedItems;
   const styles = useSlotEntries(islandItemStyles, "islandLayout");
   const styled = useCallback((item: string) => styles.some((entry) => islandItemStyleMatches(entry.id, item)), [styles]);
@@ -108,6 +110,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
           {stage(
             <IslandBarPreview
               settings={settings}
+              notch={notch}
               names={names}
               placements={editor.view}
               centers={centers}
@@ -117,7 +120,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
               onDragStart={editor.startDrag}
             />,
           )}
-          <CollapsedLanes layout={layout} editor={editor} centers={centers} styled={styled} selected={openItem} onSelect={setOpenItem} onStyle={showStyle} />
+          <CollapsedLanes layout={layout} editor={editor} notch={notch} centers={centers} styled={styled} selected={openItem} onSelect={setOpenItem} onStyle={showStyle} />
           <ItemStyleTabs items={styleItems} current={openItem} onPick={setOpenItem} settings={settings} onSettingsChange={onSettingsChange} />
           <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />
         </>

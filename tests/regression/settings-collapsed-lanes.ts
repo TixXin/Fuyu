@@ -81,6 +81,28 @@ async function checkDrag(check: Check) {
   await reset();
 }
 
+async function checkNotch(check: Check) {
+  const notch = async (value: { width: number; height: number } | null) => act(async () => {
+    await (await import("@tauri-apps/api/event")).emit("island-notch-changed", value);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+  await overflow(["timer"]);
+  await notch({ width: 200, height: 32 });
+  const wings = [...document.querySelectorAll(".island-bar-preview[data-notch] .island-bar-preview__wing")];
+  const itemsIn = (wing: Element | undefined) => [...wing?.querySelectorAll("[data-item]") ?? []].map((item) => item.getAttribute("data-item"));
+  check(wings.length === 2 && document.querySelector(".island-bar-preview__wing + .island-bar-preview__notch + .island-bar-preview__wing")
+    && itemsIn(wings[0]).join("|") === "status-light" && itemsIn(wings[1])[0] === "center" && itemsIn(wings[1]).includes("mail")
+    && !document.querySelector(".island-bar-preview__text") && wings[0].querySelector(".island-bar-preview__more")?.textContent === "+1",
+    "In notch mode the preview hangs from the top with the camera in the middle: left items on the left, the center pattern leading the right, no text, +N on the emptier side");
+  check(document.querySelector(".collapsed-lanes__lane[data-lane='center'] .collapsed-lanes__lane-hint")?.textContent === "排在刘海右边最前"
+    && document.querySelector(".collapsed-lanes__lane[data-lane='left'] .collapsed-lanes__lane-hint")?.textContent === "刘海左边",
+    "The lanes say where things go around the notch");
+  await notch(null);
+  await overflow(null);
+  check(!document.querySelector(".island-bar-preview[data-notch]") && document.querySelector(".collapsed-lanes__lane[data-lane='left'] .collapsed-lanes__lane-hint")?.textContent === "摘要左边",
+    "Without a notch the bar preview and hints go back to the pill");
+}
+
 export async function checkCollapsedLanes(check: Check) {
   localStorage.removeItem("fuyu-collapsed-items");
   check(lane("left") === "浮屿水母" && lane("right").startsWith("新邮件提醒") && lane("right").endsWith("会话数 / 会话环|计时器") && off() === "外设电量" && saved() === null,
@@ -88,6 +110,7 @@ export async function checkCollapsedLanes(check: Check) {
   await checkKeyboard(check);
   await checkButtons(check);
   await checkDrag(check);
+  await checkNotch(check);
   await overflow(["session-count", "timer"]);
   check(document.querySelector(".collapsed-lanes__lane[data-lane='right'] .collapsed-lanes__fold + .lane-chip")?.getAttribute("data-item") === "session-count"
     && chip("timer")?.hasAttribute("data-spilled") && more() === "+2", "Items the island had no room for are marked after a fold line and counted in the preview's +N");
