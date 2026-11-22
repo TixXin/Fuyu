@@ -37,7 +37,7 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
       collapsedSteps: notch ? notchWingDetents(DEFAULT_SETTINGS.notchWingMax, collapsed) : collapsedDetents(collapsed),
       presets: panelPresets(fallback, width, height),
     };
-  }, [notch, page, settings]);
+  }, [notch, settings]);
 
   const latest = useRef({ settings, setSettings, page, pageSize, model });
   useLayoutEffect(() => {
