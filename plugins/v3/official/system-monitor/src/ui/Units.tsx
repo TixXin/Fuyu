@@ -114,7 +114,7 @@ export function GpuUnit({
   const memory =
     gpu && gpu.memoryUsedBytes !== null
       ? gpu.memoryTotalBytes !== null
-        ? `${copy.vram} ${formatGb(gpu.memoryUsedBytes)} / ${formatGb(gpu.memoryTotalBytes)} GB`
+        ? `${gpu.memoryShared ? copy.sharedMemory : copy.vram} ${formatGb(gpu.memoryUsedBytes)} / ${formatGb(gpu.memoryTotalBytes)} GB`
         : `${copy.vramUsed} ${formatGb(gpu.memoryUsedBytes)} GB`
       : null;
   const extra =

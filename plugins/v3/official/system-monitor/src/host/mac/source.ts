@@ -15,7 +15,7 @@ export const MAC_COMMANDS = {
 
 type CommandName = keyof typeof MAC_COMMANDS;
 
-export function createMacSource(exec: Exec, cores: () => number): Source {
+export function createMacSource(exec: Exec, cores: () => number, systemMemory: () => number): Source {
   const network = new NetworkMeter();
   const run = (name: CommandName) => {
     const [file, args] = MAC_COMMANDS[name];
@@ -44,7 +44,8 @@ export function createMacSource(exec: Exec, cores: () => number): Source {
           percent: gpu.percent,
           temperatureC: null,
           memoryUsedBytes: gpu.memoryUsedBytes,
-          memoryTotalBytes: null,
+          memoryTotalBytes: gpu.memoryUsedBytes === null ? null : systemMemory(),
+          memoryShared: true,
           powerW: null,
           engines: [],
         });

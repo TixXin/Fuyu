@@ -35,6 +35,7 @@ export interface GpuReading {
   temperatureC: number | null;
   memoryUsedBytes: number | null;
   memoryTotalBytes: number | null;
+  memoryShared: boolean;
   powerW: number | null;
   engines: GpuEngine[];
 }

@@ -50,7 +50,7 @@ function currentPlatform(): Platform {
 
 export function createSource(ctx: Context, exec: Exec, kind: Platform): Source {
   const cores = () => Math.max(1, cpus().length);
-  if (kind === "macos") return createMacSource(exec, cores);
+  if (kind === "macos") return createMacSource(exec, cores, totalmem);
   if (kind === "windows") {
     const helper = new PowerShellHelper({
       exec,
