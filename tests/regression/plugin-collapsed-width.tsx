@@ -110,15 +110,17 @@ async function runChecks() {
 
   const removeLong = await act(async () => registry.add("island.collapsed/v1", { id: "long-bar", component: LongChip }, "@test/long", external));
   await settle(() => width === MAX_FITTED_COLLAPSED_WIDTH, "cap");
-  await settle(() => bar().querySelector(".test-long-chip")?.closest(".island__collapsed-fit")?.hasAttribute("data-clipped") === true, "clipped");
+  await settle(() => !bar().querySelector(".test-long-chip") && bar().querySelector(".island__more-chip")?.textContent === "+1", "behind +N");
   const shell = bar().getBoundingClientRect();
   const quiet = bar().querySelector<HTMLElement>(".island__quiet-button")!.getBoundingClientRect();
-  check(width === MAX_FITTED_COLLAPSED_WIDTH && quiet.right <= shell.right + 0.5 && quiet.width > 0, `超过上限时岛宽停在 ${MAX_FITTED_COLLAPSED_WIDTH}px，右边的收起按钮还在岛里`);
-  check(bar().querySelector(".test-long-chip")!.closest(".island__collapsed-fit")!.hasAttribute("data-clipped"), "放不下的插件收起项在右端淡出裁掉");
+  const more = bar().querySelector<HTMLElement>(".island__more-chip")!.getBoundingClientRect();
+  check(width === MAX_FITTED_COLLAPSED_WIDTH && quiet.right <= shell.right + 0.5 && quiet.width > 0 && more.right <= quiet.left + 0.5, `超过上限时岛宽停在 ${MAX_FITTED_COLLAPSED_WIDTH}px，「+N」和右边的收起按钮都在岛里`);
+  check(whole(".test-monitor-chip") && !bar().querySelector(".island__collapsed-fit[data-clipped]"), "放不下的插件收起项整项收进「+N」，留下的完整显示，不再在右端裁掉");
+  check(JSON.parse(localStorage.getItem("fuyu-collapsed-overflow") ?? "[]").join() === "long-bar", "收进「+N」的项目记给设置窗口");
   const usage = measureBarUsage(1);
   const [monitorBox, longBox] = ["monitor-bar", "long-bar"].map((id) => usage.items.find((item) => item.id === id)?.box ?? null);
   check(usage.collapsed && usage.barWidth === bar().offsetWidth && usage.items.map((item) => item.owner).join() === "@test/system-monitor,@test/long", `bar usage: the island reports the bar width (${usage.barWidth}px) and whose item each one is`);
-  check(monitorBox !== null && longBox !== null && [monitorBox, longBox].every((box) => box.clipped && box.wanted > box.width && box.left >= 0 && box.left + box.width <= usage.barWidth!) && longBox.left >= monitorBox.left + monitorBox.width, `bar usage: over the cap every plugin item is cut, and each reports its place, its width and the width it wanted (${monitorBox?.width}/${monitorBox?.wanted}px, ${longBox?.width}/${longBox?.wanted}px)`);
+  check(monitorBox !== null && !monitorBox.clipped && monitorBox.left >= 0 && monitorBox.left + monitorBox.width <= usage.barWidth! && longBox === null, `bar usage: the item that stays is whole and the one behind +N has no box (${monitorBox?.width}/${monitorBox?.wanted}px)`);
 
   await act(async () => {
     removeLong();

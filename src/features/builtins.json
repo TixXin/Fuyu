@@ -20,6 +20,7 @@
     { "id": "messages", "kind": "builtin", "root": "messages", "host": "host/index.mjs", "background": ["qq", "wechat", "mail", "telegram", "discord", "whatsapp", "tim", "feishu", "dingtalk", "wecom"], "provides": ["messages/v1", "island-notices/v1"] },
     { "id": "device-events", "kind": "builtin", "root": "device-events", "host": "host/index.mjs", "background": ["watcher"] },
     { "id": "system-levels", "kind": "builtin", "root": "system-levels", "host": "host/index.mjs", "background": ["watcher"] },
+    { "id": "caps-lock", "kind": "builtin", "defaultOff": true, "root": "caps-lock", "host": "host/index.mjs", "background": ["watcher"] },
     { "id": "device-use", "kind": "builtin", "root": "device-use", "host": "host/index.mjs", "background": [] },
     { "id": "theme-market", "kind": "builtin", "root": "theme-market", "host": "host/index.mjs", "background": [] },
     { "id": "updater", "kind": "essential", "root": "updater", "host": "host/index.mjs", "background": [], "provides": ["market/v1"] }

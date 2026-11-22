@@ -4,6 +4,7 @@ mod app_identity;
 mod agent_status;
 mod bluetooth_access;
 mod calendar;
+mod caps_lock;
 mod cc_connect;
 mod claude_usage;
 mod clipboard_history;
@@ -267,6 +268,7 @@ pub fn run() {
             system::fullscreen::start(app.handle());
             media_control::init(app.handle());
             system_levels::init(app.handle());
+            caps_lock::init(app.handle());
             agent_status::init();
             device_events::init(app.handle());
             Ok(())
@@ -316,6 +318,7 @@ pub fn run() {
             tray_visibility;
             taskbar_host;
             system_levels;
+            caps_lock;
             system_widgets;
             wallpaper
         ))

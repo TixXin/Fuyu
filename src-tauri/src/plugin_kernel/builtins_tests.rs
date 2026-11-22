@@ -51,8 +51,8 @@ fn register(table: &mut Table, plugin: &str, name: &str, fake: &Arc<Fake>) {
 fn the_shipped_catalog_lists_every_built_in_plugin() {
     let catalog = parse_catalog(CATALOG).unwrap();
     let ids: Vec<&str> = catalog.iter().map(|plugin| plugin.id.as_str()).collect();
-    assert_eq!(ids.len(), 22, "{ids:?}");
-    for id in ["todos", "calendar", "music", "clipboard", "screenshot", "file-shelf", "translation", "voice-input", "timer", "agents", "session-ring", "claude-usage", "cc-connect", "ssh-tunnel", "local-api", "center-pattern", "messages", "device-events", "system-levels", "device-use", "theme-market", "updater"] {
+    assert_eq!(ids.len(), 23, "{ids:?}");
+    for id in ["todos", "calendar", "music", "clipboard", "screenshot", "file-shelf", "translation", "voice-input", "timer", "agents", "session-ring", "claude-usage", "cc-connect", "ssh-tunnel", "local-api", "center-pattern", "messages", "device-events", "system-levels", "caps-lock", "device-use", "theme-market", "updater"] {
         assert!(ids.contains(&id), "{id} is missing from builtins.json");
     }
     let essential: Vec<&str> = catalog.iter().filter(|plugin| plugin.kind == Kind::Essential).map(|plugin| plugin.id.as_str()).collect();

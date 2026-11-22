@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { backgroundBuildEnv } from "../build-load.mjs";
 import { pruneMainTarget } from "../prune-build-cache.mjs";
+import { acquireBrowsers, browserCap, isRegression, wantedBrowsers, withBrowsers } from "./browsers.mjs";
 import { acquire, DEFAULT_CARGO_TARGET_DIR, explicitCargoTargetDir, HEAVY_ENV, isCargoBuild, laneOf, queueDir, slotCount } from "./queue.mjs";
 
 export function parseArgs(argv) {
@@ -35,9 +36,20 @@ export function run(argv, env = process.env, { afterJob = () => pruneMainTarget(
   };
   const options = { stdio: "inherit", shell: process.platform === "win32", env: jobEnv };
   if (env[HEAVY_ENV] === "1") return spawn(command[0], command.slice(1), options).status ?? 1;
-  const release = acquire({ label, lane: lane ?? laneOf(command, jobEnv), dir: queueDir(jobEnv), slots: slotCount(jobEnv), log });
+  let job = command;
+  let release;
+  if (isRegression(command)) {
+    const want = wantedBrowsers(command, jobEnv);
+    const cap = browserCap(jobEnv);
+    const held = acquireBrowsers({ label, want, dir: queueDir(jobEnv), cap, log });
+    release = held.release;
+    job = withBrowsers(command, held.granted);
+    log(`[heavy] 回归页开 ${held.granted} 个浏览器（要 ${want} 个，全机器最多 ${cap} 个，和 Rust 构建的名额分开）`);
+  } else {
+    release = acquire({ label, lane: lane ?? laneOf(command, jobEnv), dir: queueDir(jobEnv), slots: slotCount(jobEnv), log });
+  }
   try {
-    const result = spawn(command[0], command.slice(1), options);
+    const result = spawn(job[0], job.slice(1), options);
     if (result.error) console.error(`[heavy] 启动失败：${result.error.message}`);
     return result.status ?? 1;
   } finally {

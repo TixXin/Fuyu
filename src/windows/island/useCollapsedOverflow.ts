@@ -9,24 +9,24 @@ export type CollapsedOverflowState = { fitting: boolean; shelved: ReadonlySet<st
 
 export const BAR_UNIT = "data-bar-unit";
 export const MORE_CHIP_CLASS = "island__more-chip";
-const MORE_CHIP_WIDTH = 28;
+export const MORE_CHIP_WIDTH = 28;
 const HOLD_ID = "overflow:hold";
 const HOLD_WIDTH = 400;
 const SIDES: readonly OverflowSide[] = ["left", "right"];
 const NONE: CollapsedOverflowState = { fitting: false, shelved: new Set(), moved: new Set(), chip: null, wing: null };
 
-function ownWidth(element: Element) {
+export function ownWidth(element: Element) {
   if (!(element instanceof HTMLElement)) return element.getBoundingClientRect().width;
   const inner = element.matches(".island__collapsed-fit") ? element.firstElementChild : element.querySelector(".island__collapsed-fit-inner");
   return Math.max(element.offsetWidth, element.scrollWidth, inner instanceof HTMLElement ? inner.offsetWidth : 0);
 }
 
-const px = (value: string) => Number.parseFloat(value) || 0;
-const isOpenButton = (element: Element) => element.classList.contains("island__open-button");
-const isMoreChip = (element: Element) => element.classList.contains(MORE_CHIP_CLASS);
+export const px = (value: string) => Number.parseFloat(value) || 0;
+export const isOpenButton = (element: Element) => element.classList.contains("island__open-button");
+export const isMoreChip = (element: Element) => element.classList.contains(MORE_CHIP_CLASS);
 const isBarControl = (element: Element) => isOpenButton(element) || element.classList.contains("island__quiet-button");
 
-function flexBoxes(children: Iterable<Element>): Element[] {
+export function flexBoxes(children: Iterable<Element>): Element[] {
   const boxes: Element[] = [];
   for (const child of children) {
     if (child.hasAttribute(BAR_UNIT)) boxes.push(...flexBoxes(child.children));
@@ -35,13 +35,13 @@ function flexBoxes(children: Iterable<Element>): Element[] {
   return boxes;
 }
 
-function boxWidth(element: Element) {
+export function boxWidth(element: Element) {
   if (!isOpenButton(element)) return ownWidth(element);
   const style = getComputedStyle(element);
   return px(style.paddingLeft) + px(style.paddingRight);
 }
 
-const spanOf = (boxes: readonly Element[], gap: number) =>
+export const spanOf = (boxes: readonly Element[], gap: number) =>
   boxes.reduce((total, box) => total + boxWidth(box), 0) + gap * Math.max(0, boxes.length - 1);
 
 function measureWing(wing: HTMLElement) {
@@ -68,6 +68,14 @@ const itemCount = (wing: HTMLElement) => flexBoxes(wing.children).filter((box) =
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((id) => b.has(id));
 const sameState = (a: CollapsedOverflowState, b: CollapsedOverflowState) =>
   a.fitting === b.fitting && a.chip === b.chip && a.wing === b.wing && sameSet(a.shelved, b.shelved) && sameSet(a.moved, b.moved);
+
+export function useOverflowHold(fitting: boolean) {
+  useEffect(() => {
+    if (!fitting) return;
+    collapsedFit.report(HOLD_ID, HOLD_WIDTH);
+    return () => collapsedFit.drop(HOLD_ID);
+  }, [fitting]);
+}
 
 export type CollapsedOverflowOptions = { auto: boolean; forceChip: boolean; maxWing: number };
 
@@ -149,11 +157,7 @@ export function useCollapsedOverflow(
     return () => observer.disconnect();
   }, [enabled, active, signature, state, leftRef, rightRef, auto, forceChip, maxWing]);
 
-  useEffect(() => {
-    if (!state.fitting) return;
-    collapsedFit.report(HOLD_ID, HOLD_WIDTH);
-    return () => collapsedFit.drop(HOLD_ID);
-  }, [state.fitting]);
+  useOverflowHold(state.fitting);
 
   useEffect(() => {
     reportNotchWing(state.wing);

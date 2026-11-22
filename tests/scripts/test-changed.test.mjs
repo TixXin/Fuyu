@@ -44,6 +44,24 @@ test("a page or test is picked when a file it imports, directly or not, changed"
   assert.ok(closure(path.join(root, "src", "App.tsx"), root).has("src/lib/x.ts"));
 });
 
+test("builtins-off runs only the part of the switched-off feature whose files changed, and every part for shared code", (t) => {
+  const root = fixture({
+    "tests/regression/builtins-off.html": '<script type="module" src="/tests/regression/builtins-off.tsx"></script>',
+    "tests/regression/builtins-off.tsx": 'import "../../src/windows/island/shell.ts";',
+    "src/windows/island/shell.ts": "export {};",
+    "src/features/timer/plugin/island.tsx": "export {};",
+    "src/features/media/MusicPlayerPanel.tsx": "export {};",
+  });
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const pages = ["builtins-off.html?self", "builtins-off.html?only=timer", "builtins-off.html?only=music"];
+  const picked = (changed) => select({ changed, pages, unitTests: [], root }).pages;
+  assert.deepEqual(picked(["src/features/timer/plugin/island.tsx"]), ["builtins-off.html?only=timer"]);
+  assert.deepEqual(picked(["src/features/media/MusicPlayerPanel.tsx"]), ["builtins-off.html?only=music"]);
+  assert.deepEqual(picked(["src/windows/island/shell.ts"]), pages);
+  assert.deepEqual(picked(["tests/regression/builtins-off.html"]), pages);
+  assert.deepEqual(picked(["src/elsewhere.ts"]), []);
+});
+
 test("Rust changes run the tests of the touched modules, anything else runs the whole lib", () => {
   assert.equal(rustFilters(["src/a.ts"]), null);
   assert.deepEqual(rustFilters(["src-tauri/src/island/geometry.rs", "src-tauri/src/island/tests.rs", "src-tauri/src/tray.rs"]), ["island::", "tray::"]);

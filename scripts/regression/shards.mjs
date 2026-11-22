@@ -4,7 +4,7 @@ import path from "node:path";
 export const TIMINGS_FILE = "tests/regression/timings.json";
 const DEFAULT_SECONDS = 5;
 
-const pageKey = (page) => page.split("?")[0];
+export const pageKey = (page) => (/[?&](only=|self\b)/.test(page) ? page : page.split("?")[0]);
 
 export function readTimings(root) {
   try {

@@ -2,6 +2,7 @@ use super::*;
 use serde_json::json;
 
 const DEFAULT_OFF: [&str; 6] = ["cc-connect", "center-pattern", "claude-usage", "local-api", "session-ring", "ssh-tunnel"];
+const OFF_AND_NEWER_THAN_V2: [&str; 1] = ["caps-lock"];
 
 fn plan_for(migration: &Migration, grants: &Map<String, Value>) -> Option<Plan> {
     plan(migration, grants, off_without_grant(&catalog(), migration))
@@ -177,7 +178,7 @@ const ALL_MIGRATED: [&str; 7] = ["focusd.cc-connect", "focusd.center-pattern", "
 fn builtins_json_marks_exactly_the_plugins_that_were_off_in_v2() {
     let catalog = catalog();
     let off: BTreeSet<String> = catalog.iter().filter(|plugin| plugin.default_off).map(|plugin| plugin.id.clone()).collect();
-    assert_eq!(off, ids(&DEFAULT_OFF));
+    assert_eq!(off, ids(&DEFAULT_OFF).union(&ids(&OFF_AND_NEWER_THAN_V2)).cloned().collect());
     for migration in MIGRATIONS {
         assert!(catalog.iter().any(|plugin| plugin.id == migration.v3), "{} is not in builtins.json", migration.v3);
     }

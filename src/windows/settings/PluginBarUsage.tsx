@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Settings } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { useCollapsedOverflowIds } from "../../lib/settings/useCollapsedOverflowIds";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { MAX_FITTED_COLLAPSED_WIDTH } from "../island/layout";
 import { barUsageModel, isOnBar, type BarUsageRow } from "./barUsageRows";
@@ -18,12 +19,14 @@ export function PluginBarUsage({ entries, usage, onOpenSettings }: {
 }) {
   const text = useTranslation().settings.pluginsV3.page.bar;
   const { placements: saved } = useCollapsedPlacements();
+  const away = useCollapsedOverflowIds();
   const [open, setOpen] = useState<string | null>(null);
   if (usage === undefined) return null;
   const model = barUsageModel(
     entries.map((entry) => ({ id: entry.id, title: entry.title, running: entry.enabled && entry.plugin.state === "running", declaresBar: entry.places.includes("bar"), settings: entry.settings === true })),
     usage.report,
     saved,
+    away,
   );
   if (model.rows.length === 0) return null;
   const onBar = model.rows.filter(isOnBar);

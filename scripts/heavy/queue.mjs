@@ -135,7 +135,7 @@ export function waitingNote({ slots, held, ahead, now, lane = null, laneBusy = f
   return `[heavy] 这台机器同时最多跑 ${slots} 个重任务。正在跑：${running}；${why}，轮到了会自动开始。`;
 }
 
-function writeTicket(dir, ticket) {
+export function writeTicket(dir, ticket) {
   const name = `${String(ticket.since).padStart(15, "0")}-${ticket.pid}.json`;
   const temp = path.join(dir, `.${name}`);
   writeFileSync(temp, JSON.stringify(ticket));

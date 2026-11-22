@@ -25,6 +25,7 @@ export type SettingsCollapsedItemsText = {
     mail: string;
     update: string;
     deviceUse: string;
+    capsLock: string;
     shelf: string;
     music: string;
     sessionCount: string;
@@ -149,6 +150,7 @@ export const zhCN: SettingsCollapsedItemsText = {
     mail: "新邮件提醒",
     update: "更新提醒",
     deviceUse: "摄像头 / 麦克风",
+    capsLock: "大写锁定",
     shelf: "文件中转数量",
     music: "音乐",
     sessionCount: "会话数 / 会话环",
@@ -230,6 +232,7 @@ export const en: SettingsCollapsedItemsText = {
     mail: "New mail",
     update: "Update available",
     deviceUse: "Camera / microphone",
+    capsLock: "Caps Lock",
     shelf: "File shelf count",
     music: "Music",
     sessionCount: "Session count / ring",

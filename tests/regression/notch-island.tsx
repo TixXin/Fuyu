@@ -23,8 +23,10 @@ import { permission, SESSIONS } from "./agentNoticeGallery";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import { mirrorDiffers } from "./mirrorCheck";
 import { checkNotchText } from "./notchTextChecks";
+import { checkPillOverflow } from "./pillOverflowChecks";
 import { collapsedFit } from "../../src/windows/island/collapsedFitStore";
 import { islandSpotlight, SPOTLIGHT_ANIMATION } from "../../src/features/plugin-kernel/islandSpotlight";
+import type { CollapsedPlacement } from "../../src/lib/settings/collapsedItems";
 import type { IslandPage } from "../../src/windows/island/types";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -46,7 +48,14 @@ mockIPC((command, payload) => {
 
 const registry = windowSlots("island");
 const ClocksPage = () => <div>clocks page</div>;
-const clockChip = (city: string) => () => <span className="test-clock-chip" style={{ display: "inline-block", width: 44, whiteSpace: "nowrap", fontSize: 12 }}>{city}</span>;
+let clockWidth = 44;
+const clockWidthListeners = new Set<() => void>();
+const subscribeClockWidth = (listener: () => void) => (clockWidthListeners.add(listener), () => { clockWidthListeners.delete(listener); });
+const setClockWidth = (next: number) => { clockWidth = next; clockWidthListeners.forEach((listener) => listener()); };
+const clockChip = (city: string) => function ClockChip() {
+  const width = useSyncExternalStore(subscribeClockWidth, () => clockWidth);
+  return <span className="test-clock-chip" style={{ display: "inline-block", width, whiteSpace: "nowrap", fontSize: 12 }}>{city}</span>;
+};
 function addClocks() {
   const removers: (() => void)[] = [];
   for (const [index, city] of ["TYO", "LON", "NYC", "SYD", "PAR"].entries()) {
@@ -212,12 +221,26 @@ async function runChecks() {
     const gapBox = box(bar().querySelector(".island__notch-gap")!);
     check(box(chip()!).right <= gapBox.left + 0.5 || box(chip()!).left >= gapBox.right - 0.5, "「+N」不压刘海");
     check(box(chip()!).left >= box(island()).left && box(chip()!).right <= box(island()).right && chip() === hit(chip()!), "「+N」在岛上看得见、点得到");
+    const { arrangeCollapsedItems, saveCollapsedPlacements, setCollapsedItemShelf } = await import("../../src/lib/settings/collapsedItems");
+    const CLOCK_ITEMS = ["status-light", "clock-1", "clock-2", "clock-3", "clock-4", "clock-5"];
+    const saveLayout = (placements: CollapsedPlacement[]) => act(async () => {
+      saveCollapsedPlacements(placements);
+      window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-items" }));
+    });
+    const keepInPanel = (id: string | null) => saveLayout(id ? setCollapsedItemShelf(arrangeCollapsedItems(CLOCK_ITEMS, []), id, true) : []);
+    await saveLayout(arrangeCollapsedItems(CLOCK_ITEMS, []));
     const spotlit = () => [...bar().querySelectorAll<HTMLElement>("[data-spotlight]")].filter((element) => getComputedStyle(element).animationName === SPOTLIGHT_ANIMATION);
     await act(async () => islandSpotlight.request("@test/clock-par"));
     check(spotlit().length === 1 && spotlit()[0] === chip(), "刚装的插件那一格被收进「+N」时，亮的是「+N」");
     await act(async () => islandSpotlight.request("@test/clock-tyo"));
     check(spotlit().length === 1 && spotlit()[0] === clocksShown().find((clock) => clock.textContent === "TYO")?.closest(".island__collapsed-fit"), "它那一格在岛上时亮的是那一格，「+N」不亮");
     await act(async () => islandSpotlight.end("@test/clock-tyo"));
+    await saveLayout([]);
+    await act(async () => islandSpotlight.request("@test/clock-par"));
+    check(localStorage.getItem("fuyu-collapsed-items")?.includes('"items":[{"id":"clock-5","zone":"left"}]'), "新装插件的项目还没摆过、左侧项目更少时，只把它记到左侧，别的项目不记");
+    await act(async () => islandSpotlight.end("@test/clock-par"));
+    await saveLayout([]);
+    await settleTransitions();
     await act(async () => { chip()!.click(); });
     const panel = () => document.querySelector<HTMLElement>(".island-more-panel");
     const rowNames = () => [...(panel()?.querySelectorAll(".island-more-panel__row") ?? [])].map((row) => row.textContent);
@@ -245,12 +268,6 @@ async function runChecks() {
     check(notchMirror === null, `刘海形态：设置窗口照岛发来的内容画出的镜像，每个元素的位置、大小和颜色都和真岛一样（${notchMirror}）`);
     await set({ wing: 100 });
     await settleTransitions();
-    const { arrangeCollapsedItems, saveCollapsedPlacements, setCollapsedItemShelf } = await import("../../src/lib/settings/collapsedItems");
-    const keepInPanel = (id: string | null) => act(async () => {
-      const offered = ["status-light", "clock-1", "clock-2", "clock-3", "clock-4", "clock-5"];
-      saveCollapsedPlacements(id ? setCollapsedItemShelf(arrangeCollapsedItems(offered, []), id, true) : []);
-      window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-items" }));
-    });
     await keepInPanel("clock-1");
     await settleTransitions();
     await act(async () => { chip()!.click(); });
@@ -271,6 +288,12 @@ async function runChecks() {
     check(rowNames().join() === "时钟 LON" && box(panel()!).top >= box(island()).bottom, "没有刘海时点「+N」同样在岛下面出小面板");
     await act(async () => { endChip!.click(); });
     await keepInPanel(null);
+    await checkPillOverflow({ check, set, widen: (px) => act(async () => setClockWidth(px)), settle: settleTransitions, island, bar, clocks: clocksShown, openPanelNames: async () => {
+      await act(async () => { bar().querySelector<HTMLButtonElement>(".island__more-chip")!.click(); });
+      const names = rowNames();
+      await act(async () => { bar().querySelector<HTMLButtonElement>(".island__more-chip")!.click(); });
+      return names;
+    } });
     await set({ notch: NOTCH });
     await settleTransitions();
     await act(async () => { removeClocks(); });

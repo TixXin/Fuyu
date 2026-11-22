@@ -306,6 +306,10 @@ async function runChecks() {
   const marked = () => [...document.querySelectorAll<HTMLElement>("[data-spotlight]")];
   const lit = () => marked().filter((element) => getComputedStyle(element).animationName === SPOTLIGHT_ANIMATION);
   const cellWidth = cell().offsetWidth;
+  await act(async () => {
+    localStorage.setItem("fuyu-collapsed-items", JSON.stringify({ version: 1, items: [{ id: "world-clock-bar", zone: "right" }] }));
+    window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-items" }));
+  });
   check(marked().length === 0, "平时岛上没有哪一项被点亮");
   await act(async () => islandSpotlight.request("@test/system-monitor"));
   check(lit().length === 1 && lit()[0] === expandedRoot.querySelector('.dot-button[data-page="@test/system-monitor"]'), "刚装的插件只有岛页面时，亮的是页头上它的按钮");

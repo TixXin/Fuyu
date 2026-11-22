@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { builtinsOffReached, featureOfFile, isBuiltinsOffPage } from "./regression/builtins-off-pages.mjs";
 import { PAGES } from "./run-regression.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -9,6 +10,7 @@ const SPECIFIER = /\bfrom\s*["']([^"']+)["']|\bimport\s*["']([^"']+)["']|\bimpor
 const EXTENSIONS = ["", ".ts", ".tsx", ".mjs", ".js", ".json", ".css", "/index.ts", "/index.tsx", "/index.mjs"];
 const SOURCE = /\.(tsx?|mjs|js|css)$/;
 const WINDOWS = process.platform === "win32";
+const REGRESSION_JOBS = 3;
 
 const rel = (root, file) => path.relative(root, file).split(path.sep).join("/");
 
@@ -76,7 +78,11 @@ export function select({ changed, pages, unitTests, root, read = (file) => readF
   const hits = (deps) => [...deps].some((file) => touched.has(file));
   const selectedPages = pages.filter((page) => {
     const entry = pageEntry(page, root, read);
-    return entry && (touched.has(rel(root, path.join(root, "tests", "regression", page.split("?")[0]))) || hits(closure(entry, root, read, exists, cache)));
+    if (!entry) return false;
+    if (touched.has(rel(root, path.join(root, "tests", "regression", page.split("?")[0])))) return true;
+    const deps = closure(entry, root, read, exists, cache);
+    if (!isBuiltinsOffPage(page)) return hits(deps);
+    return builtinsOffReached(page, changed.filter((file) => deps.has(file) || featureOfFile(file)));
   });
   const selectedTests = unitTests.filter((test) => {
     if (touched.has(rel(root, test))) return true;
@@ -110,7 +116,7 @@ function changedFiles(since) {
   ])];
 }
 
-const pageWord = (page) => page.split("?")[0];
+const pageWord = (page) => (isBuiltinsOffPage(page) ? page : page.split("?")[0]);
 
 function main(args) {
   const at = args.indexOf("--since");
@@ -130,7 +136,7 @@ function main(args) {
   if (dryRun) return 0;
   let code = 0;
   if (tests.length) code ||= spawnSync(process.execPath, ["--test", ...tests], { cwd: ROOT, stdio: "inherit" }).status ?? 1;
-  if (pages.length) code ||= spawnSync("pnpm", ["test:regression", ...pages.map(pageWord)], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;
+  if (pages.length) code ||= spawnSync("pnpm", ["test:regression", "--jobs", String(Math.min(REGRESSION_JOBS, pages.length)), ...pages.map(pageWord)], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;
   if (rust) code ||= spawnSync("pnpm", ["heavy", "--label", "test:changed", "--", "cargo", "test", "--manifest-path", "src-tauri/Cargo.toml", "--lib", "--", ...rust], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;
   console.log(code ? "\n[test:changed] 有没过的，见上面。" : "\n✓ [test:changed] 改到的部分都过了（全量等推 PR 时 pnpm mq:verify）。");
   return code;

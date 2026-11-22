@@ -114,3 +114,23 @@ export function overflowCount(fit: Pick<OverflowFit, "left" | "right">, sizes: R
   const sum = (side: OverflowSide) => fit[side].reduce((total, shelved, index) => total + (shelved ? sizes[side][index] ?? 1 : 0), 0);
   return sum("left") + sum("right");
 }
+
+export type PillFit = { away: boolean[]; chip: boolean; used: number };
+
+export function fitPill(widths: readonly number[], capacity: number, gap: number, chipWidth: number, options: Omit<OverflowOptions, "least"> = {}): PillFit {
+  const pack = (room: number) => {
+    let used = 0;
+    const away = widths.map((width) => {
+      if (!(width > 0)) return false;
+      if (options.auto !== false && used + width + gap > room) return true;
+      used += width + gap;
+      return false;
+    });
+    return { away, used };
+  };
+  const first = pack(capacity);
+  if (!first.away.includes(true) && options.forceChip !== true) return { ...first, chip: false };
+  const chipCost = chipWidth + gap;
+  const second = options.auto === false || first.used + chipCost <= capacity ? first : pack(capacity - chipCost);
+  return { away: second.away, chip: true, used: second.used + chipCost };
+}

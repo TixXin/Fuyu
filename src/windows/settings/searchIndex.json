@@ -3453,6 +3453,66 @@
       "page": "behaviorAlerts",
       "zh-CN": {
         "group": "在小岛上提示",
+        "title": "大写锁定",
+        "description": "按 Caps Lock 时，收起的小岛显示现在是大写还是小写；可以在大写开着时留一个小角标。笔记本自带大写提示的可以不开。"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Caps Lock",
+        "description": "When you press Caps Lock, the collapsed island shows whether it is on or off, and can keep a small badge while it is on. Skip this if your laptop already shows Caps Lock."
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "提示方式",
+        "options": [
+          "只一闪",
+          "只角标",
+          "一闪 + 角标"
+        ]
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Show",
+        "options": [
+          "Flash only",
+          "Badge only",
+          "Flash + badge"
+        ]
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "关掉大写时也提示",
+        "description": "灰色的「大写锁定已关闭」"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Also show when turned off",
+        "description": "A grey “Caps Lock Off”"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "点角标关掉大写",
+        "description": "角标的位置在「岛屿布局」里摆"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Click the badge to turn it off",
+        "description": "Place the badge in Island layout"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
         "title": "摄像头和麦克风使用提示",
         "description": "有程序在用摄像头或麦克风时，在小岛上显示绿色摄像头或橙色麦克风图标，点击打开系统的隐私设置。"
       },

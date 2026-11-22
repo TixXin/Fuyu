@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { PAGES, runnerOptions } from "../../scripts/run-regression.mjs";
-import { parseShard, readTimings, slowestFirst, splitPages } from "../../scripts/regression/shards.mjs";
+import { pageKey, parseShard, readTimings, slowestFirst, splitPages } from "../../scripts/regression/shards.mjs";
 import { pageSeconds } from "../../scripts/regression/timings.mjs";
 
 test("every page lands in exactly one shard, in the order the list gives", () => {
@@ -40,4 +40,15 @@ test("page times are read from CI log lines, with or without the timestamp, and 
   const first = "2026-11-22T14:10:51.29Z ✓ builtins-off.html  passed, 12 checks, 90.0s\r\n✗ settings.html?test=1  failed, 3 checks, 4.1s\n    snapshot changed: x";
   const second = "2026-11-22T14:20:51.29Z ✓ builtins-off.html  passed, 12 checks, 100.0s\n✗ settings.html?test=1  timed out, 0 checks, 120.0s";
   assert.deepEqual(pageSeconds([first, second]), { "builtins-off.html": 95, "settings.html": 62.1 });
+});
+
+test("the parts of a split page keep their own time, other queries are dropped", () => {
+  assert.equal(pageKey("settings.html?test=1"), "settings.html");
+  assert.equal(pageKey("builtins-off.html?only=timer"), "builtins-off.html?only=timer");
+  assert.equal(pageKey("builtins-off.html?self"), "builtins-off.html?self");
+  const log = "✓ builtins-off.html?self  passed, 5 checks, 9.0s\n✓ builtins-off.html?only=timer  passed, 1 checks, 4.0s";
+  assert.deepEqual(pageSeconds([log]), { "builtins-off.html?only=timer": 4, "builtins-off.html?self": 9 });
+  const parts = PAGES.filter((page) => page.startsWith("builtins-off.html"));
+  assert.ok(parts.length > 2);
+  assert.equal(new Set(parts.map(pageKey)).size, parts.length);
 });

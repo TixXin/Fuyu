@@ -134,3 +134,9 @@ test("plugin widgets reach Settings with their sizes and an svg icon only (C156.
   ]);
   assert.equal(readBarUsageReport({ id: 4, items: [] }).widgets, undefined);
 });
+
+test("an item behind +N says so instead of having nothing to show", () => {
+  const entries = [entry("long"), entry("kept"), entry("quiet"), entry("shown")];
+  const model = barUsageModel(entries, report([item("l", "long"), item("k", "kept"), item("q", "quiet"), item("s", "shown", box(10, 20))]), [{ id: "k", zone: "right", shelf: true }], new Set(["l", "s"]));
+  assert.deepEqual(model.rows.map((row) => [row.key, row.state]), [["s", "shown"], ["l", "panel"], ["k", "panel"], ["q", "idle"]]);
+});

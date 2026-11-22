@@ -25,6 +25,7 @@ export type BuiltinPluginName =
   | "messages"
   | "device-events"
   | "system-levels"
+  | "caps-lock"
   | "device-use"
   | "theme-market"
   | "updater";
@@ -119,6 +120,7 @@ export const zhCN: SettingsPluginsV3Text = {
     messages: "QQ、微信提醒与多邮箱收信",
     "device-events": "耳机连接断开、蓝牙低电量与插拔电源时在小岛提示",
     "system-levels": "调节音量或亮度时在收起的小岛或刘海两侧提示",
+    "caps-lock": "按 Caps Lock 时在小岛提示大小写，开着时留角标",
     "device-use": "应用占用摄像头或麦克风时在收起条显示图标",
     "theme-market": "浏览、预览并应用社区主题或保存为本地预设",
     updater: "后台检查版本更新与应用内安装",
@@ -143,6 +145,7 @@ export const zhCN: SettingsPluginsV3Text = {
     messages: "消息",
     "device-events": "设备提示",
     "system-levels": "音量和亮度提示",
+    "caps-lock": "大写锁定提示",
     "device-use": "摄像头和麦克风提示",
     "theme-market": "主题市场",
     updater: "自动更新",
@@ -242,6 +245,7 @@ export const en: SettingsPluginsV3Text = {
     messages: "QQ, WeChat and mail alerts",
     "device-events": "Headphone, low battery and power alerts on the collapsed island",
     "system-levels": "Volume and brightness popups on the collapsed island or notch",
+    "caps-lock": "Shows Caps Lock on or off on the island, with a badge while on",
     "device-use": "Camera and microphone indicator on the collapsed bar",
     "theme-market": "Browse, preview and apply community themes or save as presets",
     updater: "Background update checks and in-app installation",
@@ -266,6 +270,7 @@ export const en: SettingsPluginsV3Text = {
     messages: "Messages",
     "device-events": "Device alerts",
     "system-levels": "Volume and brightness",
+    "caps-lock": "Caps Lock",
     "device-use": "Camera and mic in use",
     "theme-market": "Theme market",
     updater: "Updates",

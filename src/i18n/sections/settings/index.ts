@@ -20,6 +20,7 @@ import type { SettingsGameModeText } from "./gameMode";
 import type { SettingsDeviceUseText } from "./deviceUse";
 import type { SettingsLevelPopupText } from "./levelPopup";
 import type { SettingsDeviceAlertsText } from "./deviceAlerts";
+import type { SettingsCapsLockText } from "./capsLock";
 import type { SettingsLyricsText } from "./lyrics";
 import type { SettingsMusicBarText } from "./musicBar";
 import type { SettingsCalendarText } from "./calendar";
@@ -68,6 +69,7 @@ import * as gameMode from "./gameMode.ts";
 import * as deviceUse from "./deviceUse.ts";
 import * as levelPopup from "./levelPopup.ts";
 import * as deviceAlerts from "./deviceAlerts.ts";
+import * as capsLock from "./capsLock.ts";
 import * as lyrics from "./lyrics.ts";
 import * as musicBar from "./musicBar.ts";
 import * as calendar from "./calendar.ts";
@@ -124,6 +126,7 @@ export type SettingsText = {
   deviceUse: SettingsDeviceUseText;
   levelPopup: SettingsLevelPopupText;
   deviceAlerts: SettingsDeviceAlertsText;
+  capsLock: SettingsCapsLockText;
   lyrics: SettingsLyricsText;
   musicBar: SettingsMusicBarText;
   calendar: SettingsCalendarText;
@@ -195,6 +198,7 @@ export const zhCN: SettingsText = {
   deviceUse: deviceUse.zhCN,
   levelPopup: levelPopup.zhCN,
   deviceAlerts: deviceAlerts.zhCN,
+  capsLock: capsLock.zhCN,
   lyrics: lyrics.zhCN,
   musicBar: musicBar.zhCN,
   calendar: calendar.zhCN,
@@ -266,6 +270,7 @@ export const en: SettingsText = {
   deviceUse: deviceUse.en,
   levelPopup: levelPopup.en,
   deviceAlerts: deviceAlerts.en,
+  capsLock: capsLock.en,
   lyrics: lyrics.en,
   musicBar: musicBar.en,
   calendar: calendar.en,

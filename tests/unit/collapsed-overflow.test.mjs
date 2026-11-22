@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { balancedLanes, fitCollapsedZones, isUnbalanced, leastWing, overflowCount } from "../../src/windows/island/collapsedOverflow.ts";
+import { balancedLanes, fitCollapsedZones, fitPill, isUnbalanced, leastWing, overflowCount } from "../../src/windows/island/collapsedOverflow.ts";
 
 const GAP = 8;
 const CHIP = 26;
@@ -133,4 +133,28 @@ test("the least wing fits the first two items of each balanced wing, plus the ch
   assert.equal(leastWing(balancedLanes([31], [20, 66, 34], 2), reserved, GAP, CHIP), 28 + 66 + GAP + 34);
   const crowded = balancedLanes([31, 20, 40], [66, 34], 2);
   assert.equal(leastWing(crowded, reserved, GAP, CHIP), Math.max(20 + 31 + GAP + 20, 28 + 66 + GAP + 34, 20 + 31 + GAP + 20 + CHIP + GAP));
+});
+
+test("without a notch everything stays on the bar while it fits, with no chip", () => {
+  assert.deepEqual(fitPill([24, 40, 30], 200, GAP, CHIP), { away: [false, false, false], chip: false, used: 24 + 40 + 30 + 3 * GAP });
+});
+
+test("without a notch the items later in the list go first, and the chip takes room of its own", () => {
+  const result = fitPill([24, 40, 30, 50], 140, GAP, CHIP);
+  assert.deepEqual(result.away, [false, false, true, true]);
+  assert.equal(result.chip, true);
+  assert.ok(result.used <= 140);
+});
+
+test("without a notch a wide item behind the chip does not hold back a narrow one after it", () => {
+  assert.deepEqual(fitPill([24, 120, 20], 100, GAP, CHIP).away, [false, true, false]);
+});
+
+test("without a notch an item that draws nothing is never put away", () => {
+  assert.deepEqual(fitPill([0, 60, 0, 60], 120, GAP, CHIP).away, [false, false, false, true]);
+});
+
+test("without a notch a kept chip reserves its room, and switching put-away off keeps every item", () => {
+  assert.deepEqual(fitPill([40, 40], 96, GAP, CHIP, { forceChip: true }).away, [false, true]);
+  assert.deepEqual(fitPill([40, 40, 40], 60, GAP, CHIP, { auto: false }).away, [false, false, false]);
 });

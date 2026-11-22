@@ -2,8 +2,8 @@ use std::mem::size_of;
 
 use windows::Win32::UI::{
     Input::KeyboardAndMouse::{
-        keybd_event, GetAsyncKeyState, SendInput, INPUT, INPUT_0, INPUT_MOUSE, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
-        MOUSEEVENTF_WHEEL, MOUSEINPUT, VIRTUAL_KEY, VK_CONTROL, VK_ESCAPE, VK_LBUTTON, VK_RBUTTON, VK_RETURN, VK_SHIFT,
+        keybd_event, GetAsyncKeyState, GetKeyState, SendInput, INPUT, INPUT_0, INPUT_MOUSE, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
+        MOUSEEVENTF_WHEEL, MOUSEINPUT, VIRTUAL_KEY, VK_CAPITAL, VK_CONTROL, VK_ESCAPE, VK_LBUTTON, VK_RBUTTON, VK_RETURN, VK_SHIFT,
     },
     WindowsAndMessaging::SetCursorPos,
 };
@@ -47,6 +47,19 @@ pub(crate) fn send_paste_shortcut() {
 pub(crate) fn send_enter() {
     send_key_down(VK_RETURN);
     send_key_up(VK_RETURN);
+}
+
+pub(crate) fn is_caps_lock_on() -> bool {
+    let state = unsafe { GetKeyState(i32::from(VK_CAPITAL.0)) };
+    state & 1 != 0
+}
+
+pub(crate) fn turn_off_caps_lock() -> bool {
+    if is_caps_lock_on() {
+        send_key_down(VK_CAPITAL);
+        send_key_up(VK_CAPITAL);
+    }
+    true
 }
 
 pub(crate) fn is_escape_down() -> bool {
