@@ -25,7 +25,13 @@ description: >
 
 ## 顺序
 
-1. **在发版目录里做，不在主工作区**：`../Fuyu-release`（主仓库的一个 detached worktree，只用来发版，不在里面开发；没有就 `git worktree add --detach ../Fuyu-release origin/main`，第一次 `pnpm install`）。`git fetch origin && git checkout --detach origin/main`。这样主工作区里别的会话没提交的文件、本地 `main` 上没推的提交都不挡发版，也不会混进来。本地 `main` 上有没合入的提交时问用户要不要进这一版；要，就先在主工作区 `pnpm mq:land --yes --wait`，再回发版目录 checkout 新的 `origin/main`。
+1. **在发版目录里做，不在主工作区**：`../Fuyu-release`（主仓库的一个 detached worktree，只用来发版，不在里面开发；没有就 `git worktree add --detach ../Fuyu-release origin/main`，第一次 `pnpm install`）。`git fetch origin && git checkout --detach origin/main`。这样主工作区里别的会话没提交的文件、本地 `main` 上没推的提交都不挡发版，也不会混进来。
+   - **先一次问清这一版带什么**：在主工作区跑 `pnpm mq:pending`（没推的提交）和 `pnpm tasks dirty`（没提交的文件，看是谁的），一起列给用户，问要不要进这一版。要等没提交的改动，就先找到改它的会话（`ListAgents` 问）等它提交，再开始验证。原因：验证、land 开始后再加东西，前一轮验证和 PR 的 CI 全部作废，要重来一轮（约 15 分钟）。
+   - 要带上的，按根 `AGENTS.md`「Git 与协作」推：`pnpm mq:verify`，再 `pnpm mq:land --yes --upto <验过的提交>`，后台 `pnpm mq:wait`。合入后回发版目录 checkout 新的 `origin/main`。
+   - **等最后一轮 land 的 CI 时就做第 2–5 步**，不要等合入。原因：CI 要 9 分钟左右，用户确认说明也要几分钟，两段可以重叠。做法：
+     - 在发版目录 `git checkout --detach <验过的提交>`（本地 `main` 上的提交在发版目录里也看得到），照第 2–5 步写说明、问用户。
+     - 合入后 `git checkout --detach origin/main`，四处版本号的改动和说明文件会跟过来。checkout 因为版本文件冲突被拒时（期间有人改了 `Cargo.lock` 这类文件）：先把说明拷到 scratchpad，丢掉发版目录里的改动，重新 checkout、`pnpm release:version`，再把说明拷回来。发版目录只用来发版，里面没有别人的改动，丢掉是安全的；`pnpm release:version` 见到说明已存在不会覆盖。
+     - 再对一下 `git log --oneline --no-merges <上一个 tag>..HEAD`：这期间别人合入、草稿里没有的提交补进说明；有用户能感觉到的新条目，再问用户一次。
 2. **定版本号**：看 `gh release list --repo TixXin/Fuyu --limit 5` 和 `package.json`，按 `docs/releases/README.md`。
 3. `pnpm release:version <版本号>`：改四处版本号，写草稿 `docs/releases/v<版本号>.md`。
 4. **写说明**：草稿的「更新内容」和 What's New 里已经放了提交自带的 `Release note:` 行，合并、重排，再读没写这一行的提交的正文（不只标题），按 `docs/releases/README.md` 补成中英文，删掉草稿标记。正式版的草稿已经把这一轮各测试版的说明拼好（新的测试版在前，修复合成一组），只要去重、按重要程度重排，再补上草稿里列出的、最后一个测试版之后的提交。说明同时给 Windows 和 Mac 用户看：按其中「平台」一节，只属于一个系统的条目标「（Windows）」/「（Mac）」，快捷键两边不同时都写。在 Windows 上写也要这样，别照 Windows 的习惯写。
