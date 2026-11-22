@@ -1,44 +1,17 @@
-.tuck-intro {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2xl);
-  padding: 12px 16px;
-  color: var(--color-text-muted);
-  background:
-    radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 60%),
-    var(--color-white-a04);
-  border: 1px solid var(--color-white-a06);
-  border-radius: var(--radius-xl);
-  font-size: 12.5px;
-  line-height: 1.55;
-}
-
-.tuck-intro + .settings-group {
-  margin-top: var(--space-lg);
-}
-
-.tuck-intro p {
-  margin: 0;
-  min-width: 0;
-}
-
-.tuck-intro__art {
-  flex: none;
-  width: 196px;
-  height: 40px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+.tuck-settings__strip-row .settings-row__main {
   align-items: start;
-  gap: var(--space-md);
 }
 
-.tuck-intro__arrow {
-  align-self: center;
-  color: var(--color-text-subtle);
+.tuck-settings__holds .settings-choice--multi {
+  flex-wrap: wrap;
 }
 
-@media (max-width: 719px) {
-  .tuck-intro__art {
-    display: none;
-  }
+.tuck-settings__strip-row,
+.tuck-preview {
+  --settings-thumb-wall-a: var(--tuck-wall-a, #5b6fa6);
+  --settings-thumb-wall-b: var(--tuck-wall-b, #2a345c);
+}
+
+.tuck-settings__strip {
+  min-width: 0;
 }

@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Play } from "lucide-react";
 import { useTranslation } from "../../../i18n";
-import { SettingsSelect } from "../../../components/settings/SettingsSelect";
+import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
+import { SettingsThumbStrip } from "../../../components/settings/SettingsThumbStrip";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
-import { islandMotionTiming, islandMotionVariables } from "../../../lib/theme/islandMotion";
+import { ISLAND_MOTIONS, islandMotionTiming, islandMotionVariables } from "../../../lib/theme/islandMotion";
 import type { IslandBounce, IslandMotion } from "../../../lib/settings/types";
+import { MotionThumb } from "./motion/MotionThumb";
+import { useThumbPointer } from "./useThumbPointer";
 import "./IslandMotionRow.css";
 
 const HOLD_MS = 700;
@@ -13,18 +16,21 @@ const HOLD_MS = 700;
 export function IslandMotionRow({
   value,
   bounce,
-  bounceDisabled,
+  showBounce,
+  islandColor,
   onChange,
   onBounceChange,
 }: {
   value: IslandMotion;
   bounce: IslandBounce;
-  bounceDisabled: boolean;
+  showBounce: boolean;
+  islandColor: string;
   onChange: (value: IslandMotion) => void;
   onBounceChange: (value: IslandBounce) => void;
 }) {
   const text = useTranslation().settings.expand;
   const reducedMotion = useReducedMotion();
+  const { pointed, handlers } = useThumbPointer();
   const [open, setOpen] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -34,19 +40,19 @@ export function IslandMotionRow({
     setOpen(true);
     timer.current = window.setTimeout(() => setOpen(false), islandMotionTiming(motion, "open", false, strength).width + HOLD_MS);
   };
-  const options = [
-    { value: "pop", label: text.motionPop },
-    { value: "lively", label: text.motionLively },
-    { value: "spring", label: text.motionSpring },
-    { value: "snappy", label: text.motionSnappy },
-    { value: "soft", label: text.motionSoft },
-    { value: "unfold", label: text.motionUnfold },
-    { value: "grow", label: text.motionGrow },
-    { value: "smooth", label: text.motionSmooth },
-    { value: "fast", label: text.motionFast },
-    { value: "bouncy", label: text.motionBouncy },
-    { value: "none", label: text.motionNone },
-  ] as const;
+  const labels: Record<IslandMotion, string> = {
+    pop: text.motionPop,
+    lively: text.motionLively,
+    spring: text.motionSpring,
+    snappy: text.motionSnappy,
+    soft: text.motionSoft,
+    unfold: text.motionUnfold,
+    grow: text.motionGrow,
+    smooth: text.motionSmooth,
+    fast: text.motionFast,
+    bouncy: text.motionBouncy,
+    none: text.motionNone,
+  };
   const bounces = [
     { value: "subtle", label: text.bounceSubtle },
     { value: "regular", label: text.bounceRegular },
@@ -55,22 +61,8 @@ export function IslandMotionRow({
 
   return (
     <>
-      <SettingsRow
-        title={text.motionCurve}
-        description={text.motionHint}
-        control={
-          <SettingsSelect<IslandMotion>
-            value={value}
-            options={options}
-            ariaLabel={text.motion}
-            onChange={(motion) => {
-              onChange(motion);
-              play(motion, bounce);
-            }}
-          />
-        }
-      >
-        <div className="island-motion-preview" style={islandMotionVariables(value, open ? "open" : "close", reducedMotion, bounce) as CSSProperties}>
+      <SettingsRow className="island-motion-row" title={text.motionCurve} description={text.motionHint}>
+        <div className="island-motion-preview" data-search="off" style={islandMotionVariables(value, open ? "open" : "close", reducedMotion, bounce) as CSSProperties}>
           <div className={`island-motion-preview__island${open ? " island-motion-preview__island--open" : ""}`}>
             <span className="island-motion-preview__line" />
             <span className="island-motion-preview__line island-motion-preview__line--short" />
@@ -79,23 +71,37 @@ export function IslandMotionRow({
             <Play size={14} />
           </button>
         </div>
-      </SettingsRow>
-      <SettingsRow
-        title={text.bounce}
-        description={text.bounceHint}
-        control={
-          <SettingsSelect<IslandBounce>
-            value={bounce}
-            options={bounces}
-            ariaLabel={text.bounce}
-            disabled={bounceDisabled}
-            onChange={(strength) => {
-              onBounceChange(strength);
-              if (value === "pop") play(value, strength);
+        <div className="island-motion-row__strip" {...handlers}>
+          <SettingsThumbStrip<IslandMotion>
+            options={ISLAND_MOTIONS.map((motion) => ({ value: motion, label: labels[motion], hint: text.motionHints[motion] }))}
+            value={value}
+            ariaLabel={text.motion}
+            onChange={(motion) => {
+              onChange(motion);
+              play(motion, bounce);
             }}
+            renderArt={(motion) => <MotionThumb motion={motion} bounce={bounce} play={!reducedMotion && pointed === motion} islandColor={islandColor} />}
           />
-        }
-      />
+        </div>
+      </SettingsRow>
+      {showBounce && (
+        <SettingsRow
+          indent
+          title={text.bounce}
+          description={text.bounceHint}
+          control={
+            <SettingsChoice<IslandBounce>
+              value={bounce}
+              options={bounces}
+              ariaLabel={text.bounce}
+              onChange={(strength) => {
+                onBounceChange(strength);
+                if (value === "pop") play(value, strength);
+              }}
+            />
+          }
+        />
+      )}
     </>
   );
 }

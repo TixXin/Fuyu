@@ -1,4 +1,6 @@
-import type { WidgetEntrance } from "../../../lib/settings/types";
+import type { IslandHover, IslandMotion, TuckHintStyle, TuckStyle, WidgetEntrance } from "../../../lib/settings/types";
+
+export type TuckHold = "todo" | "agent" | "music" | "messages";
 
 export type SettingsExpandText = {
   title: string;
@@ -14,15 +16,8 @@ export type SettingsExpandText = {
   hoverSwitchDelay: string;
   tuckTitle: string;
   revealTitle: string;
-  holdTodo: string;
-  holdTodoHint: string;
-  holdAgent: string;
-  holdAgentHint: string;
   holdMusic: string;
-  holdMusicHint: string;
   holdMusicElsewhere: string;
-  holdMessages: string;
-  holdMessagesHint: string;
   revealOnMessage: string;
   tuckedHover: string;
   tuckedHoverReveal: string;
@@ -78,15 +73,26 @@ export type SettingsExpandText = {
   hoverDrop: string;
   hoverTouch: string;
   hoverNone: string;
-  hoverTry: string;
   clickHint: string;
   hoverHint: string;
   instant: string;
   pageKeys: string;
   pageKeysHint: string;
   pageKeysOpen: string;
-  tuckIntro: string;
   alertsTitle: string;
+  tuckLookTitle: string;
+  tuckWhenTitle: string;
+  tuckPreviewLabel: string;
+  tuckTry: string;
+  tuckTryHint: string;
+  tuckStyleHints: Record<TuckStyle, string>;
+  tuckHintStyleHints: Record<TuckHintStyle, string>;
+  tuckHintColorHint: string;
+  holds: string;
+  holdsHint: string;
+  holdChips: Record<TuckHold, string>;
+  motionHints: Record<IslandMotion, string>;
+  hoverHints: Record<IslandHover, string>;
 };
 
 export const zhCN: SettingsExpandText = {
@@ -103,38 +109,31 @@ export const zhCN: SettingsExpandText = {
   hoverSwitchDelay: "悬停多久后切换",
   tuckTitle: "贴边隐藏",
   revealTitle: "露出",
-  holdTodo: "有正在进行的待办时不收起",
-  holdTodoHint: "点了「开始」、岛上正显示这件事时，一直留在屏幕上。",
-  holdAgent: "Agent 在等你时不收起",
-  holdAgentHint: "有会话在等你审批或回答时，一直留在屏幕上。",
   holdMusic: "音乐播放中不收起",
-  holdMusicHint: "播放音乐时一直留在屏幕上。暂停或停止后，重新从头计时。",
   holdMusicElsewhere: "播放音乐时岛一直留在屏幕上。和「行为 → 贴边隐藏」里的是同一个开关，打开了自动收起才起作用。",
-  holdMessages: "有未读消息时不收起",
-  holdMessagesHint: "微信、QQ 有没看的消息，或来了新邮件、还没在消息页看过时，一直留在屏幕上。没打开的消息来源不算。",
   revealOnMessage: "有新消息时露出",
   tuckedHover: "鼠标移到隐藏的岛上",
   tuckedHoverReveal: "只露出岛屿",
   tuckedHoverExpand: "展开面板",
   tuckStyle: "露出样式",
-  tuckStyleHint: "顶边和底边贴边隐藏后露出的厚度；贴边隐身时完全不显露，鼠标推到屏幕边缘 2px 热区照常唤醒",
+  tuckStyleHint: "顶边和底边贴边隐藏后露出多少",
   tuckStyleEdge: "标准露边",
   tuckStyleLine: "极简细线",
   tuckStyleHidden: "贴边隐身",
-  tuckHint: "隐身提示",
-  tuckHintHint: "贴边隐身时在屏幕边缘留一个很小的记号，表示岛还在运行；记号不挡鼠标",
+  tuckHint: "隐身记号",
+  tuckHintHint: "隐身提示：贴边隐身时在屏幕边缘留个小记号，表示岛还在运行，不挡鼠标",
   tuckHintNone: "无",
   tuckHintDot: "小圆点",
   tuckHintGlow: "光晕",
-  tuckHintColor: "提示颜色",
+  tuckHintColor: "记号颜色",
   tuckHintColorContrast: "白色描边",
   tuckHintColorIsland: "跟随岛色",
   tuckHintColorCustom: "自选",
   tuckHintCustomColor: "自选颜色",
-  tuckHintBreathe: "提示呼吸",
-  tuckHintBreatheHint: "提示慢慢明暗变化；系统开了减少动画时一直常亮",
+  tuckHintBreathe: "记号呼吸",
+  tuckHintBreatheHint: "提示呼吸：记号慢慢明暗变化；系统开了减少动画时一直常亮",
   motion: "开合动画",
-  motionHint: "弹开（默认）像弹簧一样一下子张开、宽度和高度都冲过头一点再回来，高度慢半拍，内容由模糊变清楚，收起时内容先消失、不回弹地收拢；灵动快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹",
+  motionHint: "鼠标移到格子上就演一次，点一下选用",
   motionPop: "弹开",
   motionLively: "灵动",
   motionSpring: "弹性（同官网）",
@@ -148,13 +147,13 @@ export const zhCN: SettingsExpandText = {
   motionNone: "无动画",
   motionPlay: "播放一次",
   motionCurve: "动画曲线",
-  bounce: "弹动幅度",
-  bounceHint: "动画结束时回弹多少：轻微几乎不过头，常规（默认）过头一点再回来，弹动过头更多、多晃一下，收起时也会回一下。只对开合动画「弹开」和悬停效果「碰到弹一下」起作用",
+  bounce: "弹开的回弹",
+  bounceHint: "弹动幅度：到位时冲过头多少；悬停效果「碰到弹一下」也跟着变",
   bounceSubtle: "轻微",
   bounceRegular: "常规",
   bounceBouncy: "弹动",
   widgetEntrance: "小组件出场动效",
-  widgetEntranceHint: "面板展开时，Fuyu 页的小组件怎么出现。轮播（默认）每次展开换一种，不会连着两次一样；也可以固定用某一种，或者选「整体淡入」不要额外的动效。下次展开面板时生效",
+  widgetEntranceHint: "面板展开时 Fuyu 页的小组件怎么出现；轮播每次换一种，下次展开时生效",
   widgetEntrances: {
     shuffle: "轮播",
     fade: "整体淡入",
@@ -173,7 +172,7 @@ export const zhCN: SettingsExpandText = {
   widgetData: "数据动效",
   widgetDataHint: "小组件出现时，圆环扫出来、数字跳到位、进度条灌满、格子一波波亮起",
   hoverEffect: "悬停效果",
-  hoverMotionHint: "鼠标靠近收起的岛时它怎么变：碰到弹一下（默认）碰到岛就变宽一点、轻轻弹一下；靠近就鼓进到岛周围就慢慢鼓起、越近越胖；轻轻鼓起幅度小一半；明显变胖幅度更大、更慢；只往下鼓几乎不变宽；碰到才鼓要碰到岛才变；不变化就不动",
+  hoverMotionHint: "鼠标靠近收起的岛时它怎么变；移到格子上就演一次",
   hoverBounce: "碰到弹一下",
   hoverNear: "靠近就鼓",
   hoverSubtle: "轻轻鼓起",
@@ -181,15 +180,54 @@ export const zhCN: SettingsExpandText = {
   hoverDrop: "只往下鼓",
   hoverTouch: "碰到才鼓",
   hoverNone: "不变化",
-  hoverTry: "把鼠标移到这里试试",
   clickHint: "点一下小岛才展开",
   hoverHint: "鼠标移上去就展开，移开收起",
   instant: "立即",
   pageKeys: "页面切换快捷键",
   pageKeysHint: "数字键切页、上一页和下一页，在「快捷键 › 岛上」里改。",
   pageKeysOpen: "去设置",
-  tuckIntro: "贴边隐藏时，岛屿贴到屏幕顶部，只露出一条边；鼠标移上去或有新消息时再露出。",
   alertsTitle: "在小岛上提示",
+  tuckLookTitle: "隐藏后的样子",
+  tuckWhenTitle: "什么时候收起",
+  tuckPreviewLabel: "屏幕顶边，按下面的设置画",
+  tuckTry: "试一下",
+  tuckTryHint: "演鼠标碰到顶边、岛滑出来再收回去，只在这里演",
+  tuckStyleHints: {
+    edge: "露出 10 像素的一条边，鼠标碰到就滑出来",
+    line: "只露一条 4 像素的细线",
+    hidden: "完全不露；鼠标推到屏幕边缘照常唤醒",
+  },
+  tuckHintStyleHints: {
+    none: "什么都不留",
+    dot: "屏幕边下方一个小圆点",
+    glow: "贴着屏幕边的一道短光",
+  },
+  tuckHintColorHint: "提示颜色：白色描边、跟随岛色，或点彩色那格自选颜色",
+  holds: "这些时候不收起",
+  holdsHint: "有正在进行的待办、Agent 在等你、音乐播放中、有未读消息时，岛一直留在屏幕上；音乐这项和「音乐」页里的是同一个开关",
+  holdChips: { todo: "待办", agent: "Agent", music: "音乐", messages: "消息" },
+  motionHints: {
+    pop: "默认。一下子张开，宽和高都冲过头一点再回来，收起时不回弹",
+    lively: "快速冲出去、微微回一下，内容由模糊变清楚",
+    spring: "和官网上的岛一样的弹簧",
+    snappy: "很快到位，几乎不晃",
+    soft: "柔和的弹簧，几乎不弹",
+    unfold: "先横着拉开，再往下落",
+    grow: "内容从岛里长出来",
+    smooth: "平滑展开，不回弹",
+    fast: "最快到位，不回弹",
+    bouncy: "到位后弹几下",
+    none: "直接切换，没有动画",
+  },
+  hoverHints: {
+    bounce: "默认。碰到岛就变宽一点、轻轻弹一下",
+    near: "鼠标靠近就慢慢鼓起，越近越胖",
+    subtle: "和「靠近就鼓」一样，幅度小一半",
+    bold: "鼓得更大、更慢",
+    drop: "只往下鼓，几乎不变宽",
+    touch: "碰到岛才鼓起来",
+    none: "不变化",
+  },
 };
 
 export const en: SettingsExpandText = {
@@ -206,38 +244,31 @@ export const en: SettingsExpandText = {
   hoverSwitchDelay: "Hover time before switching",
   tuckTitle: "Tuck to edge",
   revealTitle: "Sliding out",
-  holdTodo: "Stay out while a todo is in progress",
-  holdTodoHint: "While a todo you started shows on the island, it stays on screen.",
-  holdAgent: "Stay out while an agent waits for you",
-  holdAgentHint: "While a session waits for your approval or answer, the island stays on screen.",
   holdMusic: "Stay out while music plays",
-  holdMusicHint: "While music plays, the island stays on screen. Paused or stopped, the idle time starts again.",
   holdMusicElsewhere: "While music plays, the island stays on screen. It is the same switch as in Behavior → Tuck to edge, and works only when auto tuck is on.",
-  holdMessages: "Stay out while messages are unread",
-  holdMessagesHint: "While WeChat or QQ has unread messages, or new mail you haven't looked at on the messages page, it stays on screen. Sources you turned off don't count.",
   revealOnMessage: "Slide out for new messages",
   tuckedHover: "Pointer on a tucked island",
   tuckedHoverReveal: "Slides it out",
   tuckedHoverExpand: "Opens the panel",
   tuckStyle: "Tucked edge",
-  tuckStyleHint: "How much of the island stays visible when tucked at the top or bottom edge; Hidden leaves a 2px wake strip at the screen edge",
+  tuckStyleHint: "How much shows when tucked at the top or bottom edge",
   tuckStyleEdge: "Standard edge",
   tuckStyleLine: "Thin line",
   tuckStyleHidden: "Hidden",
-  tuckHint: "Hidden hint",
-  tuckHintHint: "Leaves a tiny mark at the screen edge while the island is hidden, so you know it is still running; clicks pass through it",
+  tuckHint: "Hidden mark",
+  tuckHintHint: "Hidden hint: leaves a tiny mark at the screen edge so you know the island is still running; clicks pass through it",
   tuckHintNone: "None",
   tuckHintDot: "Dot",
   tuckHintGlow: "Glow",
-  tuckHintColor: "Hint color",
+  tuckHintColor: "Mark color",
   tuckHintColorContrast: "White",
   tuckHintColorIsland: "Island",
   tuckHintColorCustom: "Custom",
   tuckHintCustomColor: "Custom color",
-  tuckHintBreathe: "Breathing hint",
-  tuckHintBreatheHint: "The hint slowly fades in and out; it stays steady when the system reduces motion",
+  tuckHintBreathe: "Breathing mark",
+  tuckHintBreatheHint: "Breathing hint: the mark slowly fades in and out; it stays steady when the system reduces motion",
   motion: "Open and close",
-  motionHint: "Pop (the default) springs open, the width and height overshoot a little and come back, the height follows a beat later and the content goes from blurred to sharp, and on closing the content vanishes before the island shrinks without a bounce; Lively shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot",
+  motionHint: "Point at a tile to play it once, click to use it",
   motionPop: "Pop",
   motionLively: "Lively",
   motionSpring: "Spring (as the website)",
@@ -251,13 +282,13 @@ export const en: SettingsExpandText = {
   motionNone: "None",
   motionPlay: "Play it",
   motionCurve: "Animation curve",
-  bounce: "Bounce strength",
-  bounceHint: "How far the animation swings past its end: Subtle barely overshoots, Regular (the default) overshoots a little and comes back, Bouncy overshoots more, swings once more and also bounces on closing. Only affects the Pop animation and the Bounce on touch hover effect",
+  bounce: "Pop overshoot",
+  bounceHint: "Bounce strength: how far it swings past the end; also sets the Bounce on touch hover effect",
   bounceSubtle: "Subtle",
   bounceRegular: "Regular",
   bounceBouncy: "Bouncy",
   widgetEntrance: "Widget entrance",
-  widgetEntranceHint: "How the widgets on the Fuyu page appear when the panel opens. Shuffle (the default) picks a different one each time and never the same twice in a row; you can also keep one, or choose Fade in for no extra motion. Applies the next time the panel opens",
+  widgetEntranceHint: "How the widgets on the Fuyu page appear when the panel opens; Shuffle picks a new one each time. Applies the next time it opens",
   widgetEntrances: {
     shuffle: "Shuffle",
     fade: "Fade in",
@@ -276,7 +307,7 @@ export const en: SettingsExpandText = {
   widgetData: "Data motion",
   widgetDataHint: "As widgets appear, rings sweep in, numbers count up, bars fill and grids light up in a wave",
   hoverEffect: "Hover effect",
-  hoverMotionHint: "How the collapsed island reacts as the pointer comes near: Bounce on touch (the default) widens a little with a light bounce once the pointer is on the island; Swell nearby starts swelling as the pointer gets close and grows as it nears; Subtle swells half as much; Bold grows more and slower; Drop down grows downward and barely wider; On touch changes only when the pointer is on the island; None keeps it still",
+  hoverMotionHint: "How the collapsed island reacts as the pointer comes near; point at a tile to play it",
   hoverBounce: "Bounce on touch",
   hoverNear: "Swell nearby",
   hoverSubtle: "Subtle",
@@ -284,13 +315,52 @@ export const en: SettingsExpandText = {
   hoverDrop: "Drop down",
   hoverTouch: "On touch",
   hoverNone: "None",
-  hoverTry: "Move the pointer here to try it",
   clickHint: "Opens only when you click the island",
   hoverHint: "Opens under the pointer, closes when it leaves",
   instant: "At once",
   pageKeys: "Page switching keys",
   pageKeysHint: "Number keys, next page and previous page are set under Shortcuts › On the island.",
   pageKeysOpen: "Open",
-  tuckIntro: "A tucked island sits against the top of the screen with only an edge showing; it slides out under the pointer or for a new message.",
   alertsTitle: "Shown on the island",
+  tuckLookTitle: "When tucked",
+  tuckWhenTitle: "When to tuck",
+  tuckPreviewLabel: "The top of the screen, drawn with the settings below",
+  tuckTry: "Try it",
+  tuckTryHint: "Plays the pointer touching the top edge and the island sliding out and back, only here",
+  tuckStyleHints: {
+    edge: "A 10 px edge shows and slides out under the pointer",
+    line: "Only a 4 px line shows",
+    hidden: "Nothing shows; pushing the pointer to the screen edge still wakes it",
+  },
+  tuckHintStyleHints: {
+    none: "Leaves nothing",
+    dot: "A small dot just below the screen edge",
+    glow: "A short glow along the screen edge",
+  },
+  tuckHintColorHint: "Hint color: white, the island's color, or pick your own with the rainbow swatch",
+  holds: "Stay out while",
+  holdsHint: "While a todo is in progress, an agent waits for you, music plays or messages are unread, the island stays on screen; Music is the same switch as on the Music page",
+  holdChips: { todo: "Todo", agent: "Agent", music: "Music", messages: "Messages" },
+  motionHints: {
+    pop: "The default. Springs open, overshoots a little and comes back; closes without a bounce",
+    lively: "Shoots out with a slight bounce; the content sharpens from a blur",
+    spring: "The same spring as the island on the website",
+    snappy: "Gets there fast with barely a wobble",
+    soft: "A gentle spring that barely bounces",
+    unfold: "Opens sideways first, then down",
+    grow: "The content grows out of the island",
+    smooth: "Opens smoothly without overshooting",
+    fast: "Gets there quickest without overshooting",
+    bouncy: "Bounces a few times as it arrives",
+    none: "Switches at once, no animation",
+  },
+  hoverHints: {
+    bounce: "The default. Widens a little with a light bounce once the pointer is on it",
+    near: "Swells as the pointer gets close, more the nearer it is",
+    subtle: "Like Swell nearby, half as much",
+    bold: "Swells more and slower",
+    drop: "Grows downward and barely wider",
+    touch: "Swells only once the pointer is on it",
+    none: "Stays still",
+  },
 };
