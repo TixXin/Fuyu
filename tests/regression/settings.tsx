@@ -34,8 +34,10 @@ const restore = () => {
 window.addEventListener("beforeunload", restore);
 
 localStorage.setItem(LOCALE_STORAGE_KEY, query.get("locale") === "en" ? "en" : "zh-CN");
-if (automated) localStorage.setItem("fuyu-settings", JSON.stringify({ opacity: 60, carryOverIncompleteTodos: false }));
-else localStorage.removeItem("fuyu-settings");
+if (automated) {
+  localStorage.setItem("fuyu-settings", JSON.stringify({ opacity: 60, carryOverIncompleteTodos: false }));
+  localStorage.removeItem("fuyu-agent-sounds");
+} else localStorage.removeItem("fuyu-settings");
 localStorage.setItem("fuyu-save-directory", "");
 localStorage.setItem("fuyu-qq-notification-access-requested", "true");
 
