@@ -4,6 +4,8 @@
 
 **怎么看的**：读了每页的组件代码和 `src/windows/settings/searchIndex.json`（每页有哪些行、说明、选项）。没有跑回归页、没有截图；窄窗口是否挤是按代码推断的（`SettingsChoice` 不换行、`settings-row__control` 不收缩），标了「待看」的要上真窗口确认。岛屿布局三个 tab（收起的岛 / 展开的面板 / 显示与刘海）和刘海组正在别的会话里改，不在这份清单里。
 
+预览页：[settings-ux-audit-preview.html](settings-ux-audit-preview.html)，7 项各有「现在 / 改后」，改后能点。
+
 ## 参照的几种做法
 
 | 记号 | 做法 | 现成的例子 |
