@@ -96,6 +96,53 @@
     {
       "page": "generalSync",
       "zh-CN": {
+        "group": "设置跨设备同步",
+        "title": "选同步方式",
+        "description": "同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV",
+        "options": [
+          "同步文件夹",
+          "WebDAV"
+        ]
+      },
+      "en": {
+        "group": "Set up cross-device sync",
+        "title": "Choose how to sync",
+        "description": "A synced folder (cloud drive, Syncthing, NAS) or WebDAV",
+        "options": [
+          "Sync folder",
+          "WebDAV"
+        ]
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "设置跨设备同步",
+        "title": "选一个文件夹",
+        "description": "空文件夹，或别的电脑已经在用的 fuyu-sync 的上一级"
+      },
+      "en": {
+        "group": "Set up cross-device sync",
+        "title": "Choose a folder",
+        "description": "An empty folder, or the parent of the fuyu-sync folder another computer already uses"
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "设置跨设备同步",
+        "title": "要不要端到端加密",
+        "description": "网盘看不到内容；忘了口令又没留恢复密钥就找不回来。打开的话，设好同步后接着设口令"
+      },
+      "en": {
+        "group": "Set up cross-device sync",
+        "title": "End-to-end encryption?",
+        "description": "Your cloud provider can't read your data; a forgotten passphrase without the recovery key can't be recovered. If on, you'll set the passphrase right after"
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
         "group": "同步方式",
         "title": "同步通道",
         "options": [
