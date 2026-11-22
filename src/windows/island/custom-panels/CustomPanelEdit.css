@@ -397,12 +397,42 @@
   outline-offset: 2px;
 }
 
+.custom-panel__target {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border: 1.5px dashed color-mix(in srgb, var(--color-accent) 70%, transparent);
+  border-radius: 16px;
+  animation: custom-panel-fade-in var(--motion-fast) var(--motion-ease-out) backwards;
+  transition:
+    left var(--motion-base) var(--motion-ease),
+    top var(--motion-base) var(--motion-ease),
+    width var(--motion-base) var(--motion-ease),
+    height var(--motion-base) var(--motion-ease);
+}
+
+.custom-panel--editing .custom-panel__cell[data-pushed] {
+  border-color: color-mix(in srgb, var(--warning-text, #ffb35c) 75%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning-text, #ffb35c) 45%, transparent);
+}
+
+.custom-panel--editing .custom-panel__cell[data-away] {
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.custom-panel[data-carrying] .custom-panel__shield {
+  cursor: grabbing;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .custom-panel--editing .custom-panel__cell {
     animation: none;
   }
 
-  .custom-panel__undo {
+  .custom-panel__undo,
+  .custom-panel__target {
     animation: none;
   }
 }

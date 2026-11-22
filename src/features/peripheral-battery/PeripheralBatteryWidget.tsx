@@ -1,6 +1,7 @@
 import { BatteryMedium } from "lucide-react";
 import { WidgetEmpty, WidgetFrame } from "../../components/island-widget/WidgetFrame";
 import { useTranslation } from "../../i18n";
+import { BluetoothAccessPrompt } from "./BluetoothAccessPrompt";
 import { batteryIcon, isLowBattery } from "./batteryLook";
 import { usePeripheralBatteries } from "./batteryStore";
 import "./peripheralBattery.css";
@@ -30,6 +31,7 @@ export function PeripheralBatteryWidget() {
       ) : loaded ? (
         <WidgetEmpty>{t.content.noPeripherals}</WidgetEmpty>
       ) : null}
+      <BluetoothAccessPrompt />
     </WidgetFrame>
   );
 }

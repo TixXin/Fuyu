@@ -2,6 +2,7 @@ mod agent_approval;
 #[cfg(target_os = "macos")]
 mod app_identity;
 mod agent_status;
+mod bluetooth_access;
 mod calendar;
 mod cc_connect;
 mod claude_usage;
@@ -289,6 +290,7 @@ pub fn run() {
             claude_usage;
             device_use;
             device_events;
+            bluetooth_access;
             media_control;
             lyrics;
             clipboard_history;

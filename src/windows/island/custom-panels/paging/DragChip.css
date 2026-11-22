@@ -1,0 +1,18 @@
+.panel-drag-chip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.95);
+  font-size: 12px;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--island-background-color, #000000) 88%, var(--color-accent, #74d6ff));
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(var(--overlay-rgb, 255, 255, 255), 0.2);
+  pointer-events: none;
+}

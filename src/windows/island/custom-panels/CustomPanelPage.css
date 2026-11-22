@@ -7,6 +7,14 @@
   overflow: clip;
 }
 
+.custom-panel__stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .custom-panel__scroll {
   flex: 1;
   display: flex;
@@ -15,6 +23,7 @@
   overflow: auto hidden;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
+  isolation: isolate;
 }
 
 .custom-panel__scroll::-webkit-scrollbar {
@@ -30,6 +39,18 @@
 
 .custom-panel__scroll--paged {
   scroll-snap-type: x mandatory;
+}
+
+.custom-panel--editing .custom-panel__scroll--paged {
+  scroll-snap-type: none;
+}
+
+.custom-panel__snap[data-divider] {
+  top: 6px;
+  bottom: 0;
+  height: auto;
+  margin-left: -4.5px;
+  border-left: 1px dashed rgba(var(--overlay-rgb, 255, 255, 255), 0.16);
 }
 
 .custom-panel__snap {

@@ -2,3 +2,4 @@
 "CFBundleName" = "浮屿";
 "NSAppleEventsUsageDescription" = "浮屿用它切到 AI 会话所在的终端或 iTerm2 标签页，并在系统媒体服务不可用时控制 Apple Music 或 Spotify。";
 "NSMicrophoneUsageDescription" = "浮屿只在你使用语音输入时录音，并在这台 Mac 上把语音转成文字。";
+"NSBluetoothAlwaysUsageDescription" = "浮屿读取已连接的蓝牙耳机、鼠标和键盘的电量，不搜索、不连接其他设备。";

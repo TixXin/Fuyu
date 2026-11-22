@@ -15,6 +15,10 @@ function set(list: readonly PeripheralBattery[]) {
   for (const listener of listeners) listener();
 }
 
+export function refreshPeripheralBatteries() {
+  read();
+}
+
 function read() {
   void getPeripheralBatteries()
     .then(set)

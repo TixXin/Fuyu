@@ -16,3 +16,17 @@ export function getPeripheralBatteries() {
 export function listenPeripheralBatteries(onChange: (list: PeripheralBattery[]) => void) {
   return listen<PeripheralBattery[]>("peripheral-batteries", (event) => onChange(event.payload));
 }
+
+export type BluetoothBatteryAccess = "notDetermined" | "denied" | "allowed" | "unsupported";
+
+export function getBluetoothBatteryAccess() {
+  return invoke<BluetoothBatteryAccess>("get_bluetooth_battery_access");
+}
+
+export function requestBluetoothBatteryAccess() {
+  return invoke<BluetoothBatteryAccess>("request_bluetooth_battery_access");
+}
+
+export function openBluetoothPrivacySettings() {
+  return invoke<void>("open_bluetooth_privacy_settings");
+}

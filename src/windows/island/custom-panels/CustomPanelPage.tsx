@@ -1,23 +1,31 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CirclePlus, RotateCcw } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import { skipAbsentWidgets, useAbsentWidgets } from "../../../features/plugin-kernel/absentWidgets";
-import type { LibraryWidget } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { addPanelItem, defaultWidgetSize, fuyuPanel, fuyuPanels, GRID_UNIT_PX, PANEL_MODES, placeFreeItem, removePanelItem, setPanelMode, stripRightPx, type CustomPanel } from "../../../lib/settings/customPanels";
+import { cellsToPx, fuyuPanel, fuyuPanels, removePanelItem, setPanelMode, type CustomPanel, type PanelItem } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import type { WidgetEntrance } from "../../../lib/settings/types";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
-import { dropIncoming, type Board, type IncomingWidget } from "./boardDrag";
-import { PanelBoard, type HeldWidget } from "./PanelBoard";
+import { useIslandNotch } from "../notch";
+import type { Board } from "./boardDrag";
+import { PanelBoard } from "./PanelBoard";
+import { PanelDock, type Removed } from "./PanelDock";
 import { stripGeometry } from "./stripGeometry";
 import { useWheelScrollsSideways } from "./useWheelScrollsSideways";
-import { editingPanel, startPanelEditing, stopPanelEditing, usePanelEditing } from "./panelEditing";
+import { editingPanel, stopPanelEditing, usePanelEditing } from "./panelEditing";
 import { useIslandWidgets } from "./useIslandWidgets";
 import { useEntranceRun } from "./entrance/useEntranceRun";
-import { useLongPress, type LongPressStart } from "./useLongPress";
-import { WidgetPicker, type PickerDrag } from "./WidgetPicker";
+import { useHoldToEdit } from "./useHoldToEdit";
+import { usePickerDrop } from "./usePickerDrop";
+import { DragChip } from "./paging/DragChip";
+import { dragHint } from "./paging/dragHint";
+import { EdgeHints } from "./paging/EdgeHints";
+import { PanelOverview } from "./paging/PanelOverview";
+import { usePanelDrag } from "./paging/usePanelDrag";
+import { useParkedWidgets } from "./paging/useParkedWidgets";
+import { usePointerCarry } from "./paging/usePointerCarry";
+import { usePublishPager } from "./paging/usePublishPager";
 import "./CustomPanelPage.css";
 import "./CustomPanelEdit.css";
 
@@ -39,16 +47,7 @@ function useStrip(stored: CustomPanel, editing: boolean) {
   const paged = pages > 0;
   useWheelScrollsSideways(ref, paged ? pageStepPx * fit : null);
   const board: Board = { width, height, page: pageColumns };
-  return { ref, scale: fit, board, panel, pages, pageStepPx };
-}
-
-function boardPoint(grid: HTMLElement | null, area: HTMLElement | null, drag: PickerDrag): { x: number; y: number } | null {
-  if (!grid || !area) return null;
-  const bounds = area.getBoundingClientRect();
-  if (drag.clientX < bounds.left || drag.clientX > bounds.right || drag.clientY < bounds.top || drag.clientY > bounds.bottom) return null;
-  const rect = grid.getBoundingClientRect();
-  const factor = rect.width > 0 ? grid.offsetWidth / rect.width : 1;
-  return { x: (drag.clientX - rect.left) * factor, y: (drag.clientY - rect.top) * factor };
+  return { ref, room, scale: fit, board, panel, pages, pageStepPx };
 }
 
 function useEditingLifetime(panelId: string, editing: boolean) {
@@ -65,8 +64,6 @@ function useEditingLifetime(panelId: string, editing: boolean) {
   );
 }
 
-type Removed = { before: CustomPanel; text: string };
-
 function useUndoableRemoval() {
   const [removed, setRemoved] = useState<Removed | null>(null);
   useEffect(() => {
@@ -77,8 +74,6 @@ function useUndoableRemoval() {
   return { removed, remember: setRemoved, forget: () => setRemoved(null) };
 }
 
-const holdable = (target: Element) => !target.closest("button, a, input, textarea, select, [contenteditable], [role='slider']");
-
 type CustomPanelPageProps = { panelId: string; entrance?: WidgetEntrance; dataMotion?: boolean; motion?: boolean };
 
 export function CustomPanelPage({ panelId, entrance = "fade", dataMotion = false, motion = true }: CustomPanelPageProps) {
@@ -87,47 +82,61 @@ export function CustomPanelPage({ panelId, entrance = "fade", dataMotion = false
   const library = useIslandWidgets();
   const editing = usePanelEditing() === panelId;
   const sizesOf = skipAbsentWidgets((id: string) => library.find(id)?.sizes ?? null, useAbsentWidgets());
-  const { ref, scale, board, panel, pages, pageStepPx } = useStrip(fuyuPanel(panels, library.widgets.length > 0 ? sizesOf : undefined), editing);
+  const { ref, room, scale, board, panel, pages, pageStepPx } = useStrip(fuyuPanel(panels, library.widgets.length > 0 ? sizesOf : undefined), editing);
   const empty = panel.items.length === 0;
+  const grid = panel.mode === "grid";
   const reducedMotion = useReducedMotion();
+  const notch = useIslandNotch();
   const entranceRun = useEntranceRun(entrance, dataMotion, motion && !reducedMotion && !editing && !empty);
   const gridRef = useRef<HTMLDivElement>(null);
-  const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
   const { removed, remember, forget } = useUndoableRemoval();
-  const [held, setHeld] = useState<HeldWidget | null>(null);
-  const hold = useCallback(
-    ({ target, ...point }: LongPressStart) => {
-      window.getSelection()?.removeAllRanges();
-      startPanelEditing(panelId);
-      const widget = target.closest<HTMLElement>(".custom-panel__cell[data-widget]")?.dataset.widget;
-      if (widget) setHeld({ widget, ...point });
-    },
-    [panelId],
-  );
-  const heldTaken = useCallback(() => setHeld(null), []);
-  const onPointerDown = useLongPress(hold, holdable);
+  const { held, taken: heldTaken, onPointerDown } = useHoldToEdit(panelId);
   useEditingLifetime(panelId, editing);
 
   const change = (next: CustomPanel) => save(fuyuPanels(next));
-  const add = (widget: LibraryWidget) => {
-    const size = defaultWidgetSize(widget.sizes);
-    if (!size) return;
-    const added = addPanelItem(panel, widget.id, size);
-    change(panel.mode === "free" ? placeFreeItem(added, widget.id, stripRightPx(panel) / GRID_UNIT_PX + 1, 0, Infinity, Math.floor(board.height / GRID_UNIT_PX)) : added);
-  };
+  const { parked, park, take } = useParkedWidgets(editing, panel, change);
+  const viewWidth = board.page ? cellsToPx(board.page) : board.width;
+  const drag = usePanelDrag({
+    panel,
+    board,
+    scale,
+    pageStepPx,
+    viewWidth,
+    scroller: ref,
+    grid: gridRef,
+    editing,
+    library,
+    reduced: reducedMotion,
+    held,
+    onHeldTaken: heldTaken,
+    onChange: change,
+    onSentAway: ({ before, page }) => remember({ before, text: t.paging.movedTo(page + 1), go: page }),
+    park,
+    take,
+  });
+  const { carried, paging, pointer } = drag;
+  const routed = grid && !empty;
+  const carryTray = usePointerCarry<PanelItem>({
+    onMove: (carry) => drag.moveOutside(carry ? { source: "tray", item: carry.payload, x: carry.clientX, y: carry.clientY } : null),
+    onDrop: () => drag.dropOutside(),
+  });
+  usePublishPager({
+    active: editing && routed,
+    placement: notch && !notch.simulated ? "dock" : "header",
+    panel: drag.shown ?? panel,
+    pageCount: drag.pageCount,
+    pageColumns: board.page ?? 1,
+    carried: carried?.item.widget ?? null,
+    pushed: drag.pushed,
+    nav: paging.nav,
+    overview: paging.overview,
+    hot: drag.hot,
+  });
+
+  const picker = usePickerDrop({ panel, board, area: ref, grid: gridRef, routed, onChange: change, moveOutside: drag.moveOutside, dropOutside: drag.dropOutside });
   const remove = (widget: string, name: string) => {
     remember({ before: panel, text: t.removed(name) });
     change(removePanelItem(panel, widget));
-  };
-  const incomingOf = (drag: PickerDrag | null): IncomingWidget | null => {
-    const size = drag ? defaultWidgetSize(drag.widget.sizes) : null;
-    const point = drag && size ? boardPoint(gridRef.current, ref.current, drag) : null;
-    return drag && size && point ? { widget: drag.widget.id, name: drag.widget.name, size, ...point } : null;
-  };
-  const dropPicked = (drag: PickerDrag) => {
-    const incoming = incomingOf(drag);
-    if (incoming) change(dropIncoming(panel, incoming, board));
-    else if (empty && boardPoint(ref.current, ref.current, drag)) add(drag.widget);
   };
   const reset = () => {
     remember({ before: panel, text: t.resetDone });
@@ -138,60 +147,93 @@ export function CustomPanelPage({ panelId, entrance = "fade", dataMotion = false
     forget();
   };
 
+  const pageColumns = board.page ?? 1;
+  const away = Boolean(carried) && (paging.overview || drag.spot?.kind !== "board");
+  const wide = routed ? { ...board, width: Math.max(board.width, cellsToPx(drag.pageCount * pageColumns)) } : board;
+  const snaps = editing && routed ? drag.pageCount : pages;
+  const carriedWidget = carried ? (library.find(carried.item.widget) ?? null) : null;
+  const carriedName = carriedWidget?.name ?? carried?.item.widget ?? "";
+  const hint = carried ? dragHint(t.paging, { spot: drag.spot, target: drag.target, edge: drag.edge, page: paging.nav.page, overview: paging.overview, pushed: drag.pushedNames }) : null;
+
   return (
     <div
       className={editing ? "custom-panel custom-panel--editing" : "custom-panel"}
       data-panel={panelId}
       data-window-drag={editing ? "false" : undefined}
+      data-carrying={carried ? true : undefined}
       onPointerDown={editing ? undefined : onPointerDown}
     >
-      <div className={pages > 0 ? "custom-panel__scroll custom-panel__scroll--paged" : "custom-panel__scroll"} ref={ref}>
-        {empty ? (
-          <div className="custom-panel__empty">
-            <p>{t.empty}</p>
-            {editing ? null : <PanelTemplateButtons onPick={(template) => change(applyPanelTemplate(panel, template, sizesOf))} />}
-            <span className="custom-panel__hint">{editing ? t.emptyEditing : t.templateHint}</span>
-          </div>
-        ) : (
-          <div className="custom-panel__zoom" style={{ zoom: scale }}>
-            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} board={board} incoming={incoming} held={held} entrance={entranceRun} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
-            {Array.from({ length: pages }, (_, page) => (
-              <span key={page} className="custom-panel__snap" style={{ left: page * pageStepPx }} aria-hidden="true" />
-            ))}
-          </div>
-        )}
-      </div>
-      {editing ? (
-        <div className="custom-panel__dock">
-          <div className="custom-panel__dock-head">
-            <span className="custom-panel__dock-title">
-              <CirclePlus size={14} strokeWidth={2.2} aria-hidden="true" />
-              {t.addWidget}
-            </span>
-            <div className="custom-panel__modes" role="radiogroup" aria-label={t.mode}>
-              {PANEL_MODES.map((mode) => (
-                <button key={mode} type="button" role="radio" aria-checked={panel.mode === mode} onClick={() => change(setPanelMode(panel, mode, true))}>
-                  {t.modes[mode]}
-                </button>
+      <div className="custom-panel__stage">
+        <div className={pages > 0 ? "custom-panel__scroll custom-panel__scroll--paged" : "custom-panel__scroll"} ref={ref}>
+          {empty ? (
+            <div className="custom-panel__empty">
+              <p>{t.empty}</p>
+              {editing ? null : <PanelTemplateButtons onPick={(template) => change(applyPanelTemplate(panel, template, sizesOf))} />}
+              <span className="custom-panel__hint">{editing ? t.emptyEditing : t.templateHint}</span>
+            </div>
+          ) : (
+            <div className="custom-panel__zoom" style={{ zoom: scale }}>
+              <PanelBoard
+                panel={panel}
+                shown={drag.shown}
+                library={library}
+                editing={editing}
+                scale={scale}
+                board={wide}
+                incoming={picker.incoming}
+                pending={carried && carried.source !== "board" ? { widget: carried.item.widget, name: carriedName } : null}
+                drag={drag.drag}
+                away={away}
+                pushed={drag.pushed}
+                entrance={entranceRun}
+                gridRef={gridRef}
+                begin={drag.begin}
+                onCycleSize={drag.cycleSize}
+                onChange={change}
+                onRemove={remove}
+              />
+              {Array.from({ length: snaps }, (_, page) => (
+                <span key={page} className="custom-panel__snap" style={{ left: page * pageStepPx }} data-divider={editing && page > 0 ? true : undefined} aria-hidden="true" />
               ))}
             </div>
-            <button type="button" className="custom-panel__reset" onClick={reset}>
-              <RotateCcw size={12} strokeWidth={2.2} aria-hidden="true" />
-              {t.reset}
-            </button>
-            {removed ? (
-              <span className="custom-panel__undo" role="status">
-                <span>{removed.text}</span>
-                <button type="button" onClick={undo}>
-                  {t.undo}
-                </button>
-              </span>
-            ) : (
-              <span className="custom-panel__hint">{panel.mode === "free" ? t.freeHint : t.gridHint}</span>
-            )}
-          </div>
-          <WidgetPicker panel={panel} library={library} onAdd={add} onDrag={(drag) => setIncoming(incomingOf(drag))} onDrop={dropPicked} />
+          )}
         </div>
+        {editing ? <EdgeHints edge={drag.edge} continuous={!grid} /> : null}
+        {carried && paging.overview && room ? (
+          <PanelOverview
+            panel={drag.shown ?? panel}
+            pageCount={drag.pageCount}
+            pageColumns={pageColumns}
+            pageStepPx={pageStepPx}
+            viewWidth={viewWidth}
+            boardHeight={board.height}
+            room={room}
+            canAdd
+            target={drag.target ? { widget: carried.item.widget, page: drag.target.page } : null}
+            pushed={drag.pushed}
+            library={library}
+          />
+        ) : null}
+      </div>
+      {carried && pointer && away ? <DragChip widget={carriedWidget} name={carriedName} x={pointer.x} y={pointer.y} /> : null}
+      {editing ? (
+        <PanelDock
+          panel={panel}
+          library={library}
+          removed={removed}
+          hint={hint}
+          tray={routed ? { parked, hot: drag.spot?.kind === "tray", dragging: Boolean(carried), onPress: carryTray } : null}
+          onMode={(mode) => change(setPanelMode(panel, mode, true))}
+          onReset={reset}
+          onUndo={undo}
+          onGo={(page) => {
+            paging.nav.goPage(page);
+            forget();
+          }}
+          onAdd={picker.add}
+          onDrag={picker.drag}
+          onDrop={picker.drop}
+        />
       ) : null}
     </div>
   );

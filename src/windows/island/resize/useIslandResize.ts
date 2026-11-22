@@ -27,7 +27,7 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
     const width = { min: MIN_PANEL_WIDTH, max: maxExpandedIslandWidth(settings.expandedScale) };
     const height = { min: MIN_PAGE_PANEL_HEIGHT, max: maxExpandedIslandHeight(settings.expandedScale) };
     const collapsed = notch ? { min: MIN_NOTCH_WING_MAX, max: MAX_NOTCH_WING_MAX } : { min: MIN_COLLAPSED_WIDTH_EXTRA, max: MAX_COLLAPSED_WIDTH_EXTRA };
-    const fallback = defaultPageSize(settings, page);
+    const fallback = defaultPageSize(settings);
     return {
       notch,
       barKey: barKey(notch),
@@ -37,7 +37,7 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
       collapsedSteps: notch ? notchWingDetents(DEFAULT_SETTINGS.notchWingMax, collapsed) : collapsedDetents(collapsed),
       presets: panelPresets(fallback, width, height),
     };
-  }, [notch, page, settings]);
+  }, [notch, settings]);
 
   const latest = useRef({ settings, setSettings, page, pageSize, model });
   useLayoutEffect(() => {

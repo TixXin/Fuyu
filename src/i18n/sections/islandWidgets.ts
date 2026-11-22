@@ -51,6 +51,28 @@ export type IslandWidgetsText = {
     freeHint: string;
     allAdded: string;
     plugin: string;
+    paging: {
+      pages: string;
+      goTo: (page: number) => string;
+      newPage: string;
+      all: string;
+      tray: string;
+      trayEmpty: string;
+      takeOut: (name: string) => string;
+      dropHere: (page: number) => string;
+      dropNew: (page: number) => string;
+      dropAway: (page: number) => string;
+      dropTray: string;
+      pushed: (name: string, page: number) => string;
+      edgeFlip: (page: number) => string;
+      edgeNew: string;
+      firstPage: string;
+      dwell: string;
+      overview: string;
+      keys: string;
+      movedTo: (page: number) => string;
+      goLook: string;
+    };
   };
   content: {
     todosEmpty: string;
@@ -91,6 +113,10 @@ export type IslandWidgetsText = {
     noBatteryHint: string;
     noPeripherals: string;
     peripheralLevel: (name: string, level: number) => string;
+    bluetoothAccessAsk: string;
+    bluetoothAccessHint: string;
+    bluetoothAccessDenied: string;
+    bluetoothOpenSettings: string;
     quickTargets: { files: string; terminal: string; calculator: string; settings: string };
     volume: string;
     brightness: string;
@@ -149,6 +175,28 @@ export const zhCN: IslandWidgetsText = {
     freeHint: "拖动摆位置，拉右下角改大小 · 自动保存",
     allAdded: "能加的组件都加上了",
     plugin: "插件",
+    paging: {
+      pages: "面板的页",
+      goTo: (page) => `第 ${page} 页`,
+      newPage: "新的一页",
+      all: "全部",
+      tray: "暂存",
+      trayEmpty: "拖到这里暂存",
+      takeOut: (name) => `把「${name}」拖回面板`,
+      dropHere: (page) => `松手放到第 ${page} 页`,
+      dropNew: (page) => `松手新建第 ${page} 页`,
+      dropAway: (page) => `松手放进第 ${page} 页，当前页不动`,
+      dropTray: "松手暂存，翻到想要的页再拖出来",
+      pushed: (name, page) => `「${name}」会挤到第 ${page} 页`,
+      edgeFlip: (page) => `停住：翻到第 ${page} 页`,
+      edgeNew: "停住：新建一页",
+      firstPage: "已经是第一页",
+      dwell: "停一下就跳过去",
+      overview: "放进任意一页 · 空格退出",
+      keys: "滚轮或 ← → 翻页 · 空格看全部 · Esc 取消",
+      movedTo: (page) => `已放到第 ${page} 页`,
+      goLook: "去看看",
+    },
   },
   content: {
     todosEmpty: "今天没有待办",
@@ -189,6 +237,10 @@ export const zhCN: IslandWidgetsText = {
     noBatteryHint: "长按可移除这一格",
     noPeripherals: "没有连着能读到电量的设备",
     peripheralLevel: (name, level) => `${name} 电量 ${level}%`,
+    bluetoothAccessAsk: "读取第三方蓝牙设备",
+    bluetoothAccessHint: "允许浮屿使用蓝牙，读取第三方耳机、鼠标和键盘的电量",
+    bluetoothAccessDenied: "浮屿没有蓝牙权限，读不到第三方设备的电量",
+    bluetoothOpenSettings: "打开系统设置",
     quickTargets: { files: "文件", terminal: "终端", calculator: "计算器", settings: "系统设置" },
     volume: "音量",
     brightness: "亮度",
@@ -247,6 +299,28 @@ export const en: IslandWidgetsText = {
     freeHint: "Drag to move, pull the corner to resize · Saved automatically",
     allAdded: "Every widget is already here",
     plugin: "Plugin",
+    paging: {
+      pages: "Panel pages",
+      goTo: (page) => `Page ${page}`,
+      newPage: "New page",
+      all: "All",
+      tray: "Hold",
+      trayEmpty: "Drop here to hold",
+      takeOut: (name) => `Drag ${name} back onto the panel`,
+      dropHere: (page) => `Release to put it on page ${page}`,
+      dropNew: (page) => `Release to start page ${page}`,
+      dropAway: (page) => `Release to send it to page ${page} and stay here`,
+      dropTray: "Release to hold it, then drag it out on any page",
+      pushed: (name, page) => `${name} moves to page ${page}`,
+      edgeFlip: (page) => `Hold to turn to page ${page}`,
+      edgeNew: "Hold to start a new page",
+      firstPage: "This is the first page",
+      dwell: "Hold to jump there",
+      overview: "Drop on any page · Space to close",
+      keys: "Scroll or ← → to turn pages · Space for all · Esc to cancel",
+      movedTo: (page) => `Moved to page ${page}`,
+      goLook: "Show me",
+    },
   },
   content: {
     todosEmpty: "Nothing to do today",
@@ -287,6 +361,10 @@ export const en: IslandWidgetsText = {
     noBatteryHint: "Long-press to remove",
     noPeripherals: "No connected device reports its battery",
     peripheralLevel: (name, level) => `${name} battery ${level}%`,
+    bluetoothAccessAsk: "Read other Bluetooth devices",
+    bluetoothAccessHint: "Let Fuyu use Bluetooth to read the battery of third-party headphones, mice and keyboards",
+    bluetoothAccessDenied: "Fuyu has no Bluetooth access, so third-party devices are not shown",
+    bluetoothOpenSettings: "Open System Settings",
     quickTargets: { files: "Files", terminal: "Terminal", calculator: "Calculator", settings: "System settings" },
     volume: "Volume",
     brightness: "Brightness",

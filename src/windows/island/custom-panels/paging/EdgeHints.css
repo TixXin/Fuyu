@@ -1,0 +1,69 @@
+.panel-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  width: 56px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.panel-edge[data-side="left"] {
+  left: 0;
+  justify-content: flex-start;
+  padding-left: 4px;
+  background: linear-gradient(to right, color-mix(in srgb, var(--color-accent) 30%, transparent), transparent);
+  border-radius: 16px 0 0 16px;
+}
+
+.panel-edge[data-side="right"] {
+  right: 0;
+  justify-content: flex-end;
+  padding-right: 4px;
+  background: linear-gradient(to left, color-mix(in srgb, var(--color-accent) 30%, transparent), transparent);
+  border-radius: 0 16px 16px 0;
+}
+
+.panel-edge[data-on] {
+  opacity: 1;
+}
+
+.panel-edge[data-off] {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.panel-edge__ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.95);
+  background: color-mix(in srgb, var(--island-background-color, #000000) 80%, transparent);
+  border-radius: 50%;
+}
+
+.panel-edge__ring svg {
+  position: absolute;
+  inset: 0;
+  rotate: -90deg;
+}
+
+.panel-edge__track,
+.panel-edge__progress {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.panel-edge__track {
+  stroke: rgba(var(--overlay-rgb, 255, 255, 255), 0.18);
+}
+
+.panel-edge__progress {
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+}
