@@ -12,7 +12,7 @@ import { getResizeState, setResizeEditing } from "../../src/windows/island/resiz
 import { islandPageSize } from "../../src/windows/island/pageSize";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
 import type { IslandSettings } from "../../src/lib/settings/types";
-import { until } from "./pollUntil";
+import { animationsDone, until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 Object.defineProperty(window.screen, "availWidth", { value: 1920 });
@@ -151,7 +151,7 @@ async function runChecks() {
 
     await act(async () => setExpanded(false));
     check(!q(".island-resize__grab") && document.querySelectorAll(".island-resize__cap").length === 2, "折叠岛只有两端的小拉环");
-    await until(() => Math.abs(islandBox().width - 340) < 0.5, 2000);
+    await until(() => Math.abs(islandBox().width - 340) < 0.5 && animationsDone(q(".island")!), 2000);
     box = islandBox();
     await hover(box.left + box.width / 2, box.top + 15);
     check(getComputedStyle(q(".island-resize__cap--r")!).opacity === "0", "鼠标在折叠岛中间时不出小拉环");
