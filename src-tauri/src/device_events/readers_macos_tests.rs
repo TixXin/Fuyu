@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use super::{
-    bluetooth::ConnectedDevice, classify, hid_reading, merge_peripherals, AudioKind, AudioOutput, DeviceThread,
-    HidBattery, Reading, Transport,
+    access_readings, add_access_batteries, bluetooth::ConnectedDevice, classify, hid_reading, merge_peripherals,
+    AudioKind, AudioOutput, BleBattery, ClassicBattery, ClassicKind, DeviceThread, HidBattery, Reading, Transport,
 };
 use crate::device_events::peripherals::{Peripheral, PeripheralKind};
 
@@ -146,6 +148,62 @@ fn probe_this_computer() {
     println!("batteries: {:?}", super::read_batteries());
     println!("system_profiler: {:?}", crate::macos::bluetooth::connected_devices());
     println!("iokit hid: {:?}", crate::macos::hid_battery::connected_batteries());
+    println!("bluetooth access: {:?}", crate::macos::bluetooth_access::access());
+    println!("iobluetooth: {:?}", crate::macos::bluetooth_access::classic_batteries());
+    println!("corebluetooth: {:?}", crate::macos::ble_battery::ble_batteries());
+    std::thread::sleep(std::time::Duration::from_secs(8));
+    println!("corebluetooth after 8 s: {:?}", crate::macos::ble_battery::ble_batteries());
     println!("peripherals: {:?}", super::read_peripherals());
     println!("power: {:?}", super::power_source());
+}
+
+fn classic(key: &str, name: &str, kind: ClassicKind, battery: u8) -> ClassicBattery {
+    ClassicBattery { key: key.into(), name: name.into(), kind, battery }
+}
+
+fn ble(name: &str, battery: u8) -> BleBattery {
+    BleBattery { id: format!("UUID-{name}"), name: name.into(), battery }
+}
+
+#[test]
+fn bluetooth_access_batteries_only_fill_headphones_the_system_did_not_report() {
+    let mut batteries = HashMap::from([("B4E7B3CAE4EB".to_string(), 65)]);
+    let outputs = vec![
+        AudioOutput { uid: "B4-E7-B3-CA-E4-EB:output".into(), name: "AirPods".into(), transport: Transport::Bluetooth, has_input: false },
+        AudioOutput { uid: "11-22-33-44-55-66:output".into(), name: "EDIFIER W820NB".into(), transport: Transport::Bluetooth, has_input: false },
+        AudioOutput { uid: "AA-BB-CC-DD-EE-FF:output".into(), name: "Soundcore".into(), transport: Transport::Bluetooth, has_input: false },
+    ];
+    let classic = vec![
+        classic("B4E7B3CAE4EB", "AirPods", ClassicKind::Audio, 90),
+        classic("112233445566", "EDIFIER W820NB", ClassicKind::Audio, 70),
+        classic("998877665544", "MX Keys", ClassicKind::Keyboard, 50),
+    ];
+    add_access_batteries(&mut batteries, &outputs, classic, vec![ble("Soundcore", 40), ble("Nobody", 10)]);
+    assert_eq!(
+        batteries,
+        HashMap::from([("B4E7B3CAE4EB".to_string(), 65), ("112233445566".to_string(), 70), ("AABBCCDDEEFF".to_string(), 40)])
+    );
+}
+
+#[test]
+fn bluetooth_access_readings_reuse_known_keys_and_drop_unknown_kinds() {
+    let earlier = vec![Reading { key: "D12233445566".into(), name: "MX Master 3S".into(), kind: Some(PeripheralKind::Mouse), battery: None }];
+    let readings = access_readings(
+        &earlier,
+        vec![classic("998877665544", "MX Keys", ClassicKind::Keyboard, 50), classic("B4E7B3CAE4EB", "Buds", ClassicKind::Audio, 80)],
+        vec![ble("MX Master 3S", 60), ble("Keychron K3 Keyboard", 30), ble("Heart Rate", 90)],
+    );
+    let summary: Vec<(&str, Option<PeripheralKind>, Option<u8>)> = readings.iter().map(|r| (r.key.as_str(), r.kind, r.battery)).collect();
+    assert_eq!(
+        summary,
+        vec![
+            ("998877665544", Some(PeripheralKind::Keyboard), Some(50)),
+            ("D12233445566", None, Some(60)),
+            ("Keychron K3 Keyboard", Some(PeripheralKind::Keyboard), Some(30)),
+            ("Heart Rate", None, Some(90)),
+        ]
+    );
+    let merged = merge_peripherals(Vec::new(), [earlier, readings].concat());
+    assert_eq!(merged.iter().filter(|p| p.device == "D12233445566").map(|p| p.battery).collect::<Vec<_>>(), vec![Some(60)]);
+    assert!(merged.iter().all(|p| p.name != "Heart Rate"));
 }

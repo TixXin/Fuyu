@@ -91,6 +91,10 @@ export type IslandWidgetsText = {
     noBatteryHint: string;
     noPeripherals: string;
     peripheralLevel: (name: string, level: number) => string;
+    bluetoothAccessAsk: string;
+    bluetoothAccessHint: string;
+    bluetoothAccessDenied: string;
+    bluetoothOpenSettings: string;
     quickTargets: { files: string; terminal: string; calculator: string; settings: string };
     volume: string;
     brightness: string;
@@ -189,6 +193,10 @@ export const zhCN: IslandWidgetsText = {
     noBatteryHint: "长按可移除这一格",
     noPeripherals: "没有连着能读到电量的设备",
     peripheralLevel: (name, level) => `${name} 电量 ${level}%`,
+    bluetoothAccessAsk: "读取第三方蓝牙设备",
+    bluetoothAccessHint: "允许浮屿使用蓝牙，读取第三方耳机、鼠标和键盘的电量",
+    bluetoothAccessDenied: "浮屿没有蓝牙权限，读不到第三方设备的电量",
+    bluetoothOpenSettings: "打开系统设置",
     quickTargets: { files: "文件", terminal: "终端", calculator: "计算器", settings: "系统设置" },
     volume: "音量",
     brightness: "亮度",
@@ -287,6 +295,10 @@ export const en: IslandWidgetsText = {
     noBatteryHint: "Long-press to remove",
     noPeripherals: "No connected device reports its battery",
     peripheralLevel: (name, level) => `${name} battery ${level}%`,
+    bluetoothAccessAsk: "Read other Bluetooth devices",
+    bluetoothAccessHint: "Let Fuyu use Bluetooth to read the battery of third-party headphones, mice and keyboards",
+    bluetoothAccessDenied: "Fuyu has no Bluetooth access, so third-party devices are not shown",
+    bluetoothOpenSettings: "Open System Settings",
     quickTargets: { files: "Files", terminal: "Terminal", calculator: "Calculator", settings: "System settings" },
     volume: "Volume",
     brightness: "Brightness",

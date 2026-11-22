@@ -2,6 +2,7 @@
   display: grid;
   gap: 5px;
   min-width: 0;
+  min-height: 0;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -86,4 +87,67 @@
 .peripheral-battery-chip[data-low] {
   color: var(--error-text, #ff5f57);
   background: color-mix(in srgb, var(--error-text, #ff5f57) 18%, transparent);
+}
+
+.peripheral-battery__access {
+  flex: none;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin-top: auto;
+  padding-top: 5px;
+}
+
+.peripheral-battery__access-hint {
+  margin: 0;
+  overflow: hidden;
+  color: var(--widget-text-3);
+  font-size: 11px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.peripheral-battery__access-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  height: 22px;
+  padding: 0 8px;
+  overflow: hidden;
+  color: var(--widget-text-1);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.peripheral-battery__access-button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.peripheral-battery__access-button svg {
+  flex: none;
+}
+
+.peripheral-battery__access-button:hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.16);
+}
+
+.peripheral-battery__access-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.peripheral-battery__access-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
 }
