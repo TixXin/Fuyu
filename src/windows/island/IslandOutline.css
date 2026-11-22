@@ -45,7 +45,8 @@
     --glass-rim-light: rgba(255, 255, 255, 0.9);
   }
 
-  :root[data-island-notch] .island--collapsed {
+  :root[data-island-notch] .island--collapsed,
+  :root[data-island-notch] .island:has(> .notch-rim:not([data-style="off"])) {
     --island-rim-paint: none;
   }
 

@@ -4,9 +4,10 @@ import path from "node:path";
 import { INTEGRATION_BRANCH, git, mainCheckoutOf, tryGit } from "./settings.mjs";
 
 export const STEPS = ["verify", "regression", "exe"];
+const REGRESSION_JOBS = 3;
 const COMMANDS = {
   verify: ["pnpm", "verify"],
-  regression: ["pnpm", "test:regression"],
+  regression: ["pnpm", "test:regression", "--jobs", String(REGRESSION_JOBS)],
   exe: ["pnpm", "build:exe"],
 };
 const DOCS_ONLY = /(^docs\/|\.md$)/;

@@ -9,7 +9,7 @@ import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRo
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { InflinkRow } from "./InflinkRow";
 import { AppleMusicLyricsRows } from "./AppleMusicLyricsRows";
-import type { LyricsIntro, LyricsIslandPriority } from "./lyricsSettings";
+import type { LyricsIntro } from "./lyricsSettings";
 import type { IslandSettings } from "../../../lib/settings/types";
 import "./LyricsSettingsSection.css";
 
@@ -38,21 +38,6 @@ export function LyricsSettingsSection({
           checked={settings.lyricsOnIsland}
           onChange={(lyricsOnIsland) => onSettingsChange({ ...settings, lyricsOnIsland })}
         />
-        {settings.lyricsOnIsland && (
-          <SettingsRow
-            indent
-            title={text.priority}
-            description={text.priorityHint}
-            control={
-              <SettingsChoice<LyricsIslandPriority>
-                value={settings.lyricsIslandPriority}
-                ariaLabel={text.priority}
-                options={[{ value: "lyrics", label: text.priorityLyrics }, { value: "agent", label: text.priorityAgent }]}
-                onChange={(lyricsIslandPriority) => onSettingsChange({ ...settings, lyricsIslandPriority })}
-              />
-            }
-          />
-        )}
         {settings.lyricsOnIsland && (
           <SettingsRow
             indent

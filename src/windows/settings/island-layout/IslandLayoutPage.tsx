@@ -1,19 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { islandItemStyleMatches, islandItemStyles } from "../../../features/plugin-kernel/settingsSlots";
 import { useSlotEntries } from "../../../features/plugin-kernel/useSlotEntries";
 import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
-import { DisplaySettingsSection } from "../sections/DisplaySettingsSection";
 import { useIslandNotchShown } from "../useIslandNotchShown";
 import { CENTER_ITEMS } from "./centerItems";
 import { CollapsedLanes } from "./CollapsedLanes";
 import { laneOf } from "./laneMoves";
 import { ItemStyleTabs } from "./ItemStyleTabs";
 import { firstListedMatch } from "./itemPlace";
-import { ExpandedLayout } from "./ExpandedLayout";
 import { IslandBarPreview } from "./IslandBarPreview";
 import { onIslandLayoutItem, takeIslandLayoutItem } from "./islandLayoutFocus";
-import { LayoutStage, type LayoutMode } from "./LayoutStage";
+import { LayoutStage } from "./LayoutStage";
 import { useBarMirror } from "./useBarMirror";
 import { useCollapsedEditor } from "./useCollapsedEditor";
 import { useCollapsedLayout } from "./useCollapsedLayout";
@@ -33,14 +31,12 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
   const styles = useSlotEntries(islandItemStyles, "islandLayout");
   const styled = useCallback((item: string) => styles.some((entry) => islandItemStyleMatches(entry.id, item)), [styles]);
   const centers = useMemo(() => CENTER_ITEMS.filter(styled), [styled]);
-  const [mode, setMode] = useState<LayoutMode>("bar");
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [wanted, setWanted] = useState<{ item: string; at: number } | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const [flash, setFlash] = useState(0);
 
   const pick = useCallback((item: string) => {
-    setMode("bar");
     setOpenItem(item);
     setWanted({ item, at: Date.now() });
   }, []);
@@ -99,37 +95,24 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
       .map((item) => ({ ...item, place: where(item.id) }));
   }, [centers, editor.view, listed, names, styled, text]);
 
-  const stage = (preview: ReactNode) => (
-    <LayoutStage mode={mode} onMode={setMode}>
-      {preview}
-    </LayoutStage>
-  );
-
   return (
-    <div className="island-layout" ref={root} data-mode={mode}>
-      {mode === "bar" ? (
-        <>
-          {stage(
-            <IslandBarPreview
-              settings={settings}
-              notch={notch}
-              mirror={mirror}
-              names={names}
-              placements={editor.view}
-              centers={centers}
-              openItem={openItem}
-              drag={editor.drag}
-              onPick={pick}
-              onDragStart={editor.startDrag}
-            />,
-          )}
-          <CollapsedLanes layout={layout} editor={editor} notch={notch} frame={mirror.view?.live ? mirror.view.frame : null} centers={centers} styled={styled} selected={openItem} onSelect={setOpenItem} onStyle={showStyle} />
-          <ItemStyleTabs items={styleItems} current={openItem} onPick={setOpenItem} settings={settings} onSettingsChange={onSettingsChange} />
-          <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />
-        </>
-      ) : (
-        <ExpandedLayout settings={settings} pluginPages={layout.pluginPages} pluginWidgets={layout.pluginWidgets} stage={stage} />
-      )}
+    <div className="island-layout" ref={root} data-mode="bar">
+      <LayoutStage mode="bar">
+        <IslandBarPreview
+          settings={settings}
+          notch={notch}
+          mirror={mirror}
+          names={names}
+          placements={editor.view}
+          centers={centers}
+          openItem={openItem}
+          drag={editor.drag}
+          onPick={pick}
+          onDragStart={editor.startDrag}
+        />
+      </LayoutStage>
+      <CollapsedLanes layout={layout} editor={editor} notch={notch} frame={mirror.view?.live ? mirror.view.frame : null} centers={centers} styled={styled} selected={openItem} onSelect={setOpenItem} onStyle={showStyle} />
+      <ItemStyleTabs items={styleItems} current={openItem} onPick={setOpenItem} settings={settings} onSettingsChange={onSettingsChange} />
     </div>
   );
 }

@@ -172,6 +172,7 @@ pub fn set_island_interaction(
     tuck_style: Option<String>,
     game_passthrough: Option<bool>,
     collapsed_height: Option<f64>,
+    notch_ring_extra: Option<f64>,
 ) -> Result<String, String> {
     let window = main_window(&app)?;
     let mode = IslandMode::from_value(&mode)?;
@@ -215,6 +216,7 @@ pub fn set_island_interaction(
                 collapsed_width.clamp(MIN_ADJUSTED_COLLAPSED_WIDTH, MAX_ADJUSTED_COLLAPSED_WIDTH);
         }
         state.collapsed_height = grown_collapsed_height(collapsed_height.unwrap_or(COLLAPSED_ISLAND_HEIGHT));
+        state.notch_ring_extra = notch::notch_ring_extra(notch_ring_extra);
         if state.custom_position.is_none() {
             state.custom_position = restored_custom_position;
         }

@@ -14,6 +14,8 @@ export function SettingsSliderRow({
   defaultValue,
   resetLabel,
   indent,
+  className,
+  children,
   onChange,
 }: {
   title: ReactNode;
@@ -26,6 +28,8 @@ export function SettingsSliderRow({
   defaultValue?: number;
   resetLabel?: string;
   indent?: boolean;
+  className?: string;
+  children?: ReactNode;
   onChange: (value: number) => void;
 }) {
   const id = useId();
@@ -34,7 +38,7 @@ export function SettingsSliderRow({
 
   return (
     <SettingsRow
-      className="settings-row--slider"
+      className={className ? `settings-row--slider ${className}` : "settings-row--slider"}
       title={title}
       description={description}
       indent={indent}
@@ -65,7 +69,8 @@ export function SettingsSliderRow({
           <output className="settings-slider__value" htmlFor={id}>{format(value)}</output>
         </>
       }
-    />
-
+    >
+      {children}
+    </SettingsRow>
   );
 }

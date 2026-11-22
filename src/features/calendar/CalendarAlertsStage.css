@@ -1,0 +1,110 @@
+.calendar-stage {
+  --calendar-stage-fill: #0b0b0d;
+  --island-ink-rgb: 241, 240, 246;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-xl) 16px;
+}
+
+.island-light .calendar-stage {
+  --calendar-stage-fill: #ffffff;
+  --island-ink-rgb: 24, 24, 30;
+}
+
+.calendar-stage__scene {
+  height: 64px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px 12px 0;
+  overflow: hidden;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a06);
+  border-top: 2px solid var(--color-white-a16);
+  border-radius: var(--radius-lg);
+}
+
+.calendar-stage__bar {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  max-width: 100%;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 0 6px 0 12px;
+  color: rgba(var(--island-ink-rgb), 0.92);
+  font-size: 13px;
+}
+
+.calendar-stage__bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--calendar-stage-fill);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.calendar-stage__bar--played::before {
+  animation: calendar-stage-widen var(--motion-slow) var(--motion-ease-out) backwards;
+}
+
+.island-light .calendar-stage__bar::before {
+  box-shadow: 0 0 0 1px rgba(24, 24, 30, 0.1), 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-stage__bar--played > * {
+  animation: calendar-stage-fade var(--motion-medium) var(--motion-ease-out) var(--motion-base) backwards;
+}
+
+.calendar-stage__bar--idle {
+  width: 120px;
+}
+
+.calendar-stage__bar--banner {
+  width: 360px;
+  height: 40px;
+  padding: 0 8px 0 14px;
+}
+
+.calendar-stage__bar--banner::before {
+  border-radius: 20px;
+}
+
+.calendar-stage__caption,
+.calendar-stage__note {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.calendar-stage__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md) var(--space-xl);
+}
+
+@keyframes calendar-stage-widen {
+  from {
+    transform: scaleX(0.6);
+  }
+}
+
+@keyframes calendar-stage-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-stage__bar--played::before,
+  .calendar-stage__bar--played > * {
+    animation: none;
+  }
+}

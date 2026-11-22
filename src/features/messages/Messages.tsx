@@ -1,5 +1,7 @@
-import { useEffect, useRef, useSyncExternalStore, type WheelEvent } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore, type WheelEvent } from "react";
 import { useLocale, useTranslation } from "../../i18n";
+import type { MessageLayout } from "./feed/messageLayout";
 import { ImNotificationPanel } from "./im-sources/ImNotificationPanel";
 import { IM_SOURCE_IDS, imSourceBadge, isImSource } from "./im-sources/imSourcesState";
 import type { ImSourcesController } from "./im-sources/useImSources";
@@ -7,6 +9,7 @@ import { MailPanel, type MailController } from "./mail/MailPanel";
 import { sharedMailProvider } from "./mail/mailProvider";
 import { MessageSourceIcon } from "./MessageSourceIcon";
 import { getMessageSourcesSnapshot, subscribeMessageSources } from "./host/sources.mjs";
+import { MessageFeedView } from "./layouts/MessageFeedView";
 import { mailBadgeCount, type MessageSource } from "./messagePreview";
 import { QQNotificationPanel, type QQNotificationsController } from "./qq-notifications/QQNotifications";
 import { WeChatReminderPanel, type WeChatRemindersController } from "./wechat/WeChatReminders";
@@ -25,6 +28,7 @@ type MessagesProps = {
   enabledSources: EnabledSourceMap;
   onSourceChange: (source: MessageView) => void;
   onOpenMailSettings?: () => void;
+  layout?: MessageLayout;
 };
 
 export function messagePanelHeight(source: MessageView, readingMail = false) {
@@ -40,6 +44,7 @@ export function MessagesPanel({
   enabledSources,
   onSourceChange,
   onOpenMailSettings,
+  layout,
 }: MessagesProps) {
   const t = useTranslation();
   const locale = useLocale().locale === "en" ? "en" : "zh";
@@ -49,6 +54,7 @@ export function MessagesPanel({
   const enabledImIds = IM_SOURCE_IDS.filter((id) => enabledSources[id] ?? imSources?.snapshots[id].enabled ?? false);
   const totalTabs = Number(enabledSources.qq) + Number(enabledSources.wechat) + Number(enabledSources.qqMail) + enabledImIds.length + extraSources.length;
   const crowded = totalTabs > 3;
+  const [details, setDetails] = useState(false);
 
   useEffect(() => {
     const nav = navRef.current;
@@ -65,8 +71,30 @@ export function MessagesPanel({
     }
   };
 
+  if (layout && !details) {
+    const mailOpen = qqMail.compose !== null || (layout !== "reader" && qqMail.selectedMail !== null);
+    return (
+      <>
+        {mailOpen && <MailPanel controller={qqMail} navigation={null} onOpenSettings={onOpenMailSettings} />}
+        <MessageFeedView
+          layout={layout}
+          hidden={mailOpen}
+          controllers={{ qqMail, qqNotifications, wechatReminders, imSources, enabledSources, onOpenMailSettings }}
+          onDetails={(next) => { onSourceChange(next); setDetails(true); }}
+        />
+      </>
+    );
+  }
+
   const navigate = (next: MessageView) => onSourceChange(next);
+  const back = layout ? (
+    <button className="icon-button message-feed-back" type="button" aria-label={t.messages.feed.back} onClick={() => { qqMail.closeReader(); setDetails(false); }}>
+      <ArrowLeft size={15} strokeWidth={1.8} />
+    </button>
+  ) : null;
   const navigation = (
+    <>
+    {back}
     <div
       ref={navRef}
       className={crowded ? "message-sources message-sources--crowded" : "message-sources"}
@@ -122,6 +150,7 @@ export function MessagesPanel({
         );
       })}
     </div>
+    </>
   );
 
   if (source === "qqMail") return <MailPanel controller={qqMail} navigation={navigation} onOpenSettings={onOpenMailSettings} />;

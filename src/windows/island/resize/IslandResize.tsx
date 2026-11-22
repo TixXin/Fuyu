@@ -15,6 +15,7 @@ type IslandResizeProps = {
   enabled: boolean;
   size: PanelPageSize;
   extra: number;
+  barWidth?: (value: number) => number;
 };
 
 const BADGE_LINGER_MS = 900;
@@ -41,7 +42,7 @@ function px(value: number) {
   return `calc(${value}px * var(--island-scale, 1))`;
 }
 
-export function IslandResize({ model, expanded, enabled, size, extra }: IslandResizeProps) {
+export function IslandResize({ model, expanded, enabled, size, extra, barWidth }: IslandResizeProps) {
   const t = useTranslation();
   const text = t.island.resize;
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -92,7 +93,7 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
     if (value.preset) return text.preset[value.preset];
     return [value.width, value.height].filter((id) => id !== undefined).map((id) => text.detent[id]).join(" · ");
   };
-  const sizeText = expanded ? `${size.width} × ${size.height}` : text.collapsedWidth(`${extra > 0 ? "+" : ""}${extra}`);
+  const sizeText = expanded ? `${size.width} × ${size.height}` : barWidth ? text.notchWing(extra) : text.collapsedWidth(`${extra > 0 ? "+" : ""}${extra}`);
   const detentText = labelText(label);
   const showBadge = drag !== null || editing || linger;
   const widthAxis = drag !== null && drag.widthSign !== 0;
@@ -169,7 +170,7 @@ export function IslandResize({ model, expanded, enabled, size, extra }: IslandRe
           <span key={preset.id} className={`island-resize__ghost${label.preset === preset.id ? " is-on" : ""}`} style={{ width: px(preset.width), height: px(preset.height) }} />
         ))}
         {barGhosts.map((step) => (
-          <span key={step.id} className={`island-resize__ghost island-resize__ghost--bar${label.width === step.id ? " is-on" : ""}`} style={{ width: `calc(100% + ${px(step.value - extra)})` }} />
+          <span key={step.id} className={`island-resize__ghost island-resize__ghost--bar${label.width === step.id ? " is-on" : ""}`} style={{ width: barWidth ? px(barWidth(step.value)) : `calc(100% + ${px(step.value - extra)})` }} />
         ))}
       </div>
       <span className={`island-resize__badge${showBadge ? " is-shown" : ""}`}>

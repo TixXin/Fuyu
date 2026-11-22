@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { Download, Upload } from "lucide-react";
+import { SettingsAdvanced } from "../../components/settings/SettingsAdvanced";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
@@ -56,45 +57,47 @@ export function ClipboardLinkSettings({ iconsOn }: { iconsOn: boolean }) {
           }
         />
       )}
-      {settings.notice && (
-        <ClipboardSiteListRow id="clipboard-link-blocked" title={text.blocked} description={text.blockedHint} placeholder={text.sitesPlaceholder} sites={settings.blockedSites} onChange={(blockedSites) => change({ blockedSites })} />
-      )}
-      {settings.notice && (
-        <ClipboardSiteListRow id="clipboard-link-only" title={text.only} description={text.onlyHint} placeholder={text.sitesPlaceholder} sites={settings.onlySites} onChange={(onlySites) => change({ onlySites })} />
-      )}
-      <SettingsRow
-        title={text.export}
-        description={text.exportHint}
-        control={
-          <SettingsLinkButton onClick={() => run(async () => ({ kind: "exported", path: await exportClipboardLinks() }))} disabled={busy}>
-            <Download size={13} strokeWidth={2.2} aria-hidden="true" />
-            {text.exportAction}
-          </SettingsLinkButton>
-        }
-      />
-      <SettingsRow
-        title={text.import}
-        description={text.importHint}
-        control={
-          <>
-            <SettingsLinkButton onClick={() => fileInput.current?.click()} disabled={busy}>
-              <Upload size={13} strokeWidth={2.2} aria-hidden="true" />
-              {text.importAction}
-            </SettingsLinkButton>
-            <input ref={fileInput} hidden type="file" accept=".json,.txt,application/json,text/plain" aria-label={text.import} onChange={importFile} />
-          </>
-        }
-      />
-      {status && (
+      <SettingsAdvanced>
+        {settings.notice && (
+          <ClipboardSiteListRow id="clipboard-link-blocked" title={text.blocked} description={text.blockedHint} placeholder={text.sitesPlaceholder} sites={settings.blockedSites} onChange={(blockedSites) => change({ blockedSites })} />
+        )}
+        {settings.notice && (
+          <ClipboardSiteListRow id="clipboard-link-only" title={text.only} description={text.onlyHint} placeholder={text.sitesPlaceholder} sites={settings.onlySites} onChange={(onlySites) => change({ onlySites })} />
+        )}
         <SettingsRow
-          searchable={false}
-          title={status.kind === "error" ? text.failed : status.kind === "exported" ? text.exported : text.imported(status.count)}
-          description={status.kind === "error" ? status.message : status.kind === "exported" ? status.path : undefined}
-          control={status.kind === "exported" && (
-            <SettingsLinkButton onClick={() => void revealExportedFile(status.path)}>{isMacOS ? text.showMac : text.show}</SettingsLinkButton>
-          )}
+          title={text.export}
+          description={text.exportHint}
+          control={
+            <SettingsLinkButton onClick={() => run(async () => ({ kind: "exported", path: await exportClipboardLinks() }))} disabled={busy}>
+              <Download size={13} strokeWidth={2.2} aria-hidden="true" />
+              {text.exportAction}
+            </SettingsLinkButton>
+          }
         />
-      )}
+        <SettingsRow
+          title={text.import}
+          description={text.importHint}
+          control={
+            <>
+              <SettingsLinkButton onClick={() => fileInput.current?.click()} disabled={busy}>
+                <Upload size={13} strokeWidth={2.2} aria-hidden="true" />
+                {text.importAction}
+              </SettingsLinkButton>
+              <input ref={fileInput} hidden type="file" accept=".json,.txt,application/json,text/plain" aria-label={text.import} onChange={importFile} />
+            </>
+          }
+        />
+        {status && (
+          <SettingsRow
+            searchable={false}
+            title={status.kind === "error" ? text.failed : status.kind === "exported" ? text.exported : text.imported(status.count)}
+            description={status.kind === "error" ? status.message : status.kind === "exported" ? status.path : undefined}
+            control={status.kind === "exported" && (
+              <SettingsLinkButton onClick={() => void revealExportedFile(status.path)}>{isMacOS ? text.showMac : text.show}</SettingsLinkButton>
+            )}
+          />
+        )}
+      </SettingsAdvanced>
     </SettingsGroup>
   );
 }

@@ -134,6 +134,7 @@ pub(crate) struct IslandWindowState {
     pub(super) shown_auto_form: Option<super::notch::AutoForm>,
     pub(super) notch: Option<super::notch::Notch>,
     pub(super) notch_drop: bool,
+    pub(super) notch_ring_extra: f64,
     pub(super) side_column_height: f64,
     pub(super) resize_reach: (f64, f64),
 }
@@ -176,7 +177,7 @@ impl IslandWindowState {
             return (SIDE_COLUMN_WIDTH, self.side_column_height);
         }
         if let (IslandMode::Collapsed, Some(notch)) = (self.mode, self.notch) {
-            return super::notch::collapsed_size(self.collapsed_width, self.collapsed_scale, notch, self.is_tucked, self.notch_drop);
+            return super::notch::collapsed_size(self.collapsed_width, self.collapsed_scale, notch, self.is_tucked, self.notch_drop, self.notch_ring_extra);
         }
         if matches!(self.mode, IslandMode::Collapsed) && !self.is_tucked {
             return (self.collapsed_width, self.collapsed_height);
@@ -294,6 +295,7 @@ impl Default for IslandWindowState {
             shown_auto_form: None,
             notch: None,
             notch_drop: false,
+            notch_ring_extra: 0.0,
             side_column_height: SIDE_COLUMN_MIN_HEIGHT,
             resize_reach: (0.0, 0.0),
         }

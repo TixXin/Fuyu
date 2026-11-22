@@ -6,6 +6,15 @@ export type SettingsLayoutText = {
   collapsedOverflowMoreHint: string;
   notchWingMax: string;
   notchWingMaxHint: string;
+  notchTextTitle: string;
+  notchTextHint: string;
+  notchTextKinds: Record<"todos" | "lyrics" | "agent" | "meeting", string>;
+  notchTextModes: Record<"panel" | "row" | "flash" | "off", string>;
+  textOrderTitle: string;
+  textOrderHint: string;
+  textOrderShow: (name: string) => string;
+  textOrderUp: (name: string) => string;
+  textOrderDown: (name: string) => string;
   showIdleTodoCount: string;
   title: string;
   sizeTitle: string;
@@ -80,6 +89,15 @@ export const zhCN: SettingsLayoutText = {
   collapsedOverflowMoreHint: "贴合刘海时两侧位置有限：按下面清单的顺序先放，放不下的收进「+N」，停在或点它查看。关掉后放不下的项目不显示。",
   notchWingMax: "刘海两侧最宽",
   notchWingMaxHint: "贴合刘海时每一侧最多占多宽。每侧至少放得下两项，放不下时自动变宽（最宽 170）；调宽能多放几个项目，也会盖住更多菜单栏。",
+  notchTextTitle: "刘海屏上的文字",
+  notchTextHint: "刘海挡住了中间，文字放不进收起条。每类文字选一个去处；消息和长提示仍然优先占刘海下面那一行。",
+  notchTextKinds: { todos: "待办", lyrics: "歌词", agent: "Agent 标题", meeting: "会议" },
+  notchTextModes: { panel: "收进「+N」小面板", row: "刘海下常驻一行", flash: "有变化时出现 4 秒", off: "不显示" },
+  textOrderTitle: "文字的先后",
+  textOrderHint: "收起条中间同时有几样文字时，显示排在前面的那一样。消息、翻译、截图识字这类临时提示总在最前。Agent 跑完一轮、出错或等你回答时临时排到第二位。歌词排在 Agent 前面时，没找到歌词的歌显示「歌名 - 歌手」。",
+  textOrderShow: (name) => `在收起条上显示${name}`,
+  textOrderUp: (name) => `把${name}往前移`,
+  textOrderDown: (name) => `把${name}往后移`,
   showIdleTodoCount: "空闲时显示剩余待办数",
   title: "尺寸与位置",
   sizeTitle: "尺寸",
@@ -158,6 +176,15 @@ export const en: SettingsLayoutText = {
   collapsedOverflowMoreHint: "Beside the notch there is little room: items are placed in the order of the list below, and the rest go behind +N. Hover or click it to see them. When off, items that do not fit are not shown.",
   notchWingMax: "Widest each side of the notch",
   notchWingMaxHint: "How wide each side may grow when the island sits around the notch. Each side always fits two items and widens for them if needed (up to 170); wider fits more items and covers more of the menu bar.",
+  notchTextTitle: "Text around the notch",
+  notchTextHint: "The notch covers the middle, so text does not fit on the bar. Pick where each kind goes; messages and long notices still take the row under the notch first.",
+  notchTextKinds: { todos: "To-do", lyrics: "Lyrics", agent: "Agent title", meeting: "Meeting" },
+  notchTextModes: { panel: "In the +N panel", row: "Always, under the notch", flash: "4 seconds when it changes", off: "Hidden" },
+  textOrderTitle: "Text order",
+  textOrderHint: "When several kinds of text want the middle of the bar, the one higher in this list shows. Messages, translation and screenshot text always come first. An agent that finishes a turn, fails or waits for you moves up to second place for a while. With lyrics above the agent, a song without lyrics shows “title - artist”.",
+  textOrderShow: (name) => `Show ${name} on the bar`,
+  textOrderUp: (name) => `Move ${name} up`,
+  textOrderDown: (name) => `Move ${name} down`,
   showIdleTodoCount: "Show todo count when idle",
   title: "Size & position",
   sizeTitle: "Size",

@@ -1,6 +1,8 @@
 import type { AgentSettingValues } from "./agentSettings";
 import type { CalendarSettingValues } from "./calendarSettings";
 import type { GlassSettingValues } from "./glassSettings";
+import type { NotchRimSettingValues } from "./notchRimSettings";
+import type { NotchRingSettingValues } from "./notchRingSettings";
 import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "./lyricsSettings";
 import type { TodoProject } from "../todo-projects/prefix";
 
@@ -34,7 +36,11 @@ export type IslandBounce = "subtle" | "regular" | "bouncy";
 export type WidgetEntrance = "shuffle" | "fade" | "spread" | "curtain" | "wave" | "ripple" | "skeleton" | "trace" | "glow" | "drop" | "bubble" | "focus" | "flip";
 export type ShelfDoubleClick = "open" | "reveal";
 
-export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentSettingValues & {
+export type IslandSettings = CalendarSettingValues &
+  GlassSettingValues &
+  NotchRimSettingValues &
+  NotchRingSettingValues &
+  AgentSettingValues & {
   topEdgeLayoutVersion: 1;
   appearanceMode: AppearanceMode;
   fontFamily: IslandFont;

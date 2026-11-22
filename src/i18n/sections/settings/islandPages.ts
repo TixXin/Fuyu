@@ -9,8 +9,8 @@ export type SettingsIslandPagesText = {
   loading: string;
   hidePage: (name: string) => string;
   moveHint: string;
-  modes: { label: string; bar: string; expanded: string };
-  preview: { builtin: string; off: string; empty: string };
+  modes: { bar: string; expanded: string };
+  preview: { builtin: string; off: string; empty: string; pageOf: (page: number, pages: number) => string; actions: string };
   panels: {
     tag: string;
     title: string;
@@ -62,11 +62,13 @@ export const zhCN: SettingsIslandPagesText = {
   loading: "插件页面要等岛启动后才列出来。",
   hidePage: (name) => `从顶部隐藏：${name}`,
   moveHint: "拖动换位置，也可以选中后按住 Alt 加方向键",
-  modes: { label: "预览岛的哪种样子", bar: "收起条", expanded: "展开" },
+  modes: { bar: "收起的岛预览", expanded: "展开的面板预览" },
   preview: {
     builtin: "内置页面，内容由功能自己决定；可以换顺序或隐藏。",
     off: "这个功能关着，岛上不会出现这一页。",
     empty: "这个面板还没有组件，在下面「可以添加」里点 ＋",
+    pageOf: (page, pages) => `第 ${page} / ${pages} 页`,
+    actions: "页头按钮",
   },
   panels: {
     tag: "我的",
@@ -124,11 +126,13 @@ export const en: SettingsIslandPagesText = {
   loading: "Plugin pages are listed once the island has started.",
   hidePage: (name) => `Hide from the top: ${name}`,
   moveHint: "Drag to move, or select one and press Alt with an arrow key",
-  modes: { label: "Which island to preview", bar: "Collapsed bar", expanded: "Expanded" },
+  modes: { bar: "Collapsed island preview", expanded: "Expanded panel preview" },
   preview: {
     builtin: "A built-in page: the feature decides what is on it. You can move or hide it.",
     off: "This feature is off, so the page does not show on the island.",
     empty: "This panel has no widgets yet. Press + under Add below.",
+    pageOf: (page, pages) => `Page ${page} of ${pages}`,
+    actions: "Header buttons",
   },
   panels: {
     tag: "Mine",

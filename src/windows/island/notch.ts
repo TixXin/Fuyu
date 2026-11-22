@@ -68,14 +68,38 @@ export function useNotchWingNeed(): number | null {
   return useSyncExternalStore(subscribeWing, () => wingNeed, () => null);
 }
 
+let textRow = false;
+const rowListeners = new Set<() => void>();
+
+export function reportNotchTextRow(shown: boolean) {
+  if (shown === textRow) return;
+  textRow = shown;
+  rowListeners.forEach((listener) => listener());
+}
+
+function subscribeRow(listener: () => void) {
+  rowListeners.add(listener);
+  return () => {
+    rowListeners.delete(listener);
+  };
+}
+
+export function useNotchTextRow(): boolean {
+  return useSyncExternalStore(subscribeRow, () => textRow, () => false);
+}
+
 export const ALERT_NOTCH_WING = 90;
+
+export function notchBarWidth(notch: IslandNotch, collapsedScale: number, wing: number) {
+  const gap = Math.ceil(notch.width / Math.max(collapsedScale, 0.01));
+  return notch.simulated ? Math.max(SIMULATED_NOTCH_WIDTH, gap + 2 * wing) : gap + 2 * wing;
+}
 
 export function notchFittedWidth(width: number, notch: IslandNotch | null, collapsedScale: number, alerted = false, maxWing = MAX_NOTCH_WING) {
   if (!notch) return width;
-  const gap = Math.ceil(notch.width / Math.max(collapsedScale, 0.01));
   const least = alerted ? ALERT_NOTCH_WING : NOTCH_WING;
   const wing = Math.min(Math.max(maxWing, MAX_NOTCH_WING), Math.max(least, NOTCH_WING + width - MIN_COLLAPSED_ISLAND_WIDTH));
-  return notch.simulated ? Math.max(SIMULATED_NOTCH_WIDTH, gap + 2 * wing) : gap + 2 * wing;
+  return notchBarWidth(notch, collapsedScale, wing);
 }
 
 export const NOTCH_CONTENT_GAP = 8;
@@ -105,6 +129,7 @@ export type NotchDropSources = {
   preview: unknown;
   notice: unknown;
   peek: unknown;
+  row?: unknown;
 };
 
 export function hasNotchDrop(sources: NotchDropSources) {

@@ -1,6 +1,5 @@
 import { SettingsAdvanced } from "../../../components/settings/SettingsAdvanced";
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
-import { SettingsColor } from "../../../components/settings/SettingsColor";
 import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
@@ -15,19 +14,18 @@ import { GLASS_LOOK_VALUES, GLASS_LOOKS, glassLookOf, type GlassLookId } from ".
 import {
   DEFAULT_GLASS_SETTINGS,
   GLASS_BACKDROPS,
-  GLASS_COLOR_SOURCES,
   GLASS_FLOW_WHEN,
   GLASS_MORPHS,
-  GLASS_STYLES,
   type GlassSettingValues,
 } from "../../../lib/settings/glassSettings";
 import { DEFAULT_SETTINGS } from "../../../lib/settings/settings";
 import { glassFallbackNote } from "./glassFallbackNote";
+import { GlassColorRow } from "./GlassColorRow";
+import { GlassStyleStrip } from "./GlassStyleStrip";
 import { useIslandGlassStatus } from "./useIslandGlassStatus";
 import type { IslandSettings } from "../../../lib/settings/types";
 
 const percent = (value: number) => `${Math.round(value)}%`;
-const COLOR_KEYS = ["glassColor1", "glassColor2", "glassColor3"] as const;
 
 export function GlassSettingsSection({
   settings,
@@ -43,8 +41,8 @@ export function GlassSettingsSection({
   if (settings.appearanceMode !== "liquidGlass") return null;
 
   const set = (patch: Partial<GlassSettingValues> & Partial<Pick<IslandSettings, "glassIntensity">>) => onSettingsChange({ ...settings, ...patch });
-  const derived = glassPalette({
-    settings: { ...settings, glassColorSource: "accent", glassContrastGuard: false },
+  const shown = glassPalette({
+    settings: { ...settings, glassContrastGuard: false },
     accent: settings.accentMode === "pick" ? settings.accentColor : null,
     cover: null,
     background: settings.islandBackgroundColor,
@@ -81,18 +79,9 @@ export function GlassSettingsSection({
             />
           }
         />
-        <SettingsRow
-          title={text.style}
-          description={settings.glassStyle === "shader" ? text.shaderHint : undefined}
-          control={
-            <SettingsChoice
-              value={settings.glassStyle}
-              options={GLASS_STYLES.map((value) => ({ value, label: text.styles[value] }))}
-              ariaLabel={text.style}
-              onChange={(glassStyle) => set({ glassStyle, ...GLASS_STYLE_PRESETS[glassStyle] })}
-            />
-          }
-        />
+        <SettingsRow title={text.style}>
+          <GlassStyleStrip value={settings.glassStyle} palette={shown} onChange={(glassStyle) => set({ glassStyle, ...GLASS_STYLE_PRESETS[glassStyle] })} />
+        </SettingsRow>
         <SettingsSliderRow
           title={t.settings.appearance.glassStrength}
           value={settings.glassIntensity}
@@ -125,32 +114,12 @@ export function GlassSettingsSection({
             </span>
           )}
         </SettingsRow>
-        <SettingsRow
-          title={text.colorSource}
-          description={settings.glassColorSource === "cover" ? text.coverHint : undefined}
-          control={
-            <SettingsChoice
-              value={settings.glassColorSource}
-              options={GLASS_COLOR_SOURCES.map((value) => ({ value, label: text.colorSources[value] }))}
-              ariaLabel={text.colorSource}
-              onChange={(glassColorSource) => set({ glassColorSource })}
-            />
-          }
+        <GlassColorRow
+          source={settings.glassColorSource}
+          palette={shown}
+          onSource={(glassColorSource) => set({ glassColorSource })}
+          onColor={(key, color) => set({ [key]: color })}
         />
-        {settings.glassColorSource === "custom" && COLOR_KEYS.map((key, index) => (
-          <SettingsRow
-            key={key}
-            title={text.color(index + 1)}
-            indent
-            control={
-              <SettingsColor
-                value={settings[key] || derived[index]}
-                ariaLabel={text.color(index + 1)}
-                onChange={(color) => set({ [key]: color })}
-              />
-            }
-          />
-        ))}
         <SettingsSliderRow
           title={text.colorStrength}
           value={settings.glassColorStrength}

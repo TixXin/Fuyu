@@ -1,5 +1,5 @@
 import "../../src/styles/tokens.css";
-import { act, StrictMode } from "react";
+import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { I18nProvider } from "../../src/i18n";
@@ -7,6 +7,10 @@ import type { CalendarEvent, CalendarSnapshot } from "../../src/features/calenda
 import { CalendarPanel } from "../../src/features/calendar/CalendarPanel";
 import { MeetingLine } from "../../src/features/calendar/MeetingLine";
 import { CalendarSourcesSection } from "../../src/features/calendar/CalendarSourcesSection";
+import { CalendarDemoSection } from "../../src/features/calendar/CalendarDemoSection";
+import { CALENDAR_PREFS_KEY } from "../../src/features/calendar/storage";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
+import type { IslandSettings } from "../../src/lib/settings/types";
 import { until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -48,6 +52,12 @@ mockIPC((command, payload) => {
   if (command === "plugin:opener|open_url") return null;
   return null;
 });
+
+let demoSettings: IslandSettings = { ...DEFAULT_SETTINGS, calendarRemindMinutes: 10, calendarShowTitle: true };
+function DemoHarness() {
+  const [settings, setSettings] = useState(demoSettings);
+  return <CalendarDemoSection settings={settings} onSettingsChange={(next) => { demoSettings = next; setSettings(next); }} />;
+}
 
 const results = document.getElementById("results")!;
 const messages: string[] = [];
@@ -209,6 +219,30 @@ try {
   await act(async () => { removeButton.click(); });
   await until(() => !document.body.textContent?.includes("u_abc"));
   check(!document.body.textContent?.includes("u_abc"), "删除后从列表消失");
+
+  localStorage.setItem(CALENDAR_PREFS_KEY, JSON.stringify({ bannerEnabled: false, countdownFormat: "titleMinutes" }));
+  const alerts = createRoot(document.getElementById("alerts")!);
+  await act(async () => { alerts.render(<I18nProvider><DemoHarness /></I18nProvider>); });
+  const bar = () => document.querySelector<HTMLElement>(".calendar-stage__bar")!;
+  const demoButton = () => [...document.querySelectorAll<HTMLButtonElement>(".calendar-stage .settings-link-button")].find((button) => button.textContent === "演示强提醒")!;
+  check(bar().textContent === "产品周会· 10 分钟后加入" && document.querySelector(".calendar-stage__caption")?.textContent?.startsWith("示例：14:00 的「产品周会」"),
+    "提醒演示：收起的小岛用真的收起条显示示例会议和加入按钮");
+  check(demoButton().disabled && document.querySelector(".calendar-stage__note")?.textContent === "会前强提醒关着，打开后才会弹横幅。", "强提醒关着时演示按钮灰掉并说明");
+  const thumbs = () => [...document.querySelectorAll<HTMLButtonElement>(".settings-thumbs__item")];
+  check(thumbs().map((thumb) => thumb.textContent).join("|") === "产品周会· 10 分钟后标题和倒计时|14:00 产品周会· 10m时间和标题|10m紧凑"
+    && thumbs()[0].getAttribute("aria-pressed") === "true", "显示格式是三格缩略图，缩略图就是三种收起条");
+  await act(async () => { thumbs()[2].click(); });
+  check(JSON.parse(localStorage.getItem(CALENDAR_PREFS_KEY) ?? "{}").countdownFormat === "compact" && bar().querySelector(".island-meeting--compact") && thumbs()[2].getAttribute("aria-pressed") === "true",
+    "选紧凑：照旧存进 fuyu-calendar-prefs 的 countdownFormat，演示跟着变");
+  const titleSwitch = [...document.querySelectorAll<HTMLInputElement>("#alerts input[role='switch']")].pop()!;
+  await act(async () => { titleSwitch.click(); });
+  check(demoSettings.calendarShowTitle === false && thumbs()[0].textContent?.startsWith("会议· 10 分钟后"), "关掉显示会议标题，缩略图只写「会议」");
+  localStorage.setItem(CALENDAR_PREFS_KEY, JSON.stringify({ ...JSON.parse(localStorage.getItem(CALENDAR_PREFS_KEY) ?? "{}"), bannerEnabled: true, bannerMinutes: 1 }));
+  await act(async () => { alerts.render(<I18nProvider><DemoHarness key="banner" /></I18nProvider>); });
+  await act(async () => { demoButton().click(); });
+  check(bar().classList.contains("calendar-stage__bar--banner") && bar().textContent === "会议 · 1 分钟后立即加入", "点演示强提醒：小岛弹出横幅，不显示标题时写「会议」");
+  await until(() => !document.querySelector(".calendar-stage__bar--banner"), 6000);
+  check(!document.querySelector(".calendar-stage__bar--banner") && bar().querySelector(".island-meeting--compact"), "横幅演示完回到收起条");
 
   results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
   results.dataset.result = "passed";

@@ -81,3 +81,41 @@ button.island-more-panel__row:focus-visible {
   outline: 2px solid var(--color-focus-ring-soft);
   outline-offset: -2px;
 }
+
+.island-more-panel__text {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+  max-width: 100%;
+  min-height: 28px;
+  padding: 4px 8px;
+  overflow: hidden;
+  border-radius: 8px;
+  color: var(--text-1);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.island-more-panel__text[aria-disabled] {
+  cursor: default;
+}
+
+.island-more-panel__text:not([aria-disabled]):hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+}
+
+.island-more-panel__text:focus-visible {
+  outline: 2px solid var(--color-focus-ring-soft);
+  outline-offset: -2px;
+}
+
+.island-more-panel__rule {
+  margin: 3px 4px;
+  border: 0;
+  border-top: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+}
+
+.island-more-panel:has(.island-more-panel__text) {
+  max-width: 320px;
+}

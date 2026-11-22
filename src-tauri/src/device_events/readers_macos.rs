@@ -2,11 +2,13 @@ use std::collections::HashMap;
 
 use crate::macos::{
     audio_devices::{self, AudioOutput, Transport},
-    bluetooth, power,
+    bluetooth::{self, ConnectedDevice},
+    hid_battery::{self, HidBattery},
+    power,
 };
 
 use super::{
-    peripherals::{kind_from_minor_type, Peripheral},
+    peripherals::{kind_from_minor_type, Peripheral, PeripheralKind},
     tracker::{AudioKind, Output},
 };
 
@@ -43,18 +45,69 @@ pub(super) fn read_batteries() -> HashMap<String, u8> {
     bluetooth::connected_batteries()
 }
 
-fn peripheral(device: bluetooth::ConnectedDevice) -> Option<Peripheral> {
-    let kind = kind_from_minor_type(&device.minor_type)?;
-    Some(Peripheral {
-        device: device.key,
-        name: device.name,
-        kind,
-        battery: device.battery,
-    })
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Reading {
+    pub(super) key: String,
+    pub(super) name: String,
+    pub(super) kind: Option<PeripheralKind>,
+    pub(super) battery: Option<u8>,
+}
+
+const GENERIC_DESKTOP_PAGE: i64 = 0x01;
+const MOUSE_USAGE: i64 = 0x02;
+const KEYBOARD_USAGE: i64 = 0x06;
+
+fn hid_kind(device: &HidBattery) -> Option<PeripheralKind> {
+    if device.name.to_ascii_lowercase().contains("trackpad") {
+        return Some(PeripheralKind::Trackpad);
+    }
+    match (device.usage_page, device.usage) {
+        (Some(GENERIC_DESKTOP_PAGE), Some(MOUSE_USAGE)) => Some(PeripheralKind::Mouse),
+        (Some(GENERIC_DESKTOP_PAGE), Some(KEYBOARD_USAGE)) => Some(PeripheralKind::Keyboard),
+        _ => kind_from_minor_type(&device.name),
+    }
+}
+
+fn hid_reading(device: HidBattery) -> Reading {
+    Reading { kind: hid_kind(&device), battery: Some(device.battery), key: device.key, name: device.name }
+}
+
+pub(super) fn merge_peripherals(profiled: Vec<ConnectedDevice>, readings: Vec<Reading>) -> Vec<Peripheral> {
+    let mut used = vec![false; readings.len()];
+    let mut found: Vec<Peripheral> = Vec::new();
+    for device in profiled {
+        let mut kind = kind_from_minor_type(&device.minor_type);
+        let mut battery = device.battery;
+        for (index, reading) in readings.iter().enumerate() {
+            if reading.key == device.key || reading.key == device.name {
+                used[index] = true;
+                kind = kind.or(reading.kind);
+                battery = battery.or(reading.battery);
+            }
+        }
+        if let Some(kind) = kind {
+            found.push(Peripheral { device: device.key, name: device.name, kind, battery });
+        }
+    }
+    for (reading, used) in readings.into_iter().zip(used) {
+        if used {
+            continue;
+        }
+        if let Some(known) = found.iter_mut().find(|known| known.device == reading.key) {
+            known.battery = known.battery.or(reading.battery);
+        } else if let Some(kind) = reading.kind {
+            found.push(Peripheral { device: reading.key, name: reading.name, kind, battery: reading.battery });
+        }
+    }
+    found
+}
+
+fn read_hid() -> Vec<Reading> {
+    hid_battery::connected_batteries().into_iter().map(hid_reading).collect()
 }
 
 pub(super) fn read_peripherals() -> Vec<Peripheral> {
-    bluetooth::connected_devices().into_iter().filter_map(peripheral).collect()
+    merge_peripherals(bluetooth::connected_devices(), read_hid())
 }
 
 pub(super) fn power_source() -> (Option<bool>, Option<u8>) {
@@ -63,76 +116,5 @@ pub(super) fn power_source() -> (Option<bool>, Option<u8>) {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{
-        bluetooth::ConnectedDevice, classify, peripheral, AudioKind, AudioOutput, DeviceThread,
-        Transport,
-    };
-    use crate::device_events::peripherals::PeripheralKind;
-
-    fn output(uid: &str, transport: Transport, has_input: bool) -> AudioOutput {
-        AudioOutput {
-            uid: uid.into(),
-            name: "Device".into(),
-            transport,
-            has_input,
-        }
-    }
-
-    #[test]
-    fn bluetooth_and_usb_headsets_are_announced_but_built_in_speakers_are_not() {
-        let buds = classify(output("B4-E7-B3-CA-E4-EB:output", Transport::Bluetooth, false));
-        assert!(
-            buds.as_ref().is_some_and(|o| o.kind == AudioKind::Headphones
-                && o.bluetooth
-                && o.device == "B4E7B3CAE4EB"),
-            "{buds:?}"
-        );
-        let headset = classify(output("AppleUSBAudioEngine:Jabra:1", Transport::Usb, true));
-        assert!(
-            headset
-                .as_ref()
-                .is_some_and(|o| o.kind == AudioKind::Headset && !o.bluetooth && o.device == o.id),
-            "{headset:?}"
-        );
-        assert!(classify(output("AppleUSBAudioEngine:DAC:1", Transport::Usb, false)).is_none());
-        assert!(classify(output("BuiltInSpeakerDevice", Transport::Other, false)).is_none());
-    }
-
-    #[test]
-    fn mice_keyboards_and_trackpads_are_peripherals_but_headphones_are_not() {
-        let device = |minor_type: &str| ConnectedDevice {
-            key: "9A02CB733405".into(),
-            name: "Magic".into(),
-            minor_type: minor_type.into(),
-            battery: Some(50),
-        };
-        assert_eq!(
-            peripheral(device("Mouse")).map(|p| p.kind),
-            Some(PeripheralKind::Mouse)
-        );
-        assert_eq!(
-            peripheral(device("Keyboard")).map(|p| p.kind),
-            Some(PeripheralKind::Keyboard)
-        );
-        assert_eq!(
-            peripheral(device("Trackpad")).map(|p| p.kind),
-            Some(PeripheralKind::Trackpad)
-        );
-        assert!(peripheral(device("Headphones")).is_none());
-        assert!(peripheral(device("")).is_none());
-    }
-
-    #[test]
-    #[ignore = "reads the real devices of the computer it runs on"]
-    fn probe_this_computer() {
-        for output in crate::macos::audio_devices::outputs() {
-            println!("{output:?}");
-        }
-        let mut thread = DeviceThread;
-        println!("announced: {:?}", super::read_outputs(&mut thread));
-        println!("batteries: {:?}", super::read_batteries());
-        println!("peripherals: {:?}", super::read_peripherals());
-        println!("power: {:?}", super::power_source());
-    }
-}
+#[path = "readers_macos_tests.rs"]
+mod tests;

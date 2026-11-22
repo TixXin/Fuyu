@@ -80,60 +80,18 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
       <SettingsGroup title={text.pasteTitle}>
         {inWindow && (
           <SettingsToggleRow
-            title={listText.pinFavorites}
-            description={listText.pinFavoritesHint(ALT_KEY.replace("+", ""))}
-            checked={clipboardSettings.pinFavorites !== false}
-            onChange={(pinFavorites) => change({ pinFavorites })}
-          />
-        )}
-        {inWindow && (
-          <SettingsToggleRow
             title={text.autoPaste}
             description={isMacOS ? text.autoPasteHintMac : text.autoPasteHint}
             checked={clipboardSettings.autoPaste}
             onChange={(autoPaste) => change({ autoPaste })}
           />
         )}
-        {inWindow && clipboardSettings.autoPaste && (
-          <SettingsToggleRow
-            indent
-            title={text.terminalImagePath}
-            description={isMacOS ? text.terminalImagePathHintMac : text.terminalImagePathHint}
-            checked={clipboardSettings.terminalImagePath}
-            onChange={(terminalImagePath) => change({ terminalImagePath })}
-          />
-        )}
-        {inWindow && clipboardSettings.autoPaste && (
-          <SettingsToggleRow
-            indent
-            title={text.flattenTerminalCommands}
-            description={text.flattenTerminalCommandsHint}
-            checked={clipboardSettings.flattenTerminalCommands === true}
-            onChange={(flattenTerminalCommands) => change({ flattenTerminalCommands })}
-          />
-        )}
         {inWindow && (
           <SettingsToggleRow
-            title={text.hideFromCapture}
-            description={text.hideFromCaptureHint}
-            checked={clipboardSettings.hideFromCapture === true}
-            onChange={(hideFromCapture) => change({ hideFromCapture })}
-          />
-        )}
-        {inWindow && (
-          <SettingsToggleRow
-            title={text.prewarmWindow}
-            description={text.prewarmWindowHint}
-            checked={clipboardSettings.prewarmWindow ?? !isMacOS}
-            onChange={(prewarmWindow) => change({ prewarmWindow })}
-          />
-        )}
-        {inWindow && (
-          <SettingsToggleRow
-            title={text.linkPreview}
-            description={text.linkPreviewHint}
-            checked={clipboardSettings.linkPreview === true}
-            onChange={(linkPreview) => change({ linkPreview })}
+            title={listText.pinFavorites}
+            description={listText.pinFavoritesHint(ALT_KEY.replace("+", ""))}
+            checked={clipboardSettings.pinFavorites !== false}
+            onChange={(pinFavorites) => change({ pinFavorites })}
           />
         )}
         <SettingsRow
@@ -150,6 +108,46 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
         />
         {children}
       </SettingsGroup>
+
+      {inWindow && clipboardSettings.autoPaste && (
+        <SettingsGroup title={text.terminalTitle}>
+          <SettingsToggleRow
+            title={text.terminalImagePath}
+            description={isMacOS ? text.terminalImagePathHintMac : text.terminalImagePathHint}
+            checked={clipboardSettings.terminalImagePath}
+            onChange={(terminalImagePath) => change({ terminalImagePath })}
+          />
+          <SettingsToggleRow
+            title={text.flattenTerminalCommands}
+            description={text.flattenTerminalCommandsHint}
+            checked={clipboardSettings.flattenTerminalCommands === true}
+            onChange={(flattenTerminalCommands) => change({ flattenTerminalCommands })}
+          />
+        </SettingsGroup>
+      )}
+
+      {inWindow && (
+        <SettingsGroup title={text.privacyPerfTitle}>
+          <SettingsToggleRow
+            title={text.hideFromCapture}
+            description={text.hideFromCaptureHint}
+            checked={clipboardSettings.hideFromCapture === true}
+            onChange={(hideFromCapture) => change({ hideFromCapture })}
+          />
+          <SettingsToggleRow
+            title={text.linkPreview}
+            description={text.linkPreviewHint}
+            checked={clipboardSettings.linkPreview === true}
+            onChange={(linkPreview) => change({ linkPreview })}
+          />
+          <SettingsToggleRow
+            title={text.prewarmWindow}
+            description={text.prewarmWindowHint}
+            checked={clipboardSettings.prewarmWindow ?? !isMacOS}
+            onChange={(prewarmWindow) => change({ prewarmWindow })}
+          />
+        </SettingsGroup>
+      )}
       {shortcuts}
     </>
   );

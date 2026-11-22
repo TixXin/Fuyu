@@ -24,6 +24,7 @@ import {
 
 export type SyncController = {
   status: SyncStatus;
+  loaded: boolean;
   busy: boolean;
   actionError: unknown;
   chooseFolder: (pickerTitle: string) => Promise<void>;
@@ -38,6 +39,7 @@ export type SyncController = {
 
 export function useSyncSettings(): SyncController {
   const [status, setStatus] = useState<SyncStatus>(DEFAULT_SYNC_STATUS);
+  const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<unknown>(null);
 
@@ -46,7 +48,9 @@ export function useSyncSettings(): SyncController {
     let stop: (() => void) | undefined;
 
     void onSyncStatus((next) => {
-      if (alive) setStatus(next);
+      if (!alive) return;
+      setStatus(next);
+      setLoaded(true);
     })
       .then((unlisten) => {
         if (!alive) unlisten();
@@ -68,6 +72,9 @@ export function useSyncSettings(): SyncController {
       })
       .catch((error: unknown) => {
         if (alive) setActionError(error);
+      })
+      .finally(() => {
+        if (alive) setLoaded(true);
       });
 
     return () => {
@@ -173,6 +180,7 @@ export function useSyncSettings(): SyncController {
 
   return {
     status,
+    loaded,
     busy,
     actionError,
     chooseFolder,

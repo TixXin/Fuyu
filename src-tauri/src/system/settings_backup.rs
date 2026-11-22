@@ -10,11 +10,13 @@ use crate::user_error::UserError;
 
 const MAX_BACKUP_BYTES: usize = 2 * 1024 * 1024;
 const MAX_NAME_TRIES: u32 = 50;
+const BACKUP_NAME_PREFIXES: [&str; 4] = ["fuyu-settings-", "fuyu-theme-", "fly-island-settings-", "fly-island-theme-"];
+const BACKUP_APP_NAMES: [&str; 2] = ["fuyu", "fly-island"];
 
 pub(crate) fn is_backup_file_name(file_name: &str) -> bool {
-    file_name
-        .strip_prefix("fly-island-settings-")
-        .or_else(|| file_name.strip_prefix("fly-island-theme-"))
+    BACKUP_NAME_PREFIXES
+        .iter()
+        .find_map(|prefix| file_name.strip_prefix(prefix))
         .and_then(|rest| rest.strip_suffix(".json"))
         .is_some_and(|stamp| !stamp.is_empty() && stamp.chars().all(|c| c.is_ascii_digit() || c == '-'))
 }
@@ -22,7 +24,7 @@ pub(crate) fn is_backup_file_name(file_name: &str) -> bool {
 pub(crate) fn is_backup_content(content: &str) -> bool {
     content.len() <= MAX_BACKUP_BYTES
         && serde_json::from_str::<serde_json::Value>(content).is_ok_and(|value| {
-            value["app"] == "fly-island"
+            value["app"].as_str().is_some_and(|app| BACKUP_APP_NAMES.contains(&app))
                 && (value["keys"].is_object() || (value["kind"] == "theme" && value["appearance"].is_object()))
         })
 }
@@ -85,6 +87,12 @@ mod tests {
 
     #[test]
     fn only_backup_names_and_contents_are_accepted() {
+        assert!(is_backup_file_name("fuyu-settings-2026-11-22-0930.json"));
+        assert!(is_backup_file_name("fuyu-theme-2026-11-22-0930.json"));
+        assert!(!is_backup_file_name("fuyu-settings-.json"));
+        assert!(!is_backup_file_name("fuyu-notes-2026-11-22-0930.json"));
+        assert!(is_backup_content(r#"{"app":"fuyu","version":1,"keys":{}}"#));
+        assert!(is_backup_content(r#"{"app":"fuyu","kind":"theme","version":1,"appearance":{}}"#));
         assert!(is_backup_file_name("fly-island-settings-2026-11-06-1430.json"));
         assert!(!is_backup_file_name("fly-island-settings-.json"));
         assert!(!is_backup_file_name(r"..\fly-island-settings-1.json"));
@@ -98,7 +106,7 @@ mod tests {
         assert!(!is_backup_content(r#"{"app":"fly-island","kind":"theme","appearance":"x"}"#));
         assert_eq!(save_settings_backup("bad.json".into(), "{}".into()).unwrap_err().code(), "settingsBackup.badName");
         assert_eq!(
-            save_settings_backup("fly-island-settings-1.json".into(), "{}".into()).unwrap_err().code(),
+            save_settings_backup("fuyu-settings-1.json".into(), "{}".into()).unwrap_err().code(),
             "settingsBackup.badContent"
         );
     }

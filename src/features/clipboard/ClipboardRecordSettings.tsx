@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SettingsAdvanced } from "../../components/settings/SettingsAdvanced";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
@@ -39,7 +40,6 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
         {isMacOS && (
           <SettingsToggleRow title={privacy.recordRemote} description={privacy.recordRemoteHint} checked={clipboardSettings.recordRemote} onChange={(recordRemote) => onChange({ recordRemote })} />
         )}
-        <SettingsToggleRow title={privacy.forgetCleared} description={privacy.forgetClearedHint} checked={clipboardSettings.forgetCleared} onChange={(forgetCleared) => onChange({ forgetCleared })} />
         <SettingsRow
           title={text.secrets}
           description={text.secretsHint}
@@ -56,21 +56,6 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
             />
           }
         />
-        {clipboardSettings.secrets === "mask" && (
-          <SettingsRow
-            indent
-            title={privacy.secretExpiry}
-            description={privacy.secretExpiryHint}
-            control={
-              <SettingsSelect
-                value={String(clipboardSettings.secretExpiryMinutes)}
-                ariaLabel={privacy.secretExpiry}
-                options={CLIPBOARD_SECRET_EXPIRY_MINUTES.map((minutes) => ({ value: String(minutes), label: privacy.secretExpiryOption(minutes) }))}
-                onChange={(value) => onChange({ secretExpiryMinutes: Number(value) })}
-              />
-            }
-          />
-        )}
         <SettingsRow title={text.excludedApps} description={isMacOS ? text.excludedAppsHintMac : text.excludedAppsHint} labelFor="clipboard-excluded-apps">
           <SettingsInput
             id="clipboard-excluded-apps"
@@ -83,35 +68,54 @@ export function ClipboardRecordSettings({ clipboardSettings, onChange }: {
             }}
           />
         </SettingsRow>
-        <SettingsToggleRow title={text.localApiRead} description={text.localApiReadHint} checked={clipboardSettings.localApiRead === true} onChange={(localApiRead) => onChange({ localApiRead })} />
+        <SettingsAdvanced>
+          <SettingsToggleRow title={privacy.forgetCleared} description={privacy.forgetClearedHint} checked={clipboardSettings.forgetCleared} onChange={(forgetCleared) => onChange({ forgetCleared })} />
+          {clipboardSettings.secrets === "mask" && (
+            <SettingsRow
+              title={privacy.secretExpiry}
+              description={privacy.secretExpiryHint}
+              control={
+                <SettingsSelect
+                  value={String(clipboardSettings.secretExpiryMinutes)}
+                  ariaLabel={privacy.secretExpiry}
+                  options={CLIPBOARD_SECRET_EXPIRY_MINUTES.map((minutes) => ({ value: String(minutes), label: privacy.secretExpiryOption(minutes) }))}
+                  onChange={(value) => onChange({ secretExpiryMinutes: Number(value) })}
+                />
+              }
+            />
+          )}
+          <SettingsToggleRow title={text.localApiRead} description={text.localApiReadHint} checked={clipboardSettings.localApiRead === true} onChange={(localApiRead) => onChange({ localApiRead })} />
+        </SettingsAdvanced>
       </SettingsGroup>
 
       <SettingsGroup title={text.storageTitle}>
-        <SettingsRow
-          title={privacy.maxText}
-          description={privacy.maxTextHint}
-          control={
-            <SettingsSelect
-              value={String(clipboardSettings.maxTextKb)}
-              ariaLabel={privacy.maxText}
-              options={CLIPBOARD_TEXT_LIMITS_KB.map((kb) => ({ value: String(kb), label: privacy.maxTextOption(kb) }))}
-              onChange={(value) => onChange({ maxTextKb: Number(value) })}
-            />
-          }
-        />
-        <SettingsNumberRow title={text.maxItems} value={clipboardSettings.maxItems} min={CLIPBOARD_MIN_ITEMS} max={CLIPBOARD_MAX_ITEMS} onChange={(maxItems) => onChange({ maxItems })} />
-        <SettingsRow
-          title={text.retention}
-          description={text.retentionHint}
-          control={
-            <SettingsSelect
-              value={String(clipboardSettings.retentionDays)}
-              ariaLabel={text.retention}
-              options={CLIPBOARD_RETENTION_DAYS.map((days) => ({ value: String(days), label: text.retentionOption(days) }))}
-              onChange={(value) => onChange({ retentionDays: Number(value) })}
-            />
-          }
-        />
+        <SettingsAdvanced label={text.storageSummary(clipboardSettings.maxItems, clipboardSettings.retentionDays)}>
+          <SettingsRow
+            title={privacy.maxText}
+            description={privacy.maxTextHint}
+            control={
+              <SettingsSelect
+                value={String(clipboardSettings.maxTextKb)}
+                ariaLabel={privacy.maxText}
+                options={CLIPBOARD_TEXT_LIMITS_KB.map((kb) => ({ value: String(kb), label: privacy.maxTextOption(kb) }))}
+                onChange={(value) => onChange({ maxTextKb: Number(value) })}
+              />
+            }
+          />
+          <SettingsNumberRow title={text.maxItems} value={clipboardSettings.maxItems} min={CLIPBOARD_MIN_ITEMS} max={CLIPBOARD_MAX_ITEMS} onChange={(maxItems) => onChange({ maxItems })} />
+          <SettingsRow
+            title={text.retention}
+            description={text.retentionHint}
+            control={
+              <SettingsSelect
+                value={String(clipboardSettings.retentionDays)}
+                ariaLabel={text.retention}
+                options={CLIPBOARD_RETENTION_DAYS.map((days) => ({ value: String(days), label: text.retentionOption(days) }))}
+                onChange={(value) => onChange({ retentionDays: Number(value) })}
+              />
+            }
+          />
+        </SettingsAdvanced>
       </SettingsGroup>
     </>
   );

@@ -12,6 +12,7 @@ import { MessageSourceIcon } from "../MessageSourceIcon";
 import { messagesIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 import { islandPage } from "./page.ts";
+import { useMessageLayout } from "./useSourceSwitches";
 
 type Panel = ComponentProps<typeof MessagesPanel>;
 
@@ -34,6 +35,7 @@ function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
   const playing = useIslandContributed().hints.has("media.playing");
   const art = useTrackArt();
   const messages = messagesIsland.use();
+  const layout = useMessageLayout();
   if (!messages) return null;
   const { mail: qqMail, qq: qqNotifications, wechat: wechatReminders, im: imSources, enabledSources, source: messageSource, panel: messagePanel, open: openMessages } = messages;
   const shownArrivals = messagePanel?.arrivals ?? messagePanel?.closingArrivals ?? null;
@@ -59,6 +61,7 @@ function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
           enabledSources={enabledSources ?? features}
           onSourceChange={openMessages}
           onOpenMailSettings={() => onOpenSettings("mail")}
+          layout={layout}
         />
       )}
     </div>

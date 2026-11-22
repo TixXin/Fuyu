@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { lyricsBeforeAgent, useTextOrder } from "../../lib/settings/collapsedText";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useAgentStatus } from "./useAgentStatus";
 import { useAgentSession } from "./useAgentSession";
@@ -16,10 +17,11 @@ export function useIslandAgents(settings: IslandSettings, demoSessions: AgentSes
   const others = useMemo(() => agentStatus.others?.filter((report) => !isRemoteSessionReport(report)), [agentStatus.others]);
   const titlesOn = settings.agentStatusEnabled && settings.agentTitleEnabled;
   const whileRunning = settings.agentTitleMode === "running";
+  const { order, hidden } = useTextOrder(settings.lyricsIslandPriority);
   const agentSession = useAgentSession(sessions.agentSessions, others, titlesOn && whileRunning);
   const agentInterjection = useAgentInterjection(
     sessions.agentSessions,
-    titlesOn && (!whileRunning || (settings.musicEnabled && settings.lyricsOnIsland && settings.lyricsIslandPriority === "lyrics")),
+    titlesOn && (!whileRunning || (settings.musicEnabled && settings.lyricsOnIsland && lyricsBeforeAgent(order) && !hidden.includes("lyrics"))),
     settings.agentRemindSeconds * 1000,
     settings.agentAlertStarted,
   );

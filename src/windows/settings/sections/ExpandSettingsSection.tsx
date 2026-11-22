@@ -121,11 +121,12 @@ export function ExpandSettingsSection({
         <IslandMotionRow
           value={settings.islandMotion}
           bounce={settings.islandBounce}
-          bounceDisabled={settings.islandMotion !== "pop" && settings.islandHover !== "bounce"}
+          showBounce={settings.islandMotion === "pop"}
+          islandColor={settings.islandBackgroundColor}
           onChange={(islandMotion) => update({ islandMotion })}
           onBounceChange={(islandBounce) => update({ islandBounce })}
         />
-        <IslandHoverRow value={settings.islandHover} bounce={settings.islandBounce} onChange={(islandHover) => update({ islandHover })} />
+        <IslandHoverRow value={settings.islandHover} bounce={settings.islandBounce} islandColor={settings.islandBackgroundColor} onChange={(islandHover) => update({ islandHover })} />
         <WidgetEntranceRow value={settings.widgetEntrance} onChange={(widgetEntrance) => update({ widgetEntrance })} />
         <SettingsToggleRow
           title={expand.widgetData}

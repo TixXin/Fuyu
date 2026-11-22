@@ -1,9 +1,14 @@
 import { useTranslation } from "../../../i18n";
-import { SettingsChoice } from "../../../components/settings/SettingsChoice";
-import { SettingsColor } from "../../../components/settings/SettingsColor";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
+import { SettingsThumbStrip } from "../../../components/settings/SettingsThumbStrip";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import type { IslandSettings, TuckHintColor, TuckHintStyle } from "../../../lib/settings/types";
+import { TuckMock } from "./tuck/TuckMock";
+import { tuckHintPaint, tuckHintRing } from "./tuck/tuckHintPaint";
+import { TuckSwatches } from "./tuck/TuckSwatches";
+import { useThumbPointer } from "./useThumbPointer";
+
+const HINT_STYLES = ["none", "dot", "glow"] as const satisfies readonly TuckHintStyle[];
 
 export function TuckHintRows({
   settings,
@@ -13,63 +18,55 @@ export function TuckHintRows({
   update: (patch: Partial<IslandSettings>) => void;
 }) {
   const expand = useTranslation().settings.expand;
-  const styles: { value: TuckHintStyle; label: string }[] = [
-    { value: "none", label: expand.tuckHintNone },
-    { value: "dot", label: expand.tuckHintDot },
-    { value: "glow", label: expand.tuckHintGlow },
-  ];
-  const colors: { value: TuckHintColor; label: string }[] = [
-    { value: "contrast", label: expand.tuckHintColorContrast },
-    { value: "island", label: expand.tuckHintColorIsland },
-    { value: "custom", label: expand.tuckHintColorCustom },
-  ];
+  const { pointed, handlers } = useThumbPointer();
+  const labels: Record<TuckHintStyle, string> = { none: expand.tuckHintNone, dot: expand.tuckHintDot, glow: expand.tuckHintGlow };
+  const colorLabels: Record<TuckHintColor, string> = {
+    contrast: expand.tuckHintColorContrast,
+    island: expand.tuckHintColorIsland,
+    custom: expand.tuckHintColorCustom,
+  };
+  const paint = (color: TuckHintColor) => tuckHintPaint(color, settings);
+  const chosenPaint = paint(settings.tuckHintColor);
+  const ring = tuckHintRing(settings.tuckHintColor, chosenPaint);
   const shown = settings.tuckHintStyle !== "none";
 
   return (
     <>
-      <SettingsRow
-        indent
-        title={expand.tuckHint}
-        description={expand.tuckHintHint}
-        control={
-          <SettingsChoice
+      <SettingsRow className="tuck-settings__strip-row" title={expand.tuckHint} description={expand.tuckHintHint}>
+        <div className="tuck-settings__strip" {...handlers}>
+          <SettingsThumbStrip<TuckHintStyle>
+            options={HINT_STYLES.map((value) => ({ value, label: labels[value], hint: expand.tuckHintStyleHints[value] }))}
             value={settings.tuckHintStyle}
-            options={styles}
             ariaLabel={expand.tuckHint}
             onChange={(tuckHintStyle) => update({ tuckHintStyle })}
+            renderArt={(value) => (
+              <TuckMock
+                tuckStyle="hidden"
+                islandColor={settings.islandBackgroundColor}
+                hint={{ style: value, paint: chosenPaint, ring, breathe: pointed === value && settings.tuckHintBreathe }}
+              />
+            )}
           />
-        }
-      />
+        </div>
+      </SettingsRow>
       {shown && (
         <SettingsRow
-          indent
           title={expand.tuckHintColor}
-          control={
-            <SettingsChoice
-              value={settings.tuckHintColor}
-              options={colors}
+          description={expand.tuckHintColorHint}
+          control={(
+            <TuckSwatches
+              color={settings.tuckHintColor}
+              customColor={settings.tuckHintCustomColor}
+              paint={paint}
+              labels={colorLabels}
               ariaLabel={expand.tuckHintColor}
-              onChange={(tuckHintColor) => update({ tuckHintColor })}
+              onChange={(patch) => update(patch)}
             />
-          }
-        />
-      )}
-      {shown && settings.tuckHintColor === "custom" && (
-        <SettingsRow
-          indent
-          title={expand.tuckHintCustomColor}
-          control={
-            <SettingsColor
-              value={settings.tuckHintCustomColor}
-              ariaLabel={expand.tuckHintCustomColor}
-              onChange={(tuckHintCustomColor) => update({ tuckHintCustomColor })}
-            />
-          }
+          )}
         />
       )}
       {shown && (
         <SettingsToggleRow
-          indent
           title={expand.tuckHintBreathe}
           description={expand.tuckHintBreatheHint}
           checked={settings.tuckHintBreathe}

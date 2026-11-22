@@ -46,10 +46,11 @@ import { sideColumnTarget } from "./sideColumn";
 import { IslandRunners } from "./IslandRunners";
 import { islandMarginY } from "./islandForm";
 import { useAutoIslandForm } from "./autoIslandForm";
-import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync, useNotchWingNeed } from "./notch";
+import { hasNotchDrop, notchBarWidth, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync, useNotchTextRow, useNotchWingNeed } from "./notch";
+import { anyNotchText } from "./notchText";
+import { useNotchTextModes } from "../../lib/settings/collapsedText";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
-import { LINE_PRIORITY } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { effectiveIslandOpacity } from "./idleDim";
@@ -62,6 +63,10 @@ import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
 import { IslandResize } from "./resize/IslandResize";
 import { useIslandResize } from "./resize/useIslandResize";
 import { islandPageSize } from "./pageSize";
+import { useNotchRimView } from "./notch-rim/useNotchRimView";
+import { useNotchRingView } from "./notch-ring/useNotchRingView";
+import { ringLit } from "./notch-ring/ringPlan";
+import { notchRingExtra, notchRingLook } from "../../lib/settings/notchRingSettings";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
@@ -100,7 +105,10 @@ export function IslandApp() {
   const notch = useIslandNotch();
   const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
-  const { lines: contributedLines, alerts, popups, style, settled, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus, summaryGrow } = useIslandContributed();
+  const notchModes = useNotchTextModes();
+  const notchText = notch !== null && settings.showCollapsedText && anyNotchText(notchModes);
+  const notchRow = useNotchTextRow();
+  const { lines: contributedLines, alerts, popups, style, settled, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus, summaryGrow, glow: contributedGlow } = useIslandContributed();
   const grow = mode === "collapsed" && !isTucked && notch === null && side === null ? summaryGrow : null;
   const textWidth = useCollapsedWidth({
     barText,
@@ -139,7 +147,7 @@ export function IslandApp() {
     panelIslandWidth(panelWidth + editGrow, settings.expandedScale),
     openPopup?.wide === true,
   );
-  const resizeModel = useIslandResize(settings, setSettings, page, pageSize);
+  const resizeModel = useIslandResize(settings, setSettings, page, pageSize, notch !== null);
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
   const pageIslandHeight = fuyuPage && !popup ? pageSize.height : getExpandedIslandHeight({ maxPanelHeight: pageSize.height, panel: popups.get(page), popup });
   const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
@@ -159,12 +167,15 @@ export function IslandApp() {
     hasAlert: alerts.size > 0,
     hasOpenPopup,
     hasReveal: contributedReveal.always || contributedReveal.allowed || contributedReveal.pauseIdle,
-    hasAgentInterjection: contributedLines.some((line) => line.priority === LINE_PRIORITY.agentInterjection),
+    hasAgentInterjection: contributedLines.some((line) => line.interjection === true),
     agentWaiting: contributedStatus?.state === "waiting",
   });
   const islandOpacity = effectiveIslandOpacity(settings, { mode, isTucked, isDimmed });
   const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
+  const notchRim = useNotchRimView(settings, accent, game.quiet);
+  const notchRing = useNotchRingView(settings, accent, game.quiet);
+  const ringExtra = notch && mode === "collapsed" && !isTucked ? notchRingExtra(settings, ringLit(notchRingLook(settings, "Island"), contributedGlow), settings.collapsedScale) : 0;
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
   const { glass, glassStyle, layerState } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
@@ -179,12 +190,13 @@ export function IslandApp() {
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
       ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion, settings.islandBounce),
       ...(collapsedIslandHeight !== COLLAPSED_ISLAND_HEIGHT ? { "--collapsed-island-height": `${collapsedIslandHeight}px` } : {}),
+      ...(ringExtra > 0 ? { "--island-notch-ring-extra": `${ringExtra}px` } : {}),
       ...(islandOpacity < 1 ? { "--island-opacity": String(islandOpacity) } : {}),
       ...(settings.islandMotion === "none" ? { "--island-opacity-duration": "0ms" } : {}),
       ...style.vars,
       ...glassStyle,
     }),
-    [collapsedIslandWidth, collapsedIslandHeight, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, settings.islandBounce, reducedMotion, islandOpacity, style.vars, glassStyle],
+    [collapsedIslandWidth, collapsedIslandHeight, ringExtra, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, settings.islandBounce, reducedMotion, islandOpacity, style.vars, glassStyle],
   );
 
   const {
@@ -205,6 +217,7 @@ export function IslandApp() {
     expandedIslandWidth,
     collapsedIslandWidth,
     collapsedIslandHeight,
+    notchRingExtra: ringExtra,
     ready: settled,
     onCollapse: collapseIsland,
   });
@@ -213,7 +226,7 @@ export function IslandApp() {
   useIslandGlassStatus({ settings, nativeGlassState, layer: layerState });
 
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
+    preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true), row: notchText && notchRow,
   }));
   const hoverTucked = useIslandHover({
     settings,
@@ -263,6 +276,9 @@ export function IslandApp() {
     showCollapsedText: barText,
     overflowMore: settings.collapsedOverflowMore,
     notchWingMax: settings.notchWingMax,
+    notchText,
+    notchRim,
+    notchRing,
     features,
     onOpenPage: openEnabledPage,
     taskbarHandle: onTaskbar.placed ? (settings.expandTrigger === "hover" ? "modifier" : "hover") : null,
@@ -282,7 +298,7 @@ export function IslandApp() {
     fuyuTabIcon: settings.fuyuTabIcon,
     notice: islandNotice,
     collapsedSlots,
-    resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled && (mode === "expanded" || notch === null)} size={pageSize} extra={settings.collapsedWidthExtra} />,
+    resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled} size={pageSize} extra={settings[resizeModel.barKey]} barWidth={notch ? (wing) => notchBarWidth(notch, settings.collapsedScale, wing) : undefined} />,
   };
   const pages = (
     <>
@@ -298,7 +314,7 @@ export function IslandApp() {
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${lightStage ? " island-light" : ""}${taskbarClear ? " stage--taskbar-clear" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
-      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
+      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText || notchText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       {taskbarParts.panelled ? (
         <IslandTaskbarParts shell={shell} mode={mode} parts={taskbarParts} lift={onTaskbar.lift}>
           {pages}

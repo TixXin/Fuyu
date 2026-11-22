@@ -1,0 +1,53 @@
+.tuck-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tuck-swatches__swatch {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--tuck-swatch-ink, #fff);
+  background: var(--tuck-swatch);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--color-white-a16), 0 0 0 2px transparent;
+  cursor: pointer;
+  transition: box-shadow var(--motion-base) var(--motion-ease);
+}
+
+.tuck-swatches__swatch--light {
+  color: var(--tuck-swatch-ink-dark, #111);
+}
+
+.tuck-swatches__swatch--active {
+  box-shadow: inset 0 0 0 1px var(--color-white-a16), 0 0 0 2px var(--color-text);
+}
+
+.tuck-swatches__swatch:focus-visible,
+.tuck-swatches__swatch:focus-within {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.tuck-swatches__swatch--custom:not(.tuck-swatches__swatch--active) {
+  background: conic-gradient(var(--notch-hue-1, #ff375f), var(--notch-hue-2, #ff9f0a), var(--notch-hue-3, #ffd60a), var(--notch-hue-4, #30d158), var(--notch-hue-5, #0a84ff), var(--notch-hue-6, #bf5af2), var(--notch-hue-1, #ff375f));
+}
+
+.tuck-swatches__swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tuck-swatches__check {
+  pointer-events: none;
+}

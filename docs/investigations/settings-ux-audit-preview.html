@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>设置页改造总预览</title>
+<style>
+  :root { color-scheme: dark; --accent: #0a84ff; --line: rgba(255,255,255,.07); --sub: #9a9aa2; --card: rgba(255,255,255,.04); --island: #000; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 26px 30px 80px; background: #121316; color: #ececef; font: 13px/1.6 -apple-system, "PingFang SC", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p.note { color: var(--sub); margin: 0 0 14px; max-width: 1100px; }
+  .nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 18px; }
+  .nav button { background: #1b1c20; border: 1px solid #26272c; color: #b8b8be; font: inherit; padding: 6px 12px; border-radius: 10px; cursor: pointer; text-align: left; }
+  .nav button b { color: #7e7e86; margin-right: 6px; font-weight: 600; }
+  .nav button small { display: block; color: #7e7e86; font-size: 11px; }
+  .nav button.on { background: #1f2a3a; border-color: #34507a; color: #fff; }
+  .item { display: none; grid-template-columns: 720px minmax(260px, 1fr); gap: 26px; align-items: start; }
+  .item.on { display: grid; }
+  @media (max-width: 1100px) { .item.on { grid-template-columns: 1fr; } }
+  .why { background: #18191c; border: 1px solid #24252a; border-radius: 14px; padding: 14px 16px; position: sticky; top: 16px; }
+  .why h3 { margin: 0 0 6px; font-size: 14px; }
+  .why h4 { margin: 10px 0 4px; font-size: 12.5px; color: #d8d8dc; }
+  .why ul { margin: 0 0 6px; padding-left: 18px; color: #c9c9ce; }
+  .why li { margin: 3px 0; }
+  .why .cost { color: #e8b45a; }
+  .why .ask { color: #8fc3ff; }
+  .why .cnt { display: flex; gap: 10px; margin: 4px 0 8px; flex-wrap: wrap; }
+  .why .cnt div { background: #202227; border-radius: 10px; padding: 6px 10px; }
+  .why .cnt b { display: block; font-size: 18px; color: #fff; }
+  .why .cnt span { color: var(--sub); font-size: 12px; }
+
+  .win { min-width: 0; background: #1c1d21; border-radius: 16px; padding: 16px 20px 22px; border: 1px solid #26272c; }
+  .winhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+  .crumb { color: var(--sub); font-size: 12px; }
+  .ba { display: inline-flex; background: #26282d; border-radius: 9px; padding: 2px; }
+  .ba button { background: none; border: 0; color: #b9b9bf; font: inherit; font-size: 12px; padding: 3px 12px; border-radius: 7px; cursor: pointer; }
+  .ba button.on { background: #3a3d44; color: #fff; }
+  .ba button.on.after { background: #24456e; }
+  .view { display: none; }
+  .view.on { display: block; }
+  .ptabs { display: flex; gap: 2px; border-bottom: 1px solid #2a2b30; margin: 0 0 6px; overflow-x: auto; }
+  .ptabs button { background: none; border: 0; color: #9a9aa2; font: inherit; padding: 6px 12px 8px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .ptabs button.on { color: #fff; border-bottom-color: var(--accent); }
+  .ptabs button.new::after { content: "新"; font-size: 10px; color: #8fc3ff; background: #20324a; border-radius: 5px; padding: 0 4px; margin-left: 5px; }
+  .pane { display: none; }
+  .pane.on { display: block; }
+  .gtitle { font-size: 13px; font-weight: 600; color: #d8d8dc; margin: 14px 4px 6px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .gtitle .tag { font-weight: 400; font-size: 11px; color: #8d8d95; background: #26282d; border-radius: 6px; padding: 0 6px; }
+  .gtitle a { font-weight: 400; font-size: 12px; color: #8fc3ff; text-decoration: none; cursor: pointer; }
+  .group { background: var(--card); border-radius: 14px; overflow: hidden; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 14px; min-height: 44px; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: 0; }
+  .row.indent { padding-left: 34px; }
+  .row.col { flex-direction: column; align-items: stretch; gap: 8px; }
+  .row .t { color: #ececef; }
+  .row .d { color: var(--sub); font-size: 12px; line-height: 1.5; }
+  .row .ctl { flex: none; display: flex; align-items: center; gap: 8px; }
+  .row.dim { opacity: .45; }
+  .row.old .d { max-height: 36px; overflow: hidden; }
+  .foot { color: #7f7f87; font-size: 12px; margin: 6px 6px 0; }
+  .fakesel { background: #2a2c31; border: 1px solid #34363c; border-radius: 8px; padding: 3px 26px 3px 10px; color: #e6e6ea; position: relative; min-width: 90px; font-size: 12.5px; white-space: nowrap; }
+  .fakesel::after { content: "⌄"; position: absolute; right: 9px; top: 0; color: #8d8d95; }
+  .fakein { background: #2a2c31; border: 1px solid #34363c; border-radius: 8px; padding: 3px 10px; color: #8d8d95; min-width: 160px; font-size: 12px; }
+  .switch { width: 38px; height: 22px; border-radius: 11px; background: #3a3c42; position: relative; cursor: pointer; border: 0; flex: none; transition: background .2s; }
+  .switch::after { content: ""; position: absolute; left: 2px; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .switch.on { background: #30d158; }
+  .switch.on::after { transform: translateX(16px); }
+  .switch.sm { width: 30px; height: 18px; }
+  .switch.sm::after { width: 14px; height: 14px; }
+  .switch.sm.on::after { transform: translateX(12px); }
+  .seg { display: inline-flex; background: #26282d; border-radius: 9px; padding: 2px; gap: 2px; }
+  .seg button { background: none; border: 0; color: #b9b9bf; font: inherit; font-size: 12px; padding: 3px 11px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+  .seg button.on { background: #3a3d44; color: #fff; }
+  .linkbtn { background: #26282d; border: 1px solid #30323a; color: #b9b9bf; border-radius: 8px; font: inherit; font-size: 12px; padding: 3px 9px; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; white-space: nowrap; }
+  .linkbtn:hover { color: #fff; }
+  .linkbtn.pri { background: #24456e; border-color: #34507a; color: #fff; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: #26282d; border: 1px solid #30323a; color: #c9c9cf; font: inherit; font-size: 12px; padding: 3px 10px 3px 8px; border-radius: 999px; cursor: pointer; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #55575e; }
+  .chip.on { background: #2c3a30; border-color: #3f6b4b; color: #fff; }
+  .chip.on .dot { background: #30d158; box-shadow: 0 0 6px #30d158; }
+  .swatches { display: flex; gap: 7px; align-items: center; }
+  .sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+  .sw.on { border-color: #fff; }
+  .sw.rainbow { background: conic-gradient(#ff375f, #ff9f0a, #ffd60a, #30d158, #0a84ff, #bf5af2, #ff375f); }
+  details.adv { border-top: 1px solid var(--line); }
+  details.adv summary { list-style: none; cursor: pointer; padding: 10px 14px; color: #b9b9bf; display: flex; align-items: center; gap: 6px; }
+  details.adv summary::-webkit-details-marker { display: none; }
+  details.adv summary::before { content: "›"; display: inline-block; transition: transform .2s; color: #8d8d95; }
+  details.adv[open] summary::before { transform: rotate(90deg); }
+  details.adv summary small { color: #7f7f87; margin-left: 4px; }
+  details.adv .row { padding-left: 28px; }
+
+  .stagewrap { padding: 12px 14px; }
+  .stage { position: relative; border-radius: 12px; overflow: hidden; height: 200px; background: radial-gradient(60% 90% at 18% 20%, #3b2f6b 0%, transparent 60%), radial-gradient(50% 70% at 82% 30%, #12456b 0%, transparent 65%), linear-gradient(160deg, #1b2240, #0d1020); }
+  .stagebar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .stagebar .lbl { color: #8d8d95; font-size: 12px; }
+  .isl { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); background: var(--island); color: #fff; border-radius: 14px; height: 30px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font-size: 12px; white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+  .isl .lt { width: 7px; height: 7px; border-radius: 50%; background: #30d158; }
+  .strip { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: thin; }
+  .thumb { flex: none; width: 96px; background: #202227; border: 1.5px solid transparent; border-radius: 11px; padding: 5px 5px 4px; cursor: pointer; text-align: center; color: #c9c9cf; font: inherit; font-size: 12px; }
+  .thumb:hover { background: #26282e; }
+  .thumb.on { border-color: var(--accent); background: #1f2a3a; color: #fff; }
+  .thumb .pic { height: 50px; border-radius: 7px; background: linear-gradient(160deg, #222a48, #0f1326); position: relative; overflow: hidden; margin-bottom: 3px; }
+  .thumb.wide { width: 150px; }
+  .thumbnote { color: var(--sub); font-size: 12px; margin: 2px 4px 0; min-height: 20px; }
+
+  .mx { width: 100%; border-collapse: collapse; }
+  .mx th { font-weight: 500; color: #9a9aa2; font-size: 12px; text-align: center; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  .mx th:first-child { text-align: left; padding-left: 14px; }
+  .mx th small { display: block; color: #6f7078; font-size: 11px; font-weight: 400; }
+  .mx th small a { color: #8fc3ff; cursor: pointer; }
+  .mx td { text-align: center; padding: 6px; border-top: 1px solid var(--line); }
+  .mx td:first-child { text-align: left; padding-left: 14px; cursor: pointer; }
+  .mx tr.sel td { background: rgba(10,132,255,.08); }
+  .mx tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+  .mx .ev { color: #ececef; }
+  .mx .ev small { display: block; color: var(--sub); font-size: 11.5px; }
+  .mx .na { color: #4c4e55; }
+  .mx .cell { display: inline-flex; align-items: center; gap: 6px; }
+  .mx .play { background: none; border: 0; color: #8d8d95; cursor: pointer; font-size: 12px; padding: 0 2px; }
+  .mx .play:hover { color: #fff; }
+  .mx .twin { display: inline-flex; gap: 8px; font-size: 11px; color: var(--sub); align-items: center; }
+  .mx .colOff { opacity: .35; }
+  .notice { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); width: 330px; background: #000; border-radius: 18px; padding: 10px 14px; color: #fff; box-shadow: 0 10px 28px rgba(0,0,0,.45); transition: transform .35s cubic-bezier(.34,1.4,.64,1), opacity .25s; }
+  .notice .h { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .notice .h i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .notice .b { color: #c9c9ce; font-size: 12px; margin-top: 4px; }
+  .notice .tagrow { display: flex; gap: 6px; margin-top: 6px; }
+  .notice .tagrow span { font-size: 11px; color: #8d8d95; background: #1c1c1f; border-radius: 6px; padding: 0 6px; }
+  .notice .tagrow span.lit { color: #fff; background: #24456e; }
+  .phone { position: absolute; right: 18px; bottom: -6px; width: 92px; height: 120px; border-radius: 16px 16px 0 0; background: #0b0c10; border: 2px solid #2a2c33; border-bottom: 0; padding: 18px 6px 0; transition: opacity .3s, transform .3s; }
+  .phone div { background: #23252c; border-radius: 8px; padding: 4px 6px; font-size: 10px; color: #ddd; line-height: 1.35; }
+  .phone.off { opacity: .15; transform: translateY(10px); }
+  .speaker { position: absolute; left: 18px; bottom: 14px; font-size: 22px; transition: opacity .3s; }
+  .speaker.off { opacity: .15; }
+  .speaker.ring { animation: ring .5s ease 2; }
+  @keyframes ring { 50% { transform: scale(1.25); } }
+
+  .screen { position: absolute; inset: 0; }
+  .screen .topedge { position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(255,255,255,.18); }
+  .tk { position: absolute; left: 50%; transform: translateX(-50%); background: var(--tkbg, #000); border-radius: 0 0 14px 14px; width: 200px; height: 34px; top: -28px; transition: top .45s cubic-bezier(.34,1.3,.64,1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; gap: 8px; }
+  .tk.line { top: -32px; }
+  .tk.hidden { top: -36px; }
+  .tk.out { top: 0; }
+  .hint { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); transition: opacity .3s; pointer-events: none; }
+  .hint.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hc, #fff); top: 3px; }
+  .hint.halo { width: 120px; height: 14px; top: -7px; border-radius: 50%; background: radial-gradient(closest-side, var(--hc, #fff), transparent); opacity: .55; }
+  .hint.breath { animation: breath 2.4s ease-in-out infinite; }
+  @keyframes breath { 50% { opacity: .15; } }
+  .hint.none { opacity: 0; }
+  .ptr { position: absolute; left: 50%; top: 70px; font-size: 18px; transition: top .45s, opacity .3s; opacity: 0; }
+  .ptr.show { opacity: 1; top: 6px; }
+  .mini { position: absolute; left: 50%; transform: translateX(-50%); background: #000; border-radius: 0 0 8px 8px; width: 56px; height: 18px; }
+
+  .cal { display: flex; align-items: center; gap: 8px; }
+  .cal i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .banner { position: absolute; left: 50%; top: 46px; transform: translate(-50%, -16px) scale(.96); opacity: 0; width: 320px; background: #000; border-radius: 16px; padding: 10px 14px; transition: all .35s cubic-bezier(.34,1.4,.64,1); }
+  .banner.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  .banner .b1 { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .banner .join { background: #30d158; color: #000; border-radius: 8px; padding: 2px 10px; font-weight: 600; font-size: 12px; }
+  .barfmt { display: flex; align-items: center; gap: 6px; }
+  .barfmt .cam { width: 14px; height: 10px; border: 1.5px solid #8fc3ff; border-radius: 3px; display: inline-block; }
+  .barfmt .join2 { background: #30d158; color: #000; border-radius: 6px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+
+  .steps { display: grid; gap: 10px; padding: 12px 14px; }
+  .step { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; background: #202227; border-radius: 12px; padding: 10px 12px; }
+  .step .n { width: 24px; height: 24px; border-radius: 50%; background: #2f3138; display: grid; place-items: center; font-size: 12px; color: #c9c9cf; }
+  .step.done .n { background: #30d158; color: #000; }
+  .step.cur { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .step .t { color: #ececef; }
+  .step .d { color: var(--sub); font-size: 12px; }
+  .ghost { margin: 0 14px 12px; border: 1.5px dashed #34363c; border-radius: 12px; padding: 12px; color: #7f7f87; text-align: center; }
+  .statuscard { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .statuscard .ic { width: 36px; height: 36px; border-radius: 10px; background: #1f3a29; display: grid; place-items: center; color: #30d158; font-size: 18px; }
+  .statuscard .tx { flex: 1; }
+  .statuscard .tx b { display: block; }
+  .statuscard .tx span { color: var(--sub); font-size: 12px; }
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px 14px; }
+  @media (max-width: 760px) { .tiles { grid-template-columns: 1fr; } }
+  .tile { display: flex; gap: 10px; align-items: center; background: #202227; border: 1.5px solid transparent; border-radius: 12px; padding: 9px 10px; cursor: pointer; }
+  .tile.on { border-color: #3f6b4b; background: #1f2a23; }
+  .tile .box { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #55575e; display: grid; place-items: center; font-size: 12px; color: #000; flex: none; }
+  .tile.on .box { background: #30d158; border-color: #30d158; }
+  .tile .nm { flex: 1; min-width: 0; }
+  .tile .nm b { font-weight: 500; display: block; }
+  .tile .nm span { color: var(--sub); font-size: 11.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge { font-size: 11px; border-radius: 6px; padding: 0 6px; white-space: nowrap; }
+  .badge.ok { color: #30d158; background: #1f3a29; }
+  .badge.warn { color: #ffb340; background: #3a2f1c; }
+  .badge.muted { color: #8d8d95; background: #26282d; }
+
+  .mthumb .pic { display: flex; align-items: flex-start; justify-content: center; }
+  .mthumb .mi { margin-top: 6px; background: #000; width: 34px; height: 10px; border-radius: 5px; transition-property: width, height, border-radius; }
+  .mthumb:hover .mi, .mthumb.play .mi { width: 70px; height: 34px; border-radius: 9px; }
+  .hthumb .pic { display: flex; align-items: flex-start; justify-content: center; }
+  .hthumb .mi { margin-top: 10px; background: #000; width: 44px; height: 12px; border-radius: 6px; transition: transform .35s cubic-bezier(.34,1.6,.64,1); transform-origin: top center; }
+  .bigdemo { height: 150px; display: flex; justify-content: center; align-items: flex-start; }
+  .bigdemo .mi { margin-top: 10px; background: #000; width: 120px; height: 28px; border-radius: 14px; transition-property: width, height, border-radius; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; overflow: hidden; }
+  .bigdemo .mi.open { width: 320px; height: 120px; border-radius: 26px; }
+
+  .gthumb .pic { background: #0e1020; }
+  .gthumb .glass { position: absolute; left: 12px; right: 12px; top: 10px; bottom: 10px; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+  .gthumb .glass::before { content: ""; position: absolute; inset: -40%; background: var(--g); filter: blur(10px); opacity: .9; }
+  .gthumb:hover .glass::before, .gthumb.on .glass::before { animation: var(--anim, none); }
+  @keyframes drift { to { transform: translateX(20%) rotate(20deg); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes hue { to { filter: blur(10px) hue-rotate(160deg); } }
+  .opgroup { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 14px 12px; }
+  .opgroup .o { background: #202227; border-radius: 12px; padding: 8px 10px; }
+  .opgroup .o .pv { height: 40px; border-radius: 8px; background: linear-gradient(160deg, #3b2f6b, #12456b); position: relative; margin: 6px 0; }
+  .opgroup .o .pv span { position: absolute; left: 50%; top: 9px; transform: translateX(-50%); background: rgba(0,0,0,.6); color: #fff; border-radius: 10px; padding: 1px 12px; font-size: 11px; }
+  .opgroup .o .pv.whole span { background: rgba(0,0,0,.6); color: rgba(255,255,255,.55); }
+  input[type=range] { accent-color: var(--accent); width: 100%; }
+</style>
+</head>
+<body>
+<h1>设置页改造总预览</h1>
+<p class="note">对应 <code>docs/investigations/settings-ux-audit.md</code> 的 7 项。每项左边是设置窗口里的样子，右上角切「现在 / 改后」；改后的开关、缩略图、演示都能点，只在这页里动。右边是改了什么、工作量和要你定的地方。看完在对话里说哪项照做、哪项要改。</p>
+
+<div class="nav" id="nav"></div>
+
+<section class="item" data-k="1" data-title="Agent 提醒总表" data-sub="三个 tab 的事件合一张表">
+  <div class="win">
+    <div class="winhead"><span class="crumb">AI Agent › 提醒</span><span class="ba"><button>现在</button><button class="on after">改后</button></span></div>
+    <div class="view" data-v="before">
+      <div class="ptabs"><button class="on">桌面提醒</button><button>声音</button><button>推送与机器人</button></div>
+      <div class="gtitle">桌面提醒 › 什么时候提醒</div>
+      <div class="group">
+        <div class="row old"><div><div class="t">等待你确认或回答时</div></div><div class="ctl">🔊 <button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">会话完成时</div><div class="ctl">🔊 <button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">会话出错时</div><div class="ctl">🔊 <button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">开始新一轮时</div><div class="ctl"><button class="switch"></button></div></div>
+      </div>
+      <div class="gtitle">声音 › 事件 <span class="tag">另一个 tab</span></div>
+      <div class="group">
+        <div class="row old"><div class="t">会话开始</div><div class="ctl"><span class="linkbtn">▶ 试听</span><button class="switch"></button></div></div>
+        <div class="row old"><div class="t">任务完成</div><div class="ctl"><span class="linkbtn">▶ 试听</span><button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">任务出错</div><div class="ctl"><span class="linkbtn">▶ 试听</span><button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">需要审批 · 需要回答 · 发出消息 · 上下文快满 · 闲置等你 · 额度快用完 · 额度已刷新</div><div class="ctl">还有 7 行</div></div>
+      </div>
+      <div class="gtitle">推送与机器人 › 手机推送 <span class="tag">又一个 tab</span></div>
+      <div class="group">
+        <div class="row old indent"><div class="t">等你确认或回答时</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old indent"><div class="t">完成一轮时</div><div class="ctl"><button class="switch"></button></div></div>
+        <div class="row old indent"><div class="t">出错时</div><div class="ctl"><button class="switch on"></button></div></div>
+      </div>
+      <p class="foot">「完成」在三处分别叫「会话完成时」「任务完成」「完成一轮时」。</p>
+    </div>
+    <div class="view on" data-v="after">
+      <div class="ptabs"><button class="on new">事件总表</button><button>通知的样子</button><button>声音</button><button>推送与机器人</button></div>
+      <div class="group">
+        <div class="stagewrap">
+          <div class="stage" id="mxStage">
+            <div class="notice" id="mxNotice"><div class="h"><i></i><b></b></div><div class="b"></div><div class="tagrow"></div></div>
+            <div class="speaker" id="mxSpk">🔊</div>
+            <div class="phone" id="mxPhone"><div></div></div>
+          </div>
+          <div class="stagebar"><span class="lbl">点表里的一行，上面演这件事发生时你会收到什么</span><span><button class="linkbtn" id="mxReplay">↻ 再演示一次</button> <button class="linkbtn">在真岛上试一下</button></span></div>
+        </div>
+      </div>
+      <div class="gtitle">每件事从哪儿提醒你</div>
+      <div class="group"><table class="mx" id="mx"></table></div>
+      <p class="foot">灰的「—」是这个渠道不支持这件事。列头的设置链接去对应 tab；声音或推送总开关关着时整列变灰。</p>
+    </div>
+  </div>
+  <aside class="why">
+    <h3>1. Agent 提醒总表</h3>
+    <div class="cnt"><div><b>17 → 10</b><span>事件行</span></div><div><b>3 → 1</b><span>处开同一件事</span></div></div>
+    <ul>
+      <li>新加第一个 tab「事件总表」：一行一件事，三列岛上 / 声音 / 手机。</li>
+      <li>事件名统一成一套。「等你确认 / 等你回答」在岛上和手机是同一个开关，声音分开，所以那一行声音格里是两个小开关。</li>
+      <li>额度那两行的岛上格是原来的「额度提醒线」下拉。</li>
+      <li>点行就在上面演一遍（B87 的预览搬上来），声音格带试听。</li>
+      <li>原来三个 tab 只留渠道的配置：通知的样子和行为、音量 / 音效包 / 静音时段、通道 / Key / 离开多久才推。</li>
+    </ul>
+    <h4>工作量和风险</h4>
+    <ul><li class="cost">中到大：新表格组件，三处开关改从表读写，回归页和设置搜索跟着改。</li><li>存储不变：<code>IslandSettings</code>、<code>fuyu-agent-sounds</code>、<code>fuyu-agent-push</code>。旧页名照旧能打开。</li></ul>
+    <h4>要你定</h4>
+    <ul class="ask"><li>原「桌面提醒」改名「通知的样子」可以吗？</li><li>总表放第一个 tab，还是放进「桌面提醒」最上面、不加 tab？</li></ul>
+  </aside>
+</section>
+
+<section class="item" data-k="2" data-title="贴边隐藏" data-sub="实时预览 + 缩略图">
+  <div class="win">
+    <div class="winhead"><span class="crumb">行为 › 贴边隐藏</span><span class="ba"><button>现在</button><button class="on after">改后</button></span></div>
+    <div class="view" data-v="before">
+      <div class="group"><div class="row"><div class="d">▭ → ▔　岛一段时间不用会贴到屏幕顶部，只露出一条边。</div></div></div>
+      <div class="gtitle">贴边隐藏</div>
+      <div class="group">
+        <div class="row old"><div class="t">闲置时贴边隐藏</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old indent"><div class="t">闲置多久后隐藏</div><div class="ctl"><span class="fakesel">30 秒</span></div></div>
+        <div class="row old indent"><div class="t">细调 › 待办 / Agent / 音乐 / 未读消息时不收起（4 行）、再次隐藏、等待</div></div>
+        <div class="row old"><div class="t">最小化按钮</div><div class="ctl"><span class="seg"><button class="on">托盘</button><button>贴边隐藏</button></span></div></div>
+        <div class="row old"><div><div class="t">露出样式</div><div class="d">顶边和底边贴边隐藏后露出的厚度</div></div><div class="ctl"><span class="seg"><button>标准露边</button><button>极简细线</button><button class="on">贴边隐身</button></span></div></div>
+        <div class="row old indent"><div class="t">隐身提示</div><div class="ctl"><span class="seg"><button>无</button><button class="on">小圆点</button><button>光晕</button></span></div></div>
+        <div class="row old indent"><div class="t">提示颜色</div><div class="ctl"><span class="seg"><button class="on">白色描边</button><button>跟随岛色</button><button>自选</button></span></div></div>
+        <div class="row old indent"><div class="t">自选颜色</div><div class="ctl">●</div></div>
+        <div class="row old indent"><div class="t">提示呼吸</div><div class="ctl"><button class="switch on"></button></div></div>
+      </div>
+      <p class="foot">改了露出样式，顶上的示意不变；看不出「极简细线」和「标准露边」差多少。</p>
+    </div>
+    <div class="view on" data-v="after">
+      <div class="group">
+        <div class="stagewrap">
+          <div class="stage" style="height:150px">
+            <div class="screen"><div class="topedge"></div><div class="tk" id="tk">待办 3 · 写周报</div><div class="hint dot breath" id="tkHint"></div><div class="ptr" id="tkPtr">↖</div></div>
+          </div>
+          <div class="stagebar"><span class="lbl">屏幕顶边，按下面的设置画</span><button class="linkbtn" id="tkTry">▶ 试一下：鼠标碰到顶边</button></div>
+        </div>
+        <div class="row col"><div class="t">露出样式</div><div class="strip" id="tkStyles"></div><div class="thumbnote" id="tkStyleNote"></div></div>
+        <div class="row col" id="tkHintRow"><div class="t">隐身时留个记号</div><div class="strip" id="tkHints"></div></div>
+        <div class="row" id="tkColorRow"><div class="t">记号颜色</div><div class="ctl swatches" id="tkColors"></div></div>
+        <div class="row" id="tkBreathRow"><div class="t">记号呼吸</div><div class="ctl"><button class="switch on" id="tkBreath"></button></div></div>
+      </div>
+      <div class="gtitle">什么时候收起</div>
+      <div class="group">
+        <div class="row"><div class="t">闲置时贴边隐藏</div><div class="ctl"><span class="fakesel">30 秒后</span><button class="switch on"></button></div></div>
+        <div class="row col"><div><div class="t">这些时候不收起</div><div class="d">音乐那一项和「音乐」页里的是同一个开关。</div></div><div class="chips" id="tkHolds"></div></div>
+        <details class="adv"><summary>细调 <small>鼠标移开后再次隐藏、等待多久</small></summary>
+          <div class="row"><div class="t">鼠标移开后再次隐藏</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">再次隐藏前等待</div><div class="ctl"><span class="fakesel">0.8 秒</span></div></div>
+        </details>
+      </div>
+      <div class="gtitle">露出</div>
+      <div class="group">
+        <div class="row"><div class="t">鼠标碰到隐藏的岛</div><div class="ctl"><span class="seg"><button class="on">只露出岛屿</button><button>展开面板</button></span></div></div>
+        <div class="row"><div class="t">有新消息时露出</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row"><div class="t">最小化按钮</div><div class="ctl"><span class="seg"><button class="on">托盘</button><button>贴边隐藏</button></span></div></div>
+      </div>
+    </div>
+  </div>
+  <aside class="why">
+    <h3>2. 贴边隐藏</h3>
+    <div class="cnt"><div><b>16 → 11</b><span>行</span></div><div><b>5 → 3</b><span>格缩略图代替文字选项</span></div></div>
+    <ul>
+      <li>顶上的死示意换成实时预览，跟着露出样式、记号、颜色、呼吸变；「试一下」演鼠标碰顶边时岛滑出来再收回去。</li>
+      <li>露出样式、隐身记号做成缩略图条，提示颜色做成色块（白、岛色、自选）。</li>
+      <li>四个「不收起」合成一行多选胶囊。</li>
+      <li>「最小化按钮」挪进「露出」组的最后，它和贴边的关系是「点了也会贴边」。</li>
+    </ul>
+    <h4>工作量和风险</h4>
+    <ul><li class="cost">中。缩略图条照刘海的 <code>NotchStyleStrip</code>。</li><li>设置键不变（<code>tuckStyle</code>、<code>autoTuckHold*</code>…），设置搜索的四行合成一行。</li></ul>
+    <h4>要你定</h4>
+    <ul class="ask"><li>「最小化按钮」放这里，还是挪回「展开与收起」？</li></ul>
+  </aside>
+</section>
+
+<section class="item" data-k="3" data-title="日历" data-sub="分两个 tab + 提醒演示">
+  <div class="win">
+    <div class="winhead"><span class="crumb">功能 › 日历</span><span class="ba"><button>现在</button><button class="on after">改后</button></span></div>
+    <div class="view" data-v="before">
+      <div class="group"><div class="row"><div class="t">📅 日历</div><div class="d">会议倒计时、强提醒和日程面板</div></div></div>
+      <div class="gtitle">小岛倒计时显示</div>
+      <div class="group">
+        <div class="row old"><div class="t">会前倒计时</div><div class="ctl"><span class="fakesel">提前 10 分钟</span></div></div>
+        <div class="row old indent"><div class="t">倒计时范围</div><div class="ctl"><span class="fakesel">全部非全天日程</span></div></div>
+        <div class="row old indent"><div class="t">收起条显示格式</div><div class="ctl"><span class="fakesel">标题 · 10 分钟后</span></div></div>
+        <div class="row old indent"><div class="t">显示会议标题</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old indent"><div class="t">开始后保留时长</div><div class="ctl"><span class="fakesel">5 分钟</span></div></div>
+      </div>
+      <div class="gtitle">会前强提醒与入会动作 <span class="tag">5 行</span></div>
+      <div class="gtitle">日历面板与过滤规则 <span class="tag">7 行</span></div>
+      <div class="gtitle">已添加的日历 <span class="tag">在最底下</span></div>
+      <div class="group"><div class="row"><div class="cal"><i style="background:#0a84ff"></i>工作（CalDAV）</div></div><div class="row"><div class="cal"><i style="background:#ff9f0a"></i>中国节假日（订阅）</div></div></div>
+    </div>
+    <div class="view on" data-v="after">
+      <div class="ptabs"><button class="on" data-p="cal">日历</button><button class="new" data-p="rem">提醒</button></div>
+      <div class="pane on" data-pane="cal">
+        <div class="gtitle">已添加的日历 <a>＋ 添加日历</a></div>
+        <div class="group">
+          <div class="row"><div class="cal"><i style="background:#0a84ff"></i><div><div class="t">工作</div><div class="d">CalDAV · 2 分钟前更新</div></div></div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="cal"><i style="background:#30d158"></i><div><div class="t">个人</div><div class="d">ICS 订阅 · 1 小时前更新</div></div></div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="cal"><i style="background:#ff9f0a"></i><div><div class="t">中国节假日</div><div class="d">内置订阅 · 调休和放假</div></div></div><div class="ctl"><button class="switch on"></button></div></div>
+        </div>
+        <div class="gtitle">日历面板</div>
+        <div class="group">
+          <div class="row"><div class="t">默认日程视图</div><div class="ctl"><span class="seg"><button class="on">近两日</button><button>未来 7 天</button></span></div></div>
+          <div class="row"><div class="t">每周起始日</div><div class="ctl"><span class="seg"><button class="on">默认</button><button>周一</button><button>周日</button></span></div></div>
+          <div class="row"><div class="t">月历显示周数</div><div class="ctl"><button class="switch"></button></div></div>
+          <div class="row"><div class="t">在列表中折叠全天日程</div><div class="ctl"><button class="switch on"></button></div></div>
+        </div>
+        <div class="gtitle">哪些日程不算</div>
+        <div class="group">
+          <div class="row"><div class="t">隐藏已拒绝的日程</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">空闲日程不参与倒计时</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">以时间开头的待办并入日程</div><div class="ctl"><button class="switch"></button></div></div>
+        </div>
+      </div>
+      <div class="pane" data-pane="rem">
+        <div class="group">
+          <div class="stagewrap">
+            <div class="stage" style="height:150px">
+              <div class="isl" id="calBar"></div>
+              <div class="banner" id="calBanner"><div class="b1"><span id="calBannerT"></span><span class="join">立即加入</span></div><div style="color:#9a9aa2;font-size:12px;margin-top:2px">14:00–14:30 · 腾讯会议</div></div>
+            </div>
+            <div class="stagebar"><span class="lbl">示例：14:00 的「产品周会」，现在 13:50</span><span><button class="linkbtn" id="calDemo">▶ 演示强提醒</button> <button class="linkbtn">在真岛上试一下</button></span></div>
+          </div>
+          <div class="row col"><div class="t">收起条上怎么写</div><div class="strip" id="calFmts"></div></div>
+          <div class="row"><div><div class="t">显示会议标题</div><div class="d">关掉后只写「会议」，共享屏幕时不露内容。</div></div><div class="ctl"><button class="switch on" id="calTitle"></button></div></div>
+        </div>
+        <div class="gtitle">小岛倒计时</div>
+        <div class="group">
+          <div class="row"><div class="t">会前倒计时</div><div class="ctl"><span class="fakesel">提前 10 分钟</span></div></div>
+          <div class="row indent"><div class="t">倒计时范围</div><div class="ctl"><span class="fakesel">全部非全天日程</span></div></div>
+          <div class="row indent"><div class="t">开始后保留时长</div><div class="ctl"><span class="fakesel">5 分钟</span></div></div>
+        </div>
+        <div class="gtitle">会前强提醒</div>
+        <div class="group">
+          <div class="row"><div class="t">会前弹出强提醒横幅</div><div class="ctl"><span class="fakesel">提前 1 分钟</span><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">调休和放假前一晚提醒</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">点加入时暂停音乐和视频</div><div class="ctl"><button class="switch on"></button></div></div>
+          <details class="adv"><summary>细调 <small>自定义视频会议域名</small></summary><div class="row"><div class="t">自定义视频会议域名</div><div class="ctl"><span class="fakein">meet.example.com</span></div></div></details>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="why">
+    <h3>3. 日历</h3>
+    <div class="cnt"><div><b>1 → 2</b><span>tab</span></div><div><b>第 4 组 → 第 1 组</b><span>已添加的日历</span></div></div>
+    <ul>
+      <li>「日历」tab：已添加的日历放最上面，下面是面板和过滤规则。侧栏点「日历」先到这里。</li>
+      <li>「提醒」tab：顶上演示收起条倒计时，「演示强提醒」演横幅弹出。格式三格缩略图就是三种收起条，「显示会议标题」一关立刻变「会议」。</li>
+      <li>不常改的「自定义视频会议域名」收进细调。</li>
+    </ul>
+    <h4>工作量和风险</h4>
+    <ul><li class="cost">中。新页名（暂定 <code>calendarAlerts</code>）要进 <code>settingsCategories.ts</code>、i18n、回归页。</li><li><code>calendar</code> 和别名 <code>calendarSources</code> 继续打开「日历」tab；<code>fuyu-calendar-prefs</code> 不动。</li></ul>
+    <h4>要你定</h4>
+    <ul class="ask"><li>第一个 tab 是「日历」还是「提醒」？（推荐「日历」：新用户先要添加日历。）</li></ul>
+  </aside>
+</section>
+
+<section class="item" data-k="4" data-title="跨设备同步" data-sub="没设置时只给引导">
+  <div class="win">
+    <div class="winhead"><span class="crumb">通用 › 跨设备同步</span><span class="ba"><button>现在</button><button class="on after">改后</button></span></div>
+    <div class="view" data-v="before">
+      <div class="gtitle">同步方式</div>
+      <div class="group"><div class="row old"><div class="t">同步通道</div><div class="ctl"><span class="seg"><button class="on">同步文件夹</button><button>WebDAV</button></span></div></div><div class="row old"><div><div class="t">同步文件夹</div><div class="d">未选择（首次使用请手动指定一个空目录或已有的 fuyu-sync 上级目录）</div></div></div></div>
+      <div class="gtitle">端到端加密</div>
+      <div class="group"><div class="row old"><div class="t">端到端加密默认关闭</div></div></div>
+      <div class="gtitle">同步内容 <span class="tag">没选文件夹也照样摊开</span></div>
+      <div class="group">
+        <div class="row old"><div><div class="t">待办、每日笔记与归档</div><div class="d">按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。</div></div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old"><div><div class="t">常用短语</div><div class="d">剪贴板里的常用语与 AI 提示词模板。</div></div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">……还有 4 行</div></div>
+      </div>
+      <div class="gtitle">可选同步 <span class="tag">7 行，默认都关</span></div>
+      <div class="group">
+        <div class="row old"><div><div class="t">翻译服务与模型选择</div><div class="d">默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。</div></div><div class="ctl"><button class="switch"></button></div></div>
+        <div class="row old"><div><div class="t">PrtSc 接管与录屏参数</div><div class="d">默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。</div></div><div class="ctl"><button class="switch"></button></div></div>
+        <div class="row old"><div class="t">……还有 5 行</div></div>
+      </div>
+    </div>
+    <div class="view on" data-v="after">
+      <div style="margin-bottom:8px"><span class="lbl" style="color:#8d8d95;font-size:12px">看哪种状态：</span> <span class="seg" id="syState"><button class="on" data-s="new">还没设置</button><button data-s="set">已经设置好</button></span></div>
+      <div id="syNew">
+        <div class="group">
+          <div class="steps">
+            <div class="step done"><span class="n">✓</span><div><div class="t">选同步方式</div><div class="d">同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV</div></div><span class="seg"><button class="on">同步文件夹</button><button>WebDAV</button></span></div>
+            <div class="step cur"><span class="n">2</span><div><div class="t">选一个文件夹</div><div class="d">空文件夹，或别的电脑已经在用的 fuyu-sync 的上一级</div></div><button class="linkbtn pri" id="syPick">选择文件夹…</button></div>
+            <div class="step"><span class="n">3</span><div><div class="t">要不要端到端加密</div><div class="d">网盘看不到内容；忘了口令又没留恢复密钥就找不回来</div></div><button class="switch"></button></div>
+          </div>
+          <div class="ghost">设好之后在这里选同步什么</div>
+        </div>
+      </div>
+      <div id="sySet" style="display:none">
+        <div class="group"><div class="statuscard"><div class="ic">⟳</div><div class="tx"><b>正常同步中</b><span>上次 2 分钟前 · 3 台设备 · 文件夹 ~/Nutstore/fuyu-sync · 已加密</span></div><button class="linkbtn pri">立即同步</button><button class="linkbtn">更换…</button></div></div>
+        <div class="gtitle">同步什么</div>
+        <div class="group"><div class="tiles" id="syTiles"></div></div>
+        <div class="group" style="margin-top:10px">
+          <details class="adv" style="border-top:0"><summary>可选同步 <small id="syOptCount">已开 1 项 · 这些因电脑而异，默认关</small></summary><div id="syOpt"></div></details>
+        </div>
+        <div class="gtitle">设备</div>
+        <div class="group"><div class="row"><div class="t">MacBook Pro（这台）</div><div class="d">刚刚</div></div><div class="row"><div class="t">办公室台式机</div><div class="d">2 分钟前</div></div></div>
+      </div>
+    </div>
+  </div>
+  <aside class="why">
+    <h3>4. 跨设备同步</h3>
+    <div class="cnt"><div><b>13 → 0</b><span>没设置时摊开的开关</span></div><div><b>13 行 → 6 格 + 折叠</b><span>设好之后</span></div></div>
+    <ul>
+      <li>没选文件夹时只给三步引导（通道、文件夹、加密），同步内容先折着。</li>
+      <li>设好后最上面是状态卡；「同步什么」做成两列勾选格子，状态徽标留着，说明缩成一行（悬停看全）。</li>
+      <li>可选同步 7 项整组收进折叠，标题写已开几项。</li>
+    </ul>
+    <h4>工作量和风险</h4>
+    <ul><li class="cost">中：主要是 <code>SyncSettingsPage</code> 的排版和格子组件。</li><li>开关逻辑和存储都不动；同步页回归快照要更新。</li></ul>
+    <h4>要你定</h4>
+    <ul class="ask"><li>格子里的说明缩成一行可以吗？还是保留完整说明、只把可选同步折起来？</li></ul>
+  </aside>
+</section>
+
+<section class="item" data-k="5" data-title="剪贴板" data-sub="重新分组 + 细调">
+  <div class="win">
+    <div class="winhead"><span class="crumb">功能 › 剪贴板</span><span class="ba"><button>现在</button><button class="on after">改后</button></span></div>
+    <div class="view" data-v="before">
+      <div class="ptabs"><button class="on">打开与粘贴</button><button>记录与链接</button><button>常用语与提示词</button></div>
+      <div class="gtitle">粘贴与显示 <span class="tag">8 个开关，管四类事</span></div>
+      <div class="group">
+        <div class="row old"><div class="t">收藏的条目置顶</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">选中后自动粘贴</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">粘贴图片到终端时贴文件路径</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">多行命令贴到终端时合成一行</div><div class="ctl"><button class="switch"></button></div></div>
+        <div class="row old"><div class="t">共享屏幕时隐藏</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">启动时预先准备剪贴板窗口</div><div class="ctl"><button class="switch on"></button></div></div>
+        <div class="row old"><div class="t">读取链接标题和图标</div><div class="ctl"><button class="switch"></button></div></div>
+        <div class="row old"><div class="t">岛上的复制卡片</div><div class="ctl"><button class="switch on"></button></div></div>
+      </div>
+      <p class="foot">「记录与链接」tab 21 行：记录什么 4、隐私与过滤 6、容量与清理 3、链接书签 6、导入导出 2，全部展开。</p>
+    </div>
+    <div class="view on" data-v="after">
+      <div class="ptabs"><button class="on" data-p="open">打开与粘贴</button><button data-p="rec">记录与链接</button><button>常用语与提示词</button></div>
+      <div class="pane on" data-pane="open">
+        <div class="gtitle">打开方式</div>
+        <div class="group">
+          <div class="row"><div class="t">快捷键</div><div class="ctl"><span class="fakesel">⌘⇧V</span></div></div>
+          <div class="row"><div class="t">弹出位置</div><div class="ctl"><span class="seg"><button class="on">鼠标旁</button><button>屏幕中间</button></span></div></div>
+          <div class="row"><div class="t">窗口宽度</div><div class="ctl"><span class="seg"><button>标准</button><button class="on">宽版</button></span></div></div>
+        </div>
+        <div class="gtitle">粘贴</div>
+        <div class="group">
+          <div class="row"><div class="t">选中后自动粘贴</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">收藏的条目置顶</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">岛上的复制卡片</div><div class="ctl"><button class="switch on"></button></div></div>
+        </div>
+        <div class="gtitle">贴到终端</div>
+        <div class="group">
+          <div class="row"><div class="t">图片贴成文件路径</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">多行命令合成一行</div><div class="ctl"><button class="switch"></button></div></div>
+        </div>
+        <div class="gtitle">隐私与性能</div>
+        <div class="group">
+          <div class="row"><div class="t">共享屏幕时隐藏</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div><div class="t">读取链接标题和图标</div><div class="d">会访问那个网址</div></div><div class="ctl"><button class="switch"></button></div></div>
+          <div class="row"><div><div class="t">启动时预先准备窗口</div><div class="d">秒开，多占约 40 MB</div></div><div class="ctl"><button class="switch on"></button></div></div>
+        </div>
+      </div>
+      <div class="pane" data-pane="rec">
+        <div class="gtitle">记录什么</div>
+        <div class="group">
+          <div class="row"><div class="t">图片</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row indent"><div class="t">识别图片里的文字</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">复制的文件</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">保留格式</div><div class="ctl"><button class="switch on"></button></div></div>
+        </div>
+        <div class="gtitle">隐私</div>
+        <div class="group">
+          <div class="row"><div class="t">不记录密码</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">密钥和令牌</div><div class="ctl"><span class="seg"><button class="on">打码</button><button>不记录</button><button>照常</button></span></div></div>
+          <div class="row"><div class="t">不记录这些程序</div><div class="ctl"><span class="fakein">keepass.exe</span></div></div>
+          <details class="adv"><summary>细调 <small>清空时删掉、打码自动删、本地接口读取</small></summary>
+            <div class="row"><div class="t">剪贴板被清空时删掉刚记下的那条</div><div class="ctl"><button class="switch on"></button></div></div>
+            <div class="row"><div class="t">打码的条目自动删除</div><div class="ctl"><span class="fakesel">7 天后</span></div></div>
+            <div class="row"><div class="t">允许本地接口读取历史</div><div class="ctl"><button class="switch"></button></div></div>
+          </details>
+        </div>
+        <div class="gtitle">链接书签</div>
+        <div class="group">
+          <div class="row"><div class="t">复制链接时在岛上提示</div><div class="ctl"><button class="switch on"></button></div></div>
+          <div class="row"><div class="t">识别哪些链接</div><div class="ctl"><span class="seg"><button class="on">所有网址</button><button>只认 http(s)://</button></span></div></div>
+          <details class="adv"><summary>细调 <small>网站名单、导入导出书签</small></summary>
+            <div class="row"><div class="t">这些网站不提示</div><div class="ctl"><span class="fakein">google.com</span></div></div>
+            <div class="row"><div class="t">只提示这些网站</div><div class="ctl"><span class="fakein">留空就是所有</span></div></div>
+            <div class="row"><div class="t">书签</div><div class="ctl"><span class="linkbtn">导出</span><span class="linkbtn">导入</span></div></div>
+          </details>
+        </div>
+        <div class="group" style="margin-top:10px">
+          <details class="adv" style="border-top:0"><summary>容量与清理 <small>500 条 · 30 天没用自动删</small></summary>
+            <div class="row"><div class="t">单条文字大小上限</div><div class="ctl"><span class="fakesel">1 MB</span></div></div>
+            <div class="row"><div class="t">最大历史条数</div><div class="ctl"><span class="fakesel">500</span></div></div>
+            <div class="row"><div class="t">自动清理</div><div class="ctl"><span class="fakesel">30 天</span></div></div>
+          </details>
+          <details class="adv"><summary>导入导出 <small>换电脑时用</small></summary>
+            <div class="row"><div class="t">导出剪贴板历史</div><div class="ctl"><span class="linkbtn">导出</span></div></div>
+            <div class="row"><div class="t">从文件导入</div><div class="ctl"><span class="linkbtn">导入…</span></div></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="why">
+    <h3>5. 剪贴板</h3>
+    <div class="cnt"><div><b>21 → 11</b><span>记录与链接默认看到的行</span></div><div><b>1 → 3</b><span>组（原「粘贴与显示」）</span></div></div>
+    <ul>
+      <li>「粘贴与显示」拆成粘贴、贴到终端、隐私与性能三组，行名缩短，长说明只留关键的半句。</li>
+      <li>「记录与链接」：隐私组的冷门三项、书签的网站名单和导入导出进细调；容量与清理、导入导出整组折起来，标题写当前值。</li>
+      <li>不加新 tab：之前「合并稀疏的子 tab」（<code>dfa719767</code>）刚把书签并进来。</li>
+    </ul>
+    <h4>工作量和风险</h4>
+    <ul><li class="cost">小到中：挪行、包 <code>SettingsAdvanced</code>。</li><li>设置键不变；设置搜索分组名会变。</li></ul>
+    <h4>要你定</h4>
+    <ul class="ask"><li>行名缩短（「粘贴图片到终端时贴文件路径」→「图片贴成文件路径」）可以吗？</li></ul>
+  </aside>
+</section>
+
+<section class="item" data-k="6" data-title="开合动画" data-sub="缩略图代替长说明">
+  <div class="win">
+    <div class="winhead"><span class="crumb">行为 › 展开与收起</span><span class="ba"><button>现在</button><button class="on after">改后</button></span></div>
+    <div class="view" data-v="before">
+      <div class="gtitle">开合动画</div>
+      <div class="group">
+        <div class="row old col"><div style="display:flex;justify-content:space-between"><div class="t">动画曲线</div><span class="fakesel">弹开</span></div><div class="d" style="max-height:none">弹开（默认）像弹簧一样一下子张开、宽度和高度都冲过头一点再回来，高度慢半拍，内容由模糊变清楚，收起时内容先消失、不回弹地收拢；灵动快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹</div></div>
+        <div class="row old"><div class="t">弹动幅度</div><div class="ctl"><span class="fakesel">常规</span></div></div>
+        <div class="row old col"><div style="display:flex;justify-content:space-between"><div class="t">悬停效果</div><span class="fakesel">碰到弹一下</span></div><div class="d" style="max-height:none">鼠标靠近收起的岛时它怎么变：碰到弹一下（默认）碰到岛就变宽一点、轻轻弹一下；靠近就鼓进到岛周围就慢慢鼓起、越近越胖；轻轻鼓起幅度小一半；明显变胖幅度更大、更慢；只往下鼓几乎不变宽；碰到才鼓要碰到岛才变；不变化就不动</div></div>
+        <div class="row old"><div class="t">小组件出场动效</div><div class="ctl"><span class="fakesel">轮播</span></div></div>
+      </div>
+      <p class="foot">想比两种曲线：下拉选一个、点播放、再下拉选另一个。</p>
+    </div>
+    <div class="view on" data-v="after">
+      <div class="gtitle">开合动画</div>
+      <div class="group">
+        <div class="stagewrap"><div class="stage bigdemo" style="height:160px"><div class="mi" id="mvBig">待办 3</div></div>
+          <div class="stagebar"><span class="lbl" id="mvNote"></span><button class="linkbtn" id="mvPlay">▶ 再开合一次</button></div></div>
+        <div class="row col"><div class="t">怎么开合 <span class="d">鼠标移到格子上就演一次</span></div><div class="strip" id="mvStrip"></div></div>
+        <div class="row indent" id="mvBounce"><div class="t">弹开的回弹</div><div class="ctl"><span class="seg"><button>轻微</button><button class="on">常规</button><button>弹动</button></span></div></div>
+      </div>
+      <div class="gtitle">鼠标靠近收起的岛</div>
+      <div class="group">
+        <div class="row col"><div class="strip" id="hvStrip"></div><div class="thumbnote" id="hvNote"></div></div>
+      </div>
+      <div class="gtitle">展开以后</div>
+      <div class="group">
+        <div class="row"><div><div class="t">小组件出场</div><div class="d">每次展开换一种，不连着两次一样</div></div><div class="ctl"><span class="fakesel">轮播</span></div></div>
+        <div class="row"><div class="t">数据动效</div><div class="ctl"><button class="switch on"></button></div></div>
+      </div>
+    </div>
+  </div>
+  <aside class="why">
+    <h3>6. 开合动画</h3>
+    <div class="cnt"><div><b>~400 字 → 1 句</b><span>每行说明</span></div><div><b>18</b><span>格缩略图</span></div></div>
+    <ul>
+      <li>动画曲线 11 种、悬停效果 7 种做成缩略图条，鼠标或键盘移上去就演一次，没指着的停着。</li>
+      <li>选中的那种在上面的大预览里开合，下面一句话说明它。</li>
+      <li>「弹动幅度」只在选了「弹开」时出现，改叫「弹开的回弹」。</li>
+      <li>这页的曲线只是示意，真的实现用 <code>islandMotionVariables</code> 的真参数。</li>
+    </ul>
+    <h4>工作量和风险</h4>
+    <ul><li class="cost">中：排版为主，动效守 motion.md 和减少动画。</li><li>设置键不变。</li></ul>
+  </aside>
+</section>
+
+<section class="item" data-k="7" data-title="材质与圆角" data-sub="风格缩略图 + 色块">
+  <div class="win">
+    <div class="winhead"><span class="crumb">外观 › 材质与圆角 › 液态玻璃</span><span class="ba"><button>现在</button><button class="on after">改后</button></span></div>
+    <div class="view" data-v="before">
+      <div class="gtitle">质感与形状</div>
+      <div class="group">
+        <div class="row old"><div><div class="t">不透明度</div><div class="d">只调整岛底色的浓淡，文字和图标保持不透明。</div></div><div class="ctl"><span class="fakesel">85%</span></div></div>
+        <div class="row old"><div><div class="t">整体不透明度</div><div class="d">连同文字、图标和展开面板一起调整整个岛的不透明度。</div></div><div class="ctl"><span class="fakesel">100%</span></div></div>
+      </div>
+      <div class="gtitle">液态玻璃</div>
+      <div class="group">
+        <div class="row old"><div class="t">风格</div><div class="ctl"><span class="seg"><button class="on">静态</button><button>慢流动</button><button>极光</button><button>着色器（实验）</button></span></div></div>
+      </div>
+      <div class="gtitle">背景折射与色彩</div>
+      <div class="group">
+        <div class="row old"><div class="t">颜色来源</div><div class="ctl"><span class="seg"><button>主题色</button><button>跟封面</button><button class="on">自定义</button></span></div></div>
+        <div class="row old indent"><div class="t">颜色 1</div><div class="ctl">●</div></div>
+        <div class="row old indent"><div class="t">颜色 2</div><div class="ctl">●</div></div>
+        <div class="row old indent"><div class="t">颜色 3</div><div class="ctl">●</div></div>
+      </div>
+    </div>
+    <div class="view on" data-v="after">
+      <div class="gtitle">透明度</div>
+      <div class="group">
+        <div class="opgroup">
+          <div class="o"><div class="t">底色</div><div class="pv"><span>待办 3</span></div><input type="range" value="85" /><div class="d">只淡底色，字照样清楚</div></div>
+          <div class="o"><div class="t">整个岛</div><div class="pv whole"><span>待办 3</span></div><input type="range" value="100" /><div class="d">连字和面板一起淡</div></div>
+        </div>
+      </div>
+      <div class="gtitle">液态玻璃</div>
+      <div class="group">
+        <div class="row col"><div class="t">风格</div><div class="strip" id="glStrip"></div><div class="thumbnote" id="glNote"></div></div>
+        <div class="row"><div class="t">颜色</div><div class="ctl"><span class="seg" id="glSrc"><button>主题色</button><button>跟封面</button><button class="on">自定义</button></span><span class="swatches" id="glSw"><button class="sw on" style="background:#bf5af2"></button><button class="sw" style="background:#0a84ff"></button><button class="sw" style="background:#ff375f"></button></span></div></div>
+      </div>
+      <p class="foot">其余（玻璃强度、色彩浓度、细调里的模糊 / 饱和度 / 噪点、流光细节）照旧，不在这次改。</p>
+    </div>
+  </div>
+  <aside class="why">
+    <h3>7. 材质与圆角</h3>
+    <div class="cnt"><div><b>4 → 1</b><span>行（颜色来源加三个颜色）</span></div></div>
+    <ul>
+      <li>两个不透明度并排成一组，各带一个小预览：左边只淡底色，右边连字一起淡，一眼分得清。</li>
+      <li>风格四种做成缩略图，移上去才流动。</li>
+      <li>颜色来源和三个色块合成一行；不是「自定义」时色块显示当前取到的颜色、不能点。</li>
+    </ul>
+    <h4>工作量和风险</h4>
+    <ul><li class="cost">小到中。</li><li>设置键不变。</li></ul>
+  </aside>
+</section>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+const nav = $("#nav");
+const items = $$(".item");
+items.forEach((it, i) => {
+  const b = document.createElement("button");
+  b.innerHTML = `<b>${it.dataset.k}</b>${it.dataset.title}<small>${it.dataset.sub}</small>`;
+  b.onclick = () => show(i);
+  nav.append(b);
+});
+function show(i) {
+  items.forEach((it, j) => it.classList.toggle("on", i === j));
+  $$("button", nav).forEach((b, j) => b.classList.toggle("on", i === j));
+  location.hash = items[i].dataset.k;
+}
+show(Math.max(0, items.findIndex((it) => "#" + it.dataset.k === location.hash)));
+
+$$(".item").forEach((it) => {
+  const [before, after] = $$(".ba button", it);
+  const set = (v) => {
+    before.classList.toggle("on", v === "before");
+    after.classList.toggle("on", v === "after");
+    $$(".view", it).forEach((x) => x.classList.toggle("on", x.dataset.v === v));
+  };
+  before.onclick = () => set("before");
+  after.onclick = () => set("after");
+});
+document.addEventListener("click", (e) => {
+  const sw = e.target.closest(".switch");
+  if (sw && !sw.id) sw.classList.toggle("on");
+  const seg = e.target.closest(".seg button");
+  if (seg && !seg.closest("#syState") && !seg.closest("#glSrc")) $$("button", seg.parentElement).forEach((b) => b.classList.toggle("on", b === seg));
+  const tab = e.target.closest(".ptabs button[data-p]");
+  if (tab) {
+    const view = tab.closest(".view");
+    $$(".ptabs button", view).forEach((b) => b.classList.toggle("on", b === tab));
+    $$(".pane", view).forEach((p) => p.classList.toggle("on", p.dataset.pane === tab.dataset.p));
+  }
+  const chip = e.target.closest(".chip");
+  if (chip) chip.classList.toggle("on");
+});
+
+let audio;
+function beep(f = 660) {
+  try {
+    audio ??= new AudioContext();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.value = f; o.type = "sine";
+    g.gain.setValueAtTime(0.0001, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.15, audio.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.35);
+    o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + 0.4);
+  } catch {}
+}
+
+const EV = [
+  { id: "wait", name: "等你确认或回答", sub: "要你允许一个操作，或 Claude 问了你", c: "#ff9f0a", body: "Bash: rm -rf dist && pnpm build", island: true, sound: [["确认", true], ["回答", true]], push: true, f: 880 },
+  { id: "done", name: "完成", sub: "这一轮回复写完了", c: "#30d158", body: "已改好 3 个文件，测试通过", island: true, sound: true, push: false, f: 700 },
+  { id: "fail", name: "出错", sub: "这一轮失败或接口出错", c: "#ff453a", body: "API Error: 529 overloaded", island: true, sound: true, push: true, f: 330 },
+  { id: "start", name: "开始新一轮", sub: "新会话，或你发了新的提问", c: "#0a84ff", body: "fuyu · 帮我把日历页拆成两个 tab", island: false, sound: false, push: null, f: 520 },
+  { id: "ack", name: "发出消息", sub: "你给会话发了新的提问", c: "#8d8d95", body: "", island: null, sound: false, push: null, f: 600 },
+  { id: "compact", name: "上下文快满", sub: "Claude Code 开始压缩上下文", c: "#bf5af2", body: "", island: null, sound: true, push: null, f: 440 },
+  { id: "idle", name: "闲置等你", sub: "完成 5 分钟后你还没看", c: "#ffd60a", body: "", island: null, sound: false, push: null, f: 500 },
+  { id: "qlow", name: "额度快用完", sub: "5 小时或 7 天用量到提醒线", c: "#ff9f0a", body: "Claude 5 小时用量 80%", island: "line", sound: true, push: null, f: 400 },
+  { id: "qreset", name: "额度已刷新", sub: "到过提醒线的额度重置了", c: "#30d158", body: "Claude 5 小时额度已刷新", island: "follow", sound: false, push: null, f: 760 },
+];
+const mxState = { soundOn: true, pushOn: true, sel: "wait" };
+function mxRender() {
+  const t = $("#mx");
+  const sw = (on, key) => `<button class="switch sm${on ? " on" : ""}" data-k="${key}"></button>`;
+  let h = `<tr><th>事件</th><th>岛上<small>&nbsp;</small></th><th class="${mxState.soundOn ? "" : "colOff"}">声音<small>音量 60% · <a data-go="sound">设置 ›</a></small></th><th class="${mxState.pushOn ? "" : "colOff"}">手机<small>Bark · <a data-go="push">设置 ›</a></small></th></tr>`;
+  for (const e of EV) {
+    let isl;
+    if (e.island === null) isl = `<span class="na">—</span>`;
+    else if (e.island === "line") isl = `<span class="fakesel" style="min-width:0">用到 80%</span>`;
+    else if (e.island === "follow") isl = `<span class="d" style="font-size:11.5px;color:#8d8d95">跟上一行</span>`;
+    else isl = sw(e.island, `${e.id}.island`);
+    let snd;
+    if (Array.isArray(e.sound)) snd = `<span class="twin">${e.sound.map(([n, on], i) => `${n} ${sw(on, `${e.id}.sound.${i}`)}`).join("")}</span><button class="play" data-play="${e.id}">▶</button>`;
+    else snd = `<span class="cell">${sw(e.sound, `${e.id}.sound`)}<button class="play" data-play="${e.id}">▶</button></span>`;
+    const ph = e.push === null ? `<span class="na">—</span>` : sw(e.push, `${e.id}.push`);
+    h += `<tr data-ev="${e.id}" class="${e.id === mxState.sel ? "sel" : ""}"><td><span class="ev">${e.name}<small>${e.sub}</small></span></td><td>${isl}</td><td class="${mxState.soundOn ? "" : "colOff"}">${snd}</td><td class="${mxState.pushOn ? "" : "colOff"}">${ph}</td></tr>`;
+  }
+  t.innerHTML = h;
+}
+function mxPlay(id) {
+  const e = EV.find((x) => x.id === id);
+  const n = $("#mxNotice");
+  const sOn = Array.isArray(e.sound) ? e.sound.some((x) => x[1]) : e.sound;
+  const iOn = e.island === true || e.island === "line" || e.island === "follow";
+  n.style.opacity = iOn ? 1 : .25;
+  n.style.transform = "translate(-50%, -60px)";
+  $(".h i", n).style.background = e.c;
+  $(".h b", n).textContent = iOn ? `fuyu · ${e.name}` : `岛上不提醒「${e.name}」`;
+  $(".b", n).textContent = iOn ? (e.body || e.sub) : "这件事只在开着的渠道里出现";
+  $(".tagrow", n).innerHTML = [["岛上", iOn], ["声音", sOn && mxState.soundOn], ["手机", e.push === true && mxState.pushOn]].map(([x, on]) => `<span class="${on ? "lit" : ""}">${x}${on ? " ✓" : " —"}</span>`).join("");
+  requestAnimationFrame(() => requestAnimationFrame(() => { n.style.transform = "translate(-50%, 0)"; }));
+  const spk = $("#mxSpk");
+  spk.classList.toggle("off", !(sOn && mxState.soundOn));
+  spk.classList.remove("ring");
+  if (sOn && mxState.soundOn) { void spk.offsetWidth; spk.classList.add("ring"); beep(e.f); }
+  const ph = $("#mxPhone");
+  ph.classList.toggle("off", !(e.push === true && mxState.pushOn));
+  $("div", ph).textContent = e.push === true ? `Fuyu\n${e.name}` : "不推";
+}
+$("#mx").addEventListener("click", (ev) => {
+  const sw = ev.target.closest(".switch");
+  if (sw) {
+    const [id, ch, i] = sw.dataset.k.split(".");
+    const e = EV.find((x) => x.id === id);
+    if (ch === "sound" && i !== undefined) e.sound[+i][1] = !e.sound[+i][1];
+    else e[ch] = !e[ch];
+    mxRender(); mxPlay(id); return;
+  }
+  const p = ev.target.closest("[data-play]");
+  if (p) { beep(EV.find((x) => x.id === p.dataset.play).f); return; }
+  if (ev.target.closest("a[data-go]")) return;
+  const tr = ev.target.closest("tr[data-ev]");
+  if (tr) { mxState.sel = tr.dataset.ev; mxRender(); mxPlay(tr.dataset.ev); }
+});
+$("#mxReplay").onclick = () => mxPlay(mxState.sel);
+mxRender(); mxPlay("wait");
+
+const tk = { style: "hidden", hint: "dot", color: "#ffffff", breath: true };
+const TK_STYLES = [["edge", "标准露边", "露出 6px 的岛边"], ["line", "极简细线", "只露一条 2px 的线"], ["hidden", "贴边隐身", "完全藏起来，鼠标推到顶边 2px 照样唤醒"]];
+const TK_HINTS = [["none", "不留"], ["dot", "小圆点"], ["halo", "光晕"]];
+const TK_COLORS = [["#ffffff", "白色描边"], ["#30d158", "跟随岛色"], ["rainbow", "自选"]];
+function tkPic(style, hint) {
+  const top = style === "edge" ? -12 : style === "line" ? -16 : -18;
+  let h = `<div class="mini" style="top:${top}px"></div><div style="position:absolute;left:0;right:0;top:0;height:1px;background:rgba(255,255,255,.2)"></div>`;
+  if (hint === "dot") h += `<div style="position:absolute;left:50%;top:2px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#fff"></div>`;
+  if (hint === "halo") h += `<div style="position:absolute;left:50%;top:-5px;width:50px;margin-left:-25px;height:10px;border-radius:50%;background:radial-gradient(closest-side,#fff,transparent);opacity:.6"></div>`;
+  return h;
+}
+function tkRender() {
+  $("#tkStyles").innerHTML = TK_STYLES.map(([v, n]) => `<button class="thumb${tk.style === v ? " on" : ""}" data-v="${v}"><div class="pic">${tkPic(v, v === "hidden" ? tk.hint : "none")}</div>${n}</button>`).join("");
+  $("#tkStyleNote").textContent = TK_STYLES.find((s) => s[0] === tk.style)[2];
+  $("#tkHints").innerHTML = TK_HINTS.map(([v, n]) => `<button class="thumb${tk.hint === v ? " on" : ""}" data-v="${v}"><div class="pic">${tkPic("hidden", v)}</div>${n}</button>`).join("");
+  $("#tkColors").innerHTML = TK_COLORS.map(([v, n]) => `<button class="sw${v === "rainbow" ? " rainbow" : ""}${tk.color === v ? " on" : ""}" title="${n}" data-v="${v}" style="${v === "rainbow" ? "" : `background:${v}`}"></button>`).join("");
+  const hidden = tk.style === "hidden";
+  ["#tkHintRow", "#tkColorRow", "#tkBreathRow"].forEach((s) => ($(s).style.display = hidden ? "" : "none"));
+  $("#tkColorRow").style.display = hidden && tk.hint !== "none" ? "" : "none";
+  $("#tkBreathRow").style.display = hidden && tk.hint !== "none" ? "" : "none";
+  const el = $("#tk");
+  el.className = "tk " + tk.style;
+  const hint = $("#tkHint");
+  hint.className = "hint " + (hidden ? tk.hint : "none") + (tk.breath ? " breath" : "");
+  hint.style.setProperty("--hc", tk.color === "rainbow" ? "#bf5af2" : tk.color);
+  $("#tkBreath").classList.toggle("on", tk.breath);
+}
+$("#tkStyles").onclick = (e) => { const b = e.target.closest("[data-v]"); if (b) { tk.style = b.dataset.v; tkRender(); } };
+$("#tkHints").onclick = (e) => { const b = e.target.closest("[data-v]"); if (b) { tk.hint = b.dataset.v; tkRender(); } };
+$("#tkColors").onclick = (e) => { const b = e.target.closest("[data-v]"); if (b) { tk.color = b.dataset.v; tkRender(); } };
+$("#tkBreath").onclick = () => { tk.breath = !tk.breath; tkRender(); };
+$("#tkTry").onclick = () => {
+  const ptr = $("#tkPtr"), el = $("#tk");
+  ptr.classList.add("show");
+  setTimeout(() => el.classList.add("out"), 450);
+  setTimeout(() => { ptr.classList.remove("show"); }, 1400);
+  setTimeout(() => el.classList.remove("out"), 2200);
+};
+$("#tkHolds").innerHTML = [["正在做的待办", true], ["Agent 在等你", true], ["音乐播放中", false], ["有未读消息", true]].map(([n, on]) => `<button class="chip${on ? " on" : ""}"><span class="dot"></span>${n}</button>`).join("");
+tkRender();
+
+const cal = { fmt: "titleMinutes", title: true };
+const CAL_FMT = { titleMinutes: "标题 · 10 分钟后", timeTitle: "14:00 标题 · 10m", compact: "紧凑" };
+function calText(fmt, title) {
+  const n = title ? "产品周会" : "会议";
+  if (fmt === "titleMinutes") return `<span class="barfmt"><span class="cam"></span>${n} · 10 分钟后 <span class="join2">加入</span></span>`;
+  if (fmt === "timeTitle") return `<span class="barfmt"><span class="cam"></span>14:00 ${n} · 10m <span class="join2">加入</span></span>`;
+  return `<span class="barfmt"><span class="cam"></span>10m</span>`;
+}
+function calRender() {
+  $("#calBar").innerHTML = `<span class="lt"></span>${calText(cal.fmt, cal.title)}`;
+  $("#calBannerT").textContent = `${cal.title ? "产品周会" : "会议"} · 1 分钟后开始`;
+  $("#calFmts").innerHTML = Object.entries(CAL_FMT).map(([v, n]) => `<button class="thumb wide${cal.fmt === v ? " on" : ""}" data-v="${v}"><div class="pic" style="display:grid;place-items:center"><span style="background:#000;border-radius:9px;padding:2px 8px;font-size:10px;color:#fff;white-space:nowrap">${calText(v, cal.title).replace(/<span class="join2">加入<\/span>/, "")}</span></div>${n}</button>`).join("");
+  $("#calTitle").classList.toggle("on", cal.title);
+}
+$("#calFmts").onclick = (e) => { const b = e.target.closest("[data-v]"); if (b) { cal.fmt = b.dataset.v; calRender(); } };
+$("#calTitle").onclick = () => { cal.title = !cal.title; calRender(); };
+$("#calDemo").onclick = () => { const b = $("#calBanner"); b.classList.add("show"); setTimeout(() => b.classList.remove("show"), 2600); };
+calRender();
+
+$("#syState").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  $$("#syState button").forEach((x) => x.classList.toggle("on", x === b));
+  $("#syNew").style.display = b.dataset.s === "new" ? "" : "none";
+  $("#sySet").style.display = b.dataset.s === "set" ? "" : "none";
+};
+$("#syPick").onclick = () => $("#syState button[data-s=set]").click();
+const SY = [["待办、笔记与归档", "按条合并，同一天两边都改留冲突副本", true, "ok", "正常"], ["常用短语", "常用语和 AI 提示词模板", true, "ok", "正常"], ["链接书签", "收藏的网址和顺序", true, "warn", "待确认"], ["通用与功能设置", "按白名单同步配色、行为和偏好", true, "ok", "正常"], ["我的主题预设", "去掉显示器、尺寸这些本机的字段", false, "muted", "没开"], ["剪贴板收藏（仅文字）", "只同步收藏的纯文本，图片和打码的留在本机", false, "muted", "没开"]];
+$("#syTiles").innerHTML = SY.map(([n, d, on, tone, st]) => `<div class="tile${on ? " on" : ""}" title="${d}"><span class="box">${on ? "✓" : ""}</span><span class="nm"><b>${n}</b><span>${d}</span></span><span class="badge ${tone}">${st}</span></div>`).join("");
+$("#syTiles").onclick = (e) => { const t = e.target.closest(".tile"); if (t) { t.classList.toggle("on"); const on = t.classList.contains("on"); $(".box", t).textContent = on ? "✓" : ""; const bd = $(".badge", t); bd.className = "badge " + (on ? "ok" : "muted"); bd.textContent = on ? "正常" : "没开"; } };
+const SYO = [["翻译服务与模型选择", "API 密钥各台单独存，本地模型地址在别的电脑上多半用不了"], ["PrtSc 接管与录屏参数", "键盘、麦克风和系统声音因电脑而异"], ["Agent 提示音量与音效包", "外放和耳机习惯不同，音效包可能没装"], ["手机推送开关与通道", "几台电脑都开会重复推到手机"], ["邮箱账号列表（不含密码）", "授权码在本机钥匙串，过去还要重新登录"], ["收起条和展开页面的顺序", "可能有只在一台电脑装的插件"], ["更新通道", "一台尝鲜测试版，主力机留稳定版"]];
+$("#syOpt").innerHTML = SYO.map(([n, d], i) => `<div class="row"><div><div class="t">${n}</div><div class="d">${d}</div></div><div class="ctl"><button class="switch${i === 6 ? " on" : ""}"></button></div></div>`).join("");
+
+const MV = [
+  ["pop", "弹开", "像弹簧一样张开，冲过头一点再回来，高度慢半拍", "cubic-bezier(.34,1.56,.64,1)", 460],
+  ["lively", "灵动", "快速冲出去，微微回一下", "cubic-bezier(.3,1.35,.5,1)", 340],
+  ["spring", "弹性（同官网）", "和官网的岛一样", "cubic-bezier(.45,1.8,.55,.9)", 560],
+  ["snappy", "利落", "很快到位，不回弹", "cubic-bezier(.2,.9,.2,1)", 220],
+  ["soft", "柔弹", "几乎不弹，很柔", "cubic-bezier(.3,1.12,.5,1)", 480],
+  ["unfold", "先横后竖", "先拉开，再落下", "unfold", 560],
+  ["grow", "生长", "内容从岛里长出来", "cubic-bezier(.2,.8,.2,1)", 420],
+  ["smooth", "平滑", "匀速顺滑，不回弹", "cubic-bezier(.25,.1,.25,1)", 400],
+  ["fast", "快速", "最快，不回弹", "ease-out", 160],
+  ["bouncy", "Q 弹", "会弹好几下", "cubic-bezier(.3,2.3,.5,.6)", 640],
+  ["none", "无动画", "直接变过去", "linear", 0],
+];
+const mv = { sel: "pop" };
+function trans(curve, ms) {
+  if (curve === "unfold") return `width ${ms * .5}ms cubic-bezier(.65,0,.35,1), height ${ms * .5}ms cubic-bezier(.65,0,.35,1) ${ms * .45}ms, border-radius ${ms}ms`;
+  return `width ${ms}ms ${curve}, height ${ms}ms ${curve} ${Math.round(ms * .12)}ms, border-radius ${ms}ms ${curve}`;
+}
+$("#mvStrip").innerHTML = MV.map(([v, n, , c, ms]) => `<button class="thumb mthumb${v === mv.sel ? " on" : ""}" data-v="${v}"><div class="pic"><div class="mi" style="transition:${trans(c, ms)}"></div></div>${n}</button>`).join("");
+function mvPlay() {
+  const m = MV.find((x) => x[0] === mv.sel), big = $("#mvBig");
+  big.style.transition = trans(m[3], m[4] * 1.3);
+  big.classList.add("open");
+  setTimeout(() => { big.classList.remove("open"); }, m[4] * 1.3 + 900);
+  $("#mvNote").textContent = `${m[1]}：${m[2]}`;
+  $("#mvBounce").style.display = mv.sel === "pop" ? "" : "none";
+}
+$("#mvStrip").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; mv.sel = b.dataset.v; $$("#mvStrip .thumb").forEach((x) => x.classList.toggle("on", x === b)); mvPlay(); };
+$("#mvPlay").onclick = mvPlay;
+mvPlay();
+
+const HV = [["bounce", "碰到弹一下", "碰到岛就变宽一点，轻轻弹一下", "scale(1.18,1.1)"], ["near", "靠近就鼓", "到岛周围就慢慢鼓起，越近越胖", "scale(1.3,1.25)"], ["subtle", "轻轻鼓起", "幅度小一半", "scale(1.08,1.06)"], ["bold", "明显变胖", "幅度更大，更慢", "scale(1.45,1.4)"], ["drop", "只往下鼓", "几乎不变宽", "scale(1.03,1.6)"], ["touch", "碰到才鼓", "要碰到岛才变", "scale(1.2,1.15)"], ["none", "不变化", "就不动", "none"]];
+const hv = { sel: "bounce" };
+$("#hvStrip").innerHTML = HV.map(([v, n, , tf]) => `<button class="thumb hthumb${v === hv.sel ? " on" : ""}" data-v="${v}" data-tf="${tf}"><div class="pic"><div class="mi"></div></div>${n}</button>`).join("");
+$$("#hvStrip .thumb").forEach((b) => {
+  b.onmouseenter = () => { $(".mi", b).style.transform = b.dataset.tf; };
+  b.onmouseleave = () => { $(".mi", b).style.transform = ""; };
+});
+function hvNote() { const h = HV.find((x) => x[0] === hv.sel); $("#hvNote").textContent = `${h[1]}：${h[2]}。鼠标移到格子上试。`; }
+$("#hvStrip").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; hv.sel = b.dataset.v; $$("#hvStrip .thumb").forEach((x) => x.classList.toggle("on", x === b)); hvNote(); };
+hvNote();
+
+const GL = [["still", "静态", "颜色停着不动，最省电", "radial-gradient(40% 50% at 30% 40%, #bf5af2, transparent), radial-gradient(40% 50% at 70% 60%, #0a84ff, transparent)", "none"], ["flow", "慢流动", "色块慢慢漂", "radial-gradient(40% 50% at 30% 40%, #bf5af2, transparent), radial-gradient(40% 50% at 70% 60%, #0a84ff, transparent)", "drift 3s ease-in-out infinite alternate"], ["aurora", "极光", "一条条光带流过，颜色自己变", "linear-gradient(100deg, #30d158, #0a84ff 40%, #bf5af2 70%, #ff375f)", "hue 4s linear infinite alternate"], ["shader", "着色器（实验）", "GPU 画的流体，更耗电", "conic-gradient(from 0deg, #bf5af2, #0a84ff, #30d158, #ff9f0a, #bf5af2)", "spin 5s linear infinite"]];
+const gl = { sel: "flow" };
+$("#glStrip").innerHTML = GL.map(([v, n, , g, a]) => `<button class="thumb gthumb${v === gl.sel ? " on" : ""}" data-v="${v}" style="--g:${g};--anim:${a}"><div class="pic"><div class="glass"></div></div>${n}</button>`).join("");
+function glNote() { const g = GL.find((x) => x[0] === gl.sel); $("#glNote").textContent = `${g[1]}：${g[2]}`; }
+$("#glStrip").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; gl.sel = b.dataset.v; $$("#glStrip .thumb").forEach((x) => x.classList.toggle("on", x === b)); glNote(); };
+glNote();
+$("#glSrc").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  $$("#glSrc button").forEach((x) => x.classList.toggle("on", x === b));
+  const custom = b.textContent === "自定义";
+  $$("#glSw .sw").forEach((s, i) => { s.style.opacity = custom ? 1 : .55; s.style.cursor = custom ? "pointer" : "default"; s.style.background = custom ? ["#bf5af2", "#0a84ff", "#ff375f"][i] : b.textContent === "主题色" ? ["#30d158", "#1e8a3d", "#0f3d1d"][i] : ["#e0a85a", "#7a4a2a", "#2a1c14"][i]; });
+};
+$("#glSw").onclick = (e) => { const s = e.target.closest(".sw"); if (s && $("#glSrc button.on").textContent === "自定义") $$("#glSw .sw").forEach((x) => x.classList.toggle("on", x === s)); };
+$$(".opgroup input").forEach((r, i) => {
+  const pv = $$(".opgroup .pv span")[i];
+  r.oninput = () => { if (i === 0) pv.style.background = `rgba(0,0,0,${r.value / 100 * .9})`; else pv.style.opacity = r.value / 100; };
+  r.oninput();
+});
+</script>
+</body>
+</html>

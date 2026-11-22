@@ -8,6 +8,7 @@ import "./MessagesSettingsPage.css";
 import { SlotView } from "../plugin-kernel/SlotView";
 import { settingsSections } from "../plugin-kernel/settingsSlots";
 import { OWNER } from "./plugin/owner.ts";
+import { LayoutSection } from "./settings/LayoutSection";
 import { NoticeSection } from "./settings/NoticeSection";
 import { SourcesSection } from "./settings/SourcesSection";
 
@@ -26,6 +27,7 @@ const sections = settingsSections<MessagesSectionProps, MessagesTab>();
 
 sections.add({ id: "messagesIm.sources", category: "messagesIm", order: 10, component: SourcesSection }, OWNER);
 sections.add({ id: "messages.notice", category: "messages", order: 10, component: NoticeSection }, OWNER);
+sections.add({ id: "messages.layout", category: "messages", order: 20, component: LayoutSection }, OWNER);
 
 export function MessagesSettingsPage({ tab, ...page }: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders" | "imSources"> & { tab: MessagesTab }) {
   const controllers = useMessageControllers();

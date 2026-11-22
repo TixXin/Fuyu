@@ -36,6 +36,8 @@ import { usePanelEditing } from "./custom-panels/panelEditing";
 import { setPanelAwake } from "../../components/island-widget/panelAwake";
 import "./IslandOutline.css";
 import { IslandTaskbarHandle, type TaskbarHandleShow } from "./IslandTaskbarHandle";
+import { NotchRim, type NotchRimView } from "./notch-rim/NotchRim";
+import { NotchRing, type NotchRingView } from "./notch-ring/NotchRing";
 
 export type IslandShellPart = "bar" | "panel";
 
@@ -61,6 +63,9 @@ export type IslandShellProps = {
   showCollapsedText: boolean;
   overflowMore?: boolean;
   notchWingMax?: number;
+  notchText?: boolean;
+  notchRim?: NotchRimView | null;
+  notchRing?: NotchRingView | null;
   features: IslandFeatures;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -162,6 +167,9 @@ export function IslandShell({
   showCollapsedText,
   overflowMore = true,
   notchWingMax,
+  notchText = false,
+  notchRim = null,
+  notchRing = null,
   features,
   onOpenPage,
   onWindowDragStart,
@@ -265,6 +273,7 @@ export function IslandShell({
       >
         <div className="island__surface">
           {isLiquidGlass && <IslandGlassLayer glass={glass} />}
+          {notchRing && notch && !side && !part && !isDetached && !isTucked && <NotchRing view={notchRing} expanded={isExpanded} notch={notch} glow={contributed.glow} playback={contributed.playback} />}
           {side && (
             <IslandSideHandle
               label={collapsedLabel}
@@ -295,6 +304,7 @@ export function IslandShell({
             showCollapsedText={showCollapsedText}
             overflowMore={overflowMore}
             notchWingMax={notchWingMax}
+            notchText={notchText}
             collapsedLabel={collapsedLabel}
             agentVisualState={agentVisualState}
             onOpenPage={onOpenPage}
@@ -346,6 +356,7 @@ export function IslandShell({
           </div>}
           {overlay}
         </div>
+        {notchRim && notch && !side && !part && !isDetached && !isTucked && <NotchRim view={notchRim} expanded={isExpanded} glow={contributed.glow} />}
         {sideBubble && (
           <IslandSideBubble
             top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}

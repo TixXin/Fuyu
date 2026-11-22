@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { auditLight, MIN_CONTRAST, SKIPPED_PAGES, pageName } from "./regression-contrast.mjs";
 import { connect, PIPE_STDIO } from "./regression/cdp.mjs";
+import { parseJobs, parseShard, readTimings, shardOf, slowestFirst } from "./regression/shards.mjs";
 import { captureSnapshot, prepareSnapshotBrowser, settledSnapshot } from "./regression/snapshots.mjs";
 
 export const PAGES = [
@@ -27,6 +28,8 @@ export const PAGES = [
   "dev-build.html",
   "drag-grid.html?test=1",
   "notch-island.html?test=1",
+  "notch-rim.html",
+  "notch-settings.html",
   "island-forms.html?test=1",
   "bottom-island.html?test=1",
   "side-island.html?test=1",
@@ -38,6 +41,7 @@ export const PAGES = [
   "track-notice.html?test=1",
   "i18n.html?test=1",
   "mail-reader.html?run=1",
+  "messages-layouts.html?test=1",
   "music-lyrics.html",
   "cover-edge.html?test=1",
   "notification-startup.html",
@@ -187,36 +191,50 @@ export async function runPage(session, url) {
   return { outcome: "timed out", state, errors: [...session.errors] };
 }
 
-export async function withRegressionBrowser(root, firstPage, use) {
+const liveBrowsers = new Set();
+
+function stopOnSignal(signal) {
+  for (const { browser, profile } of liveBrowsers) {
+    browser.kill("SIGKILL");
+    try { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch {}
+  }
+  process.exit(128 + (constants.signals[signal] ?? 0));
+}
+
+export async function withRegressionVite(root, firstPage, use) {
   removeStaleProfiles(tmpdir());
   const vitePort = Number(process.env.REGRESSION_PORT ?? await freePort());
   const base = `http://127.0.0.1:${vitePort}/tests/regression/`;
-  const profile = mkdtempSync(path.join(tmpdir(), PROFILE_PREFIX));
-  let browser;
   let vite;
-  const stopOnSignal = (signal) => {
-    browser?.kill("SIGKILL");
-    try { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch {}
-    process.exit(128 + (constants.signals[signal] ?? 0));
-  };
-  for (const signal of EXIT_SIGNALS) process.on(signal, stopOnSignal);
   try {
     const { createServer: createViteServer } = await import("vite");
     vite = await createViteServer({ root, logLevel: "silent", server: { port: vitePort, strictPort: true, host: "127.0.0.1" } });
     await vite.listen();
     await waitForHttp(`${base}${firstPage.split("?")[0]}`, 30_000);
-    const language = process.env.REGRESSION_LANG ?? "zh-CN";
-    browser = spawn(findBrowser(), ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--remote-debugging-pipe", `--user-data-dir=${profile}`, `--lang=${language}`, `--accept-lang=${language}`, `--user-agent=${USER_AGENT}`,"--window-size=1280,900", "about:blank"], { stdio: PIPE_STDIO });
+    return await use(base);
+  } finally {
+    await vite?.close();
+  }
+}
+
+export async function withBrowser(use) {
+  const profile = mkdtempSync(path.join(tmpdir(), PROFILE_PREFIX));
+  const language = process.env.REGRESSION_LANG ?? "zh-CN";
+  const browser = spawn(findBrowser(), ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--remote-debugging-pipe", `--user-data-dir=${profile}`, `--lang=${language}`, `--accept-lang=${language}`, `--user-agent=${USER_AGENT}`,"--window-size=1280,900", "about:blank"], { stdio: PIPE_STDIO });
+  const entry = { browser, profile };
+  if (liveBrowsers.size === 0) for (const signal of EXIT_SIGNALS) process.on(signal, stopOnSignal);
+  liveBrowsers.add(entry);
+  try {
     let browserLog = "";
     browser.stderr.on("data", (chunk) => { browserLog = (browserLog + chunk).slice(-4000); });
     const session = await connect(browser, () => browserLog, BROWSER_START_MS);
-    const result = await use({ session, base });
+    const result = await use(session);
     session.close();
     return result;
   } finally {
-    browser?.kill();
-    await vite?.close();
-    for (const signal of EXIT_SIGNALS) process.off(signal, stopOnSignal);
+    browser.kill();
+    liveBrowsers.delete(entry);
+    if (liveBrowsers.size === 0) for (const signal of EXIT_SIGNALS) process.off(signal, stopOnSignal);
     await sleep(300);
     try {
       rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
@@ -224,6 +242,10 @@ export async function withRegressionBrowser(root, firstPage, use) {
       console.warn(`Could not remove ${profile}: ${error instanceof Error ? error.message : error}`);
     }
   }
+}
+
+export function withRegressionBrowser(root, firstPage, use) {
+  return withRegressionVite(root, firstPage, (base) => withBrowser((session) => use({ session, base })));
 }
 
 export function recordSnapshotOutcome(page, variant, outcome, snapshotTally, { ci = process.env.CI === "true", log = console.log } = {}) {
@@ -246,47 +268,82 @@ export function recordSnapshotOutcome(page, variant, outcome, snapshotTally, { c
   return false;
 }
 
+async function checkPage({ root, session, base, page, update, contrastAllowlist, snapshotTally }) {
+  const lines = [];
+  const log = (line) => lines.push(line);
+  const started = Date.now();
+  const { outcome, state, errors } = await runPage(session, base + page);
+  const seconds = ((Date.now() - started) / 1000).toFixed(1);
+  log(`${outcome === "passed" ? "✓" : "✗"} ${page}  ${outcome}, ${passedChecks(state.text ?? "")} checks, ${seconds}s`);
+  if (outcome !== "passed") {
+    const shown = (state.text ?? "").split("\n").filter((line) => line.trim());
+    for (const line of shown.filter((line) => !line.startsWith("PASS ")).slice(-5)) log(`    ${line}`);
+    for (const error of errors.slice(0, 3)) log(`    ${error.split("\n")[0]}`);
+    return { passed: false, lines };
+  }
+  let darkActual = null;
+  const snapshot = async (variant) => {
+    const result = await settledSnapshot({ root, page, variant, update, darkActual, capture: () => captureSnapshot(session), sleep });
+    if (variant === "dark") darkActual = result.actual;
+    return recordSnapshotOutcome(page, variant, result, snapshotTally, { log });
+  };
+  let passed = await snapshot("dark");
+  const findings = await auditLight(session, page, contrastAllowlist);
+  if (!SKIPPED_PAGES.includes(pageName(page))) passed = await snapshot("light") && passed;
+  if (findings.length > 0) {
+    passed = false;
+    log(`✗ ${page}  light island: ${findings.length} text(s) under ${MIN_CONTRAST}:1`);
+    for (const { key, ratio, text, color, background } of findings.slice(0, 8)) log(`    ${ratio} ${key} "${text}" ${color} on ${background}`);
+  }
+  return { passed, lines };
+}
+
+export function runnerOptions(args) {
+  const words = [];
+  let shard = null;
+  let jobs = Number(process.env.REGRESSION_JOBS ?? 1);
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--shard") {
+      shard = parseShard(args[++i]);
+      if (!shard) return { error: "--shard takes <index>/<count>, e.g. --shard 1/3." };
+    } else if (arg === "--jobs") {
+      jobs = parseJobs(args[++i]);
+      if (!jobs) return { error: "--jobs takes a whole number of browsers, e.g. --jobs 2." };
+    } else if (!arg.startsWith("--")) {
+      words.push(arg);
+    }
+  }
+  return { words, shard, jobs: parseJobs(jobs) ?? 1, update: args.includes("--update-snapshots") };
+}
+
 async function main() {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-  const args = process.argv.slice(2);
-  const update = args.includes("--update-snapshots");
-  const filters = args.filter((arg) => !arg.startsWith("--"));
-  const pages = PAGES.filter((page) => filters.length === 0 || filters.some((word) => page.includes(word)));
-  if (pages.length === 0) throw new Error(`No regression page matches ${filters.join(", ")}.`);
+  const options = runnerOptions(process.argv.slice(2));
+  if (options.error) throw new Error(options.error);
+  const { words, shard, update } = options;
+  const matched = PAGES.filter((page) => words.length === 0 || words.some((word) => page.includes(word)));
+  if (matched.length === 0) throw new Error(`No regression page matches ${words.join(", ")}.`);
+  const timings = readTimings(root);
+  const pages = shardOf(matched, shard, timings);
+  if (pages.length === 0) {
+    console.log(`Shard ${shard.index}/${shard.count} has no pages.`);
+    return 0;
+  }
+  const jobs = Math.min(options.jobs, pages.length);
+  if (shard || jobs > 1) console.log(`${shard ? `Shard ${shard.index}/${shard.count}: ` : ""}${pages.length} pages, ${jobs} browser${jobs > 1 ? "s" : ""}.`);
   let failed = 0;
   const contrastAllowlist = JSON.parse(readFileSync(path.join(root, "tests/regression/contrast-allowlist.json"), "utf8")).pages;
   const snapshotTally = { same: 0, created: 0, updated: 0, removed: 0 };
-  let darkActual = null;
-  const snapshot = async (session, page, variant) => {
-    const outcome = await settledSnapshot({ root, page, variant, update, darkActual, capture: () => captureSnapshot(session), sleep });
-    if (variant === "dark") darkActual = outcome.actual;
-    return recordSnapshotOutcome(page, variant, outcome, snapshotTally);
-  };
-  await withRegressionBrowser(root, pages[0], async ({ session, base }) => {
+  const queue = jobs > 1 ? slowestFirst(pages, timings) : [...pages];
+  await withRegressionVite(root, pages[0], (base) => Promise.all(Array.from({ length: jobs }, () => withBrowser(async (session) => {
     await prepareSnapshotBrowser(session);
-    for (const page of pages) {
-      const started = Date.now();
-      const { outcome, state, errors } = await runPage(session, base + page);
-      const seconds = ((Date.now() - started) / 1000).toFixed(1);
-      console.log(`${outcome === "passed" ? "✓" : "✗"} ${page}  ${outcome}, ${passedChecks(state.text ?? "")} checks, ${seconds}s`);
-      if (outcome === "passed") {
-        let pagePassed = await snapshot(session, page, "dark");
-        const findings = await auditLight(session, page, contrastAllowlist);
-        if (!SKIPPED_PAGES.includes(pageName(page))) pagePassed = await snapshot(session, page, "light") && pagePassed;
-        if (findings.length > 0) pagePassed = false;
-        if (!pagePassed) failed += 1;
-        if (findings.length > 0) {
-          console.log(`✗ ${page}  light island: ${findings.length} text(s) under ${MIN_CONTRAST}:1`);
-          for (const { key, ratio, text, color, background } of findings.slice(0, 8)) console.log(`    ${ratio} ${key} "${text}" ${color} on ${background}`);
-        }
-      } else {
-        failed += 1;
-        const lines = (state.text ?? "").split("\n").filter((line) => line.trim());
-        for (const line of lines.filter((line) => !line.startsWith("PASS ")).slice(-5)) console.log(`    ${line}`);
-        for (const error of errors.slice(0, 3)) console.log(`    ${error.split("\n")[0]}`);
-      }
+    while (queue.length) {
+      const result = await checkPage({ root, session, base, page: queue.shift(), update, contrastAllowlist, snapshotTally });
+      if (!result.passed) failed += 1;
+      console.log(result.lines.join("\n"));
     }
-  });
+  }))));
   const { same, created, updated, removed } = snapshotTally;
   console.log(`Snapshots: ${same} unchanged${created + updated + removed ? `, ${created} created, ${updated} updated, ${removed} removed` : ""}.`);
   console.log(failed === 0 ? `All ${pages.length} regression pages passed.` : `${failed} of ${pages.length} regression pages did not pass.`);

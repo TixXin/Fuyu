@@ -5,7 +5,7 @@ import { meetingLineContributions, meetingSharesBar } from "../../src/features/c
 import { lyricLineContribution } from "../../src/features/media/plugin/lyricLine.ts";
 
 const t = { island: { nowPlaying: (text) => `Now playing: ${text}`, lyricLine: (text) => `Lyric: ${text}` } };
-const lyric = (text, lyricsFirst = false) => lyricLineContribution({ text, song: false, longest: "a long line" }, lyricsFirst, t);
+const lyric = (text, lyricsFirst = false) => lyricLineContribution({ text, song: false, longest: "a long line" }, lyricsFirst ? LINE_PRIORITY.lyricsFirst : LINE_PRIORITY.lyrics, t);
 const line = (item, priority, extra = {}) => ({ kind: "line", item, priority, ...extra });
 const bar = (...lists) => aggregateContributions(lists, true).lines;
 const sharing = (lines) => meetingSharesBar(lineBelow(lines, LINE_PRIORITY.meeting));
@@ -44,9 +44,9 @@ test("no meeting, or no text on the bar, gives nothing", () => {
   assert.deepEqual(meetingLineContributions(true, false, false, true), []);
 });
 
-test("the lyric line ranks above the agent title only when lyrics are put first", () => {
+test("the lyric line takes the rank it is given and is left out when lyrics are hidden", () => {
   assert.equal(lyric("la la", true).priority, LINE_PRIORITY.lyricsFirst);
-  assert.equal(lyric("la la").priority, LINE_PRIORITY.lyrics);
   assert.equal(lyric("la la").label, "Lyric: la la");
-  assert.equal(lyricLineContribution(null, true, t), null);
+  assert.equal(lyricLineContribution(null, LINE_PRIORITY.lyrics, t), null);
+  assert.equal(lyricLineContribution({ text: "la la", song: false, longest: null }, null, t), null);
 });

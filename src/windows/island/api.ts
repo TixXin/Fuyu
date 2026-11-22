@@ -146,6 +146,7 @@ export type IslandInteraction = {
   isDimmed?: boolean;
   gamePassthrough?: boolean;
   collapsedHeight?: number;
+  notchRingExtra?: number;
 };
 
 export function setIslandLayout(layout: IslandLayout) {

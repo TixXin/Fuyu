@@ -1,7 +1,6 @@
 .island-motion-preview {
   position: relative;
   height: 92px;
-  margin-top: var(--space-md);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -92,6 +91,14 @@
 .island-motion-preview__play:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
+}
+
+.island-motion-row .settings-row__main {
+  align-items: start;
+}
+
+.island-motion-row__strip {
+  min-width: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

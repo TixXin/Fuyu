@@ -3,6 +3,7 @@ import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributed, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useTextRanks } from "../../plugin-kernel/useTextRanks";
 import { todoFileData } from "../todoStore";
 import type { TodoItem } from "../types";
 import { useCollapsedTodo } from "../useCollapsedTodo";
@@ -71,7 +72,8 @@ function TodosRunner({ mode, page, isTucked, barText, settings, setSettings, ope
   const line = useMemo(() => ({ title, count }), [title, count]);
   todoLine.useProvide(line);
   const inProgress = useMemo(() => activeTodoId !== null && todos.some((todo) => todo.id === activeTodoId && !todo.completed), [activeTodoId, todos]);
-  const list = todoLineContributions(line, t);
+  const ranks = useTextRanks(settings.lyricsIslandPriority);
+  const list = todoLineContributions(line, t, ranks);
   if (settings.autoTuckHoldTodo && on && inProgress) list.push({ kind: "hold", reason: "todos.active" });
   if (activeTodoId !== null) list.push({ kind: "hint", key: "todos.active" });
   useIslandContributions(OWNER, "todos.island", list);

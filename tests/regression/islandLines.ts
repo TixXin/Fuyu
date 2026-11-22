@@ -18,6 +18,7 @@ import type { DeviceUse } from "../../src/features/device-use/api";
 import { devicesInUse } from "../../src/features/device-use/deviceUse";
 import { deviceUseState } from "../../src/features/device-use/plugin/islandState";
 import type { IslandContribution } from "../../src/features/plugin-kernel/islandContributions";
+import { useTextRanks } from "../../src/features/plugin-kernel/useTextRanks";
 import { useIslandContributions } from "../../src/features/plugin-kernel/useIslandContributions";
 import { useTranslation } from "../../src/i18n";
 import { levelState } from "../../src/features/system-levels/plugin/islandState";
@@ -54,12 +55,13 @@ const IDLE = { state: "idle", label: "" };
 
 export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, sideLyric = false, status = IDLE, agents = null, messages = null, shelfCount = null }: FixtureLines) {
   const t = useTranslation();
+  const ranks = useTextRanks("lyrics");
   useFixtureMessages(messages);
   quotaAlertState.useProvide(quotaAlert);
   agentLine.useProvide(agentSession);
   agentShell.useProvide(useMemo(() => ({ ...agentShell.get(), activeCount: agents ?? 0 }), [agents]));
   const agentList: IslandContribution[] = [{ kind: "status", state: status.state, label: status.label }, { kind: "side", item: "agent", height: 28 }];
-  const agentLineItem = agentLineContribution(agentSession, false, agentIconWidth, agentSession ? t.island.agentSession(agentSession.label, agentSession.title) : "");
+  const agentLineItem = agentLineContribution(agentSession, false, agentIconWidth, agentSession ? t.island.agentSession(agentSession.label, agentSession.title) : "", ranks);
   if (agentLineItem) agentList.push(agentLineItem);
   if (agents !== null) agentList.push({ kind: "hint", key: "agents.count" });
   if (agents !== null && agents > 0) agentList.push({ kind: "hint", key: "agent" });
@@ -78,7 +80,7 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
   const lyric = agentSession ? null : lyricLine;
   mediaIsland.useProvide(useMemo(() => ({ media: { mediaState: media ?? DEFAULT_MEDIA_STATE } as MediaController, lyricLine: lyric, sideCover, sideLyric }), [media, lyric, sideCover, sideLyric]));
   const mediaList: IslandContribution[] = [];
-  const line = lyricLineContribution(lyric, true, t);
+  const line = lyricLineContribution(lyric, ranks.lyrics, t);
   if (line) mediaList.push(line);
   if (media && (media.available || media.audioActive)) mediaList.push({ kind: "side", item: "music", height: sideCover && media.thumbnail ? 40 : 28, grow: sideLyric });
   if (media?.audioActive) mediaList.push({ kind: "hint", key: "media.audible" });
@@ -86,9 +88,9 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
   useIslandContributions("builtin", "fixture.media", mediaList);
   const todo = useMemo(() => ({ title: todoTitle, count: todoCount }), [todoTitle, todoCount]);
   todoLine.useProvide(todo);
-  useIslandContributions("builtin", "fixture.todos", todoLineContributions(todo, t));
+  useIslandContributions("builtin", "fixture.todos", todoLineContributions(todo, t, ranks));
   meetingState.useProvide(meeting);
-  useIslandContributions("calendar", "fixture.meeting", useMeetingContributions(meeting, barText));
+  useIslandContributions("calendar", "fixture.meeting", useMeetingContributions(meeting, barText, ranks.meeting));
   shelfIsland.useProvide(useMemo(() => ({ shelf: null, dropping: false, count: shelfCount }), [shelfCount]));
   useIslandContributions("file-shelf", "fixture.shelf", shelfContributions(shelfCount));
 }

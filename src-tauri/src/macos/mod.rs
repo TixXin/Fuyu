@@ -17,6 +17,7 @@ pub(crate) mod display_name;
 pub(crate) mod dock_badges;
 pub(crate) mod drag_grid;
 pub(crate) mod fullscreen;
+pub(crate) mod hid_battery;
 pub(crate) mod hotkeys;
 pub(crate) mod icon;
 pub(crate) mod input;

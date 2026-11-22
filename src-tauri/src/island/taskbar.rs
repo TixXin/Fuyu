@@ -128,8 +128,13 @@ pub(super) fn panel_room(state: IslandWindowState) -> f64 {
     }
 }
 
+fn slot_on_bar(state: DockState) -> Option<Rect> {
+    let stays = matches!(state.status, DockStatus::Shown | DockStatus::Fullscreen);
+    state.rect.filter(|_| stays && state.edge == Some(BarEdge::Bottom))
+}
+
 fn panel_space(state: DockState, island_height: i32, scale: f64) -> Option<PanelSpace> {
-    let rect = state.rect.filter(|_| state.status == DockStatus::Shown && state.edge == Some(BarEdge::Bottom))?;
+    let rect = slot_on_bar(state)?;
     let bar = state.bar.unwrap_or(rect);
     let gap = (PANEL_GAP * scale).round() as i32;
     let island_bottom = (rect.top + rect.bottom + island_height) / 2;
@@ -193,7 +198,7 @@ pub(crate) fn reported() -> IslandTaskbar {
 }
 
 fn stage_on_bar(state: DockState, island: (i32, i32), stage: (i32, i32)) -> Option<(i32, i32)> {
-    let rect = state.rect.filter(|_| state.status == DockStatus::Shown && state.edge == Some(BarEdge::Bottom))?;
+    let rect = slot_on_bar(state)?;
     let x = rect.right - (island.0 + stage.0) / 2;
     let y = (rect.top + rect.bottom + island.1) / 2 - stage.1;
     Some((x, y))
@@ -266,7 +271,8 @@ mod tests {
         let space = panel_space(bar, 44, 1.5).unwrap();
         assert_eq!(space.lift, (2100 + 2160 + 44) / 2 - 2100 + 12);
         assert_eq!((space.room_left, space.room_right), (3000 - 12, 3840 - 3000 - 12));
-        assert!(panel_space(DockState { status: DockStatus::Fullscreen, ..bar }, 44, 1.0).is_none());
+        assert_eq!(panel_space(DockState { status: DockStatus::Fullscreen, ..bar }, 44, 1.5), Some(space));
+        assert!(panel_space(DockState { status: DockStatus::BarHidden, ..bar }, 44, 1.0).is_none());
     }
 
     #[test]
@@ -275,6 +281,13 @@ mod tests {
         assert_eq!(panel_shift(600.0, 1000.0, 200.0), -100.0);
         assert_eq!(panel_shift(600.0, 100.0, 1000.0), 200.0);
         assert_eq!(panel_shift(600.0, 100.0, 300.0), 100.0);
+    }
+
+    #[test]
+    fn a_full_screen_app_leaves_the_island_in_its_slot_instead_of_above_the_bar() {
+        let shown_at = stage_on_bar(shown(2800, 3200), (400, 44), (1200, 900));
+        let fullscreen = DockState { status: DockStatus::Fullscreen, ..shown(2800, 3200) };
+        assert_eq!(stage_on_bar(fullscreen, (400, 44), (1200, 900)), shown_at);
     }
 
     #[test]

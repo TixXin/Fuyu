@@ -1,90 +1,37 @@
-import { useEffect, useRef, type PointerEvent } from "react";
 import { useTranslation } from "../../../i18n";
-import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
+import { SettingsThumbStrip } from "../../../components/settings/SettingsThumbStrip";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
-import { advanceHoverSpring, hoverNearness, hoverSettled, islandHoverShape, type HoverSpring } from "../../../lib/theme/islandHover";
+import { ISLAND_HOVERS } from "../../../lib/theme/islandHover";
 import type { IslandBounce, IslandHover } from "../../../lib/settings/types";
-import "./IslandMotionRow.css";
+import { HoverThumb } from "./motion/HoverThumb";
+import { useThumbPointer } from "./useThumbPointer";
 import "./IslandHoverRow.css";
 
-export function IslandHoverRow({ value, bounce, onChange }: { value: IslandHover; bounce: IslandBounce; onChange: (value: IslandHover) => void }) {
+export function IslandHoverRow({ value, bounce, islandColor, onChange }: { value: IslandHover; bounce: IslandBounce; islandColor: string; onChange: (value: IslandHover) => void }) {
   const text = useTranslation().settings.expand;
   const reducedMotion = useReducedMotion();
-  const islandRef = useRef<HTMLDivElement>(null);
-  const pointer = useRef<{ x: number; y: number } | null>(null);
-  const frame = useRef(0);
-  const spring = useRef<HoverSpring>({ value: 0, velocity: 0 });
-  const shape = reducedMotion ? null : islandHoverShape(value, bounce);
-
-  useEffect(() => () => cancelAnimationFrame(frame.current), []);
-
-  useEffect(() => {
-    const island = islandRef.current;
-    if (!island) return;
-    cancelAnimationFrame(frame.current);
-    frame.current = 0;
-    spring.current = { value: 0, velocity: 0 };
-    island.style.setProperty("--hover-grow-x", "0px");
-    island.style.setProperty("--hover-grow-y", "0px");
-  }, [shape]);
-
-  const target = () => {
-    const island = islandRef.current;
-    if (!shape || !island || !pointer.current) return 0;
-    const rect = island.getBoundingClientRect();
-    const grownX = shape.growX * spring.current.value;
-    const dx = Math.max(0, Math.abs(pointer.current.x - (rect.left + rect.width / 2)) - (rect.width - grownX) / 2);
-    const dy = Math.max(0, pointer.current.y - (rect.bottom - shape.growY * spring.current.value));
-    return hoverNearness(Math.hypot(dx, dy), shape.range);
+  const { pointed, handlers } = useThumbPointer();
+  const labels: Record<IslandHover, string> = {
+    bounce: text.hoverBounce,
+    near: text.hoverNear,
+    subtle: text.hoverSubtle,
+    bold: text.hoverBold,
+    drop: text.hoverDrop,
+    touch: text.hoverTouch,
+    none: text.hoverNone,
   };
-
-  const wake = () => {
-    if (frame.current || !shape) return;
-    let last = 0;
-    const step = (now: number) => {
-      const island = islandRef.current;
-      if (!island) return;
-      const seconds = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60;
-      last = now;
-      const goal = target();
-      advanceHoverSpring(spring.current, goal, seconds, shape.response, shape.damping);
-      if (hoverSettled(spring.current, goal)) spring.current = { value: goal, velocity: 0 };
-      island.style.setProperty("--hover-grow-x", `${(shape.growX * spring.current.value).toFixed(2)}px`);
-      island.style.setProperty("--hover-grow-y", `${(shape.growY * spring.current.value).toFixed(2)}px`);
-      frame.current = spring.current.velocity === 0 && spring.current.value === goal ? 0 : requestAnimationFrame(step);
-    };
-    frame.current = requestAnimationFrame(step);
-  };
-
-  const onMove = (event: PointerEvent<HTMLDivElement>) => {
-    pointer.current = { x: event.clientX, y: event.clientY };
-    wake();
-  };
-  const onLeave = () => {
-    pointer.current = null;
-    wake();
-  };
-
-  const options = [
-    { value: "bounce", label: text.hoverBounce },
-    { value: "near", label: text.hoverNear },
-    { value: "subtle", label: text.hoverSubtle },
-    { value: "bold", label: text.hoverBold },
-    { value: "drop", label: text.hoverDrop },
-    { value: "touch", label: text.hoverTouch },
-    { value: "none", label: text.hoverNone },
-  ] as const;
 
   return (
-    <SettingsRow
-      title={text.hoverEffect}
-      description={text.hoverMotionHint}
-      control={<SettingsSelect<IslandHover> value={value} options={options} ariaLabel={text.hoverEffect} onChange={onChange} />}
-    >
-      <div className="island-motion-preview island-hover-preview" onPointerMove={onMove} onPointerLeave={onLeave}>
-        <div ref={islandRef} className="island-motion-preview__island island-hover-preview__island" />
-        <span className="island-hover-preview__hint">{text.hoverTry}</span>
+    <SettingsRow className="island-hover-row" title={text.hoverEffect} description={text.hoverMotionHint}>
+      <div className="island-hover-row__strip" {...handlers}>
+        <SettingsThumbStrip<IslandHover>
+          options={ISLAND_HOVERS.map((hover) => ({ value: hover, label: labels[hover], hint: text.hoverHints[hover] }))}
+          value={value}
+          ariaLabel={text.hoverEffect}
+          onChange={onChange}
+          renderArt={(hover) => <HoverThumb hover={hover} bounce={bounce} play={!reducedMotion && pointed === hover} islandColor={islandColor} />}
+        />
       </div>
     </SettingsRow>
   );

@@ -7,3 +7,4 @@
 .message-overview__chevron { flex: 0 0 auto; color: var(--text-3); }
 .message-overview__connections { display: flex; flex-wrap: wrap; gap: var(--space-md); padding: 10px 8px; }
 .message-overview__connections .message-action { color: var(--text-2); }
+.qq-panel__header .message-feed-back { flex: 0 0 auto; margin-right: -4px; }

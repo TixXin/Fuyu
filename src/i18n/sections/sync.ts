@@ -9,6 +9,11 @@ export type SyncText = {
     neverSynced: string;
     lastSynced: (time: string) => string;
     skippedFiles: (count: number) => string;
+    devices: (count: number) => string;
+    encrypted: string;
+    notEncrypted: string;
+    manage: string;
+    manageDone: string;
     phases: Record<SyncPhase, { headline: string; hint: string }>;
     webdavUnavailable: { headline: string; hint: string };
     webdavError: { headline: string; hint: string };
@@ -60,15 +65,28 @@ export type SyncText = {
     footnote: string;
   };
   encryption: SyncEncryptionText;
+  guide: {
+    groupTitle: string;
+    methodTitle: string;
+    methodHint: string;
+    folderTitle: string;
+    folderHint: string;
+    webdavTitle: string;
+    webdavHint: string;
+    encryptionTitle: string;
+    encryptionHint: string;
+    later: string;
+  };
   categories: {
     groupTitle: string;
     footnote: string;
     states: Record<CategoryState, string>;
-    items: Record<SyncCategory, { title: string; description: string }>;
+    items: Record<SyncCategory, { title: string; description: string; hint: string }>;
   };
   optional: {
     groupTitle: string;
     footnote: string;
+    summary: (on: number, total: number) => string;
     items: Record<OptionalSyncGroup, { title: string; description: string }>;
   };
   devices: {
@@ -107,6 +125,11 @@ export const zhCN: SyncText = {
     neverSynced: "还没有完成过同步",
     lastSynced: (time) => `上次同步：${time}`,
     skippedFiles: (count) => `跳过了 ${count} 个暂不可读的远端文件，将在下一轮重试`,
+    devices: (count) => `${count} 台设备`,
+    encrypted: "已加密",
+    notEncrypted: "没加密",
+    manage: "更换…",
+    manageDone: "收起",
     phases: {
       off: {
         headline: "尚未开启跨设备同步",
@@ -197,8 +220,20 @@ export const zhCN: SyncText = {
     footnote: "请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。",
   },
   encryption: encryptionZhCN,
+  guide: {
+    groupTitle: "设置跨设备同步",
+    methodTitle: "选同步方式",
+    methodHint: "同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV",
+    folderTitle: "选一个文件夹",
+    folderHint: "空文件夹，或别的电脑已经在用的 fuyu-sync 的上一级",
+    webdavTitle: "填 WebDAV",
+    webdavHint: "服务器目录、账号和应用密码，测试通过后保存",
+    encryptionTitle: "要不要端到端加密",
+    encryptionHint: "网盘看不到内容；忘了口令又没留恢复密钥就找不回来。打开的话，设好同步后接着设口令",
+    later: "设好后在这里选同步什么",
+  },
   categories: {
-    groupTitle: "同步内容",
+    groupTitle: "同步什么",
     footnote: "所有凭据与 API 密钥、普通剪贴板历史和图片、截图文件、文件中转及窗口位置/快捷键等本机项永不离开本机。",
     states: {
       off: "已关闭",
@@ -213,32 +248,39 @@ export const zhCN: SyncText = {
       todos: {
         title: "待办、每日笔记与归档",
         description: "按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。",
+        hint: "按条合并，同一天两边都改留冲突副本",
       },
       snippets: {
         title: "常用短语",
         description: "剪贴板里的常用语与 AI 提示词模板。",
+        hint: "常用语和 AI 提示词模板",
       },
       links: {
         title: "链接书签",
         description: "剪贴板收藏的常用网址与排列顺序。",
+        hint: "收藏的网址和顺序",
       },
       settings: {
         title: "通用与功能设置",
         description: "按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。",
+        hint: "按白名单同步配色、行为和偏好",
       },
       presets: {
         title: "我的主题预设",
         description: "已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。",
+        hint: "去掉显示器、尺寸这些本机的字段",
       },
       clipFavorites: {
         title: "剪贴板收藏（仅文字）",
         description: "默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。",
+        hint: "只同步收藏的纯文本，图片和打码的留在本机",
       },
     },
   },
   optional: {
     groupTitle: "可选同步",
     footnote: "以上分组涉及本机硬件、外部服务或插件环境差异，默认关闭；开启后仅在同样开启该组的电脑之间合并。",
+    summary: (on, total) => (on === 0 ? `都没开（共 ${total} 项）` : `已开 ${on} 项（共 ${total} 项）`),
     items: {
       translationProvider: {
         title: "翻译服务与模型选择",
@@ -327,6 +369,11 @@ export const en: SyncText = {
     neverSynced: "Never synced yet",
     lastSynced: (time) => `Last synced: ${time}`,
     skippedFiles: (count) => `Skipped ${count} unreadable remote file(s); will retry next round`,
+    devices: (count) => (count === 1 ? "1 device" : `${count} devices`),
+    encrypted: "Encrypted",
+    notEncrypted: "Not encrypted",
+    manage: "Change…",
+    manageDone: "Done",
     phases: {
       off: {
         headline: "Cross-device sync is off",
@@ -417,6 +464,18 @@ export const en: SyncText = {
     footnote: "Use a dedicated subfolder for sync rather than placing Fuyu's data folder (~/.fuyu) inside a cloud drive. Each device writes only its own files, and a local backup is created automatically before the first merge.",
   },
   encryption: encryptionEn,
+  guide: {
+    groupTitle: "Set up cross-device sync",
+    methodTitle: "Choose how to sync",
+    methodHint: "A synced folder (cloud drive, Syncthing, NAS) or WebDAV",
+    folderTitle: "Choose a folder",
+    folderHint: "An empty folder, or the parent of the fuyu-sync folder another computer already uses",
+    webdavTitle: "Connect WebDAV",
+    webdavHint: "Server folder, account and app password; test, then save",
+    encryptionTitle: "End-to-end encryption?",
+    encryptionHint: "Your cloud provider can't read your data; a forgotten passphrase without the recovery key can't be recovered. If on, you'll set the passphrase right after",
+    later: "Once set up, choose what to sync here",
+  },
   categories: {
     groupTitle: "What to sync",
     footnote: "Credentials, API keys, regular clipboard history and images, screenshots, the file shelf, and machine-specific layout or shortcuts never leave this computer.",
@@ -433,32 +492,39 @@ export const en: SyncText = {
       todos: {
         title: "Todos, daily notes and archive",
         description: "Merges todos and project tags item-by-item; keeps a conflict copy if both computers edit the same day's note.",
+        hint: "Merged item by item; same-day edits keep a conflict copy",
       },
       snippets: {
         title: "Snippets",
         description: "Saved clipboard phrases and AI prompt templates.",
+        hint: "Phrases and AI prompt templates",
       },
       links: {
         title: "Link bookmarks",
         description: "Saved websites in the clipboard window and their order.",
+        hint: "Saved websites and their order",
       },
       settings: {
         title: "General and feature settings",
         description: "Syncs allowlisted theme, behavior and feature preferences; feature master switches copy only on first merge.",
+        hint: "Allowlisted theme, behavior and preferences",
       },
       presets: {
         title: "Saved themes",
         description: "Style presets with monitor and size fields stripped per machine.",
+        hint: "Without per-machine monitor and size fields",
       },
       clipFavorites: {
         title: "Clipboard favorites (text only)",
         description: "Off by default: deduplicates favorited text entries by content hash; masked, secret, private-format and image entries stay local.",
+        hint: "Favorited text only; images and masked items stay local",
       },
     },
   },
   optional: {
     groupTitle: "Optional sync",
     footnote: "These groups depend on local hardware, credentials or installed plugins, so they stay off by default and sync only between computers where you turn them on.",
+    summary: (on, total) => (on === 0 ? `None on (${total} in all)` : `${on} of ${total} on`),
     items: {
       translationProvider: {
         title: "Translation service and models",

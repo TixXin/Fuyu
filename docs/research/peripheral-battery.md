@@ -2,6 +2,44 @@
 
 > 日期：2026-11-15。问题：桌面应用（Tauri / Rust，Windows + macOS）怎样读到无线鼠标、键盘的电量。范围：Microsoft Learn、Bluetooth SIG、Apple 开发者论坛、Logitech 官方 cpg-docs、Linux 内核 hid-logitech-hidpp、Solaar / OpenLogi / LGSTrayBattery 等 GitHub 项目、Nordic DevZone 等论坛；关键词：Battery Service 0x180F、HOGP AccessDenied、DEVPKEY_Bluetooth_Battery、HID++ 0x1004、IOHIDManager Input Monitoring、system_profiler、BatteryPercent、openrazer、rivalcfg、iCUE。相关任务：C64（#315）
 
+## 2026-11-22：开源电量工具的做法，以及 C161 组件为什么读不到
+
+> 问题：C161 的「外设电量」组件在 Windows 和 macOS 上都读不到任何设备，别的开源工具是怎么读的。范围：GitHub 上的 BlueGauge、BleBatterySubscribe、AirBattery、BatteryBoi 的源码和 issue，搜索 DEVPKEY_Bluetooth_Battery、BatteryPercent、batteryPercentSingle、BluetoothLEDevice.Appearance。star 数和更新时间都查于 2026-11-22。
+
+### 结论
+
+**Windows**，参考 BlueGauge（Rust 写的托盘工具，MIT，461 star，2026-11 还在更新）：
+
+- **经典蓝牙耳机**：读设备节点的 `{104EA319-…},2`（电量）和 `{2BD67D8B-8BEB-48D5-87E0-6CDA3428040A},1`（蓝牙地址，字符串），按地址认设备。电量挂在 `BTHENUM\{0000111E-…}`（免提服务）节点上，它的 issue #8 里贴出了实际的实例 ID。我们 `devnode.rs` 读的也是这个属性，读法是对的，区别是我们按 ContainerId 去和音频输出配对。
+- **低功耗蓝牙设备**：枚举**全部已配对**的 BLE 设备（`GetDeviceSelectorFromPairingState(true)`），每台读 GATT 电池服务；**不按外观值筛**，还订阅电量特性的变化通知。BleBatterySubscribe 也是对已连接的 BLE 设备（包括键盘）订阅电池服务，说明应用读得到 HID 设备的电池服务，和 11-15 那节的推断一致。
+- **我们读不到的原因（按可能性排序）**：
+  1. `ble_battery.rs` 先按 `Appearance` 筛设备，外观值不是 0x03C1 / 0x03C2 的设备**连电量都不读**。BlueGauge 不做这一步。外观值为 0 的情况有多常见，「未核实」，没找到可靠来源。
+  2. 耳机电量只在音频输出的枚举器以 `BTH` 开头时才去读（`has_bluetooth`）。如果系统走 Intel 等厂商的蓝牙音频卸载驱动，枚举器不是 `BTH…`，就永远不读。这是从代码推断的，「未核实」。
+  3. 设备节点读到、但没对上音频输出的电量，`collect()` 直接丢掉了。
+- **建议**：BLE 设备不再按外观值预筛，读到电量后再定类型：先看外观值，看不出来就看同一 ContainerId 下 HID 子设备的类别（键盘类 `{4D36E96B-…}`、鼠标类 `{4D36E96F-…}`）；设备节点的电量每 60 秒读一次，不再要求音频输出是 `BTH` 开头。
+
+**macOS**，参考 AirBattery（AGPL-3.0，约 3000 star）和 BatteryBoi（GPL-3.0），两个都只看思路、不抄代码。AirBattery 用了四条读法，我们只有第一条：
+
+| 读法 | 覆盖的设备 | 权限 |
+|---|---|---|
+| `system_profiler SPBluetoothDataType -json` 的 `device_batteryLevel*`（我们现在的读法） | AirPods、Beats、妙控设备 | 不用 |
+| IOKit：匹配 `AppleDeviceManagementHIDEventService`，读 `BatteryPercent`、`DeviceAddress`、`Product`、`BatteryStatusFlags` | 妙控鼠标、键盘、触控板，以及系统能拿到电量的蓝牙 HID 设备 | 不用（只读 IORegistry） |
+| IOBluetooth：`IOBluetoothDevice.pairedDevices()` 里已连接、不是苹果的设备，取私有属性 `batteryPercentSingle` | 第三方经典蓝牙耳机（走 HFP 电量上报的） | 要蓝牙权限，私有接口 |
+| CoreBluetooth：连上 BLE 设备，读 0x180F / 0x2A19 | 第三方 BLE 鼠标、键盘、耳机 | 要蓝牙权限，`Info.plist` 要加 `NSBluetoothAlwaysUsageDescription` |
+
+- **我们读不到的原因**：第三方设备在 `system_profiler` 里一般没有电量字段。这台开发 Mac 配对过的设备全是第三方的（漫步者、小米等），所以组件一直是空的。
+- **建议**：先加 IOKit 这一条，不用任何权限。第三方耳机和 BLE 外设要走 IOBluetooth / CoreBluetooth，第一次用时会弹系统的蓝牙权限框，要不要做由用户决定。
+
+### 来源
+
+- BlueGauge：[仓库](https://github.com/iKineticate/BlueGauge)，[pnp_battery.rs](https://github.com/iKineticate/BlueGauge/blob/HEAD/src/bluetooth/pnp_battery.rs)，[ble.rs](https://github.com/iKineticate/BlueGauge/blob/HEAD/src/bluetooth/ble.rs)，[issue #8（免提节点的实例 ID）](https://github.com/iKineticate/BlueGauge/issues/8)
+- BleBatterySubscribe：[README](https://github.com/joelspadin/BleBatterySubscribe)
+- AirBattery：[仓库](https://github.com/lihaoyun6/AirBattery)，[MagicBattery.swift](https://github.com/lihaoyun6/AirBattery/blob/HEAD/AirBattery/BatteryInfo/MagicBattery.swift)，[BLEBattery.swift](https://github.com/lihaoyun6/AirBattery/blob/HEAD/AirBattery/BatteryInfo/BLEBattery.swift)
+- BatteryBoi：[BBBluetoothManager.swift](https://github.com/thebarbican19/BatteryBoi/blob/HEAD/BatteryBoi/Objects/BBBluetoothManager.swift)
+- 其他 Windows 工具（没读源码）：[joric/bluetooth-battery-monitor](https://github.com/joric/bluetooth-battery-monitor)，[SpartanX1/bluetooth_classic_battery_windows](https://github.com/SpartanX1/bluetooth_classic_battery_windows)，[XBatteryStatus](https://github.com/tommaier123/XBatteryStatus)
+- `ioreg -r -k BatteryPercent` 的解析示例：[Leancrew](https://leancrew.com/all-this/2020/08/a-battery-bitbar-bonanza/)
+- `BluetoothLEDevice.Appearance`：[Microsoft Learn](https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothledevice.appearance)
+
 ## 结论
 
 **现状（C64）**：macOS 读 `system_profiler SPBluetoothDataType -json`，取 `device_minorType` 为鼠标、键盘、触控板的设备的 `device_batteryLevelMain`（见 `src-tauri/src/macos/bluetooth.rs`）；Windows 用 WinRT 枚举已连接的 BLE 设备，读 GATT 电池服务 0x180F 的 0x2A19（见 `src-tauri/src/win32/ble_battery.rs`），还没在 Windows 真机上测过。

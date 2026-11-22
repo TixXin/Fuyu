@@ -1,4 +1,5 @@
 import { act } from "react";
+import { saveCollapsedText } from "../../src/lib/settings/collapsedText";
 import { FUYU_PANEL_ID, PANEL_ICONS, saveCustomPanels } from "../../src/lib/settings/customPanels";
 
 const styleTab = () => document.querySelector<HTMLElement>(".lane-styles__tabs [aria-selected='true']")?.dataset.item;
@@ -15,7 +16,23 @@ export async function checkIslandLayout(check: (condition: unknown, message: str
     "Clicking an item on the preview points at its chip and shows the session ring style");
   await act(async () => { document.querySelector<HTMLButtonElement>(".lane-chip[data-item='status-light'] .lane-chip__style")!.click(); });
   check(styleTab() === "status-light" && styleTitles().includes("样式"), "A chip's style button switches the style card to it");
-  check([...document.querySelectorAll(".editor-panel .settings-row__title")].some((title) => title.textContent === "放不下的项目收进「+N」"), "The +N switch is on the island layout page");
+  check(tabs().join() === "islandLayout,islandPanel,islandDisplay" && activeTab() === "islandLayout" && !document.querySelector(".layout-stage__switch"),
+    "Island layout has the same tabs as the other pages, opening on the collapsed island, with no switch of its own on the stage");
+  await openTab("islandDisplay");
+  check(rowTitles().includes("放不下的项目收进「+N」") && !document.querySelector(".layout-stage"), "Display and notch is its own tab with the +N switch and no preview stage");
+  await checkTextOrder(check);
+}
+
+const textOrder = () => [...document.querySelectorAll<HTMLElement>("[data-text-order]")].map((row) => row.dataset.textOrder).join();
+const savedText = () => JSON.parse(localStorage.getItem("fuyu-collapsed-text") ?? "null") as { order?: string[]; hidden?: string[] } | null;
+
+async function checkTextOrder(check: (condition: unknown, message: string) => void) {
+  check(textOrder() === "meeting,lyrics,agent,todos" && savedText() === null, "Text order starts from the old lyrics-first choice without writing anything");
+  await act(async () => { document.querySelector<HTMLButtonElement>("[data-text-order='todos'] .text-order__move")!.click(); });
+  check(textOrder() === "meeting,lyrics,todos,agent" && savedText()?.order?.join() === "meeting,lyrics,todos,agent", "Moving to-dos up reorders the list and saves the whole order");
+  await act(async () => { document.querySelector<HTMLInputElement>("[data-text-order='lyrics'] input[role='switch']")!.click(); });
+  check(savedText()?.hidden?.join() === "lyrics" && !document.querySelector<HTMLInputElement>("[data-text-order='lyrics'] input")!.checked, "Switching lyrics off hides them from the bar");
+  await act(async () => { saveCollapsedText({ order: null, hidden: [] }); });
 }
 
 const pageIds = () => [...document.querySelectorAll<HTMLElement>(".island-pages__item")].map((item) => item.dataset.page);
@@ -23,22 +40,30 @@ const pageRow = (page: string) => document.querySelector<HTMLElement>(`.island-p
 const savedPages = () => JSON.parse(localStorage.getItem("fuyu-island-pages") ?? "null") as { order: string[]; hidden: string[] } | null;
 const previewTabs = () => [...document.querySelectorAll<HTMLElement>(".expanded-preview__tab")].map((tab) => tab.dataset.page);
 const altArrow = (element: Element, key: string) => element.dispatchEvent(new KeyboardEvent("keydown", { key, altKey: true, bubbles: true }));
-const switchMode = (mode: string) => act(async () => { document.querySelector<HTMLButtonElement>(`.layout-stage__switch button[data-mode='${mode}']`)!.click(); });
+const tabs = () => [...document.querySelectorAll<HTMLElement>(".settings-tabs__tab")].map((tab) => tab.dataset.tab);
+const activeTab = () => document.querySelector<HTMLElement>(".settings-tabs__tab--active")?.dataset.tab;
+const rowTitles = () => [...document.querySelectorAll(".editor-panel .settings-row__title")].map((title) => title.textContent);
+const headButtons = () => [...document.querySelectorAll<HTMLElement>(".expanded-preview__head-start .expanded-preview__tab--button")].map((tab) => tab.dataset.page).join();
+const headActions = () => [...document.querySelectorAll<HTMLElement>(".expanded-preview__action")].map((action) => action.dataset.action).join();
+const islandBox = () => document.querySelector<HTMLElement>(".expanded-preview__island")?.style;
+const openTab = (tab: string) => act(async () => { document.querySelector<HTMLButtonElement>(`.settings-tabs__tab[data-tab='${tab}']`)!.click(); });
 
 export async function checkIslandPages(check: (condition: unknown, message: string) => void) {
   localStorage.removeItem("fuyu-island-pages");
-  check(document.querySelector(".island-bar-preview__bar") && !document.querySelector(".expanded-preview"), "The island layout page opens on the collapsed bar");
-  await switchMode("expanded");
+  await openTab("islandPanel");
   const before = pageIds();
   check(before[0] === "panel:fuyu" && before[1] === "agents" && before[2] === "todo" && before.includes("timer") && before.includes("qq") && previewTabs()[0] === "panel:fuyu"
     && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] .panel-text-icon")?.textContent === "Fuyu" && !document.querySelector(".layout-chip--create") && !document.querySelector(".collapsed-lanes"),
-    "Switching to the expanded island draws its preview and lists the Fuyu page first, then the built-in pages in today's order, with no way to make more panels");
+    "The expanded panel tab draws its preview and lists the Fuyu page first, then the built-in pages in today's order, with no way to make more panels");
+  check(headButtons() === "qq" && !document.querySelector(".expanded-preview__tab--page[data-page='qq']") && headActions() === "layout,settings" && islandBox()?.width === "800px" && islandBox()?.height === "360px",
+    "The preview header is the island's: page tabs, then messages as a bell button, layout and settings on the right, at the page's real size");
   await act(async () => { altArrow(pageRow("todo")!, "ArrowLeft"); });
   check(pageIds()[1] === "todo" && savedPages()?.order[1] === "todo" && previewTabs()[1] === "todo", "Alt+Left moves a page forward, saves the order and the preview follows");
   await act(async () => { pageRow("music")!.querySelector<HTMLButtonElement>(".layout-chip__action")!.click(); });
   check(pageRow("music")?.dataset.hidden !== undefined && savedPages()?.hidden.includes("music") && !previewTabs().includes("music"), "Hiding a page keeps the feature on and takes it off the preview's top bar");
   await act(async () => { pageRow("calendar")!.click(); });
-  check(document.querySelector(".expanded-preview__page[data-page='calendar']") && pageRow("calendar")?.getAttribute("aria-selected") === "true", "Clicking a page chip shows that page on the preview");
+  check(document.querySelector(".expanded-preview__page[data-page='calendar']") && pageRow("calendar")?.getAttribute("aria-selected") === "true" && headActions() === "settings",
+    "Clicking a page chip shows that page on the preview, without the panel layout button");
   await checkPageIcons(check);
 }
 
@@ -81,11 +106,27 @@ async function checkFreeCanvas(check: (condition: unknown, message: string) => v
   check(document.querySelector(".expanded-preview__grid[data-mode='free']") && document.querySelectorAll(".expanded-preview__stretch").length === 3 && modeButton("free")?.getAttribute("aria-checked") === "true",
     "Switching a panel to free shows a canvas with a resize corner on every widget");
   const lyrics = document.querySelector<HTMLElement>(".expanded-preview__cell[data-widget='lyrics']")!;
-  const scale = Number(getComputedStyle(document.querySelector(".expanded-preview__island")!).zoom) || 1;
+  const zoomOf = (selector: string) => Number(getComputedStyle(document.querySelector(selector)!).zoom) || 1;
+  const scale = zoomOf(".expanded-preview__island") * zoomOf(".expanded-preview__zoom");
   await act(async () => { pointer("pointerdown", lyrics, 100, 100); pointer("pointermove", window, 100 + 40 * scale, 100 + 80 * scale); pointer("pointerup", window, 100 + 40 * scale, 100 + 80 * scale); });
-  check(layoutOf() === "todos:l@0,0 session-count:m@32,0 lyrics:w@0,42", `Dragging on the canvas moves the widget in 8px steps, kept inside the four columns (${layoutOf()})`);
+  check(layoutOf() === "todos:l@0,0 session-count:m@32,0 lyrics:w@37,16", `Switching to free starts from the island's two-row layout, and dragging moves the widget in 8px steps, kept inside the two rows (${layoutOf()})`);
   await act(async () => { modeButton("grid")!.click(); });
   check(layoutOf() === "todos:l@0,0 session-count:m@32,0 lyrics:w@0,32" && !document.querySelector(".expanded-preview__stretch"), "Back to grid, the widgets flow again by position");
+}
+
+const slotAt = (widget: string) => {
+  const slot = document.querySelector<HTMLElement>(`.expanded-preview__slot[data-widget='${widget}']`);
+  return `${slot?.style.left},${slot?.style.top}`;
+};
+const pager = () => [...document.querySelectorAll<HTMLElement>(".expanded-preview__pager button")].map((dot) => dot.getAttribute("aria-pressed")).join();
+const shift = () => document.querySelector<HTMLElement>(".expanded-preview__grid")?.style.transform;
+
+async function checkPreviewPages(check: (condition: unknown, message: string) => void) {
+  for (const widget of ["todos", "music", "countdown", "network", "water"]) await act(async () => { addChip(widget)!.click(); });
+  check(pager() === "false,true" && shift() === "translateX(-768px)" && slotAt("water") === "768px,0px",
+    "Past six columns the preview gets a second page, and it turns to the page of the widget just picked");
+  await act(async () => { document.querySelector<HTMLButtonElement>(".expanded-preview__pager [data-page-index='0']")!.click(); });
+  check(pager() === "true,false" && shift() === "translateX(0px)", "The dots under the preview turn back to the first page");
 }
 
 export async function checkCustomPanels(check: (condition: unknown, message: string) => void) {
@@ -112,11 +153,14 @@ export async function checkCustomPanels(check: (condition: unknown, message: str
   await act(async () => { document.querySelector<HTMLButtonElement>(".size-card[data-size='l']")!.click(); });
   check(layoutOf() === "todos:l@0,0 session-count:m@32,0 lyrics:w@0,32" && document.querySelector<HTMLElement>(".expanded-preview__slot[data-widget='todos']")?.style.height === "248px",
     "Picking a larger size lays the panel out again and the preview follows");
+  check(slotAt("todos") === "0px,0px" && slotAt("session-count") === "256px,0px" && slotAt("lyrics") === "256px,128px" && !document.querySelector(".expanded-preview__pager"),
+    "The preview lays widgets out like the island: two rows, filled column by column, six columns to a page");
   await checkFreeCanvas(check);
   await act(async () => { altArrow(panelChip("session-count")!, "ArrowLeft"); });
   check(layoutOf() === "session-count:m@0,0 todos:l@32,0 lyrics:w@0,32", "Alt+Left moves a widget earlier in the panel");
   await act(async () => { panelChip("todos")!.querySelector<HTMLButtonElement>(".layout-chip__action")!.click(); });
   check(layoutOf() === "session-count:m@0,0 lyrics:w@0,16" && addChip("todos"), "Removing a widget closes the gap and puts it back in the add bucket");
   check(savedPanels()?.panels.map((panel) => panel.id).join() === "fuyu", "Edits are saved to the one Fuyu panel");
-  await switchMode("bar");
+  await checkPreviewPages(check);
+  await openTab("islandLayout");
 }

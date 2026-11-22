@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>刘海边框预览</title>
+<style>
+  :root { color-scheme: dark; --accent: #0a84ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 22px 26px 60px; background: #0f1012; color: #e8e8ea; font: 13px/1.6 -apple-system, "PingFang SC", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 0 0 8px; }
+  p.note { color: #9a9aa0; margin: 0 0 14px; max-width: 1100px; }
+  code { background: #232428; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+  .layout { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+  .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: #1a1b1e; border: 1px solid #26272b; border-radius: 12px; padding: 12px 14px; }
+  .card h3 { margin: 0 0 8px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .card h3 small { color: #8a8a90; font-weight: 400; font-size: 12px; }
+  .row { display: grid; grid-template-columns: 62px 1fr; gap: 8px; align-items: center; min-height: 30px; }
+  .row > span { color: #a8a8ae; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chips button, .seg button { background: #26272b; border: 1px solid transparent; color: #c8c8cc; padding: 2px 9px; border-radius: 7px; cursor: pointer; font: inherit; }
+  .chips button.on, .seg button.on { background: #34363c; border-color: #5a5d66; color: #fff; }
+  .seg { display: inline-flex; gap: 2px; background: #1f2023; padding: 2px; border-radius: 8px; }
+  .swatches { display: flex; gap: 6px; align-items: center; }
+  .sw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .sw.on { border-color: #fff; }
+  .sw input { opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: #c8c8cc; }
+  .switch input { accent-color: var(--accent); }
+  .dim { opacity: .35; pointer-events: none; }
+  .hint { color: #7d7d84; font-size: 12px; margin: 4px 0 0; }
+
+  .stagebar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 0 0 10px; }
+  .stagebar label { color: #a8a8ae; display: inline-flex; gap: 6px; align-items: center; }
+  .screens { display: flex; flex-direction: column; gap: 14px; }
+  .screen { position: relative; overflow: hidden; border-radius: 12px; border: 1px solid #2a2b30; }
+  .screen .cap { position: absolute; left: 10px; bottom: 8px; z-index: 5; color: #fff; font-size: 12px; background: #0008; padding: 1px 8px; border-radius: 6px; }
+  .wall { position: absolute; inset: 0; }
+  .wall.dark { background: radial-gradient(60% 90% at 20% 20%, #3b2f6b 0%, transparent 60%), radial-gradient(50% 70% at 80% 30%, #12456b 0%, transparent 65%), linear-gradient(160deg, #1b2240, #0d1020); }
+  .wall.light { background: radial-gradient(60% 80% at 25% 30%, #ffd6b8 0%, transparent 60%), radial-gradient(50% 70% at 75% 40%, #cfe8ff 0%, transparent 65%), linear-gradient(160deg, #f4f1ea, #d6deea); }
+  .wall.photo { background: radial-gradient(40% 60% at 70% 80%, #ff8a3c 0%, transparent 60%), radial-gradient(60% 50% at 30% 20%, #5fd0ff 0%, transparent 60%), linear-gradient(180deg, #1d6fa5 0%, #f0b27a 70%, #6b3b2a 100%); }
+  .menubar { position: absolute; left: 0; right: 0; top: 0; height: 32px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 13px; color: #fff; background: rgba(20, 20, 24, .35); backdrop-filter: blur(20px); }
+  .wall.light ~ .menubar { color: #111; background: rgba(255, 255, 255, .45); }
+  .menubar b { margin-right: 16px; }
+  .menubar span { margin-right: 14px; opacity: .9; }
+  .phys-notch { position: absolute; top: 0; left: 50%; height: 32px; translate: -50% 0; background: #000; border-radius: 0 0 9px 9px; }
+  .zoomer { position: absolute; inset: 0; transform-origin: 50% 0; }
+  .shape { position: absolute; top: 0; left: 50%; }
+  .shape svg { position: absolute; top: 0; overflow: visible; }
+  .shape .ui { position: absolute; top: 0; }
+
+  .ui-row { display: flex; align-items: center; height: 32px; }
+  .wing { display: flex; align-items: center; gap: 7px; height: 100%; color: #fff; font-size: 12px; }
+  .wing.l { padding-left: 8px; }
+  .wing.r { justify-content: flex-end; padding-right: 10px; }
+  .art { width: 18px; height: 18px; border-radius: 5px; background: linear-gradient(135deg, #ff6b6b, #845ef7); }
+  .bars { display: inline-flex; gap: 2px; align-items: center; height: 14px; }
+  .bars i { width: 2.5px; border-radius: 2px; background: #ff8fa3; animation: bar 0.9s ease-in-out infinite alternate; }
+  .bars i:nth-child(2) { animation-delay: -.3s; } .bars i:nth-child(3) { animation-delay: -.6s; } .bars i:nth-child(4) { animation-delay: -.15s; }
+  @keyframes bar { from { height: 4px; } to { height: 14px; } }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .drop { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 4px; color: #fff; font-size: 12.5px; }
+  .drop .av { width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+  .drop b { font-weight: 600; } .drop em { font-style: normal; color: #b8b8be; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+  .p-head { display: grid; align-items: center; height: 32px; padding: 0 20px; color: #fff; font-size: 13px; }
+  .p-head .l { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+  .p-head .l i { width: 6px; height: 6px; border-radius: 50%; background: #555; display: inline-block; }
+  .p-head .l i.on { background: #fff; }
+  .p-head .r { display: flex; gap: 8px; justify-content: flex-end; }
+  .p-head .r i { width: 18px; height: 18px; border-radius: 6px; background: #ffffff1a; display: inline-block; }
+  .p-body { padding: 14px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .todo { display: flex; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 12px; background: #ffffff0d; color: #ddd; }
+  .todo s { color: #777; }
+  .todo .ck { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #666; flex: none; }
+  .todo .ck.done { background: var(--accent); border-color: var(--accent); }
+  .p-sub { color: #888; font-size: 12px; margin-top: 4px; }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-top: 18px; }
+  .g { background: #17181b; border: 1px solid #26272b; border-radius: 12px; overflow: hidden; }
+  .g .mini { position: relative; height: 86px; overflow: hidden; }
+  .g .t { padding: 8px 12px 10px; }
+  .g .t b { font-size: 13px; }
+  .g .t p { margin: 2px 0 8px; color: #8e8e94; font-size: 12px; min-height: 38px; }
+  .g .t .seg button { font-size: 12px; }
+
+  .decide { margin-top: 26px; max-width: 1100px; }
+  .decide ol { padding-left: 20px; }
+  .decide li { margin: 0 0 10px; }
+  .decide li b { color: #fff; }
+  .lean { color: #ffd479; }
+
+  @keyframes breathe { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+  @keyframes pulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+  @keyframes cometTail { from { stroke-dashoffset: 180; } to { stroke-dashoffset: -1000; } }
+  @keyframes cometHead { from { stroke-dashoffset: 40; } to { stroke-dashoffset: -1140; } }
+  @keyframes twin { 0% { stroke-dashoffset: 260; opacity: 1; } 55% { stroke-dashoffset: -1000; opacity: 1; } 56%, 100% { stroke-dashoffset: -1000; opacity: 0; } }
+  @keyframes flash { 0%, 38% { opacity: 0; } 48% { opacity: 1; } 75%, 100% { opacity: 0; } }
+  @keyframes ripple { 0% { opacity: 0; stroke-width: 1px; } 25% { opacity: 1; } 100% { opacity: 0; stroke-width: 18px; } }
+  .anim-breathe { animation: breathe var(--dur, 3.2s) ease-in-out infinite; }
+  .anim-pulse { animation: pulse 1.2s ease-in-out infinite; }
+  .anim-comet-tail { animation: cometTail var(--dur) linear infinite; }
+  .anim-comet-head { animation: cometHead var(--dur) linear infinite; }
+  .anim-twin { animation: twin var(--dur) cubic-bezier(.45, 0, .55, 1) infinite; }
+  .anim-flash { animation: flash var(--dur) ease-out infinite; }
+  .anim-ripple { animation: ripple .9s ease-out 1 forwards; }
+  .frozen * { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) { .shape svg * { animation-play-state: paused !important; } }
+</style>
+</head>
+<body>
+<h1>刘海边框</h1>
+<p class="note">Mac 刘海模式（真刘海，或实验台「模拟刘海」）下，岛和刘海连成一整块黑，现在没有描边。这页给它加一圈边：顺着轮廓走，从左边反向弧的尖进屏幕顶边出来，绕过底边，再从右边弧尖回到屏幕里。左边两张卡就是设置里的样子，岛屿和面板各一组，面板可以「同岛屿」。上面两块屏幕是实际大小（可放大看细节），最下面是所有样式的对照。</p>
+
+<div class="layout">
+  <aside class="side">
+    <div class="card" id="cardIsland"></div>
+    <div class="card" id="cardPanel"></div>
+    <div class="card">
+      <h3>模拟状态 <small>看「跟随状态」的效果</small></h3>
+      <div class="chips" id="states"></div>
+      <p class="hint">新消息时岛下面多一行；Agent 等你时边框按状态色闪；完成时绿光扫一下再回到原样。</p>
+    </div>
+  </aside>
+
+  <main>
+    <div class="stagebar">
+      <label>壁纸 <span class="seg" id="wall"></span></label>
+      <label>刘海宽 <input type="range" id="notchW" min="160" max="240" value="186" style="width:110px" /> <output id="notchWOut">186</output></label>
+      <label>放大 <span class="seg" id="zoom"></span></label>
+      <label class="switch"><input type="checkbox" id="freeze" /> 暂停动画</label>
+    </div>
+    <div class="screens">
+      <div class="screen" id="screenIsland" style="height:190px"></div>
+      <div class="screen" id="screenPanel" style="height:450px"></div>
+    </div>
+
+    <h2 style="margin-top:22px">全部样式</h2>
+    <p class="note" style="margin:0">用左边岛屿那组的颜色、粗细和强度画。点「岛屿」「面板」直接套用。</p>
+    <div class="gallery" id="gallery"></div>
+
+    <section class="decide">
+      <h2>要你定的</h2>
+      <ol>
+        <li><b>留哪几种样式。</b>七种：关、发丝、辉光、环游、汇流、极光、下沿光。<span class="lean">我倾向全留</span>，都是同一套画法换参数，多一种只多几行 CSS；嫌多就砍掉「下沿光」。</li>
+        <li><b>默认值。</b><span class="lean">我倾向岛屿和面板都默认「关」</span>，老用户升级后长相不变；想让人看到这个功能，可以岛屿默认「发丝」（几乎看不出，只是让岛和刘海之间有个边界）。</li>
+        <li><b>「跟随状态」默认开不开。</b>开着时新消息用来源软件的颜色、Agent 等你用橙色闪、完成用绿色扫一下，样式是「关」时也会亮这一下。<span class="lean">我倾向默认开</span>，它是这功能最有用的部分：眼角扫一下就知道是谁。</li>
+        <li><b>外发光有没有地方画。</b>辉光、极光、下沿光有一部分画在岛外面，岛窗口在刘海模式下比岛宽多少要在真机上量；不够时要给窗口留几像素透明边（点击判定不变），或者这几种只画内侧。实现时先看，不需要你定，结果会写进任务。</li>
+        <li><b>只做刘海模式，还是普通贴顶的岛也能用。</b>普通贴顶的岛已经有一圈细描边（液态玻璃是油膜边），<span class="lean">我倾向这次只做刘海模式</span>，之后要的话把设置从「刘海边框」改名成「边框」再放开。</li>
+        <li><b>设置放哪。</b>外观 → 显示，「刘海两侧最宽」下面一组「刘海边框」，只在 Mac 上显示（实验台模拟刘海时在 Windows 上也显示，方便试）。项目就是左边两张卡。</li>
+        <li><b>省电。</b>环游、汇流、极光会一直动：岛隐藏、全屏、贴边收起时停；系统开了「减少动态效果」时停在静止的样子（环游、汇流退成静止的辉光）；电池供电时要不要也停，你说。</li>
+      </ol>
+    </section>
+  </main>
+</div>
+
+<script>
+const STYLES = [
+  { id: "off", name: "关", desc: "和现在一样，岛和刘海一整块黑。" },
+  { id: "hairline", name: "发丝", desc: "一圈细线，顺着反向弧钻进屏幕顶边。不抢眼，只是让岛有个边界。" },
+  { id: "glow", name: "辉光", desc: "带颜色的描边加一层外发光，开动效时慢慢呼吸。" },
+  { id: "comet", name: "环游", desc: "一颗光点从左边弧尖钻出来，绕底边一圈，从右边弧尖钻回屏幕，像绕着刘海转。" },
+  { id: "twin", name: "汇流", desc: "两道光从两边弧尖同时流下，在底边正中汇合闪一下。" },
+  { id: "aurora", name: "极光", desc: "几种颜色的渐变描边，沿着边慢慢流动；颜色选项对它不起作用。" },
+  { id: "under", name: "下沿光", desc: "只亮底边，底下透出一片柔光，像岛下面挂着一盏灯。" },
+];
+const COLORS = [
+  { id: "accent", c: "#0a84ff", name: "强调色" },
+  { id: "white", c: "#ffffff", name: "白" },
+  { id: "violet", c: "#bf5af2", name: "紫" },
+  { id: "pink", c: "#ff375f", name: "粉" },
+  { id: "mint", c: "#63e6be", name: "薄荷" },
+];
+const STATES = [
+  { id: "idle", name: "空闲" },
+  { id: "qq", name: "QQ 新消息", c: "#12b7f5", who: "小林", text: "晚上一起吃饭吗？我订好位置了", av: "林" },
+  { id: "wechat", name: "微信新消息", c: "#07c160", who: "妈妈", text: "周末回家吃饭不", av: "妈" },
+  { id: "wait", name: "Agent 等你", c: "#ff9f0a" },
+  { id: "done", name: "Agent 完成", c: "#30d158" },
+];
+const AURORA = ["#5ac8fa", "#bf5af2", "#ff375f", "#ff9f0a", "#63e6be", "#5ac8fa"];
+
+const S = {
+  island: { style: "glow", color: "accent", custom: "#ffd60a", width: 1.5, intensity: 70, motion: true, status: true },
+  panel: { link: false, style: "hairline", color: "white", custom: "#ffd60a", width: 1, intensity: 45, motion: true, status: true },
+  wall: "dark", notchW: 186, zoom: 1, state: "idle", freeze: false, rippleKey: 0,
+};
+
+let uidSeq = 0;
+const F = 6;
+const PAD = 40;
+
+function geom(W, H, r) {
+  const f = F, BW = W + 2 * f, mid = BW / 2;
+  const fill = `M0 0 L${BW} 0 A${f} ${f} 0 0 0 ${W + f} ${f} L${W + f} ${H - r} A${r} ${r} 0 0 1 ${W + f - r} ${H} L${f + r} ${H} A${r} ${r} 0 0 1 ${f} ${H - r} L${f} ${f} A${f} ${f} 0 0 0 0 0 Z`;
+  const rim = `M0 0 A${f} ${f} 0 0 1 ${f} ${f} L${f} ${H - r} A${r} ${r} 0 0 0 ${f + r} ${H} L${W + f - r} ${H} A${r} ${r} 0 0 0 ${W + f} ${H - r} L${W + f} ${f} A${f} ${f} 0 0 1 ${BW} 0`;
+  const rimL = `M0 0 A${f} ${f} 0 0 1 ${f} ${f} L${f} ${H - r} A${r} ${r} 0 0 0 ${f + r} ${H} L${mid} ${H}`;
+  const rimR = `M${BW} 0 A${f} ${f} 0 0 0 ${W + f} ${f} L${W + f} ${H - r} A${r} ${r} 0 0 1 ${W + f - r} ${H} L${mid} ${H}`;
+  return { BW, mid, fill, rim, rimL, rimR };
+}
+
+function colorOf(cfg) {
+  if (cfg.color === "custom") return cfg.custom;
+  return (COLORS.find((c) => c.id === cfg.color) || COLORS[0]).c;
+}
+
+function svgFor(cfg, W, H, r, opts = {}) {
+  const id = `u${++uidSeq}`;
+  const g = geom(W, H, r);
+  const state = STATES.find((s) => s.id === (opts.state || "idle"));
+  const statusOn = cfg.status && state.id !== "idle";
+  let style = cfg.style;
+  if (statusOn && (style === "off" || style === "hairline")) style = "glow";
+  const c = statusOn ? state.c : colorOf(cfg);
+  const t = cfg.width;
+  const k = cfg.intensity / 100;
+  const motion = cfg.motion;
+  const perimeter = 2 * (H - r) + (W - 2 * r) + Math.PI * r;
+  const dur = Math.max(2.6, perimeter / 110);
+  const fillPaint = opts.panel ? `url(#pf${id})` : "#000";
+  const aurora = style === "aurora";
+  const paint = aurora ? `url(#ag${id})` : style === "under" ? `url(#ug${id})` : c;
+  const vb = `${-PAD} 0 ${g.BW + 2 * PAD} ${H + PAD}`;
+  const stops = AURORA.map((col, i) => `<stop offset="${i / (AURORA.length - 1)}" stop-color="${col}"/>`).join("");
+  const breatheCls = motion ? (statusOn && state.id === "wait" ? "anim-pulse" : "anim-breathe") : "";
+  const parts = [];
+
+  const base = (w, op, extra = "") => `<path d="${g.rim}" fill="none" stroke="${paint}" stroke-width="${w}" opacity="${op}" clip-path="url(#cl${id})" ${extra}/>`;
+  const glow = (w, op, blur, cls = "") => `<path d="${g.rim}" fill="none" stroke="${paint}" stroke-width="${w}" opacity="${op}" filter="url(#bl${blur}${id})" class="${cls}"/>`;
+
+  if (style === "hairline") {
+    parts.push(base(t * 2, 0.12 + k * 0.5));
+  } else if (style === "glow") {
+    parts.push(glow(t * 3, k, "B", breatheCls));
+    parts.push(base(t * 2, 0.55 + k * 0.45));
+  } else if (style === "comet" && motion) {
+    parts.push(base(t * 2, 0.08 + k * 0.14));
+    parts.push(`<path d="${g.rim}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 2.4}" stroke-linecap="round" stroke-dasharray="180 3000" opacity="${0.35 * k + 0.15}" clip-path="url(#cl${id})" class="anim-comet-tail" style="--dur:${dur}s"/>`);
+    parts.push(`<path d="${g.rim}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 5}" stroke-linecap="round" stroke-dasharray="40 3000" opacity="${k}" filter="url(#blB${id})" class="anim-comet-head" style="--dur:${dur}s"/>`);
+    parts.push(`<path d="${g.rim}" pathLength="1000" fill="none" stroke="#fff" stroke-width="${t * 2}" stroke-linecap="round" stroke-dasharray="40 3000" opacity="${0.6 + 0.4 * k}" clip-path="url(#cl${id})" class="anim-comet-head" style="--dur:${dur}s"/>`);
+  } else if (style === "twin" && motion) {
+    const d2 = dur * 0.9;
+    parts.push(base(t * 2, 0.08 + k * 0.14));
+    for (const d of [g.rimL, g.rimR]) {
+      parts.push(`<path d="${d}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 4}" stroke-linecap="round" stroke-dasharray="260 3000" opacity="${k}" filter="url(#blB${id})" class="anim-twin" style="--dur:${d2}s"/>`);
+      parts.push(`<path d="${d}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 2}" stroke-linecap="round" stroke-dasharray="260 3000" clip-path="url(#cl${id})" class="anim-twin" style="--dur:${d2}s"/>`);
+    }
+    parts.push(`<ellipse cx="${g.mid}" cy="${H}" rx="${Math.min(70, W * 0.18)}" ry="${5 + 6 * k}" fill="${c}" filter="url(#blC${id})" class="anim-flash" style="--dur:${d2}s"/>`);
+  } else if (style === "comet" || style === "twin") {
+    parts.push(glow(t * 3, k * 0.8, "B"));
+    parts.push(base(t * 2, 0.5 + k * 0.4));
+  } else if (aurora) {
+    parts.push(glow(t * 4, k, "C"));
+    parts.push(base(t * 2, 0.7 + k * 0.3));
+  } else if (style === "under") {
+    parts.push(`<ellipse cx="${g.mid}" cy="${H + 2}" rx="${W * 0.36}" ry="${4 + 7 * k}" fill="${c}" opacity="${0.35 + 0.55 * k}" filter="url(#blC${id})" class="${breatheCls}"/>`);
+    parts.push(base(t * 2, 0.5 + k * 0.5));
+  }
+
+  if (opts.ripple) {
+    parts.push(`<path d="${g.rim}" fill="none" stroke="${c}" stroke-width="2" opacity="0" filter="url(#blB${id})" class="anim-ripple"/>`);
+  }
+
+  const shift = aurora && motion ? `<animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="${g.BW * 1.2} 0" dur="${dur * 2}s" repeatCount="indefinite"/>` : "";
+  return `<svg width="${g.BW + 2 * PAD}" height="${H + PAD}" viewBox="${vb}" style="left:${-PAD}px">
+    <defs>
+      <clipPath id="cl${id}"><path d="${g.fill}"/></clipPath>
+      <linearGradient id="fg${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${F * 0.45 + 0.6}"><stop offset="0" stop-color="#000"/><stop offset="0.15" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
+      <mask id="mk${id}" maskUnits="userSpaceOnUse" x="${-PAD}" y="0" width="${g.BW + 2 * PAD}" height="${H + PAD}"><rect x="${-PAD}" y="0" width="${g.BW + 2 * PAD}" height="${H + PAD}" fill="url(#fg${id})"/></mask>
+      <linearGradient id="ag${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${g.BW * 0.6}" y2="${H * 0.4}" spreadMethod="reflect">${stops}${shift}</linearGradient>
+      <linearGradient id="ug${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${H}"><stop offset="${Math.max(0, 1 - 26 / H)}" stop-color="${c}" stop-opacity="0"/><stop offset="1" stop-color="${c}"/></linearGradient>
+      <linearGradient id="pf${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${H}"><stop offset="0" stop-color="#000"/><stop offset="${30 / H}" stop-color="#000"/><stop offset="${46 / H}" stop-color="#141416"/><stop offset="1" stop-color="#141416"/></linearGradient>
+      <filter id="blB${id}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="${2 + t * 1.5}"/></filter>
+      <filter id="blC${id}" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="${5 + t * 2}"/></filter>
+    </defs>
+    <path d="${g.fill}" fill="${fillPaint}"/>
+    <g mask="url(#mk${id})">${parts.join("")}</g>
+  </svg>`;
+}
+
+function islandUI(W, wing, notchW, state) {
+  const st = STATES.find((s) => s.id === state);
+  let right = `<span class="bars"><i></i><i></i><i></i><i></i></span>`;
+  let left = `<span class="art"></span>`;
+  if (state === "wait") { left = `<span class="dot" style="background:#ff9f0a"></span><span>Claude</span>`; right = `<span style="color:#ff9f0a">等你</span>`; }
+  if (state === "done") { left = `<span class="dot" style="background:#30d158"></span><span>Claude</span>`; right = `<span style="color:#30d158">✓ 完成</span>`; }
+  if (st.who) { left = `<span class="dot" style="background:${st.c}"></span><span>${st.id === "qq" ? "QQ" : "微信"}</span>`; right = `<span>1</span>`; }
+  const drop = st.who ? `<div class="drop" style="width:${W}px"><span class="av" style="background:${st.c}">${st.av}</span><b>${st.who}</b><em>${st.text}</em></div>` : "";
+  return `<div class="ui-row"><div class="wing l" style="width:${wing}px">${left}</div><div style="width:${notchW}px"></div><div class="wing r" style="width:${wing}px">${right}</div></div>${drop}`;
+}
+
+function panelUI(W, notchW) {
+  const side = (W - notchW - 16 - 40) / 2;
+  return `<div class="p-head" style="width:${W}px;grid-template-columns:${side}px ${notchW + 16}px ${side}px">
+      <div class="l">待办 <i class="on"></i><i></i><i></i><i></i></div><div></div><div class="r"><i></i><i></i><i></i></div></div>
+    <div class="p-body">
+      <div class="todo"><span class="ck"></span>给设计稿换一版刘海边框<span style="margin-left:auto;color:#ff9f0a;font-size:12px">今天</span></div>
+      <div class="todo"><span class="ck"></span>回小林的消息</div>
+      <div class="todo"><span class="ck done"></span><s>跑一遍实验台</s></div>
+      <div class="todo"><span class="ck"></span>周五前把发布说明写完</div>
+      <div class="p-sub">每日笔记 · 3 条未归档</div>
+    </div>`;
+}
+
+function screenHTML(id, inner, cap) {
+  const n = S.notchW;
+  return `<div class="wall ${S.wall}"></div>
+    <div class="menubar"><div><b></b><b>Finder</b><span>文件</span><span>编辑</span><span>显示</span><span>前往</span></div><div><span>⌁</span><span>◔</span><span>11月22日 周日 14:08</span></div></div>
+    <div class="zoomer" style="transform:scale(${id === "island" ? S.zoom : 1})">
+      <div class="phys-notch" style="width:${n}px"></div>${inner}
+    </div><div class="cap">${cap}</div>`;
+}
+
+function renderStages() {
+  const n = S.notchW;
+  const wing = 74;
+  const W = n + 2 * wing;
+  const st = STATES.find((s) => s.id === S.state);
+  const H = st.who ? 32 + 38 : 32;
+  const ripple = S.rippleKey > 0 && S.state !== "idle";
+  const iSvg = svgFor(S.island, W, H, 14, { state: S.state, ripple: ripple && S.island.status });
+  const islandShape = `<div class="shape" style="margin-left:${-(W + 2 * F) / 2}px">${iSvg}<div class="ui" style="left:${F}px">${islandUI(W, wing, n, S.state)}</div></div>`;
+  const si = document.getElementById("screenIsland");
+  si.style.height = `${[0, 190, 260, 330][S.zoom]}px`;
+  si.innerHTML = screenHTML("island", islandShape, "岛屿 · 收起");
+
+  const pcfg = S.panel.link ? { ...S.island } : S.panel;
+  const PW = Math.max(600, n + 16 + 2 * 210 + 40);
+  const PH = 330;
+  const pSvg = svgFor(pcfg, PW, PH, 24, { state: S.state, ripple: ripple && pcfg.status, panel: true });
+  const panelShape = `<div class="shape" style="margin-left:${-(PW + 2 * F) / 2}px">${pSvg}<div class="ui" style="left:${F}px">${panelUI(PW, n)}</div></div>`;
+  document.getElementById("screenPanel").innerHTML = screenHTML("panel", panelShape, "面板 · 展开");
+}
+
+function renderGallery() {
+  const n = 150, wing = 52, W = n + 2 * wing;
+  document.getElementById("gallery").innerHTML = STYLES.map((s) => {
+    const cfg = { ...S.island, style: s.id, status: false };
+    const svg = svgFor(cfg, W, 30, 13);
+    return `<div class="g"><div class="mini"><div class="wall ${S.wall}"></div>
+      <div class="shape" style="margin-left:${-(W + 2 * F) / 2}px">${svg}<div class="ui" style="left:${F}px"><div class="ui-row" style="height:30px"><div class="wing l" style="width:${wing}px"><span class="art"></span></div><div style="width:${n}px"></div><div class="wing r" style="width:${wing}px"><span class="bars"><i></i><i></i><i></i></span></div></div></div></div></div>
+      <div class="t"><b>${s.name}</b><p>${s.desc}</p><span class="seg"><button data-apply="island" data-style="${s.id}" class="${S.island.style === s.id ? "on" : ""}">岛屿</button><button data-apply="panel" data-style="${s.id}" class="${!S.panel.link && S.panel.style === s.id ? "on" : ""}">面板</button></span></div></div>`;
+  }).join("");
+}
+
+function card(key, title) {
+  const cfg = S[key];
+  const linked = key === "panel" && cfg.link;
+  const off = cfg.style === "off" && !cfg.status;
+  const aurora = cfg.style === "aurora";
+  const sw = COLORS.map((c) => `<button class="sw ${cfg.color === c.id ? "on" : ""}" style="background:${c.c}" title="${c.name}" data-k="${key}" data-color="${c.id}"></button>`).join("")
+    + `<label class="sw ${cfg.color === "custom" ? "on" : ""}" style="background:conic-gradient(#ff375f,#ff9f0a,#ffd60a,#30d158,#5ac8fa,#bf5af2,#ff375f)" title="自定义"><input type="color" value="${cfg.custom}" data-k="${key}" data-custom /></label>`;
+  return `<h3>${title} <small>${key === "island" ? "收起时和消息下拉" : "展开的面板"}</small></h3>
+    ${key === "panel" ? `<label class="switch" style="margin-bottom:6px"><input type="checkbox" data-k="panel" data-f="link" ${cfg.link ? "checked" : ""}/> 同岛屿</label>` : ""}
+    <div class="${linked ? "dim" : ""}">
+      <div class="row"><span>样式</span><div class="chips">${STYLES.map((s) => `<button data-k="${key}" data-style="${s.id}" class="${cfg.style === s.id ? "on" : ""}">${s.name}</button>`).join("")}</div></div>
+      <div class="${off ? "dim" : ""}">
+        <div class="row ${aurora ? "dim" : ""}"><span>颜色</span><div class="swatches">${sw}</div></div>
+        <div class="row"><span>粗细</span><input type="range" min="0.5" max="3" step="0.5" value="${cfg.width}" data-k="${key}" data-f="width" /></div>
+        <div class="row"><span>强度</span><input type="range" min="10" max="100" value="${cfg.intensity}" data-k="${key}" data-f="intensity" /></div>
+        <div class="row"><span>动效</span><label class="switch"><input type="checkbox" data-k="${key}" data-f="motion" ${cfg.motion ? "checked" : ""}/> 呼吸、流动</label></div>
+      </div>
+      <div class="row"><span>状态</span><label class="switch"><input type="checkbox" data-k="${key}" data-f="status" ${cfg.status ? "checked" : ""}/> 跟随状态变色</label></div>
+    </div>`;
+}
+
+function seg(elId, items, cur, onPick) {
+  const el = document.getElementById(elId);
+  el.innerHTML = items.map(([v, l]) => `<button data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}">${l}</button>`).join("");
+  el.onclick = (e) => { const b = e.target.closest("button"); if (b) onPick(b.dataset.v); };
+}
+
+function renderAll() {
+  uidSeq = 0;
+  document.getElementById("cardIsland").innerHTML = card("island", "岛屿");
+  document.getElementById("cardPanel").innerHTML = card("panel", "面板");
+  document.getElementById("states").innerHTML = STATES.map((s) => `<button data-state="${s.id}" class="${S.state === s.id ? "on" : ""}">${s.name}</button>`).join("");
+  seg("wall", [["dark", "深色"], ["light", "浅色"], ["photo", "照片"]], S.wall, (v) => { S.wall = v; renderAll(); });
+  seg("zoom", [[1, "1×"], [2, "2×"], [3, "3×"]], S.zoom, (v) => { S.zoom = Number(v); renderAll(); });
+  renderStages();
+  renderGallery();
+  document.body.classList.toggle("frozen", S.freeze);
+}
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.apply) {
+    const k = b.dataset.apply;
+    S[k].style = b.dataset.style;
+    if (k === "panel") S.panel.link = false;
+    renderAll();
+  } else if (b.dataset.k && b.dataset.style) {
+    S[b.dataset.k].style = b.dataset.style; renderAll();
+  } else if (b.dataset.k && b.dataset.color) {
+    S[b.dataset.k].color = b.dataset.color; renderAll();
+  } else if (b.dataset.state) {
+    S.state = b.dataset.state; S.rippleKey++; renderAll();
+    if (S.state === "done") setTimeout(() => { if (S.state === "done") { S.state = "idle"; S.rippleKey = 0; renderAll(); } }, 2600);
+  }
+});
+
+document.addEventListener("input", (e) => {
+  const el = e.target;
+  if (el.id === "notchW") { S.notchW = Number(el.value); document.getElementById("notchWOut").textContent = el.value; renderStages(); renderGallery(); return; }
+  if (el.id === "freeze") { S.freeze = el.checked; document.body.classList.toggle("frozen", S.freeze); return; }
+  const k = el.dataset.k;
+  if (!k) return;
+  if (el.dataset.custom !== undefined) { S[k].custom = el.value; S[k].color = "custom"; renderStages(); renderGallery(); return; }
+  const f = el.dataset.f;
+  if (el.type === "checkbox") { S[k][f] = el.checked; renderAll(); return; }
+  S[k][f] = Number(el.value);
+  renderStages(); renderGallery();
+});
+
+renderAll();
+</script>
+</body>
+</html>

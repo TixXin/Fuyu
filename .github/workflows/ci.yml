@@ -87,6 +87,11 @@ jobs:
     needs: scope
     if: needs.scope.outputs.docs != 'true'
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    name: regression (${{ matrix.shard }}/3)
     steps:
       - uses: actions/checkout@v4
 
@@ -102,9 +107,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 自带 Vite，用 runner 上预装的 Chrome 跑 tests/regression/ 下的全部回归页。
+      # 自带 Vite，用 runner 上预装的 Chrome 跑 tests/regression/ 下的回归页；按 tests/regression/timings.json 的耗时分成 3 份并行。
       - name: Browser regression pages
-        run: pnpm test:regression
+        run: pnpm test:regression --shard ${{ matrix.shard }}/3
 
   rust:
     needs: scope

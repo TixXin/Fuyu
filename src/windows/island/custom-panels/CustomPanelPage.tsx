@@ -4,14 +4,14 @@ import { PanelTemplateButtons } from "../../../components/island-widget/PanelTem
 import { skipAbsentWidgets, useAbsentWidgets } from "../../../features/plugin-kernel/absentWidgets";
 import type { LibraryWidget } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
-import { addPanelItem, cellsToPx, defaultWidgetSize, fuyuPanel, fuyuPanels, GRID_CELL_PX, GRID_GAP_PX, GRID_UNIT_PX, layoutStrip, PANEL_MODES, placeFreeItem, removePanelItem, setPanelMode, stripRightPx, type CustomPanel } from "../../../lib/settings/customPanels";
+import { addPanelItem, defaultWidgetSize, fuyuPanel, fuyuPanels, GRID_UNIT_PX, PANEL_MODES, placeFreeItem, removePanelItem, setPanelMode, stripRightPx, type CustomPanel } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import type { WidgetEntrance } from "../../../lib/settings/types";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
 import { dropIncoming, type Board, type IncomingWidget } from "./boardDrag";
 import { PanelBoard, type HeldWidget } from "./PanelBoard";
-import { FUYU_BOARD_TOP_PX, FUYU_COLUMNS, FUYU_ROWS } from "./panelSize";
+import { stripGeometry } from "./stripGeometry";
 import { useWheelScrollsSideways } from "./useWheelScrollsSideways";
 import { editingPanel, startPanelEditing, stopPanelEditing, usePanelEditing } from "./panelEditing";
 import { useIslandWidgets } from "./useIslandWidgets";
@@ -22,7 +22,6 @@ import "./CustomPanelPage.css";
 import "./CustomPanelEdit.css";
 
 const UNDO_MS = 4000;
-const STEP_PX = GRID_CELL_PX + GRID_GAP_PX;
 
 function useStrip(stored: CustomPanel, editing: boolean) {
   const ref = useRef<HTMLDivElement>(null);
@@ -36,23 +35,11 @@ function useStrip(stored: CustomPanel, editing: boolean) {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const height = cellsToPx(FUYU_ROWS);
-  const scale = room ? Math.min(1, room.width / cellsToPx(FUYU_COLUMNS), room.height / (height + FUYU_BOARD_TOP_PX)) : 1;
-  const fit = scale > 0 ? scale : 1;
-  const visible = room ? room.width / fit : cellsToPx(FUYU_COLUMNS);
-  const pageColumns = Math.max(1, Math.floor((visible + GRID_GAP_PX) / STEP_PX));
-  const panel = layoutStrip(stored, FUYU_ROWS, pageColumns);
-  const right = stripRightPx(panel);
-  const paged = panel.mode === "grid" && !editing && panel.items.length > 0;
-  const columns = Math.max(pageColumns, Math.ceil((right + GRID_GAP_PX) / STEP_PX) + (editing ? 1 : 0));
-  const width =
-    panel.mode === "free"
-      ? Math.max(visible, right + (editing ? STEP_PX : 0))
-      : cellsToPx(paged ? Math.ceil(columns / pageColumns) * pageColumns : columns);
-  const pages = paged ? Math.ceil(columns / pageColumns) : 0;
-  useWheelScrollsSideways(ref, paged ? pageColumns * STEP_PX * fit : null);
+  const { scale: fit, width, height, panel, pages, pageColumns, pageStepPx } = stripGeometry(stored, room, editing);
+  const paged = pages > 0;
+  useWheelScrollsSideways(ref, paged ? pageStepPx * fit : null);
   const board: Board = { width, height, page: pageColumns };
-  return { ref, scale: fit, board, panel, pages, pageStepPx: pageColumns * STEP_PX };
+  return { ref, scale: fit, board, panel, pages, pageStepPx };
 }
 
 function boardPoint(grid: HTMLElement | null, area: HTMLElement | null, drag: PickerDrag): { x: number; y: number } | null {

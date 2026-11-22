@@ -1,0 +1,118 @@
+.notch-ring {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.notch-ring__svg {
+  position: absolute;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+  animation: notchRingEnter var(--motion-medium) var(--motion-ease-out) backwards;
+}
+
+.notch-ring__anim--breathe {
+  animation: notchRingBreathe 3.2s var(--motion-ease-in-out) infinite;
+}
+
+.notch-ring__anim--pulse {
+  animation: notchRingPulse 1.1s var(--motion-ease-in-out) infinite;
+}
+
+.notch-ring__anim--scan {
+  animation: notchRingScan 2.8s var(--motion-ease-in-out) infinite alternate;
+}
+
+.notch-ring__anim--twin {
+  animation: notchRingTwin 2.8s var(--motion-ease-in-out) infinite;
+}
+
+.notch-ring__anim--drip {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: notchRingDrip 2.8s var(--motion-ease-out) infinite;
+}
+
+.notch-ring__anim--progress {
+  stroke-dasharray: 0 2000;
+  animation: notchRingProgress var(--notch-ring-progress, 1s) linear var(--notch-ring-progress-at, 0s) forwards;
+}
+
+.notch-ring__anim--beat {
+  animation: notchRingBeat 0.5s var(--motion-ease-out) infinite;
+}
+
+.notch-ring__anim--turn {
+  animation: notchRingTurn 6s linear infinite;
+}
+
+.notch-ring--paused .notch-ring__svg,
+.notch-ring--paused .notch-ring__anim {
+  animation-play-state: paused;
+}
+
+@keyframes notchRingEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes notchRingBreathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@keyframes notchRingPulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes notchRingScan {
+  from { stroke-dashoffset: 120; }
+  to { stroke-dashoffset: -1000; }
+}
+
+@keyframes notchRingTwin {
+  0% { stroke-dashoffset: 300; opacity: 1; }
+  55% { stroke-dashoffset: -1000; opacity: 1; }
+  56%, 100% { stroke-dashoffset: -1000; opacity: 0; }
+}
+
+@keyframes notchRingDrip {
+  0%, 44% { opacity: 0; transform: translateY(0) scale(0.6); }
+  52% { opacity: 1; transform: translateY(0) scale(1); }
+  80% { opacity: 0; transform: translateY(7px) scale(0.5); }
+  100% { opacity: 0; }
+}
+
+@keyframes notchRingProgress {
+  from { stroke-dasharray: 0 2000; }
+  to { stroke-dasharray: 1000 2000; }
+}
+
+@keyframes notchRingBeat {
+  0% { opacity: 1; }
+  18% { opacity: 0.35; }
+  50% { opacity: 0.8; }
+  66%, 100% { opacity: 0.3; }
+}
+
+@keyframes notchRingTurn {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -60; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notch-ring__svg,
+  .notch-ring__anim--breathe,
+  .notch-ring__anim--pulse,
+  .notch-ring__anim--scan,
+  .notch-ring__anim--twin,
+  .notch-ring__anim--drip,
+  .notch-ring__anim--progress,
+  .notch-ring__anim--beat,
+  .notch-ring__anim--turn {
+    animation: none;
+  }
+}

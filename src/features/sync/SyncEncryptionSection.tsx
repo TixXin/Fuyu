@@ -27,7 +27,7 @@ import {
 import type { SyncSectionProps } from "./syncBackends";
 import { isSyncActive } from "./syncState";
 
-export function SyncEncryptionSection({ status, busy }: SyncSectionProps) {
+export function SyncEncryptionSection({ status, busy, startOpen = false }: SyncSectionProps & { startOpen?: boolean }) {
   const t = useTranslation();
   const errorText = useErrorText();
   const copy = t.sync.encryption;
@@ -39,7 +39,7 @@ export function SyncEncryptionSection({ status, busy }: SyncSectionProps) {
     effectiveStatus.encryption?.state ?? (effectiveStatus.phase === "locked" ? "locked" : "off");
   const keyId = effectiveStatus.encryption?.keyId ?? null;
 
-  const [panel, setPanel] = useState<EncryptionPanelKind>("none");
+  const [panel, setPanel] = useState<EncryptionPanelKind>(startOpen ? "enable" : "none");
   const [working, setWorking] = useState<string | null>(null);
   const [unlockSecret, setUnlockSecret] = useState("");
   const [feedback, setFeedback] = useState<{ kind: "ok"; text: string } | { kind: "error"; error: unknown } | null>(null);

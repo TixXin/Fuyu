@@ -196,12 +196,15 @@ if (!automated) {
 
     await openPage("behaviorTuck");
     const holdRow = (title: string) => settingRow(title)?.querySelector<HTMLInputElement>("input");
-    check(!holdRow("有正在进行的待办时不收起"), "Idle tuck holds are hidden while idle tuck is off");
+    const holdChip = (label: string) => [...(settingRow("这些时候不收起")?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
+    check(texts(".settings-group__title") === "隐藏后的样子|什么时候收起|露出" && texts(".tuck-settings__strip-row .settings-thumbs__label") === "标准露边|极简细线|贴边隐身" && Boolean(document.querySelector(".tuck-preview .tuck-mock__island")),
+      "Tuck opens on a live preview and picks the tucked edge from three thumbnails");
+    check(!settingRow("这些时候不收起"), "Idle tuck holds are hidden while idle tuck is off");
     await act(async () => { holdRow("闲置时贴边隐藏")!.click(); });
-    check(holdRow("有正在进行的待办时不收起")?.checked === true && holdRow("Agent 在等你时不收起")?.checked === true && holdRow("音乐播放中不收起")?.checked === false && holdRow("有未读消息时不收起")?.checked === true,
-      "Idle tuck holds: todo, agent and unread messages on, music off by default");
-    check(holdRow("有正在进行的待办时不收起")?.closest<HTMLDetailsElement>("details.settings-advanced")?.open === false && settingRow("鼠标移到隐藏的岛上")?.checkVisibility(),
-      "The tuck holds sit in a closed Advanced fold while the main tuck choices stay in view");
+    check(["待办", "Agent", "消息"].every((label) => holdChip(label)?.getAttribute("aria-pressed") === "true") && holdChip("音乐")?.getAttribute("aria-pressed") === "false",
+      "Idle tuck holds are one row of chips: todo, agent and unread messages on, music off by default");
+    check(!settingRow("这些时候不收起")?.closest("details") && [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.querySelector(".settings-group__title")?.textContent === "露出")?.querySelector(".settings-row:last-child .settings-row__title")?.textContent === "最小化按钮" && settingRow("鼠标移到隐藏的岛上")?.checkVisibility(),
+      "The holds stay in view and the minimize button closes the Sliding out group");
     const tuckedHover = settingRow("鼠标移到隐藏的岛上");
     const tuckedHoverButton = (label: string) => [...(tuckedHover?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
     check(tuckedHoverButton("只露出岛屿")?.getAttribute("aria-pressed") === "true", "Hovering a tucked island only slides it out by default");
@@ -210,7 +213,7 @@ if (!automated) {
       && tuckedHoverButton("展开面板")?.getAttribute("aria-pressed") === "true",
       "Choosing to open the panel from a tucked island is saved");
     check(tuckedHover && tuckedHover.scrollWidth <= tuckedHover.clientWidth, "The tucked-hover choice fits its row");
-    await act(async () => { holdRow("有未读消息时不收起")!.click(); holdRow("音乐播放中不收起")!.click(); }); await openPage("music");
+    await act(async () => { holdChip("消息")!.click(); }); await act(async () => { holdChip("音乐")!.click(); }); await openPage("music");
     check(holdRow("音乐播放中不收起")?.checked === true && storedSettings().autoTuckHoldMusic === true && storedSettings().autoTuckHoldMessages === false, "The music page shows the same stay-out-while-playing switch as Behavior");
 
     const agentPolls = () => commands.filter(command => command === "get_agent_status").length;

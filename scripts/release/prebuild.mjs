@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 import { findCiRun } from "./ci-build.mjs";
 import { MAC_WORKFLOW, startMacBuild } from "./mac-build.mjs";
+import { startPrefetch } from "./prefetch.mjs";
 import { readVersion, VERSION_FILES } from "./versions.mjs";
 import { startWindowsBuild, WINDOWS_WORKFLOW } from "./windows-build.mjs";
 
@@ -39,7 +40,7 @@ function gh(command, args, options = {}) {
   return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
 }
 
-function prebuild() {
+function prebuild({ download }) {
   const versions = Object.entries(VERSION_FILES).map(([kind, path]) => readVersion(kind, readFileSync(path, "utf8")));
   const version = versions[0];
   if (!version || versions.some((found) => found !== version)) throw new Error("The four version files disagree; run pnpm release:version first.");
@@ -60,11 +61,15 @@ function prebuild() {
   mkdirSync(dirname(PREBUILD_FILE), { recursive: true });
   writeFileSync(PREBUILD_FILE, `${JSON.stringify(record, null, 2)}\n`);
   console.log(`\n✓ Prebuilding v${version} at ${revision.slice(0, 8)}. Once the PR is merged, pnpm release uses these runs if main has the same files.`);
+  if (download) {
+    const log = startPrefetch(record);
+    console.log(`✓ A background process downloads and signs both builds as soon as they finish, so pnpm release does not wait for the download (log: ${log}; --no-download turns it off).`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    prebuild();
+    prebuild({ download: !process.argv.includes("--no-download") });
   } catch (error) {
     console.error(`\n✗ ${error.message}`);
     process.exit(1);

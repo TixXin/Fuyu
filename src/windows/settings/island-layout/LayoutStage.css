@@ -1,7 +1,7 @@
 .layout-stage {
   position: relative;
   margin: 0 0 var(--space-lg, 16px);
-  padding: 22px 16px 64px;
+  padding: 22px 16px;
   border-radius: 16px;
   background: var(--color-white-a04);
   border: 1px solid var(--color-white-a08);
@@ -22,48 +22,4 @@
   margin: 0;
   padding: 0;
   background: transparent;
-}
-
-.layout-stage__switch {
-  position: absolute;
-  left: 50%;
-  bottom: 14px;
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: var(--color-white-a08);
-  border: 1px solid var(--color-white-a10);
-}
-
-.layout-stage__switch button {
-  min-width: 72px;
-  padding: 5px 16px;
-  color: var(--color-text-muted);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  background: transparent;
-  border: 0;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
-}
-
-.layout-stage__switch button[aria-selected="true"] {
-  color: var(--color-text);
-  background: var(--color-white-a12);
-}
-
-.layout-stage__switch button:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 1px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .layout-stage__switch button {
-    transition: none;
-  }
 }

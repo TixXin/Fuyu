@@ -4,6 +4,7 @@ import type { IslandSettings } from "../../../lib/settings/types";
 import { ISLAND_SIDE_COVER_HEIGHT, ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-kernel/islandContributions";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useTextRanks } from "../../plugin-kernel/useTextRanks";
 import { useAudible } from "../useAudible";
 import { useAudioLevel } from "../useAudioLevel";
 import { coverAccentVariables, useCoverColor } from "../useCoverColor";
@@ -13,6 +14,7 @@ import { usePublishTrackArt } from "../usePublishTrackArt";
 import { demoMediaState } from "./demo";
 import { mediaIsland, useLyricWidgetsShown } from "./islandState";
 import { lyricLineContribution } from "./lyricLine";
+import { playbackContribution } from "./playbackContribution";
 import { OWNER } from "./owner.ts";
 
 type RunnerProps = {
@@ -57,7 +59,8 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   useIslandAction("media.next", () => void runMediaCommand("media_next"));
   useIslandAction("media.open-page", () => openIslandPage("music"));
   const list: IslandContribution[] = [];
-  const line = lyricLineContribution(lyricLine, settings.lyricsIslandPriority === "lyrics", t);
+  const ranks = useTextRanks(settings.lyricsIslandPriority);
+  const line = lyricLineContribution(lyricLine, ranks.lyrics, t);
   if (line) list.push(line);
   if (settings.autoTuckHoldMusic && settings.musicEnabled && playing) list.push({ kind: "hold", reason: "media.playing" });
   if (features.music && (mediaState.available || mediaState.audioActive)) {
@@ -65,6 +68,8 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   }
   if (features.music && audible) list.push({ kind: "hint", key: "media.audible" });
   if (playing) list.push({ kind: "hint", key: "media.playing" });
+  const playback = features.music ? playbackContribution(mediaState) : null;
+  if (playback) list.push(playback);
   if (coverOn) list.push({ kind: "style", vars: coverAccentVariables(coverColor, background, accent), className: "cover-color" });
   if (glassCover && playing && coverColor) list.push({ kind: "style", tint: coverColor });
   useIslandContributions(OWNER, "media.island", list);

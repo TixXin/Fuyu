@@ -27,14 +27,18 @@ mockIPC((command, args) => {
 
 let latest: IslandSettings = { ...DEFAULT_SETTINGS, panelWidth: 800, maxPanelHeight: 306, pageSizes: {}, collapsedWidthExtra: 0 };
 let setExpanded: (expanded: boolean) => void;
+let setNotch: (notch: boolean) => void;
+const NOTCH_GAP = 200;
 
 function Fixture() {
   const [settings, setSettings] = useState(latest);
   const [expanded, changeExpanded] = useState(true);
+  const [notch, changeNotch] = useState(false);
   setExpanded = changeExpanded;
+  setNotch = changeNotch;
   latest = settings;
   const pageSize = islandPageSize(settings, "music");
-  const model = useIslandResize(settings, (next) => { latest = next; setSettings(next); }, "music", pageSize);
+  const model = useIslandResize(settings, (next) => { latest = next; setSettings(next); }, "music", pageSize, notch);
   return <div className="stage" style={{ "--collapsed-island-width": `${340 + settings.collapsedWidthExtra}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${pageSize.width}px`, "--expanded-island-height": `${pageSize.height}px`, "--island-top-fillet-size": 8 } as CSSProperties}>
     <IslandShell
       mode={expanded ? "expanded" : "collapsed"} page="music" isTucked={false}
@@ -44,7 +48,7 @@ function Fixture() {
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}
-      resize={<IslandResize model={model} expanded={expanded} enabled size={pageSize} extra={settings.collapsedWidthExtra} />}>
+      resize={<IslandResize model={model} expanded={expanded} enabled size={pageSize} extra={settings[model.barKey]} barWidth={notch ? (wing) => NOTCH_GAP + 2 * wing : undefined} />}>
       <span>待办清单</span>
     </IslandShell>
   </div>;
@@ -74,8 +78,8 @@ const press = (element: Element) => {
   return pressAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
 };
 const cursor = () => document.documentElement.dataset.islandResizeCursor;
-const resize = (width: number, height: number, done: boolean) => act(async () => {
-  await emit("island-resize", { width, height, collapsed: false, done });
+const resize = (width: number, height: number, done: boolean, collapsed = false) => act(async () => {
+  await emit("island-resize", { width, height, collapsed, done });
 });
 const size = () => latest.pageSizes.music;
 const results = document.getElementById("results")!;
@@ -175,6 +179,34 @@ async function runChecks() {
     await until(() => Math.abs(islandBox().width - box.width) < 0.5 && !root().className.includes("is-near") && !root().className.includes("glow"), 2000);
     await until(() => !badge().classList.contains("is-shown"), 2000);
     check(!badge().classList.contains("is-shown"), "松手一会儿后尺寸标签收起");
+
+    await act(async () => setNotch(true));
+    check(document.querySelectorAll(".island-resize__cap").length === 2, "刘海形态下折叠岛两端也有小拉环");
+    const capR = q(".island-resize__cap--r")!.getBoundingClientRect();
+    await hover(capR.left + 2, capR.top + capR.height / 2);
+    await hover(capR.left + 2, capR.top + capR.height / 2 + 1);
+    check(root().classList.contains("is-near-cap-r") && cursor() === "ew-resize", "刘海形态下鼠标到右端，拉环出现、指针变成左右箭头");
+    await pressAt(capR.left + 2, capR.top + capR.height / 2);
+    check(last()?.widthSign === 1 && last()?.height === false, "刘海形态下拖右端只改宽度");
+    const ghosts = [...document.querySelectorAll<HTMLElement>(".island-resize__ghost--bar")].map((ghost) => Math.round(ghost.getBoundingClientRect().width));
+    check(ghosts.join(",") === `${NOTCH_GAP + 200},${NOTCH_GAP + 260},${NOTCH_GAP + 340}`, `拖动时虚线轮廓是刘海加两侧 100 / 130 / 170 的整岛宽度（${ghosts.join(",")}）`);
+    await resize(56, 0, false, true);
+    await until(() => latest.notchWingMax === 130);
+    check(latest.notchWingMax === 130 && latest.collapsedWidthExtra === 0, "整岛拉宽 56 时每侧加 28，吸到两侧最宽 130，不动折叠岛宽度");
+    check(badge().textContent?.includes("两侧最宽 130") && badge().textContent?.includes("+60"), `尺寸标签写两侧最宽和档位（${badge().textContent}）`);
+    await resize(400, 0, true, true);
+    await until(() => getResizeState().drag === null);
+    check(latest.notchWingMax === 170, "拉过头停在两侧最宽的上限 170");
+    await act(async () => setResizeEditing(true));
+    const notchChips = [...document.querySelectorAll<HTMLButtonElement>(".island-resize__chips button")].map((button) => button.textContent);
+    check(notchChips.join(",") === "默认,+60,最大,完成", `刘海形态的调整模式按两侧宽度分档（${notchChips.join(",")}）`);
+    await act(async () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", shiftKey: true })); });
+    check(latest.notchWingMax === 150, "Shift + 方向键让整岛窄 40，也就是每侧 20");
+    await act(async () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });
+    check(!getResizeState().editing && latest.notchWingMax === 170, "Esc 撤销这次对两侧宽度的改动");
+    await act(async () => setNotch(false));
+    check(badge().textContent?.includes("折叠宽度 0"), "离开刘海形态后拉环改回折叠岛宽度");
+    await until(() => !badge().classList.contains("is-shown") && !root().className.includes("is-near"), 2000);
 
     cover.remove();
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

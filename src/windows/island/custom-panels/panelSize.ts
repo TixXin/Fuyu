@@ -10,3 +10,7 @@ export const FUYU_ISLAND_SIZE = {
   width: cellsToPx(FUYU_COLUMNS) + EXPANDED_PADDING_X,
   height: cellsToPx(FUYU_ROWS) + FUYU_BOARD_TOP_PX + EXPANDED_CHROME_HEIGHT,
 } as const;
+
+export function stripRoom(size: { width: number; height: number }) {
+  return { width: Math.max(0, size.width - EXPANDED_PADDING_X), height: Math.max(0, size.height - EXPANDED_CHROME_HEIGHT) };
+}

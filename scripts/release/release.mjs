@@ -13,6 +13,8 @@ import { smokeTest } from "./smoke-test.mjs";
 import { finishMacBuild, macFiles, startMacBuild } from "./mac-build.mjs";
 import { finishWindowsBuild, startWindowsBuild } from "./windows-build.mjs";
 import { forgetPrebuild, matchingPrebuild, readPrebuild } from "./prebuild.mjs";
+import { forgetPrefetch, PLATFORMS, prefetchSummary, readyPrefetch, takePrefetched } from "./prefetch.mjs";
+import { releaseClock } from "./timing.mjs";
 import { publishToSite } from "./site-import.mjs";
 import { EXE_NAME, installExe, takeLock } from "../build-exe.mjs";
 import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
@@ -42,6 +44,9 @@ const local = args.includes("--local");
 const shareImage = !args.includes("--no-share-image");
 const usePrebuild = !args.includes("--no-prebuild");
 const toSite = !args.includes("--no-site");
+process.on("exit", () => {
+  for (const line of releaseClock.table()) console.log(line);
+});
 
 if (baseFlag >= 0 && (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:")) {
   fail("--base-url requires a valid HTTPS URL.");
@@ -119,12 +124,13 @@ if (upload) {
 
 let macBuild = null;
 let windowsBuild = null;
+let prebuilt = null;
 if (withMac || !local) {
   const revision = run("git", ["rev-parse", "HEAD"], { capture: true }).stdout.trim();
   const remote = run("git", ["branch", "-r", "--contains", revision], { capture: true, allowFailure: true }).stdout;
   if (!remote.includes("origin/")) fail(`${revision} is not on GitHub yet, so GitHub Actions cannot build it. Land it first, or pass --local --no-mac.`);
   const tree = run("git", ["rev-parse", "HEAD^{tree}"], { capture: true }).stdout.trim();
-  const prebuilt = usePrebuild ? matchingPrebuild(readPrebuild(), { version, tree }) : null;
+  prebuilt = usePrebuild ? matchingPrebuild(readPrebuild(), { version, tree }) : null;
   if (prebuilt) console.log(`Using the prebuild started at ${prebuilt.revision.slice(0, 8)}, which has the same files (pass --no-prebuild to build again).`);
   if (withMac) {
     macBuild = prebuilt?.mac ? { runId: prebuilt.mac } : startMacBuild(run, { repo: REPO, revision, version });
@@ -137,14 +143,29 @@ if (withMac || !local) {
   if (!prebuilt) console.log(`Started on GitHub Actions: ${[windowsBuild && "Windows", macBuild && "macOS"].filter(Boolean).join(" and ")} build.`);
 }
 
+releaseClock.done("checks", "Version, notes, signing keys and GitHub are ready.");
 takeLock(PUBLISH_LOCK);
 process.on("exit", () => rmSync(PUBLISH_LOCK, { force: true }));
-if (windowsBuild) {
+if (prebuilt) await readyPrefetch(prebuilt, [windowsBuild && "windows", macBuild && "mac"].filter(Boolean), { version });
+if (windowsBuild && !takeAhead("windows", RELEASE_DIR)) {
   const problem = finishWindowsBuild(run, { repo: REPO, version, since: windowsBuild.since, runId: windowsBuild.runId, releaseDir: RELEASE_DIR });
   if (problem) fail(`${problem}\nNothing was published. Fix it, or pass --local to build Windows on this machine${windowsBuild.runId ? ", or --no-prebuild to build again" : ""}.`);
-  console.log("✓ The Windows build is downloaded and signed for the updater.");
-} else {
+} else if (!windowsBuild) {
   buildLocally();
+  releaseClock.done("Windows local build", "Built Windows on this machine.");
+}
+
+function takeAhead(platform, dest) {
+  if (!Number.isInteger(prebuilt?.[platform])) return false;
+  const { label } = PLATFORMS[platform];
+  const taken = takePrefetched(platform, { record: prebuilt, version, dest });
+  if (taken.problem) {
+    console.log(`  Not using the ${label} build downloaded ahead: ${taken.problem}. Downloading it now.`);
+    return false;
+  }
+  releaseClock.done(`${label} downloaded ahead`, `Using the ${label} build downloaded and signed ahead; its SHA-256 match. Back then:`);
+  for (const line of prefetchSummary(taken.manifest)) console.log(line);
+  return true;
 }
 
 function buildLocally() {
@@ -165,11 +186,10 @@ function buildLocally() {
   run("pnpm", ["tauri", "build", "--ci", ...configs, "--bundles", "nsis,msi"], { env: { CARGO_TARGET_DIR: PUBLISH_TARGET } });
 }
 
-if (macBuild) {
+if (macBuild && !takeAhead("mac", MAC_DIR)) {
   rmSync(MAC_DIR, { recursive: true, force: true });
   const problem = finishMacBuild(run, { repo: REPO, version, since: macBuild.since, runId: macBuild.runId, dir: MAC_DIR });
   if (problem) fail(`${problem}\nNothing was published. Fix it, or pass --no-mac to release Windows only.`);
-  console.log("✓ The macOS build is downloaded and signed for the updater.");
 }
 
 const latestArgs = ["scripts/release/make-latest-json.mjs", "--notes-file", notesFile, "--release-dir", RELEASE_DIR];
@@ -188,9 +208,11 @@ const checksumPath = `${BUNDLE_DIR}/SHA256SUMS.txt`;
 writeFileSync(checksumPath, downloads.map((path) =>
   `${createHash("sha256").update(readFileSync(path)).digest("hex")}  ${basename(path)}`,
 ).join("\n") + "\n");
+releaseClock.done("manifest", "latest.json and SHA256SUMS.txt are written.");
 
 if (!upload) {
-  console.log(`\n✓ Built v${version}. NSIS: ${BUNDLE_DIR}; MSI: ${MSI_DIR} (--no-upload).`);
+  console.log("");
+  releaseClock.done("done", `Built v${version}. NSIS: ${BUNDLE_DIR}; MSI: ${MSI_DIR} (--no-upload).`);
   process.exit(0);
 }
 
@@ -216,26 +238,32 @@ for (const path of assets) {
     fail(`Uploaded asset verification failed for ${name}. The release remains a draft.`);
   }
 }
+releaseClock.done("upload", `The draft release has all ${assets.length} files and their SHA-256 match.`);
 if (smoke) {
   const problem = smokeTest(run, tag, REPO);
   if (problem) fail(`${problem}\nThe release remains a draft; fix it and release a new version, or delete the draft.`);
-  console.log("✓ The installer installs and starts on a clean Windows runner.");
+  releaseClock.done("smoke test", "The installer installs and starts on a clean Windows runner.");
 }
 run("gh", [
   "release", "edit", tag, "--repo", REPO, "--draft=false",
   ...(prerelease ? ["--prerelease", "--latest=false"] : ["--latest"]),
 ]);
-console.log(`\n✓ Published ${tag}${prerelease ? " as a pre-release (beta channel only)" : ""}.`);
+console.log("");
+releaseClock.done("publish", `Published ${tag}${prerelease ? " as a pre-release (beta channel only)" : ""}.`);
 
 forgetPrebuild();
+forgetPrefetch();
 installLocally();
 
 updateBetaChannel(revision);
 verifyChannels();
 const siteProblems = toSite ? await publishToSite({ main: mainCheckout(), tag, version }) : [];
-if (siteProblems.length === 0 && toSite) console.log(`✓ The official site offers ${tag}.`);
+if (siteProblems.length === 0 && toSite) releaseClock.done("official site", `The official site offers ${tag}.`);
+else releaseClock.mark("official site");
 if (issueComments) await tellShippedIssues(revision);
+releaseClock.mark("issue comments");
 if (shareImage) renderShareImage();
+releaseClock.mark("share image");
 if (siteProblems.length > 0) {
   console.error(`\n✗ ${tag} is on GitHub, but the official site is behind:\n${siteProblems.join("\n")}`);
   process.exitCode = 1;
@@ -243,16 +271,19 @@ if (siteProblems.length > 0) {
 
 function renderShareImage() {
   const out = join(mainCheckout(), "src-tauri", "target", "release-share", tag);
-  const result = run(process.execPath, [join("scripts", "release", "share-card.mjs"), version, "--out", out, ...(process.env.FUYU_BOT_INBOX ? ["--push"] : [])], { allowFailure: true });
+  const push = Boolean(process.env.FUYU_BOT_INBOX);
+  const result = run(process.execPath, [join("scripts", "release", "share-card.mjs"), version, "--out", out, ...(push ? ["--push"] : [])], { allowFailure: true });
   if (result.status !== 0) console.error(`  Could not render or push the share image for ${tag}; run pnpm release:share ${version} by hand.`);
+  else if (!push) console.error(`\n! The share image was not pushed to the bot: FUYU_BOT_INBOX is not set on this machine (see bot/README.md). Set it, then run FUYU_BOT_INBOX=<host>:<inbox>/ pnpm release:share ${version} --push.`);
 }
 
 function installLocally() {
   try {
     const exe = installExe(EXE);
-    console.log(`✓ This machine now runs ${tag}: ${exe}`);
+    releaseClock.done("install here", `This machine now runs ${tag}: ${exe}`);
   } catch (error) {
     console.error(`  Could not put ${tag}'s exe in place (${error.message}); run pnpm build:exe instead.`);
+    releaseClock.mark("install here");
   }
 }
 
@@ -276,10 +307,11 @@ function updateBetaChannel(target) {
     : null;
   if (!shouldUpdateBetaManifest(version, currentVersion)) {
     console.log(`Beta channel keeps v${currentVersion}, which is newer than ${tag}.`);
+    releaseClock.mark("beta channel");
     return;
   }
   run("gh", ["release", "upload", BETA_CHANNEL_TAG, `${BUNDLE_DIR}/latest.json`, "--repo", REPO, "--clobber"]);
-  console.log(`✓ Beta channel now offers ${tag}.`);
+  releaseClock.done("beta channel", `Beta channel now offers ${tag}.`);
 }
 
 function verifyChannels() {
@@ -298,7 +330,7 @@ function verifyChannels() {
   if (problems.length > 0) {
     fail(`${tag} is published, but the update channels are off:\n${problems.join("\n")}\nSee "撤回有问题的版本" in docs/features/updater.md.`);
   }
-  console.log(`✓ Channels read back: stable offers ${prerelease ? "the last final release" : tag}, beta offers ${tag}.`);
+  releaseClock.done("channels", `Channels read back: stable offers ${prerelease ? "the last final release" : tag}, beta offers ${tag}.`);
 }
 
 async function tellShippedIssues(target) {

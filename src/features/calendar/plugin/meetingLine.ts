@@ -4,10 +4,10 @@ export function meetingSharesBar(below: IslandLineContribution | null): boolean 
   return below?.shareable === true;
 }
 
-export function meetingLineContributions(hasMeeting: boolean, barText: boolean, sharing: boolean, beat: boolean): IslandContribution[] {
+export function meetingLineContributions(hasMeeting: boolean, barText: boolean, sharing: boolean, beat: boolean, priority: number | null = LINE_PRIORITY.meeting): IslandContribution[] {
   if (!barText || !hasMeeting) return [];
   const list: IslandContribution[] = [];
-  if (!sharing || beat) list.push({ kind: "line", item: "calendar.meeting", priority: LINE_PRIORITY.meeting, page: "calendar", bare: true });
+  if (priority !== null && (!sharing || beat)) list.push({ kind: "line", item: "calendar.meeting", priority, page: "calendar", bare: true });
   list.push({ kind: "trail", item: "calendar.join" });
   return list;
 }

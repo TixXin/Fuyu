@@ -1,19 +1,33 @@
 import { useTranslation } from "../../../i18n";
+import type { TuckHold } from "../../../i18n/sections/settings/expand";
 import { isMacOS } from "../../../lib/platform";
 import { SettingsAdvanced } from "../../../components/settings/SettingsAdvanced";
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
+import { SettingsMultiChoice } from "../../../components/settings/SettingsMultiChoice";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
+import { SettingsThumbStrip } from "../../../components/settings/SettingsThumbStrip";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, MAX_AUTO_TUCK_RETRACT_DELAY_MS, MIN_AUTO_TUCK_RETRACT_DELAY_MS } from "../../../lib/settings/settings";
-import { IslandGlyph } from "../../../components/settings/IslandGlyph";
 import { TuckHintRows } from "./TuckHintRows";
+import { useThumbPointer } from "./useThumbPointer";
+import { TuckMock } from "./tuck/TuckMock";
+import { TuckPreview } from "./tuck/TuckPreview";
+import { tuckHintPaint, tuckHintRing } from "./tuck/tuckHintPaint";
 import type { IslandSettings, MinimizeAction, TuckedHoverAction, TuckStyle } from "../../../lib/settings/types";
 import "./TuckSettingsSection.css";
 
 const IDLE_SECONDS = [5, 10, 15, 30, 60, 120, 300, 600];
+const TUCK_STYLES = ["edge", "line", "hidden"] as const satisfies readonly TuckStyle[];
+const HOLDS = ["todo", "agent", "music", "messages"] as const satisfies readonly TuckHold[];
+const HOLD_KEYS = {
+  todo: "autoTuckHoldTodo",
+  agent: "autoTuckHoldAgent",
+  music: "autoTuckHoldMusic",
+  messages: "autoTuckHoldMessages",
+} as const satisfies Record<TuckHold, keyof IslandSettings>;
 
 export function TuckSettingsSection({
   settings,
@@ -23,6 +37,7 @@ export function TuckSettingsSection({
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const t = useTranslation();
+  const { pointed, handlers } = useThumbPointer();
   const layout = t.settings.layout;
   const expand = t.settings.expand;
   const update = (patch: Partial<IslandSettings>) => onSettingsChange({ ...settings, ...patch });
@@ -39,23 +54,31 @@ export function TuckSettingsSection({
     { value: "tray", label: isMacOS ? layout.minimizeToMenuBar : layout.minimizeToTray },
     { value: "tuck", label: layout.minimizeToTop },
   ];
-  const tuckStyles: { value: TuckStyle; label: string }[] = [
-    { value: "edge", label: expand.tuckStyleEdge },
-    { value: "line", label: expand.tuckStyleLine },
-    { value: "hidden", label: expand.tuckStyleHidden },
-  ];
+  const styleLabels: Record<TuckStyle, string> = { edge: expand.tuckStyleEdge, line: expand.tuckStyleLine, hidden: expand.tuckStyleHidden };
+  const paint = tuckHintPaint(settings.tuckHintColor, settings);
+  const hint = { style: settings.tuckHintStyle, paint, ring: tuckHintRing(settings.tuckHintColor, paint), breathe: false };
 
   return (
     <>
-      <div className="tuck-intro">
-        <span className="tuck-intro__art" aria-hidden="true">
-          <IslandGlyph state="collapsed" />
-          <span className="tuck-intro__arrow">→</span>
-          <IslandGlyph state="tucked" />
-        </span>
-        <p>{expand.tuckIntro}</p>
-      </div>
-      <SettingsGroup title={expand.tuckTitle}>
+      <SettingsGroup title={expand.tuckLookTitle}>
+        <TuckPreview settings={settings} label={expand.tuckPreviewLabel} tryLabel={expand.tuckTry} tryHint={expand.tuckTryHint} />
+        <SettingsRow className="tuck-settings__strip-row" title={expand.tuckStyle} description={expand.tuckStyleHint}>
+          <div className="tuck-settings__strip" {...handlers}>
+            <SettingsThumbStrip<TuckStyle>
+              options={TUCK_STYLES.map((value) => ({ value, label: styleLabels[value], hint: expand.tuckStyleHints[value] }))}
+              value={settings.tuckStyle}
+              ariaLabel={expand.tuckStyle}
+              onChange={(tuckStyle) => update({ tuckStyle })}
+              renderArt={(value) => (
+                <TuckMock tuckStyle={value} hint={{ ...hint, breathe: pointed === value && settings.tuckHintBreathe }} islandColor={settings.islandBackgroundColor} scale={0.6} />
+              )}
+            />
+          </div>
+        </SettingsRow>
+        {settings.tuckStyle === "hidden" && <TuckHintRows settings={settings} update={update} />}
+      </SettingsGroup>
+
+      <SettingsGroup title={expand.tuckWhenTitle}>
         <SettingsToggleRow
           title={layout.autoTuck}
           description={layout.autoTuckHint}
@@ -76,11 +99,15 @@ export function TuckSettingsSection({
                 />
               }
             />
+            <SettingsRow indent className="tuck-settings__holds" title={expand.holds} description={expand.holdsHint}>
+              <SettingsMultiChoice<TuckHold>
+                values={HOLDS.filter((hold) => settings[HOLD_KEYS[hold]])}
+                options={HOLDS.map((value) => ({ value, label: expand.holdChips[value] }))}
+                ariaLabel={expand.holds}
+                onToggle={(hold, selected) => update({ [HOLD_KEYS[hold]]: selected } as Partial<IslandSettings>)}
+              />
+            </SettingsRow>
             <SettingsAdvanced indent>
-              <SettingsToggleRow indent title={expand.holdTodo} description={expand.holdTodoHint} checked={settings.autoTuckHoldTodo} onChange={(autoTuckHoldTodo) => update({ autoTuckHoldTodo })} />
-              <SettingsToggleRow indent title={expand.holdAgent} description={expand.holdAgentHint} checked={settings.autoTuckHoldAgent} onChange={(autoTuckHoldAgent) => update({ autoTuckHoldAgent })} />
-              <SettingsToggleRow indent title={expand.holdMusic} description={expand.holdMusicHint} checked={settings.autoTuckHoldMusic} onChange={(autoTuckHoldMusic) => update({ autoTuckHoldMusic })} />
-              <SettingsToggleRow indent title={expand.holdMessages} description={expand.holdMessagesHint} checked={settings.autoTuckHoldMessages} onChange={(autoTuckHoldMessages) => update({ autoTuckHoldMessages })} />
               <SettingsToggleRow
                 indent
                 title={layout.autoTuckRetract}
@@ -104,31 +131,6 @@ export function TuckSettingsSection({
             </SettingsAdvanced>
           </>
         )}
-        <SettingsRow
-          title={layout.minimizeAction}
-          description={isMacOS ? layout.minimizeHintMac : layout.minimizeHint}
-          control={
-            <SettingsChoice
-              value={settings.minimizeAction}
-              options={minimizeActions}
-              ariaLabel={layout.minimizeAction}
-              onChange={(minimizeAction) => update({ minimizeAction })}
-            />
-          }
-        />
-        <SettingsRow
-          title={expand.tuckStyle}
-          description={expand.tuckStyleHint}
-          control={
-            <SettingsChoice
-              value={settings.tuckStyle}
-              options={tuckStyles}
-              ariaLabel={expand.tuckStyle}
-              onChange={(tuckStyle) => update({ tuckStyle })}
-            />
-          }
-        />
-        {settings.tuckStyle === "hidden" && <TuckHintRows settings={settings} update={update} />}
       </SettingsGroup>
 
       <SettingsGroup title={expand.revealTitle}>
@@ -147,6 +149,18 @@ export function TuckSettingsSection({
           title={expand.revealOnMessage}
           checked={settings.revealOnMessage}
           onChange={(revealOnMessage) => update({ revealOnMessage })}
+        />
+        <SettingsRow
+          title={layout.minimizeAction}
+          description={isMacOS ? layout.minimizeHintMac : layout.minimizeHint}
+          control={
+            <SettingsChoice
+              value={settings.minimizeAction}
+              options={minimizeActions}
+              ariaLabel={layout.minimizeAction}
+              onChange={(minimizeAction) => update({ minimizeAction })}
+            />
+          }
         />
       </SettingsGroup>
     </>

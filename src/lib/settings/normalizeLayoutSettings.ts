@@ -13,6 +13,8 @@ import { ISLAND_HOVERS } from "../theme/islandHover.ts";
 import { ISLAND_BOUNCES } from "../theme/islandBounce.ts";
 import { WIDGET_ENTRANCES } from "../theme/widgetEntrance.ts";
 import { normalizeGlassSettings } from "./glassSettings.ts";
+import { normalizeNotchRimSettings } from "./notchRimSettings.ts";
+import { normalizeNotchRingSettings } from "./notchRingSettings.ts";
 import { storedIslandForm } from "./islandFormMigration.ts";
 import { isMacOS } from "../platform.ts";
 import { normalizePageSizes } from "./pageSizes.ts";
@@ -58,6 +60,8 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     menuBarPlacement: settings?.menuBarPlacement === "below" ? "below" : "notch",
     islandForm: storedIslandForm(settings, isMacOS),
     ...normalizeGlassSettings(settings),
+    ...normalizeNotchRimSettings(settings),
+    ...normalizeNotchRingSettings(settings),
     marginY: clamp(
       Number(hasPreviousDefaultMargin ? DEFAULT_SETTINGS.marginY : marginY),
       0,

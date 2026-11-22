@@ -1,31 +1,36 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "../../../i18n";
-import { gridWidthPx, type CustomPanel } from "../../../lib/settings/customPanels";
+import { FUYU_PAGE_ID, type CustomPanel } from "../../../lib/settings/customPanels";
+import type { IslandSettings } from "../../../lib/settings/types";
+import { stripRoom } from "../../island/custom-panels/panelSize";
+import { islandPageSize } from "../../island/pageSize";
+import { useIslandNotchShown } from "../useIslandNotchShown";
+import { PreviewHeader } from "./PreviewHeader";
 import { PreviewPanel } from "./PreviewPanel";
 import type { IslandPageRow } from "./useIslandPageRows";
 import type { WidgetLibrary } from "./useWidgetLibrary";
+import "./ExpandedPreview.css";
 
-const ISLAND_PADDING = 14;
-const ISLAND_WIDTH = gridWidthPx + ISLAND_PADDING * 2;
-
-function useFitScale() {
+function useStageWidth() {
   const ref = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [width, setWidth] = useState<number | null>(null);
   useLayoutEffect(() => {
     const element = ref.current;
     if (!element) return;
-    const measure = () => setScale(Math.min(1, element.clientWidth / ISLAND_WIDTH) || 1);
+    const measure = () => setWidth(element.clientWidth || null);
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  return { ref, scale };
+  return { ref, width };
 }
 
 type ExpandedPreviewProps = {
+  settings: IslandSettings;
   rows: readonly IslandPageRow[];
   current: IslandPageRow | undefined;
+  screenshotOn: boolean;
   panel: CustomPanel | undefined;
   library: WidgetLibrary;
   selected: string | undefined;
@@ -34,35 +39,29 @@ type ExpandedPreviewProps = {
   onPanel: (panel: CustomPanel) => void;
 };
 
-export function ExpandedPreview({ rows, current, panel, library, selected, onPage, onWidget, onPanel }: ExpandedPreviewProps) {
+export function ExpandedPreview({ settings, rows, current, screenshotOn, panel, library, selected, onPage, onWidget, onPanel }: ExpandedPreviewProps) {
   const text = useTranslation().settings.islandPages;
-  const { ref, scale } = useFitScale();
-  const tabs = rows.filter((row) => !row.hidden && !row.off);
+  const notch = useIslandNotchShown();
+  const { ref, width: stageWidth } = useStageWidth();
+  const size = islandPageSize(settings, current?.id ?? FUYU_PAGE_ID);
+  const zoom = stageWidth ? Math.min(1, stageWidth / size.width) : 1;
+  const room = stripRoom(size);
   const CurrentIcon = current?.icon;
   return (
     <div className="expanded-preview" ref={ref}>
-      <div className="expanded-preview__island" style={{ width: ISLAND_WIDTH, zoom: scale }}>
-        <div className="expanded-preview__head">
-          {tabs.map((row) => {
-            const Icon = row.icon;
-            const on = row.id === current?.id;
-            return (
-              <button key={row.id} className="expanded-preview__tab" type="button" data-page={row.id} aria-pressed={on} aria-label={row.name} title={row.name} onClick={() => onPage(row.id)}>
-                <Icon size={13} strokeWidth={2} aria-hidden="true" />
-                {on ? <span>{row.name}</span> : null}
-              </button>
-            );
-          })}
+      <div className="expanded-preview__island" data-page={current?.id} style={{ width: size.width, height: size.height, zoom }}>
+        <PreviewHeader rows={rows} current={current} notch={notch} showTitle={settings.showTitle} screenshot={screenshotOn} onPage={onPage} />
+        <div className="expanded-preview__body">
+          {panel ? (
+            <PreviewPanel panel={panel} room={room} zoom={zoom} library={library} selected={selected} onWidget={onWidget} onChange={onPanel} />
+          ) : current && CurrentIcon ? (
+            <div className="expanded-preview__page" data-page={current.id}>
+              <CurrentIcon size={24} strokeWidth={1.6} aria-hidden="true" />
+              <strong>{current.name}</strong>
+              <span>{current.off ? text.preview.off : text.preview.builtin}</span>
+            </div>
+          ) : null}
         </div>
-        {panel ? (
-          <PreviewPanel panel={panel} library={library} selected={selected} scale={scale} onWidget={onWidget} onChange={onPanel} />
-        ) : current && CurrentIcon ? (
-          <div className="expanded-preview__page" data-page={current.id}>
-            <CurrentIcon size={24} strokeWidth={1.6} aria-hidden="true" />
-            <strong>{current.name}</strong>
-            <span>{current.off ? text.preview.off : text.preview.builtin}</span>
-          </div>
-        ) : null}
       </div>
     </div>
   );

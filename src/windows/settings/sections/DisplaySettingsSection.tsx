@@ -6,6 +6,10 @@ import { isMacOS } from "../../../lib/platform";
 import { DEFAULT_SETTINGS } from "../../../lib/settings/settingsDefaults";
 import { MAX_NOTCH_WING_MAX, MIN_NOTCH_WING_MAX } from "../../../lib/settings/settingsLimits";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { useIslandNotchShown } from "../useIslandNotchShown";
+import { NotchSettings } from "./notch/NotchSettings";
+import { NotchTextRows } from "./NotchTextRows";
+import { TextOrderRows } from "./TextOrderRows";
 
 export function DisplaySettingsSection({
   settings,
@@ -15,39 +19,46 @@ export function DisplaySettingsSection({
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const t = useTranslation();
+  const notchShown = useIslandNotchShown();
+  const notchGroups = isMacOS || notchShown;
 
   return (
-    <SettingsGroup title={t.settings.layout.displayTitle}>
-      <SettingsToggleRow
-        title={t.settings.layout.showCollapsedText}
-        checked={settings.showCollapsedText}
-        onChange={(showCollapsedText) => onSettingsChange({ ...settings, showCollapsedText })}
-      />
-      <SettingsToggleRow
-        title={t.settings.layout.showTitle}
-        checked={settings.showTitle}
-        onChange={(showTitle) => onSettingsChange({ ...settings, showTitle })}
-      />
-      <SettingsToggleRow
-        title={t.settings.layout.collapsedOverflowMore}
-        description={t.settings.layout.collapsedOverflowMoreHint}
-        checked={settings.collapsedOverflowMore}
-        onChange={(collapsedOverflowMore) => onSettingsChange({ ...settings, collapsedOverflowMore })}
-      />
-      {isMacOS && (
-        <SettingsSliderRow
-          title={t.settings.layout.notchWingMax}
-          description={t.settings.layout.notchWingMaxHint}
-          value={settings.notchWingMax}
-          min={MIN_NOTCH_WING_MAX}
-          max={MAX_NOTCH_WING_MAX}
-          step={2}
-          format={(value) => `${value} px`}
-          defaultValue={DEFAULT_SETTINGS.notchWingMax}
-          resetLabel={t.settings.layout.resetToDefault}
-          onChange={(notchWingMax) => onSettingsChange({ ...settings, notchWingMax })}
+    <>
+      <SettingsGroup title={t.settings.layout.displayTitle}>
+        <SettingsToggleRow
+          title={t.settings.layout.showCollapsedText}
+          checked={settings.showCollapsedText}
+          onChange={(showCollapsedText) => onSettingsChange({ ...settings, showCollapsedText })}
         />
-      )}
-    </SettingsGroup>
+        <SettingsToggleRow
+          title={t.settings.layout.showTitle}
+          checked={settings.showTitle}
+          onChange={(showTitle) => onSettingsChange({ ...settings, showTitle })}
+        />
+        <SettingsToggleRow
+          title={t.settings.layout.collapsedOverflowMore}
+          description={t.settings.layout.collapsedOverflowMoreHint}
+          checked={settings.collapsedOverflowMore}
+          onChange={(collapsedOverflowMore) => onSettingsChange({ ...settings, collapsedOverflowMore })}
+        />
+        {isMacOS && (
+          <SettingsSliderRow
+            title={t.settings.layout.notchWingMax}
+            description={t.settings.layout.notchWingMaxHint}
+            value={settings.notchWingMax}
+            min={MIN_NOTCH_WING_MAX}
+            max={MAX_NOTCH_WING_MAX}
+            step={2}
+            format={(value) => `${value} px`}
+            defaultValue={DEFAULT_SETTINGS.notchWingMax}
+            resetLabel={t.settings.layout.resetToDefault}
+            onChange={(notchWingMax) => onSettingsChange({ ...settings, notchWingMax })}
+          />
+        )}
+      </SettingsGroup>
+      <TextOrderRows lyricsPriority={settings.lyricsIslandPriority} disabled={!settings.showCollapsedText} />
+      {notchGroups && <NotchSettings settings={settings} onSettingsChange={onSettingsChange} />}
+      {notchGroups && <NotchTextRows disabled={!settings.showCollapsedText} />}
+    </>
   );
 }

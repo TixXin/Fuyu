@@ -42,16 +42,20 @@ export function SyncStatusSection({
   status,
   busy,
   actionError,
+  managing,
   onSyncNow,
   onConfirmDeletions,
   onStopSync,
+  onManage,
 }: {
   status: SyncStatus;
   busy: boolean;
   actionError: unknown;
+  managing: boolean;
   onSyncNow: () => void;
   onConfirmDeletions: () => void;
   onStopSync: () => void;
+  onManage: () => void;
 }) {
   const t = useTranslation();
   const { locale } = useLocale();
@@ -68,6 +72,8 @@ export function SyncStatusSection({
   const formattedLast = status.lastSyncAt
     ? text.status.lastSynced(new Date(status.lastSyncAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }))
     : active ? text.status.neverSynced : null;
+  const location = isWebdav ? status.webdav?.url ?? null : status.folder;
+  const encrypted = (status.encryption?.state ?? "off") !== "off";
   const errorDetail = actionError !== null
     ? errorText(actionError)
     : status.error != null
@@ -94,15 +100,20 @@ export function SyncStatusSection({
           <div className="sync-status__copy" role={tone === "error" ? "alert" : "status"}>
             <strong>{phaseCopy.headline}</strong>
             <span>{phaseCopy.hint}</span>
-            {formattedLast ? <span className="sync-status__meta">{formattedLast}</span> : null}
+            <span className="sync-status__meta sync-status__facts">
+              {formattedLast ? <span>{formattedLast}</span> : null}
+              {status.devices.length > 0 ? <span>{text.status.devices(status.devices.length)}</span> : null}
+              {location ? <span className="sync-status__location" title={location}>{location}</span> : null}
+              {active ? <span>{encrypted ? text.status.encrypted : text.status.notEncrypted}</span> : null}
+            </span>
             {status.skippedFiles.length > 0 ? (
               <span className="sync-status__warn">{text.status.skippedFiles(status.skippedFiles.length)}</span>
             ) : null}
           </div>
-          {active && status.phase !== "needsConfirm" ? (
-            <div className="sync-status__actions">
+          <div className="sync-status__actions">
+            {active && status.phase !== "needsConfirm" ? (
               <button
-                className="sync-status__button"
+                className="sync-status__button sync-status__button--primary"
                 type="button"
                 disabled={busy || status.phase === "syncing"}
                 onClick={onSyncNow}
@@ -110,8 +121,16 @@ export function SyncStatusSection({
                 <RefreshCw size={14} strokeWidth={1.9} aria-hidden="true" />
                 <span>{status.phase === "syncing" ? text.status.syncingAction : text.status.syncNow}</span>
               </button>
-            </div>
-          ) : null}
+            ) : null}
+            <button
+              className="sync-status__button sync-status__manage"
+              type="button"
+              aria-expanded={managing}
+              onClick={onManage}
+            >
+              <span>{managing ? text.status.manageDone : text.status.manage}</span>
+            </button>
+          </div>
         </div>
 
         {errorDetail ? (

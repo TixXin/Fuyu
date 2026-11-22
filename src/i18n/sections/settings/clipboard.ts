@@ -11,8 +11,12 @@ export type SettingsClipboardText = {
   pressKeys: string;
   openTitle: string;
   pasteTitle: string;
+  terminalTitle: string;
+  privacyPerfTitle: string;
   privacyTitle: string;
   storageTitle: string;
+  storageSummary: (items: number, days: number) => string;
+  transferSummary: string;
   openIn: string;
   openInHint: string;
   openInOptions: Record<"window" | "island", string>;
@@ -122,9 +126,13 @@ export const zhCN: SettingsClipboardText = {
   noShortcut: "两个都关着时，只能从岛屿或托盘菜单打开剪贴板。",
   pressKeys: "按下组合键",
   openTitle: "打开方式",
-  pasteTitle: "粘贴与显示",
+  pasteTitle: "粘贴",
+  terminalTitle: "贴到终端",
+  privacyPerfTitle: "隐私与性能",
   privacyTitle: "隐私与过滤",
   storageTitle: "容量与清理",
+  storageSummary: (items, days) => (days === 0 ? `最多 ${items} 条 · 不自动清理` : `最多 ${items} 条 · ${days} 天没再复制的自动删`),
+  transferSummary: "换电脑时用：导出、从文件导入",
   openIn: "快捷键打开",
   openInHint: "独立窗口在鼠标旁弹出，选中一条直接粘贴到原来的窗口；岛上页面和以前一样，展开岛的剪贴板页。",
   openInOptions: { window: "独立窗口", island: "岛上页面" },
@@ -234,9 +242,13 @@ export const en: SettingsClipboardText = {
   noShortcut: "With both off, the clipboard only opens from the island or the tray menu.",
   pressKeys: "Press keys",
   openTitle: "Opening",
-  pasteTitle: "Pasting and display",
+  pasteTitle: "Pasting",
+  terminalTitle: "Pasting into terminals",
+  privacyPerfTitle: "Privacy and performance",
   privacyTitle: "Privacy and filtering",
   storageTitle: "Limits and cleanup",
+  storageSummary: (items, days) => (days === 0 ? `Up to ${items} entries · no cleanup` : `Up to ${items} entries · removed after ${days === 1 ? "1 day" : `${days} days`} unused`),
+  transferSummary: "For moving computers: export, import from a file",
   openIn: "The shortcut opens",
   openInHint: "The window pops up by the pointer and pastes what you pick into the window you were in; the island page opens the island's clipboard page as before.",
   openInOptions: { window: "A window", island: "The island page" },

@@ -6,6 +6,7 @@ import { useIslandDecor } from "../../plugin-kernel/islandDecor";
 import type { IslandHost } from "../../plugin-kernel/islandHost";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributed, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useTextRanks } from "../../plugin-kernel/useTextRanks";
 import type { AgentSessionSummary } from "../api";
 import { AGENT_POPUP_LIST_SAVING, getAgentAlertExpandedHeight } from "../islandLayout";
 import { listAgentStatuses } from "../status";
@@ -17,6 +18,7 @@ import { useIslandAgents } from "../useIslandAgents";
 import { useQuotaAlert } from "../useQuotaAlert";
 import { demoAgentSessions } from "./demo";
 import { agentFeed, agentFeedOf, announceAgentsChanged } from "./agentFeed";
+import { useAgentGlow } from "./agentGlow";
 import { agentLineContribution, pickAgentSession } from "./agentLine";
 import { agentArrange, agentLine, agentPage, agentShell, quotaAlertState, type AgentArrange } from "./islandState";
 import { OWNER } from "./owner.ts";
@@ -89,11 +91,13 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   ));
   const { lines } = useIslandContributed();
   const iconWidth = useIslandDecor().agentIconWidth ?? 0;
-  const lineSession = pickAgentSession(lines, settings.agentTitleMode, agentSession, agentInterjection);
+  const ranks = useTextRanks(settings.lyricsIslandPriority);
+  const lineSession = pickAgentSession(lines, settings.agentTitleMode, agentSession, agentInterjection, ranks);
   agentLine.useProvide(lineSession);
-  const line = agentLineContribution(lineSession, lineSession !== null && lineSession === agentInterjection, iconWidth, lineSession ? t.island.agentSession(lineSession.label, lineSession.title) : "");
+  const line = agentLineContribution(lineSession, lineSession !== null && lineSession === agentInterjection, iconWidth, lineSession ? t.island.agentSession(lineSession.label, lineSession.title) : "", ranks);
   const waiting = agentSessions.some((session) => session.phase === "waiting");
   const busy = agentSessions.some((session) => session.phase === "running" || session.phase === "waiting");
+  const glow = useAgentGlow(agentSessions, features.agents && settings.agentStatusEnabled && !demo.active);
   const list: IslandContribution[] = [
     { kind: "status", state: agentVisualState, label: agentStatusLabel },
     { kind: "popup", page: "agents", height: agentCardHeight !== undefined ? getAgentAlertExpandedHeight(agentCardHeight) : undefined, saving: AGENT_POPUP_LIST_SAVING, open: alertPopup, wide: alertWide },
@@ -105,6 +109,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   if (settings.autoTuckHoldAgent && settings.agentStatusEnabled && waiting) list.push({ kind: "hold", reason: "agent-status.waiting" });
   if (settings.agentStatusEnabled && activeAgentSessionCount > 0) list.push({ kind: "hint", key: "agent" });
   if (busy) list.push({ kind: "hint", key: "agents.busy" });
+  if (glow) list.push(glow);
   useIslandContributions(OWNER, "agent-status.island", list);
   return null;
 }

@@ -68,12 +68,19 @@ pub(super) fn stale_after_drop(state: IslandWindowState) -> bool {
     state.notch.is_some() && !wants_notch(state)
 }
 
-pub(super) fn collapsed_size(collapsed_width: f64, scale: f64, notch: Notch, tucked: bool, drop: bool) -> (f64, f64) {
+pub(super) const MAX_NOTCH_RING_EXTRA: f64 = 12.0;
+
+pub(super) fn notch_ring_extra(extra: Option<f64>) -> f64 {
+    extra.filter(|value| value.is_finite()).map_or(0.0, |value| value.clamp(0.0, MAX_NOTCH_RING_EXTRA))
+}
+
+pub(super) fn collapsed_size(collapsed_width: f64, scale: f64, notch: Notch, tucked: bool, drop: bool, ring_extra: f64) -> (f64, f64) {
     let scale = scale.max(0.01);
     let height = notch.height / scale;
     if tucked && !notch.simulated {
         return (((notch.width - 2.0 * TUCKED_NOTCH_INSET) / scale).max(1.0), height);
     }
+    let height = if tucked { height } else { height + ring_extra };
     let height = if drop && !tucked { height + NOTCH_DROP_HEIGHT } else { height };
     (collapsed_width.max(notch.width / scale + 2.0 * MIN_NOTCH_WING), height)
 }
@@ -192,27 +199,37 @@ mod tests {
 
     #[test]
     fn collapsed_island_is_at_least_notch_plus_two_wings() {
-        let (width, height) = collapsed_size(220.0, 1.0, NOTCH, false, false);
+        let (width, height) = collapsed_size(220.0, 1.0, NOTCH, false, false, 0.0);
         assert_eq!(width, 200.0 + 2.0 * MIN_NOTCH_WING);
         assert_eq!(height, 32.0);
-        assert_eq!(collapsed_size(500.0, 1.0, NOTCH, false, false).0, 500.0);
+        assert_eq!(collapsed_size(500.0, 1.0, NOTCH, false, false, 0.0).0, 500.0);
     }
 
     #[test]
     fn sizes_are_in_unscaled_layer_units() {
-        let (width, height) = collapsed_size(220.0, 0.8, NOTCH, false, false);
+        let (width, height) = collapsed_size(220.0, 0.8, NOTCH, false, false, 0.0);
         assert!((width - (250.0 + 2.0 * MIN_NOTCH_WING)).abs() < 1e-9);
         assert!((height - 40.0).abs() < 1e-9);
     }
 
     #[test]
     fn a_message_drops_one_row_below_the_notch() {
-        assert_eq!(collapsed_size(220.0, 1.0, NOTCH, false, true).1, 32.0 + NOTCH_DROP_HEIGHT);
+        assert_eq!(collapsed_size(220.0, 1.0, NOTCH, false, true, 0.0).1, 32.0 + NOTCH_DROP_HEIGHT);
+    }
+
+    #[test]
+    fn a_full_notch_ring_grows_the_island_below_the_notch_but_not_when_tucked() {
+        assert_eq!(collapsed_size(220.0, 1.0, NOTCH, false, false, 5.0).1, 37.0);
+        assert_eq!(collapsed_size(220.0, 1.0, NOTCH, false, true, 5.0).1, 37.0 + NOTCH_DROP_HEIGHT);
+        assert_eq!(collapsed_size(340.0, 1.0, NOTCH, true, false, 5.0).1, 32.0);
+        assert_eq!(notch_ring_extra(Some(40.0)), MAX_NOTCH_RING_EXTRA);
+        assert_eq!(notch_ring_extra(Some(f64::NAN)), 0.0);
+        assert_eq!(notch_ring_extra(None), 0.0);
     }
 
     #[test]
     fn tucked_island_hides_just_inside_the_notch() {
-        let (width, height) = collapsed_size(340.0, 1.0, NOTCH, true, true);
+        let (width, height) = collapsed_size(340.0, 1.0, NOTCH, true, true, 0.0);
         assert_eq!(width, 200.0 - 2.0 * TUCKED_NOTCH_INSET);
         assert_eq!(height, 32.0);
     }
@@ -272,7 +289,7 @@ mod tests {
 
     #[test]
     fn tucked_simulated_notch_keeps_its_width_and_drops_no_row() {
-        let (width, height) = collapsed_size(240.0, 1.0, Notch::simulated(1.0), true, true);
+        let (width, height) = collapsed_size(240.0, 1.0, Notch::simulated(1.0), true, true, 0.0);
         assert_eq!(width, 240.0);
         assert_eq!(height, 32.0);
     }

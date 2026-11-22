@@ -1,0 +1,86 @@
+.notch-strip {
+  display: flex;
+  gap: var(--space-md);
+  margin: 0 -16px;
+  padding: 2px 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.notch-strip__item {
+  flex: none;
+  width: 104px;
+  display: grid;
+  gap: 4px;
+  padding: 4px 4px 5px;
+  color: var(--color-text-muted);
+  background: var(--color-white-a04);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-lg);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    color var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease);
+}
+
+.notch-strip__item:hover {
+  color: var(--color-text);
+  background: var(--color-white-a08);
+}
+
+.notch-strip__item:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.notch-strip__item--active {
+  color: var(--color-text);
+  background: var(--color-white-a08);
+  border-color: var(--color-accent);
+}
+
+.notch-strip__art {
+  position: relative;
+  display: block;
+  height: 50px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg, var(--notch-wall-c, #222a48), var(--notch-wall-d, #0f1326)) var(--notch-wall-d, #0f1326);
+}
+
+.notch-strip__art--plain {
+  display: grid;
+  place-items: center;
+  color: var(--notch-strip-plain, rgba(255, 255, 255, 0.55));
+  font-size: 11px;
+}
+
+.notch-strip__mock {
+  position: absolute;
+  top: 0;
+  display: block;
+  transform-origin: 0 0;
+}
+
+.notch-strip__mock .notch-ring__svg {
+  animation: none;
+}
+
+.notch-strip__mock .notch-ring__anim:not(.notch-ring__anim--progress),
+.notch-strip__mock .notch-rim__anim {
+  animation-delay: -1.3s;
+}
+
+.notch-strip__mock :is(.notch-rim__anim--comet-head, .notch-rim__anim--comet-tail) {
+  animation-delay: calc(var(--notch-rim-duration, 4s) * -0.7);
+}
+
+.notch-strip__label {
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

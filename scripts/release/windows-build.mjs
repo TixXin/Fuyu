@@ -2,6 +2,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync,
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { downloadCiBuild, signUpdate, startCiBuild } from "./ci-build.mjs";
+import { releaseClock } from "./timing.mjs";
 import { msiNames, msiVersion } from "./msi-version.mjs";
 import { prepareReleaseResources, releaseResources } from "../plugins-v3/release-resources.mjs";
 
@@ -37,10 +38,10 @@ export function startWindowsBuild(run, { repo, revision, version }) {
   return startCiBuild(run, { workflow: WINDOWS_WORKFLOW, repo, revision, version });
 }
 
-export function finishWindowsBuild(run, { repo, version, since, runId, releaseDir }) {
+export function finishWindowsBuild(run, { repo, version, since, runId, releaseDir, clock = releaseClock }) {
   for (const dir of [join(releaseDir, "bundle", "nsis"), join(releaseDir, "bundle", "msi")]) rmSync(dir, { recursive: true, force: true });
   rmSync(join(releaseDir, "fuyu.exe"), { force: true });
-  const problem = downloadCiBuild(run, { workflow: WINDOWS_WORKFLOW, label: "Windows", repo, artifact: windowsArtifact(version), since, runId, dir: releaseDir });
+  const problem = downloadCiBuild(run, { workflow: WINDOWS_WORKFLOW, label: "Windows", repo, artifact: windowsArtifact(version), since, runId, dir: releaseDir, clock });
   if (problem) return problem;
   const files = windowsFiles(releaseDir, version);
   for (const path of [files.installer, files.msi, files.exe]) {
@@ -49,6 +50,7 @@ export function finishWindowsBuild(run, { repo, version, since, runId, releaseDi
   for (const path of [files.installer, files.msi]) {
     if (!signUpdate(path) || !existsSync(`${path}.sig`)) return `could not sign ${path} with the updater key`;
   }
+  clock.done("Windows signing", "The Windows installers are signed for the updater.");
   return null;
 }
 

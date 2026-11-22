@@ -1,0 +1,102 @@
+.tuck-mock {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--color-white-a16);
+}
+
+.tuck-mock__island {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  border-radius: 0 0 calc(14px * var(--tuck-mock-scale)) calc(14px * var(--tuck-mock-scale));
+  box-shadow: 0 0 0 1px var(--color-white-a16), 0 4px 12px var(--tuck-mock-shadow, rgba(0, 0, 0, 0.3));
+  transition:
+    transform var(--motion-medium) var(--motion-ease),
+    width var(--motion-medium) var(--motion-ease),
+    height var(--motion-medium) var(--motion-ease),
+    border-radius var(--motion-medium) var(--motion-ease),
+    opacity var(--motion-base) var(--motion-ease);
+}
+
+.tuck-mock__island--revealed {
+  border-radius: calc(14px * var(--tuck-mock-scale));
+}
+
+.tuck-mock__island--hidden {
+  opacity: 0;
+}
+
+.tuck-mock__island i {
+  width: 34%;
+  height: calc(5px * var(--tuck-mock-scale));
+  border-radius: var(--radius-pill);
+  background: var(--tuck-mock-bar, rgba(255, 255, 255, 0.28));
+}
+
+.tuck-mock__hint {
+  position: absolute;
+  background: var(--tuck-mock-hint);
+  pointer-events: none;
+  --tuck-mock-ring: var(--tuck-hint-ring-dark, rgba(0, 0, 0, 0.38));
+}
+
+.tuck-mock__hint--ring-light {
+  --tuck-mock-ring: var(--tuck-hint-ring-light, rgba(255, 255, 255, 0.5));
+}
+
+.tuck-mock__hint--dot {
+  top: 3px;
+  left: calc(50% - 3.5px);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--tuck-mock-ring), 0 1px 3px var(--tuck-hint-shadow, rgba(0, 0, 0, 0.35));
+}
+
+.tuck-mock__hint--glow {
+  top: 0;
+  left: calc(50% - 19px);
+  width: 38px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  box-shadow:
+    0 0 0 0.5px var(--tuck-mock-ring),
+    0 0 8px 2px color-mix(in srgb, var(--tuck-mock-hint) 55%, transparent),
+    0 0 18px 4px color-mix(in srgb, var(--tuck-mock-hint) 22%, transparent);
+}
+
+.tuck-mock__hint--breathe {
+  animation: tuck-mock-breathe 2.8s var(--motion-ease-in-out) infinite;
+}
+
+.tuck-mock__pointer {
+  position: absolute;
+  left: calc(50% + 24px);
+  top: 0;
+  color: var(--color-white, #fff);
+  filter: drop-shadow(0 1px 2px var(--tuck-mock-shadow, rgba(0, 0, 0, 0.5)));
+  transition: transform var(--motion-slow) var(--motion-ease);
+}
+
+.tuck-mock__pointer--away {
+  transform: translateY(78px);
+}
+
+.tuck-mock__pointer--edge {
+  transform: translateY(1px);
+}
+
+@keyframes tuck-mock-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tuck-mock__hint--breathe {
+    animation: none;
+  }
+}

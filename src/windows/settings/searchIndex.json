@@ -96,6 +96,53 @@
     {
       "page": "generalSync",
       "zh-CN": {
+        "group": "设置跨设备同步",
+        "title": "选同步方式",
+        "description": "同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV",
+        "options": [
+          "同步文件夹",
+          "WebDAV"
+        ]
+      },
+      "en": {
+        "group": "Set up cross-device sync",
+        "title": "Choose how to sync",
+        "description": "A synced folder (cloud drive, Syncthing, NAS) or WebDAV",
+        "options": [
+          "Sync folder",
+          "WebDAV"
+        ]
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "设置跨设备同步",
+        "title": "选一个文件夹",
+        "description": "空文件夹，或别的电脑已经在用的 fuyu-sync 的上一级"
+      },
+      "en": {
+        "group": "Set up cross-device sync",
+        "title": "Choose a folder",
+        "description": "An empty folder, or the parent of the fuyu-sync folder another computer already uses"
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "设置跨设备同步",
+        "title": "要不要端到端加密",
+        "description": "网盘看不到内容；忘了口令又没留恢复密钥就找不回来。打开的话，设好同步后接着设口令"
+      },
+      "en": {
+        "group": "Set up cross-device sync",
+        "title": "End-to-end encryption?",
+        "description": "Your cloud provider can't read your data; a forgotten passphrase without the recovery key can't be recovered. If on, you'll set the passphrase right after"
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
         "group": "同步方式",
         "title": "同步通道",
         "options": [
@@ -1118,7 +1165,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "显示内容",
         "title": "显示折叠岛屿文字"
@@ -1129,7 +1176,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "显示内容",
         "title": "显示岛屿名称"
@@ -1140,7 +1187,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "显示内容",
         "title": "放不下的项目收进「+N」",
@@ -1150,6 +1197,233 @@
         "group": "Display",
         "title": "Put items that do not fit behind +N",
         "description": "Beside the notch there is little room: items are placed in the order of the list below, and the rest go behind +N. Hover or click it to see them. When off, items that do not fit are not shown."
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "文字的先后",
+        "title": "会议"
+      },
+      "en": {
+        "group": "Text order",
+        "title": "Meeting"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "文字的先后",
+        "title": "歌词"
+      },
+      "en": {
+        "group": "Text order",
+        "title": "Lyrics"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "文字的先后",
+        "title": "Agent 标题"
+      },
+      "en": {
+        "group": "Text order",
+        "title": "Agent title"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "文字的先后",
+        "title": "待办"
+      },
+      "en": {
+        "group": "Text order",
+        "title": "To-do"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "外框",
+        "description": "岛和面板的外轮廓"
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Border",
+        "description": "Around the island and the panel"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "内圈",
+        "description": "沿摄像头刘海画一圈"
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Ring",
+        "description": "Around the camera notch"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "颜色",
+        "description": "外框和内圈共用。"
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Colour",
+        "description": "Shared by the border and the ring."
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "什么时候亮",
+        "description": "亮在内圈，样式是「关」也会亮：摄像头绿、麦克风橙，新消息用来源软件的颜色，Agent 等你时橙色闪。外框开着时跟着变色。",
+        "options": [
+          "摄像头和麦克风",
+          "新消息和 Agent"
+        ]
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Light up for",
+        "description": "The ring lights up even when its style is Off: green for the camera, orange for the mic, the app's colour for a message, pulsing orange while an agent waits. The border changes colour when it is on.",
+        "options": [
+          "Camera and mic",
+          "Messages and agents"
+        ]
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "粗细",
+        "options": [
+          "细",
+          "中",
+          "粗"
+        ]
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Thickness",
+        "options": [
+          "Thin",
+          "Medium",
+          "Thick"
+        ]
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "亮度"
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Brightness"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "内圈离刘海",
+        "description": "线和刘海边缘之间空出多少。"
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Ring gap",
+        "description": "Space between the ring and the edge of the notch."
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "收起时内圈的底边",
+        "description": "收起的岛和刘海一样高，刘海下面没有地方。整圈时收起的岛会往下长几像素。",
+        "options": [
+          "只画两侧",
+          "岛加高画整圈"
+        ]
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Ring bottom when collapsed",
+        "description": "The collapsed island is as tall as the notch, so there is no room below it. A full ring makes the collapsed island a few pixels taller.",
+        "options": [
+          "Sides only",
+          "Taller island, full ring"
+        ]
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海",
+        "title": "动效",
+        "description": "呼吸、流动。岛隐藏、全屏、贴边收起时停下；系统开了「减少动态效果」时停在静止的样子。"
+      },
+      "en": {
+        "group": "Notch",
+        "title": "Motion",
+        "description": "Breathing and flowing. Stops while the island is hidden, full screen or tucked; holds still when Reduce motion is on."
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海屏上的文字",
+        "title": "待办"
+      },
+      "en": {
+        "group": "Text around the notch",
+        "title": "To-do"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海屏上的文字",
+        "title": "歌词"
+      },
+      "en": {
+        "group": "Text around the notch",
+        "title": "Lyrics"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海屏上的文字",
+        "title": "Agent 标题"
+      },
+      "en": {
+        "group": "Text around the notch",
+        "title": "Agent title"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海屏上的文字",
+        "title": "会议"
+      },
+      "en": {
+        "group": "Text around the notch",
+        "title": "Meeting"
       }
     },
     {
@@ -1222,6 +1496,29 @@
         "group": "Open and close",
         "title": "Animation curve",
         "description": "Pop (the default) springs open, the width and height overshoot a little and come back, the height follows a beat later and the content goes from blurred to sharp, and on closing the content vanishes before the island shrinks without a bounce; Lively shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "开合动画",
+        "title": "弹开的回弹",
+        "description": "弹动幅度：到位时冲过头多少；悬停效果「碰到弹一下」也跟着变",
+        "options": [
+          "轻微",
+          "常规",
+          "弹动"
+        ]
+      },
+      "en": {
+        "group": "Open and close",
+        "title": "Pop overshoot",
+        "description": "Bounce strength: how far it swings past the end; also sets the Bounce on touch hover effect",
+        "options": [
+          "Subtle",
+          "Regular",
+          "Bouncy"
+        ]
       }
     },
     {
@@ -1324,6 +1621,19 @@
       "en": {
         "group": "Tuck to edge",
         "title": "Idle time"
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "什么时候收起",
+        "title": "这些时候不收起",
+        "description": "有正在进行的待办、Agent 在等你、音乐播放中、有未读消息时，岛一直留在屏幕上；音乐这项和「音乐」页里的是同一个开关"
+      },
+      "en": {
+        "group": "When to tuck",
+        "title": "Stay out while",
+        "description": "While a todo is in progress, an agent waits for you, music plays or messages are unread, the island stays on screen; Music is the same switch as on the Music page"
       }
     },
     {
@@ -1442,6 +1752,45 @@
           "Thin line",
           "Hidden"
         ]
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "隐藏后的样子",
+        "title": "隐身记号",
+        "description": "隐身提示：贴边隐身时在屏幕边缘留个小记号，表示岛还在运行，不挡鼠标"
+      },
+      "en": {
+        "group": "When tucked",
+        "title": "Hidden mark",
+        "description": "Hidden hint: leaves a tiny mark at the screen edge so you know the island is still running; clicks pass through it"
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "隐藏后的样子",
+        "title": "记号颜色",
+        "description": "提示颜色：白色描边、跟随岛色，或点彩色那格自选颜色"
+      },
+      "en": {
+        "group": "When tucked",
+        "title": "Mark color",
+        "description": "Hint color: white, the island's color, or pick your own with the rainbow swatch"
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "隐藏后的样子",
+        "title": "记号呼吸",
+        "description": "提示呼吸：记号慢慢明暗变化；系统开了减少动画时一直常亮"
+      },
+      "en": {
+        "group": "When tucked",
+        "title": "Breathing mark",
+        "description": "Breathing hint: the mark slowly fades in and out; it stays steady when the system reduces motion"
       }
     },
     {
@@ -2342,27 +2691,6 @@
         "group": "Lyrics",
         "title": "Show the current line on the collapsed island",
         "description": "While a song plays and synced lyrics are found, the collapsed island shows the line being sung; paused, between verses or without lyrics it shows your todo as usual."
-      }
-    },
-    {
-      "page": "music",
-      "zh-CN": {
-        "group": "歌词",
-        "title": "同时有 Agent 在运行时",
-        "description": "歌词优先：Agent 开始新会话、跑完或出错时临时显示 4 秒，做到一半等你审批或回答时一直显示到你处理；没找到歌词的歌显示「歌名 - 歌手」。Agent 优先：有 Agent 在运行就显示它，空下来才显示歌词。",
-        "options": [
-          "歌词优先",
-          "Agent 优先"
-        ]
-      },
-      "en": {
-        "group": "Lyrics",
-        "title": "While an agent is running",
-        "description": "Lyrics first: an agent shows for 4 seconds when it starts a session, finishes or fails, and stays while it is stopped on an approval or question; a song without lyrics shows “title - artist”. Agent first: a running agent shows, and lyrics come back when it is idle.",
-        "options": [
-          "Lyrics first",
-          "Agent first"
-        ]
       }
     },
     {
@@ -3719,6 +4047,17 @@
       }
     },
     {
+      "page": "messages",
+      "zh-CN": {
+        "group": "消息页布局",
+        "title": "消息页布局"
+      },
+      "en": {
+        "group": "Messages page layout",
+        "title": "Messages page layout"
+      }
+    },
+    {
       "page": "agents",
       "zh-CN": {
         "group": "钩子设置",
@@ -4118,6 +4457,17 @@
       "page": "agentAlerts",
       "zh-CN": {
         "group": "通知的样子",
+        "title": "Mac 刘海时"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "With a Mac notch"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的样子",
         "title": "消息正文最多显示",
         "description": "超出在卡片里滚动；「随内容长高」到岛的最大高度为止",
         "options": [
@@ -4350,6 +4700,17 @@
       "en": {
         "group": "Sounds",
         "title": "Sounds to use"
+      }
+    },
+    {
+      "page": "sounds",
+      "zh-CN": {
+        "group": "音效",
+        "title": "每件事响不响"
+      },
+      "en": {
+        "group": "Sounds",
+        "title": "Which events play a sound"
       }
     },
     {
@@ -4592,6 +4953,17 @@
       "page": "agentPush",
       "zh-CN": {
         "group": "手机推送",
+        "title": "推哪些事"
+      },
+      "en": {
+        "group": "Phone push",
+        "title": "Which events are pushed"
+      }
+    },
+    {
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "手机推送",
         "title": "等你确认或回答时"
       },
       "en": {
@@ -4810,6 +5182,382 @@
       "en": {
         "group": "Opening",
         "title": "Hover time before opening"
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "",
+        "title": "收起条显示格式",
+        "description": "选择收起条上怎么写会议的开始时间、标题和剩余分钟数。"
+      },
+      "en": {
+        "group": "",
+        "title": "Collapsed bar format",
+        "description": "Choose how the start time, title and remaining minutes appear on the bar."
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "",
+        "title": "显示会议标题",
+        "description": "关掉后收起条与横幅提醒只写「会议」，共享屏幕时不会露出会议内容。"
+      },
+      "en": {
+        "group": "",
+        "title": "Show the meeting's title",
+        "description": "Off shows only \"Meeting\" on the bar and banner, so a shared screen does not reveal what the meeting is about."
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "小岛倒计时",
+        "title": "会前倒计时",
+        "description": "会议开始前这么久，收起的小岛显示会前倒计时，有会议链接时旁边带「加入」按钮。"
+      },
+      "en": {
+        "group": "Collapsed countdown",
+        "title": "Countdown before a meeting",
+        "description": "This long before a meeting starts, the collapsed island counts down, with a Join button when it has a meeting link."
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "小岛倒计时",
+        "title": "倒计时范围",
+        "description": "只在关注视频会议时，可以把没有会议链接的普通日程排除在收起条倒计时外。"
+      },
+      "en": {
+        "group": "Collapsed countdown",
+        "title": "Countdown scope",
+        "description": "Count down every timed event, or only events that include a video meeting link."
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "小岛倒计时",
+        "title": "开始后保留时长",
+        "description": "会议开始后收起条继续保留的时长；选直至会议结束时会动态显示剩余分钟数。"
+      },
+      "en": {
+        "group": "Collapsed countdown",
+        "title": "Keep after start",
+        "description": "How long the countdown stays once the meeting starts, or keep until the meeting ends."
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "会前强提醒",
+        "title": "会前弹出岛屿强提醒横幅",
+        "description": "按右边的提前量，临近开会时在岛屿弹出一次提醒横幅，有会议链接时附带「立即加入」按钮。"
+      },
+      "en": {
+        "group": "Strong reminder",
+        "title": "Pop up an island reminder banner",
+        "description": "Show a one-time banner on the island at the lead time on the right, with a Join now button when a link is available."
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "会前强提醒",
+        "title": "调休和放假前一晚提醒",
+        "description": "订阅了中国节假日时，前一天 20:00 后在岛上提醒一次：明天调休要上班，或者明天起放假。"
+      },
+      "en": {
+        "group": "Strong reminder",
+        "title": "Remind the evening before make-up workdays and days off",
+        "description": "With China's holidays subscribed, the island reminds you once after 20:00 the day before a make-up workday or the first day off."
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "会前强提醒",
+        "title": "点击加入会议时自动暂停媒体",
+        "description": "点「加入」打开会议链接前，若当前正在播放音乐或视频则自动暂停。"
+      },
+      "en": {
+        "group": "Strong reminder",
+        "title": "Pause media when joining",
+        "description": "Pause active music or video playback automatically right before opening a meeting link."
+      }
+    },
+    {
+      "page": "calendarAlerts",
+      "zh-CN": {
+        "group": "会前强提醒",
+        "title": "自定义视频会议域名",
+        "description": "填写企业私有视频会议域名后，日程地点里的 https://<域名>/… 链接也会识别为会议链接。"
+      },
+      "en": {
+        "group": "Strong reminder",
+        "title": "Custom meeting domain",
+        "description": "Recognize https://<domain>/… links in event locations for self-hosted video conferencing."
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "停留多久",
+        "title": "等你确认的通知"
+      },
+      "en": {
+        "group": "How long notices stay",
+        "title": "Approval requests"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "停留多久",
+        "title": "没处理时再提醒",
+        "description": "等你确认或回答的会话过了这么久还在等，再弹一次并再响一次；每次等待只补一次"
+      },
+      "en": {
+        "group": "How long notices stay",
+        "title": "Remind again",
+        "description": "If a session is still waiting for your approval or answer this long, pop up and sound once more; once per wait"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "停留多久",
+        "title": "等你回复的通知",
+        "description": "看过 = 悬停过它，或切到了那个窗口"
+      },
+      "en": {
+        "group": "How long notices stay",
+        "title": "Your-turn notices",
+        "description": "Seen means you hovered it or switched to that window"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "停留多久",
+        "title": "完成的通知停留"
+      },
+      "en": {
+        "group": "How long notices stay",
+        "title": "Finished notices stay"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "停留多久",
+        "title": "出错的通知"
+      },
+      "en": {
+        "group": "How long notices stay",
+        "title": "Failure notices"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "通知样式"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Notice style"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "Mac 刘海时"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "With a Mac notch"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "消息正文最多显示",
+        "description": "超出在卡片里滚动；「随内容长高」到岛的最大高度为止",
+        "options": [
+          "4 行",
+          "6 行",
+          "8 行",
+          "12 行",
+          "随内容长高"
+        ]
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Message shows up to",
+        "description": "Longer messages scroll inside the card; \"Fit content\" grows up to the island's maximum height",
+        "options": [
+          "4 lines",
+          "6 lines",
+          "8 lines",
+          "12 lines",
+          "Fit content"
+        ]
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "运行中的命令最多显示",
+        "options": [
+          "1 行",
+          "2 行",
+          "3 行",
+          "5 行"
+        ]
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Running command shows up to",
+        "options": [
+          "1 line",
+          "2 lines",
+          "3 lines",
+          "5 lines"
+        ]
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "消息按 Markdown 显示",
+        "description": "列表、代码块和行内代码；关掉显示纯文字"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Show messages as Markdown",
+        "description": "Lists, code blocks and inline code; off shows plain text"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "模型、用时、「你：」",
+        "options": [
+          "只在悬停卡片里",
+          "通知里也显示"
+        ]
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Model, time and \"You:\"",
+        "options": [
+          "Hover card only",
+          "In the notice too"
+        ]
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "滚动条",
+        "options": [
+          "滚动时出现",
+          "一直显示"
+        ]
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Scroll bar",
+        "options": [
+          "While scrolling",
+          "Always"
+        ]
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "鼠标停在岛上时暂停倒计时"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Pause the countdown while the pointer is on the island"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "点通知",
+        "description": "另一个去处放在右上角的小按钮",
+        "options": [
+          "切到会话所在的窗口",
+          "打开 Agent 页"
+        ]
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Clicking a notice",
+        "description": "Switch to the session's window or open the Agent page; the other one is the small button at the top right",
+        "options": [
+          "Session window",
+          "Agent page"
+        ]
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "多个会话同时来",
+        "description": "悬停都能展开成列表"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Several sessions at once",
+        "description": "Stacked shows the edges of the ones behind; hovering always expands them into a list"
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "审批按钮",
+        "title": "按钮顺序",
+        "options": [
+          "拒绝 · 到终端 · 允许",
+          "允许 · 到终端 · 拒绝"
+        ]
+      },
+      "en": {
+        "group": "Approval buttons",
+        "title": "Button order",
+        "options": [
+          "Deny · Terminal · Allow",
+          "Allow · Terminal · Deny"
+        ]
+      }
+    },
+    {
+      "page": "agentNoticeLook",
+      "zh-CN": {
+        "group": "审批按钮",
+        "title": "按钮上显示快捷键",
+        "description": "窄岛上会自动隐藏"
+      },
+      "en": {
+        "group": "Approval buttons",
+        "title": "Show shortcuts on buttons",
+        "description": "Hidden automatically on a narrow island"
       }
     }
   ]

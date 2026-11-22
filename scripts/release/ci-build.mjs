@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { commandLine } from "./command-line.mjs";
 import { dispatchedRun, sleep, watchRun } from "./smoke-test.mjs";
+import { releaseClock, sizeText } from "./timing.mjs";
 
 export function signerArgs(env, file) {
   const key = env.TAURI_SIGNING_PRIVATE_KEY ?? "";
@@ -38,17 +40,32 @@ export function findCiRun(run, { workflow, repo, since }) {
   return null;
 }
 
-export function downloadCiBuild(run, { workflow, label, repo, artifact, since, runId, dir }) {
+export function dirBytes(dir) {
+  if (!existsSync(dir)) return 0;
+  let total = 0;
+  for (const entry of readdirSync(dir, { withFileTypes: true, recursive: true })) {
+    if (entry.isFile()) total += statSync(join(entry.parentPath ?? entry.path, entry.name)).size;
+  }
+  return total;
+}
+
+export function downloadCiBuild(run, { workflow, label, repo, artifact, since, runId, dir, clock = releaseClock, wait = sleep, now = Date.now }) {
   const found = runId ? { databaseId: runId, url: `https://github.com/${repo}/actions/runs/${runId}` } : findCiRun(run, { workflow, repo, since });
   if (!found) return `${workflow} was started but its run did not show up within a minute`;
-  console.log(`${label} build running: ${found.url}`);
+  console.log(`${clock.stamp()} ${label} build running: ${found.url}`);
   if (!watchRun(run, { repo, id: found.databaseId, interval: 20 })) return `the ${label} build failed: ${found.url}`;
+  clock.done(`${label} build`, `The ${label} build finished on GitHub Actions.`);
   mkdirSync(dir, { recursive: true });
+  const before = dirBytes(dir);
+  const started = now();
   let downloaded = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    if (attempt > 0) sleep(10000);
+    if (attempt > 0) wait(10000);
     downloaded = run("gh", ["run", "download", String(found.databaseId), "--repo", repo, "--name", artifact, "--dir", dir], { capture: true, allowFailure: true });
-    if (downloaded.status === 0) return null;
+    if (downloaded.status === 0) {
+      clock.done(`${label} download`, `Downloaded the ${label} build: ${sizeText(dirBytes(dir) - before, now() - started)}${attempt > 0 ? `, try ${attempt + 1}` : ""}.`);
+      return null;
+    }
   }
   return `could not download the ${label} build: ${downloaded.stderr.trim()}`;
 }

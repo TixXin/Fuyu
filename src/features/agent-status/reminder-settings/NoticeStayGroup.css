@@ -1,0 +1,28 @@
+.agent-reminder-row {
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease);
+}
+
+.agent-reminder-row--active:not(.settings-row--indent) {
+  background: color-mix(in srgb, var(--color-accent) 7%, transparent);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+.agent-reminder-row--active.settings-row--indent {
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  border-left-color: var(--color-accent);
+}
+
+.agent-reminder-row .settings-row__control,
+.agent-reminder-row label {
+  cursor: auto;
+}
+
+.agent-reminder-row__fixed {
+  color: var(--color-text-subtle);
+  font-size: 12.5px;
+  white-space: nowrap;
+}

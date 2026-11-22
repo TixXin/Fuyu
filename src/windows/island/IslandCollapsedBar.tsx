@@ -11,7 +11,9 @@ import type { CollapsedSlots, IslandPage } from "./types";
 import { useCollapsedContextMenu } from "./useCollapsedContextMenu";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { useBarMirrorWatched } from "../../features/plugin-kernel/barMirrorWatch";
-import { hasNotchDrop, MAX_NOTCH_WING, useIslandNotch } from "./notch";
+import { hasNotchDrop, MAX_NOTCH_WING, reportNotchTextRow, useIslandNotch } from "./notch";
+import { useNotchText } from "./useNotchText";
+import { notchTextPage } from "./notchText";
 import { CollapsedMore } from "./CollapsedMore";
 import { BAR_UNIT, useCollapsedOverflow, type CollapsedOverflowState } from "./useCollapsedOverflow";
 import { useCollapsedItemNames } from "./useCollapsedItemNames";
@@ -37,6 +39,7 @@ type IslandCollapsedBarProps = {
   slots?: CollapsedSlots;
   overflowMore?: boolean;
   notchWingMax?: number;
+  notchText?: boolean;
 };
 
 const NO_SLOTS: CollapsedSlots = {};
@@ -88,6 +91,7 @@ export function IslandCollapsedBar({
   slots = NO_SLOTS,
   overflowMore = true,
   notchWingMax = MAX_NOTCH_WING,
+  notchText = false,
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
   const notch = useIslandNotch();
@@ -103,7 +107,10 @@ export function IslandCollapsedBar({
   const activeAlert = useActiveAlert();
   const alertSources = NO_SOURCES;
   const lines = visibleLines(contributed.lines, showCollapsedText);
-  const line = shownLine(lines);
+  const notchRoute = useNotchText(notch !== null && notchText && !isExpanded && !isTucked, contributed.lines);
+  const alwaysLine = shownLine(lines);
+  const rowLine = !alwaysLine && !preview && !notice && !activeAlert ? notchRoute.row : null;
+  const line = alwaysLine ?? rowLine;
   const peekLine = line?.drop ? line : null;
   const openTarget = homePage;
   const openPeek = () => {
@@ -130,7 +137,11 @@ export function IslandCollapsedBar({
   const zone = (name: CollapsedZone) => zoneIds(placements, name, offered).flatMap((id) => byId.get(id) ?? []);
 
   const alerted = notch !== null && activeAlert !== null;
-  const dropped = notch !== null && hasNotchDrop({ preview, notice, peek: peekLine });
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, peek: peekLine, row: rowLine });
+  useEffect(() => {
+    reportNotchTextRow(rowLine !== null);
+    return () => reportNotchTextRow(false);
+  }, [rowLine]);
   const messaged = notch !== null && !alerted && !notice && preview !== null;
   const wings = alerted ? "alert" : messaged ? `message:${preview?.key}` : dropped ? "dropped" : "idle";
   const leftWingRef = useRef<HTMLDivElement>(null);
@@ -143,12 +154,14 @@ export function IslandCollapsedBar({
   const leftUnits = barUnits(leftItems, placed);
   const rightUnits = barUnits(rightItems, placed);
   const pinned = new Set(shelfIds(placements, offered));
+  const panelTexts = notchRoute.panel;
+  const forceChip = pinned.size > 0 || panelTexts.length > 0;
   const overflow = useCollapsedOverflow(
-    notch !== null && (overflowMore || pinned.size > 0),
+    notch !== null && (overflowMore || forceChip),
     !isExpanded && !isTucked && (wings === "idle" || wings === "dropped"),
     { left: leftUnits, right: rightUnits },
     { left: leftWingRef, right: rightWingRef },
-    { auto: overflowMore, forceChip: pinned.size > 0, maxWing: notchWingMax },
+    { auto: overflowMore, forceChip, maxWing: notchWingMax },
   );
   const overflowKey = [...overflow.shelved].join("\n");
   useEffect(() => {
@@ -160,7 +173,8 @@ export function IslandCollapsedBar({
     .filter((item) => pinned.has(item.id) || overflow.shelved.has(item.id))
     .map((item) => ({ id: item.id, name: nameOf(item.id), page: item.page ?? null }));
   const chipSide = notch !== null ? overflow.chip : pinned.size > 0 ? "end" : null;
-  const more = (side: "left" | "right" | "end") => chipSide === side && moreRows.length > 0 && <CollapsedMore rows={moreRows} onOpenPage={onOpenPage} reserve={side === "end"} />;
+  const moreTexts = panelTexts.map((text) => ({ id: text.item, node: lineView(text.item), page: notchTextPage(text) as IslandPage | null }));
+  const more = (side: "left" | "right" | "end") => chipSide === side && moreRows.length + moreTexts.length > 0 && <CollapsedMore rows={moreRows} texts={moreTexts} onOpenPage={onOpenPage} reserve={side === "end"} />;
 
   const stays = (unit: BarUnit) => !overflow.moved.has(unit.key);
   const crossed = (unit: BarUnit) => overflow.moved.has(unit.key);
@@ -186,7 +200,7 @@ export function IslandCollapsedBar({
               } else if (peekLine) {
                 openPeek();
               } else {
-                onOpenPage(openTarget);
+                onOpenPage(rowLine ? (notchTextPage(rowLine) ?? openTarget) as IslandPage : openTarget);
               }
             }
           }}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { MAX_COLLAPSED_WIDTH_EXTRA, MIN_COLLAPSED_WIDTH_EXTRA, MIN_PANEL_WIDTH } from "../../../lib/settings/settingsLimits.ts";
+import { MAX_COLLAPSED_WIDTH_EXTRA, MAX_NOTCH_WING_MAX, MIN_COLLAPSED_WIDTH_EXTRA, MIN_NOTCH_WING_MAX, MIN_PANEL_WIDTH } from "../../../lib/settings/settingsLimits.ts";
+import { DEFAULT_SETTINGS } from "../../../lib/settings/settingsDefaults.ts";
 import { MIN_PAGE_PANEL_HEIGHT, withPageSize } from "../../../lib/settings/pageSizes.ts";
 import type { IslandSettings, PanelPageSize } from "../../../lib/settings/types";
 import { clamp } from "../../../utils/number.ts";
@@ -7,7 +8,7 @@ import { throttle } from "../../../utils/throttle.ts";
 import { listenIslandResize, type IslandResizeDelta } from "../api";
 import { maxExpandedIslandHeight, maxExpandedIslandWidth } from "../layout";
 import { defaultPageSize } from "../pageSize";
-import { collapsedDetents, heightDetents, panelPresets, snap, snapPreset, widthDetents, type PresetId } from "./detents.ts";
+import { collapsedDetents, heightDetents, notchWingDetents, panelPresets, snap, snapPreset, widthDetents, type PresetId } from "./detents.ts";
 import { endResizeDrag, getResizeState, setResizeLabel, type ResizeLabel } from "./session.ts";
 
 const RESIZING_CLASS = "island-resizing";
@@ -15,20 +16,28 @@ const RESIZE_THROTTLE_MS = 16;
 
 export type IslandResizeModel = ReturnType<typeof useIslandResize>;
 
-export function useIslandResize(settings: IslandSettings, setSettings: (settings: IslandSettings) => void, page: string, pageSize: PanelPageSize) {
+type BarKey = "collapsedWidthExtra" | "notchWingMax";
+
+function barKey(notch: boolean): BarKey {
+  return notch ? "notchWingMax" : "collapsedWidthExtra";
+}
+
+export function useIslandResize(settings: IslandSettings, setSettings: (settings: IslandSettings) => void, page: string, pageSize: PanelPageSize, notch: boolean) {
   const model = useMemo(() => {
     const width = { min: MIN_PANEL_WIDTH, max: maxExpandedIslandWidth(settings.expandedScale) };
     const height = { min: MIN_PAGE_PANEL_HEIGHT, max: maxExpandedIslandHeight(settings.expandedScale) };
-    const collapsed = { min: MIN_COLLAPSED_WIDTH_EXTRA, max: MAX_COLLAPSED_WIDTH_EXTRA };
+    const collapsed = notch ? { min: MIN_NOTCH_WING_MAX, max: MAX_NOTCH_WING_MAX } : { min: MIN_COLLAPSED_WIDTH_EXTRA, max: MAX_COLLAPSED_WIDTH_EXTRA };
     const fallback = defaultPageSize(settings, page);
     return {
+      notch,
+      barKey: barKey(notch),
       limits: { width, height, collapsed },
       widths: widthDetents(fallback.width, width),
       heights: heightDetents(fallback.height, height),
-      collapsedSteps: collapsedDetents(collapsed),
+      collapsedSteps: notch ? notchWingDetents(DEFAULT_SETTINGS.notchWingMax, collapsed) : collapsedDetents(collapsed),
       presets: panelPresets(fallback, width, height),
     };
-  }, [page, settings]);
+  }, [notch, page, settings]);
 
   const latest = useRef({ settings, setSettings, page, pageSize, model });
   useLayoutEffect(() => {
@@ -42,9 +51,9 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
     save({ ...current, pageSizes: withPageSize(current.pageSizes, currentPage, size) });
   }, []);
 
-  const saveCollapsed = useCallback((extra: number) => {
-    const { settings: current, setSettings: save } = latest.current;
-    if (extra !== current.collapsedWidthExtra) save({ ...current, collapsedWidthExtra: extra });
+  const saveCollapsed = useCallback((value: number) => {
+    const { settings: current, setSettings: save, model: m } = latest.current;
+    if (value !== current[m.barKey]) save({ ...current, [m.barKey]: value });
   }, []);
 
   const startRef = useRef<{ width: number; height: number; extra: number } | null>(null);
@@ -54,13 +63,14 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
     let stop: (() => void) | undefined;
     const apply = ({ width, height, collapsed, done }: IslandResizeDelta) => {
       const { settings: current, pageSize: size, model: m } = latest.current;
-      const start = (startRef.current ??= { width: size.width, height: size.height, extra: current.collapsedWidthExtra });
+      const start = (startRef.current ??= { width: size.width, height: size.height, extra: current[m.barKey] });
       const spec = getResizeState().drag;
       document.documentElement.classList.toggle(RESIZING_CLASS, !done);
       if (done) startRef.current = null;
       const label: ResizeLabel = {};
       if (collapsed) {
-        const snapped = snap(start.extra + width, m.collapsedSteps, spec?.preset ? 16 : undefined);
+        const perSide = m.notch ? 2 : 1;
+        const snapped = snap(start.extra + width / perSide, m.collapsedSteps, spec?.preset ? 16 / perSide : undefined);
         if (snapped.detent) label.width = snapped.detent;
         saveCollapsed(clamp(Math.round(snapped.value), m.limits.collapsed.min, m.limits.collapsed.max));
       } else {
@@ -123,7 +133,7 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
   const nudge = useCallback((collapsed: boolean, dx: number, dy: number) => {
     const { settings: current, pageSize: size, model: m } = latest.current;
     if (collapsed) {
-      applyCollapsed(current.collapsedWidthExtra + dx);
+      applyCollapsed(current[m.barKey] + (m.notch ? Math.round(dx / 2) : dx));
       return;
     }
     const width = clamp(size.width + dx, m.limits.width.min, m.limits.width.max);
@@ -136,10 +146,10 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
   }, [applyCollapsed, savePanel]);
 
   const snapshot = useCallback(() => {
-    const { pageSizes, collapsedWidthExtra } = latest.current.settings;
-    return { pageSizes, collapsedWidthExtra };
+    const { pageSizes, collapsedWidthExtra, notchWingMax } = latest.current.settings;
+    return { pageSizes, collapsedWidthExtra, notchWingMax };
   }, []);
-  const restore = useCallback((saved: Pick<IslandSettings, "pageSizes" | "collapsedWidthExtra">) => {
+  const restore = useCallback((saved: Pick<IslandSettings, "pageSizes" | "collapsedWidthExtra" | "notchWingMax">) => {
     const { settings: current, setSettings: save } = latest.current;
     save({ ...current, ...saved });
   }, []);

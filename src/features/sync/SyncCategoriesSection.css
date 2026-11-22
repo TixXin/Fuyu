@@ -1,0 +1,78 @@
+.sync-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(220px, calc(50% - 4px)), 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+
+.sync-tile.settings-row {
+  min-height: 0;
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--color-white-a04);
+  box-shadow: inset 0 0 0 1px var(--color-white-a06);
+}
+
+.sync-tile--on.settings-row {
+  background: var(--color-white-a06);
+  box-shadow: inset 0 0 0 1px var(--color-white-a12);
+}
+
+.sync-tile--error.settings-row {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--error-text, #ff8a9a) 40%, transparent);
+}
+
+.sync-tile__main {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.sync-tile__box {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.sync-tile__box:disabled {
+  cursor: default;
+}
+
+.sync-tile__box:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.sync-tile__text.settings-row__text {
+  gap: 1px;
+}
+
+.sync-tile__name,
+.sync-tile__hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sync-tile__name.settings-row__title {
+  font-size: 13px;
+}
+
+.sync-tile__hint.settings-row__description {
+  font-size: 11.5px;
+}
+
+.sync-tile__error {
+  margin: 0;
+  color: var(--error-text, #ff8a9a);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}

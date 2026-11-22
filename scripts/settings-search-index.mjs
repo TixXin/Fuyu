@@ -45,7 +45,7 @@ async function main() {
     for (const locale of LOCALES) {
       const byState = [];
       for (const state of STATES) {
-        const { outcome, state: shown, errors } = await runPage(session, `${base}${PAGE}?collect=${locale}&state=${state}`);
+        const { outcome, state: shown, errors } = await runPage(session, `${base}${PAGE}?collect=${locale}&state=${state}${state === "on" ? "&notch" : ""}`);
         if (outcome !== "passed") throw new Error(`${PAGE} (${locale}, ${state}) ${outcome}: ${shown.text ?? ""} ${errors.join(" ")}`);
         const { result } = await session.send("Runtime.evaluate", { expression: "document.documentElement.dataset.index", returnByValue: true });
         byState.push(JSON.parse(result.value));

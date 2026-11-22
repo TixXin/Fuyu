@@ -295,7 +295,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 
 | `kind` | 字段 | 外壳拿它做什么 |
 |---|---|---|
-| `line` | `item`（`island.line/v1` 项的 id）、`priority`（`LINE_PRIORITY`，大的先）、`measure`（量宽用的文字）、`extra`（额外宽度）、`page`、`lead`（悬停时领头切到 `page`）、`handle`（侧边把手点了去 `page`）、`action`（点它调的 action）、`label`（读屏文字）、`center`（中心图案嵌在这一行）、`shareable`（上面的行可以和它轮流）、`drop`（速览，盖住别的行，点了调 `action`）、`always`（收起条不显示文字时也显示）、`bare`（不套外壳的文字容器）、`reserve`（占着宽度先不显示） | 收起条主行取 `priority` 最高的一条；收起宽度、点击和悬停的去向跟着它 |
+| `line` | `item`（`island.line/v1` 项的 id）、`priority`（`LINE_PRIORITY`，大的先）、`measure`（量宽用的文字）、`extra`（额外宽度）、`page`、`lead`（悬停时领头切到 `page`）、`handle`（侧边把手点了去 `page`）、`action`（点它调的 action）、`label`（读屏文字）、`center`（中心图案嵌在这一行）、`shareable`（上面的行可以和它轮流）、`drop`（速览，盖住别的行，点了调 `action`）、`always`（收起条不显示文字时也显示）、`bare`（不套外壳的文字容器）、`reserve`（占着宽度先不显示）、`interjection`（Agent 插话：一轮跑完、出错或等你回答时临时提前的那条，熄屏变暗和刘海屏「有变化时出现」认它；先后由「文字的先后」换算成 `priority`，见 `textRanks.ts`） | 收起条主行取 `priority` 最高的一条；收起宽度、点击和悬停的去向跟着它 |
 | `trail` | `item` | 主行右边的尾巴（会议的加入按钮），没有提示和预览时显示 |
 | `summary` | `item`、`grow`（可选，`{ width, height }`：要多加的宽度和要长到的收起高度，未缩放的 px） | 消息预览那一行由哪个 `island.line/v1` 项来画，外壳只管过渡的外层；`grow` 只在普通收起条上生效（刘海、侧边岛、贴边、展开时不管），宽度加在收起宽度上、不超过上限，高度随 `set_island_interaction` 的 `collapsedHeight` 交给原生算点击区域 |
 | `preview` | `item`、`key`、`label`、`hot`（侧边岛标热哪一行）、`action`（点它）、`open`（点侧边气泡） | 收起条上的消息预览，盖在主行上 |
@@ -310,6 +310,8 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | `hint` | `key` | 一个开关量，外壳和别的插槽项的 `shown` / `enabled` 读它（`agents.busy`、`update.reminder`、`shelf.count`、`timer.chip` 这类） |
 | `page` | `page`、`enabled` | 这一页现在开不开（消息按 QQ、微信开关） |
 | `badge` | `target`（现在只有 `settings`）、`label`、`action` | 外壳自己的按钮上挂圆点、换读屏文字，点了调 `action`（更新提示挂在设置按钮上） |
+| `glow` | `color`（`#hex`）、`priority`（`GLOW_PRIORITY`，大的先）、`reason`、`pulse`（闪） | 刘海模式下的边框和摄像头一圈按它变色（C166、C167）：摄像头 / 麦克风开着、新消息、Agent 等你和刚完成时各自写一条，取 `priority` 最高的 |
+| `playback` | `startedAt`（从头播放的时刻，毫秒）、`durationMs` | 正在播放的进度，摄像头一圈的「进度」样式用 CSS 动画按它走，不每秒刷新外壳；暂停时不写 |
 
 外壳只能 import `plugin-kernel` 和第 2 版插件系统（`plugins`、`plugin-views`）这几个功能目录，`tests/unit/feature-boundaries.test.mjs` 检查；第 2 版那两个随第 6 阶段删掉时从检查的名单里去掉。
 
