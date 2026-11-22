@@ -57,6 +57,7 @@
 ├── plugins/             # 插件市场：v3/official/ 是第 3 版的官方插件，其余是冻结的第 2 版索引、包和公钥；不进入发布产物
 ├── scripts/             # 发布、插件索引、合并队列（mq/）、门禁钩子（gate/）、各项检查和开发流程脚本
 ├── video/               # 宣传视频（自带 package.json，不在 workspace 里）
+├── bot/                 # 本项目的 QQ 机器人插件（astrbot/ 下每个插件一个目录，部署见 bot/README.md）；不进入发布产物
 ├── .githooks/           # pre-push、pre-commit（main 上提交必须写文件名）、commit-msg（拒绝 Claude 署名行）
 ├── docs/                # 文档，各目录放什么见 docs/README.md；tasks/ 是任务
 └── README.md            # 项目说明（简体中文）；英文和其他语言的版本在 docs/readme/
@@ -155,7 +156,7 @@
 - 前端状态继续用 `localStorage` 持久化，除非需求明确要求迁移到文件、数据库或云同步。
 - 新增 Tauri 命令时，同步更新 Rust handler、前端类型化封装和必要的权限配置（细则见子目录规则）。
 - 修改窗口大小、定位、透明度、置顶、托盘或注册表逻辑时，要同时考虑折叠态、展开态、贴边收起和托盘隐藏。
-- **代码和脚本不写注释**（2026-11-12 起，用户定）。适用于 `src/`、`src-tauri/`、`scripts/`、`tests/`、`packages/` 里的所有源码和脚本（TS/TSX/JS/MJS、CSS、Rust、PowerShell、cmd、HTML、shell）。要解释"为什么"，写进提交说明、`docs/` 或任务文件。例外只有工具要读的指令：`eslint-disable*`、`@ts-expect-error` / `@ts-ignore`、`/// <reference>`、脚本首行的 `#!`、PowerShell 的 `#Requires`、`@vite-ignore` 这类，以及发布给插件开发者的类型声明（`*.d.mts`）里的 JSDoc，它们是编辑器给第三方显示的接口说明。
+- **代码和脚本不写注释**（2026-11-12 起，用户定）。适用于 `src/`、`src-tauri/`、`scripts/`、`tests/`、`packages/`、`bot/` 里的所有源码和脚本（TS/TSX/JS/MJS、CSS、Rust、Python、PowerShell、cmd、HTML、shell）。要解释"为什么"，写进提交说明、`docs/` 或任务文件。例外只有工具要读的指令：`eslint-disable*`、`@ts-expect-error` / `@ts-ignore`、`/// <reference>`、脚本首行的 `#!`、PowerShell 的 `#Requires`、`@vite-ignore` 这类，以及发布给插件开发者的类型声明（`*.d.mts`）里的 JSDoc，它们是编辑器给第三方显示的接口说明。
 - 用户可见文案必须支持中英文，并注意窄窗口下按钮、标签和标题不溢出。
 - 避免与任务无关的改动和对生成产物的改动。
 

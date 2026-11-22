@@ -235,8 +235,8 @@ if (shareImage) renderShareImage();
 
 function renderShareImage() {
   const out = join(mainCheckout(), "src-tauri", "target", "release-share", tag);
-  const result = run(process.execPath, [join("scripts", "release", "share-card.mjs"), version, "--out", out], { allowFailure: true });
-  if (result.status !== 0) console.error(`  Could not render the share image for ${tag}; run pnpm release:share ${version} by hand.`);
+  const result = run(process.execPath, [join("scripts", "release", "share-card.mjs"), version, "--out", out, ...(process.env.FUYU_BOT_INBOX ? ["--push"] : [])], { allowFailure: true });
+  if (result.status !== 0) console.error(`  Could not render or push the share image for ${tag}; run pnpm release:share ${version} by hand.`);
 }
 
 function installLocally() {

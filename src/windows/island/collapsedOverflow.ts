@@ -1,58 +1,71 @@
 export type OverflowSide = "left" | "right";
-export type OverflowZone = { widths: readonly number[]; capacity: number };
+export type OverflowZone = { widths: readonly number[]; capacity: number; movable?: readonly boolean[] };
 export type OverflowFit = {
   left: boolean[];
   right: boolean[];
+  moved: Record<OverflowSide, boolean[]>;
   chip: OverflowSide | null;
   used: Record<OverflowSide, number>;
 };
 
-type Prefix = { kept: number; used: number; shown: number };
+type Room = { used: number; count: number };
+type Packed = { shown: Record<OverflowSide, boolean[]>; moved: Record<OverflowSide, boolean[]>; room: Record<OverflowSide, Room> };
 
-function keepPrefix(widths: readonly number[], capacity: number, gap: number): Prefix {
-  let used = 0;
-  let kept = 0;
-  let shown = 0;
-  for (const width of widths) {
-    if (!(width > 0)) {
-      kept += 1;
-      continue;
-    }
-    const next = used + width + (shown > 0 ? gap : 0);
-    if (next > capacity) break;
-    used = next;
-    kept += 1;
-    shown += 1;
-  }
-  return { kept, used, shown };
+const SIDES: readonly OverflowSide[] = ["left", "right"];
+const OTHER: Record<OverflowSide, OverflowSide> = { left: "right", right: "left" };
+
+function pack(zones: Record<OverflowSide, OverflowZone>, capacity: Record<OverflowSide, number>, gap: number, everything: boolean): Packed {
+  const room: Record<OverflowSide, Room> = { left: { used: 0, count: 0 }, right: { used: 0, count: 0 } };
+  const shown = { left: zones.left.widths.map((width) => !(width > 0)), right: zones.right.widths.map((width) => !(width > 0)) };
+  const moved = { left: zones.left.widths.map(() => false), right: zones.right.widths.map(() => false) };
+  const put = (side: OverflowSide, width: number) => {
+    const next = room[side].used + width + (room[side].count > 0 ? gap : 0);
+    if (!everything && next > capacity[side]) return false;
+    room[side] = { used: next, count: room[side].count + 1 };
+    return true;
+  };
+  for (const side of SIDES) zones[side].widths.forEach((width, index) => {
+    if (width > 0 && put(side, width)) shown[side][index] = true;
+  });
+  if (!everything) for (const side of SIDES) zones[side].widths.forEach((width, index) => {
+    if (shown[side][index] || zones[side].movable?.[index] !== true || !put(OTHER[side], width)) return;
+    shown[side][index] = true;
+    moved[side][index] = true;
+  });
+  return { shown, moved, room };
 }
-
-function keepAll(widths: readonly number[], gap: number): Prefix {
-  const shown = widths.filter((width) => width > 0);
-  return { kept: widths.length, used: shown.reduce((total, width) => total + width, 0) + gap * Math.max(0, shown.length - 1), shown: shown.length };
-}
-
-const shelvedFlags = (widths: readonly number[], kept: number) => widths.map((width, index) => index >= kept && width > 0);
 
 export type OverflowOptions = { auto?: boolean; forceChip?: boolean };
 
 export function fitCollapsedZones(left: OverflowZone, right: OverflowZone, gap: number, chipWidth: number, options: OverflowOptions = {}): OverflowFit {
-  const auto = options.auto !== false;
+  const everything = options.auto === false;
   const zones: Record<OverflowSide, OverflowZone> = { left, right };
-  const keep = (zone: OverflowZone, capacity = zone.capacity) => (auto ? keepPrefix(zone.widths, capacity, gap) : keepAll(zone.widths, gap));
-  const kept: Record<OverflowSide, Prefix> = { left: keep(left), right: keep(right) };
-  const flags = () => ({ left: shelvedFlags(left.widths, kept.left.kept), right: shelvedFlags(right.widths, kept.right.kept) });
-  const first = flags();
-  if (!first.left.includes(true) && !first.right.includes(true) && options.forceChip !== true) {
-    return { ...first, chip: null, used: { left: kept.left.used, right: kept.right.used } };
-  }
-  const free = (side: OverflowSide) => zones[side].capacity - kept[side].used;
-  const chip: OverflowSide = free("right") > free("left") ? "right" : "left";
-  const need = chipWidth + (kept[chip].shown > 0 ? gap : 0);
-  if (free(chip) < need) kept[chip] = keep(zones[chip], zones[chip].capacity - chipWidth - gap);
-  const chipUsed = kept[chip].used + chipWidth + (kept[chip].shown > 0 ? gap : 0);
-  return { ...flags(), chip, used: { left: kept.left.used, right: kept.right.used, [chip]: chipUsed } };
+  const result = (packed: Packed, chip: OverflowSide | null): OverflowFit => {
+    const used = { left: packed.room.left.used, right: packed.room.right.used };
+    if (chip) used[chip] += chipWidth + (packed.room[chip].count > 0 ? gap : 0);
+    return {
+      left: packed.shown.left.map((shown) => !shown),
+      right: packed.shown.right.map((shown) => !shown),
+      moved: packed.moved,
+      chip,
+      used,
+    };
+  };
+  const first = pack(zones, { left: left.capacity, right: right.capacity }, gap, everything);
+  const hidden = SIDES.some((side) => first.shown[side].includes(false));
+  if (!hidden && options.forceChip !== true) return result(first, null);
+  const free = (side: OverflowSide) => zones[side].capacity - first.room[side].used;
+  const preferred: OverflowSide = free("right") > free("left") ? "right" : "left";
+  const withChip = (chip: OverflowSide) => {
+    if (everything || free(chip) >= chipWidth + (first.room[chip].count > 0 ? gap : 0)) return first;
+    return pack(zones, { left: left.capacity, right: right.capacity, [chip]: zones[chip].capacity - chipWidth - gap }, gap, false);
+  };
+  const best = withChip(preferred);
+  const other = withChip(OTHER[preferred]);
+  return shownCount(other) > shownCount(best) ? result(other, OTHER[preferred]) : result(best, preferred);
 }
+
+const shownCount = (packed: Packed) => SIDES.reduce((total, side) => total + packed.room[side].count, 0);
 
 export function overflowCount(fit: Pick<OverflowFit, "left" | "right">, sizes: Record<OverflowSide, readonly number[]>) {
   const sum = (side: OverflowSide) => fit[side].reduce((total, shelved, index) => total + (shelved ? sizes[side][index] ?? 1 : 0), 0);

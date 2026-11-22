@@ -81,6 +81,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
   - `mq/` 攒批开 PR 合入（`pnpm mq:*` 和 pre-push 检查）；`island-lab/` 岛屿实验台（`pnpm lab`）；`progress/` 进度汇总（`pnpm progress`）。
   - 根目录放开发流程脚本：合并队列的检查（`land-check.mjs`）、门禁钩子（`gate/`，Claude Code 的 PreToolUse 钩子，登记在 `.claude/settings.json`：第一次改 `src/`、`src-tauri/`、各家 AI 代理的接入点等之前拦一次，要求先读规则文件或加载 skill，见 [workflow.md](workflow.md)「门禁钩子」）、行数检查、浏览器回归页运行器（`run-regression.mjs`）、dev 前停止运行中的岛屿。
 - `video/`：宣传视频。真的前端加假后端在浏览器里跑，按时间表逐帧渲染成 MP4；自带 `package.json`，不在 workspace 里（用法见 [video/README.md](../../video/README.md)）；成片不进仓库。
+- `bot/`：本项目的 QQ 机器人插件，不进入发布产物。`astrbot/` 下每个 AstrBot 插件一个目录（目录名就是插件名），跑在用户自己的 AstrBot + NapCat 上；第一个是 `astrbot_plugin_fuyu_release`，`pnpm release` 发布后把分享图推到 QQ。部署和本地测试见 [bot/README.md](../../bot/README.md)。
 - `.githooks/`（`core.hooksPath` 指向这里）：
   - `pre-push`：合并队列的推送保护与检查。
   - `pre-commit`：在 `main` 上提交必须写文件名（`git commit -- <文件>`），免得带走别的会话暂存的改动。
