@@ -10,12 +10,12 @@ export type SettingsCategoriesText = {
   backTo: (page: string) => string;
   keywords: Record<
     | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "islandLayout" | "islandPanel" | "islandDisplay" | "theme" | "themeStyle" | "shortcuts" | "todos" | "todosReminders" | "todosArchive" | "calendar" | "music" | "translation" | "clipboard"
-    | "shelf" | "screenshot" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
+    | "shelf" | "screenshot" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "agentNoticeLook" | "calendarAlerts" | "voiceInput"
     | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp",
     string
   >;
-  entries: { general: string; islandLayout: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; todos: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string; about: string };
-  tabs: Record<"islandLayout" | "islandPanel" | "islandDisplay" | "general" | "generalData" | "generalSync" | "todos" | "todosReminders" | "todosArchive" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp", string>;
+  entries: { general: string; islandLayout: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; todos: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string; calendar: string; about: string };
+  tabs: Record<"islandLayout" | "islandPanel" | "islandDisplay" | "general" | "generalData" | "generalSync" | "todos" | "todosReminders" | "todosArchive" | "calendar" | "calendarAlerts" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "agentNoticeLook" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp", string>;
   groups: {
     basics: string;
     features: string;
@@ -64,6 +64,8 @@ export type SettingsCategoriesText = {
   agentRings: string;
   agentRemote: string;
   agentAlerts: string;
+  agentNoticeLook: string;
+  calendarAlerts: string;
   sounds: string;
   agentPush: string;
   agentApprovals: string;
@@ -128,7 +130,9 @@ export const zhCN: SettingsCategoriesText = {
     agentSessions: "会话 卡片 列表 隐藏会话 筛选 子会话",
     agentRings: "用量 用量环 会话环 额度 GLM Kimi Anthropic",
     agentRemote: "SSH 远程 服务器 主机 其他电脑 隧道 代理 转发 端口",
-    agentAlerts: "弹出 提醒 通知",
+    agentAlerts: "弹出 提醒 通知 事件 声音 手机 推送 每件事",
+    agentNoticeLook: "通知 样式 停留 关闭 正文 Markdown 滚动条 审批按钮 刘海",
+    calendarAlerts: "会前 倒计时 强提醒 横幅 加入会议 调休 放假 会议域名 收起条",
     sounds: "音效 声音包 提示音",
     agentPush: "手机推送 Bark cc-connect 机器人 飞书",
     agentApprovals: "批准 允许 拒绝 权限 提问 回答 审批",
@@ -156,6 +160,7 @@ export const zhCN: SettingsCategoriesText = {
     agents: "Agent",
     agentAppearance: "外观",
     agentAlerts: "提醒",
+    calendar: "日历",
     about: "关于",
   },
   tabs: {
@@ -194,7 +199,10 @@ export const zhCN: SettingsCategoriesText = {
     agentAppearance: "状态灯与标题",
     agentSessions: "会话列表",
     agentRings: "用量与会话环",
-    agentAlerts: "桌面提醒",
+    agentAlerts: "事件总表",
+    agentNoticeLook: "通知的样子",
+    calendar: "日历",
+    calendarAlerts: "提醒",
     sounds: "声音",
     agentPush: "推送与机器人",
     about: "概览",
@@ -249,7 +257,9 @@ export const zhCN: SettingsCategoriesText = {
   agentSessions: "会话列表",
   agentRings: "用量与会话环",
   agentRemote: "SSH 远程",
-  agentAlerts: "桌面提醒",
+  agentAlerts: "事件总表",
+  agentNoticeLook: "通知的样子",
+  calendarAlerts: "日历提醒",
   sounds: "声音",
   agentPush: "推送与机器人",
   agentApprovals: "审批",
@@ -314,7 +324,9 @@ export const en: SettingsCategoriesText = {
     agentSessions: "sessions cards list hide filter subagent",
     agentRings: "usage ring session ring quota glm kimi anthropic",
     agentRemote: "ssh remote server host other computers tunnel proxy forward port",
-    agentAlerts: "pop-up alerts notifications",
+    agentAlerts: "pop-up alerts notifications events sounds phone push",
+    agentNoticeLook: "notice style duration close body markdown scrollbar approval buttons notch",
+    calendarAlerts: "meeting countdown banner reminder join holiday eve domain collapsed bar",
     sounds: "sound pack",
     agentPush: "mobile push bark cc-connect bot feishu",
     agentApprovals: "approve allow deny permission questions answer",
@@ -342,6 +354,7 @@ export const en: SettingsCategoriesText = {
     agents: "Agent",
     agentAppearance: "Appearance",
     agentAlerts: "Alerts",
+    calendar: "Calendar",
     about: "About",
   },
   tabs: {
@@ -380,7 +393,10 @@ export const en: SettingsCategoriesText = {
     agentAppearance: "Light and title",
     agentSessions: "Session list",
     agentRings: "Usage and session rings",
-    agentAlerts: "Desktop alerts",
+    agentAlerts: "Events",
+    agentNoticeLook: "Notice look",
+    calendar: "Calendar",
+    calendarAlerts: "Reminders",
     sounds: "Sounds",
     agentPush: "Push and bots",
     about: "Overview",
@@ -435,7 +451,9 @@ export const en: SettingsCategoriesText = {
   agentSessions: "Session list",
   agentRings: "Usage and session rings",
   agentRemote: "SSH remote",
-  agentAlerts: "Desktop alerts",
+  agentAlerts: "Events",
+  agentNoticeLook: "Notice look",
+  calendarAlerts: "Calendar reminders",
   sounds: "Sounds",
   agentPush: "Push and bots",
   agentApprovals: "Approvals",
