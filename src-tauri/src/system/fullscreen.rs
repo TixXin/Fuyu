@@ -67,6 +67,8 @@ pub(crate) fn start(app: &AppHandle) {
         if changed {
             let _ = app.emit_to(island::WINDOW_LABEL, FOREGROUND_FULLSCREEN_CHANGED_EVENT, next);
         }
+        #[cfg(windows)]
+        island::topmost_guard::check(&app, next.covers_island());
         thread::sleep(POLL_INTERVAL);
     });
 }

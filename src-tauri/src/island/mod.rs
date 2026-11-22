@@ -42,6 +42,8 @@ pub(crate) mod taskbar;
 #[cfg(windows)]
 mod taskbar_drag;
 pub(crate) mod top_edge;
+#[cfg(windows)]
+pub(crate) mod topmost_guard;
 mod watch;
 
 #[cfg(test)]
