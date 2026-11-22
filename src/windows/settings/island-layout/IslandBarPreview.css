@@ -22,6 +22,24 @@
   scrollbar-width: none;
 }
 
+.island-bar-preview__zone {
+  min-width: 14px;
+  min-height: 24px;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.island-bar-preview__item[data-dragging] {
+  opacity: 0.35;
+}
+
+.island-bar-preview__zone .island-bar-preview__item {
+  cursor: grab;
+  touch-action: none;
+}
+
 .island-bar-preview__center {
   min-width: 56px;
   display: flex;

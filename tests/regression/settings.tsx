@@ -12,6 +12,7 @@ import { checkGlassLooks } from "./settings-glass-looks";
 import { checkIdleDimSettings } from "./settings-idle-dim";
 import { checkLocalApiNotify } from "./settings-local-api";
 import { checkNotchPreview } from "./settings-notch-preview";
+import { checkCollapsedLanes } from "./settings-collapsed-lanes";
 import { checkCustomPanels, checkIslandLayout, checkIslandPages } from "./settings-island-layout";
 import { checkAgentNoticeSettings } from "./settings-agent-notice";
 import { checkMessageNotice, checkMessageSources } from "./settings-im-sources";
@@ -181,32 +182,7 @@ if (!automated) {
     await openPage("themeStyle"); await checkIdleDimSettings(check); await checkGlassLooks(check); await checkNotchPreview(check);
     await openPage("agentAlerts"); await checkAgentNoticeSettings(check);
     await openPage("islandLayout"); await checkIslandLayout(check); await checkIslandPages(check); await checkCustomPanels(check);
-    const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
-    const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
-    const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean; shelf?: boolean }[] } | null;
-    check(zoneRows("左侧").join("|") === "浮屿水母" && zoneRows("右侧")[0] === "新邮件提醒"
-      && zoneRows("右侧").slice(-3).join("|") === "会话数 / 会话环|计时器|外设电量" && savedItems() === null, "The collapsed bar items list the default layout, the timer and the peripheral battery included, without saving anything");
-    await act(async () => { itemButton("移到左侧：会话数 / 会话环")!.click(); });
-    await act(async () => { itemButton("上移：会话数 / 会话环")!.click(); });
-    check(zoneRows("左侧").join("|") === "会话数 / 会话环|浮屿水母" && savedItems()?.items[0].id === "session-count", "An item moves to the other side and up, and the order is saved");
-    await act(async () => { document.querySelector<HTMLElement>(".collapsed-items__zone[aria-label='左侧'] li:nth-child(2) .toggle-control, .collapsed-items__zone[aria-label='左侧'] li:nth-child(2) [role='switch']")?.click(); });
-    check(savedItems()?.items.find((item) => item.id === "status-light")?.hidden === true, "The status light can be hidden");
-    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".collapsed-items__reset")][0].click(); });
-    check(savedItems() === null && zoneRows("左侧").join("|") === "浮屿水母", "Reset to default clears the saved order");
-    const badge = (kind: string) => document.querySelector(`.collapsed-items small[data-badge="${kind}"]`)?.textContent;
-    await act(async () => { itemButton("收进「+N」小面板：会话数 / 会话环")!.click(); });
-    check(savedItems()?.items.find((item) => item.id === "session-count")?.shelf === true && badge("panel") === "在小面板里" && itemButton("放回岛上：会话数 / 会话环")?.getAttribute("aria-pressed") === "true", "An item can be kept behind +N, and its row says it is in the panel");
-    await act(async () => { itemButton("放回岛上：会话数 / 会话环")!.click(); });
-    localStorage.setItem("fuyu-collapsed-overflow", JSON.stringify(["session-count"]));
-    await act(async () => { window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-overflow" })); });
-    check(!savedItems()?.items.find((item) => item.id === "session-count")?.shelf && badge("panel") === undefined && badge("no-room") === "刘海旁放不下", "Taken back out it is on the island again; a row the island could not fit is marked");
-    localStorage.removeItem("fuyu-collapsed-overflow");
-    await act(async () => { window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-overflow" })); });
-    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".collapsed-items__reset")][0].click(); });
-    check(badge("no-room") === undefined && savedItems() === null, "The mark goes away when the island has room again");
-    await act(async () => { await (await import("@tauri-apps/api/event")).emit("plugin-bar-usage-report", { id: 1, collapsed: false, barWidth: null, items: [{ id: "weather", owner: "@fuyu/weather", hideable: true, box: null, name: "天气" }, { id: "ring", owner: "@fuyu/todo-ring", hideable: false, box: null, name: "待办环" }] }); await new Promise((resolve) => setTimeout(resolve, 50)); });
-    await act(async () => { itemButton("移到左侧：天气")?.click(); });
-    check(zoneRows("左侧").join("|") === "浮屿水母|天气" && !zoneRows("右侧").includes("待办环") && savedItems()?.items.find((item) => item.id === "weather")?.zone === "left", "A plugin item the island reports is listed by name and can change sides; one that cannot be hidden is left out"); localStorage.removeItem("fuyu-collapsed-items");
+    await checkCollapsedLanes(check);
 
     await openPage("theme");
     await checkThemeMarket(check, () => openPage("overview"));
@@ -216,7 +192,7 @@ if (!automated) {
     check(waveLink()?.textContent === "右侧第 5 个 · 调整 ›" && !settingRow("在收起的岛上显示音乐波形")?.querySelector("input"), "The music page only links to where the wave sits on the island");
     await act(async () => { waveLink()!.click(); await new Promise((resolve) => setTimeout(resolve, 50)); });
     check(document.querySelector(".settings-sidebar__item[data-category='islandLayout']")?.getAttribute("aria-current") === "page"
-      && document.querySelector(".collapsed-items__item[data-item='music']")?.classList.contains("collapsed-items__item--found"), "Its link opens the island layout and points at the music row");
+      && document.querySelector(".lane-chip[data-item='music']")?.classList.contains("lane-chip--found"), "Its link opens the island layout and points at the music chip");
 
     await openPage("behaviorTuck");
     const holdRow = (title: string) => settingRow(title)?.querySelector<HTMLInputElement>("input");

@@ -1,21 +1,20 @@
 import { act } from "react";
 import { FUYU_PANEL_ID, PANEL_ICONS, saveCustomPanels } from "../../src/lib/settings/customPanels";
 
-const row = (item: string) => document.querySelector<HTMLElement>(`.collapsed-items__item[data-item='${item}']`);
-const style = (item: string) => row(item)?.querySelector<HTMLDetailsElement>("details.collapsed-items__style");
-const titles = (item: string) => [...(style(item)?.querySelectorAll(".settings-row__title") ?? [])].map((title) => title.textContent);
+const styleTab = () => document.querySelector<HTMLElement>(".lane-styles__tabs [aria-selected='true']")?.dataset.item;
+const styleTitles = () => [...document.querySelectorAll(".lane-styles__body .settings-row__title")].map((title) => title.textContent);
 
 export async function checkIslandLayout(check: (condition: unknown, message: string) => void) {
   const preview = document.querySelector(".island-bar-preview__bar");
   const chips = [...(preview?.querySelectorAll<HTMLElement>(".island-bar-preview__item") ?? [])].map((chip) => chip.dataset.item);
   check(chips[0] === "status-light" && chips.includes("session-count") && chips.includes("center"), "The island layout page draws the collapsed bar with its items in order");
-  check(!style("status-light")?.open && titles("status-light").includes("样式"), "A row with a style keeps it folded under the row");
+  check(styleTab() === "center" && styleTitles().includes("图案") && document.querySelector(".lane-styles__tabs [data-item='todos-count']") && document.querySelector(".lane-styles__tabs [data-item='status-light']"),
+    "The style card has a tab per styled item, the center pattern first");
   await act(async () => { preview!.querySelector<HTMLButtonElement>("[data-item='session-count']")!.click(); });
-  check(style("session-count")?.open && row("session-count")?.classList.contains("collapsed-items__item--found") && titles("session-count").includes("样式"),
-    "Clicking an item on the preview opens its row with the session ring style");
-  await act(async () => { row("status-light")!.querySelector<HTMLButtonElement>(".collapsed-items__expand")!.click(); });
-  check(style("status-light")?.open && !style("session-count")?.open, "Opening another row folds the one before");
-  check(row("center") && titles("center").includes("图案") && titles("todos-count").length === 1, "The middle group holds the center pattern and the todo count");
+  check(styleTab() === "session-count" && document.querySelector(".lane-chip[data-item='session-count']")?.classList.contains("lane-chip--found") && styleTitles().includes("样式"),
+    "Clicking an item on the preview points at its chip and shows the session ring style");
+  await act(async () => { document.querySelector<HTMLButtonElement>(".lane-chip[data-item='status-light'] .lane-chip__style")!.click(); });
+  check(styleTab() === "status-light" && styleTitles().includes("样式"), "A chip's style button switches the style card to it");
   check([...document.querySelectorAll(".editor-panel .settings-row__title")].some((title) => title.textContent === "放不下的项目收进「+N」"), "The +N switch is on the island layout page");
 }
 
@@ -32,7 +31,7 @@ export async function checkIslandPages(check: (condition: unknown, message: stri
   await switchMode("expanded");
   const before = pageIds();
   check(before[0] === "panel:fuyu" && before[1] === "agents" && before[2] === "todo" && before.includes("timer") && before.includes("qq") && previewTabs()[0] === "panel:fuyu"
-    && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] .panel-text-icon")?.textContent === "Fuyu" && !document.querySelector(".layout-chip--create") && !document.querySelector(".collapsed-items__zone"),
+    && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] .panel-text-icon")?.textContent === "Fuyu" && !document.querySelector(".layout-chip--create") && !document.querySelector(".collapsed-lanes"),
     "Switching to the expanded island draws its preview and lists the Fuyu page first, then the built-in pages in today's order, with no way to make more panels");
   await act(async () => { altArrow(pageRow("todo")!, "ArrowLeft"); });
   check(pageIds()[1] === "todo" && savedPages()?.order[1] === "todo" && previewTabs()[1] === "todo", "Alt+Left moves a page forward, saves the order and the preview follows");
