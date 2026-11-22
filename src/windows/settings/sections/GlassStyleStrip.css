@@ -103,7 +103,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .glass-art__layer,
-  .glass-art--live .glass-art__layer {
+  .glass-art--live .glass-art__layer,
+  .glass-art--flow .glass-art__layer--a,
+  .glass-art--flow .glass-art__layer--b,
+  .glass-art--aurora .glass-art__layer--a,
+  .glass-art--shader .glass-art__layer--a,
+  .glass-art--shader .glass-art__layer--b {
     animation: none;
   }
 }
