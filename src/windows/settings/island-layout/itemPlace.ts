@@ -4,12 +4,12 @@ export type ItemPlace =
   | { kind: "left" | "right"; position: number }
   | { kind: "panel" | "hidden" | "absent" };
 
-export function itemPlace(placements: readonly CollapsedPlacement[], listed: ReadonlySet<string>, id: string): ItemPlace {
+export function itemPlace(placements: readonly CollapsedPlacement[], listed: ReadonlySet<string>, id: string, away: ReadonlySet<string> = new Set()): ItemPlace {
   const placement = placements.find((candidate) => candidate.id === id);
   if (!placement || !listed.has(id)) return { kind: "absent" };
   if (placement.hidden) return { kind: "hidden" };
-  if (placement.shelf) return { kind: "panel" };
-  const zone = placements.filter((candidate) => candidate.zone === placement.zone && listed.has(candidate.id));
+  if (placement.shelf || away.has(id)) return { kind: "panel" };
+  const zone = placements.filter((candidate) => candidate.zone === placement.zone && listed.has(candidate.id) && !away.has(candidate.id));
   return { kind: placement.zone, position: zone.findIndex((candidate) => candidate.id === id) + 1 };
 }
 

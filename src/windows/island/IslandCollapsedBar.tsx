@@ -16,6 +16,8 @@ import { useNotchText } from "./useNotchText";
 import { notchTextPage } from "./notchText";
 import { CollapsedMore } from "./CollapsedMore";
 import { BAR_UNIT, useCollapsedOverflow, type CollapsedOverflowState } from "./useCollapsedOverflow";
+import { usePillOverflow } from "./usePillOverflow";
+import { usePlaceNewPluginItems } from "./usePlaceNewPluginItems";
 import { useCollapsedItemNames } from "./useCollapsedItemNames";
 import { useCollapsedContent } from "./useCollapsedContent";
 import { AlertPopup, NotchAlertLeading, NotchAlertTrailing, useActiveAlert } from "./NotchAlert";
@@ -133,6 +135,7 @@ export function IslandCollapsedBar({
   });
   const offered = items.map(({ id }) => id);
   const placements = arrangeCollapsedItems(offered, saved);
+  usePlaceNewPluginItems(offered, saved, placements, savePlacements);
   const byId = new Map(items.map((item) => [item.id, item]));
   const zone = (name: CollapsedZone) => zoneIds(placements, name, offered).flatMap((id) => byId.get(id) ?? []);
 
@@ -156,13 +159,21 @@ export function IslandCollapsedBar({
   const pinned = new Set(shelfIds(placements, offered));
   const panelTexts = notchRoute.panel;
   const forceChip = pinned.size > 0 || panelTexts.length > 0;
-  const overflow = useCollapsedOverflow(
+  const notchOverflow = useCollapsedOverflow(
     notch !== null && (overflowMore || forceChip),
     !isExpanded && !isTucked && (wings === "idle" || wings === "dropped"),
     { left: leftUnits, right: rightUnits },
     { left: leftWingRef, right: rightWingRef },
     { auto: overflowMore, forceChip, maxWing: notchWingMax },
   );
+  const pillOverflow = usePillOverflow(
+    notch === null && overflowMore,
+    !isExpanded && !isTucked,
+    [...leftUnits, ...rightUnits],
+    barRef,
+    { auto: overflowMore, keepChip: pinned.size > 0 },
+  );
+  const overflow = notch !== null ? notchOverflow : pillOverflow;
   const overflowKey = [...overflow.shelved].join("\n");
   useEffect(() => {
     saveCollapsedOverflow(overflowKey === "" ? [] : overflowKey.split("\n"));
@@ -172,7 +183,7 @@ export function IslandCollapsedBar({
     .flatMap((placement) => (placement.hidden ? [] : byId.get(placement.id) ?? []))
     .filter((item) => pinned.has(item.id) || overflow.shelved.has(item.id))
     .map((item) => ({ id: item.id, name: nameOf(item.id), page: item.page ?? null }));
-  const chipSide = notch !== null ? overflow.chip : pinned.size > 0 ? "end" : null;
+  const chipSide = notch !== null ? overflow.chip : pinned.size > 0 || overflow.shelved.size > 0 ? "end" : null;
   const moreTexts = panelTexts.map((text) => ({ id: text.item, node: lineView(text.item), page: notchTextPage(text) as IslandPage | null }));
   const more = (side: "left" | "right" | "end") => chipSide === side && moreRows.length + moreTexts.length > 0 && <CollapsedMore rows={moreRows} texts={moreTexts} onOpenPage={onOpenPage} reserve={side === "end"} />;
 

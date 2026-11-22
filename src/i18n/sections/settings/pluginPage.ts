@@ -55,7 +55,7 @@ export type SettingsPluginPageText = {
     unmeasured: string;
     cap: (max: number) => string;
     width: (px: number) => string;
-    state: { clipped: (px: number) => string; hidden: string; idle: string; off: string; unmeasured: string };
+    state: { clipped: (px: number) => string; hidden: string; panel: string; idle: string; off: string; unmeasured: string };
     side: { left: string; right: string };
     actions: { left: string; right: string; toLeft: string; toRight: string; hide: string; show: string; settings: string };
   };
@@ -303,6 +303,7 @@ export const zhCN: SettingsPluginPageText = {
     state: {
       clipped: (px) => `放不下，右端被裁掉 ${px} px`,
       hidden: "你把它从收起条上拿掉了",
+      panel: "在「+N」小面板里",
       idle: "插件现在没有要显示的内容",
       off: "插件没在运行",
       unmeasured: "还没量到",
@@ -572,6 +573,7 @@ export const en: SettingsPluginPageText = {
     state: {
       clipped: (px) => `Doesn't fit: ${px} px cut off on the right`,
       hidden: "You took it off the collapsed bar",
+      panel: "Behind +N",
       idle: "The plugin has nothing to show right now",
       off: "The plugin isn't running",
       unmeasured: "Not measured yet",

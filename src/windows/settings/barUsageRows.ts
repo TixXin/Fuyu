@@ -1,7 +1,7 @@
 import type { BarUsageReport } from "../../features/plugin-kernel/barUsage.ts";
 import { arrangeCollapsedItems, isCollapsedItemHidden, type CollapsedPlacement, type CollapsedZone } from "../../lib/settings/collapsedItems.ts";
 
-export type BarRowState = "shown" | "clipped" | "hidden" | "idle" | "off" | "unmeasured";
+export type BarRowState = "shown" | "clipped" | "hidden" | "panel" | "idle" | "off" | "unmeasured";
 
 export interface BarUsageEntry {
   id: string;
@@ -38,11 +38,11 @@ export interface BarUsageModel {
 }
 
 const VISIBLE: readonly BarRowState[] = ["shown", "clipped"];
-const REST_ORDER: readonly BarRowState[] = ["hidden", "idle", "unmeasured", "off"];
+const REST_ORDER: readonly BarRowState[] = ["hidden", "panel", "idle", "unmeasured", "off"];
 
 export const isOnBar = (row: Pick<BarUsageRow, "state">) => VISIBLE.includes(row.state);
 
-export function barUsageModel(entries: readonly BarUsageEntry[], report: BarUsageReport | null, saved: readonly CollapsedPlacement[]): BarUsageModel {
+export function barUsageModel(entries: readonly BarUsageEntry[], report: BarUsageReport | null, saved: readonly CollapsedPlacement[], away: ReadonlySet<string> = new Set()): BarUsageModel {
   const measured = report?.collapsed === true;
   const known = new Map(entries.map((entry) => [entry.id, entry]));
   const reported = (report?.items ?? []).filter((item) => known.has(item.owner));
@@ -54,7 +54,8 @@ export function barUsageModel(entries: readonly BarUsageEntry[], report: BarUsag
     const entry = known.get(item.owner)!;
     const hidden = item.hideable && isCollapsedItemHidden(placements, item.id);
     const cut = item.box ? Math.max(0, item.box.wanted - item.box.width) : 0;
-    const state: BarRowState = hidden ? "hidden" : !measured ? "unmeasured" : !item.box ? "idle" : cut > 0 ? "clipped" : "shown";
+    const shelved = !item.box && (away.has(item.id) || saved.some((placement) => placement.id === item.id && placement.shelf === true));
+    const state: BarRowState = hidden ? "hidden" : shelved ? "panel" : !measured ? "unmeasured" : !item.box ? "idle" : cut > 0 ? "clipped" : "shown";
     const onBar = VISIBLE.includes(state);
     rows.push({
       key: item.id,
