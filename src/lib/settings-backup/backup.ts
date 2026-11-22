@@ -15,6 +15,7 @@ export const BACKUP_KEYS = [
   "fuyu-collapsed-items",
   "fuyu-island-pages",
   "fuyu-custom-panels",
+  "fuyu-collapsed-text",
   "fuyu-screenshot-annotation",
   "fuyu-screenshot-settings",
   "fuyu-save-directory",

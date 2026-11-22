@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "../../i18n";
 import { setIslandOverflowRect } from "./api";
@@ -9,6 +9,10 @@ import type { IslandPage } from "./types";
 import "./CollapsedMore.css";
 
 export type CollapsedMoreRow = { id: string; name: string; page: IslandPage | null };
+export type CollapsedMoreText = { id: string; node: ReactNode; page: IslandPage | null };
+
+const FOCUSABLE = "button, [data-more-text]";
+const NO_TEXTS: readonly CollapsedMoreText[] = [];
 
 const OPEN_DELAY_MS = 150;
 const CLOSE_DELAY_MS = 220;
@@ -19,7 +23,7 @@ const CHIP_FIT_WIDTH = 28;
 
 type Place = { top: number; left: number | null; center: number; root: Element };
 
-export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: readonly CollapsedMoreRow[]; onOpenPage: (page: IslandPage) => void; reserve?: boolean }) {
+export function CollapsedMore({ rows, texts = NO_TEXTS, onOpenPage, reserve = false }: { rows: readonly CollapsedMoreRow[]; texts?: readonly CollapsedMoreText[]; onOpenPage: (page: IslandPage) => void; reserve?: boolean }) {
   const copy = useTranslation().island;
   const chipRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -27,6 +31,7 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
   const [place, setPlace] = useState<Place | null>(null);
   const open = place !== null;
   const spotlight = useCollapsedSpotlight(rows.map((row) => row.id));
+  const count = rows.length + texts.length;
 
   const cancel = () => window.clearTimeout(timerRef.current);
   const show = useCallback(() => {
@@ -77,7 +82,7 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
     };
   }, [open, place?.left]);
 
-  const pick = (row: CollapsedMoreRow) => {
+  const pick = (row: { page: IslandPage | null }) => {
     hide();
     if (row.page) onOpenPage(row.page);
   };
@@ -87,7 +92,7 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
       hide();
     } else if (event.key === "ArrowDown" && open) {
       event.preventDefault();
-      panelRef.current?.querySelector<HTMLElement>("button")?.focus();
+      panelRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
     }
   };
   const onPanelKey = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -99,7 +104,7 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
     }
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
     event.preventDefault();
-    const buttons = [...(panelRef.current?.querySelectorAll<HTMLElement>("button") ?? [])];
+    const buttons = [...(panelRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])];
     const at = buttons.indexOf(document.activeElement as HTMLElement);
     buttons[(at + (event.key === "ArrowDown" ? 1 : buttons.length - 1)) % Math.max(buttons.length, 1)]?.focus();
   };
@@ -110,7 +115,7 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
         ref={chipRef}
         className={MORE_CHIP_CLASS}
         type="button"
-        aria-label={copy.overflowMore(rows.length)}
+        aria-label={copy.overflowMore(count)}
         aria-haspopup="menu"
         aria-expanded={open}
         onPointerEnter={() => later(show, OPEN_DELAY_MS)}
@@ -124,7 +129,7 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
         onKeyDown={onChipKey}
         {...spotlight}
       >
-        +{rows.length}
+        +{count}
       </button>
       {place && createPortal(
         <div
@@ -137,6 +142,26 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
           onPointerLeave={() => later(hide, CLOSE_DELAY_MS)}
           onKeyDown={onPanelKey}
         >
+          {texts.map((text) => (
+            <div
+              key={text.id}
+              className="island-more-panel__text"
+              role="menuitem"
+              tabIndex={-1}
+              data-more-text=""
+              data-item={text.id}
+              aria-disabled={text.page ? undefined : true}
+              onClick={() => pick(text)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                pick(text);
+              }}
+            >
+              {text.node}
+            </div>
+          ))}
+          {texts.length > 0 && rows.length > 0 ? <hr className="island-more-panel__rule" /> : null}
           {rows.map((row) => row.page ? (
             <button key={row.id} className="island-more-panel__row" type="button" role="menuitem" onClick={() => pick(row)}>{row.name}</button>
           ) : (

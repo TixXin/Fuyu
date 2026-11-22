@@ -8,6 +8,7 @@ import { MAX_NOTCH_WING_MAX, MIN_NOTCH_WING_MAX } from "../../../lib/settings/se
 import type { IslandSettings } from "../../../lib/settings/types";
 import { useIslandNotchShown } from "../useIslandNotchShown";
 import { NotchSettings } from "./notch/NotchSettings";
+import { NotchTextRows } from "./NotchTextRows";
 
 export function DisplaySettingsSection({
   settings,
@@ -55,6 +56,7 @@ export function DisplaySettingsSection({
         )}
       </SettingsGroup>
       {notchGroups && <NotchSettings settings={settings} onSettingsChange={onSettingsChange} />}
+      {notchGroups && <NotchTextRows disabled={!settings.showCollapsedText} />}
     </>
   );
 }

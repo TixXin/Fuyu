@@ -68,6 +68,26 @@ export function useNotchWingNeed(): number | null {
   return useSyncExternalStore(subscribeWing, () => wingNeed, () => null);
 }
 
+let textRow = false;
+const rowListeners = new Set<() => void>();
+
+export function reportNotchTextRow(shown: boolean) {
+  if (shown === textRow) return;
+  textRow = shown;
+  rowListeners.forEach((listener) => listener());
+}
+
+function subscribeRow(listener: () => void) {
+  rowListeners.add(listener);
+  return () => {
+    rowListeners.delete(listener);
+  };
+}
+
+export function useNotchTextRow(): boolean {
+  return useSyncExternalStore(subscribeRow, () => textRow, () => false);
+}
+
 export const ALERT_NOTCH_WING = 90;
 
 export function notchBarWidth(notch: IslandNotch, collapsedScale: number, wing: number) {
@@ -109,6 +129,7 @@ export type NotchDropSources = {
   preview: unknown;
   notice: unknown;
   peek: unknown;
+  row?: unknown;
 };
 
 export function hasNotchDrop(sources: NotchDropSources) {

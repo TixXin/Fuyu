@@ -46,7 +46,9 @@ import { sideColumnTarget } from "./sideColumn";
 import { IslandRunners } from "./IslandRunners";
 import { islandMarginY } from "./islandForm";
 import { useAutoIslandForm } from "./autoIslandForm";
-import { hasNotchDrop, notchBarWidth, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync, useNotchWingNeed } from "./notch";
+import { hasNotchDrop, notchBarWidth, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync, useNotchTextRow, useNotchWingNeed } from "./notch";
+import { anyNotchText } from "./notchText";
+import { useNotchTextModes } from "../../lib/settings/collapsedText";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
 import { LINE_PRIORITY } from "../../features/plugin-kernel/islandContributions";
@@ -104,6 +106,9 @@ export function IslandApp() {
   const notch = useIslandNotch();
   const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
+  const notchModes = useNotchTextModes();
+  const notchText = notch !== null && settings.showCollapsedText && anyNotchText(notchModes);
+  const notchRow = useNotchTextRow();
   const { lines: contributedLines, alerts, popups, style, settled, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus, summaryGrow, glow: contributedGlow } = useIslandContributed();
   const grow = mode === "collapsed" && !isTucked && notch === null && side === null ? summaryGrow : null;
   const textWidth = useCollapsedWidth({
@@ -222,7 +227,7 @@ export function IslandApp() {
   useIslandGlassStatus({ settings, nativeGlassState, layer: layerState });
 
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
+    preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true), row: notchText && notchRow,
   }));
   const hoverTucked = useIslandHover({
     settings,
@@ -272,6 +277,7 @@ export function IslandApp() {
     showCollapsedText: barText,
     overflowMore: settings.collapsedOverflowMore,
     notchWingMax: settings.notchWingMax,
+    notchText,
     notchRim,
     notchRing,
     features,
@@ -309,7 +315,7 @@ export function IslandApp() {
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${lightStage ? " island-light" : ""}${taskbarClear ? " stage--taskbar-clear" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
-      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
+      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText || notchText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       {taskbarParts.panelled ? (
         <IslandTaskbarParts shell={shell} mode={mode} parts={taskbarParts} lift={onTaskbar.lift}>
           {pages}

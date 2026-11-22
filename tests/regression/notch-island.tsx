@@ -22,6 +22,7 @@ import type { AgentApprovals } from "../../src/features/agent-status/approvals/u
 import { permission, SESSIONS } from "./agentNoticeGallery";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import { mirrorDiffers } from "./mirrorCheck";
+import { checkNotchText } from "./notchTextChecks";
 import { collapsedFit } from "../../src/windows/island/collapsedFitStore";
 import { islandSpotlight, SPOTLIGHT_ANIMATION } from "../../src/features/plugin-kernel/islandSpotlight";
 import type { IslandPage } from "../../src/windows/island/types";
@@ -57,11 +58,11 @@ function addClocks() {
   return () => removers.forEach((remove) => remove());
 }
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null; card: NoticeCard; more: boolean; wing: number };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null; card: NoticeCard; more: boolean; wing: number; text: boolean; todo: string };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack, card: demoCard, more: true, wing: Number(params.get("wing")) || 100 });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack, card: demoCard, more: true, wing: Number(params.get("wing")) || 100, text: params.has("text"), todo: "写周报和整理会议记录" });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
@@ -69,13 +70,13 @@ function Fixture() {
   const fitWidth = useSyncExternalStore(collapsedFit.subscribe, collapsedFit.total);
   const wingNeed = useNotchWingNeed();
   const width = notchFittedWidth(Math.min(520, 300 + fitWidth), state.notch, 1, Boolean(state.level || state.device), Math.max(state.wing, wingNeed ?? 0));
-  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: state.preview }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, barText: !state.notch, todoTitle: "写周报和整理会议记录", translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: state.preview }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, barText: !state.notch, todoTitle: state.todo, translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device });
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${state.popup ? notchPanelWidth(400, state.notch, 1, true) : notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
     <IslandShell
       mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={false} showTitle={false}
       showCollapsedText={!state.notch} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
-      onOpenPage={(page) => openedPages.push(page)} overflowMore={state.more} notchWingMax={state.wing}
+      onOpenPage={(page) => openedPages.push(page)} overflowMore={state.more} notchWingMax={state.wing} notchText={state.text}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       {state.stack ? <NoticeStack notch={state.stack} card={state.card} /> : <span>待办清单</span>}
@@ -308,6 +309,8 @@ async function runChecks() {
     await set({ device: null });
     await settleTransitions();
     check(bar().querySelector(".island__notch-wing--left .island__pulse"), "提示结束后刘海左边换回状态灯");
+
+    await checkNotchText({ check, set, settle: settleTransitions, island, bar, chip, panel, opened: () => last(openedPages), notchHeight: NOTCH.height });
 
     await set({ tucked: true });
     await settleTransitions();
