@@ -323,6 +323,8 @@ Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态
 - 开发版一启动就 panic，报 WebView2 `0x800700AA`「请求的资源在使用中」或 `拒绝访问 (os error 5)`：沙箱给工作区加的 Low 完整性标记让 `target\debug\fuyu.exe` 以低完整性运行，写不了 `%APPDATA%`。`pnpm tauri dev` 启动前会自动把 `target\debug` 改回 Medium（`scripts/dev-integrity.mjs`）；原因、确认方法和手动修法见 [dev-island-issues.md](../investigations/dev-island-issues.md) 第 5 节。
 - 手动关 land PR（被新 PR 取代了、不要了）用 `gh pr close <n> --delete-branch`，不然分支一直留在远程；land 只自动关本机的、提交都已经在新 PR 里的那些（F59）。
 - PR 落后于 `main`：工作流 `.github/workflows/update-behind-prs.yml`（`scripts/mq/updateBehind.mjs`）按开启自动合并的先后，只更新排在最前、能合入的那个 PR；它出问题时 `pnpm mq:wait --update` 自己更新。它用仓库 secret `PR_UPDATER_TOKEN`，过期时 PR 会停在落后状态。
+- `mq:wait` 读 PR 状态遇到网络错误（`Post "https://api.github.com/graphql": EOF`、连接被重置、HTTP 502/503/504 这类）时每 15 秒重试，连续 5 次才退出；别的 `gh` 错误照旧直接退出（D119）。
+- `mq:wait` 报 CI 挂了、挂的是回归页时，它读失败日志里的 `✗ <页面>` 行，再查最近 30 次 CI 里 main 和 land 分支上挂过的运行（含重跑前的那次，不含这个 PR 自己的运行）：同一页挂过的标「疑似时好时坏」，提示开任务；挂的全是这类页时给出 `gh run rerun <运行号> --failed`。没挂过的照常当真失败查（D119）。
 - `mq:wait` 报告合入了，但本地 `main` 没跟上：`mq:sync` 会列出挡路的文件和原因（没提交的改动和 `origin/main` 改了同一处这类），等那些文件提交后再 `pnpm mq:sync`。land 说「改在仓库内部合并」之后也是这种情况。
 - land 说「本地的提交和 origin/main 冲突，什么都没动」：两边的提交真的有内容冲突，land 列出冲突的文件。`git status` 里没有别人没提交的已跟踪文件时，才能自己 `git merge origin/main` 解决、提交，再 land；有的话不要 `git merge`（F58），先找改那些文件的会话或全局总控。
 - 一批里别人的提交让 PR 的 CI 没过（常见的是 Windows 上写的 Rust 在 `rust-macos` 上编译不过，本机查不出来）：先用 SendMessage 把失败的 job 和报错发给提交它的会话，并订阅它空闲。它空闲后那些文件仍没有改动、也没有回复时，被挡住的会话可以自己做最小的修复（只让检查通过，不改逻辑），单独提交、标题写清补的是哪个提交，再发消息告知对方；动手前先看那些文件有没有没提交的改动，有就不动。
