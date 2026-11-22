@@ -21,6 +21,7 @@ export type IslandText = {
     done: string;
     keys: string;
     collapsedWidth: (extra: string) => string;
+    notchWing: (wing: number) => string;
     detent: Record<"min" | "compact" | "default" | "wide" | "tall" | "max" | "plus60" | "plus120", string>;
     preset: Record<"compact" | "default" | "large", string>;
   };
@@ -88,6 +89,7 @@ export const zhCN: IslandText = {
     done: "完成",
     keys: "方向键微调",
     collapsedWidth: (extra) => `折叠宽度 ${extra}`,
+    notchWing: (wing) => `两侧最宽 ${wing}`,
     detent: { min: "最小", compact: "适中", default: "默认", wide: "宽", tall: "高", max: "最大", plus60: "+60", plus120: "+120" },
     preset: { compact: "紧凑", default: "默认", large: "宽大" },
   },
@@ -161,6 +163,7 @@ export const en: IslandText = {
     done: "Done",
     keys: "Arrow keys nudge",
     collapsedWidth: (extra) => `Bar width ${extra}`,
+    notchWing: (wing) => `Side width ${wing}`,
     detent: { min: "Min", compact: "Medium", default: "Default", wide: "Wide", tall: "Tall", max: "Max", plus60: "+60", plus120: "+120" },
     preset: { compact: "Compact", default: "Default", large: "Large" },
   },

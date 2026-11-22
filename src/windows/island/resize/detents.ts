@@ -9,11 +9,11 @@ export const FREE_SNAP = 10;
 export const PRESET_SNAP = 28;
 const MIN_GAP = 40;
 
-function pick(candidates: Detent[], limits: Limits): Detent[] {
+function pick(candidates: Detent[], limits: Limits, gap = MIN_GAP): Detent[] {
   const kept: Detent[] = [];
   for (const candidate of candidates) {
     if (candidate.value < limits.min || candidate.value > limits.max) continue;
-    if (kept.some((detent) => Math.abs(detent.value - candidate.value) < MIN_GAP)) continue;
+    if (kept.some((detent) => Math.abs(detent.value - candidate.value) < gap)) continue;
     kept.push(candidate);
   }
   return kept.sort((a, b) => a.value - b.value);
@@ -46,6 +46,14 @@ export function collapsedDetents(limits: Limits): Detent[] {
     { value: 60, id: "plus60" },
     { value: 120, id: "plus120" },
   ], limits);
+}
+
+export function notchWingDetents(defaultWing: number, limits: Limits): Detent[] {
+  return pick([
+    { value: defaultWing, id: "default" },
+    { value: limits.max, id: "max" },
+    { value: defaultWing + 30, id: "plus60" },
+  ], limits, MIN_GAP / 2);
 }
 
 export function snap(value: number, detents: Detent[], radius = FREE_SNAP): Snapped {

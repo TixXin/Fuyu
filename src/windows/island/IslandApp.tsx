@@ -46,7 +46,7 @@ import { sideColumnTarget } from "./sideColumn";
 import { IslandRunners } from "./IslandRunners";
 import { islandMarginY } from "./islandForm";
 import { useAutoIslandForm } from "./autoIslandForm";
-import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync, useNotchWingNeed } from "./notch";
+import { hasNotchDrop, notchBarWidth, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync, useNotchWingNeed } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
 import { LINE_PRIORITY } from "../../features/plugin-kernel/islandContributions";
@@ -143,7 +143,7 @@ export function IslandApp() {
     panelIslandWidth(panelWidth + editGrow, settings.expandedScale),
     openPopup?.wide === true,
   );
-  const resizeModel = useIslandResize(settings, setSettings, page, pageSize);
+  const resizeModel = useIslandResize(settings, setSettings, page, pageSize, notch !== null);
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
   const pageIslandHeight = fuyuPage && !popup ? pageSize.height : getExpandedIslandHeight({ maxPanelHeight: pageSize.height, panel: popups.get(page), popup });
   const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
@@ -293,7 +293,7 @@ export function IslandApp() {
     fuyuTabIcon: settings.fuyuTabIcon,
     notice: islandNotice,
     collapsedSlots,
-    resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled && (mode === "expanded" || notch === null)} size={pageSize} extra={settings.collapsedWidthExtra} />,
+    resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled} size={pageSize} extra={settings[resizeModel.barKey]} barWidth={notch ? (wing) => notchBarWidth(notch, settings.collapsedScale, wing) : undefined} />,
   };
   const pages = (
     <>

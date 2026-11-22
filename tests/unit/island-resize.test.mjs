@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   collapsedDetents,
   heightDetents,
+  notchWingDetents,
   panelPresets,
   snap,
   snapPreset,
@@ -26,6 +27,11 @@ test("width detents stay inside the limits, keep the page default and drop near 
 test("height and collapsed detents never leave their ranges", () => {
   assert.deepEqual(heightDetents(386, { min: 240, max: 500 }).map((detent) => detent.value), [240, 386, 500]);
   assert.deepEqual(collapsedDetents({ min: -60, max: 180 }).map((detent) => detent.value), [-60, 0, 60, 120, 180]);
+});
+
+test("notch wing detents cover the 100 to 170 range of the side-width setting", () => {
+  assert.deepEqual(notchWingDetents(100, { min: 100, max: 170 }).map((detent) => [detent.id, detent.value]), [["default", 100], ["plus60", 130], ["max", 170]]);
+  assert.deepEqual(notchWingDetents(100, { min: 100, max: 120 }).map((detent) => detent.value), [100, 120]);
 });
 
 test("snapping pulls a value onto the nearest detent only within the radius", () => {
