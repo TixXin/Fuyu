@@ -24,10 +24,11 @@ export type IslandPageRow = {
   plugin: boolean;
   off: boolean;
   hidden: boolean;
+  headerDot: boolean;
   panel?: string;
 };
 
-type BaseRow = Omit<IslandPageRow, "hidden" | "defaultIcon" | "iconName">;
+type BaseRow = Omit<IslandPageRow, "hidden" | "defaultIcon" | "iconName" | "headerDot">;
 
 export function useIslandPageRows(settings: IslandSettings, pluginPages: readonly BarUsagePage[] | null) {
   const t = useTranslation();
@@ -37,9 +38,11 @@ export function useIslandPageRows(settings: IslandSettings, pluginPages: readonl
   const unsupported = useUnsupportedFeatures();
   const { layout, save } = useIslandPages();
 
-  const rows = useMemo(() => {
+  const { rows, screenshotOn } = useMemo(() => {
     const on = (owner: string, fallback?: (value: IslandSettings) => boolean) => isBuiltinEnabled(plugins, owner, fallback?.(settings) ?? true);
-    const folded = on("clipboard") && !unsupported.has("clipboard") && on("screenshot", (value) => value.screenshotEnabled);
+    const screenshotEnabled = on("screenshot", (value) => value.screenshotEnabled);
+    const screenshotOn = screenshotEnabled && !unsupported.has("screenshot");
+    const folded = on("clipboard") && !unsupported.has("clipboard") && screenshotEnabled;
     const builtin = BUILTIN_PAGES.filter((page) => !(page.id === "screenshots" && folded)).map((page) => ({
       id: page.id,
       shortcutOrder: page.shortcutOrder,
@@ -68,15 +71,16 @@ export function useIslandPageRows(settings: IslandSettings, pluginPages: readonl
     }));
     const defaults = byShortcut<{ id: string; shortcutOrder?: number; headerDot?: boolean; external: boolean; row: BaseRow }>([...builtin, ...custom, ...external]);
     const order = arrangeIslandPages(defaults.map((page) => page.id), layout.order);
-    const byId = new Map(defaults.map((page) => [page.id, page.row]));
+    const byId = new Map(defaults.map((page) => [page.id, { ...page.row, headerDot: page.headerDot ?? true }]));
     const hidden = new Set(layout.hidden);
-    return order.flatMap((id): IslandPageRow[] => {
+    const list = order.flatMap((id): IslandPageRow[] => {
       const row = byId.get(id);
       if (!row) return [];
       const iconName = id === FUYU_PAGE_ID ? fuyuPageIconName(layout.icons, id, settings.fuyuTabIcon) : layout.icons?.[id];
       return [{ ...row, icon: pageIconComponent(iconName) ?? row.icon, defaultIcon: row.icon, iconName, hidden: hidden.has(id) }];
     });
+    return { rows: list, screenshotOn };
   }, [appName, layout, pluginPages, plugins, settings, text, unsupported]);
 
-  return { rows, layout, save, pluginsListed: pluginPages !== null };
+  return { rows, layout, save, pluginsListed: pluginPages !== null, screenshotOn };
 }

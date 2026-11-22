@@ -14,16 +14,17 @@ type PanelEditorProps = {
   selected: string | undefined;
   onSelect: (widget: string) => void;
   onChange: (panel: CustomPanel) => void;
+  strip: (panel: CustomPanel) => CustomPanel;
 };
 
-function PanelHead({ panel, onChange }: Pick<PanelEditorProps, "panel" | "onChange">) {
+function PanelHead({ panel, onChange, strip }: Pick<PanelEditorProps, "panel" | "onChange" | "strip">) {
   const text = useTranslation().islandWidgets.panel;
   return (
     <div className="panel-head">
       <span className="panel-head__label">{text.mode}</span>
       <div className="panel-head__modes" role="radiogroup" aria-label={text.mode}>
         {PANEL_MODES.map((mode) => (
-          <button key={mode} type="button" role="radio" data-mode={mode} aria-checked={panel.mode === mode} onClick={() => onChange(setPanelMode(panel, mode))}>
+          <button key={mode} type="button" role="radio" data-mode={mode} aria-checked={panel.mode === mode} onClick={() => onChange(setPanelMode(strip(panel), mode, true))}>
             {text.modes[mode]}
           </button>
         ))}
@@ -32,7 +33,7 @@ function PanelHead({ panel, onChange }: Pick<PanelEditorProps, "panel" | "onChan
   );
 }
 
-export function PanelEditor({ panel, library, selected, onSelect, onChange }: PanelEditorProps) {
+export function PanelEditor({ panel, library, selected, onSelect, onChange, strip }: PanelEditorProps) {
   const t = useTranslation();
   const text = t.settings.islandPages.panels;
   const ids = panel.items.map((item) => item.widget);
@@ -51,7 +52,7 @@ export function PanelEditor({ panel, library, selected, onSelect, onChange }: Pa
 
   return (
     <SettingsGroup title={text.title} footer={text.hint}>
-      <PanelHead panel={panel} onChange={onChange} />
+      <PanelHead panel={panel} onChange={onChange} strip={strip} />
       <div className="panel-buckets">
         <section className="panel-bucket" data-bucket="in" aria-label={text.inPanel}>
           <header>

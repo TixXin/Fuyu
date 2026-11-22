@@ -10,7 +10,7 @@ export type SettingsIslandPagesText = {
   hidePage: (name: string) => string;
   moveHint: string;
   modes: { bar: string; expanded: string };
-  preview: { builtin: string; off: string; empty: string };
+  preview: { builtin: string; off: string; empty: string; pageOf: (page: number, pages: number) => string; actions: string };
   panels: {
     tag: string;
     title: string;
@@ -67,6 +67,8 @@ export const zhCN: SettingsIslandPagesText = {
     builtin: "内置页面，内容由功能自己决定；可以换顺序或隐藏。",
     off: "这个功能关着，岛上不会出现这一页。",
     empty: "这个面板还没有组件，在下面「可以添加」里点 ＋",
+    pageOf: (page, pages) => `第 ${page} / ${pages} 页`,
+    actions: "页头按钮",
   },
   panels: {
     tag: "我的",
@@ -129,6 +131,8 @@ export const en: SettingsIslandPagesText = {
     builtin: "A built-in page: the feature decides what is on it. You can move or hide it.",
     off: "This feature is off, so the page does not show on the island.",
     empty: "This panel has no widgets yet. Press + under Add below.",
+    pageOf: (page, pages) => `Page ${page} of ${pages}`,
+    actions: "Header buttons",
   },
   panels: {
     tag: "Mine",
