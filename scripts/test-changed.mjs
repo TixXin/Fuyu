@@ -9,6 +9,7 @@ const SPECIFIER = /\bfrom\s*["']([^"']+)["']|\bimport\s*["']([^"']+)["']|\bimpor
 const EXTENSIONS = ["", ".ts", ".tsx", ".mjs", ".js", ".json", ".css", "/index.ts", "/index.tsx", "/index.mjs"];
 const SOURCE = /\.(tsx?|mjs|js|css)$/;
 const WINDOWS = process.platform === "win32";
+const REGRESSION_JOBS = 3;
 
 const rel = (root, file) => path.relative(root, file).split(path.sep).join("/");
 
@@ -130,7 +131,7 @@ function main(args) {
   if (dryRun) return 0;
   let code = 0;
   if (tests.length) code ||= spawnSync(process.execPath, ["--test", ...tests], { cwd: ROOT, stdio: "inherit" }).status ?? 1;
-  if (pages.length) code ||= spawnSync("pnpm", ["test:regression", ...pages.map(pageWord)], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;
+  if (pages.length) code ||= spawnSync("pnpm", ["test:regression", "--jobs", String(Math.min(REGRESSION_JOBS, pages.length)), ...pages.map(pageWord)], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;
   if (rust) code ||= spawnSync("pnpm", ["heavy", "--label", "test:changed", "--", "cargo", "test", "--manifest-path", "src-tauri/Cargo.toml", "--lib", "--", ...rust], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;
   console.log(code ? "\n[test:changed] 有没过的，见上面。" : "\n✓ [test:changed] 改到的部分都过了（全量等推 PR 时 pnpm mq:verify）。");
   return code;
