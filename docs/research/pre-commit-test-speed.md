@@ -1,6 +1,6 @@
 # 提交前测试提速
 
-> 日期：2026-11-22。问题：用户觉得提交前跑的测试（尤其是回归页）太耗时间，问还能不能再快。范围：本机实测（一次 `pnpm test:changed`、一次 `pnpm mq:verify` 的日志，`tests/regression/timings.json`），读了 `scripts/run-regression.mjs`、`scripts/test-changed.mjs`、`scripts/heavy/queue.mjs`；联网搜了 Vite 冷启动和预热、Playwright 的假时钟和复用服务器、Vitest 浏览器模式、按改动挑测试（Meta 的 Predictive Test Selection、Google TAP）、用 V8 覆盖率建「测试 ↔ 文件」对应表。相关任务：无（等用户挑）。
+> 日期：2026-11-22。问题：用户觉得提交前跑的测试（尤其是回归页）太耗时间，问还能不能再快。范围：本机实测（一次 `pnpm test:changed`、一次 `pnpm mq:verify` 的日志，`tests/regression/timings.json`），读了 `scripts/run-regression.mjs`、`scripts/test-changed.mjs`、`scripts/heavy/queue.mjs`；联网搜了 Vite 冷启动和预热、Playwright 的假时钟和复用服务器、Vitest 浏览器模式、按改动挑测试（Meta 的 Predictive Test Selection、Google TAP）、用 V8 覆盖率建「测试 ↔ 文件」对应表。相关任务：D120（D120.1–D120.3，用户 2026-11-22 定三条一起排）。
 
 ## 结论
 
