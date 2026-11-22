@@ -121,20 +121,6 @@ fn alerts_reach_the_island_as_tagged_json() {
     assert_eq!(value, serde_json::json!({ "kind": "powerDisconnected", "battery": null }));
 }
 
-#[cfg(windows)]
-#[test]
-#[ignore = "reads the real devices of the computer it runs on"]
-fn probe_this_computer() {
-    let mut thread = super::start_thread().expect("com");
-    for info in crate::win32::audio_outputs::active_outputs().expect("outputs") {
-        let container = crate::win32::devnode::container_id(&format!(r"SWD\MMDEVAPI\{}", info.id));
-        println!("{} | form factor {} | {} | {:?}", info.name, info.form_factor, info.enumerator, container);
-    }
-    println!("announced: {:?}", super::read_outputs(&mut thread));
-    println!("batteries: {:?}", crate::win32::devnode::bluetooth_batteries());
-    println!("power: {:?}", crate::win32::power::power_source());
-}
-
 mod peripherals {
     use super::super::{
         peripherals::{kind_from_appearance, kind_from_minor_type, Peripheral, PeripheralKind, PeripheralTracker, QUIET_RECONNECT_POLLS},
@@ -262,4 +248,55 @@ fn battery_list_is_only_published_when_it_changes() {
     assert_eq!(latest().map(|items| items.len()), Some(1));
     drop(guard);
     assert_eq!(latest(), None);
+}
+
+mod windows_matching {
+    use super::super::{
+        batteries::{address_in_instance_id, bluetooth_address, is_device_root, kind_from_hid, merge_peripherals},
+        peripherals::{Peripheral, PeripheralKind},
+    };
+
+    #[test]
+    fn the_bluetooth_address_comes_from_the_property_or_the_instance_id() {
+        assert_eq!(bluetooth_address("a4c13810f2e1"), Some("A4C13810F2E1".into()));
+        assert_eq!(bluetooth_address("A4:C1:38:10:F2:E1"), Some("A4C13810F2E1".into()));
+        assert_eq!(bluetooth_address("000000000000"), None);
+        assert_eq!(bluetooth_address("A4C13810F2"), None);
+        assert_eq!(address_in_instance_id(r"BTHLE\DEV_E1A2B3C4D5E6\7&1A2B3C4D&0&BLUETOOTHDEVICE_E1A2B3C4D5E6"), Some("E1A2B3C4D5E6".into()));
+        assert_eq!(
+            address_in_instance_id(r"BTHENUM\{0000111E-0000-1000-8000-00805F9B34FB}_VID&0001004C_PID&200E\7&2C6F1E5&0&9C3E53A1B2C4_C00000000"),
+            Some("9C3E53A1B2C4".into())
+        );
+        assert_eq!(
+            address_in_instance_id(r"BTHLEDEVICE\{00001812-0000-1000-8000-00805F9B34FB}_DEV_VID&02046D_PID&B023_REV&0011_E1A2B3C4D5E6\9&2F1E&0&0016"),
+            Some("E1A2B3C4D5E6".into())
+        );
+        assert_eq!(address_in_instance_id(r"BTHENUM\{0000111E-0000-1000-8000-00805F9B34FB}_LOCALMFG&0000\7&1&0&000000000000_00000000"), None);
+    }
+
+    #[test]
+    fn the_device_root_node_carries_the_name() {
+        assert!(is_device_root(r"BTHLE\Dev_e1a2b3c4d5e6\7&1&0&BluetoothDevice_e1a2b3c4d5e6"));
+        assert!(is_device_root(r"BTHENUM\DEV_9C3E53A1B2C4\7&2&0&BLUETOOTHDEVICE_9C3E53A1B2C4"));
+        assert!(!is_device_root(r"BTHENUM\{0000111E-0000-1000-8000-00805F9B34FB}_VID&0001004C\7&2&0&9C3E53A1B2C4_C00000000"));
+    }
+
+    #[test]
+    fn hid_classes_tell_mice_from_keyboards_and_leave_phones_out() {
+        assert_eq!(kind_from_hid("Pixel 8", false, false), None);
+        assert_eq!(kind_from_hid("MX Keys", true, false), Some(PeripheralKind::Keyboard));
+        assert_eq!(kind_from_hid("M650", false, true), Some(PeripheralKind::Mouse));
+        assert_eq!(kind_from_hid("Gaming Mouse", true, true), Some(PeripheralKind::Mouse));
+        assert_eq!(kind_from_hid("K400 Keyboard", true, true), Some(PeripheralKind::Keyboard));
+        assert_eq!(kind_from_hid("罗技键盘", true, true), Some(PeripheralKind::Keyboard));
+        assert_eq!(kind_from_hid("Combo", true, true), Some(PeripheralKind::Mouse));
+    }
+
+    #[test]
+    fn one_device_read_two_ways_is_listed_once_with_the_system_number() {
+        let item = |device: &str, battery| Peripheral { device: device.into(), name: device.into(), kind: PeripheralKind::Mouse, battery };
+        let merged = merge_peripherals(vec![item("A", Some(80)), item("B", None)], vec![item("A", Some(75)), item("B", Some(40)), item("C", Some(10))]);
+        let found: Vec<(&str, Option<u8>)> = merged.iter().map(|p| (p.device.as_str(), p.battery)).collect();
+        assert_eq!(found, vec![("A", Some(80)), ("B", Some(40)), ("C", Some(10))]);
+    }
 }

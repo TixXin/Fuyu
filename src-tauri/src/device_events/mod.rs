@@ -4,7 +4,11 @@ mod batteries;
 mod peripherals;
 mod tracker;
 
-use std::{collections::HashMap, sync::Arc, time::{Duration, Instant}};
+use std::{
+    collections::HashMap,
+    sync::{mpsc, Arc},
+    time::{Duration, Instant},
+};
 
 use tauri::{AppHandle, Emitter};
 
@@ -15,7 +19,7 @@ use crate::plugin_kernel::{
 };
 use batteries::{collect, latest, publish, Published};
 pub use batteries::PeripheralBattery;
-use peripherals::PeripheralTracker;
+use peripherals::{Peripheral, PeripheralTracker};
 use readers::{power_source, read_batteries, read_outputs, read_peripherals, start_thread};
 use tracker::{DeviceAlert, OutputTracker, PowerTracker};
 
@@ -28,6 +32,47 @@ const OUTPUT_POLL: Duration = Duration::from_secs(1);
 const BATTERY_POLL: Duration = Duration::from_secs(60);
 const POWER_POLL: Duration = Duration::from_secs(2);
 const PERIPHERAL_POLL: Duration = Duration::from_secs(15);
+const BATTERIES_WITHOUT_BLUETOOTH_OUTPUT: bool = cfg!(windows);
+
+struct PeripheralReader {
+    ask: mpsc::Sender<()>,
+    answers: mpsc::Receiver<Vec<Peripheral>>,
+    busy: bool,
+}
+
+impl PeripheralReader {
+    fn start() -> Option<Self> {
+        let (ask, asked) = mpsc::channel::<()>();
+        let (answer, answers) = mpsc::channel();
+        std::thread::Builder::new()
+            .name("device-peripherals".into())
+            .spawn(move || {
+                while asked.recv().is_ok() {
+                    if answer.send(read_peripherals()).is_err() {
+                        return;
+                    }
+                }
+            })
+            .ok()?;
+        Some(Self { ask, answers, busy: false })
+    }
+
+    fn request(&mut self) {
+        if !self.busy {
+            self.busy = self.ask.send(()).is_ok();
+        }
+    }
+
+    fn answer(&mut self) -> Option<Vec<Peripheral>> {
+        let list = self.answers.try_recv().ok()?;
+        self.busy = false;
+        Some(list)
+    }
+}
+
+fn wants_batteries(has_bluetooth: bool) -> bool {
+    BATTERIES_WITHOUT_BLUETOOTH_OUTPUT || has_bluetooth
+}
 
 fn watch(app: &AppHandle, stop: &Stop) {
     let Some(mut thread) = start_thread() else {
@@ -44,12 +89,13 @@ fn watch(app: &AppHandle, stop: &Stop) {
     let mut power_read: Option<Instant> = None;
     let mut peripherals_read: Option<Instant> = None;
     let mut peripherals = Vec::new();
+    let mut reader = PeripheralReader::start();
     let _published = Published;
     loop {
         let current = read_outputs(&mut thread);
         let has_bluetooth = current.iter().any(|output| output.bluetooth);
         let battery_due = batteries_read.is_none_or(|at| at.elapsed() >= BATTERY_POLL);
-        if outputs.wants_batteries() || (has_bluetooth && battery_due) {
+        if outputs.wants_batteries() || (wants_batteries(has_bluetooth) && battery_due) {
             batteries = read_batteries();
             batteries_read = Some(Instant::now());
         }
@@ -65,7 +111,18 @@ fn watch(app: &AppHandle, stop: &Stop) {
         }
         if peripherals_read.is_none_or(|at| at.elapsed() >= PERIPHERAL_POLL) {
             peripherals_read = Some(Instant::now());
-            peripherals = read_peripherals();
+            match reader.as_mut() {
+                Some(reader) => reader.request(),
+                None => {
+                    peripherals = read_peripherals();
+                    for alert in peripheral_tracker.update(peripherals.clone()) {
+                        emit(alert);
+                    }
+                }
+            }
+        }
+        if let Some(list) = reader.as_mut().and_then(PeripheralReader::answer) {
+            peripherals = list;
             for alert in peripheral_tracker.update(peripherals.clone()) {
                 emit(alert);
             }
@@ -85,7 +142,8 @@ fn read_now() -> Vec<PeripheralBattery> {
         return Vec::new();
     };
     let outputs = read_outputs(&mut thread);
-    let batteries = if outputs.iter().any(|output| output.bluetooth) { read_batteries() } else { HashMap::new() };
+    let has_bluetooth = outputs.iter().any(|output| output.bluetooth);
+    let batteries = if wants_batteries(has_bluetooth) { read_batteries() } else { HashMap::new() };
     collect(&outputs, &batteries, &read_peripherals())
 }
 
@@ -94,7 +152,9 @@ pub async fn get_peripheral_batteries() -> Vec<PeripheralBattery> {
     if let Some(list) = latest() {
         return list;
     }
-    tauri::async_runtime::spawn_blocking(read_now).await.unwrap_or_default()
+    tauri::async_runtime::spawn_blocking(|| std::thread::spawn(read_now).join().unwrap_or_default())
+        .await
+        .unwrap_or_default()
 }
 
 pub(crate) fn init(app: &AppHandle) {
