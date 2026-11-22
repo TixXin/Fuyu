@@ -51,6 +51,8 @@ export type SettingsCollapsedLanesText = {
   denyCenter: string;
   fold: string;
   spilled: string;
+  seen: Record<"empty" | "left" | "right", string>;
+  seenTitle: Record<"empty" | "left" | "right", string>;
   at: (lane: string, position: number) => string;
   chip: (name: string, lane: string) => string;
   remove: (name: string) => string;
@@ -91,7 +93,7 @@ export const zhCN: SettingsCollapsedItemsText = {
     offDrop: "松手就拿下来",
     allOn: "都放上去了",
     dropHere: "拖到这里",
-    notchHint: { left: "刘海左边", center: "排在刘海右边最前", right: "刘海右边" },
+    notchHint: { left: "刘海左边", center: "刘海右边最前", right: "刘海右边" },
     notchCaption: "现在是刘海模式：中间被摄像头挡住，不显示文字。每侧至少放两项，一侧不够时靠刘海的项目换到这一侧",
     mirrorLive: "这是岛上现在的样子。点一项，下面定位到它；也可以直接拖",
     mirrorAway: "岛现在展开或收起着，这是收起条上一次的样子",
@@ -104,6 +106,12 @@ export const zhCN: SettingsCollapsedItemsText = {
     denyCenter: "中间只放中心图案和剩余待办数",
     fold: "放不下，后面的收进 +N",
     spilled: "刘海旁放不下，收进了 +N",
+    seen: { empty: "暂无内容", left: "在左侧", right: "在右侧" },
+    seenTitle: {
+      empty: "现在没有内容，岛上不显示，有内容时才出现在这个位置",
+      left: "刘海左边不到两项，这一项换到了刘海左边显示",
+      right: "刘海右边不到两项，这一项换到了刘海右边显示",
+    },
     at: (lane, position) => `${lane}第 ${position} 个`,
     chip: (name, lane) => `${name}，${lane}`,
     remove: (name) => `把${name}拿下来`,
@@ -166,7 +174,7 @@ export const en: SettingsCollapsedItemsText = {
     offDrop: "Drop to take it off",
     allOn: "Everything is on the bar",
     dropHere: "Drag here",
-    notchHint: { left: "Left of the notch", center: "First on the right of the notch", right: "Right of the notch" },
+    notchHint: { left: "Left of the notch", center: "First right of the notch", right: "Right of the notch" },
     notchCaption: "Notch mode: the camera covers the middle and no text shows. Each side holds at least two items; a short side takes the ones next to the notch",
     mirrorLive: "This is the island right now. Click an item to find it below, or drag it",
     mirrorAway: "The island is open or tucked away; this is how the bar last looked",
@@ -179,6 +187,12 @@ export const en: SettingsCollapsedItemsText = {
     denyCenter: "Only the center pattern and the todo count go in the middle",
     fold: "No room from here on, these go behind +N",
     spilled: "No room beside the notch, kept behind +N",
+    seen: { empty: "Empty now", left: "On the left", right: "On the right" },
+    seenTitle: {
+      empty: "Nothing to show right now, so it is not on the island; it appears here once it has something",
+      left: "The left of the notch had fewer than two items, so this one shows there",
+      right: "The right of the notch had fewer than two items, so this one shows there",
+    },
     at: (lane, position) => `${lane}, no. ${position}`,
     chip: (name, lane) => `${name}, ${lane}`,
     remove: (name) => `Take ${name} off`,

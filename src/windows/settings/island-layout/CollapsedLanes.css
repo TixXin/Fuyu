@@ -139,8 +139,7 @@
 
 .collapsed-lanes__lane-hint {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
 }
 
 .collapsed-lanes__pict {
@@ -253,6 +252,19 @@
 
 .lane-chip__tag {
   color: var(--color-warning);
+}
+
+.lane-chip[data-seen="empty"] .layout-chip__icon,
+.lane-chip[data-seen="empty"] .layout-chip__name {
+  opacity: 0.5;
+}
+
+.lane-chip__seen {
+  color: var(--color-text-muted);
+}
+
+.lane-chip:is([data-seen="left"], [data-seen="right"]) .lane-chip__seen {
+  color: var(--color-accent);
 }
 
 .lane-chip__style {

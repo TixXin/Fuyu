@@ -94,7 +94,7 @@ async function checkNotch(check: Check) {
     && itemsIn(wings[0]).join("|") === "status-light" && itemsIn(wings[1])[0] === "center" && itemsIn(wings[1]).includes("mail")
     && !document.querySelector(".island-bar-preview__text") && wings[0].querySelector(".island-bar-preview__more")?.textContent === "+1",
     "In notch mode the preview hangs from the top with the camera in the middle: left items on the left, the center pattern leading the right, no text, +N on the emptier side");
-  check(document.querySelector(".collapsed-lanes__lane[data-lane='center'] .collapsed-lanes__lane-hint")?.textContent === "排在刘海右边最前"
+  check(document.querySelector(".collapsed-lanes__lane[data-lane='center'] .collapsed-lanes__lane-hint")?.textContent === "刘海右边最前"
     && document.querySelector(".collapsed-lanes__lane[data-lane='left'] .collapsed-lanes__lane-hint")?.textContent === "刘海左边",
     "The lanes say where things go around the notch");
   await notch(null);
@@ -110,7 +110,7 @@ async function checkMirror(check: Check) {
     width: 300,
     height: 38,
     html: shown ? `<section class="island" onclick="window.mirrorRan = true" style="position: relative; width: 300px; height: 38px; border-radius: 19px; background-color: rgb(12, 34, 56);"><b style="position: absolute; left: 14px; top: 14px; width: 10px; height: 10px;"></b><script>window.mirrorRan = true</script></section>` : "",
-    items: [{ id: "status-light", box: { left: 14, top: 14, width: 10, height: 10 } }, { id: "mail", box: { left: 240, top: 8, width: 22, height: 22 } }, { id: "not-listed", box: { left: 270, top: 8, width: 10, height: 10 } }],
+    items: [{ id: "status-light", box: { left: 14, top: 14, width: 10, height: 10 } }, { id: "mail", box: { left: 240, top: 8, width: 22, height: 22 } }, { id: "update", box: { left: 26, top: 8, width: 10, height: 10 } }, { id: "not-listed", box: { left: 270, top: 8, width: 10, height: 10 } }],
     more: null,
     middle: { left: 40, top: 0, width: 180, height: 38 },
     center: null,
@@ -138,6 +138,12 @@ async function checkMirror(check: Check) {
   check(mail?.closest("[data-lane]")?.getAttribute("data-lane") === "right" && hit("status-light")?.closest("[data-lane]")?.getAttribute("data-lane") === "left"
     && !hit("not-listed") && Math.round(mail!.getBoundingClientRect().width) === 22,
     "Each item the island reports gets a target over it, on the side of the summary it sits on; things that are not bar items get none");
+  const seen = (item: string) => [chip(item)?.getAttribute("data-seen") ?? null, chip(item)?.querySelector(".lane-chip__seen")?.textContent ?? null].join(":");
+  check(seen("timer") === "empty:暂无内容" && seen("music") === "empty:暂无内容" && seen("mail") === ":" && seen("status-light") === ":"
+    && chip("timer")?.getAttribute("aria-label")?.endsWith("暂无内容"),
+    `Chips of items that are on the bar but draw nothing on the island right now are dimmed and say so (${seen("timer")}, ${seen("mail")})`);
+  check(seen("update") === "left:在左侧" && chip("update")?.getAttribute("title")?.includes("刘海左边"),
+    "A right-lane item the island shows left of the summary is marked as shown on the left");
   await act(async () => { mail!.click(); });
   check(mail?.getAttribute("aria-pressed") === "true" && chip("mail")?.classList.contains("lane-chip--found"), "Clicking an item in the mirror finds its chip below");
   const from = middle(mail!);
@@ -151,6 +157,7 @@ async function checkMirror(check: Check) {
   check(document.querySelector(".island-bar-preview[data-mirror]:not([data-live])") && document.querySelector(".island-bar-preview__caption")?.textContent === "岛现在展开或收起着，这是收起条上一次的样子"
     && document.querySelector(".bar-mirror__paint")?.shadowRoot?.querySelector(".island"),
     "While the island is open the last bar stays, dimmed, with a note");
+  check(!document.querySelector(".lane-chip[data-seen]"), "A stale frame marks no chips as empty or moved");
   await reset();
 }
 

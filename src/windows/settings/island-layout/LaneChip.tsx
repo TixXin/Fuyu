@@ -2,10 +2,11 @@ import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { Palette, Plus, X } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { ItemGlyph } from "./IslandBarPreview";
+import type { SeenState } from "./mirrorItemState";
 
 export type ChipKind = "bar" | "center" | "off";
 
-export function LaneChip({ id, name, place, kind, selected, picked, dragging, spilled, styled, onPointerDown, onSelect, onKeyDown, onMenu, onRemove, onRestore, onStyle }: {
+export function LaneChip({ id, name, place, kind, selected, picked, dragging, spilled, seen, styled, onPointerDown, onSelect, onKeyDown, onMenu, onRemove, onRestore, onStyle }: {
   id: string;
   name: string;
   place: string;
@@ -14,6 +15,7 @@ export function LaneChip({ id, name, place, kind, selected, picked, dragging, sp
   picked: boolean;
   dragging: boolean;
   spilled: boolean;
+  seen?: SeenState;
   styled: boolean;
   onPointerDown?: (event: PointerEvent<HTMLElement>) => void;
   onSelect: () => void;
@@ -41,8 +43,9 @@ export function LaneChip({ id, name, place, kind, selected, picked, dragging, sp
       tabIndex={0}
       role="option"
       aria-selected={selected}
-      aria-label={lanes.chip(name, place)}
-      title={spilled ? lanes.spilled : undefined}
+      data-seen={seen}
+      aria-label={seen ? `${lanes.chip(name, place)}，${lanes.seen[seen]}` : lanes.chip(name, place)}
+      title={spilled ? lanes.spilled : seen ? lanes.seenTitle[seen] : undefined}
       onPointerDown={onPointerDown}
       onClick={onSelect}
       onKeyDown={onKeyDown}
@@ -56,6 +59,7 @@ export function LaneChip({ id, name, place, kind, selected, picked, dragging, sp
       <span className="layout-chip__icon lane-chip__icon" aria-hidden="true"><ItemGlyph id={id} /></span>
       <span className="layout-chip__name">{name}</span>
       {spilled ? <span className="layout-chip__badge lane-chip__tag">+N</span> : null}
+      {seen ? <span className="layout-chip__badge lane-chip__seen">{lanes.seen[seen]}</span> : null}
       {styled && kind !== "off" ? (
         <button className="layout-chip__action lane-chip__style" type="button" tabIndex={-1} aria-label={text.styleOf(name)} title={lanes.styles} onClick={(event) => { event.stopPropagation(); onStyle?.(); }}>
           <Palette size={13} strokeWidth={2.2} />
