@@ -178,7 +178,15 @@ const READ_STATE = `(() => {
   });
 })()`;
 
+export async function clearPageStorage(session, url) {
+  const { origin } = new URL(url);
+  await session.send("Page.navigate", { url: "about:blank" });
+  await session.send("Storage.clearDataForOrigin", { origin, storageTypes: "all" });
+  await session.send("DOMStorage.clear", { storageId: { securityOrigin: origin, isLocalStorage: false } });
+}
+
 export async function runPage(session, url) {
+  await clearPageStorage(session, url);
   session.errors.length = 0;
   await session.send("Page.navigate", { url });
   const deadline = Date.now() + PAGE_TIMEOUT_MS;

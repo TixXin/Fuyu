@@ -66,3 +66,26 @@ test("DevTools pipe messages are split at NUL and a partial one waits for the re
   assert.deepEqual(splitFrames('{"id'), { frames: [], rest: '{"id' });
   assert.deepEqual(splitFrames('{"id":3}\0'), { frames: ['{"id":3}'], rest: "" });
 });
+
+test("each page starts from empty storage: its origin is cleared after leaving the last page and before loading it", async () => {
+  const { runPage } = await import("../../scripts/run-regression.mjs");
+  const calls = [];
+  const session = {
+    errors: ["left over from the last page"],
+    send: async (method, params) => {
+      calls.push([method, params]);
+      if (method !== "Runtime.evaluate") return {};
+      return { result: { value: JSON.stringify({ testResult: "passed" }) } };
+    },
+  };
+  const url = "http://127.0.0.1:5173/tests/regression/settings.html?test=1";
+  const { outcome, errors } = await runPage(session, url);
+  assert.equal(outcome, "passed");
+  assert.deepEqual(errors, []);
+  const navigations = calls.filter(([method]) => method === "Page.navigate").map(([, params]) => params.url);
+  assert.deepEqual(navigations, ["about:blank", url]);
+  const clearAt = calls.findIndex(([method, params]) => method === "Storage.clearDataForOrigin" && params.origin === "http://127.0.0.1:5173" && params.storageTypes === "all");
+  const blankAt = calls.findIndex(([, params]) => params?.url === "about:blank");
+  const loadAt = calls.findIndex(([, params]) => params?.url === url);
+  assert.ok(blankAt < clearAt && clearAt < loadAt, calls.map(([method]) => method).join(", "));
+});
