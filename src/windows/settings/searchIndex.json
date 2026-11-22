@@ -1022,12 +1022,12 @@
       "zh-CN": {
         "group": "展开面板",
         "title": "面板宽度",
-        "description": "各页面默认都用这个宽度和高度，待办、日历、剪贴板、消息和 Agent 这类列表页再高 80。Fuyu 页的宽度至少放得下 6 列，面板更宽时多显示几列；高度固定两行，不跟面板高度。在岛上改过尺寸的页面记着自己的尺寸，不跟这两项，见下面。"
+        "description": "所有页面默认都用这个宽度和高度，切换页面时面板大小不变。Fuyu 页的组件固定两行，面板更宽时多显示几列；面板窄到放不下 6 列时，这一页会加宽到正好放下。在岛上改过尺寸的页面记着自己的尺寸，不跟这两项，见下面。"
       },
       "en": {
         "group": "Open panel",
         "title": "Panel width",
-        "description": "Every page uses this width and height by default; list pages (to-dos, calendar, clipboard, messages, agents) are 80 taller. The Fuyu page is always wide enough for 6 columns and shows more when the panel is wider; it stays two rows tall whatever the height. Pages resized on the island keep their own size instead, listed below."
+        "description": "Every page uses this width and height by default, so the panel keeps its size when you switch pages. The Fuyu page shows two rows of widgets and more columns when the panel is wider; if the panel is too narrow for 6 columns, that page widens just enough. Pages resized on the island keep their own size instead, listed below."
       }
     },
     {

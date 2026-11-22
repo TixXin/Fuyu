@@ -1,28 +1,25 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { FUYU_ISLAND_SIZE } from "../../src/windows/island/custom-panels/panelSize.ts";
-import { defaultPageSize, islandPageSize, LIST_PAGE_EXTRA_HEIGHT } from "../../src/windows/island/pageSize.ts";
+import { defaultPageSize, islandPageSize } from "../../src/windows/island/pageSize.ts";
 
 const defaults = { panelWidth: 800, maxPanelHeight: 360, pageSizes: {} };
 
-test("pages share one width and two heights unless sized on the island", () => {
-  assert.deepEqual(defaultPageSize(defaults, "panel:fuyu"), { width: FUYU_ISLAND_SIZE.width, height: FUYU_ISLAND_SIZE.height });
-  assert.deepEqual(defaultPageSize(defaults, "music"), { width: 800, height: 360 });
-  assert.deepEqual(defaultPageSize(defaults, "plugin:weather"), { width: 800, height: 360 });
-  for (const page of ["todo", "calendar", "clipboard", "qq", "agents"]) {
-    assert.deepEqual(defaultPageSize(defaults, page), { width: 800, height: 360 + LIST_PAGE_EXTRA_HEIGHT }, page);
+test("every page shares the panel width and height unless sized on the island", () => {
+  for (const page of ["panel:fuyu", "music", "plugin:weather", "todo", "calendar", "clipboard", "qq", "agents"]) {
+    assert.deepEqual(defaultPageSize(defaults, page), { width: 800, height: 360 }, page);
   }
-  assert.equal(defaultPageSize({ panelWidth: 640, maxPanelHeight: 4300 }, "todo").height, 4320, "the list bonus never passes the height cap");
+  assert.deepEqual(defaultPageSize({ panelWidth: 1400, maxPanelHeight: 900 }, "todo"), { width: 1400, height: 900 });
 });
 
-test("the Fuyu page widens with the panel width but never drops below six columns", () => {
-  assert.deepEqual(defaultPageSize({ panelWidth: 1400, maxPanelHeight: 360 }, "panel:fuyu"), { width: 1400, height: FUYU_ISLAND_SIZE.height });
-  assert.deepEqual(defaultPageSize({ panelWidth: 560, maxPanelHeight: 900 }, "panel:fuyu"), { width: FUYU_ISLAND_SIZE.width, height: FUYU_ISLAND_SIZE.height });
+test("the Fuyu page follows the panel size but never drops below six columns and two rows", () => {
+  assert.deepEqual(defaultPageSize({ panelWidth: 1400, maxPanelHeight: 900 }, "panel:fuyu"), { width: 1400, height: 900 });
+  assert.deepEqual(defaultPageSize({ panelWidth: 480, maxPanelHeight: 300 }, "panel:fuyu"), { width: FUYU_ISLAND_SIZE.width, height: FUYU_ISLAND_SIZE.height });
 });
 
 test("a size dragged on the island wins over the page default", () => {
   const settings = { ...defaults, pageSizes: { todo: { width: 1000, height: 300 } } };
   assert.deepEqual(islandPageSize(settings, "todo"), { width: 1000, height: 300 });
-  assert.deepEqual(islandPageSize(settings, "calendar"), { width: 800, height: 440 });
+  assert.deepEqual(islandPageSize(settings, "calendar"), { width: 800, height: 360 });
   assert.deepEqual(islandPageSize({ ...defaults, pageSizes: {} }, "constructor"), { width: 800, height: 360 }, "page ids never read the prototype");
 });
