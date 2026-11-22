@@ -3,6 +3,8 @@ import { useTranslation } from "../../../i18n";
 import type { IslandContribution } from "../../plugin-kernel/islandContributions";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useTextRanks } from "../../plugin-kernel/useTextRanks";
+import type { LyricsIslandPriority } from "../../../lib/settings/lyricsSettings";
 import { listenCalendarJoinShortcut } from "../api";
 import { joinCalendarMeeting } from "../joinMeeting";
 import { todoEvents } from "../todoEvents";
@@ -18,7 +20,7 @@ import { OWNER } from "./owner.ts";
 
 type RunnerProps = {
   barText: boolean;
-  settings: { todoEnabled: boolean; calendarEnabled: boolean; calendarRemindMinutes: number; calendarShowTitle: boolean };
+  settings: { todoEnabled: boolean; calendarEnabled: boolean; calendarRemindMinutes: number; calendarShowTitle: boolean; lyricsIslandPriority: LyricsIslandPriority };
 };
 
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
@@ -83,7 +85,8 @@ function CalendarRunner({ barText, settings }: RunnerProps) {
   useHolidayEve(settings.calendarEnabled && prefs.holidayEveReminder, calendar.snapshot.events, calendar.now);
   const banner = useMeetingBanner(settings.calendarEnabled, calendar.snapshot.events, calendar.now, prefs, settings.calendarShowTitle);
   meetingBannerState.useProvide(banner);
-  const lineContributions = useMeetingContributions(meeting, barText);
+  const ranks = useTextRanks(settings.lyricsIslandPriority);
+  const lineContributions = useMeetingContributions(meeting, barText, ranks.meeting);
   const contributions = useMemo<IslandContribution[]>(() => {
     if (!banner) return lineContributions;
     return [...lineContributions, { kind: "notice", item: "calendar.banner" }, { kind: "reveal", reveal: "allowed" }];

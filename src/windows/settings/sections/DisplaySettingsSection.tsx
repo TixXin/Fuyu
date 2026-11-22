@@ -9,6 +9,7 @@ import type { IslandSettings } from "../../../lib/settings/types";
 import { useIslandNotchShown } from "../useIslandNotchShown";
 import { NotchSettings } from "./notch/NotchSettings";
 import { NotchTextRows } from "./NotchTextRows";
+import { TextOrderRows } from "./TextOrderRows";
 
 export function DisplaySettingsSection({
   settings,
@@ -55,6 +56,7 @@ export function DisplaySettingsSection({
           />
         )}
       </SettingsGroup>
+      <TextOrderRows lyricsPriority={settings.lyricsIslandPriority} disabled={!settings.showCollapsedText} />
       {notchGroups && <NotchSettings settings={settings} onSettingsChange={onSettingsChange} />}
       {notchGroups && <NotchTextRows disabled={!settings.showCollapsedText} />}
     </>

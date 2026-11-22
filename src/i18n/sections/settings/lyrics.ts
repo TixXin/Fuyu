@@ -16,10 +16,6 @@ export type SettingsLyricsText = {
   onIslandHint: string;
   styleNeedsIsland: string;
   onIslandNoSource: string;
-  priority: string;
-  priorityHint: string;
-  priorityLyrics: string;
-  priorityAgent: string;
   intro: string;
   introHint: string;
   introTodo: string;
@@ -105,10 +101,6 @@ export const zhCN: SettingsLyricsText = {
   onIslandHint: "播放中、找到带时间轴的歌词时，收起的岛显示正在唱的那一句；暂停、间奏和没找到歌词时照常显示待办。",
   styleNeedsIsland: "歌词样式管的是收起的岛上那一句歌词。先在「岛上显示」里打开它。",
   onIslandNoSource: "还没有歌词来源：设置本地歌词文件夹，或打开「在线查找歌词」。",
-  priority: "同时有 Agent 在运行时",
-  priorityHint: "歌词优先：Agent 开始新会话、跑完或出错时临时显示 4 秒，做到一半等你审批或回答时一直显示到你处理；没找到歌词的歌显示「歌名 - 歌手」。Agent 优先：有 Agent 在运行就显示它，空下来才显示歌词。",
-  priorityLyrics: "歌词优先",
-  priorityAgent: "Agent 优先",
   intro: "前奏时显示",
   introHint: "第一句歌词开始之前，收起的岛和音乐页显示什么。第一句开始时切到歌词。",
   introTodo: "待办",
@@ -194,10 +186,6 @@ export const en: SettingsLyricsText = {
   onIslandHint: "While a song plays and synced lyrics are found, the collapsed island shows the line being sung; paused, between verses or without lyrics it shows your todo as usual.",
   styleNeedsIsland: "These styles apply to the lyric line on the collapsed island. Turn that on under On the island first.",
   onIslandNoSource: "No lyrics source yet: set a lyrics folder or turn on Find lyrics online.",
-  priority: "While an agent is running",
-  priorityHint: "Lyrics first: an agent shows for 4 seconds when it starts a session, finishes or fails, and stays while it is stopped on an approval or question; a song without lyrics shows “title - artist”. Agent first: a running agent shows, and lyrics come back when it is idle.",
-  priorityLyrics: "Lyrics first",
-  priorityAgent: "Agent first",
   intro: "Before the first line",
   introHint: "What the collapsed island and the music page show before the first line starts. The lyrics take over when it does.",
   introTodo: "Todo",

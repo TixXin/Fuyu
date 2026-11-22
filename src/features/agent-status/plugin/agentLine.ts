@@ -3,23 +3,30 @@ import type { AgentSession } from "../session.ts";
 
 const ICON_TEXT = "MM";
 
-export function pickAgentSession(lines: readonly IslandLineContribution[], titleMode: string, named: AgentSession | null, interjection: AgentSession | null): AgentSession | null {
-  const below = lineBelow(lines, LINE_PRIORITY.agentInterjection);
-  const lyricsAhead = below?.shareable === true && below.priority > LINE_PRIORITY.agentTitle;
+export type AgentRanks = { agent: number | null; agentInterjection: number | null };
+
+const DEFAULT_RANKS: AgentRanks = { agent: LINE_PRIORITY.agentTitle, agentInterjection: LINE_PRIORITY.agentInterjection };
+
+export function pickAgentSession(lines: readonly IslandLineContribution[], titleMode: string, named: AgentSession | null, interjection: AgentSession | null, ranks: AgentRanks = DEFAULT_RANKS): AgentSession | null {
+  if (ranks.agent === null || ranks.agentInterjection === null) return null;
+  const below = lineBelow(lines, ranks.agentInterjection);
+  const lyricsAhead = below?.shareable === true && below.priority > ranks.agent;
   return titleMode === "changes" || lyricsAhead ? interjection : named;
 }
 
-export function agentLineContribution(session: AgentSession | null, interjecting: boolean, iconWidth: number, label: string): IslandLineContribution | null {
-  if (!session) return null;
+export function agentLineContribution(session: AgentSession | null, interjecting: boolean, iconWidth: number, label: string, ranks: AgentRanks = DEFAULT_RANKS): IslandLineContribution | null {
+  const priority = interjecting ? ranks.agentInterjection : ranks.agent;
+  if (!session || priority === null) return null;
   return {
     kind: "line",
     item: "agent-status.session",
-    priority: interjecting ? LINE_PRIORITY.agentInterjection : LINE_PRIORITY.agentTitle,
+    priority,
     measure: ICON_TEXT + session.title,
     extra: iconWidth,
     page: "agents",
     lead: true,
     handle: true,
     label,
+    ...(interjecting && { interjection: true }),
   };
 }

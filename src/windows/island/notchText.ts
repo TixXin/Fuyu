@@ -1,4 +1,4 @@
-import { LINE_PRIORITY, type IslandLineContribution } from "../../features/plugin-kernel/islandContributions.ts";
+import type { IslandLineContribution } from "../../features/plugin-kernel/islandContributions.ts";
 import type { NotchTextKind, NotchTextModes } from "../../lib/settings/collapsedText.ts";
 
 export const NOTCH_FLASH_MS = 4000;
@@ -48,7 +48,7 @@ export function anyNotchText(modes: NotchTextModes) {
 const LOUD = "\u0001";
 
 function interjecting(line: IslandLineContribution) {
-  return notchTextKind(line.item) === "agent" && line.priority >= LINE_PRIORITY.agentInterjection;
+  return line.interjection === true;
 }
 
 export function changedTexts(before: ReadonlyMap<string, string>, lines: readonly IslandLineContribution[]) {

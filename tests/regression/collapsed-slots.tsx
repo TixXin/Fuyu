@@ -18,6 +18,7 @@ import type { KaraokeLine } from "../../src/features/media/lyrics/useCurrentLyri
 import { karaokeWords } from "../../src/features/media/lyrics/lrc";
 import { karaokeLook } from "../../src/features/media/lyrics/lyricsSettings";
 import { normalizeSettings } from "../../src/lib/settings/settings";
+import { saveCollapsedText } from "../../src/lib/settings/collapsedText";
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -188,6 +189,11 @@ async function runChecks() {
     openedPage = null;
     await act(async () => bar().querySelector<HTMLElement>(".island__open-button")!.click());
     check(openedPage === "todo", "点歌词也打开首页，不进音乐页");
+    await act(async () => saveCollapsedText({ order: ["todos", "meeting", "lyrics", "agent"] }));
+    check(bar().querySelector(".island__active-task")?.textContent?.includes("剩余3个待办") && !bar().querySelector(".island__lyric"), "文字的先后把待办排到歌词前面，收起条改显示待办");
+    await act(async () => saveCollapsedText({ hidden: ["todos"] }));
+    check(bar().querySelector(".island__lyric")?.textContent === "故事的小黄花" && !bar().querySelector(".island__active-task"), "把待办隐藏后，收起条回到歌词");
+    await act(async () => saveCollapsedText({ order: null, hidden: [] }));
     await set({ agentTitle: "修复登录" });
     check(!bar().querySelector(".island__lyric") && bar().querySelector(".island__agent-session-title")?.textContent === "修复登录", "外部传来 Agent 标题时不显示歌词");
     await set({ agentTitle: undefined });

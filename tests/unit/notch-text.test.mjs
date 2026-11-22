@@ -46,10 +46,10 @@ test("a change is a new to-do or agent label, a new song for lyrics, or a line t
 
 test("an agent line that starts interjecting is a change, and calming down again is not", () => {
   const calm = changedTexts(new Map(), [AGENT]).now;
-  const loud = changedTexts(calm, [{ ...AGENT, priority: 50 }]);
+  const loud = changedTexts(calm, [{ ...AGENT, priority: 50, interjection: true }]);
   assert.deepEqual(loud.changed, ["agent-status.session"]);
   assert.deepEqual(changedTexts(loud.now, [AGENT]).changed, []);
-  assert.deepEqual(changedTexts(loud.now, [{ ...AGENT, priority: 50 }]).changed, []);
+  assert.deepEqual(changedTexts(loud.now, [{ ...AGENT, priority: 50, interjection: true }]).changed, []);
 });
 
 test("stored modes are read per kind, falling back to the panel for anything unknown or broken", () => {

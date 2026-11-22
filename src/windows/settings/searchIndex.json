@@ -1155,6 +1155,50 @@
     {
       "page": "islandDisplay",
       "zh-CN": {
+        "group": "文字的先后",
+        "title": "会议"
+      },
+      "en": {
+        "group": "Text order",
+        "title": "Meeting"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "文字的先后",
+        "title": "歌词"
+      },
+      "en": {
+        "group": "Text order",
+        "title": "Lyrics"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "文字的先后",
+        "title": "Agent 标题"
+      },
+      "en": {
+        "group": "Text order",
+        "title": "Agent title"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "文字的先后",
+        "title": "待办"
+      },
+      "en": {
+        "group": "Text order",
+        "title": "To-do"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
         "group": "刘海",
         "title": "外框",
         "description": "岛和面板的外轮廓"
@@ -2525,27 +2569,6 @@
         "group": "Lyrics",
         "title": "Show the current line on the collapsed island",
         "description": "While a song plays and synced lyrics are found, the collapsed island shows the line being sung; paused, between verses or without lyrics it shows your todo as usual."
-      }
-    },
-    {
-      "page": "music",
-      "zh-CN": {
-        "group": "歌词",
-        "title": "同时有 Agent 在运行时",
-        "description": "歌词优先：Agent 开始新会话、跑完或出错时临时显示 4 秒，做到一半等你审批或回答时一直显示到你处理；没找到歌词的歌显示「歌名 - 歌手」。Agent 优先：有 Agent 在运行就显示它，空下来才显示歌词。",
-        "options": [
-          "歌词优先",
-          "Agent 优先"
-        ]
-      },
-      "en": {
-        "group": "Lyrics",
-        "title": "While an agent is running",
-        "description": "Lyrics first: an agent shows for 4 seconds when it starts a session, finishes or fails, and stays while it is stopped on an approval or question; a song without lyrics shows “title - artist”. Agent first: a running agent shows, and lyrics come back when it is idle.",
-        "options": [
-          "Lyrics first",
-          "Agent first"
-        ]
       }
     },
     {

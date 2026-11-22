@@ -1,0 +1,37 @@
+.text-order__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.text-order__move {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-white-a08);
+  border: 1px solid var(--color-white-a10);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.text-order__move:hover:not(:disabled) {
+  background: var(--color-white-a10);
+}
+
+.text-order__move:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+.text-order__move:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.text-order__controls .settings-switch {
+  margin-left: 6px;
+}

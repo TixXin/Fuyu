@@ -51,7 +51,6 @@ import { anyNotchText } from "./notchText";
 import { useNotchTextModes } from "../../lib/settings/collapsedText";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
-import { LINE_PRIORITY } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { effectiveIslandOpacity } from "./idleDim";
@@ -168,7 +167,7 @@ export function IslandApp() {
     hasAlert: alerts.size > 0,
     hasOpenPopup,
     hasReveal: contributedReveal.always || contributedReveal.allowed || contributedReveal.pauseIdle,
-    hasAgentInterjection: contributedLines.some((line) => line.priority === LINE_PRIORITY.agentInterjection),
+    hasAgentInterjection: contributedLines.some((line) => line.interjection === true),
     agentWaiting: contributedStatus?.state === "waiting",
   });
   const islandOpacity = effectiveIslandOpacity(settings, { mode, isTucked, isDimmed });
