@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>摄像头刘海内描边预览</title>
+<style>
+  :root { color-scheme: dark; --accent: #0a84ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 22px 26px 60px; background: #0f1012; color: #e8e8ea; font: 13px/1.6 -apple-system, "PingFang SC", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 0 0 8px; }
+  p.note { color: #9a9aa0; margin: 0 0 14px; max-width: 1100px; }
+  .layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+  .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: #1a1b1e; border: 1px solid #26272b; border-radius: 12px; padding: 12px 14px; }
+  .card h3 { margin: 0 0 8px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .card h3 small { color: #8a8a90; font-weight: 400; font-size: 12px; }
+  .row { display: grid; grid-template-columns: 62px 1fr; gap: 8px; align-items: center; min-height: 30px; }
+  .row > span { color: #a8a8ae; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chips button, .seg button { background: #26272b; border: 1px solid transparent; color: #c8c8cc; padding: 2px 9px; border-radius: 7px; cursor: pointer; font: inherit; }
+  .chips button.on, .seg button.on { background: #34363c; border-color: #5a5d66; color: #fff; }
+  .seg { display: inline-flex; gap: 2px; background: #1f2023; padding: 2px; border-radius: 8px; }
+  .swatches { display: flex; gap: 6px; align-items: center; }
+  .sw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .sw.on { border-color: #fff; }
+  .sw input { opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: #c8c8cc; }
+  .switch input { accent-color: var(--accent); }
+  .dim { opacity: .35; pointer-events: none; }
+  .hint { color: #7d7d84; font-size: 12px; margin: 4px 0 0; }
+
+  .stagebar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 0 0 10px; }
+  .stagebar label { color: #a8a8ae; display: inline-flex; gap: 6px; align-items: center; }
+  .screens { display: flex; flex-direction: column; gap: 14px; }
+  .screen { position: relative; overflow: hidden; border-radius: 12px; border: 1px solid #2a2b30; }
+  .screen .cap { position: absolute; left: 10px; bottom: 8px; z-index: 5; color: #fff; font-size: 12px; background: #0008; padding: 1px 8px; border-radius: 6px; }
+  .wall { position: absolute; inset: 0; }
+  .wall.dark { background: radial-gradient(60% 90% at 20% 20%, #3b2f6b 0%, transparent 60%), radial-gradient(50% 70% at 80% 30%, #12456b 0%, transparent 65%), linear-gradient(160deg, #1b2240, #0d1020); }
+  .wall.light { background: radial-gradient(60% 80% at 25% 30%, #ffd6b8 0%, transparent 60%), radial-gradient(50% 70% at 75% 40%, #cfe8ff 0%, transparent 65%), linear-gradient(160deg, #f4f1ea, #d6deea); }
+  .menubar { position: absolute; left: 0; right: 0; top: 0; height: 32px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 13px; color: #fff; background: rgba(20, 20, 24, .35); }
+  .wall.light ~ .menubar { color: #111; background: rgba(255, 255, 255, .45); }
+  .menubar b { margin-right: 16px; }
+  .menubar span { margin-right: 14px; opacity: .9; }
+  .zoomer { position: absolute; inset: 0; transform-origin: 50% 0; }
+  .shape { position: absolute; top: 0; left: 50%; }
+  .shape svg { position: absolute; top: 0; left: 0; overflow: visible; }
+  .shape .ui { position: absolute; top: 0; }
+
+  .ui-row { display: flex; align-items: center; height: 32px; }
+  .wing { display: flex; align-items: center; gap: 7px; height: 100%; color: #fff; font-size: 12px; }
+  .wing.l { padding-left: 8px; }
+  .wing.r { justify-content: flex-end; padding-right: 10px; }
+  .art { width: 18px; height: 18px; border-radius: 5px; background: linear-gradient(135deg, #ff6b6b, #845ef7); }
+  .bars { display: inline-flex; gap: 2px; align-items: center; height: 14px; }
+  .bars i { width: 2.5px; border-radius: 2px; background: #ff8fa3; animation: bar 0.9s ease-in-out infinite alternate; }
+  .bars i:nth-child(2) { animation-delay: -.3s; } .bars i:nth-child(3) { animation-delay: -.6s; } .bars i:nth-child(4) { animation-delay: -.15s; }
+  @keyframes bar { from { height: 4px; } to { height: 14px; } }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .drop { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 4px; color: #fff; font-size: 12.5px; }
+  .drop .av { width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+  .drop b { font-weight: 600; } .drop em { font-style: normal; color: #b8b8be; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+  .p-head { display: grid; align-items: center; height: 32px; padding: 0 20px; color: #fff; font-size: 13px; }
+  .p-head .l { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+  .p-head .l i { width: 6px; height: 6px; border-radius: 50%; background: #555; display: inline-block; }
+  .p-head .l i.on { background: #fff; }
+  .p-head .r { display: flex; gap: 8px; justify-content: flex-end; }
+  .p-head .r i { width: 18px; height: 18px; border-radius: 6px; background: #ffffff1a; display: inline-block; }
+  .p-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .todo { display: flex; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 12px; background: #ffffff0d; color: #ddd; }
+  .todo .ck { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #666; flex: none; }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-top: 10px; }
+  .g { background: #17181b; border: 1px solid #26272b; border-radius: 12px; overflow: hidden; }
+  .g .mini { position: relative; height: 96px; overflow: hidden; }
+  .g .t { padding: 8px 12px 10px; }
+  .g .t b { font-size: 13px; }
+  .g .t p { margin: 2px 0 8px; color: #8e8e94; font-size: 12px; min-height: 38px; }
+  .g .t .seg button { font-size: 12px; }
+
+  .decide { margin-top: 26px; max-width: 1100px; }
+  .decide ol { padding-left: 20px; }
+  .decide li { margin: 0 0 10px; }
+  .decide li b { color: #fff; }
+  .lean { color: #ffd479; }
+
+  @keyframes breathe { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+  @keyframes pulse { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+  @keyframes scan { from { stroke-dashoffset: 120; } to { stroke-dashoffset: -1000; } }
+  @keyframes twin { 0% { stroke-dashoffset: 300; opacity: 1; } 55% { stroke-dashoffset: -1000; opacity: 1; } 56%, 100% { stroke-dashoffset: -1000; opacity: 0; } }
+  @keyframes drip { 0%, 44% { opacity: 0; transform: translateY(0) scale(.6); } 52% { opacity: 1; transform: translateY(0) scale(1); } 80% { opacity: 0; transform: translateY(7px) scale(.5); } 100% { opacity: 0; } }
+  @keyframes progress { from { stroke-dasharray: 0 2000; } to { stroke-dasharray: 1000 2000; } }
+  @keyframes sweep { from { stroke-dashoffset: 250; } to { stroke-dashoffset: -1000; } }
+  @keyframes beat { 0% { opacity: 1; stroke-width: var(--w2); } 18% { opacity: .35; stroke-width: var(--w1); } 50% { opacity: .8; stroke-width: calc(var(--w2) * .8); } 66% { opacity: .3; stroke-width: var(--w1); } 100% { opacity: .3; stroke-width: var(--w1); } }
+  @keyframes turn { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -60; } }
+  @keyframes ripple { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+  .a-breathe { animation: breathe var(--dur, 3.2s) ease-in-out infinite; }
+  .a-pulse { animation: pulse 1.1s ease-in-out infinite; }
+  .a-scan { animation: scan var(--dur) cubic-bezier(.45, 0, .55, 1) infinite alternate; }
+  .a-twin { animation: twin var(--dur) cubic-bezier(.45, 0, .55, 1) infinite; }
+  .a-drip { animation: drip var(--dur) ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  .a-progress { animation: progress 24s linear infinite; }
+  .a-sweep { animation: sweep 1.8s cubic-bezier(.45, 0, .55, 1) infinite; }
+  .a-beat { animation: beat .5s ease-out infinite; }
+  .a-turn { animation: turn 6s linear infinite; }
+  .a-ripple { animation: ripple 1s ease-out 1 forwards; }
+  .frozen * { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) { .shape svg * { animation-play-state: paused !important; } }
+</style>
+</head>
+<body>
+<h1>摄像头刘海内描边</h1>
+<p class="note">刘海模式下，岛是黑的，摄像头刘海也是黑的，两块连成一片，看不出刘海在哪。这页在岛<b>里面</b>沿着摄像头刘海的轮廓画一圈：从刘海左上角的小弧出来，沿左边、底边、右边绕一圈，再回到屏幕顶边。所有效果都在岛里面，不会画到桌面上。真刘海那块没有像素，所以只画在刘海外沿；实验台的模拟刘海也照这个画。左边两张卡是设置的样子，<b>收起的岛</b>和<b>展开的面板</b>各一组。</p>
+
+<div class="layout">
+  <aside class="side">
+    <div class="card" id="cardIsland"></div>
+    <div class="card" id="cardPanel"></div>
+    <div class="card">
+      <h3>模拟状态</h3>
+      <div class="chips" id="states"></div>
+      <p class="hint">摄像头、麦克风开着时用系统隐私灯的颜色（绿、橙）；新消息用来源软件的颜色；Agent 等你时用 Agent 的橙色快闪。<br />「播放中」给「进度」和「律动」两种样式用。</p>
+    </div>
+  </aside>
+
+  <main>
+    <div class="stagebar">
+      <label>壁纸 <span class="seg" id="wall"></span></label>
+      <label>刘海宽 <input type="range" id="notchW" min="160" max="240" value="186" style="width:110px" /> <output id="notchWOut">186</output></label>
+      <label>放大 <span class="seg" id="zoom"></span></label>
+      <label class="switch"><input type="checkbox" id="showNotch" /> 把刘海涂灰（只为看清位置）</label>
+      <label class="switch"><input type="checkbox" id="freeze" /> 暂停动画</label>
+    </div>
+    <div class="screens">
+      <div class="screen" id="screenIsland"></div>
+      <div class="screen" id="screenPanel" style="height:400px"></div>
+    </div>
+
+    <h2 style="margin-top:22px">全部样式</h2>
+    <p class="note" style="margin:0">用左边「收起的岛」那组的颜色、粗细、间距、强度画，状态按「播放中」。点「岛」「面板」直接套用。</p>
+    <div class="gallery" id="gallery"></div>
+
+    <section class="decide">
+      <h2>要你定的</h2>
+      <ol>
+        <li><b>收起时底边怎么办。</b>收起的岛和刘海一样高，刘海底边就是岛的底边，一整圈画不下。两种办法：<b>只画两侧</b>，像一对括号把刘海括起来，岛的大小不变；<b>岛加高几像素</b>，整圈都画出来，岛比刘海高出「间距 + 粗细 + 2」像素（在左边卡片的「收起底边」里切换着看）。<span class="lean">我倾向做成选项，默认「只画两侧」</span>。有消息下拉的时候岛本来就比刘海高，两种都能画整圈。</li>
+        <li><b>留哪几种样式。</b>九种：关、发丝、辉光、扫描、滴落、进度、律动、刻度、极光。<span class="lean">我倾向全留</span>：「进度」和「律动」跟着播放走，没在播放时退成「发丝」。嫌多就先砍「刻度」和「极光」。</li>
+        <li><b>默认值。</b><span class="lean">我倾向两组样式都默认「关」</span>，和外框那项一样。</li>
+        <li><b>摄像头、麦克风占用时亮不亮。</b>摄像头就在刘海里，开着时刘海一圈亮绿光，开麦克风亮橙光，和系统隐私灯同色。<span class="lean">我倾向这一项单独开关、默认开，样式是「关」时也亮</span>。现有的摄像头 / 麦克风弹窗提示照旧，两者互不影响。</li>
+        <li><b>设置放哪、叫什么。</b>另一个会话正在做岛和面板外轮廓的边框（「刘海边框」）。<span class="lean">我倾向外观 → 显示里放一个「刘海」组，下面两小节：「外框」（那个会话做的）和「摄像头一圈」（这个）</span>，只在 Mac 或实验台模拟刘海时显示。</li>
+        <li><b>和外框一起开的时候。</b>两圈同时亮会花。<span class="lean">我倾向不拦</span>，由你自己选；跟随状态时只让内描边亮，外框保持原样。</li>
+        <li><b>省电。</b>跟外框一样：岛隐藏、全屏、贴边收起时停止动画；系统开了减少动态效果时停在静止的样子，扫描和滴落退成静止的辉光。</li>
+      </ol>
+    </section>
+  </main>
+</div>
+
+<script>
+const STYLES = [
+  { id: "off", name: "关", desc: "和现在一样，岛和刘海连成一片黑。" },
+  { id: "hairline", name: "发丝", desc: "沿刘海外沿一圈细线，只是让人看出刘海在哪。" },
+  { id: "glow", name: "辉光", desc: "带颜色的线，往岛里晕开一层光，慢慢呼吸。" },
+  { id: "scan", name: "扫描", desc: "一个光点沿刘海从左上走到右上，再走回来，像摄像头在扫。" },
+  { id: "drip", name: "滴落", desc: "两道光从左右上角流下来，在底边正中汇成一滴，往下掉一点后消失。" },
+  { id: "progress", name: "进度", desc: "播放进度从左上角沿刘海一路走到右上角；没在播放时退成发丝。" },
+  { id: "beat", name: "律动", desc: "跟着播放一下一下地亮、变粗，像随着音乐跳。" },
+  { id: "ticks", name: "刻度", desc: "一圈细刻度，像镜头的对焦环；开动效时慢慢转。" },
+  { id: "aurora", name: "极光", desc: "几种颜色的渐变沿刘海流动；颜色选项对它不起作用。" },
+];
+const COLORS = [
+  { id: "white", c: "#ffffff", name: "白" },
+  { id: "accent", c: "#0a84ff", name: "强调色" },
+  { id: "violet", c: "#bf5af2", name: "紫" },
+  { id: "pink", c: "#ff375f", name: "粉" },
+  { id: "mint", c: "#63e6be", name: "薄荷" },
+];
+const STATES = [
+  { id: "idle", name: "空闲" },
+  { id: "play", name: "播放中" },
+  { id: "camera", name: "摄像头开着", c: "#30d158", device: true },
+  { id: "mic", name: "麦克风开着", c: "#ff9f0a", device: true },
+  { id: "qq", name: "QQ 新消息", c: "#12b7f5", who: "小林", text: "晚上一起吃饭吗？我订好位置了", av: "林" },
+  { id: "wait", name: "Agent 等你", c: "#ff9f43", pulse: true },
+];
+const AURORA = ["#5ac8fa", "#bf5af2", "#ff375f", "#ff9f0a", "#63e6be", "#5ac8fa"];
+
+const S = {
+  island: { style: "glow", color: "white", custom: "#ffd60a", width: 1, gap: 2, intensity: 60, motion: true, status: true, device: true, bottom: "sides" },
+  panel: { link: false, style: "hairline", color: "white", custom: "#ffd60a", width: 1, gap: 3, intensity: 45, motion: true, status: true, device: true },
+  wall: "dark", notchW: 186, zoom: 2, state: "play", freeze: false, showNotch: false, ripple: 0,
+};
+
+let uid = 0;
+const F = 6, NR = 8, NE = 4, NH = 32;
+
+function islandPath(W, H, r) {
+  const f = F, BW = W + 2 * f;
+  return `M0 0 L${BW} 0 A${f} ${f} 0 0 0 ${W + f} ${f} L${W + f} ${H - r} A${r} ${r} 0 0 1 ${W + f - r} ${H} L${f + r} ${H} A${r} ${r} 0 0 1 ${f} ${H - r} L${f} ${f} A${f} ${f} 0 0 0 0 0 Z`;
+}
+
+function notchPaths(x, N, g) {
+  const R = NR, e = NE, H = NH, mid = x + N / 2;
+  const L = x - g, Rx = x + N + g, B = H + g;
+  const ring = `M${L - e} 0 A${e} ${e} 0 0 1 ${L} ${e} L${L} ${H - R} A${R + g} ${R + g} 0 0 0 ${x + R} ${B} L${x + N - R} ${B} A${R + g} ${R + g} 0 0 0 ${Rx} ${H - R} L${Rx} ${e} A${e} ${e} 0 0 1 ${Rx + e} 0`;
+  const half = (s) => s < 0
+    ? `M${L - e} 0 A${e} ${e} 0 0 1 ${L} ${e} L${L} ${H - R} A${R + g} ${R + g} 0 0 0 ${x + R} ${B} L${mid} ${B}`
+    : `M${Rx + e} 0 A${e} ${e} 0 0 0 ${Rx} ${e} L${Rx} ${H - R} A${R + g} ${R + g} 0 0 1 ${x + N - R} ${B} L${mid} ${B}`;
+  const body = `M${x - e} 0 A${e} ${e} 0 0 1 ${x} ${e} L${x} ${H - R} A${R} ${R} 0 0 0 ${x + R} ${H} L${x + N - R} ${H} A${R} ${R} 0 0 0 ${x + N} ${H - R} L${x + N} ${e} A${e} ${e} 0 0 1 ${x + N + e} 0 Z`;
+  return { ring, left: half(-1), right: half(1), body, mid, B };
+}
+
+function colorOf(cfg) {
+  if (cfg.color === "custom") return cfg.custom;
+  return (COLORS.find((c) => c.id === cfg.color) || COLORS[0]).c;
+}
+
+function svgFor(cfg, W, H, r, { state = "idle", panel = false, ripple = false } = {}) {
+  const id = `u${++uid}`;
+  const BW = W + 2 * F;
+  const N = S.notchW;
+  const x = F + (W - N) / 2;
+  const t = cfg.width, k = cfg.intensity / 100, g = cfg.gap;
+  const p = notchPaths(x, N, g);
+  const st = STATES.find((s) => s.id === state);
+  const lit = st.c && (st.device ? cfg.device : cfg.status);
+  let style = cfg.style;
+  const playing = state === "play";
+  if ((style === "progress" || style === "beat") && !playing) style = "hairline";
+  if (lit && (style === "off" || style === "hairline" || style === "ticks")) style = "glow";
+  if (!cfg.motion && (style === "scan" || style === "drip")) style = "glow";
+  const c = lit ? st.c : colorOf(cfg);
+  const dur = 2.8;
+  const aurora = style === "aurora";
+  const paint = aurora ? `url(#ag${id})` : c;
+  const breathe = cfg.motion ? (lit && st.pulse ? "a-pulse" : "a-breathe") : "";
+  const ringLen = 2 * NH + N;
+  const parts = [];
+  const line = (w, op, extra = "", d = p.ring) => `<path d="${d}" fill="none" stroke="${paint}" stroke-width="${w}" opacity="${op}" stroke-linecap="round" ${extra}/>`;
+  const glow = (w, op, f = "B", cls = "", d = p.ring) => `<path d="${d}" fill="none" stroke="${paint}" stroke-width="${w}" opacity="${op}" filter="url(#bl${f}${id})" class="${cls}"/>`;
+
+  if (style === "hairline") {
+    parts.push(line(t, 0.18 + k * 0.5));
+  } else if (style === "glow") {
+    parts.push(glow(t * 4, k, "C", breathe));
+    parts.push(line(t, 0.55 + k * 0.45, `class="${lit && st.pulse && cfg.motion ? "a-pulse" : ""}"`));
+  } else if (style === "scan") {
+    parts.push(line(t, 0.1 + k * 0.15));
+    parts.push(`<path d="${p.ring}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 5}" stroke-linecap="round" stroke-dasharray="120 3000" opacity="${k}" filter="url(#blB${id})" class="a-scan" style="--dur:${dur}s"/>`);
+    parts.push(`<path d="${p.ring}" pathLength="1000" fill="none" stroke="#fff" stroke-width="${t * 1.5}" stroke-linecap="round" stroke-dasharray="120 3000" class="a-scan" style="--dur:${dur}s"/>`);
+  } else if (style === "drip") {
+    parts.push(line(t, 0.1 + k * 0.15));
+    for (const d of [p.left, p.right]) {
+      parts.push(`<path d="${d}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 4}" stroke-linecap="round" stroke-dasharray="300 3000" opacity="${k}" filter="url(#blB${id})" class="a-twin" style="--dur:${dur}s"/>`);
+      parts.push(`<path d="${d}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 1.5}" stroke-linecap="round" stroke-dasharray="300 3000" class="a-twin" style="--dur:${dur}s"/>`);
+    }
+    parts.push(`<circle cx="${p.mid}" cy="${p.B + 3}" r="${2 + t}" fill="${c}" class="a-drip" style="--dur:${dur}s"/>`);
+    parts.push(`<circle cx="${p.mid}" cy="${p.B + 3}" r="${5 + t * 2}" fill="${c}" opacity="${k}" filter="url(#blB${id})" class="a-drip" style="--dur:${dur}s"/>`);
+  } else if (style === "progress") {
+    parts.push(line(t, 0.12 + k * 0.12));
+    const prog = cfg.motion ? `class="a-progress"` : `stroke-dasharray="380 2000"`;
+    parts.push(`<path d="${p.ring}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 4}" stroke-linecap="round" opacity="${k}" filter="url(#blB${id})" ${prog}/>`);
+    parts.push(`<path d="${p.ring}" pathLength="1000" fill="none" stroke="${c}" stroke-width="${t * 1.5}" stroke-linecap="round" ${prog}/>`);
+  } else if (style === "beat") {
+    const cls = cfg.motion ? "a-beat" : "";
+    parts.push(`<path d="${p.ring}" fill="none" stroke="${c}" opacity="${k}" filter="url(#blC${id})" class="${cls}" style="--w1:${t * 2}px;--w2:${t * 7}px;stroke-width:${t * 4}px"/>`);
+    parts.push(`<path d="${p.ring}" fill="none" stroke="${c}" class="${cls}" style="--w1:${t}px;--w2:${t * 2}px;stroke-width:${t * 1.5}px"/>`);
+  } else if (style === "ticks") {
+    parts.push(line(t * 0.6, 0.2 + k * 0.2));
+    const tickOff = g + 2.5;
+    const tp = notchPaths(x, N, tickOff);
+    parts.push(`<path d="${tp.ring}" fill="none" stroke="${c}" stroke-width="${3 + t}" stroke-dasharray="1 5" opacity="${0.35 + 0.6 * k}" class="${cfg.motion ? "a-turn" : ""}"/>`);
+  } else if (aurora) {
+    parts.push(glow(t * 5, k, "C"));
+    parts.push(line(t * 1.3, 0.75 + k * 0.25));
+  }
+  if (ripple) parts.push(`<path d="${p.ring}" fill="none" stroke="${c}" stroke-width="${t * 10}" opacity="0" filter="url(#blC${id})" class="a-ripple"/>`);
+
+  const stops = AURORA.map((col, i) => `<stop offset="${i / (AURORA.length - 1)}" stop-color="${col}"/>`).join("");
+  const shift = aurora && cfg.motion ? `<animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="${ringLen * 1.2} 0" dur="7s" repeatCount="indefinite"/>` : "";
+  const fill = panel ? `url(#pf${id})` : "#000";
+  const notchFill = S.showNotch ? "#3a3a40" : "#000";
+  return `<svg width="${BW}" height="${H}" viewBox="0 0 ${BW} ${H}">
+    <defs>
+      <clipPath id="cl${id}"><path d="${islandPath(W, H, r)}"/></clipPath>
+      <linearGradient id="fg${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${NE + 1}"><stop offset="0" stop-color="#000"/><stop offset="0.2" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
+      <mask id="mk${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${BW}" height="${H}"><rect width="${BW}" height="${H}" fill="url(#fg${id})"/></mask>
+      <linearGradient id="ag${id}" gradientUnits="userSpaceOnUse" x1="${x}" y1="0" x2="${x + ringLen * 0.5}" y2="${NH}" spreadMethod="reflect">${stops}${shift}</linearGradient>
+      <linearGradient id="pf${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${H}"><stop offset="0" stop-color="#000"/><stop offset="${44 / H}" stop-color="#000"/><stop offset="${60 / H}" stop-color="#141416"/><stop offset="1" stop-color="#141416"/></linearGradient>
+      <filter id="blB${id}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="${1.5 + t}"/></filter>
+      <filter id="blC${id}" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="${3 + t * 1.5}"/></filter>
+    </defs>
+    <path d="${islandPath(W, H, r)}" fill="${fill}"/>
+    <g clip-path="url(#cl${id})"><g mask="url(#mk${id})">${parts.join("")}</g></g>
+    <path d="${p.body}" fill="${notchFill}"/>
+  </svg>`;
+}
+
+function islandUI(W, wing, state) {
+  const st = STATES.find((s) => s.id === state);
+  let left = `<span class="art"></span>`;
+  let right = `<span class="bars"><i></i><i></i><i></i><i></i></span>`;
+  if (state === "idle") { left = `<span style="opacity:.8">14:08</span>`; right = `<span style="opacity:.8">3 项</span>`; }
+  if (st.device) { left = `<span class="dot" style="background:${st.c}"></span>`; right = `<span style="color:${st.c}">${state === "camera" ? "摄像头" : "麦克风"}</span>`; }
+  if (state === "wait") { left = `<span class="dot" style="background:${st.c}"></span><span>Claude</span>`; right = `<span style="color:${st.c}">等你</span>`; }
+  if (st.who) { left = `<span class="dot" style="background:${st.c}"></span><span>QQ</span>`; right = `<span>1</span>`; }
+  const drop = st.who ? `<div class="drop" style="width:${W}px;margin-top:${S.island.bottom === "full" ? islandExtra() : 0}px"><span class="av" style="background:${st.c}">${st.av}</span><b>${st.who}</b><em>${st.text}</em></div>` : "";
+  return `<div class="ui-row"><div class="wing l" style="width:${wing}px">${left}</div><div style="width:${S.notchW}px"></div><div class="wing r" style="width:${wing}px">${right}</div></div>${drop}`;
+}
+
+function islandExtra() {
+  const c = S.island;
+  return c.style === "off" && !(c.device || c.status) ? 0 : Math.ceil(c.gap + c.width + 2);
+}
+
+function panelUI(W) {
+  const n = S.notchW;
+  const side = (W - n - 16 - 40) / 2;
+  return `<div class="p-head" style="width:${W}px;grid-template-columns:${side}px ${n + 16}px ${side}px">
+      <div class="l">待办 <i class="on"></i><i></i><i></i><i></i></div><div></div><div class="r"><i></i><i></i><i></i></div></div>
+    <div class="p-body">
+      <div class="todo"><span class="ck"></span>给摄像头刘海画一圈</div>
+      <div class="todo"><span class="ck"></span>回小林的消息</div>
+      <div class="todo"><span class="ck"></span>周五前把发布说明写完</div>
+    </div>`;
+}
+
+function screen(elId, inner, cap, zoom) {
+  document.getElementById(elId).innerHTML = `<div class="wall ${S.wall}"></div>
+    <div class="menubar"><div><b></b><b>Finder</b><span>文件</span><span>编辑</span><span>显示</span></div><div><span>11月22日 周日 14:08</span></div></div>
+    <div class="zoomer" style="transform:scale(${zoom})">${inner}</div><div class="cap">${cap}</div>`;
+}
+
+function renderStages() {
+  const wing = 74, W = S.notchW + 2 * wing;
+  const st = STATES.find((s) => s.id === S.state);
+  const extra = S.island.bottom === "full" ? islandExtra() : 0;
+  const H = NH + extra + (st.who ? 38 : 0);
+  const si = document.getElementById("screenIsland");
+  si.style.height = `${[0, 170, 240, 320][S.zoom]}px`;
+  const svg = svgFor(S.island, W, H, 14, { state: S.state, ripple: S.ripple > 0 });
+  screen("screenIsland", `<div class="shape" style="margin-left:${-(W + 2 * F) / 2}px">${svg}<div class="ui" style="left:${F}px">${islandUI(W, wing, S.state)}</div></div>`, `收起的岛 · ${S.island.bottom === "full" ? `加高 ${extra}px` : "只画两侧"}`, S.zoom);
+  const pcfg = S.panel.link ? { ...S.island } : S.panel;
+  const PW = Math.max(600, S.notchW + 16 + 2 * 210 + 40), PH = 300;
+  const psvg = svgFor(pcfg, PW, PH, 24, { state: S.state, panel: true, ripple: S.ripple > 0 });
+  screen("screenPanel", `<div class="shape" style="margin-left:${-(PW + 2 * F) / 2}px">${psvg}<div class="ui" style="left:${F}px">${panelUI(PW)}</div></div>`, "展开的面板", 1);
+}
+
+function renderGallery() {
+  const wing = 60, W = S.notchW + 2 * wing;
+  document.getElementById("gallery").innerHTML = STYLES.map((s) => {
+    const cfg = { ...S.island, style: s.id, status: false, device: false };
+    const H = NH + Math.ceil(cfg.gap + cfg.width + 2);
+    const svg = svgFor(cfg, W, H, 14, { state: "play" });
+    return `<div class="g"><div class="mini"><div class="wall ${S.wall}"></div>
+      <div class="zoomer" style="transform:scale(1.25)"><div class="shape" style="margin-left:${-(W + 2 * F) / 2}px">${svg}<div class="ui" style="left:${F}px"><div class="ui-row"><div class="wing l" style="width:${wing}px"><span class="art"></span></div><div style="width:${S.notchW}px"></div><div class="wing r" style="width:${wing}px"><span class="bars"><i></i><i></i><i></i></span></div></div></div></div></div></div>
+      <div class="t"><b>${s.name}</b><p>${s.desc}</p><span class="seg"><button data-apply="island" data-style="${s.id}" class="${S.island.style === s.id ? "on" : ""}">岛</button><button data-apply="panel" data-style="${s.id}" class="${!S.panel.link && S.panel.style === s.id ? "on" : ""}">面板</button></span></div></div>`;
+  }).join("");
+}
+
+function card(key) {
+  const cfg = S[key];
+  const linked = key === "panel" && cfg.link;
+  const off = cfg.style === "off";
+  const sw = COLORS.map((c) => `<button class="sw ${cfg.color === c.id ? "on" : ""}" style="background:${c.c}" title="${c.name}" data-k="${key}" data-color="${c.id}"></button>`).join("")
+    + `<label class="sw ${cfg.color === "custom" ? "on" : ""}" style="background:conic-gradient(#ff375f,#ff9f0a,#ffd60a,#30d158,#5ac8fa,#bf5af2,#ff375f)" title="自定义"><input type="color" value="${cfg.custom}" data-k="${key}" data-custom /></label>`;
+  return `<h3>${key === "island" ? "收起的岛" : "展开的面板"} <small>摄像头一圈</small></h3>
+    ${key === "panel" ? `<label class="switch" style="margin-bottom:6px"><input type="checkbox" data-k="panel" data-f="link" ${cfg.link ? "checked" : ""}/> 同收起的岛</label>` : ""}
+    <div class="${linked ? "dim" : ""}">
+      <div class="row"><span>样式</span><div class="chips">${STYLES.map((s) => `<button data-k="${key}" data-style="${s.id}" class="${cfg.style === s.id ? "on" : ""}">${s.name}</button>`).join("")}</div></div>
+      <div class="${off ? "dim" : ""}">
+        <div class="row ${cfg.style === "aurora" ? "dim" : ""}"><span>颜色</span><div class="swatches">${sw}</div></div>
+        <div class="row"><span>粗细</span><input type="range" min="0.5" max="3" step="0.5" value="${cfg.width}" data-k="${key}" data-f="width" /></div>
+        <div class="row"><span>间距</span><input type="range" min="0" max="6" step="1" value="${cfg.gap}" data-k="${key}" data-f="gap" /></div>
+        <div class="row"><span>强度</span><input type="range" min="10" max="100" value="${cfg.intensity}" data-k="${key}" data-f="intensity" /></div>
+        <div class="row"><span>动效</span><label class="switch"><input type="checkbox" data-k="${key}" data-f="motion" ${cfg.motion ? "checked" : ""}/> 呼吸、流动</label></div>
+      </div>
+      ${key === "island" ? `<div class="row"><span>收起底边</span><span class="seg" id="bottomSeg"><button data-bottom="sides" class="${cfg.bottom === "sides" ? "on" : ""}">只画两侧</button><button data-bottom="full" class="${cfg.bottom === "full" ? "on" : ""}">岛加高画整圈</button></span></div>` : ""}
+      <div class="row"><span>亮起</span><div style="display:flex;flex-direction:column">
+        <label class="switch"><input type="checkbox" data-k="${key}" data-f="device" ${cfg.device ? "checked" : ""}/> 摄像头、麦克风开着时</label>
+        <label class="switch"><input type="checkbox" data-k="${key}" data-f="status" ${cfg.status ? "checked" : ""}/> 新消息、Agent 等你时</label></div></div>
+    </div>`;
+}
+
+function seg(elId, items, cur, onPick) {
+  const el = document.getElementById(elId);
+  el.innerHTML = items.map(([v, l]) => `<button data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}">${l}</button>`).join("");
+  el.onclick = (e) => { const b = e.target.closest("button"); if (b) onPick(b.dataset.v); };
+}
+
+function renderAll() {
+  uid = 0;
+  document.getElementById("cardIsland").innerHTML = card("island");
+  document.getElementById("cardPanel").innerHTML = card("panel");
+  document.getElementById("states").innerHTML = STATES.map((s) => `<button data-state="${s.id}" class="${S.state === s.id ? "on" : ""}">${s.name}</button>`).join("");
+  seg("wall", [["dark", "深色"], ["light", "浅色"]], S.wall, (v) => { S.wall = v; renderAll(); });
+  seg("zoom", [[1, "1×"], [2, "2×"], [3, "3×"]], S.zoom, (v) => { S.zoom = Number(v); renderAll(); });
+  renderStages();
+  renderGallery();
+  document.body.classList.toggle("frozen", S.freeze);
+}
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.apply) { S[b.dataset.apply].style = b.dataset.style; if (b.dataset.apply === "panel") S.panel.link = false; S.ripple = 0; renderAll(); }
+  else if (b.dataset.bottom) { S.island.bottom = b.dataset.bottom; renderAll(); }
+  else if (b.dataset.k && b.dataset.style) { S[b.dataset.k].style = b.dataset.style; S.ripple = 0; renderAll(); }
+  else if (b.dataset.k && b.dataset.color) { S[b.dataset.k].color = b.dataset.color; renderAll(); }
+  else if (b.dataset.state) { S.state = b.dataset.state; S.ripple = STATES.find((s) => s.id === S.state).c ? 1 : 0; renderAll(); }
+});
+
+document.addEventListener("input", (e) => {
+  const el = e.target;
+  if (el.id === "notchW") { S.notchW = Number(el.value); document.getElementById("notchWOut").textContent = el.value; renderStages(); renderGallery(); return; }
+  if (el.id === "freeze") { S.freeze = el.checked; document.body.classList.toggle("frozen", S.freeze); return; }
+  if (el.id === "showNotch") { S.showNotch = el.checked; renderStages(); renderGallery(); return; }
+  const k = el.dataset.k;
+  if (!k) return;
+  S.ripple = 0;
+  if (el.dataset.custom !== undefined) { S[k].custom = el.value; S[k].color = "custom"; renderStages(); renderGallery(); return; }
+  const f = el.dataset.f;
+  if (el.type === "checkbox") { S[k][f] = el.checked; renderAll(); return; }
+  S[k][f] = Number(el.value);
+  renderStages(); renderGallery();
+});
+
+renderAll();
+</script>
+</body>
+</html>
