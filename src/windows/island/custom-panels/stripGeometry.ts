@@ -13,12 +13,9 @@ export function stripGeometry(stored: CustomPanel, room: StripRoom | null, editi
   const pageColumns = Math.max(1, Math.floor((visible + GRID_GAP_PX) / STRIP_STEP_PX));
   const panel = layoutStrip(stored, FUYU_ROWS, pageColumns);
   const right = stripRightPx(panel);
-  const paged = panel.mode === "grid" && !editing && panel.items.length > 0;
-  const columns = Math.max(pageColumns, Math.ceil((right + GRID_GAP_PX) / STRIP_STEP_PX) + (editing ? 1 : 0));
-  const width =
-    panel.mode === "free"
-      ? Math.max(visible, right + (editing ? STRIP_STEP_PX : 0))
-      : cellsToPx(paged ? Math.ceil(columns / pageColumns) * pageColumns : columns);
+  const paged = panel.mode === "grid" && panel.items.length > 0;
+  const columns = Math.max(pageColumns, Math.ceil((right + GRID_GAP_PX) / STRIP_STEP_PX) + (editing && !paged ? 1 : 0));
   const pages = paged ? Math.ceil(columns / pageColumns) : 0;
+  const width = panel.mode === "free" ? Math.max(visible, right + (editing ? STRIP_STEP_PX : 0)) : cellsToPx(paged ? pages * pageColumns : columns);
   return { scale: fit, width, height, panel, pages, pageColumns, pageStepPx: pageColumns * STRIP_STEP_PX };
 }

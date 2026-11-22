@@ -51,6 +51,28 @@ export type IslandWidgetsText = {
     freeHint: string;
     allAdded: string;
     plugin: string;
+    paging: {
+      pages: string;
+      goTo: (page: number) => string;
+      newPage: string;
+      all: string;
+      tray: string;
+      trayEmpty: string;
+      takeOut: (name: string) => string;
+      dropHere: (page: number) => string;
+      dropNew: (page: number) => string;
+      dropAway: (page: number) => string;
+      dropTray: string;
+      pushed: (name: string, page: number) => string;
+      edgeFlip: (page: number) => string;
+      edgeNew: string;
+      firstPage: string;
+      dwell: string;
+      overview: string;
+      keys: string;
+      movedTo: (page: number) => string;
+      goLook: string;
+    };
   };
   content: {
     todosEmpty: string;
@@ -153,6 +175,28 @@ export const zhCN: IslandWidgetsText = {
     freeHint: "拖动摆位置，拉右下角改大小 · 自动保存",
     allAdded: "能加的组件都加上了",
     plugin: "插件",
+    paging: {
+      pages: "面板的页",
+      goTo: (page) => `第 ${page} 页`,
+      newPage: "新的一页",
+      all: "全部",
+      tray: "暂存",
+      trayEmpty: "拖到这里暂存",
+      takeOut: (name) => `把「${name}」拖回面板`,
+      dropHere: (page) => `松手放到第 ${page} 页`,
+      dropNew: (page) => `松手新建第 ${page} 页`,
+      dropAway: (page) => `松手放进第 ${page} 页，当前页不动`,
+      dropTray: "松手暂存，翻到想要的页再拖出来",
+      pushed: (name, page) => `「${name}」会挤到第 ${page} 页`,
+      edgeFlip: (page) => `停住：翻到第 ${page} 页`,
+      edgeNew: "停住：新建一页",
+      firstPage: "已经是第一页",
+      dwell: "停一下就跳过去",
+      overview: "放进任意一页 · 空格退出",
+      keys: "滚轮或 ← → 翻页 · 空格看全部 · Esc 取消",
+      movedTo: (page) => `已放到第 ${page} 页`,
+      goLook: "去看看",
+    },
   },
   content: {
     todosEmpty: "今天没有待办",
@@ -255,6 +299,28 @@ export const en: IslandWidgetsText = {
     freeHint: "Drag to move, pull the corner to resize · Saved automatically",
     allAdded: "Every widget is already here",
     plugin: "Plugin",
+    paging: {
+      pages: "Panel pages",
+      goTo: (page) => `Page ${page}`,
+      newPage: "New page",
+      all: "All",
+      tray: "Hold",
+      trayEmpty: "Drop here to hold",
+      takeOut: (name) => `Drag ${name} back onto the panel`,
+      dropHere: (page) => `Release to put it on page ${page}`,
+      dropNew: (page) => `Release to start page ${page}`,
+      dropAway: (page) => `Release to send it to page ${page} and stay here`,
+      dropTray: "Release to hold it, then drag it out on any page",
+      pushed: (name, page) => `${name} moves to page ${page}`,
+      edgeFlip: (page) => `Hold to turn to page ${page}`,
+      edgeNew: "Hold to start a new page",
+      firstPage: "This is the first page",
+      dwell: "Hold to jump there",
+      overview: "Drop on any page · Space to close",
+      keys: "Scroll or ← → to turn pages · Space for all · Esc to cancel",
+      movedTo: (page) => `Moved to page ${page}`,
+      goLook: "Show me",
+    },
   },
   content: {
     todosEmpty: "Nothing to do today",

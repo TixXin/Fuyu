@@ -7,9 +7,15 @@ import { pageSlot } from "../slots/pageSlot";
 import type { IslandPageProps } from "../IslandPages";
 import { CustomPanelPage } from "./CustomPanelPage";
 import { PanelLayoutButton } from "./PanelLayoutButton";
+import { PanelPager } from "./paging/PanelPager";
 
 const FUYU_ORDER = 0;
 const FUYU_SHORTCUT_ORDER = 0;
+const PANEL_PAGER_ID = "panel-pager";
+
+function HeaderPager() {
+  return createElement(PanelPager, { placement: "header" });
+}
 
 function FuyuPage({ settings }: IslandPageProps) {
   return createElement(CustomPanelPage, {
@@ -35,5 +41,6 @@ export function useCustomPanelPages() {
       }),
     [name],
   );
+  useEffect(() => headerSlot.add({ id: PANEL_PAGER_ID, order: 998, enabled: (context) => context.page === FUYU_PAGE_ID, component: HeaderPager }), []);
   useEffect(() => headerSlot.add({ id: PANEL_LAYOUT_ID, order: 999, enabled: (context) => context.page === FUYU_PAGE_ID, component: PanelLayoutButton }), []);
 }

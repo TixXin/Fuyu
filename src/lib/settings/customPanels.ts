@@ -21,7 +21,7 @@ export type PanelMode = (typeof PANEL_MODES)[number];
 export const PANEL_ICONS = ["layout-grid", "star", "briefcase", "coffee", "music", "zap", "heart", "home", "gamepad", "book"] as const;
 export type PanelIcon = (typeof PANEL_ICONS)[number];
 
-export type PanelItem = { widget: string; size: PanelSize; x: number; y: number; w: number; h: number };
+export type PanelItem = { widget: string; size: PanelSize; x: number; y: number; w: number; h: number; pageBreak?: true };
 export type CustomPanel = { id: string; name: string; icon: PanelIcon; mode: PanelMode; items: PanelItem[] };
 
 const CELLS: Record<PanelSize, { cols: number; rows: number }> = {
@@ -44,9 +44,10 @@ export function cellBox(item: PanelItem): CellBox {
   return { col: Math.max(0, Math.round(item.x / STEP)), row: Math.max(0, Math.round(item.y / STEP)), cols, rows };
 }
 
-function placed(widget: string, size: PanelSize, col: number, row: number): PanelItem {
+function placed(widget: string, size: PanelSize, col: number, row: number, pageBreak?: boolean): PanelItem {
   const { cols, rows } = CELLS[size];
-  return { widget, size, x: col * STEP, y: row * STEP, w: cols * STEP - 1, h: rows * STEP - 1 };
+  const item: PanelItem = { widget, size, x: col * STEP, y: row * STEP, w: cols * STEP - 1, h: rows * STEP - 1 };
+  return pageBreak ? { ...item, pageBreak: true } : item;
 }
 
 const isSize = (value: unknown): value is PanelSize => PANEL_SIZES.includes(value as PanelSize);
@@ -55,10 +56,11 @@ const whole = (value: unknown) => (typeof value === "number" && Number.isFinite(
 
 function readItem(value: unknown): PanelItem | null {
   if (typeof value !== "object" || value === null) return null;
-  const { widget, size, x, y, w, h } = value as Record<string, unknown>;
+  const { widget, size, x, y, w, h, pageBreak } = value as Record<string, unknown>;
   if (typeof widget !== "string" || widget === "" || !isSize(size)) return null;
   const base = placed(widget, size, 0, 0);
-  return { widget, size, x: whole(x), y: whole(y), w: typeof w === "number" ? whole(w) || base.w : base.w, h: typeof h === "number" ? whole(h) || base.h : base.h };
+  const item: PanelItem = { widget, size, x: whole(x), y: whole(y), w: typeof w === "number" ? whole(w) || base.w : base.w, h: typeof h === "number" ? whole(h) || base.h : base.h };
+  return pageBreak === true ? { ...item, pageBreak: true } : item;
 }
 
 function cleanPanelName(name: unknown): string {
@@ -107,27 +109,32 @@ function firstFit(taken: readonly CellBox[], size: PanelSize, columns: number): 
   }
 }
 
-export function flowPanelItems(items: readonly Pick<PanelItem, "widget" | "size">[], columns = GRID_COLUMNS): PanelItem[] {
+type Flowing = Pick<PanelItem, "widget" | "size" | "pageBreak">;
+
+export function flowPanelItems(items: readonly Flowing[], columns = GRID_COLUMNS): PanelItem[] {
   const taken: CellBox[] = [];
   return items.map((item) => {
     const box = firstFit(taken, item.size, columns);
     taken.push(box);
-    return placed(item.widget, item.size, box.col, box.row);
+    return placed(item.widget, item.size, box.col, box.row, item.pageBreak);
   });
 }
 
 const crossesPage = (col: number, cols: number, page: number) => cols <= page && Math.floor(col / page) !== Math.floor((col + cols - 1) / page);
 
-export function flowStrip(items: readonly Pick<PanelItem, "widget" | "size">[], rows: number, page = Infinity): PanelItem[] {
+export function flowStrip(items: readonly Flowing[], rows: number, page = Infinity): PanelItem[] {
   const taken: CellBox[] = [];
+  let floor = 0;
   return items.map((item) => {
     const { cols, rows: tall } = CELLS[item.size];
-    for (let col = 0; ; col += 1) {
+    const right = taken.reduce((edge, other) => Math.max(edge, other.col + other.cols), 0);
+    if (item.pageBreak && Number.isFinite(page) && right > 0) floor = Math.max(floor, Math.ceil(right / page) * page);
+    for (let col = floor; ; col += 1) {
       for (let row = 0; row + tall <= Math.max(rows, tall); row += 1) {
         const box = { col, row, cols, rows: tall };
         if (crossesPage(col, cols, page) || taken.some((other) => overlaps(box, other))) continue;
         taken.push(box);
-        return placed(item.widget, item.size, col, row);
+        return placed(item.widget, item.size, col, row, item.pageBreak);
       }
     }
   });

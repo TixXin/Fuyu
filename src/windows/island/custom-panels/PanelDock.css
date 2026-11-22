@@ -1,0 +1,20 @@
+.custom-panel__dock-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.custom-panel__dock-body .custom-panel__picker {
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-panel__hint[data-live] {
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.82);
+}
+
+.custom-panel__hint-warn {
+  margin-left: 8px;
+  color: var(--warning-text, #ffb35c);
+}

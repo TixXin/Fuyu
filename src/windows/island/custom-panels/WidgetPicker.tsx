@@ -12,6 +12,7 @@ export type PickerDrag = { widget: LibraryWidget; clientX: number; clientY: numb
 type PickerProps = {
   panel: CustomPanel;
   library: WidgetLibrary;
+  skip?: readonly string[];
   onAdd: (widget: LibraryWidget) => void;
   onDrag: (drag: PickerDrag | null) => void;
   onDrop: (drag: PickerDrag) => void;
@@ -63,12 +64,12 @@ function useChipDrag({ onAdd, onDrag, onDrop }: Pick<PickerProps, "onAdd" | "onD
   return { ghost, press };
 }
 
-export function WidgetPicker({ panel, library, onAdd, onDrag, onDrop }: PickerProps) {
+export function WidgetPicker({ panel, library, skip = [], onAdd, onDrag, onDrop }: PickerProps) {
   const t = useTranslation().islandWidgets.panel;
   const ref = useRef<HTMLDivElement>(null);
   useWheelScrollsSideways(ref);
   const { ghost, press } = useChipDrag({ onAdd, onDrag, onDrop });
-  const taken = new Set(panel.items.map((item) => item.widget));
+  const taken = new Set([...panel.items.map((item) => item.widget), ...skip]);
   const rest = library.widgets.filter((widget) => !taken.has(widget.id));
   const builtin = rest.filter((widget) => !widget.plugin);
   const plugins = rest.filter((widget) => widget.plugin);

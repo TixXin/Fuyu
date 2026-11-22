@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>面板编辑 · 拖动跨页预览</title>
+<style>
+  :root {
+    --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+    --motion-fast: 120ms; --motion-base: 160ms; --motion-medium: 240ms; --motion-slow: 420ms;
+    --bg: #0f1012; --card: #1a1b1f; --card-2: #222328; --line: #2c2d33;
+    --ink: #ecebef; --ink-2: #a9a9b0; --ink-3: #6f7078; --accent: #74d6ff; --warn: #ffb35c; --ok: #7ee2a8;
+    --stage: radial-gradient(120% 140% at 20% 0%, #2b2d33 0%, #1a1b1f 60%, #0f1012 100%);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 80px; background: var(--bg); color: var(--ink); font: 14px/1.55 -apple-system, "PingFang SC", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .page { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .lead { color: var(--ink-2); margin: 0 0 18px; max-width: 920px; }
+  .lead b { color: var(--ink); }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+  @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } }
+
+  .stage { background: var(--stage); border-radius: 18px; padding: 36px 20px 40px; display: flex; justify-content: center; overflow: hidden; min-height: 470px; align-items: flex-start; }
+
+  .island { width: 680px; background: #000; color: #f1f0f6; border-radius: 28px; box-shadow: 0 14px 44px #000a; padding: 10px 20px 12px; position: relative; user-select: none; -webkit-user-select: none; }
+  .ihead { position: relative; display: flex; align-items: center; gap: 6px; height: 34px; margin-bottom: 8px; }
+  .tabs { display: flex; gap: 4px; transition: opacity var(--motion-base) var(--motion-ease); }
+  .tab { height: 26px; padding: 0 9px; border-radius: 13px; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #ffffff8c; }
+  .tab.on { background: #ffffff1f; color: #fff; }
+  .ihead .sp { flex: 1; }
+  .editbtn { height: 26px; padding: 0 12px; border-radius: 13px; border: 0; background: #ffffff1a; font-size: 12px; font-weight: 600; transition: background-color var(--motion-fast) var(--motion-ease), opacity var(--motion-base) var(--motion-ease); }
+  .editbtn:hover { background: #ffffff2e; }
+  .island.editing .editbtn { background: var(--accent); color: #06202c; }
+  .island.dragging[data-pager="top"] .tabs, .island.dragging[data-pager="top"] .editbtn { opacity: 0; }
+  .pager-top { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); height: 30px; display: flex; align-items: center; }
+
+  .vpwrap { position: relative; width: 640px; height: 208px; }
+  .vp { width: 640px; height: 208px; overflow: hidden; position: relative; }
+  .strip { position: relative; height: 208px; }
+  .slot { position: absolute; width: 100px; height: 100px; border: 1.5px dashed #ffffff1a; border-radius: 16px; pointer-events: none; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .island.editing .slot { opacity: 1; }
+  .newpage { position: absolute; top: 0; width: 640px; height: 208px; border: 1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 18px; display: grid; place-items: center; color: #ffffffa0; font-size: 13px; background: color-mix(in srgb, var(--accent) 6%, transparent); pointer-events: none; }
+  .divider { position: absolute; top: 6px; bottom: 6px; width: 0; border-left: 1px dashed #ffffff26; pointer-events: none; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .island.editing .divider { opacity: 1; }
+
+  .card { position: absolute; padding: 10px 12px; border-radius: 16px; overflow: hidden; background: hsl(var(--h) 40% 50% / 0.13); border: 1px solid #ffffff10; display: flex; flex-direction: column; justify-content: space-between; }
+  .card .ct { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #ffffffa8; white-space: nowrap; }
+  .card .ic { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: hsl(var(--h) 60% 55% / 0.3); font-size: 12px; flex: none; }
+  .card .val { font-size: 20px; font-weight: 650; letter-spacing: -.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card[data-size="s"] .val { font-size: 15px; }
+  .card[data-size="s"] .nm { display: none; }
+  .island .card { transition: left var(--motion-medium) var(--motion-ease), top var(--motion-medium) var(--motion-ease), width var(--motion-medium) var(--motion-ease), height var(--motion-medium) var(--motion-ease), opacity var(--motion-base) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
+  .island.editing .card { cursor: grab; background: hsl(var(--h) 40% 55% / 0.17); border-color: #ffffff22; animation: wiggle 135ms var(--motion-ease-in-out) calc(var(--motion-slow) + var(--ph, 0ms)) infinite alternate; }
+  .island.editing .card:hover, .island.dragging .card { animation-play-state: paused; }
+  .card.ph { background: color-mix(in srgb, var(--accent) 8%, transparent) !important; border: 1.5px dashed color-mix(in srgb, var(--accent) 75%, transparent) !important; animation: none !important; }
+  .card.ph > * { opacity: 0; }
+  .card.pushed { border-color: var(--warn) !important; box-shadow: inset 0 0 0 1px var(--warn); }
+  .card.landing { opacity: 0; transition: none !important; }
+  @keyframes wiggle { from { rotate: -0.9deg; } to { rotate: 0.9deg; } }
+
+  .lifted { position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none; background: hsl(var(--h) 38% 22%) !important; border: 1px solid #ffffff38; box-shadow: 0 18px 40px #000c, 0 0 0 1px #ffffff14; color: #f1f0f6; }
+  .lifted.chip { border-radius: 17px; padding: 0 12px; justify-content: center; }
+  .lifted.chip .val { display: none; }
+  .lifted.chip .nm { display: inline !important; }
+  .lifted.fly > * { opacity: 0; transition: opacity var(--motion-fast) var(--motion-ease); }
+
+  .edge { position: absolute; top: -6px; bottom: -6px; pointer-events: none; opacity: 0; transition: opacity var(--motion-fast) var(--motion-ease); display: flex; align-items: center; z-index: 5; }
+  .edge.l { left: -20px; justify-content: flex-start; background: linear-gradient(to right, color-mix(in srgb, var(--accent) 30%, transparent), transparent); border-radius: 18px 0 0 18px; padding-left: 4px; }
+  .edge.r { right: -20px; justify-content: flex-end; background: linear-gradient(to left, color-mix(in srgb, var(--accent) 30%, transparent), transparent); border-radius: 0 18px 18px 0; padding-right: 4px; }
+  .edge.on { opacity: 1; }
+  .edge.off { filter: grayscale(1); opacity: .35; }
+  .ring { position: relative; width: 36px; height: 36px; border-radius: 50%; background: #000c; display: grid; place-items: center; }
+  .ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .ring .tr { fill: none; stroke: #ffffff26; stroke-width: 2.5; }
+  .ring .pr { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 94.25; }
+  .ring b { font-size: 17px; line-height: 1; font-weight: 600; }
+  .ring small { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; color: var(--accent); }
+
+  .pagepill { position: absolute; right: 8px; top: 8px; z-index: 6; padding: 2px 9px; border-radius: 10px; background: #000b; border: 1px solid #ffffff22; font-size: 11.5px; font-variant-numeric: tabular-nums; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); pointer-events: none; }
+  .pagepill.on { opacity: 1; }
+
+  .ov { position: absolute; inset: -4px -12px; z-index: 7; background: #000000eb; border-radius: 18px; opacity: 0; pointer-events: none; transition: opacity var(--motion-base) var(--motion-ease); }
+  .ov.on { opacity: 1; }
+  .ovp { position: absolute; border-radius: 10px; background: #ffffff0c; outline: 1px solid #ffffff1c; transition: outline-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
+  .ovp.hot { outline: 1.5px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .ovp.add { outline-style: dashed; display: grid; place-items: center; color: #ffffff80; font-size: 12px; }
+  .ovp .no { position: absolute; left: 6px; top: -17px; font-size: 11px; color: #ffffff80; }
+  .ovp i { position: absolute; border-radius: 6px; background: hsl(var(--h) 45% 50% / 0.35); display: flex; align-items: center; justify-content: center; gap: 3px; font-style: normal; font-size: 11px; color: #ffffffd0; overflow: hidden; white-space: nowrap; transition: left var(--motion-medium) var(--motion-ease), top var(--motion-medium) var(--motion-ease); }
+  .ovp i.ph { background: color-mix(in srgb, var(--accent) 25%, transparent); outline: 1.5px dashed var(--accent); }
+  .ovp i.pushed { outline: 1.5px solid var(--warn); }
+  .headdrop { position: absolute; inset: -2px -6px; border-radius: 15px; border: 1.5px dashed #ffffff40; display: grid; place-items: center; font-size: 12px; color: #ffffffb0; opacity: 0; pointer-events: none; transition: opacity var(--motion-base) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); overflow: hidden; z-index: 4; }
+  .headdrop.on { opacity: 1; }
+  .headdrop.hot { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: #fff; }
+  .headdrop .bar, .pg .bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--accent); transform-origin: left; transform: scaleX(0); }
+
+  .hint { height: 20px; margin-top: 8px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: #ffffff99; white-space: nowrap; overflow: hidden; }
+  .hint .t { overflow: hidden; text-overflow: ellipsis; transition: opacity var(--motion-base) var(--motion-ease); }
+  .hint .warn { color: var(--warn); }
+  .hint button { border: 0; background: #ffffff1f; border-radius: 10px; padding: 0 9px; height: 20px; font-size: 11.5px; }
+  .hint button:hover { background: #ffffff33; }
+
+  .dock { display: none; align-items: center; gap: 10px; height: 46px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #ffffff14; }
+  .island.editing .dock { display: flex; }
+  .tray { position: relative; display: flex; align-items: center; gap: 6px; height: 34px; min-width: 150px; max-width: 300px; padding: 0 8px; border-radius: 12px; border: 1.5px dashed #ffffff30; transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); overflow: hidden; }
+  .tray .lbl { font-size: 11.5px; color: #ffffff80; white-space: nowrap; }
+  .tray.hot { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .tray.hide { display: none; }
+  .tchip { height: 24px; padding: 0 8px; border-radius: 12px; background: hsl(var(--h) 40% 50% / 0.3); display: inline-flex; align-items: center; gap: 4px; font-size: 12px; cursor: grab; white-space: nowrap; }
+  .pager-bottom { flex: 1; display: flex; justify-content: center; align-items: center; height: 34px; }
+  .addbtn { border: 0; height: 28px; padding: 0 11px; border-radius: 14px; background: #ffffff14; font-size: 12px; color: #ffffffb0; }
+
+  .pager { display: flex; align-items: center; gap: 6px; }
+  .pg { position: relative; flex: none; width: 6px; height: 6px; border-radius: 3px; background: #ffffff40; overflow: hidden; cursor: pointer; transition: width var(--motion-base) var(--motion-ease), height var(--motion-base) var(--motion-ease), border-radius var(--motion-base) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease), opacity var(--motion-base) var(--motion-ease); }
+  .pg.cur { width: 16px; background: #fffffff0; }
+  .pg.add, .pg.all { width: 0; opacity: 0; }
+  .pager.big .pg { width: 66px; height: 26px; border-radius: 7px; background: #ffffff12; transition-duration: var(--motion-medium); transition-timing-function: var(--motion-ease-out); }
+  .pager.big .pg.cur { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 70%, transparent); }
+  .pager.big .pg.hot { background: color-mix(in srgb, var(--accent) 22%, transparent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .pager.big .pg.add { width: 30px; opacity: 1; display: grid; place-items: center; color: #ffffff90; font-size: 15px; border: 1px dashed #ffffff40; background: transparent; }
+  .pager.big .pg.all { width: 44px; opacity: 1; display: grid; place-items: center; color: #ffffffb0; font-size: 11.5px; background: #ffffff1a; }
+  .pg .mini { position: absolute; left: 4px; top: 4px; width: 58px; height: 18px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .pager.big .pg .mini { opacity: 1; }
+  .pg .mini i { position: absolute; border-radius: 2px; background: hsl(var(--h) 50% 60% / 0.7); transition: left var(--motion-medium) var(--motion-ease), top var(--motion-medium) var(--motion-ease); }
+  .pg .mini i.ph { background: var(--accent); }
+  .pg .mini i.pushed { background: var(--warn); }
+  .pg.pulse { animation: pulse var(--motion-slow) var(--motion-ease-out) backwards; }
+  @keyframes pulse { from { box-shadow: 0 0 0 0 var(--accent), inset 0 0 0 1.5px var(--accent); } to { box-shadow: 0 0 0 8px transparent, inset 0 0 0 1.5px transparent; } }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .panel + .panel { margin-top: 12px; }
+  .panel h3 { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); font-weight: 600; letter-spacing: .3px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13px; }
+  .row span small { color: var(--ink-3); display: block; font-size: 11.5px; line-height: 1.35; }
+  .row input[type=range] { width: 120px; accent-color: var(--accent); }
+  .row output { width: 52px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 12px; }
+  .sw { position: relative; width: 34px; height: 20px; flex: none; }
+  .sw input { opacity: 0; position: absolute; inset: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .sw i { position: absolute; inset: 0; border-radius: 10px; background: #3a3b42; transition: background-color var(--motion-fast) var(--motion-ease); }
+  .sw i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform var(--motion-base) var(--motion-ease); }
+  .sw input:checked + i { background: var(--accent); }
+  .sw input:checked + i::after { transform: translateX(14px); }
+  .seg { display: flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--card-2); }
+  .seg button { border: 0; background: transparent; padding: 3px 9px; border-radius: 7px; font-size: 12px; color: var(--ink-2); }
+  .seg button.on { background: #3a3b42; color: var(--ink); }
+  .resetbtn { margin-top: 8px; border: 1px solid var(--line); background: var(--card-2); border-radius: 9px; padding: 5px 12px; font-size: 12.5px; }
+
+  .checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; margin-top: 16px; }
+  .ck { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); font-size: 13px; transition: border-color var(--motion-base) var(--motion-ease), background-color var(--motion-base) var(--motion-ease); }
+  .ck .box { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--ink-3); display: grid; place-items: center; font-size: 11px; color: transparent; margin-top: 1px; transition: background-color var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease); }
+  .ck small { display: block; color: var(--ink-3); font-size: 12px; }
+  .ck.done { border-color: color-mix(in srgb, var(--ok) 45%, transparent); background: color-mix(in srgb, var(--ok) 6%, var(--card)); }
+  .ck.done .box { background: var(--ok); border-color: var(--ok); color: #0b2a18; }
+  .log { font-size: 12px; color: var(--ink-2); max-height: 170px; overflow: auto; font-variant-numeric: tabular-nums; }
+  .log div { padding: 2px 0; border-bottom: 1px solid #ffffff08; }
+  .log div b { color: var(--ink); font-weight: 600; }
+
+  .doc { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+  .doc section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .doc h2 { font-size: 15px; margin: 0 0 8px; }
+  .doc p, .doc li { color: var(--ink-2); font-size: 13px; }
+  .doc ul { padding-left: 18px; margin: 6px 0; }
+  .doc b { color: var(--ink); }
+  .doc code { background: #ffffff10; padding: 1px 5px; border-radius: 5px; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink-2); }
+  th { color: var(--ink); font-weight: 600; }
+  .doc .wide { grid-column: 1 / -1; }
+  .q { border-left: 3px solid var(--accent); padding-left: 10px; margin: 8px 0; }
+
+  :root[data-rm] *, :root[data-rm] *::before, :root[data-rm] *::after { transition-property: opacity, color, background-color, border-color, box-shadow !important; animation: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .island.editing .card, .pg.pulse { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>面板编辑：拖着组件跨页</h1>
+  <p class="lead">下面是一座按真实比例画的岛（每页 6×2 格，共 3 页），已经在编辑模式。<b>按住一个组件拖动</b>就能试各种换页方式；右边可以开关各个功能、调时长。下方的清单会在你试过某个玩法后自动打勾。不在编辑模式时，<b>长按组件</b>会进入编辑并直接拿起它。</p>
+
+  <div class="layout">
+    <div>
+      <div class="stage">
+        <div class="island editing" id="island" data-pager="top">
+          <div class="ihead" id="ihead">
+            <div class="tabs"><span class="tab">✅ 待办</span><span class="tab">💬 消息</span><span class="tab on">▦ 我的面板</span><span class="tab">♪</span></div>
+            <span class="sp"></span>
+            <button class="editbtn" id="editbtn">完成</button>
+            <div class="pager-top" id="pagerTop"></div>
+            <div class="headdrop" id="headdrop"><span>↑ 停在这里，看全部页面</span><span class="bar"></span></div>
+          </div>
+          <div class="vpwrap" id="vpwrap">
+            <div class="vp" id="vp"><div class="strip" id="strip"></div></div>
+            <div class="edge l" id="edgeL"><div class="ring"><svg width="36" height="36"><circle class="tr" cx="18" cy="18" r="15"/><circle class="pr" cx="18" cy="18" r="15"/></svg><b>‹</b><small></small></div></div>
+            <div class="edge r" id="edgeR"><div class="ring"><svg width="36" height="36"><circle class="tr" cx="18" cy="18" r="15"/><circle class="pr" cx="18" cy="18" r="15"/></svg><b>›</b><small></small></div></div>
+            <div class="pagepill" id="pagepill">1 / 3</div>
+            <div class="ov" id="ov"></div>
+          </div>
+          <div class="hint" id="hint"><span class="t" id="hintText"></span></div>
+          <div class="dock">
+            <div class="tray" id="tray"><span class="lbl">暂存</span></div>
+            <div class="pager-bottom" id="pagerBottom"></div>
+            <button class="addbtn">＋ 添加组件</button>
+          </div>
+        </div>
+      </div>
+      <div class="checks" id="checks"></div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h3>① 边缘换页</h3>
+        <div class="row"><span>开启</span><label class="sw"><input type="checkbox" data-k="edge" checked><i></i></label></div>
+        <div class="row"><span>停留多久翻页<small>拖到边上停住，圆环转满就翻</small></span><input type="range" min="250" max="900" step="25" data-k="dwell"><output data-o="dwell"></output></div>
+        <div class="row"><span>连续翻页间隔<small>一直停着时，每隔多久再翻一页</small></span><input type="range" min="450" max="1400" step="50" data-k="repeat"><output data-o="repeat"></output></div>
+        <div class="row"><span>热区宽度<small>板子边缘往里多宽算「边缘」，出了岛也算</small></span><input type="range" min="16" max="64" step="4" data-k="zone"><output data-o="zone"></output></div>
+        <div class="row"><span>快甩直接翻<small>快速甩到边上，不用等</small></span><label class="sw"><input type="checkbox" data-k="flick" checked><i></i></label></div>
+        <div class="row"><span>探头<small>停留时把下一页拉出一条边</small></span><label class="sw"><input type="checkbox" data-k="peek" checked><i></i></label></div>
+        <div class="row"><span>尽头新建页<small>在最后一页往右停，多出空白页</small></span><label class="sw"><input type="checkbox" data-k="newPage" checked><i></i></label></div>
+      </div>
+      <div class="panel">
+        <h3>② 页码 → 缩略图</h3>
+        <div class="row"><span>放在哪</span><div class="seg" id="pagerSeg"><button data-v="top">上方</button><button data-v="bottom">下方</button><button data-v="off">关</button></div></div>
+        <div class="row"><span>悬停跳页<small>拖到缩略图上停多久跳过去</small></span><input type="range" min="150" max="800" step="25" data-k="thumbDwell"><output data-o="thumbDwell"></output></div>
+      </div>
+      <div class="panel">
+        <h3>③ 其他</h3>
+        <div class="row"><span>全景<small>拖到顶部或按空格，所有页摊开</small></span><label class="sw"><input type="checkbox" data-k="overview" checked><i></i></label></div>
+        <div class="row"><span>暂存架<small>先放下，切完页再拿出来</small></span><label class="sw"><input type="checkbox" data-k="tray" checked><i></i></label></div>
+        <div class="row"><span>模拟减少动画</span><label class="sw"><input type="checkbox" data-k="rm"><i></i></label></div>
+        <button class="resetbtn" id="reset">重置布局</button>
+      </div>
+      <div class="panel">
+        <h3>刚才发生了什么</h3>
+        <div class="log" id="log"><div>还没有动作</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc">
+    <section>
+      <h2>① 边缘换页：停住翻页，甩过去立刻翻</h2>
+      <ul>
+        <li>拖到左右边缘会亮起一道光，<b>圆环开始转</b>，转满就翻一页。停住不动就每隔一段时间再翻一页。</li>
+        <li><b>快甩</b>：快速甩到边上，跳过等待直接翻。只是路过边缘的话停留时间不够，不会误翻。</li>
+        <li><b>探头</b>：圆环转的时候，下一页先露出一条边，转满时再顺着滑过去。没翻成的话就弹回原处。</li>
+        <li>最后一页往右停，圆环里会变成 <b>＋</b>，转满就多出一页空白页，放进去就是新的一页。没放进去的话，松手后自动收掉。</li>
+        <li>热区延伸到岛外面：甩出岛也算。真岛上要给窗口加 <code>setPointerCapture</code>，鼠标出了窗口还能收到移动事件。</li>
+      </ul>
+    </section>
+    <section>
+      <h2>② 页码点在拖动时变成缩略图</h2>
+      <ul>
+        <li>平时只有几个页码点（当前页是长条），点一下就跳页。</li>
+        <li>拿起组件后，页码点<b>展开成各页的缩略图</b>，用色块画出每页的排布，最后多一个 ＋ 新页。</li>
+        <li>拖到缩略图上<b>停一下</b>就跳到那页（缩略图底下的进度条走满）；<b>直接松手</b>则把组件放进那一页（排满时挤走那页最后一个），<b>当前页不动</b>，提示条里有「撤销」和「去看看」。</li>
+        <li>放进去会把别的组件挤到下一页时，缩略图上被挤走的那块变成<b>橙色</b>，提示条也会写出它会被挤到第几页。</li>
+        <li>放在「上方」时，拖动期间<b>页签栏让出位置给缩略图</b>（页签和完成按钮淡出），松手后恢复；放在「下方」时，缩略图在底栏中间。</li>
+      </ul>
+    </section>
+    <section>
+      <h2>③ 全景、暂存架、键盘和滚轮</h2>
+      <ul>
+        <li><b>全景</b>：拖到顶部的页签栏上停住（缩略图在上方时停在「全部」上），或者按<b>空格</b>，所有页面摊开成小图，可以直接放进任意一页。手里的组件缩成一个小胶囊，不会挡住小图。</li>
+        <li><b>暂存架</b>：放到底栏的「暂存」里，就可以两手空空地慢慢翻页，翻到了再拖出来。退出编辑时，暂存的组件会排回末尾。</li>
+        <li>拖动时<b>滚轮</b>、<b>← →</b> 翻页，<b>数字键</b>直接跳到第 N 页，<b>Esc</b> 取消，组件飞回原处。</li>
+        <li>底下那条<b>提示条</b>一直跟着你的动作，告诉你松手后会发生什么，这比任何动画都更能让人放心。</li>
+      </ul>
+    </section>
+    <section class="wide">
+      <h2>动效参数（都在 motion.md 的档位上）</h2>
+      <table>
+        <tr><th>元素</th><th>怎么动</th><th>时长 / 曲线</th><th>减少动画时</th></tr>
+        <tr><td>边缘光</td><td>进入热区时淡入</td><td>fast 120ms / ease</td><td>照常淡入</td></tr>
+        <tr><td>停留圆环</td><td>按停留时长匀速转满</td><td>按设置 / linear（属于进度，可以匀速）</td><td>照常（它表示进度，不是装饰）</td></tr>
+        <tr><td>探头</td><td>露出 28px，跟着圆环的进度走</td><td>跟手，没有过渡</td><td>不探头</td></tr>
+        <tr><td>翻页</td><td>整页滚动</td><td>slow 420ms / ease-out</td><td>直接跳</td></tr>
+        <tr><td>没翻成，回到原处</td><td>滚回整页位置</td><td>base 160ms / ease-out</td><td>直接跳</td></tr>
+        <tr><td>页码点 ↔ 缩略图</td><td>点的宽高变成缩略图的宽高，色块淡入</td><td>展开 medium 240ms / ease-out，收回 base 160ms / ease（约 0.7 倍）</td><td>只淡入淡出</td></tr>
+        <tr><td>其他组件让位</td><td>left / top 过渡（沿用现在的写法）</td><td>medium 240ms / ease</td><td>直接到位</td></tr>
+        <tr><td>松手落位</td><td>拿起的那张飞到占位框</td><td>medium 240ms / ease-out</td><td>直接出现</td></tr>
+        <tr><td>放进缩略图</td><td>文字先淡出，色块缩进缩略图，缩略图闪一圈</td><td>fast 淡出 + medium 缩小 / ease-out，闪圈 slow 420ms，只播一次</td><td>不闪，直接放进去</td></tr>
+        <tr><td>全景</td><td>整层淡入淡出，不缩放</td><td>base 160ms / ease</td><td>照常淡入</td></tr>
+      </table>
+      <p>拿起的卡片跟手走，不加过渡，也不放大（底线里不让「按下缩放」），靠阴影和提亮表示「拿起来了」。文字层只淡入淡出；缩放只用在没有文字的色块上。</p>
+    </section>
+    <section class="wide">
+      <h2>要你定的事</h2>
+      <div class="q"><b>1. 缩略图放上面还是下面？</b>上面离手更近，是「拖到上方切换页面」的直觉位置，但拖动时要暂时占掉页签栏；Mac 刘海模式下顶部中间可能被刘海挡住，要在真岛上看。下面不和任何东西抢位置，但离板子远一点。我倾向<b>上方</b>，刘海模式自动改到下方。</div>
+      <div class="q"><b>2. 停留时长默认多少？</b>预览默认 450ms，连续翻页 800ms。太短容易误翻，太长让人觉得「卡住了」。</div>
+      <div class="q"><b>3. 全景和暂存架要不要？</b>页数多（4 页以上）时它们才值钱。我的建议是第一批做 ①②，③ 先不做，看实际用的时候页数多不多。</div>
+      <div class="q"><b>4. 「新建一页」要改数据格式。</b>现在网格模式只存顺序，排的时候按列从前往后填，后面的小组件会回填前面的空位，所以存不下「这一页从这里开始」。预览里给组件加了一个「分页符」标记（<code>brk</code>）来实现。真做要在 <code>CustomPanel</code> 的条目上加一个可选字段，旧数据没有这个字段时照现在的方式排：这属于 localStorage 数据格式变化，要写进 contracts.md。不想改格式的话，可以只保留「翻到已有页面」，去掉 ＋ 新页。</div>
+    </section>
+    <section class="wide">
+      <h2>落到代码上的前提</h2>
+      <ul>
+        <li><b>拖动时补偿滚动</b>：<code>useBoxDrag</code> 的 dx 只算了鼠标的位移。要在拖动开始时记下 <code>scrollLeft</code>，之后每帧加上滚动的变化量，否则一翻页，组件就和鼠标错开。预览里把拿起的卡片放到一个固定定位的浮层上，天然不受滚动影响，真做也可以这么改。</li>
+        <li><b>编辑时也要分页</b>：<code>stripGeometry</code> 里 <code>paged = grid &amp;&amp; !editing</code>，一进编辑就变成连续的长条。要改成编辑时也按页对齐，再画出页的分界线（预览里每页之间的竖虚线）。</li>
+        <li>从组件库拖进来的新组件（<code>incoming</code>）也要走同一套边缘换页和缩略图。</li>
+        <li>自由模式本来就没有页，边缘换页改成匀速连续滚动，缩略图不出现。</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+const CELL = 100, GAP = 8, STEP = 108, COLS = 6, ROWS = 2, VW = 640, VH = 208, PAGE_W = COLS * STEP, PEEK = 28;
+const SIZES = { s: [1, 1], m: [2, 1], l: [2, 2], w: [4, 1] };
+const T = { fast: 120, base: 160, medium: 240, slow: 420 };
+const EASE_OUT_CSS = "cubic-bezier(0.22, 1, 0.36, 1)", EASE_CSS = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+function bez(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-5 || Math.abs(d) < 1e-6) break; t -= e / d; }
+    return sy(Math.min(1, Math.max(0, t)));
+  };
+}
+const EASE_OUT = bez(0.22, 1, 0.36, 1);
+
+const BASE = [
+  { id: "weather", name: "天气", ic: "☀️", h: 200, size: "m", val: "23° 晴" },
+  { id: "cal", name: "日历", ic: "📅", h: 0, size: "l", val: "周日 22" },
+  { id: "todo", name: "待办", ic: "✅", h: 140, size: "m", val: "还剩 3 项" },
+  { id: "clock", name: "时钟", ic: "🕑", h: 260, size: "s", val: "14:05" },
+  { id: "pomo", name: "番茄钟", ic: "🍅", h: 10, size: "s", val: "25:00" },
+  { id: "music", name: "音乐", ic: "🎵", h: 320, size: "l", val: "夜曲" },
+  { id: "clip", name: "剪贴板", ic: "📋", h: 45, size: "m", val: "12 条" },
+  { id: "trans", name: "翻译", ic: "🌐", h: 180, size: "m", val: "中 → 英" },
+  { id: "cpu", name: "系统", ic: "📈", h: 100, size: "s", val: "18%" },
+  { id: "net", name: "网速", ic: "📶", h: 220, size: "s", val: "2.1M" },
+  { id: "mail", name: "邮件", ic: "✉️", h: 30, size: "m", val: "2 封未读" },
+  { id: "agent", name: "Agent", ic: "🤖", h: 280, size: "m", val: "2 个在跑" },
+  { id: "count", name: "倒数日", ic: "⏳", h: 340, size: "s", val: "9 天" },
+  { id: "batt", name: "电量", ic: "🔋", h: 120, size: "s", val: "86%" },
+  { id: "note", name: "便签", ic: "📝", h: 50, size: "m", val: "买牛奶" },
+  { id: "fx", name: "汇率", ic: "💱", h: 160, size: "s", val: "7.12" },
+];
+const CHECKS = [
+  ["edge", "停在边缘翻页", "拖到左右边上，等圆环转满"],
+  ["flick", "快甩到边缘", "快速甩过去，不用等就翻"],
+  ["newpage", "新建一页", "在最后一页右边停住出现 ＋，放进去"],
+  ["thumbJump", "缩略图上停一下跳页", "拖到某页缩略图上停住"],
+  ["thumbDrop", "松手在缩略图上", "放进别的页，自己不离开当前页"],
+  ["overview", "全景里放置", "拖到顶部停住，或按空格"],
+  ["tray", "暂存再取回", "放进底栏「暂存」，翻页后拖出来"],
+  ["wheel", "滚轮或方向键翻页", "拖着组件时滚一下滚轮，或按 ← →"],
+  ["esc", "Esc 取消", "拖动中按 Esc，组件飞回原处"],
+];
+
+const cfg = { edge: true, dwell: 450, repeat: 800, zone: 36, flick: true, peek: true, newPage: true, pager: "top", thumbDwell: 320, overview: true, tray: true, rm: false };
+const $ = (id) => document.getElementById(id);
+const island = $("island"), vp = $("vp"), strip = $("strip"), vpwrap = $("vpwrap"), ov = $("ov"), trayEl = $("tray"), headdrop = $("headdrop");
+let items = BASE.map((i) => ({ ...i }));
+let tray = [];
+let editing = true;
+let page = 0;
+let pageCount = 1;
+let drag = null;
+let pending = null;
+let history = [];
+let scrollAnim = null;
+const cardEls = {};
+const done = new Set();
+
+function flow(list) {
+  const taken = [];
+  let floor = 0, maxCol = 0;
+  return list.map((it) => {
+    const [c, r] = SIZES[it.size];
+    if (it.brk && maxCol > 0) floor = Math.max(floor, Math.ceil(maxCol / COLS) * COLS);
+    for (let col = floor; ; col++) {
+      if (Math.floor(col / COLS) !== Math.floor((col + c - 1) / COLS)) continue;
+      for (let row = 0; row + r <= ROWS; row++) {
+        const box = { col, row, cols: c, rows: r };
+        if (taken.some((o) => box.col < o.col + o.cols && o.col < box.col + box.cols && box.row < o.row + o.rows && o.row < box.row + box.rows)) continue;
+        taken.push(box);
+        maxCol = Math.max(maxCol, col + c);
+        return { ...it, ...box };
+      }
+    }
+  });
+}
+const boxPx = (p) => ({ left: p.col * STEP, top: p.row * STEP, width: p.cols * CELL + (p.cols - 1) * GAP, height: p.rows * CELL + (p.rows - 1) * GAP });
+const pageOf = (p) => Math.floor(p.col / COLS);
+const contentPages = (placed) => (placed.length ? Math.max(...placed.map((p) => Math.floor((p.col + p.cols - 1) / COLS))) + 1 : 1);
+function insertIndexAt(rest, x, y) {
+  const placed = flow(rest);
+  for (let i = 0; i < placed.length; i++) {
+    const b = boxPx(placed[i]);
+    const inCol = x >= b.left && x < b.left + b.width;
+    if (inCol && y >= b.top && y < b.top + b.height) return x < b.left + b.width / 2 ? i : i + 1;
+    if (x < b.left || (inCol && y < b.top)) return i;
+  }
+  return rest.length;
+}
+const insertAt = (list, idx, it) => [...list.slice(0, idx), it, ...list.slice(idx)];
+const clone = (list) => list.map((i) => ({ ...i }));
+
+function log(text) {
+  const el = $("log");
+  if (el.firstChild && el.firstChild.textContent === "还没有动作") el.innerHTML = "";
+  const d = document.createElement("div");
+  const t = new Date();
+  d.innerHTML = `<span style="color:var(--ink-3)">${String(t.getMinutes()).padStart(2, "0")}:${String(t.getSeconds()).padStart(2, "0")}</span> ${text}`;
+  el.prepend(d);
+  while (el.children.length > 30) el.lastChild.remove();
+}
+function mark(id) {
+  if (done.has(id)) return;
+  done.add(id);
+  document.querySelector(`.ck[data-id="${id}"]`)?.classList.add("done");
+}
+
+function setScroll(x) { vp.scrollLeft = x; }
+function animateScroll(to, dur, ease = EASE_OUT) {
+  if (scrollAnim) cancelAnimationFrame(scrollAnim.raf);
+  const from = vp.scrollLeft;
+  if (cfg.rm || dur === 0 || Math.abs(to - from) < 1) { scrollAnim = null; setScroll(to); return; }
+  const start = performance.now();
+  scrollAnim = { to };
+  const step = (now) => {
+    const p = Math.min(1, (now - start) / dur);
+    setScroll(from + (to - from) * ease(p));
+    if (p < 1) scrollAnim.raf = requestAnimationFrame(step);
+    else scrollAnim = null;
+  };
+  scrollAnim.raf = requestAnimationFrame(step);
+}
+let pillTimer = 0;
+function showPill() {
+  const pill = $("pagepill");
+  pill.textContent = `${page + 1} / ${pageCount}`;
+  pill.classList.add("on");
+  clearTimeout(pillTimer);
+  pillTimer = setTimeout(() => pill.classList.remove("on"), 900);
+}
+function goPage(p, instant = false) {
+  page = Math.max(0, Math.min(p, pageCount - 1));
+  animateScroll(page * PAGE_W, instant ? 0 : T.slow);
+  showPill();
+}
+
+function cardEl(it) {
+  let el = cardEls[it.id];
+  if (!el) {
+    el = document.createElement("div");
+    el.className = "card";
+    el.dataset.id = it.id;
+    el.dataset.size = it.size;
+    el.style.setProperty("--h", it.h);
+    el.style.setProperty("--ph", `${(Object.keys(cardEls).length * 53) % 135}ms`);
+    el.innerHTML = `<div class="ct"><span class="ic">${it.ic}</span><span class="nm">${it.name}</span></div><div class="val">${it.val}</div>`;
+    el.addEventListener("pointerdown", (e) => onCardDown(e, it.id));
+    strip.appendChild(el);
+    cardEls[it.id] = el;
+  }
+  return el;
+}
+
+let slotsFor = -1;
+function renderStripChrome(count, emptyPages) {
+  strip.style.width = `${count * PAGE_W - GAP}px`;
+  if (slotsFor !== count) {
+    strip.querySelectorAll(".slot,.divider").forEach((n) => n.remove());
+    for (let p = 0; p < count; p++) {
+      for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
+        const s = document.createElement("span");
+        s.className = "slot";
+        s.style.left = `${p * PAGE_W + c * STEP}px`;
+        s.style.top = `${r * STEP}px`;
+        strip.prepend(s);
+      }
+      if (p > 0) {
+        const d = document.createElement("span");
+        d.className = "divider";
+        d.style.left = `${p * PAGE_W - GAP / 2}px`;
+        strip.prepend(d);
+      }
+    }
+    slotsFor = count;
+  }
+  const key = emptyPages.join(",");
+  if (strip.dataset.empty !== key) {
+    strip.dataset.empty = key;
+    strip.querySelectorAll(".newpage").forEach((n) => n.remove());
+    for (const p of emptyPages) {
+      const n = document.createElement("div");
+      n.className = "newpage";
+      n.style.left = `${p * PAGE_W}px`;
+      n.textContent = `第 ${p + 1} 页 · 松手放在这里，新建这一页`;
+      strip.appendChild(n);
+    }
+  }
+}
+
+function renderBoard(placed, ph = null, pushed = new Set()) {
+  const seen = new Set();
+  placed.forEach((p, order) => {
+    const el = cardEl(p);
+    seen.add(p.id);
+    const b = boxPx(p);
+    const s = `left:${b.left}px;top:${b.top}px;width:${b.width}px;height:${b.height}px;z-index:${order + 1}`;
+    if (el.dataset.s !== s) { el.style.cssText = el.style.cssText.replace(/left:[^;]*;?|top:[^;]*;?|width:[^;]*;?|height:[^;]*;?|z-index:[^;]*;?|display:[^;]*;?/g, "") + s; el.dataset.s = s; }
+    el.classList.toggle("ph", p.id === ph);
+    el.classList.toggle("pushed", pushed.has(p.id));
+  });
+  for (const id in cardEls) if (!seen.has(id)) { cardEls[id].style.display = "none"; cardEls[id].dataset.s = ""; }
+}
+
+const pagerEl = document.createElement("div");
+pagerEl.className = "pager";
+const pgEls = [];
+function pgEl(i) {
+  if (!pgEls[i]) {
+    const el = document.createElement("div");
+    el.className = "pg";
+    el.innerHTML = `<div class="mini"></div><span class="bar"></span>`;
+    el.addEventListener("click", () => { if (!drag && i < pageCount) { goPage(i); log(`点页码，跳到第 <b>${i + 1}</b> 页`); } });
+    pgEls[i] = el;
+  }
+  return pgEls[i];
+}
+const addPg = document.createElement("div");
+addPg.className = "pg add";
+addPg.textContent = "＋";
+const allPg = document.createElement("div");
+allPg.className = "pg all";
+allPg.innerHTML = `全部<span class="bar"></span>`;
+
+function renderPager(placed, ph, pushed, hot) {
+  const big = !!drag;
+  pagerEl.classList.toggle("big", big);
+  while (pagerEl.children.length) pagerEl.lastChild.remove();
+  for (let i = 0; i < pageCount; i++) {
+    const el = pgEl(i);
+    el.classList.toggle("cur", i === page);
+    el.classList.toggle("hot", hot && hot.kind === "page" && hot.i === i);
+    el.querySelector(".bar").style.transform = `scaleX(${hot && hot.kind === "page" && hot.i === i ? hot.p : 0})`;
+    const html = placed.filter((p) => pageOf(p) === i).map((p) => `<i class="${p.id === ph ? "ph" : pushed.has(p.id) ? "pushed" : ""}" style="--h:${p.h};left:${(p.col - i * COLS) * 10}px;top:${p.row * 10}px;width:${p.cols * 10 - 2}px;height:${p.rows * 10 - 2}px"></i>`).join("");
+    const mini = el.querySelector(".mini");
+    if (mini.dataset.h !== html) { mini.innerHTML = html; mini.dataset.h = html; }
+    pagerEl.appendChild(el);
+  }
+  if (big && cfg.newPage) { addPg.classList.toggle("hot", hot && hot.kind === "add"); pagerEl.appendChild(addPg); }
+  if (big && cfg.overview && cfg.pager === "top") {
+    allPg.classList.toggle("hot", hot && hot.kind === "all");
+    allPg.querySelector(".bar").style.transform = `scaleX(${hot && hot.kind === "all" ? hot.p : 0})`;
+    pagerEl.appendChild(allPg);
+  }
+}
+
+function renderTray() {
+  trayEl.classList.toggle("hide", !cfg.tray);
+  trayEl.querySelectorAll(".tchip").forEach((n) => n.remove());
+  const lbl = trayEl.querySelector(".lbl");
+  lbl.textContent = tray.length ? "暂存" : "拖到这里暂存";
+  for (const it of tray) {
+    const c = document.createElement("span");
+    c.className = "tchip";
+    c.style.setProperty("--h", it.h);
+    c.textContent = `${it.ic} ${it.name}`;
+    c.addEventListener("pointerdown", (e) => onTrayDown(e, it.id));
+    trayEl.appendChild(c);
+  }
+}
+
+function setHint(html, actions = null) {
+  const h = $("hint");
+  h.querySelectorAll("button").forEach((b) => b.remove());
+  $("hintText").innerHTML = html;
+  if (actions) for (const [label, fn] of actions) { const b = document.createElement("button"); b.textContent = label; b.onclick = fn; h.appendChild(b); }
+}
+let toastTimer = 0;
+function idleHint() {
+  if (toastTimer) return;
+  if (!editing) return setHint("长按组件进入编辑 · 滚轮翻页");
+  const bits = ["按住组件拖动"];
+  if (cfg.edge) bits.push("拖到左右边缘翻页");
+  if (cfg.pager !== "off") bits.push(`拖动时${cfg.pager === "top" ? "上方" : "下方"}出现各页缩略图`);
+  if (cfg.overview) bits.push("空格看全部页");
+  setHint(bits.join(" · "));
+}
+function toast(html, actions) {
+  clearTimeout(toastTimer);
+  setHint(html, actions);
+  toastTimer = setTimeout(() => { toastTimer = 0; idleHint(); }, 4200);
+}
+
+function placePager() {
+  island.dataset.pager = cfg.pager;
+  if (cfg.pager === "top") $("pagerTop").appendChild(pagerEl);
+  else if (cfg.pager === "bottom") $("pagerBottom").appendChild(pagerEl);
+  else pagerEl.remove();
+  pagerEl.style.display = editing ? "" : "none";
+}
+
+function renderIdle() {
+  const placed = flow(items);
+  pageCount = contentPages(placed);
+  if (page > pageCount - 1) goPage(pageCount - 1, true);
+  renderStripChrome(pageCount, []);
+  renderBoard(placed);
+  renderPager(placed, null, new Set(), null);
+  renderTray();
+  placePager();
+  idleHint();
+}
+
+function onCardDown(e, id) {
+  if (e.button !== 0 || drag) return;
+  e.preventDefault();
+  pending = { id, source: "board", x: e.clientX, y: e.clientY, pointerId: e.pointerId, timer: 0 };
+  if (!editing) pending.timer = setTimeout(() => {
+    if (!pending) return;
+    setEditing(true);
+    log("长按进入编辑，直接拿起");
+    startDrag(pending.id, "board", pending.x, pending.y);
+    pending = null;
+  }, 420);
+}
+function onTrayDown(e, id) {
+  if (e.button !== 0 || drag) return;
+  e.preventDefault();
+  pending = { id, source: "tray", x: e.clientX, y: e.clientY, pointerId: e.pointerId, timer: 0 };
+}
+
+function makeLifted(it, w, h) {
+  const el = document.createElement("div");
+  el.className = "card lifted";
+  el.dataset.size = it.size;
+  el.style.setProperty("--h", it.h);
+  el.style.width = `${w}px`;
+  el.style.height = `${h}px`;
+  el.innerHTML = `<div class="ct"><span class="ic">${it.ic}</span><span class="nm">${it.name}</span></div><div class="val">${it.val}</div>`;
+  document.body.appendChild(el);
+  return el;
+}
+
+function startDrag(id, source, x, y) {
+  const fromTray = source === "tray";
+  const item = fromTray ? tray.find((i) => i.id === id) : items.find((i) => i.id === id);
+  if (!item) return;
+  const snapshot = { items: clone(items), tray: clone(tray), page };
+  const rest = clone(items.filter((i) => i.id !== id));
+  if (!fromTray) {
+    const idx = items.findIndex((i) => i.id === id);
+    if (items[idx].brk && rest[idx]) rest[idx].brk = true;
+  } else tray = tray.filter((i) => i.id !== id);
+  const [c, r] = SIZES[item.size];
+  const w = c * CELL + (c - 1) * GAP, h = r * CELL + (r - 1) * GAP;
+  let rect;
+  if (!fromTray) rect = cardEls[id].getBoundingClientRect();
+  else rect = { left: x - w / 2, top: y - h / 2, width: w, height: h };
+  drag = {
+    item: { ...item, brk: false }, source, rest, snapshot, origPage: page,
+    gx: x - rect.left, gy: y - rect.top, w, h, x, y, pts: [{ x, t: performance.now() }],
+    zone: null, zoneStart: 0, zoneNeed: 0, zoneProg: 0, zoneFlick: false,
+    hot: null, hotStart: 0, hotFired: false, head: 0, ov: false,
+    maxPage: pageCount - 1, target: null, wheel: 0, wheelRest: 0,
+  };
+  drag.el = makeLifted(item, w, h);
+  positionLifted();
+  island.classList.add("dragging");
+  if (!fromTray) cardEls[id].style.animation = "none";
+  renderTray();
+  log(`拿起 <b>${item.name}</b>${fromTray ? "（从暂存）" : ""}`);
+  requestAnimationFrame(tick);
+}
+
+function positionLifted() {
+  const d = drag;
+  if (d.ov) d.el.style.transform = `translate3d(${d.x - 60}px, ${d.y - 17}px, 0)`;
+  else d.el.style.transform = `translate3d(${d.x - d.gx}px, ${d.y - d.gy}px, 0)`;
+}
+
+function speedX() {
+  const pts = drag.pts;
+  if (pts.length < 2) return 0;
+  const a = pts[0], b = pts[pts.length - 1];
+  return (b.x - a.x) / Math.max(1, b.t - a.t);
+}
+
+function within(r, x, y, pad = 0) { return x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad; }
+
+function flip(dir, why) {
+  const target = page + dir;
+  if (target < 0) return false;
+  if (target >= pageCount) {
+    if (!drag || !cfg.newPage) return false;
+    drag.maxPage = Math.max(drag.maxPage, target);
+    pageCount = target + 1;
+    renderStripChrome(pageCount, []);
+    log(`新建第 <b>${target + 1}</b> 页（空白）`);
+  }
+  goPage(target);
+  log(`${why} → 第 <b>${target + 1}</b> 页`);
+  return true;
+}
+
+function boardTarget(vr) {
+  const d = drag;
+  let cx = d.x - d.gx + d.w / 2 - vr.left + vp.scrollLeft;
+  const cy = Math.max(0, Math.min(VH - 1, d.y - d.gy + d.h / 2 - vr.top));
+  cx = Math.max(page * PAGE_W, Math.min(page * PAGE_W + VW - 1, cx));
+  return targetAt(Math.floor(cx / PAGE_W), cx, cy, "board");
+}
+function targetAt(p, cx, cy, mode) {
+  const d = drag;
+  const restPlaced = flow(d.rest);
+  const last = d.rest.length ? contentPages(restPlaced) - 1 : -1;
+  if (p > last) return { mode, list: [...d.rest, { ...d.item, brk: d.rest.length > 0 }], page: Math.min(p, last + 1), fresh: true };
+  const idx = insertIndexAt(d.rest, cx, cy);
+  return { mode, list: insertAt(d.rest, idx, { ...d.item }), page: p };
+}
+function pageEndTarget(p, mode) {
+  const d = drag;
+  const restPlaced = flow(d.rest);
+  let idx = -1;
+  restPlaced.forEach((q, i) => { if (pageOf(q) === p) idx = i; });
+  if (idx < 0) return { mode, list: [...d.rest, { ...d.item, brk: d.rest.length > 0 }], page: p, fresh: true };
+  for (let at = idx + 1; at >= 0; at--) {
+    const list = insertAt(d.rest, at, { ...d.item });
+    const me = flow(list).find((q) => q.id === d.item.id);
+    if (pageOf(me) === p) return { mode, list, page: p };
+  }
+  return { mode, list: insertAt(d.rest, idx + 1, { ...d.item }), page: p };
+}
+
+function hitPager(x, y) {
+  if (cfg.pager === "off") return null;
+  for (let i = 0; i < pgEls.length && i < pageCount; i++) if (pgEls[i].isConnected && within(pgEls[i].getBoundingClientRect(), x, y, 3)) return { kind: "page", i };
+  if (addPg.isConnected && within(addPg.getBoundingClientRect(), x, y, 3)) return { kind: "add", i: pageCount };
+  if (allPg.isConnected && within(allPg.getBoundingClientRect(), x, y, 3)) return { kind: "all", i: -1 };
+  return null;
+}
+
+function ovLayout(n) {
+  let best = null;
+  for (let k = 1; k <= n; k++) {
+    const rows = Math.ceil(n / k);
+    const s = Math.min((VW + 24 - 24 - (k - 1) * 14) / (k * VW), (VH + 8 - 26 - (rows - 1) * 22) / (rows * VH));
+    if (!best || s > best.s) best = { k, rows, s };
+  }
+  return best;
+}
+function renderOv(placed, ph, pushed, hotPage) {
+  const n = pageCount + (cfg.newPage ? 1 : 0);
+  const { k, rows, s } = ovLayout(n);
+  const pw = VW * s, phh = VH * s;
+  const totalW = k * pw + (k - 1) * 14, totalH = rows * phh + (rows - 1) * 22;
+  const ox = (VW + 24 - totalW) / 2, oy = (VH + 8 - totalH) / 2 + 9;
+  let html = "";
+  for (let p = 0; p < n; p++) {
+    const gx = ox + (p % k) * (pw + 14), gy = oy + Math.floor(p / k) * (phh + 22);
+    const isAdd = p >= pageCount;
+    html += `<div class="ovp${isAdd ? " add" : ""}${hotPage === p ? " hot" : ""}" data-p="${p}" style="left:${gx}px;top:${gy}px;width:${pw}px;height:${phh}px"><span class="no">${isAdd ? "" : `第 ${p + 1} 页`}</span>${isAdd ? "＋ 新页" : ""}`;
+    for (const q of placed) {
+      if (pageOf(q) !== p) continue;
+      const b = boxPx(q);
+      const w = b.width * s, h = b.height * s;
+      html += `<i class="${q.id === ph ? "ph" : pushed.has(q.id) ? "pushed" : ""}" style="--h:${q.h};left:${(b.left - p * PAGE_W) * s}px;top:${b.top * s}px;width:${w - 1}px;height:${h - 1}px">${q.id === ph ? "" : q.ic + (w > 64 ? " " + q.name : "")}</i>`;
+    }
+    html += "</div>";
+  }
+  if (ov.dataset.h !== html) { ov.innerHTML = html; ov.dataset.h = html; }
+  return s;
+}
+function ovTarget(s) {
+  const d = drag;
+  for (const el of ov.querySelectorAll(".ovp")) {
+    const r = el.getBoundingClientRect();
+    if (!within(r, d.x, d.y, 7)) continue;
+    const p = Number(el.dataset.p);
+    if (p >= pageCount) return { mode: "ov", list: [...d.rest, { ...d.item, brk: d.rest.length > 0 }], page: p, fresh: true, add: true };
+    const lx = Math.max(0, Math.min(VW - 1, (d.x - r.left) / s)), ly = Math.max(0, Math.min(VH - 1, (d.y - r.top) / s));
+    return { ...targetAt(p, p * PAGE_W + lx, ly, "ov") };
+  }
+  return null;
+}
+function setOv(on) {
+  if (!drag || drag.ov === on) return;
+  drag.ov = on;
+  ov.classList.toggle("on", on);
+  drag.el.classList.toggle("chip", on);
+  drag.el.style.width = on ? "120px" : `${drag.w}px`;
+  drag.el.style.height = on ? "34px" : `${drag.h}px`;
+  if (on) { ov.dataset.h = ""; drag.target = null; log("进入<b>全景</b>"); } else log("退出全景");
+  positionLifted();
+}
+
+function tick(now) {
+  const d = drag;
+  if (!d) return;
+  const vr = vp.getBoundingClientRect();
+  d.pts = d.pts.filter((p) => now - p.t < 90);
+  let zone = null, hot = null, target = null, hintHtml = "";
+
+  if (d.ov) {
+    pageCount = Math.max(pageCount, d.maxPage + 1);
+    const base = d.target ? d.target.list : d.rest;
+    const placedNow = flow(base);
+    const s = ovLayout(pageCount + (cfg.newPage ? 1 : 0)).s;
+    target = ovTarget(s) || d.target;
+  } else {
+    if (cfg.edge && d.y >= vr.top - 8 && d.y <= vr.bottom + 8) {
+      if (d.x < vr.left + cfg.zone) zone = -1;
+      else if (d.x > vr.right - cfg.zone) zone = 1;
+    }
+    const can = zone === -1 ? page > 0 : zone === 1 ? page < pageCount - 1 || cfg.newPage : false;
+    if (zone !== d.zone) {
+      const wasPeeking = d.zone && d.zoneProg > 0;
+      d.zone = zone;
+      d.zoneStart = now;
+      d.zoneProg = 0;
+      d.zoneFlick = !!zone && cfg.flick && zone * speedX() > 1.1;
+      d.zoneNeed = d.zoneFlick ? 0 : cfg.dwell;
+      if (!zone && wasPeeking && !scrollAnim) animateScroll(page * PAGE_W, T.base);
+    }
+    if (zone && can) {
+      if (scrollAnim) d.zoneStart = now;
+      else {
+        const p = d.zoneNeed ? (now - d.zoneStart) / d.zoneNeed : 1;
+        d.zoneProg = Math.min(1, p);
+        if (p >= 1) {
+          const flick = d.zoneFlick;
+          if (flip(zone, flick ? "快甩到边缘" : "边缘停留")) mark(flick ? "flick" : "edge");
+          d.zoneStart = now;
+          d.zoneNeed = cfg.repeat;
+          d.zoneFlick = false;
+          d.zoneProg = 0;
+        } else if (cfg.peek && !cfg.rm) setScroll(page * PAGE_W + zone * PEEK * EASE_OUT(d.zoneProg));
+      }
+    }
+
+    const hp = hitPager(d.x, d.y);
+    if (hp) {
+      if (!d.hot || d.hot.kind !== hp.kind || d.hot.i !== hp.i) { d.hot = hp; d.hotStart = now; d.hotFired = false; }
+      const p = Math.min(1, (now - d.hotStart) / (hp.kind === "all" ? 350 : cfg.thumbDwell));
+      hot = { ...hp, p };
+      if (p >= 1 && !d.hotFired) {
+        d.hotFired = true;
+        if (hp.kind === "all") setOv(true);
+        else if (hp.kind === "page" && hp.i !== page) { goPage(hp.i); mark("thumbJump"); log(`缩略图上停住 → 跳到第 <b>${hp.i + 1}</b> 页`); }
+      }
+    } else d.hot = null;
+
+    const headR = $("ihead").getBoundingClientRect();
+    const inHead = cfg.overview && cfg.pager !== "top" && within(headR, d.x, d.y, 4);
+    headdrop.classList.toggle("on", cfg.overview && cfg.pager !== "top");
+    headdrop.classList.toggle("hot", inHead);
+    if (inHead) {
+      if (!d.head) d.head = now;
+      const p = Math.min(1, (now - d.head) / 350);
+      headdrop.querySelector(".bar").style.transform = `scaleX(${p})`;
+      if (p >= 1) setOv(true);
+    } else { d.head = 0; headdrop.querySelector(".bar").style.transform = "scaleX(0)"; }
+
+    if (d.ov) target = d.target;
+    else if (cfg.tray && within(trayEl.getBoundingClientRect(), d.x, d.y, 4)) target = { mode: "tray", list: d.rest, page: -1 };
+    else if (hp && hp.kind === "page") target = pageEndTarget(hp.i, "thumb");
+    else if (hp && hp.kind === "add") target = { mode: "thumb", list: [...d.rest, { ...d.item, brk: d.rest.length > 0 }], page: pageCount, fresh: true, add: true };
+    else if (inHead || (hp && hp.kind === "all")) target = d.target || boardTarget(vr);
+    else target = boardTarget(vr);
+  }
+  d.target = target;
+
+  const placed = flow(target ? target.list : d.rest);
+  const mine = placed.find((q) => q.id === d.item.id);
+  if (target && mine) target.page = pageOf(mine);
+  const basePlaced = flow(d.rest);
+  const basePage = Object.fromEntries(basePlaced.map((q) => [q.id, pageOf(q)]));
+  const pushed = new Set(placed.filter((q) => q.id !== d.item.id && pageOf(q) > basePage[q.id]).map((q) => q.id));
+  const prevCount = pageCount;
+  pageCount = Math.max(contentPages(placed), d.maxPage + 1, page + 1);
+  const empties = [];
+  for (let p = 0; p < pageCount; p++) if (!placed.some((q) => pageOf(q) === p)) empties.push(p);
+  renderStripChrome(pageCount, empties);
+  if (prevCount !== pageCount) $("pagepill").textContent = `${page + 1} / ${pageCount}`;
+  renderBoard(placed, d.item.id, pushed);
+  renderPager(placed, d.item.id, pushed, hot);
+  if (d.ov) renderOv(placed, d.item.id, pushed, target ? target.page : -1);
+  trayEl.classList.toggle("hot", target && target.mode === "tray");
+
+  for (const [el, z] of [[$("edgeL"), -1], [$("edgeR"), 1]]) {
+    const on = !d.ov && cfg.edge;
+    const active = zone === z;
+    const can = z === -1 ? page > 0 : page < pageCount - 1 || cfg.newPage;
+    el.classList.toggle("on", on && active);
+    el.classList.toggle("off", on && active && !can);
+    const isNew = z === 1 && page >= pageCount - 1;
+    el.querySelector("b").textContent = z === -1 ? "‹" : isNew ? "＋" : "›";
+    el.querySelector("small").textContent = active && can ? (isNew ? "新建一页" : `第 ${page + 1 + z} 页`) : "";
+    el.querySelector(".pr").style.strokeDashoffset = 94.25 * (1 - (active ? d.zoneProg : 0));
+  }
+
+  const tp = target && target.page >= 0 ? target.page + 1 : 0;
+  const pushedNames = [...pushed].map((id) => placed.find((q) => q.id === id)).map((q) => `「${q.name}」会挤到第 ${pageOf(q) + 1} 页`);
+  const warn = pushedNames.length ? ` · <span class="warn">${pushedNames.slice(0, 2).join("，")}${pushedNames.length > 2 ? " 等" : ""}</span>` : "";
+  if (zone && !d.ov) hintHtml = zone === -1 && page === 0 ? "已经是第一页" : zone === 1 && page >= pageCount - 1 ? (cfg.newPage ? "停住：新建一页" : "已经是最后一页") : `停住：翻到第 ${page + 1 + zone} 页`;
+  else if (!target) hintHtml = "";
+  else if (target.mode === "tray") hintHtml = "松手暂存 · 翻到想要的页再把它拖出来";
+  else if (target.mode === "thumb") hintHtml = target.add ? "松手：新建一页放进去（当前页不动）" : target.page === page ? `松手放进本页${warn}` : `松手放进第 ${tp} 页，当前页不动 · 停一下就跳过去${warn}`;
+  else if (target.mode === "ov") hintHtml = `全景：放到第 ${tp} 页${target.fresh ? "（新页）" : ""}${warn} · 空格退出`;
+  else hintHtml = `松手放到第 ${tp} 页${target.fresh ? "（新建）" : ""}${warn}`;
+  if (hot && hot.kind === "all") hintHtml = "停住：看全部页面";
+  if (headdrop.classList.contains("hot")) hintHtml = "停住：看全部页面";
+  clearTimeout(toastTimer); toastTimer = 0;
+  setHint(hintHtml);
+
+  requestAnimationFrame(tick);
+}
+
+function endDrag(cancel) {
+  const d = drag;
+  if (!d) return;
+  drag = null;
+  island.classList.remove("dragging");
+  ov.classList.remove("on");
+  headdrop.classList.remove("on", "hot");
+  trayEl.classList.remove("hot");
+  $("edgeL").classList.remove("on"); $("edgeR").classList.remove("on");
+  if (cardEls[d.item.id]) cardEls[d.item.id].style.animation = "";
+  const t = d.target;
+  const lifted = d.el;
+  let flyTo = null, flyKind = "settle", landPage = page;
+  if (cancel || !t) {
+    items = d.snapshot.items; tray = d.snapshot.tray;
+    if (cancel) { mark("esc"); log("Esc 取消，飞回原处"); }
+    if (d.source === "board") landPage = d.snapshot.page;
+  } else {
+    history.push(d.snapshot);
+    if (t.mode === "tray") {
+      items = clone(d.rest);
+      tray = [...tray, { ...d.item }];
+      flyKind = "tray";
+      log(`<b>${d.item.name}</b> 放进暂存`);
+    } else {
+      items = clone(t.list);
+      if (items[0]) items[0].brk = false;
+      if (d.source === "tray") mark("tray");
+      const restLast = d.rest.length ? contentPages(flow(d.rest)) - 1 : -1;
+      if (t.page > restLast && t.page > 0) { mark("newpage"); log(`新建第 <b>${t.page + 1}</b> 页，放进 <b>${d.item.name}</b>`); }
+      if (t.mode === "thumb") {
+        flyKind = t.page === page ? "settle" : "thumb";
+        if (t.page !== page) {
+          mark("thumbDrop");
+          const target = t.page;
+          log(`<b>${d.item.name}</b> 放进第 <b>${target + 1}</b> 页（没离开当前页）`);
+          toast(`已放到第 ${target + 1} 页`, [["撤销", undo], ["去看看", () => { goPage(target); clearTimeout(toastTimer); toastTimer = 0; idleHint(); }]]);
+        }
+      } else if (t.mode === "ov") { mark("overview"); landPage = t.page; log(`全景里放到第 <b>${t.page + 1}</b> 页`); }
+      else log(`<b>${d.item.name}</b> 放到第 <b>${t.page + 1}</b> 页`);
+    }
+  }
+  const thumbIdx = t && t.mode === "thumb" ? t.page : -1;
+  const placed = flow(items);
+  pageCount = contentPages(placed);
+  if (landPage !== page || page > pageCount - 1) goPage(landPage, true);
+  else animateScroll(page * PAGE_W, T.base);
+  renderIdle();
+  const el = cardEls[d.item.id];
+  const visible = items.some((i) => i.id === d.item.id);
+  if (flyKind === "thumb" && pgEls[thumbIdx] && cfg.pager !== "off") flyTo = pgEls[thumbIdx].getBoundingClientRect();
+  else if (flyKind === "thumb") flyKind = "fade";
+  if (flyKind === "tray") flyTo = trayEl.lastElementChild?.getBoundingClientRect() || trayEl.getBoundingClientRect();
+  const from = lifted.style.transform;
+  const finish = () => { lifted.remove(); if (el) el.classList.remove("landing"); };
+  if (cfg.rm) { finish(); pulse(thumbIdx); return; }
+  if (flyKind === "settle" && visible && el) {
+    const sp = page * PAGE_W;
+    const p = placed.find((q) => q.id === d.item.id);
+    const b = boxPx(p);
+    const vr = vp.getBoundingClientRect();
+    const tx = vr.left + b.left - sp, ty = vr.top + b.top;
+    if (tx + b.width < vr.left - 4 || tx > vr.right + 4) { lifted.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.base, easing: EASE_CSS }).onfinish = finish; return; }
+    el.classList.add("landing");
+    lifted.animate([{ transform: from, width: lifted.style.width, height: lifted.style.height }, { transform: `translate3d(${tx}px, ${ty}px, 0)`, width: `${b.width}px`, height: `${b.height}px` }], { duration: T.medium, easing: EASE_OUT_CSS }).onfinish = finish;
+  } else if (flyTo) {
+    lifted.classList.add("fly");
+    const w = Math.min(30, flyTo.width), h = Math.min(14, flyTo.height);
+    lifted.animate([{ transform: from, width: lifted.style.width, height: lifted.style.height, opacity: 1, borderRadius: "16px" }, { transform: `translate3d(${flyTo.left + flyTo.width / 2 - w / 2}px, ${flyTo.top + flyTo.height / 2 - h / 2}px, 0)`, width: `${w}px`, height: `${h}px`, opacity: 0.2, borderRadius: "4px" }], { duration: T.medium, easing: EASE_OUT_CSS }).onfinish = () => { finish(); pulse(thumbIdx); };
+  } else lifted.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T.base, easing: EASE_CSS }).onfinish = finish;
+}
+function pulse(i) {
+  if (i < 0 || !pgEls[i]) return;
+  const el = pgEls[i];
+  el.classList.remove("pulse");
+  void el.offsetWidth;
+  el.classList.add("pulse");
+  setTimeout(() => el.classList.remove("pulse"), T.slow + 40);
+}
+function undo() {
+  const s = history.pop();
+  if (!s) return;
+  items = s.items; tray = s.tray;
+  clearTimeout(toastTimer); toastTimer = 0;
+  renderIdle();
+  log("撤销");
+}
+
+window.addEventListener("pointermove", (e) => {
+  if (pending && !drag) {
+    if (Math.hypot(e.clientX - pending.x, e.clientY - pending.y) > 4) {
+      clearTimeout(pending.timer);
+      const p = pending;
+      pending = null;
+      if (editing || p.source === "tray") startDrag(p.id, p.source, p.x, p.y);
+    }
+  }
+  if (!drag) return;
+  drag.x = e.clientX;
+  drag.y = e.clientY;
+  drag.pts.push({ x: e.clientX, t: performance.now() });
+  positionLifted();
+});
+window.addEventListener("pointerup", () => {
+  if (pending) { clearTimeout(pending.timer); pending = null; }
+  if (drag) endDrag(false);
+});
+window.addEventListener("pointercancel", () => { if (drag) endDrag(true); });
+window.addEventListener("keydown", (e) => {
+  if (!drag) return;
+  if (e.key === "Escape") { e.preventDefault(); endDrag(true); }
+  else if (e.key === " " && cfg.overview) { e.preventDefault(); setOv(!drag.ov); }
+  else if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); if (!drag.ov && flip(e.key === "ArrowLeft" ? -1 : 1, e.key === "ArrowLeft" ? "← 键" : "→ 键")) mark("wheel"); }
+  else if (/^[1-9]$/.test(e.key)) { const n = Number(e.key) - 1; if (n < pageCount && n !== page && !drag.ov) { goPage(n); mark("wheel"); log(`数字键 → 第 <b>${n + 1}</b> 页`); } }
+});
+vpwrap.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+  const now = performance.now();
+  const st = drag || wheelIdle;
+  if (now < st.wheelRest) return;
+  st.wheel += delta;
+  if (Math.abs(st.wheel) < 30) return;
+  const dir = Math.sign(st.wheel);
+  st.wheel = 0;
+  st.wheelRest = now + T.slow;
+  if (drag) { if (!drag.ov && flip(dir, "滚轮")) mark("wheel"); }
+  else if (page + dir >= 0 && page + dir < pageCount) goPage(page + dir);
+}, { passive: false });
+const wheelIdle = { wheel: 0, wheelRest: 0 };
+
+function setEditing(on) {
+  editing = on;
+  island.classList.toggle("editing", on);
+  $("editbtn").textContent = on ? "完成" : "编辑";
+  if (!on && tray.length) { items = [...items, ...tray.map((i) => ({ ...i, brk: false }))]; log(`退出编辑，暂存的 ${tray.length} 个组件排回末尾`); tray = []; }
+  renderIdle();
+}
+$("editbtn").addEventListener("click", () => setEditing(!editing));
+$("reset").addEventListener("click", () => { items = BASE.map((i) => ({ ...i })); tray = []; history = []; goPage(0, true); renderIdle(); log("重置布局"); });
+
+document.querySelectorAll("[data-k]").forEach((input) => {
+  const k = input.dataset.k;
+  const out = document.querySelector(`[data-o="${k}"]`);
+  const show = () => { if (out) out.textContent = k === "zone" ? `${cfg[k]}px` : `${cfg[k]}ms`; };
+  if (input.type === "checkbox") input.checked = cfg[k];
+  else input.value = cfg[k];
+  show();
+  input.addEventListener("input", () => {
+    cfg[k] = input.type === "checkbox" ? input.checked : Number(input.value);
+    show();
+    if (k === "rm") { if (cfg.rm) document.documentElement.dataset.rm = ""; else delete document.documentElement.dataset.rm; }
+    renderIdle();
+  });
+});
+document.querySelectorAll("#pagerSeg button").forEach((b) => {
+  b.classList.toggle("on", b.dataset.v === cfg.pager);
+  b.addEventListener("click", () => {
+    cfg.pager = b.dataset.v;
+    document.querySelectorAll("#pagerSeg button").forEach((x) => x.classList.toggle("on", x === b));
+    renderIdle();
+  });
+});
+$("checks").innerHTML = CHECKS.map(([id, t, s]) => `<div class="ck" data-id="${id}"><span class="box">✓</span><div>${t}<small>${s}</small></div></div>`).join("");
+if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { cfg.rm = true; document.documentElement.dataset.rm = ""; document.querySelector('[data-k="rm"]').checked = true; }
+renderIdle();
+</script>
+</body>
+</html>
