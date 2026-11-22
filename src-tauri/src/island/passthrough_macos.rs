@@ -7,6 +7,7 @@ use tauri::{AppHandle, Emitter, WebviewWindow};
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
+    hover_linger::HoverLinger,
     resize,
     geometry::{
         cursor_near_island, cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect,
@@ -107,6 +108,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
         let mut dim_wake = DimWakeTracker::default();
+        let mut linger = HoverLinger::default();
 
         loop {
             if !window.is_visible().unwrap_or(true) {
@@ -131,7 +133,8 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 });
                 let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
             }
-            let is_inside = hover_inside(state, raw_inside) || resize::is_resizing();
+            let panel = pointer.map(|p| island_rect(p.left, p.top, p.width, p.height, state));
+            let is_inside = linger.poll(state, hover_inside(state, raw_inside), panel, raw_cursor) || resize::is_resizing();
             let is_on_banner = pointer.is_some_and(on_banner);
             let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 

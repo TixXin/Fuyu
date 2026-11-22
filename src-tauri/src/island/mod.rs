@@ -17,6 +17,7 @@ pub(crate) mod drag_grid_window;
 mod drag_hint;
 mod edge;
 mod geometry;
+mod hover_linger;
 pub(crate) mod layer;
 #[cfg_attr(target_os = "macos", path = "layer_hotkey_macos.rs")]
 mod layer_hotkey;

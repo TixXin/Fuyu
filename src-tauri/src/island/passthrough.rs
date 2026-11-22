@@ -8,6 +8,7 @@ use windows::Win32::Foundation::HWND;
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
+    hover_linger::HoverLinger,
     resize,
     geometry::{
         cursor_near_island, cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect,
@@ -48,6 +49,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
         let mut dim_wake = DimWakeTracker::default();
+        let mut linger = HoverLinger::default();
 
         loop {
             if !window.is_visible().unwrap_or(true) {
@@ -55,7 +57,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 thread::sleep(passthrough_sleep_duration(false, false));
                 continue;
             }
-            let (mut state, raw_inside, is_near_island, raw_cursor) = read_pointer_state(hwnd);
+            let (mut state, raw_inside, is_near_island, raw_cursor, panel) = read_pointer_state(hwnd);
             if dim_wake.poll(state.dimmed_passthrough(), is_near_island, raw_cursor) {
                 state = mutate_window_state(|current| {
                     current.is_dimmed = false;
@@ -63,7 +65,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 });
                 let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
             }
-            let is_inside = hover_inside(state, raw_inside) || resize::is_resizing();
+            let is_inside = linger.poll(state, hover_inside(state, raw_inside), panel, raw_cursor) || resize::is_resizing();
             let is_on_banner = hwnd.is_some_and(cursor_is_on_banner);
             let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 
@@ -145,16 +147,18 @@ pub(crate) fn island_on_screen(window: &WebviewWindow) -> Option<IslandOnScreen>
     Some(island_rect(window_rect.left as f64, window_rect.top as f64, window_width, window_height, read_window_state()))
 }
 
-fn read_pointer_state(hwnd: Option<HWND>) -> (IslandWindowState, bool, bool, Option<(f64, f64)>) {
+type PointerState = (IslandWindowState, bool, bool, Option<(f64, f64)>, Option<IslandOnScreen>);
+
+fn read_pointer_state(hwnd: Option<HWND>) -> PointerState {
     let state = read_window_state();
     let Some(hwnd) = hwnd else {
-        return (state, !state.dimmed_passthrough(), false, None);
+        return (state, !state.dimmed_passthrough(), false, None, None);
     };
     let Some(window_rect) = win32::window::window_rect(hwnd) else {
-        return (state, !state.dimmed_passthrough(), false, None);
+        return (state, !state.dimmed_passthrough(), false, None, None);
     };
     let Some(cursor) = win32::window::cursor_position() else {
-        return (state, !state.dimmed_passthrough(), false, None);
+        return (state, !state.dimmed_passthrough(), false, None, None);
     };
     let left = window_rect.left as f64;
     let top = window_rect.top as f64;
@@ -165,7 +169,9 @@ fn read_pointer_state(hwnd: Option<HWND>) -> (IslandWindowState, bool, bool, Opt
     let inside = super::taskbar::cursor_on_bar_or_panel((left, top, width, height), (cx, cy), state)
         .unwrap_or_else(|| cursor_on_island(left, top, width, height, cx, cy, state));
     let near = inside || cursor_near_island(left, top, width, height, cx, cy, state);
-    (state, inside, near, Some((cx, cy)))
+    let panel = super::taskbar::panel_on_screen((left, top, width, height), state)
+        .unwrap_or_else(|| island_rect(left, top, width, height, state));
+    (state, inside, near, Some((cx, cy)), Some(panel))
 }
 
 fn cursor_is_near_stage(hwnd: HWND) -> bool {
