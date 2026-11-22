@@ -12,8 +12,9 @@ export class History {
 
   add(point: HistoryPoint): void {
     const last = this.points[this.points.length - 1];
-    if (last && point.at <= last.at) return;
-    this.points.push(point);
+    if (last && point.at < last.at) return;
+    if (last && point.at === last.at) this.points[this.points.length - 1] = point;
+    else this.points.push(point);
     this.trim(point.at);
   }
 

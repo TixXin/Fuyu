@@ -201,3 +201,11 @@ test("history keeps five minutes and at most 300 points", () => {
   assert.equal(snapshot.points[0].at, 100_000);
   assert.equal(history.snapshot(800_000).points.length, 0);
 });
+
+test("history: a later sample with the same timestamp replaces the point, an older one is ignored", () => {
+  const history = new History(5 * 60_000, 300);
+  history.add({ at: 1000, cpu: 44.8, gpu: null, down: null, up: null });
+  history.add({ at: 1000, cpu: 34, gpu: null, down: null, up: null });
+  history.add({ at: 900, cpu: 99, gpu: null, down: null, up: null });
+  assert.deepEqual(history.snapshot(1000).points.map((point) => [point.at, point.cpu]), [[1000, 34]]);
+});
