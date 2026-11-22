@@ -1,0 +1,99 @@
+.notch-rim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.notch-rim__probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--island-top-fillet, 0px);
+  height: 0;
+  visibility: hidden;
+}
+
+.notch-rim__svg {
+  position: absolute;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.notch-rim__anim--breathe {
+  animation: notchRimBreathe 3.2s var(--motion-ease-in-out) infinite;
+}
+
+.notch-rim__anim--pulse {
+  animation: notchRimPulse 1.2s var(--motion-ease-in-out) infinite;
+}
+
+.notch-rim__anim--comet-tail {
+  animation: notchRimCometTail var(--notch-rim-duration, 4s) linear infinite;
+}
+
+.notch-rim__anim--comet-head {
+  animation: notchRimCometHead var(--notch-rim-duration, 4s) linear infinite;
+}
+
+.notch-rim__anim--twin {
+  animation: notchRimTwin var(--notch-rim-twin-duration, 3.6s) var(--motion-ease-in-out) infinite;
+}
+
+.notch-rim__anim--flash {
+  animation: notchRimFlash var(--notch-rim-twin-duration, 3.6s) var(--motion-ease-out) infinite;
+}
+
+.notch-rim__anim--ripple {
+  animation: notchRimRipple 1.2s var(--motion-ease-out) 1 backwards;
+}
+
+.notch-rim--paused .notch-rim__anim {
+  animation-play-state: paused;
+}
+
+@keyframes notchRimBreathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@keyframes notchRimPulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+@keyframes notchRimCometTail {
+  from { stroke-dashoffset: 180; }
+  to { stroke-dashoffset: -1000; }
+}
+
+@keyframes notchRimCometHead {
+  from { stroke-dashoffset: 40; }
+  to { stroke-dashoffset: -1140; }
+}
+
+@keyframes notchRimTwin {
+  0% { stroke-dashoffset: 260; opacity: 1; }
+  55% { stroke-dashoffset: -1000; opacity: 1; }
+  56%, 100% { stroke-dashoffset: -1000; opacity: 0; }
+}
+
+@keyframes notchRimFlash {
+  0%, 38% { opacity: 0; }
+  48% { opacity: 1; }
+  75%, 100% { opacity: 0; }
+}
+
+@keyframes notchRimRipple {
+  0% { opacity: 0; stroke-width: 1px; }
+  25% { opacity: 1; }
+  100% { opacity: 0; stroke-width: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notch-rim__anim {
+    animation: none;
+  }
+}

@@ -62,6 +62,7 @@ import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
 import { IslandResize } from "./resize/IslandResize";
 import { useIslandResize } from "./resize/useIslandResize";
 import { islandPageSize } from "./pageSize";
+import { useNotchRimView } from "./notch-rim/useNotchRimView";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
@@ -165,6 +166,7 @@ export function IslandApp() {
   const islandOpacity = effectiveIslandOpacity(settings, { mode, isTucked, isDimmed });
   const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
+  const notchRim = useNotchRimView(settings, accent, game.quiet);
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
   const { glass, glassStyle, layerState } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
@@ -263,6 +265,7 @@ export function IslandApp() {
     showCollapsedText: barText,
     overflowMore: settings.collapsedOverflowMore,
     notchWingMax: settings.notchWingMax,
+    notchRim,
     features,
     onOpenPage: openEnabledPage,
     taskbarHandle: onTaskbar.placed ? (settings.expandTrigger === "hover" ? "modifier" : "hover") : null,

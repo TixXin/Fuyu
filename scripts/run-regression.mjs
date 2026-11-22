@@ -27,6 +27,7 @@ export const PAGES = [
   "dev-build.html",
   "drag-grid.html?test=1",
   "notch-island.html?test=1",
+  "notch-rim.html",
   "island-forms.html?test=1",
   "bottom-island.html?test=1",
   "side-island.html?test=1",

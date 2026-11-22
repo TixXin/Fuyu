@@ -36,6 +36,7 @@ import { usePanelEditing } from "./custom-panels/panelEditing";
 import { setPanelAwake } from "../../components/island-widget/panelAwake";
 import "./IslandOutline.css";
 import { IslandTaskbarHandle, type TaskbarHandleShow } from "./IslandTaskbarHandle";
+import { NotchRim, type NotchRimView } from "./notch-rim/NotchRim";
 
 export type IslandShellPart = "bar" | "panel";
 
@@ -61,6 +62,7 @@ export type IslandShellProps = {
   showCollapsedText: boolean;
   overflowMore?: boolean;
   notchWingMax?: number;
+  notchRim?: NotchRimView | null;
   features: IslandFeatures;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -162,6 +164,7 @@ export function IslandShell({
   showCollapsedText,
   overflowMore = true,
   notchWingMax,
+  notchRim = null,
   features,
   onOpenPage,
   onWindowDragStart,
@@ -346,6 +349,7 @@ export function IslandShell({
           </div>}
           {overlay}
         </div>
+        {notchRim && notch && !side && !part && !isDetached && !isTucked && <NotchRim view={notchRim} expanded={isExpanded} glow={contributed.glow} />}
         {sideBubble && (
           <IslandSideBubble
             top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
