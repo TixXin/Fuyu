@@ -15,7 +15,10 @@ export async function checkIslandLayout(check: (condition: unknown, message: str
     "Clicking an item on the preview points at its chip and shows the session ring style");
   await act(async () => { document.querySelector<HTMLButtonElement>(".lane-chip[data-item='status-light'] .lane-chip__style")!.click(); });
   check(styleTab() === "status-light" && styleTitles().includes("样式"), "A chip's style button switches the style card to it");
-  check([...document.querySelectorAll(".editor-panel .settings-row__title")].some((title) => title.textContent === "放不下的项目收进「+N」"), "The +N switch is on the island layout page");
+  check(tabs().join() === "islandLayout,islandPanel,islandDisplay" && activeTab() === "islandLayout" && !document.querySelector(".layout-stage__switch"),
+    "Island layout has the same tabs as the other pages, opening on the collapsed island, with no switch of its own on the stage");
+  await openTab("islandDisplay");
+  check(rowTitles().includes("放不下的项目收进「+N」") && !document.querySelector(".layout-stage"), "Display and notch is its own tab with the +N switch and no preview stage");
 }
 
 const pageIds = () => [...document.querySelectorAll<HTMLElement>(".island-pages__item")].map((item) => item.dataset.page);
@@ -23,16 +26,18 @@ const pageRow = (page: string) => document.querySelector<HTMLElement>(`.island-p
 const savedPages = () => JSON.parse(localStorage.getItem("fuyu-island-pages") ?? "null") as { order: string[]; hidden: string[] } | null;
 const previewTabs = () => [...document.querySelectorAll<HTMLElement>(".expanded-preview__tab")].map((tab) => tab.dataset.page);
 const altArrow = (element: Element, key: string) => element.dispatchEvent(new KeyboardEvent("keydown", { key, altKey: true, bubbles: true }));
-const switchMode = (mode: string) => act(async () => { document.querySelector<HTMLButtonElement>(`.layout-stage__switch button[data-mode='${mode}']`)!.click(); });
+const tabs = () => [...document.querySelectorAll<HTMLElement>(".settings-tabs__tab")].map((tab) => tab.dataset.tab);
+const activeTab = () => document.querySelector<HTMLElement>(".settings-tabs__tab--active")?.dataset.tab;
+const rowTitles = () => [...document.querySelectorAll(".editor-panel .settings-row__title")].map((title) => title.textContent);
+const openTab = (tab: string) => act(async () => { document.querySelector<HTMLButtonElement>(`.settings-tabs__tab[data-tab='${tab}']`)!.click(); });
 
 export async function checkIslandPages(check: (condition: unknown, message: string) => void) {
   localStorage.removeItem("fuyu-island-pages");
-  check(document.querySelector(".island-bar-preview__bar") && !document.querySelector(".expanded-preview"), "The island layout page opens on the collapsed bar");
-  await switchMode("expanded");
+  await openTab("islandPanel");
   const before = pageIds();
   check(before[0] === "panel:fuyu" && before[1] === "agents" && before[2] === "todo" && before.includes("timer") && before.includes("qq") && previewTabs()[0] === "panel:fuyu"
     && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] .panel-text-icon")?.textContent === "Fuyu" && !document.querySelector(".layout-chip--create") && !document.querySelector(".collapsed-lanes"),
-    "Switching to the expanded island draws its preview and lists the Fuyu page first, then the built-in pages in today's order, with no way to make more panels");
+    "The expanded panel tab draws its preview and lists the Fuyu page first, then the built-in pages in today's order, with no way to make more panels");
   await act(async () => { altArrow(pageRow("todo")!, "ArrowLeft"); });
   check(pageIds()[1] === "todo" && savedPages()?.order[1] === "todo" && previewTabs()[1] === "todo", "Alt+Left moves a page forward, saves the order and the preview follows");
   await act(async () => { pageRow("music")!.querySelector<HTMLButtonElement>(".layout-chip__action")!.click(); });
@@ -118,5 +123,5 @@ export async function checkCustomPanels(check: (condition: unknown, message: str
   await act(async () => { panelChip("todos")!.querySelector<HTMLButtonElement>(".layout-chip__action")!.click(); });
   check(layoutOf() === "session-count:m@0,0 lyrics:w@0,16" && addChip("todos"), "Removing a widget closes the gap and puts it back in the add bucket");
   check(savedPanels()?.panels.map((panel) => panel.id).join() === "fuyu", "Edits are saved to the one Fuyu panel");
-  await switchMode("bar");
+  await openTab("islandLayout");
 }

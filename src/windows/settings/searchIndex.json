@@ -1118,7 +1118,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "显示内容",
         "title": "显示折叠岛屿文字"
@@ -1129,7 +1129,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "显示内容",
         "title": "显示岛屿名称"
@@ -1140,7 +1140,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "显示内容",
         "title": "放不下的项目收进「+N」",
@@ -1153,7 +1153,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "外框",
@@ -1166,7 +1166,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "内圈",
@@ -1179,7 +1179,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "颜色",
@@ -1192,7 +1192,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "什么时候亮",
@@ -1213,7 +1213,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "粗细",
@@ -1234,7 +1234,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "亮度"
@@ -1245,7 +1245,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "内圈离刘海",
@@ -1258,7 +1258,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "收起时内圈的底边",
@@ -1279,7 +1279,7 @@
       }
     },
     {
-      "page": "islandLayout",
+      "page": "islandDisplay",
       "zh-CN": {
         "group": "刘海",
         "title": "动效",
@@ -1289,6 +1289,50 @@
         "group": "Notch",
         "title": "Motion",
         "description": "Breathing and flowing. Stops while the island is hidden, full screen or tucked; holds still when Reduce motion is on."
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海屏上的文字",
+        "title": "待办"
+      },
+      "en": {
+        "group": "Text around the notch",
+        "title": "To-do"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海屏上的文字",
+        "title": "歌词"
+      },
+      "en": {
+        "group": "Text around the notch",
+        "title": "Lyrics"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海屏上的文字",
+        "title": "Agent 标题"
+      },
+      "en": {
+        "group": "Text around the notch",
+        "title": "Agent title"
+      }
+    },
+    {
+      "page": "islandDisplay",
+      "zh-CN": {
+        "group": "刘海屏上的文字",
+        "title": "会议"
+      },
+      "en": {
+        "group": "Text around the notch",
+        "title": "Meeting"
       }
     },
     {

@@ -11,6 +11,8 @@ import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
 import { PluginMarketPage } from "../PluginMarketPage";
 import { PluginDiagnosticsPage } from "../PluginDiagnosticsPage";
 import { IslandLayoutPage } from "../island-layout/IslandLayoutPage";
+import { IslandPanelPage } from "../island-layout/IslandPanelPage";
+import { DisplaySettingsSection } from "../sections/DisplaySettingsSection";
 import { SlotView } from "../../../features/plugin-kernel/SlotView";
 import { addSettingsCategory, type SettingsCategory, type SettingsLink, type SettingsPageProps } from "./categorySlot";
 import { settingsSections } from "./sectionSlot";
@@ -84,6 +86,8 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   behaviorAlerts: behavior("behaviorAlerts"),
   appearance: appearance("appearance"),
   islandLayout: ({ settings, onSettingsChange }) => <IslandLayoutPage settings={settings} onSettingsChange={onSettingsChange} />,
+  islandPanel: ({ settings }) => <IslandPanelPage settings={settings} />,
+  islandDisplay: ({ settings, onSettingsChange }) => <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />,
   theme: theme("theme"),
   themeStyle: theme("themeStyle"),
   shortcuts: shortcuts("shortcuts"),
