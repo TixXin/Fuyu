@@ -3,143 +3,199 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>C156.5 · 收起条改成标签和两栏 · 预览</title>
+<title>C156.5 · 收起条改成标签和分区 · 预览第二版</title>
 <style>
   :root {
     --bg: #0f1012; --win: #17181b; --side: #131416; --card: #1e1f23; --card-2: #25262b; --line: #2c2d33;
     --ink: #ecebef; --ink-2: #a9a9b0; --ink-3: #6f7078; --accent: #74d6ff; --on-accent: #06202c;
-    --chip: #2a2b31; --chip-hover: #33343b; --shadow: 0 18px 50px #0007; --tile: #2e2f35; --tile-ink: #c9c9cf;
-    --stage: radial-gradient(120% 140% at 20% 0%, #2b2d33 0%, #1a1b1f 60%, #0f1012 100%); --warn: #f5c46e;
+    --chip: #2a2b31; --chip-hover: #33343b; --shadow: 0 18px 50px #0007; --tile: #34353c; --tile-ink: #c9c9cf;
+    --stage: radial-gradient(120% 140% at 20% 0%, #2b2d33 0%, #1a1b1f 60%, #0f1012 100%); --warn: #f5c46e; --deny: #ff7a7a;
   }
   :root[data-theme="light"] {
     --bg: #e9eaee; --win: #f6f6f8; --side: #eeeff2; --card: #fff; --card-2: #f2f3f6; --line: #e1e2e7;
     --ink: #1c1d21; --ink-2: #5d5e66; --ink-3: #9a9ba3; --accent: #0a7fd1; --on-accent: #fff;
     --chip: #fff; --chip-hover: #f4f6fa; --shadow: 0 18px 50px #0001; --tile: #eceef2; --tile-ink: #4a4b52;
-    --stage: radial-gradient(120% 140% at 20% 0%, #dcdee3 0%, #c9ccd3 55%, #b4b8c0 100%); --warn: #a86b00;
+    --stage: radial-gradient(120% 140% at 20% 0%, #dcdee3 0%, #c9ccd3 55%, #b4b8c0 100%); --warn: #a86b00; --deny: #c42b2b;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 24px 16px 80px; background: var(--bg); color: var(--ink); font: 14px/1.55 -apple-system, "PingFang SC", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  body { margin: 0; padding: 24px 16px 110px; background: var(--bg); color: var(--ink); font: 14px/1.55 -apple-system, "PingFang SC", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  body.dragging, body.dragging * { cursor: grabbing !important; user-select: none; }
   button { font: inherit; color: inherit; cursor: pointer; }
   button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .page { max-width: 1120px; margin: 0 auto; }
+  kbd { font: 12px/1 ui-monospace, Menlo, Consolas, monospace; padding: 2px 6px; border-radius: 5px; border: 1px solid var(--line); background: var(--card-2); color: var(--ink-2); }
+  .page { max-width: 1160px; margin: 0 auto; }
   h1 { font-size: 22px; margin: 0 0 4px; }
-  .intro p { color: var(--ink-2); margin: 0 0 6px; max-width: 920px; }
-  .row { display: flex; gap: 8px; align-items: center; margin: 10px 0 18px; flex-wrap: wrap; }
+  .intro p { color: var(--ink-2); margin: 0 0 6px; max-width: 940px; }
+  .try { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 6px 18px; margin: 10px 0 4px; padding: 0; list-style: none; color: var(--ink-2); font-size: 13px; }
+  .try li::before { content: "→ "; color: var(--accent); }
+  .row { display: flex; gap: 8px; align-items: center; margin: 12px 0 18px; flex-wrap: wrap; }
   .row .lbl { color: var(--ink-3); font-size: 13px; margin-right: 2px; }
   .pill-btn { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
   .pill-btn.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
 
-  .win { display: flex; background: var(--win); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .win { display: flex; background: var(--win); border-radius: 14px; overflow: clip; box-shadow: var(--shadow); border: 1px solid var(--line); }
   .side { flex: 0 0 172px; background: var(--side); padding: 16px 8px; border-right: 1px solid var(--line); }
   .side div { padding: 6px 12px; border-radius: 8px; color: var(--ink-2); font-size: 13px; }
   .side div.on { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); font-weight: 600; }
   .main { flex: 1; min-width: 0; padding: 20px 24px 28px; }
   .main h2 { margin: 0 0 14px; font-size: 20px; }
-  @media (max-width: 760px) { .side { display: none; } .main { padding: 16px; } }
+  @media (max-width: 800px) { .side { display: none; } .main { padding: 16px; } }
 
-  .stage { position: relative; background: var(--stage); border-radius: 18px; padding: 30px 16px 76px; overflow: hidden; }
-  .bar-wrap { display: flex; justify-content: center; position: relative; }
-  .bar { height: 40px; border-radius: 20px; background: #000; color: #f1f0f6; display: flex; align-items: center; gap: 8px; padding: 0 12px; box-shadow: 0 12px 40px #0009; max-width: 100%; transition: width .25s; }
-  .bar .zone { display: flex; gap: 6px; align-items: center; flex: none; }
-  .bar .mid { flex: 1; min-width: 60px; display: flex; gap: 6px; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; font-size: 12.5px; color: #ffffffcc; }
-  .bi { height: 24px; min-width: 24px; padding: 0 6px; border-radius: 12px; background: #ffffff1c; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; color: #ffffffd9; cursor: pointer; flex: none; }
+  .stage { position: sticky; top: 8px; z-index: 5; background: var(--stage); border-radius: 18px; padding: 26px 16px 14px; box-shadow: 0 10px 30px #0004; }
+  .bar-wrap { display: flex; justify-content: center; position: relative; min-height: 40px; }
+  .bar { height: 40px; border-radius: 20px; background: #000; color: #f1f0f6; display: flex; align-items: center; gap: 6px; padding: 0 10px; box-shadow: 0 12px 40px #0009; width: max-content; max-width: 100%; }
+  .bar .zone { display: flex; gap: 6px; align-items: center; flex: none; min-width: 14px; height: 32px; border-radius: 16px; padding: 0 2px; box-sizing: border-box; transition: background .15s, box-shadow .15s; }
+  .bar .zone.drop { background: #ffffff14; box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .bar .mid { flex: none; display: flex; gap: 6px; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; font-size: 12.5px; color: #ffffffcc; }
+  .bar .mid .sum { overflow: hidden; text-overflow: ellipsis; width: 132px; text-align: center; flex: none; }
+  .bi { position: relative; height: 24px; min-width: 0; padding: 0; overflow: hidden; border-radius: 12px; background: #ffffff1c; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; color: #ffffffd9; cursor: grab; flex: none; touch-action: none; user-select: none; transition: box-shadow .15s, background .15s, opacity .15s; }
+  .bi.art { background: transparent; padding: 0; }
+  .bi.hl { background: #ffffff38; box-shadow: 0 0 0 2px #ffffff66; }
   .bi.sel { box-shadow: 0 0 0 2px var(--accent); }
-  .bi.more { background: #ffffff2e; }
-  .shelf-pop { position: absolute; top: 46px; right: calc(50% - var(--w) / 2); background: #000; border-radius: 14px; padding: 6px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 12px 30px #0008; z-index: 2; }
+  .bi.ghosted { opacity: .3; }
+  .bi.more { background: #ffffff2e; cursor: pointer; width: 36px; }
+  .bi.more.drop { box-shadow: 0 0 0 2px var(--warn); }
+  .shelf-pop { position: absolute; top: 46px; background: #000; border-radius: 14px; padding: 6px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 12px 30px #0008; z-index: 6; }
   .shelf-pop.open { display: flex; }
-  .shelf-pop .bi { justify-content: flex-start; padding: 0 10px 0 6px; }
-  .width-ctl { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; padding: 6px 14px; border-radius: 999px; background: #ffffff2e; color: #fff; font-size: 12.5px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px #ffffff40; white-space: nowrap; }
-  .width-ctl input { width: 160px; }
+  .shelf-pop .bi { justify-content: flex-start; padding: 0 10px 0 6px; cursor: pointer; }
+  .meter { display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; color: #ffffffd0; font-size: 12.5px; }
+  .meter .track { width: 180px; height: 6px; border-radius: 3px; background: #ffffff26; overflow: hidden; }
+  .meter .track i { display: block; height: 100%; background: #9be7b0; border-radius: 3px; transition: width .2s, background .2s; }
+  .meter.over .track i { background: var(--warn); }
+  .meter label { display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+  .meter input[type=range] { width: 130px; }
+  .meter .sep { width: 1px; height: 14px; background: #ffffff33; }
 
   .sec { margin-top: 22px; }
   .sec-h { display: flex; align-items: center; gap: 10px; margin: 0 4px 10px; flex-wrap: wrap; }
   .sec-h h3 { margin: 0; font-size: 16px; }
   .sec-h .hint { margin-left: auto; color: var(--ink-3); font-size: 12.5px; }
+  .jump { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 4px 12px; color: var(--ink-3); font-size: 12.5px; }
+  .jump button { border: 0; background: transparent; color: var(--accent); padding: 0 2px; font-size: 12.5px; }
 
-  .chip { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px 0 7px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line); font-size: 14px; user-select: none; transition: background .15s, box-shadow .15s, opacity .15s; }
-  .chip:hover { background: var(--chip-hover); }
-  .chip[draggable="true"] { cursor: grab; }
-  .chip.dragging { opacity: .35; }
-  .chip.over { box-shadow: -3px 0 0 var(--accent); }
+  .chip { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 6px 0 7px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line); font-size: 14px; user-select: none; touch-action: none; cursor: grab; transition: background .15s, box-shadow .15s, border-color .15s, opacity .15s; }
+  .chip:hover, .chip.hl { background: var(--chip-hover); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
   .chip.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-  .chip.spill::after { content: "收进 +N"; position: absolute; top: -9px; right: 6px; font-size: 10px; font-weight: 700; padding: 0 6px; border-radius: 999px; background: var(--warn); color: #1b1300; line-height: 16px; }
+  .chip.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 8px 20px #0006; transform: translateY(-2px); }
+  .chip.placeholder { background: transparent; border: 1.5px dashed var(--accent); }
+  .chip.placeholder > * { visibility: hidden; }
+  .chip.spill { opacity: .78; }
+  .chip.idle .ic { outline: 1.5px dashed var(--ink-3); outline-offset: -1.5px; background: transparent; }
+  .chip.off-feature { opacity: .6; cursor: default; }
+  .chip.flash { animation: flash 1.1s; }
+  @keyframes flash { 0%, 40% { box-shadow: 0 0 0 2px var(--accent), 0 0 0 9px color-mix(in srgb, var(--accent) 30%, transparent); } 100% { box-shadow: 0 0 0 1px var(--accent), 0 0 0 0 transparent; } }
   .ic { display: inline-grid; place-items: center; font-weight: 700; background: var(--tile); color: var(--tile-ink); width: 24px; height: 24px; border-radius: 8px; font-size: 12px; flex: none; }
-  .chip .act { width: 22px; height: 22px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-3); display: grid; place-items: center; font-size: 14px; margin-right: -5px; padding: 0; }
+  .chip .act { width: 24px; height: 24px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-3); display: grid; place-items: center; font-size: 14px; padding: 0; flex: none; }
   .chip .act:hover { background: var(--card-2); color: var(--ink); }
   .chip .act.plus { color: var(--accent); font-size: 17px; }
-  .chip .side-tag { font-size: 11px; font-weight: 700; padding: 0 7px; border-radius: 999px; background: var(--card-2); color: var(--ink-2); line-height: 18px; }
-  .chip .side-tag.shelf { background: color-mix(in srgb, var(--warn) 25%, transparent); color: var(--warn); }
+  .chip .act.style { font-size: 11px; width: auto; padding: 0 8px; border-radius: 999px; color: var(--ink-2); background: var(--card-2); margin-right: -4px; }
+  .chip .link { border: 0; background: transparent; color: var(--accent); font-size: 12.5px; padding: 0 6px; }
+  .chip .tag { font-size: 10.5px; font-weight: 700; padding: 0 6px; border-radius: 999px; line-height: 17px; background: color-mix(in srgb, var(--warn) 22%, transparent); color: var(--warn); }
+  .drag-ghost { position: fixed; z-index: 50; pointer-events: none; margin: 0; box-shadow: 0 14px 34px #0009; transform: rotate(-2deg) scale(1.04); opacity: .96; }
 
-  .buckets { display: grid; grid-template-columns: 2fr minmax(220px, 1fr); gap: 12px; }
-  @media (max-width: 820px) { .buckets { grid-template-columns: 1fr; } }
-  .bucket { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 12px 14px; min-height: 120px; }
+  .buckets { display: grid; grid-template-columns: 3fr minmax(230px, 1fr); gap: 12px; align-items: start; }
+  @media (max-width: 940px) { .buckets { grid-template-columns: 1fr; } }
+  .bucket { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 12px 14px; transition: border-color .15s, background .15s; }
   .bucket > header { display: flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 14px; margin: 2px 4px 10px; }
   .bucket > header .n { color: var(--ink-3); }
   .bucket > header .shape { width: 34px; height: 12px; border-radius: 6px; background: var(--ink); }
   .bucket > header .shape.dash { background: transparent; border: 1.5px dashed var(--ink-3); }
+  .bucket.off.drop { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--card)); }
+  .bucket.off .drop-tip { display: none; color: var(--accent); font-size: 12.5px; margin-left: auto; }
+  .bucket.off.drop .drop-tip { display: inline; }
   .list { display: flex; gap: 8px; flex-wrap: wrap; align-content: flex-start; min-height: 40px; }
-  .none { color: var(--ink-3); font-size: 13px; padding: 8px 4px; }
+  .none { color: var(--ink-3); font-size: 13px; padding: 9px 4px; }
+  .group-label { width: 100%; color: var(--ink-3); font-size: 12px; margin: 6px 2px -2px; }
+  .group-label:first-child { margin-top: 0; }
 
-  .lanes { display: grid; gap: 8px; }
-  .lane { border-radius: 12px; padding: 8px 10px 10px; background: var(--card-2); border: 1.5px dashed transparent; transition: border-color .15s; }
-  .lane.drop { border-color: var(--accent); }
-  .lane .lane-h { font-size: 12px; color: var(--ink-3); margin: 0 2px 6px; display: flex; gap: 6px; }
-  .lane .lane-h b { color: var(--ink-2); font-weight: 600; }
+  .lanes { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(170px, 1fr) minmax(240px, 2fr); gap: 8px; }
+  .lane { border-radius: 12px; padding: 8px 10px 10px; background: var(--card-2); border: 1.5px dashed transparent; transition: border-color .15s, opacity .15s, background .15s; min-width: 0; }
+  .lane[data-zone="shelf"] { grid-column: 1 / -1; }
+  @media (max-width: 700px) { .lanes { grid-template-columns: 1fr; } }
+  .lane-h { font-size: 12px; color: var(--ink-3); margin: 0 2px 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .lane-h b { color: var(--ink-2); font-weight: 600; font-size: 13px; }
+  .pict { display: inline-flex; gap: 2px; width: 40px; height: 10px; flex: none; }
+  .pict i { flex: 1; border-radius: 3px; background: var(--ink-3); opacity: .35; }
+  .pict i.m { flex: 1.6; }
+  .pict i.on { background: var(--accent); opacity: 1; }
+  .pict.shelf i { opacity: .25; } .pict.shelf i.on { flex: .5; background: var(--warn); opacity: 1; }
+  body.dragging .lane[data-accept="yes"] { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  body.dragging .lane[data-accept="no"] { opacity: .45; }
+  .lane.drop { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 8%, var(--card-2)); }
+  .lane.deny { border-color: var(--deny) !important; opacity: 1 !important; animation: shake .25s; }
+  .lane .deny-tip { display: none; color: var(--deny); }
+  .lane.deny .deny-tip { display: inline; } .lane.deny .lane-hint { display: none; }
+  @keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+  .fold { flex-basis: 100%; display: flex; align-items: center; gap: 8px; color: var(--warn); font-size: 11.5px; font-weight: 600; margin: 2px 0; }
+  .fold::before, .fold::after { content: ""; flex: 1; border-top: 1.5px dashed color-mix(in srgb, var(--warn) 60%, transparent); }
 
-  .onerow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; border-radius: 12px; background: var(--card-2); }
-  .onerow .seg { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 46px; min-height: 40px; border-radius: 10px; border: 1.5px dashed transparent; padding: 2px; }
-  .onerow .seg.drop { border-color: var(--accent); }
-  .onerow .divider { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px; border-radius: 999px; background: #000; color: #fff; font-size: 12.5px; font-weight: 600; }
-  .onerow .gap { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
-  .onerow .seg-label { font-size: 11px; color: var(--ink-3); width: 100%; }
-
-  .menu { position: fixed; z-index: 10; min-width: 180px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 5px; display: none; }
+  .menu { position: fixed; z-index: 60; min-width: 190px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 5px; display: none; }
   .menu.open { display: block; }
   .menu button { display: flex; width: 100%; border: 0; background: transparent; text-align: left; padding: 6px 10px; border-radius: 8px; font-size: 13px; gap: 8px; }
-  .menu button:hover { background: var(--card-2); }
+  .menu button:hover, .menu button:focus-visible { background: var(--card-2); outline: 0; }
   .menu button[disabled] { color: var(--ink-3); cursor: default; background: transparent; }
+  .menu button kbd { margin-left: auto; }
   .menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 2px; }
 
-  .styles { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .styles { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; scroll-margin-top: 150px; }
+  .styles.flash { animation: flash 1.1s; }
   .stabs { display: flex; gap: 2px; padding: 6px 6px 0; background: var(--card-2); overflow-x: auto; }
   .stabs button { border: 0; background: transparent; padding: 10px 16px; border-radius: 12px 12px 0 0; display: inline-flex; gap: 8px; align-items: center; color: var(--ink-2); white-space: nowrap; font-size: 14px; }
   .stabs button.on { background: var(--card); color: var(--ink); font-weight: 600; }
-  .scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 18px; }
+  .stabs button .where { font-size: 11px; color: var(--ink-3); font-weight: 500; }
+  .scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; padding: 18px; }
   .scard { border: 0; background: transparent; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .scard .thumb { width: 100%; height: 92px; border-radius: 16px; background: #000; display: grid; place-items: center; box-shadow: inset 0 0 0 1px #ffffff14; }
+  .scard .thumb { width: 100%; height: 88px; border-radius: 16px; background: #000; display: grid; place-items: center; box-shadow: inset 0 0 0 1px #ffffff14; transition: transform .15s; }
+  .scard .thumb > * { transform: scale(1.5); }
+  .scard:hover .thumb { transform: translateY(-2px); }
   .scard.on .thumb { box-shadow: 0 0 0 2.5px var(--accent); }
   .scard span { color: var(--ink-2); font-size: 13.5px; }
   .scard.on span { color: var(--ink); font-weight: 600; }
   .styles .foot { color: var(--ink-3); font-size: 12.5px; padding: 0 18px 16px; }
-  .art-dot { width: 10px; height: 10px; border-radius: 50%; background: #5ee38a; box-shadow: 0 0 8px #5ee38a; }
-  .art-jelly { width: 22px; height: 24px; border-radius: 11px 11px 6px 6px; background: radial-gradient(circle at 50% 35%, #9ee6ff, #3aa9dc); }
+  .art-dot { width: 9px; height: 9px; border-radius: 50%; background: #5ee38a; box-shadow: 0 0 8px #5ee38a; }
+  .jelly { width: 32px; height: 24px; display: block; flex: none; }
+  .ic .jelly { width: 22px; height: 16px; }
+  .ic:has(.jelly) { background: #17181b; }
   .art-grid { display: grid; grid-template-columns: repeat(2, 8px); gap: 2px; }
   .art-grid i { width: 8px; height: 8px; border-radius: 2px; background: #5ee38a; }
   .art-grid i:nth-child(2) { background: #f5c46e; } .art-grid i:nth-child(4) { background: #ffffff1a; }
-  .art-ring { width: 24px; height: 24px; border-radius: 50%; background: conic-gradient(#5ee38a 0 40%, #f5c46e 0 60%, #74d6ff 0 85%, #ffffff22 0); -webkit-mask: radial-gradient(farthest-side, transparent 7px, #000 7.5px); mask: radial-gradient(farthest-side, transparent 7px, #000 7.5px); }
-  .art-bar { display: flex; gap: 1px; } .art-bar i { width: 10px; height: 6px; background: #5ee38a; } .art-bar i:last-child { background: #f5c46e; }
-  .art-signal { display: flex; gap: 3px; align-items: flex-end; } .art-signal i { width: 6px; background: #5ee38a; border-radius: 1px; }
-  .art-text { color: #fff; font-size: 12px; font-weight: 700; }
+  .art-ring { width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(#5ee38a 0 40%, #f5c46e 0 60%, #74d6ff 0 85%, #ffffff22 0); -webkit-mask: radial-gradient(farthest-side, transparent 6px, #000 6.5px); mask: radial-gradient(farthest-side, transparent 6px, #000 6.5px); }
+  .art-bar { display: flex; gap: 1px; } .art-bar i { width: 8px; height: 6px; background: #5ee38a; } .art-bar i:last-child { background: #f5c46e; }
+  .art-signal { display: flex; gap: 2px; align-items: flex-end; } .art-signal i { width: 5px; background: #5ee38a; border-radius: 1px; }
+  .art-text { color: #fff; font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 70; display: flex; gap: 14px; align-items: center; padding: 10px 10px 10px 18px; border-radius: 999px; background: #000; color: #fff; box-shadow: 0 12px 30px #0008; font-size: 13.5px; transition: transform .2s, opacity .2s; white-space: nowrap; max-width: calc(100vw - 24px); }
+  .toast.open { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+  .toast button { border: 0; background: #ffffff24; color: #fff; border-radius: 999px; padding: 4px 14px; font-weight: 600; font-size: 13px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 
   .note { margin-top: 26px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; }
   .note h3 { margin: 0 0 6px; font-size: 15px; }
   .note ul { margin: 6px 0 0; padding-left: 20px; color: var(--ink-2); }
-  .note li { margin: 3px 0; }
+  .note li { margin: 4px 0; }
   .note b { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <div class="page">
   <div class="intro">
-    <h1>收起条改成标签和两栏（C156.5）</h1>
-    <p>设置 → 岛屿布局 →「收起条」这一边，从清单（上移下移、换边）改成和「展开」一样的标签式：上面是收起条预览，下面「在收起条上 / 可以放上去」两栏，有样式的项目在最下面用缩略图卡片选。存储不变，仍是 <code>fuyu-collapsed-items</code>（<code>zone</code> 左 / 右，<code>shelf</code> 小面板，<code>hidden</code> 拿下来）。</p>
-    <p>要你定的是<b>左侧、中间、右侧、「+N」小面板这几个位置在标签上怎么表达</b>，下面三种可以切换着试：拖动标签、点 ＋ / ×、选中后按 Alt+方向键，上面的收起条跟着变。拖下面的「收起条最宽」能看到放不下的项目怎么收进「+N」。</p>
+    <h1>收起条改成标签和分区（C156.5 · 第二版）</h1>
+    <p>用户 2026-11-22 定了 <b>A 分区</b>。这一版把分区排成和收起条一样的「左 · 中 · 右」，下面一条小面板，并补齐交互细节。存储不变，仍是 <code>fuyu-collapsed-items</code>。下面每一条都可以直接试：</p>
+    <ul class="try">
+      <li>拖标签到别的格；也可以<b>直接拖上面收起条里的项目</b></li>
+      <li>拖的时候收起条实时跟着变，松手才算数，<kbd>Esc</kbd> 取消</li>
+      <li>鼠标停在标签上，收起条里对应的项目亮起来；反过来也一样</li>
+      <li>把左右的项目拖进「中间」，那一格会变红并说明原因</li>
+      <li>把「最宽」调小：放不下的从一条虚线开始收进「+N」</li>
+      <li>点 × 拿下来，底部出现「撤销」；<kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Z</kbd> 也行</li>
+      <li>拿下来再点 ＋，回到原来那一格的原来位置</li>
+      <li>键盘：<kbd>Tab</kbd> 到标签，<kbd>空格</kbd> 拿起，方向键移动，<kbd>回车</kbd> 放下</li>
+      <li>右键标签（或 <kbd>Shift</kbd>+<kbd>F10</kbd>）弹菜单</li>
+      <li>点带「样式」的标签，下面的样式卡片切到它；换样式后收起条里的图也换</li>
+    </ul>
     <div class="row">
-      <span class="lbl">位置怎么表达</span>
-      <button class="pill-btn on" data-mode="lanes">A 分区</button>
-      <button class="pill-btn" data-mode="row">B 一排</button>
-      <button class="pill-btn" data-mode="menu">C 菜单</button>
-      <span class="lbl" style="margin-left:14px">外观</span>
+      <span class="lbl">外观</span>
       <button class="pill-btn on" data-theme-btn="dark">深色</button>
       <button class="pill-btn" data-theme-btn="light">浅色</button>
       <button class="pill-btn" id="reset" style="margin-left:auto">还原默认</button>
@@ -154,333 +210,586 @@
       <h2>岛屿布局</h2>
       <div class="stage">
         <div class="bar-wrap" id="barWrap"><div class="bar" id="bar"></div><div class="shelf-pop" id="shelfPop"></div></div>
-        <div class="width-ctl">收起条最宽 <input type="range" id="maxw" min="300" max="720" value="560" /> <span id="maxwv">560</span> px</div>
-      </div>
-
-      <div class="sec">
-        <div class="sec-h"><h3>收起条上的项目</h3><span class="hint" id="modeHint"></span></div>
-        <div class="buckets">
-          <div class="bucket" id="onBucket"><header><span class="shape"></span>在收起条上 <span class="n" id="onCount"></span></header><div id="onBody"></div></div>
-          <div class="bucket" id="offBucket"><header><span class="shape dash"></span>可以放上去 <span class="n" id="offCount"></span></header><div class="list" id="offList"></div></div>
+        <div class="meter" id="meter">
+          <span class="track"><i id="meterFill"></i></span><span id="meterText"></span>
+          <span class="sep"></span>
+          <label>最宽 <input type="range" id="maxw" min="300" max="760" value="640" /> <span id="maxwv">640</span> px</label>
+          <span class="sep"></span>
+          <label><input type="checkbox" id="quiet" /> 只看此刻有内容的</label>
         </div>
       </div>
 
       <div class="sec">
-        <div class="sec-h"><h3>样式</h3><span class="hint">和展开那边的「大小」一样，选中的项目自动切到它的标签</span></div>
-        <div class="styles"><div class="stabs" id="stabs"></div><div class="scards" id="scards"></div><div class="foot">用量环、剩余待办数没有样式可选（用量环在 AI Agent 页勾选显示哪几家），不在这里出现。</div></div>
+        <div class="sec-h"><h3>收起条上的项目</h3><span class="hint">拖动换位置 · 空格拿起后用方向键 · 右键有菜单</span></div>
+        <div class="jump">从功能页点「调整 ›」跳过来的效果：<button data-jump="music">音乐 调整 ›</button><button data-jump="session-count">会话环 调整 ›</button><button data-jump="timer">计时器 调整 ›</button></div>
+        <div class="buckets">
+          <div class="bucket"><header><span class="shape"></span>在收起条上 <span class="n" id="onCount"></span></header><div class="lanes" id="lanes"></div></div>
+          <div class="bucket off" id="offBucket" data-zone="off"><header><span class="shape dash"></span>可以放上去 <span class="n" id="offCount"></span><span class="drop-tip">松手就拿下来</span></header><div class="list" id="offList"></div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h"><h3>样式</h3><span class="hint">点上面带「样式」的标签会切到这里</span></div>
+        <div class="styles" id="styles"><div class="stabs" id="stabs"></div><div class="scards" id="scards"></div><div class="foot" id="sfoot"></div></div>
       </div>
     </section>
   </div>
 
   <div class="note">
-    <h3>三种表达方式的取舍</h3>
+    <h3>这一版定下的交互（确认后照这个做）</h3>
     <ul>
-      <li><b>A 分区</b>：「在收起条上」里分成左侧、中间、右侧、小面板四格，拖到哪格就放哪。一眼看清每个项目在哪，最好懂；占的高度最多，窄窗口下四格竖着排。中间格只收中心图案和剩余待办数，左右的项目拖不进去。</li>
-      <li><b>B 一排</b>：按收起条的样子排成一排，中间是黑色的「摘要」块，拖过它就换到另一侧，最右边隔开的是小面板。和收起条长得最像、最省地方；但「换边」要靠拖过摘要，键盘用户得多按几下 Alt+←/→。</li>
-      <li><b>C 菜单</b>：一排标签按收起条上的顺序排，每个标签带一个小字「左 / 中 / 右 / +N」，点标签弹菜单换位置、前后挪、拿下来。最紧凑，也最像现在的右键菜单；但看不出整体布局，要一个个点开看。</li>
-      <li><b>推荐 A</b>：这一页本来就有上面的预览，多占的高度可以接受；拖动、点击和键盘都能完成换边，C 的菜单可以作为标签的右键菜单一起加上（三种方式不冲突）。</li>
-      <li>放不下的规则不变（C139.2 / 设计记录「谁留下」）：按清单顺序先放，放不下的整项收进「+N」；标签上标「收进 +N」提醒你哪几个现在看不到。</li>
+      <li><b>分区照收起条的样子排</b>：左侧、中间、右侧横着排成一行，小面板在下面单独一条；每格标题前有一个小示意图，标出它是收起条的哪一段。窗口窄于 700px 时竖着排。</li>
+      <li><b>两处都能拖</b>：拖标签，或者直接拖预览里的项目。拖的过程中预览实时更新，原位置留一个虚线占位；松手才保存，Esc 或拖到没有格子的地方松手都算取消。</li>
+      <li><b>不能放的格子会说原因</b>：中间只收中心图案和剩余待办数；开始拖的时候，不能放的格子变暗，硬拖进去会变红并显示一句话。</li>
+      <li><b>放不下的用一条虚线标出来</b>：按清单顺序先放（规则不变），第一个放不下的项目前面出现「放不下，后面的收进 +N」，把它往前拖就能留在条上。预览下面有一条用量，写着占了多少、几项被收起。</li>
+      <li><b>拿下来能撤销，放回去回原位</b>：× 或拖到右边一栏都是拿下来，底部提示 5 秒内可以撤销（最多连撤 20 步）；再点 ＋ 回到原来那一格的原来顺序（存储里本来就留着位置，只是标了隐藏）。</li>
+      <li><b>键盘能做完所有事</b>：空格拿起，← → 在格子里挪、挪到头进下一格，↑ ↓ 换格，回车放下，Esc 取消；不想拿起时 Alt+方向键直接挪。每一步都有读屏播报。</li>
+      <li><b>右键菜单</b>（第一版的 C 方案并进来）：放在左侧 / 右侧 / 小面板、样式…、拿下来，当前位置打勾。</li>
+      <li><b>此刻没内容的项目</b>（邮箱、更新、文件中转、音乐）：图标画成虚线框，悬停说明「有内容时才出现」；勾上「只看此刻有内容的」预览就和真岛现在一样。</li>
+      <li><b>功能没开的项目</b>排在「可以放上去」最下面，变灰，给一个「去开启 ›」，不能直接拖上去。</li>
+      <li><b>样式</b>：有样式的标签上有「样式」小按钮；点它或选中标签，下面的卡片切到这一项并闪一下。换了样式，预览里那一项的图立刻换。</li>
+      <li><b>定位</b>：功能页的「调整 ›」和预览上点一项，都会滚到对应标签并闪两下；它在「可以放上去」里时也一样。</li>
+      <li><b>没覆盖的</b>：刘海屏两翼的预览（等 C139.3 定了规则再加）；触摸屏长按拖动（指针事件已经支持，没专门调）。</li>
     </ul>
   </div>
 </div>
 
-<div class="menu" id="menu"></div>
+<div class="menu" id="menu" role="menu"></div>
+<div class="toast" id="toast" role="status"><span id="toastText"></span><button id="toastUndo">撤销</button></div>
+<div class="sr" id="live" aria-live="assertive"></div>
 
 <script>
+const JELLY = '<svg class="jelly" viewBox="3 4 58 43" aria-hidden="true"><g fill="#F6E3D3"><circle cx="18" cy="39" r="6.6"/><circle cx="27.3" cy="39" r="6.6"/><circle cx="36.7" cy="39" r="6.6"/><circle cx="46" cy="39" r="6.6"/><path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"/></g><g fill="#fff"><ellipse cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)" opacity=".6"/><circle cx="28.5" cy="10" r="1.5" opacity=".7"/></g><g fill="#FF8FA0" opacity=".72"><ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2"/><ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2"/></g><g fill="#1D1B22"><ellipse cx="24" cy="25" rx="2.7" ry="3.9"/><ellipse cx="40" cy="25" rx="2.7" ry="3.9"/></g><g fill="#fff"><circle cx="25" cy="23.4" r=".9"/><circle cx="41" cy="23.4" r=".9"/></g></svg>';
 const ITEMS = [
-  { id: "status-light", name: "浮屿水母", g: "水", w: 24, kind: "side", styled: "light" },
-  { id: "center", name: "中心图案", g: "◎", w: 48, kind: "center", styled: "center" },
+  { id: "status-light", name: "浮屿水母", g: JELLY, w: 32, kind: "side", styled: "light" },
+  { id: "center", name: "中心图案", g: "◎", w: 44, kind: "center", styled: "center" },
   { id: "todos-count", name: "剩余待办数", g: "3", w: 26, kind: "center" },
-  { id: "mail", name: "邮箱", g: "✉", w: 34, kind: "side" },
-  { id: "update", name: "更新提醒", g: "↑", w: 24, kind: "side" },
-  { id: "plugin:system-monitor", name: "系统监控", g: "CPU", w: 64, kind: "side" },
-  { id: "plugin:weather", name: "天气", g: "☀", w: 52, kind: "side" },
+  { id: "mail", name: "邮箱", g: "✉", w: 34, kind: "side", transient: true },
+  { id: "update", name: "更新提醒", g: "↑", w: 24, kind: "side", transient: true },
+  { id: "plugin:system-monitor", name: "系统监控", g: "CPU", w: 64, kind: "side", plugin: true },
+  { id: "plugin:weather", name: "天气", g: "☀", w: 52, kind: "side", plugin: true },
   { id: "device-use", name: "摄像头和麦克风", g: "●", w: 24, kind: "side" },
-  { id: "shelf", name: "文件中转", g: "⇩", w: 30, kind: "side" },
-  { id: "music", name: "音乐", g: "♪", w: 30, kind: "side" },
+  { id: "shelf", name: "文件中转", g: "⇩", w: 30, kind: "side", transient: true },
+  { id: "music", name: "音乐", g: "♪", w: 30, kind: "side", transient: true },
   { id: "usage:claude", name: "用量环", g: "◔", w: 26, kind: "side" },
   { id: "session-count", name: "会话环", g: "▦", w: 26, kind: "side", styled: "ring" },
   { id: "timer", name: "计时器", g: "⏱", w: 54, kind: "side" },
-  { id: "peripheral-battery", name: "外设电量", g: "🔋", w: 44, kind: "side" },
+  { id: "peripheral-battery", name: "外设电量", g: "⌨", w: 44, kind: "side" },
+  { id: "plugin:pomodoro", name: "番茄钟", g: "🍅", w: 40, kind: "side", plugin: true, disabled: "插件 → 番茄钟" },
 ];
 const DEFAULT = [
   ["status-light", "left"], ["center", "center"], ["mail", "right"], ["update", "right"], ["plugin:system-monitor", "right"],
   ["plugin:weather", "right"], ["device-use", "right"], ["shelf", "right"], ["music", "right"], ["usage:claude", "right"],
-  ["session-count", "right"], ["todos-count", "off"], ["timer", "off"], ["peripheral-battery", "off"],
+  ["session-count", "right"], ["todos-count", "off", "center"], ["timer", "off", "right"], ["peripheral-battery", "off", "right"], ["plugin:pomodoro", "off", "right"],
 ];
 const STYLES = {
-  light: { name: "浮屿水母", options: [["mark", "水母", '<div class="art-jelly"></div>'], ["dot", "圆点", '<div class="art-dot"></div>']] },
+  light: { name: "浮屿水母", options: [["mark", "水母", JELLY], ["dot", "圆点", '<div class="art-dot"></div>']] },
   ring: { name: "会话环", options: [
     ["grid", "像素格", '<div class="art-grid"><i></i><i></i><i></i><i></i></div>'],
     ["ring", "分段环", '<div class="art-ring"></div>'],
     ["bar", "横条", '<div class="art-bar"><i></i><i></i><i></i></div>'],
-    ["signal", "信号格", '<div class="art-signal"><i style="height:10px"></i><i style="height:16px"></i><i style="height:22px;background:#f5c46e"></i></div>']] },
+    ["signal", "信号格", '<div class="art-signal"><i style="height:9px"></i><i style="height:14px"></i><i style="height:20px;background:#f5c46e"></i></div>']] },
   center: { name: "中心图案", options: [
     ["eyes", "眼睛", '<span class="art-text">◉ ◉</span>'], ["bird", "小鸟", '<span class="art-text">🐦</span>'],
-    ["orb", "光球", '<div class="art-dot" style="width:18px;height:18px;background:#74d6ff;box-shadow:0 0 14px #74d6ff"></div>'],
-    ["cat", "猫", '<span class="art-text">🐱</span>'], ["mark", "水母", '<div class="art-jelly"></div>'], ["pet", "宠物", '<span class="art-text">🦊</span>']] },
+    ["orb", "光球", '<div class="art-dot" style="width:16px;height:16px;background:#74d6ff;box-shadow:0 0 12px #74d6ff"></div>'],
+    ["cat", "猫", '<span class="art-text">🐱</span>'], ["mark", "水母", JELLY], ["pet", "宠物", '<span class="art-text">🦊</span>']] },
 };
-const ZONE_NAME = { left: "左侧", center: "中间", right: "右侧", shelf: "小面板" };
-const ZONE_TAG = { left: "左", center: "中", right: "右", shelf: "+N" };
-const byId = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
-let state = DEFAULT.map(([id, zone]) => ({ id, zone }));
-let mode = "lanes";
-let selected = null;
-let styleTab = "light";
+const LANES = [
+  ["left", "左侧", "摘要左边", '<span class="pict"><i class="on"></i><i class="m"></i><i></i></span>'],
+  ["center", "中间", "摘要两旁", '<span class="pict"><i></i><i class="m on"></i><i></i></span>'],
+  ["right", "右侧", "摘要右边", '<span class="pict"><i></i><i class="m"></i><i class="on"></i></span>'],
+  ["shelf", "小面板", "一直收在「+N」里，点开才看到，不占条上的位置", '<span class="pict shelf"><i></i><i class="m"></i><i></i><i class="on"></i></span>'],
+];
+const ZONE_NAME = { left: "左侧", center: "中间", right: "右侧", shelf: "小面板", off: "可以放上去" };
+const SUMMARY_W = 132, GAP = 6, MORE_W = 36, PAD = 20;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const byId = Object.fromEntries(ITEMS.map((item) => [item.id, item]));
+const fresh = () => DEFAULT.map(([id, zone, prev]) => ({ id, zone, prev: prev ?? zone }));
+const clone = (value) => JSON.parse(JSON.stringify(value));
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+let state = fresh();
+let history = [];
+let selected = null, picked = null, drag = null, press = null, focusId = null, suppressClick = false;
+let styleTab = "light", maxWidth = 640, quiet = false, lastHit = 0;
 const chosen = { light: "mark", ring: "grid", center: "eyes" };
-let maxWidth = 560;
-let dragId = null;
 
+const entry = (id) => state.find((s) => s.id === id);
 const zoneItems = (zone) => state.filter((s) => s.zone === zone);
-const allowed = (id, zone) => zone === "off" || (byId[id].kind === "center" ? zone === "center" : zone !== "center");
+const allowed = (id, zone) => zone === "off" || (!byId[id].disabled && (byId[id].kind === "center" ? zone === "center" : zone !== "center"));
+const lanesFor = (id) => (byId[id].kind === "center" ? ["center", "off"] : ["left", "right", "shelf", "off"]);
+const live = (id) => !(quiet && byId[id].transient);
 
-function spilled() {
-  const used = 24 + 8 + 150 + zoneItems("center").reduce((n, s) => n + byId[s.id].w + 6, 0);
-  let room = maxWidth - used;
-  const out = new Set();
-  const needMore = zoneItems("shelf").length > 0;
-  for (const s of [...zoneItems("left"), ...zoneItems("right")]) {
-    const w = byId[s.id].w + 6;
-    if (out.size === 0 && w <= room - (needMore ? 32 : 0)) room -= w;
-    else out.add(s.id);
+function place(id, zone, before = null) {
+  const item = entry(id);
+  if (zone === "off") {
+    if (item.zone !== "off") { item.prev = item.zone; item.zone = "off"; }
+    return;
   }
-  if (out.size && !needMore) {
-    const keep = [...zoneItems("left"), ...zoneItems("right")].filter((s) => !out.has(s.id));
-    while (keep.length && room < 32) { const last = keep.pop(); out.add(last.id); room += byId[last.id].w + 6; }
-  }
-  return out;
-}
-
-function move(id, zone, beforeId = null) {
-  if (!allowed(id, zone)) return;
-  const item = state.find((s) => s.id === id);
-  state = state.filter((s) => s.id !== id);
+  state = state.filter((s) => s !== item);
   item.zone = zone;
-  let at = beforeId ? state.findIndex((s) => s.id === beforeId) : -1;
+  let at = before ? state.findIndex((s) => s.id === before) : -1;
   if (at < 0) {
     const last = state.map((s) => s.zone).lastIndexOf(zone);
     at = last < 0 ? state.length : last + 1;
   }
   state.splice(at, 0, item);
+}
+
+function barWidth(left, center, right, more) {
+  const zone = (items) => Math.max(14, 4 + items.reduce((n, s) => n + byId[s.id].w, 0) + GAP * Math.max(0, items.length - 1));
+  const mid = SUMMARY_W + center.reduce((n, s) => n + byId[s.id].w + GAP, 0);
+  return PAD + zone(left) + mid + zone(right) + GAP * 2 + (more ? GAP + MORE_W : 0);
+}
+
+function fit() {
+  const center = zoneItems("center").filter((s) => live(s.id));
+  const left = zoneItems("left").filter((s) => live(s.id));
+  const right = zoneItems("right").filter((s) => live(s.id));
+  const forced = zoneItems("shelf").some((s) => live(s.id));
+  const out = new Set();
+  let used = barWidth(left, center, right, forced);
+  if (used > maxWidth) {
+    const side = [...left, ...right];
+    for (let keep = side.length - 1; keep >= 0; keep -= 1) {
+      out.add(side[keep].id);
+      used = barWidth(left.filter((s) => !out.has(s.id)), center, right.filter((s) => !out.has(s.id)), true);
+      if (used <= maxWidth) break;
+    }
+  }
+  return { out, used };
+}
+
+function glyph(id) {
+  const item = byId[id];
+  const style = item.styled && STYLES[item.styled].options.find(([value]) => value === chosen[item.styled]);
+  return style ? { html: style[2], art: true } : { html: item.g, art: false };
+}
+
+function chipHtml(s, out) {
+  const item = byId[s.id];
+  const off = s.zone === "off";
+  const classes = ["chip"];
+  if (selected === s.id) classes.push("sel");
+  if (picked?.id === s.id) classes.push("picked");
+  if (drag?.id === s.id) classes.push("placeholder");
+  if (out.has(s.id)) classes.push("spill");
+  if (item.transient) classes.push("idle");
+  if (item.disabled) classes.push("off-feature");
+  const title = item.disabled ? "功能没开，开启后才能放上去" : item.transient ? "有内容时才出现在收起条上" : "";
+  const tag = out.has(s.id) ? '<span class="tag">+N</span>' : "";
+  const style = item.styled && !off ? '<button class="act style" data-act="style" tabindex="-1">样式</button>' : "";
+  const action = item.disabled
+    ? `<button class="link" data-act="enable">去开启 ›</button>`
+    : off ? `<button class="act plus" data-act="add" aria-label="把${item.name}放上去" title="放回${ZONE_NAME[s.prev]}">＋</button>`
+      : `<button class="act" data-act="remove" aria-label="把${item.name}拿下来" title="拿下来">×</button>`;
+  return `<span class="${classes.join(" ")}" data-id="${s.id}" data-flip="chip:${s.id}" tabindex="0" role="option" aria-selected="${selected === s.id}" aria-label="${item.name}，${ZONE_NAME[s.zone]}" title="${title}"><span class="ic">${item.g}</span>${item.name}${tag}${style}${action}</span>`;
+}
+
+function paintLanes(out) {
+  const dragging = drag?.id ?? picked?.id;
+  $("#lanes").innerHTML = LANES.map(([zone, name, hint, pict]) => {
+    const items = zoneItems(zone);
+    let folded = false;
+    const chips = items.map((s) => {
+      const fold = !folded && out.has(s.id) ? '<span class="fold">放不下，后面的收进 +N</span>' : "";
+      if (fold) folded = true;
+      return fold + chipHtml(s, out);
+    }).join("");
+    const accept = dragging ? (allowed(dragging, zone) ? "yes" : "no") : "";
+    const deny = zone === "center" ? "中间只放中心图案和剩余待办数" : "这一项只能放在中间";
+    return `<div class="lane" data-zone="${zone}" data-accept="${accept}" role="listbox" aria-label="${name}"><div class="lane-h">${pict}<b>${name}</b><span class="lane-hint">${hint}</span><span class="deny-tip">${deny}</span></div><div class="list">${chips || '<span class="none">拖到这里</span>'}</div></div>`;
+  }).join("");
+}
+
+function paintOff(out) {
+  const off = zoneItems("off");
+  const group = (label, items) => (items.length ? `<span class="group-label">${label}</span>` + items.map((s) => chipHtml(s, out)).join("") : "");
+  const ready = off.filter((s) => !byId[s.id].disabled);
+  $("#offList").innerHTML = off.length
+    ? group("内置", ready.filter((s) => !byId[s.id].plugin)) + group("插件", ready.filter((s) => byId[s.id].plugin)) + group("功能没开", off.filter((s) => byId[s.id].disabled))
+    : '<span class="none">都放上去了</span>';
+  $("#onCount").textContent = state.length - off.length;
+  $("#offCount").textContent = off.length;
+}
+
+function paintBar({ out, used }) {
+  const bi = (s) => {
+    const { html, art } = glyph(s.id);
+    return `<span class="bi${art ? " art" : ""}${selected === s.id ? " sel" : ""}${drag?.id === s.id ? " ghosted" : ""}" data-id="${s.id}" data-flip="bar:${s.id}" style="width:${byId[s.id].w}px" title="${byId[s.id].name}">${html}</span>`;
+  };
+  const shown = (zone) => zoneItems(zone).filter((s) => live(s.id) && !out.has(s.id)).map(bi).join("");
+  const shelved = [...zoneItems("shelf"), ...[...zoneItems("left"), ...zoneItems("right")].filter((s) => out.has(s.id))].filter((s) => live(s.id));
+  const center = zoneItems("center").filter((s) => live(s.id)).map(bi);
+  $("#bar").innerHTML = `<div class="zone" data-zone="left">${shown("left")}</div><div class="mid" data-zone="center">${center[0] ?? ""}<span class="sum">Claude Code 正在运行</span>${center.slice(1).join("")}</div><div class="zone" data-zone="right">${shown("right")}</div>${shelved.length ? `<span class="bi more" id="more" data-zone="shelf" data-flip="bar:more">+${shelved.length}</span>` : ""}`;
+  const pop = $("#shelfPop");
+  pop.innerHTML = shelved.map((s) => `<span class="bi${selected === s.id ? " sel" : ""}" data-id="${s.id}">${byId[s.id].g} ${byId[s.id].name}</span>`).join("");
+  if (!shelved.length) pop.classList.remove("open");
+  const spill = out.size;
+  $("#meter").classList.toggle("over", spill > 0);
+  $("#meterFill").style.width = Math.min(100, (used / maxWidth) * 100) + "%";
+  $("#meterText").textContent = `占 ${used} / ${maxWidth} px` + (spill ? ` · ${spill} 项放不下，收进 +N` : " · 都放得下");
+}
+
+function paintStyles() {
+  $("#stabs").innerHTML = Object.entries(STYLES).map(([key, style]) => {
+    const owner = ITEMS.find((item) => item.styled === key);
+    const zone = entry(owner.id).zone;
+    return `<button class="${key === styleTab ? "on" : ""}" data-tab="${key}">${style.name}<span class="where">${zone === "off" ? "没放上去" : ZONE_NAME[zone]}</span></button>`;
+  }).join("");
+  $("#scards").innerHTML = STYLES[styleTab].options.map(([value, name, art]) => `<button class="scard${chosen[styleTab] === value ? " on" : ""}" data-style-value="${value}" aria-pressed="${chosen[styleTab] === value}"><div class="thumb">${art}</div><span>${name}</span></button>`).join("");
+  $("#sfoot").textContent = "用量环、剩余待办数没有样式可选（用量环在 AI Agent 页勾选显示哪几家），不在这里出现。";
+}
+
+function rects() {
+  const map = new Map();
+  for (const el of $$("[data-flip]")) map.set(el.dataset.flip, el.getBoundingClientRect());
+  return map;
+}
+
+function render() {
+  const before = reduced ? null : rects();
+  const result = fit();
+  paintBar(result);
+  paintLanes(result.out);
+  paintOff(result.out);
+  paintStyles();
+  if (before) {
+    for (const el of $$("[data-flip]")) {
+      const old = before.get(el.dataset.flip);
+      const now = el.getBoundingClientRect();
+      if (!old) { el.animate([{ transform: "scale(.6)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" }); continue; }
+      const dx = old.left - now.left, dy = old.top - now.top;
+      if (Math.abs(dx) + Math.abs(dy) < 1) continue;
+      el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }], { duration: 200, easing: "cubic-bezier(.2,.8,.2,1)" });
+    }
+  }
+  if (focusId) $(`.chip[data-id="${CSS.escape(focusId)}"]`)?.focus({ preventScroll: true });
+}
+
+function say(text) { $("#live").textContent = text; }
+
+let toastTimer = 0;
+function toast(text, undo = true) {
+  $("#toastText").textContent = text;
+  $("#toastUndo").hidden = !undo || history.length === 0;
+  $("#toast").classList.add("open");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("#toast").classList.remove("open"), 5000);
+}
+
+function remember(before, text) {
+  if (same(before, state)) return false;
+  history.push(before);
+  if (history.length > 20) history.shift();
+  toast(text);
+  say(text);
+  return true;
+}
+
+function act(text, change) {
+  const before = clone(state);
+  change();
+  remember(before, text);
   render();
 }
 
-function shift(id, delta) {
-  const item = state.find((s) => s.id === id);
+function undo() {
+  const previous = history.pop();
+  if (!previous) return;
+  state = previous;
+  picked = null;
+  toast("已撤销", false);
+  say("已撤销");
+  render();
+}
+
+function where(id) {
+  const item = entry(id);
   const list = zoneItems(item.zone);
-  const j = list.indexOf(item) + delta;
-  if (j >= 0 && j < list.length) {
-    const a = state.indexOf(item), b = state.indexOf(list[j]);
+  return `${ZONE_NAME[item.zone]}第 ${list.indexOf(item) + 1} 个`;
+}
+
+function step(id, key) {
+  const item = entry(id);
+  const zones = lanesFor(id);
+  if (key === "ArrowUp" || key === "ArrowDown") {
+    const next = zones[zones.indexOf(item.zone) + (key === "ArrowDown" ? 1 : -1)];
+    if (!next || !allowed(id, next)) return false;
+    place(id, next === "off" ? "off" : next);
+    return true;
+  }
+  if (item.zone === "off") return false;
+  const delta = key === "ArrowRight" ? 1 : -1;
+  const list = zoneItems(item.zone);
+  const target = list[list.indexOf(item) + delta];
+  if (target) {
+    const a = state.indexOf(item), b = state.indexOf(target);
     [state[a], state[b]] = [state[b], state[a]];
-    render();
-    return;
+    return true;
   }
-  if (mode === "lanes" || byId[id].kind === "center") return;
-  const zones = ["left", "right", "shelf"];
-  const k = zones.indexOf(item.zone) + delta;
-  if (k < 0 || k >= zones.length) return;
-  move(id, zones[k], delta > 0 ? zoneItems(zones[k])[0]?.id ?? null : null);
+  const next = zones.filter((zone) => zone !== "off")[zones.indexOf(item.zone) + delta];
+  if (!next) return false;
+  place(id, next, delta > 0 ? zoneItems(next)[0]?.id ?? null : null);
+  return true;
 }
 
-function laneShift(id, delta) {
-  const zones = byId[id].kind === "center" ? ["center"] : ["left", "right", "shelf"];
-  const item = state.find((s) => s.id === id);
-  const k = zones.indexOf(item.zone) + delta;
-  if (k >= 0 && k < zones.length) move(id, zones[k]);
-}
-
-function chip(s, out) {
-  const it = byId[s.id];
-  const el = document.createElement("span");
-  el.className = "chip" + (selected === s.id ? " sel" : "") + (out.has(s.id) && s.zone !== "shelf" ? " spill" : "");
-  el.tabIndex = 0;
-  el.draggable = true;
-  el.dataset.id = s.id;
-  const tag = mode === "menu" && s.zone !== "off" ? `<span class="side-tag${s.zone === "shelf" ? " shelf" : ""}">${ZONE_TAG[s.zone]}</span>` : "";
-  const act = s.zone === "off"
-    ? `<button class="act plus" title="放上去" data-act="add">＋</button>`
-    : mode === "menu" ? `<button class="act" title="更多" data-act="menu">⋯</button>` : `<button class="act" title="拿下来" data-act="remove">×</button>`;
-  el.innerHTML = `<span class="ic">${it.g}</span>${it.name}${tag}${act}`;
-  el.addEventListener("click", (e) => {
-    const a = e.target.closest("[data-act]")?.dataset.act;
-    if (a === "add") return move(s.id, it.kind === "center" ? "center" : "right");
-    if (a === "remove") return move(s.id, "off");
-    if (a === "menu" || (mode === "menu" && s.zone !== "off")) return openMenu(s.id, el);
-    select(s.id);
-  });
-  el.addEventListener("contextmenu", (e) => { if (s.zone !== "off") { e.preventDefault(); openMenu(s.id, el); } });
-  el.addEventListener("keydown", (e) => {
-    if (!e.altKey) return;
-    if (e.key === "ArrowLeft") shift(s.id, -1);
-    else if (e.key === "ArrowRight") shift(s.id, 1);
-    else if (e.key === "ArrowUp" && mode === "lanes") laneShift(s.id, -1);
-    else if (e.key === "ArrowDown" && mode === "lanes") laneShift(s.id, 1);
-    else return;
-    e.preventDefault();
-    document.querySelector(`.chip[data-id="${CSS.escape(s.id)}"]`)?.focus();
-  });
-  el.addEventListener("dragstart", (e) => { dragId = s.id; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", s.id); });
-  el.addEventListener("dragend", () => { dragId = null; render(); });
-  el.addEventListener("dragover", (e) => { if (dragId && dragId !== s.id && allowed(dragId, s.zone)) { e.preventDefault(); e.stopPropagation(); el.classList.add("over"); } });
-  el.addEventListener("dragleave", () => el.classList.remove("over"));
-  el.addEventListener("drop", (e) => { e.preventDefault(); e.stopPropagation(); if (dragId && dragId !== s.id) move(dragId, s.zone, s.id); });
-  return el;
-}
-
-function dropZone(el, zone) {
-  el.addEventListener("dragover", (e) => { if (dragId && allowed(dragId, zone)) { e.preventDefault(); el.classList.add("drop"); } });
-  el.addEventListener("dragleave", (e) => { if (!el.contains(e.relatedTarget)) el.classList.remove("drop"); });
-  el.addEventListener("drop", (e) => { e.preventDefault(); el.classList.remove("drop"); if (dragId) move(dragId, zone); });
-}
-
-function renderOn(out) {
-  const body = document.getElementById("onBody");
-  body.innerHTML = "";
-  if (mode === "lanes") {
-    const lanes = document.createElement("div");
-    lanes.className = "lanes";
-    for (const [zone, hint] of [["left", "摘要左边"], ["center", "摘要两旁，只放中心图案和剩余待办数"], ["right", "摘要右边"], ["shelf", "一直收在「+N」里，不占岛上的位置"]]) {
-      const lane = document.createElement("div");
-      lane.className = "lane";
-      lane.innerHTML = `<div class="lane-h"><b>${ZONE_NAME[zone]}</b>${hint}</div>`;
-      const list = document.createElement("div");
-      list.className = "list";
-      const items = zoneItems(zone);
-      if (!items.length) list.innerHTML = `<span class="none">拖到这里</span>`;
-      items.forEach((s) => list.append(chip(s, out)));
-      lane.append(list);
-      dropZone(lane, zone);
-      lanes.append(lane);
-    }
-    body.append(lanes);
-  } else if (mode === "row") {
-    const row = document.createElement("div");
-    row.className = "onerow";
-    const seg = (zone) => {
-      const el = document.createElement("div");
-      el.className = "seg";
-      const items = zoneItems(zone);
-      items.forEach((s) => el.append(chip(s, out)));
-      if (!items.length) el.innerHTML = `<span class="none">${ZONE_NAME[zone]}</span>`;
-      dropZone(el, zone);
-      return el;
-    };
-    const divider = document.createElement("span");
-    divider.className = "divider";
-    divider.textContent = "摘要";
-    const center = seg("center");
-    center.prepend(divider);
-    const gap = document.createElement("span");
-    gap.className = "gap";
-    const shelfTag = document.createElement("span");
-    shelfTag.className = "side-tag shelf chip";
-    shelfTag.style.cssText = "height:24px;padding:0 8px;border:0";
-    shelfTag.textContent = "+N";
-    const shelf = seg("shelf");
-    shelf.prepend(shelfTag);
-    row.append(seg("left"), center, seg("right"), gap, shelf);
-    body.append(row);
-  } else {
-    const list = document.createElement("div");
-    list.className = "list";
-    [...zoneItems("left"), ...zoneItems("center"), ...zoneItems("right"), ...zoneItems("shelf")].forEach((s) => list.append(chip(s, out)));
-    dropZone(list, "right");
-    body.append(list);
-  }
-}
-
-function renderBar(out) {
-  const bar = document.getElementById("bar");
-  bar.style.width = maxWidth + "px";
-  document.getElementById("barWrap").style.setProperty("--w", maxWidth + "px");
-  const bi = (s) => `<span class="bi${selected === s.id ? " sel" : ""}" data-id="${s.id}" title="${byId[s.id].name}">${byId[s.id].g}</span>`;
-  const shown = (zone) => zoneItems(zone).filter((s) => !out.has(s.id)).map(bi).join("");
-  const shelved = [...zoneItems("shelf"), ...[...zoneItems("left"), ...zoneItems("right")].filter((s) => out.has(s.id))];
-  const center = zoneItems("center").map(bi);
-  bar.innerHTML = `<div class="zone">${shown("left")}</div><div class="mid">${center[0] ?? ""}<span>Claude Code 正在运行</span>${center.slice(1).join("")}</div><div class="zone">${shown("right")}${shelved.length ? `<span class="bi more" id="more">+${shelved.length}</span>` : ""}</div>`;
-  const pop = document.getElementById("shelfPop");
-  pop.innerHTML = shelved.map((s) => `<span class="bi" data-id="${s.id}">${byId[s.id].g} ${byId[s.id].name}</span>`).join("");
-  if (!shelved.length) pop.classList.remove("open");
-  document.getElementById("more")?.addEventListener("click", (e) => { e.stopPropagation(); pop.classList.toggle("open"); });
-  document.querySelectorAll("#bar .bi[data-id], #shelfPop .bi").forEach((el) => el.addEventListener("click", (e) => { e.stopPropagation(); select(el.dataset.id, true); }));
-}
-
-function renderStyles() {
-  const tabs = document.getElementById("stabs");
-  tabs.innerHTML = Object.entries(STYLES).map(([k, v]) => `<button class="${k === styleTab ? "on" : ""}" data-tab="${k}">${v.name}</button>`).join("");
-  tabs.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => { styleTab = b.dataset.tab; renderStyles(); }));
-  const cards = document.getElementById("scards");
-  cards.innerHTML = STYLES[styleTab].options.map(([v, n, art]) => `<button class="scard${chosen[styleTab] === v ? " on" : ""}" data-v="${v}"><div class="thumb">${art}</div><span>${n}</span></button>`).join("");
-  cards.querySelectorAll(".scard").forEach((b) => b.addEventListener("click", () => { chosen[styleTab] = b.dataset.v; renderStyles(); }));
-}
-
-function select(id, fromBar = false) {
-  selected = selected === id && !fromBar ? null : id;
+function select(id, { scroll = false, flash = false } = {}) {
+  selected = id;
   const styled = byId[id]?.styled;
   if (styled) styleTab = styled;
   render();
-  if (fromBar) document.querySelector(`.chip[data-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  const chip = $(`.chip[data-id="${CSS.escape(id)}"]`);
+  if (scroll) chip?.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
+  if (flash && chip) { chip.classList.remove("flash"); void chip.offsetWidth; chip.classList.add("flash"); }
 }
 
-function openMenu(id, anchor) {
-  const menu = document.getElementById("menu");
-  const s = state.find((x) => x.id === id);
-  const zones = byId[id].kind === "center" ? ["center"] : ["left", "right", "shelf"];
-  menu.innerHTML = zones.map((z) => `<button data-z="${z}" ${s.zone === z ? "disabled" : ""}>${s.zone === z ? "✓" : "　"} 放在${ZONE_NAME[z]}</button>`).join("")
-    + `<hr><button data-d="-1">往前挪</button><button data-d="1">往后挪</button>`
-    + (byId[id].styled ? `<button data-style="1">样式…</button>` : "")
-    + `<hr><button data-off="1">拿下来</button>`;
-  const r = anchor.getBoundingClientRect();
-  menu.style.left = Math.min(r.left, innerWidth - 200) + "px";
-  menu.style.top = r.bottom + 6 + "px";
+function showStyle(id) {
+  select(id);
+  const panel = $("#styles");
+  panel.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
+  panel.classList.remove("flash"); void panel.offsetWidth; panel.classList.add("flash");
+}
+
+function openMenu(id, x, y) {
+  const item = entry(id);
+  if (item.zone === "off" || byId[id].disabled) return;
+  const zones = lanesFor(id).filter((zone) => zone !== "off");
+  $("#menu").innerHTML = zones.map((zone) => `<button role="menuitem" data-menu-zone="${zone}" ${item.zone === zone ? "disabled" : ""}>${item.zone === zone ? "✓" : "　"} 放在${ZONE_NAME[zone]}</button>`).join("")
+    + (byId[id].styled ? '<hr><button role="menuitem" data-menu-style="1">　 样式…</button>' : "")
+    + '<hr><button role="menuitem" data-menu-off="1">　 拿下来<kbd>Del</kbd></button>';
+  const menu = $("#menu");
+  menu.dataset.for = id;
   menu.classList.add("open");
-  menu.onclick = (e) => {
-    const b = e.target.closest("button");
-    if (!b || b.disabled) return;
-    menu.classList.remove("open");
-    if (b.dataset.z) move(id, b.dataset.z);
-    else if (b.dataset.d) shift(id, Number(b.dataset.d));
-    else if (b.dataset.off) move(id, "off");
-    else if (b.dataset.style) { select(id); document.getElementById("stabs").scrollIntoView({ behavior: "smooth", block: "center" }); }
-  };
+  menu.style.left = Math.min(x, innerWidth - menu.offsetWidth - 8) + "px";
+  menu.style.top = Math.min(y, innerHeight - menu.offsetHeight - 8) + "px";
+  $("button:not([disabled])", menu)?.focus();
+}
+const closeMenu = () => $("#menu").classList.remove("open");
+
+function locate(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  let host = el.closest("[data-zone]");
+  if (!host && el.closest("#bar")) {
+    const box = $("#bar").getBoundingClientRect();
+    host = $(`#bar [data-zone="${x < box.left + box.width / 2 ? "left" : "right"}"]`);
+  }
+  if (!host) return null;
+  const zone = host.dataset.zone;
+  if (zone === "off" || zone === "shelf" && host.id === "more") return { zone, before: null, host };
+  let before = null;
+  for (const chip of $$("[data-id]", host)) {
+    if (chip.dataset.id === drag.id) continue;
+    const box = chip.getBoundingClientRect();
+    if (y < box.top || (y <= box.bottom && x < box.left + box.width / 2)) { before = chip.dataset.id; break; }
+  }
+  if (host.closest("#bar") && zone === "center") {
+    if (byId[drag.id].kind === "center") return { zone: "center", before, host };
+    const left = x < host.getBoundingClientRect().left + host.offsetWidth / 2;
+    return { zone: left ? "left" : "right", before: left ? null : zoneItems("right").find((s) => s.id !== drag.id)?.id ?? null, host };
+  }
+  return { zone, before, host };
 }
 
-const HINTS = {
-  lanes: "拖到某一格换位置；选中后 Alt+←/→ 换顺序、Alt+↑/↓ 换格；右键也有菜单",
-  row: "拖过「摘要」就换到另一侧，拖到竖线右边收进小面板；选中后 Alt+←/→ 挪动",
-  menu: "点标签弹菜单换位置；拖动只改顺序",
-};
-
-function render() {
-  const out = spilled();
-  renderBar(out);
-  renderOn(out);
-  const off = zoneItems("off");
-  const offList = document.getElementById("offList");
-  offList.innerHTML = off.length ? "" : `<span class="none">都放上去了</span>`;
-  off.forEach((s) => offList.append(chip(s, out)));
-  document.getElementById("onCount").textContent = state.length - off.length;
-  document.getElementById("offCount").textContent = off.length;
-  document.getElementById("modeHint").textContent = HINTS[mode];
-  renderStyles();
+function mark(hit, ok) {
+  $$(".drop, .deny").forEach((el) => el.classList.remove("drop", "deny"));
+  if (!hit) return;
+  const targets = hit.zone === "off" ? [$("#offBucket")] : [$(`.lane[data-zone="${hit.zone}"]`), hit.host.closest("#bar") ? hit.host : $(`#bar [data-zone="${hit.zone}"]`)];
+  targets.filter(Boolean).forEach((el) => el.classList.add(ok ? "drop" : "deny"));
 }
 
-dropZone(document.getElementById("offBucket"), "off");
-document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => {
-  mode = b.dataset.mode;
-  document.querySelectorAll("[data-mode]").forEach((x) => x.classList.toggle("on", x === b));
+function dragMove(x, y) {
+  drag.ghost.style.left = x - drag.dx + "px";
+  drag.ghost.style.top = y - drag.dy + "px";
+  if (performance.now() - lastHit < 130) return;
+  const hit = locate(x, y);
+  drag.over = hit;
+  if (!hit) { mark(null); return; }
+  const ok = allowed(drag.id, hit.zone);
+  if (ok) {
+    const item = entry(drag.id);
+    const list = zoneItems(hit.zone).filter((s) => s.id !== drag.id);
+    const current = zoneItems(item.zone);
+    const next = current[current.indexOf(item) + 1]?.id ?? null;
+    const changed = hit.zone === "off" ? item.zone !== "off" : item.zone !== hit.zone || (hit.before ?? null) !== next && list.length > 0;
+    if (changed) {
+      place(drag.id, hit.zone, hit.before);
+      lastHit = performance.now();
+      render();
+    }
+  }
+  mark(locate(x, y) ?? hit, ok);
+}
+
+function dragEnd(commit) {
+  const { id, snapshot, ghost, over } = drag;
+  ghost.remove();
+  document.body.classList.remove("dragging");
+  const keep = commit && over && allowed(id, over.zone);
+  if (!keep) state = snapshot;
+  drag = null;
+  mark(null);
+  if (keep) remember(snapshot, entry(id).zone === "off" ? `已拿下「${byId[id].name}」` : `「${byId[id].name}」放在${where(id)}`);
+  else if (!same(snapshot, state) || commit) say("已取消");
   render();
-}));
-document.querySelectorAll("[data-theme-btn]").forEach((b) => b.addEventListener("click", () => {
-  document.documentElement.dataset.theme = b.dataset.themeBtn;
-  document.querySelectorAll("[data-theme-btn]").forEach((x) => x.classList.toggle("on", x === b));
-}));
-document.getElementById("maxw").addEventListener("input", (e) => { maxWidth = Number(e.target.value); document.getElementById("maxwv").textContent = maxWidth; render(); });
-document.getElementById("reset").addEventListener("click", () => { state = DEFAULT.map(([id, zone]) => ({ id, zone })); selected = null; render(); });
-document.addEventListener("click", (e) => {
-  if (!e.target.closest("#menu") && !e.target.closest("[data-act=menu]") && !e.target.closest(".chip")) document.getElementById("menu").classList.remove("open");
-  if (!e.target.closest("#shelfPop")) document.getElementById("shelfPop").classList.remove("open");
+}
+
+document.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 || !event.target.closest || event.target.closest("button, input, #menu, #shelfPop")) return;
+  const el = event.target.closest(".chip[data-id], #bar .bi[data-id]");
+  if (!el || byId[el.dataset.id].disabled) return;
+  press = { id: el.dataset.id, x: event.clientX, y: event.clientY, el };
 });
+document.addEventListener("pointermove", (event) => {
+  if (drag) { dragMove(event.clientX, event.clientY); return; }
+  if (!press || Math.hypot(event.clientX - press.x, event.clientY - press.y) < 4) return;
+  const box = press.el.getBoundingClientRect();
+  const source = $(`.chip[data-id="${CSS.escape(press.id)}"]`) ?? press.el;
+  const ghost = source.cloneNode(true);
+  ghost.className = "chip drag-ghost";
+  ghost.removeAttribute("data-id"); ghost.removeAttribute("data-flip");
+  document.body.append(ghost);
+  const inChip = press.el.classList.contains("chip");
+  drag = { id: press.id, snapshot: clone(state), ghost, dx: inChip ? press.x - box.left : ghost.offsetWidth / 2, dy: inChip ? press.y - box.top : ghost.offsetHeight / 2, over: null };
+  press = null; picked = null; focusId = null;
+  closeMenu();
+  document.body.classList.add("dragging");
+  render();
+  dragMove(event.clientX, event.clientY);
+});
+document.addEventListener("pointerup", () => {
+  press = null;
+  if (!drag) return;
+  suppressClick = true;
+  setTimeout(() => { suppressClick = false; }, 0);
+  dragEnd(true);
+});
+document.addEventListener("pointercancel", () => { press = null; if (drag) dragEnd(false); });
+
+document.addEventListener("mouseover", (event) => {
+  const id = event.target.closest?.("[data-id]")?.dataset.id;
+  $$(".hl").forEach((el) => el.classList.remove("hl"));
+  if (id && !drag) $$(`[data-id="${CSS.escape(id)}"]`).forEach((el) => el.classList.add("hl"));
+});
+
+document.addEventListener("click", (event) => {
+  if (suppressClick) { event.preventDefault(); return; }
+  const target = event.target;
+  if (!target.closest) return;
+  if (!target.closest("#menu")) closeMenu();
+  if (!target.closest("#shelfPop, #more")) $("#shelfPop").classList.remove("open");
+  const menuButton = target.closest("#menu button");
+  if (menuButton && !menuButton.disabled) {
+    const id = $("#menu").dataset.for;
+    closeMenu();
+    focusId = id;
+    if (menuButton.dataset.menuZone) act(`「${byId[id].name}」放到${ZONE_NAME[menuButton.dataset.menuZone]}`, () => place(id, menuButton.dataset.menuZone));
+    else if (menuButton.dataset.menuOff) act(`已拿下「${byId[id].name}」`, () => place(id, "off"));
+    else showStyle(id);
+    return;
+  }
+  if (target.closest("#more")) { const pop = $("#shelfPop"); pop.classList.toggle("open"); pop.style.left = $("#more").offsetLeft - 20 + "px"; return; }
+  const tab = target.closest("[data-tab]");
+  if (tab) { styleTab = tab.dataset.tab; paintStyles(); return; }
+  const card = target.closest("[data-style-value]");
+  if (card) { chosen[styleTab] = card.dataset.styleValue; render(); return; }
+  const jump = target.closest("[data-jump]");
+  if (jump) { focusId = null; select(jump.dataset.jump, { scroll: true, flash: true }); return; }
+  const holder = target.closest("[data-id]");
+  if (!holder) return;
+  const id = holder.dataset.id;
+  const action = target.closest("[data-act]")?.dataset.act;
+  focusId = holder.classList.contains("chip") ? id : null;
+  if (action === "add") act(`「${byId[id].name}」放回${ZONE_NAME[entry(id).prev]}`, () => { const item = entry(id); item.zone = item.prev; });
+  else if (action === "remove") act(`已拿下「${byId[id].name}」`, () => place(id, "off"));
+  else if (action === "enable") toast(`会打开 设置 → ${byId[id].disabled}`, false);
+  else if (action === "style") showStyle(id);
+  else select(id, { scroll: !holder.classList.contains("chip"), flash: !holder.classList.contains("chip") });
+});
+
+document.addEventListener("contextmenu", (event) => {
+  const chip = event.target.closest?.(".chip[data-id]");
+  if (!chip) return;
+  event.preventDefault();
+  openMenu(chip.dataset.id, event.clientX, event.clientY);
+});
+
+document.addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") { event.preventDefault(); undo(); return; }
+  if (event.key === "Escape") {
+    if (drag) { dragEnd(false); return; }
+    if ($("#menu").classList.contains("open")) { closeMenu(); $(`.chip[data-id="${CSS.escape($("#menu").dataset.for)}"]`)?.focus(); return; }
+    if (picked) { state = picked.snapshot; say(`已取消，「${byId[picked.id].name}」回到原位`); picked = null; render(); }
+    return;
+  }
+  if (event.target.closest?.("#menu")) {
+    const buttons = $$("#menu button:not([disabled])");
+    const at = buttons.indexOf(document.activeElement);
+    if (event.key === "ArrowDown") { event.preventDefault(); buttons[(at + 1) % buttons.length]?.focus(); }
+    if (event.key === "ArrowUp") { event.preventDefault(); buttons[(at - 1 + buttons.length) % buttons.length]?.focus(); }
+    return;
+  }
+  const chip = event.target.closest?.(".chip[data-id]");
+  if (!chip || event.target !== chip) return;
+  const id = chip.dataset.id;
+  const item = byId[id];
+  focusId = id;
+  if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
+    event.preventDefault();
+    const box = chip.getBoundingClientRect();
+    openMenu(id, box.left, box.bottom + 6);
+    return;
+  }
+  if (item.disabled) return;
+  if ((event.key === "Delete" || event.key === "Backspace") && entry(id).zone !== "off") { event.preventDefault(); picked = null; act(`已拿下「${item.name}」`, () => place(id, "off")); return; }
+  if (event.key === " " || event.key === "Enter") {
+    event.preventDefault();
+    if (picked?.id === id) {
+      const snapshot = picked.snapshot;
+      picked = null;
+      if (!remember(snapshot, `「${item.name}」放在${where(id)}`)) say(`已放下，位置没变`);
+    } else {
+      picked = { id, snapshot: clone(state) };
+      say(`已拿起「${item.name}」，现在在${where(id)}。方向键移动，回车放下，Esc 取消`);
+    }
+    render();
+    return;
+  }
+  if (!event.key.startsWith("Arrow")) return;
+  if (picked?.id === id) {
+    event.preventDefault();
+    if (step(id, event.key)) say(where(id));
+    render();
+  } else if (event.altKey) {
+    event.preventDefault();
+    act(`「${item.name}」挪到了新位置`, () => step(id, event.key));
+    say(where(id));
+  }
+});
+
+document.addEventListener("focusout", (event) => {
+  if (!picked || drag) return;
+  setTimeout(() => {
+    if (!picked || document.activeElement?.dataset?.id === picked.id) return;
+    const snapshot = picked.snapshot;
+    const id = picked.id;
+    picked = null;
+    remember(snapshot, `「${byId[id].name}」放在${where(id)}`);
+    render();
+  }, 0);
+});
+
+$$("[data-theme-btn]").forEach((button) => button.addEventListener("click", () => {
+  document.documentElement.dataset.theme = button.dataset.themeBtn;
+  $$("[data-theme-btn]").forEach((other) => other.classList.toggle("on", other === button));
+}));
+$("#maxw").addEventListener("input", (event) => { maxWidth = Number(event.target.value); $("#maxwv").textContent = maxWidth; focusId = null; render(); });
+$("#quiet").addEventListener("change", (event) => { quiet = event.target.checked; focusId = null; render(); });
+$("#reset").addEventListener("click", () => { focusId = null; selected = null; act("已还原默认排列", () => { state = fresh(); }); });
+$("#toastUndo").addEventListener("click", (event) => { event.stopPropagation(); undo(); });
 render();
 </script>
 </body>
