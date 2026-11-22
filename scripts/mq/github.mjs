@@ -30,6 +30,9 @@ export const github = {
   prBody: (number) => gh(["pr", "view", String(number), "--json", "body", "-q", ".body"]),
   setBody: (number, body) => gh(["pr", "edit", String(number), "--body-file", "-"], body),
   runs: (branch) => JSON.parse(gh(["run", "list", "--branch", branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,url"])),
+  ciRuns: (limit) => JSON.parse(gh(["run", "list", "--workflow", "ci.yml", "--limit", String(limit), "--json", "databaseId,headBranch,conclusion,attempt,url"])),
+  attemptJobs: (runId, attempt) => JSON.parse(gh(["api", `repos/{owner}/{repo}/actions/runs/${runId}/attempts/${attempt}/jobs`, "-q", "[.jobs[] | {id, name, conclusion}]"])),
+  jobLog: (jobId) => gh(["run", "view", "--job", String(jobId), "--log"]),
 };
 
 function slug(text) {
@@ -48,6 +51,12 @@ export function prText(commits, branch, { title = null, body = null, files = [] 
 }
 
 const FAILED = new Set(["FAILURE", "TIMED_OUT", "CANCELLED", "ACTION_REQUIRED", "STARTUP_FAILURE", "ERROR"]);
+
+const NETWORK = /\bEOF\b|timed? ?out|connection (reset|refused)|TLS handshake|could not resolve host|no such host|network is unreachable|HTTP 50[234]|ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN/i;
+
+export function isNetworkError(error) {
+  return NETWORK.test(`${error?.stderr ?? ""}\n${error?.message ?? ""}`);
+}
 
 export function failedChecks(rollup = []) {
   return rollup.filter((check) => FAILED.has(check.conclusion ?? check.state ?? "")).map((check) => ({ name: check.name ?? check.context, url: check.detailsUrl ?? check.targetUrl ?? "" }));

@@ -38,6 +38,8 @@ Environment `release` 只允许 `main`（2026-11-14 建）。证书文件在 Mac
 0.3.8 的实际用时：版本号 PR 4 分钟，Windows CI 6.6 分钟，Mac CI 5.8 分钟（两边同时），下载、签名、上传约 1.2 分钟，冒烟测试 49 秒；写正式版说明另外约 15 分钟。
 
 - **预构建**：`pnpm release:prebuild`（`scripts/release/prebuild.mjs`）在 `pnpm mq:land` 把版本号提交推上 `land/…` 分支之后马上触发两边的构建，把版本号、提交、代码树和两次运行的编号记在 `src-tauri/target/publish/prebuild.json`。PR 合入后 `pnpm release` 比较合并提交的代码树：一样就下载这两次运行的产物（签名仍在本机），不一样（合入时 `main` 又进了别的提交）就照常重新构建；`--no-prebuild` 强制重新构建。构建和 PR 的 CI 重叠，一次发版约省 4–5 分钟。发布成功后删掉记录。
+- **提前下载（D119，2026-11-22）**：`pnpm release:prebuild` 记下两次运行后，默认起一个后台进程（`scripts/release/prefetch.mjs`），等两个构建跑完就把 Windows、Mac 两份产物**同时**下载、用本机私钥签名到 `src-tauri/target/publish/prebuilt/<Windows 运行编号>/`，每份写一个清单记下每个文件的 SHA-256 和各段用时，日志在同目录的 `download.log`；`--no-download` 关掉。`pnpm release` 用预构建时：后台还在下就等它下完；没下或下失败的那份当场两份并行再下一次；清单的运行编号、版本对得上、拷进发布目录后哈希也对得上才用（日志里有 `downloaded and signed ahead`），否则照旧下载。发布成功后连同 `prebuild.json` 一起删掉。
+- **计时**：`pnpm release` 的 `✓` 行带 `[+分:秒]`（相对开始），下载 CI 产物拆成「等构建跑完」「下载（大小、速度）」「签名」三段，退出时（含失败）打一张 `Time per stage` 表（`scripts/release/timing.mjs`）。2026-11-22 在 Mac 上单独测过下载：Windows 产物 52.5 MB 用 39 秒，Mac 37.6 MB 用 42 秒（约 1.3 MB/s），两份合计不到 1.5 分钟；v0.3.12-beta.4 那次下载加签名的约 6 分钟里其余时间花在哪，下次发版看这张表。
 - **正式版说明**：`pnpm release:version` 出正式版时读 `docs/releases/v<版本>-beta.*.md`，把各测试版的「更新内容」/ What's New 按新到旧拼进草稿，修复合成一组；提交列表只列最后一个测试版之后的提交（`scripts/release/beta-notes.mjs`）。
 - **issue 留言**：同时最多 6 个（`after-release.mjs` 的 `tellIssues`），0.3.8 那样 21 个 issue 从一个个发变成几批。
 - **等 CI 时 GitHub 报错**：`gh run watch` 中途退出时先用 `gh run view` 查真实状态，还在跑就接着等（PR #248）。

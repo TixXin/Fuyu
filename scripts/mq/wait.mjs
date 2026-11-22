@@ -1,11 +1,14 @@
 import { thisMachine } from "../machine-name.mjs";
 import { mergedReminder } from "../tasks/taskIssues.mjs";
-import { failedChecks, github as realGitHub, landBranchName } from "./github.mjs";
+import { flakyReport } from "./flaky.mjs";
+import { failedChecks, isNetworkError, github as realGitHub, landBranchName } from "./github.mjs";
 import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
 
 const POLL_MS = 20_000;
 const TIMEOUT_MS = 90 * 60_000;
+const NETWORK_RETRIES = 5;
+const RETRY_MS = 15_000;
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -18,10 +21,27 @@ async function afterMerge(oid) {
 
 export async function waitFor(number, options = {}) {
   const { github = realGitHub, interval = POLL_MS, timeout = TIMEOUT_MS, sleep = pause, onMerged = afterMerge, updateBehind = false } = options;
+  const { retries = NETWORK_RETRIES, retryInterval = RETRY_MS, flaky = flakyReport } = options;
   const deadline = Date.now() + timeout;
+  let misses = 0;
   console.log(`[wait] 等 PR #${number} 合入 ${INTEGRATION_BRANCH}…`);
   while (Date.now() < deadline) {
-    const pr = github.view(number);
+    let pr;
+    try {
+      pr = github.view(number);
+      misses = 0;
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+      const reason = `${error.stderr ?? error.message}`.trim().split("\n")[0];
+      misses += 1;
+      if (misses > retries) {
+        console.error(`[wait] 连续 ${misses} 次读不到 PR #${number} 的状态（${reason}），自动合并仍开着。网络好了再 pnpm mq:wait ${number}。`);
+        return 1;
+      }
+      console.log(`[wait] 读 PR 状态时网络出错（${reason}），${Math.round(retryInterval / 1000)} 秒后重试（${misses}/${retries}）…`);
+      await sleep(retryInterval);
+      continue;
+    }
     if (pr.state === "MERGED") {
       console.log(`✓ PR #${number} 已合入 ${INTEGRATION_BRANCH}（${pr.mergeCommit?.oid?.slice(0, 8) ?? "?"}）。`);
       await onMerged(pr.mergeCommit?.oid ?? "");
@@ -35,6 +55,7 @@ export async function waitFor(number, options = {}) {
     if (failed.length) {
       console.error(`[wait] PR #${number} 的检查没通过，自动合并会一直等着：`);
       for (const { name, url } of failed) console.error(`  ${name}  ${url}`);
+      for (const line of flaky(github, failed, { log: console.error })) console.error(line);
       console.error("修好、提交，再 pnpm mq:land --yes，PR 会自动更新。");
       return 1;
     }

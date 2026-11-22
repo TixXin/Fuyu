@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { prepareReleaseResources, releaseResources, verifyShippedResources } from "../plugins-v3/release-resources.mjs";
 import { downloadCiBuild, signUpdate, startCiBuild } from "./ci-build.mjs";
+import { releaseClock } from "./timing.mjs";
 
 export { signerArgs } from "./ci-build.mjs";
 
@@ -34,12 +35,13 @@ export function startMacBuild(run, { repo, revision, version }) {
   return startCiBuild(run, { workflow: MAC_WORKFLOW, repo, revision, version });
 }
 
-export function finishMacBuild(run, { repo, version, since, runId, dir }) {
-  const problem = downloadCiBuild(run, { workflow: MAC_WORKFLOW, label: "macOS", repo, artifact: macArtifact(version), since, runId, dir });
+export function finishMacBuild(run, { repo, version, since, runId, dir, clock = releaseClock }) {
+  const problem = downloadCiBuild(run, { workflow: MAC_WORKFLOW, label: "macOS", repo, artifact: macArtifact(version), since, runId, dir, clock });
   if (problem) return problem;
   const files = macFiles(dir, version);
   if (!existsSync(files.archive) || !existsSync(files.dmg)) return `the macOS build has no ${files.archive} or ${files.dmg}`;
   if (!signUpdate(files.archive) || !existsSync(files.signature)) return "could not sign the macOS update package with the updater key";
+  clock.done("macOS signing", "The macOS update package is signed for the updater.");
   return null;
 }
 
