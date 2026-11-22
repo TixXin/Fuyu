@@ -23,7 +23,7 @@
   button { font: inherit; color: inherit; cursor: pointer; }
   button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   kbd { font: 12px/1 ui-monospace, Menlo, Consolas, monospace; padding: 2px 6px; border-radius: 5px; border: 1px solid var(--line); background: var(--card-2); color: var(--ink-2); }
-  .page { max-width: 1160px; margin: 0 auto; }
+  .page { max-width: 1080px; margin: 0 auto; }
   h1 { font-size: 22px; margin: 0 0 4px; }
   .intro p { color: var(--ink-2); margin: 0 0 6px; max-width: 940px; }
   .try { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 6px 18px; margin: 10px 0 4px; padding: 0; list-style: none; color: var(--ink-2); font-size: 13px; }
@@ -37,19 +37,26 @@
   .side { flex: 0 0 172px; background: var(--side); padding: 16px 8px; border-right: 1px solid var(--line); }
   .side div { padding: 6px 12px; border-radius: 8px; color: var(--ink-2); font-size: 13px; }
   .side div.on { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); font-weight: 600; }
-  .main { flex: 1; min-width: 0; padding: 20px 24px 28px; }
+  .main { flex: 1; min-width: 0; padding: 20px 24px 28px; container-type: inline-size; }
   .main h2 { margin: 0 0 14px; font-size: 20px; }
   @media (max-width: 800px) { .side { display: none; } .main { padding: 16px; } }
 
   .stage { position: sticky; top: 8px; z-index: 5; background: var(--stage); border-radius: 18px; padding: 26px 16px 14px; box-shadow: 0 10px 30px #0004; }
   .bar-wrap { display: flex; justify-content: center; position: relative; min-height: 40px; }
-  .bar { height: 40px; border-radius: 20px; background: #000; color: #f1f0f6; display: flex; align-items: center; gap: 6px; padding: 0 10px; box-shadow: 0 12px 40px #0009; width: max-content; max-width: 100%; }
+  .scaled-tip { display: none; }
+  .bar { height: 40px; border-radius: 20px; background: #000; color: #f1f0f6; display: flex; align-items: center; gap: 6px; padding: 0 14px; box-shadow: 0 12px 40px #0009; width: max-content; flex: none; transform-origin: top center; }
   .bar .zone { display: flex; gap: 6px; align-items: center; flex: none; min-width: 14px; height: 32px; border-radius: 16px; padding: 0 2px; box-sizing: border-box; transition: background .15s, box-shadow .15s; }
   .bar .zone.drop { background: #ffffff14; box-shadow: inset 0 0 0 1.5px var(--accent); }
   .bar .mid { flex: none; display: flex; gap: 6px; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; font-size: 12.5px; color: #ffffffcc; }
   .bar .mid .sum { overflow: hidden; text-overflow: ellipsis; width: 132px; text-align: center; flex: none; }
-  .bi { position: relative; height: 24px; min-width: 0; padding: 0; overflow: hidden; border-radius: 12px; background: #ffffff1c; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; color: #ffffffd9; cursor: grab; flex: none; touch-action: none; user-select: none; transition: box-shadow .15s, background .15s, opacity .15s; }
+  .bi { position: relative; height: 24px; min-width: 0; padding: 0; overflow: hidden; border-radius: 12px; background: #ffffff1c; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; color: #ffffffd9; cursor: grab; flex: none; touch-action: none; user-select: none; transition: box-shadow .15s, background .15s, opacity .15s; }
   .bi.art { background: transparent; padding: 0; }
+  .bi svg.lu { width: 13px; height: 13px; }
+  .wave { display: flex; gap: 2px; align-items: center; height: 14px; } .wave i { width: 2.5px; border-radius: 2px; background: #fff; }
+  .ring2 { width: 22px; height: 22px; display: block; }
+  svg.pat { height: 22px; width: auto; display: block; }
+  .eyes { display: flex; gap: 5px; } .eyes i { width: 11px; height: 15px; border-radius: 50%; background: #fff; position: relative; } .eyes i::after { content: ""; position: absolute; width: 5px; height: 6px; border-radius: 50%; background: #111; left: 4px; top: 5px; }
+  .art-ph { color: #ffffff99; font-size: 10px; font-weight: 600; border: 1px dashed #ffffff55; border-radius: 6px; padding: 1px 5px; white-space: nowrap; }
   .bi.hl { background: #ffffff38; box-shadow: 0 0 0 2px #ffffff66; }
   .bi.sel { box-shadow: 0 0 0 2px var(--accent); }
   .bi.ghosted { opacity: .3; }
@@ -58,13 +65,15 @@
   .shelf-pop { position: absolute; top: 46px; background: #000; border-radius: 14px; padding: 6px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 12px 30px #0008; z-index: 6; }
   .shelf-pop.open { display: flex; }
   .shelf-pop .bi { justify-content: flex-start; padding: 0 10px 0 6px; cursor: pointer; }
-  .meter { display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; color: #ffffffd0; font-size: 12.5px; }
-  .meter .track { width: 180px; height: 6px; border-radius: 3px; background: #ffffff26; overflow: hidden; }
-  .meter .track i { display: block; height: 100%; background: #9be7b0; border-radius: 3px; transition: width .2s, background .2s; }
+  .meter { display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; color: var(--ink-2); font-size: 12.5px; }
+  .meter .track { width: 180px; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 16%, transparent); overflow: hidden; }
+  .meter .track i { display: block; height: 100%; background: #37b46a; border-radius: 3px; transition: width .2s, background .2s; }
   .meter.over .track i { background: var(--warn); }
-  .meter label { display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
-  .meter input[type=range] { width: 130px; }
-  .meter .sep { width: 1px; height: 14px; background: #ffffff33; }
+  .lab { display: flex; gap: 8px 18px; align-items: center; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1.5px dashed var(--line); border-radius: 12px; color: var(--ink-2); font-size: 13px; }
+  .lab > b { color: var(--ink-3); font-weight: 600; font-size: 12px; }
+  .lab label { display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+  .lab input[type=range] { width: 150px; }
+  .lab button { border: 0; background: transparent; color: var(--accent); padding: 0 2px; font-size: 13px; }
 
   .sec { margin-top: 22px; }
   .sec-h { display: flex; align-items: center; gap: 10px; margin: 0 4px 10px; flex-wrap: wrap; }
@@ -73,28 +82,33 @@
   .jump { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 4px 12px; color: var(--ink-3); font-size: 12.5px; }
   .jump button { border: 0; background: transparent; color: var(--accent); padding: 0 2px; font-size: 12.5px; }
 
-  .chip { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 6px 0 7px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line); font-size: 14px; user-select: none; touch-action: none; cursor: grab; transition: background .15s, box-shadow .15s, border-color .15s, opacity .15s; }
+  .chip { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 5px 0 4px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line); font-size: 13px; white-space: nowrap; max-width: 100%; user-select: none; touch-action: none; cursor: grab; transition: background .15s, box-shadow .15s, border-color .15s, opacity .15s; }
   .chip:hover, .chip.hl { background: var(--chip-hover); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
   .chip.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .chip.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 8px 20px #0006; transform: translateY(-2px); }
   .chip.placeholder { background: transparent; border: 1.5px dashed var(--accent); }
   .chip.placeholder > * { visibility: hidden; }
   .chip.spill { opacity: .78; }
-  .chip.idle .ic { outline: 1.5px dashed var(--ink-3); outline-offset: -1.5px; background: transparent; }
+  .chip.idle .ic { outline: 1.5px dashed var(--ink-3); outline-offset: -1.5px; background: transparent; color: var(--ink-2); }
+  .chip.add { padding-right: 12px; }
   .chip.off-feature { opacity: .6; cursor: default; }
   .chip.flash { animation: flash 1.1s; }
   @keyframes flash { 0%, 40% { box-shadow: 0 0 0 2px var(--accent), 0 0 0 9px color-mix(in srgb, var(--accent) 30%, transparent); } 100% { box-shadow: 0 0 0 1px var(--accent), 0 0 0 0 transparent; } }
-  .ic { display: inline-grid; place-items: center; font-weight: 700; background: var(--tile); color: var(--tile-ink); width: 24px; height: 24px; border-radius: 8px; font-size: 12px; flex: none; }
+  .ic { display: inline-grid; place-items: center; font-weight: 700; background: var(--tile); color: var(--tile-ink); width: 26px; height: 26px; border-radius: 50%; font-size: 12px; flex: none; }
+  .ic svg.lu { width: 15px; height: 15px; }
+  svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; flex: none; }
+  .chip .name { overflow: hidden; text-overflow: ellipsis; }
   .chip .act { width: 24px; height: 24px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-3); display: grid; place-items: center; font-size: 14px; padding: 0; flex: none; }
   .chip .act:hover { background: var(--card-2); color: var(--ink); }
-  .chip .act.plus { color: var(--accent); font-size: 17px; }
-  .chip .act.style { font-size: 11px; width: auto; padding: 0 8px; border-radius: 999px; color: var(--ink-2); background: var(--card-2); margin-right: -4px; }
+  .chip .act.plus { color: var(--accent); width: 26px; height: 26px; border: 1.5px solid color-mix(in srgb, var(--accent) 60%, transparent); }
+  .chip.add .ic { background: transparent; width: 18px; color: var(--ink-2); }
+  .chip .act svg.lu { width: 13px; height: 13px; }
+  .chip .act.style { margin-right: -6px; }
   .chip .link { border: 0; background: transparent; color: var(--accent); font-size: 12.5px; padding: 0 6px; }
   .chip .tag { font-size: 10.5px; font-weight: 700; padding: 0 6px; border-radius: 999px; line-height: 17px; background: color-mix(in srgb, var(--warn) 22%, transparent); color: var(--warn); }
   .drag-ghost { position: fixed; z-index: 50; pointer-events: none; margin: 0; box-shadow: 0 14px 34px #0009; transform: rotate(-2deg) scale(1.04); opacity: .96; }
 
-  .buckets { display: grid; grid-template-columns: 3fr minmax(230px, 1fr); gap: 12px; align-items: start; }
-  @media (max-width: 940px) { .buckets { grid-template-columns: 1fr; } }
+  .buckets { display: grid; grid-template-columns: 1fr; gap: 12px; }
   .bucket { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 12px 14px; transition: border-color .15s, background .15s; }
   .bucket > header { display: flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 14px; margin: 2px 4px 10px; }
   .bucket > header .n { color: var(--ink-3); }
@@ -103,23 +117,27 @@
   .bucket.off.drop { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--card)); }
   .bucket.off .drop-tip { display: none; color: var(--accent); font-size: 12.5px; margin-left: auto; }
   .bucket.off.drop .drop-tip { display: inline; }
-  .list { display: flex; gap: 8px; flex-wrap: wrap; align-content: flex-start; min-height: 40px; }
-  .none { color: var(--ink-3); font-size: 13px; padding: 9px 4px; }
+  .list { display: flex; gap: 8px; flex-wrap: wrap; align-content: flex-start; min-height: 34px; }
+  .none { color: var(--ink-3); font-size: 12.5px; padding: 7px 4px; }
   .group-label { width: 100%; color: var(--ink-3); font-size: 12px; margin: 6px 2px -2px; }
   .group-label:first-child { margin-top: 0; }
 
-  .lanes { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(170px, 1fr) minmax(240px, 2fr); gap: 8px; }
+  .lanes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lane[data-zone="left"], .lane[data-zone="center"] { flex: 1 1 180px; }
+  .lane[data-zone="right"] { flex: 4 1 360px; }
+  .lane[data-zone="shelf"] { flex: 1 1 100%; display: flex; align-items: center; gap: 4px 14px; flex-wrap: wrap; padding: 8px 10px; }
+  .lane[data-zone="shelf"] .lane-h { margin: 0 2px; }
+  .lane[data-zone="shelf"] .list { flex: 1 1 240px; min-height: 34px; align-items: center; }
   .lane { border-radius: 12px; padding: 8px 10px 10px; background: var(--card-2); border: 1.5px dashed transparent; transition: border-color .15s, opacity .15s, background .15s; min-width: 0; }
-  .lane[data-zone="shelf"] { grid-column: 1 / -1; }
-  @media (max-width: 700px) { .lanes { grid-template-columns: 1fr; } }
-  .lane-h { font-size: 12px; color: var(--ink-3); margin: 0 2px 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .lane-h b { color: var(--ink-2); font-weight: 600; font-size: 13px; }
+  .lane-h { font-size: 12px; color: var(--ink-3); margin: 0 2px 8px; display: flex; gap: 8px; align-items: center; white-space: nowrap; min-width: 0; }
+  .lane-h b { color: var(--ink-2); font-weight: 600; font-size: 13px; flex: none; }
+  .lane-h .lane-hint, .lane-h .deny-tip { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .pict { display: inline-flex; gap: 2px; width: 40px; height: 10px; flex: none; }
   .pict i { flex: 1; border-radius: 3px; background: var(--ink-3); opacity: .35; }
   .pict i.m { flex: 1.6; }
   .pict i.on { background: var(--accent); opacity: 1; }
   .pict.shelf i { opacity: .25; } .pict.shelf i.on { flex: .5; background: var(--warn); opacity: 1; }
-  body.dragging .lane[data-accept="yes"] { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  body.dragging .lane[data-accept="yes"] { border-color: color-mix(in srgb, var(--accent) 22%, transparent); }
   body.dragging .lane[data-accept="no"] { opacity: .45; }
   .lane.drop { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 8%, var(--card-2)); }
   .lane.deny { border-color: var(--deny) !important; opacity: 1 !important; animation: shake .25s; }
@@ -129,7 +147,7 @@
   .fold { flex-basis: 100%; display: flex; align-items: center; gap: 8px; color: var(--warn); font-size: 11.5px; font-weight: 600; margin: 2px 0; }
   .fold::before, .fold::after { content: ""; flex: 1; border-top: 1.5px dashed color-mix(in srgb, var(--warn) 60%, transparent); }
 
-  .menu { position: fixed; z-index: 60; min-width: 190px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 5px; display: none; }
+  .menu { position: fixed; z-index: 80; min-width: 190px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 5px; display: none; }
   .menu.open { display: block; }
   .menu button { display: flex; width: 100%; border: 0; background: transparent; text-align: left; padding: 6px 10px; border-radius: 8px; font-size: 13px; gap: 8px; }
   .menu button:hover, .menu button:focus-visible { background: var(--card-2); outline: 0; }
@@ -154,8 +172,8 @@
   .styles .foot { color: var(--ink-3); font-size: 12.5px; padding: 0 18px 16px; }
   .art-dot { width: 9px; height: 9px; border-radius: 50%; background: #5ee38a; box-shadow: 0 0 8px #5ee38a; }
   .jelly { width: 32px; height: 24px; display: block; flex: none; }
-  .ic .jelly { width: 22px; height: 16px; }
-  .ic:has(.jelly) { background: #17181b; }
+  .ic .jelly { width: 21px; height: 16px; }
+  .ic:has(.jelly) { background: #101114; }
   .art-grid { display: grid; grid-template-columns: repeat(2, 8px); gap: 2px; }
   .art-grid i { width: 8px; height: 8px; border-radius: 2px; background: #5ee38a; }
   .art-grid i:nth-child(2) { background: #f5c46e; } .art-grid i:nth-child(4) { background: #ffffff1a; }
@@ -192,7 +210,7 @@
       <li>拿下来再点 ＋，回到原来那一格的原来位置</li>
       <li>键盘：<kbd>Tab</kbd> 到标签，<kbd>空格</kbd> 拿起，方向键移动，<kbd>回车</kbd> 放下</li>
       <li>右键标签（或 <kbd>Shift</kbd>+<kbd>F10</kbd>）弹菜单</li>
-      <li>点带「样式」的标签，下面的样式卡片切到它；换样式后收起条里的图也换</li>
+      <li>点标签上的调色板，下面的样式卡片切到它；换样式后收起条里的图也换</li>
     </ul>
     <div class="row">
       <span class="lbl">外观</span>
@@ -200,6 +218,13 @@
       <button class="pill-btn" data-theme-btn="light">浅色</button>
       <button class="pill-btn" id="reset" style="margin-left:auto">还原默认</button>
     </div>
+  </div>
+
+  <div class="lab">
+    <b>预览用的开关（设置里没有这些）</b>
+    <label>收起条最宽 <input type="range" id="maxw" min="300" max="760" value="640" /> <span id="maxwv">640</span> px</label>
+    <label><input type="checkbox" id="quiet" /> 模拟此刻没有邮件、更新、文件、音乐</label>
+    <span>模拟从功能页点「调整 ›」：<button data-jump="music">音乐</button><button data-jump="session-count">会话环</button><button data-jump="timer">计时器</button></span>
   </div>
 
   <div class="win">
@@ -212,16 +237,11 @@
         <div class="bar-wrap" id="barWrap"><div class="bar" id="bar"></div><div class="shelf-pop" id="shelfPop"></div></div>
         <div class="meter" id="meter">
           <span class="track"><i id="meterFill"></i></span><span id="meterText"></span>
-          <span class="sep"></span>
-          <label>最宽 <input type="range" id="maxw" min="300" max="760" value="640" /> <span id="maxwv">640</span> px</label>
-          <span class="sep"></span>
-          <label><input type="checkbox" id="quiet" /> 只看此刻有内容的</label>
         </div>
       </div>
 
       <div class="sec">
         <div class="sec-h"><h3>收起条上的项目</h3><span class="hint">拖动换位置 · 空格拿起后用方向键 · 右键有菜单</span></div>
-        <div class="jump">从功能页点「调整 ›」跳过来的效果：<button data-jump="music">音乐 调整 ›</button><button data-jump="session-count">会话环 调整 ›</button><button data-jump="timer">计时器 调整 ›</button></div>
         <div class="buckets">
           <div class="bucket"><header><span class="shape"></span>在收起条上 <span class="n" id="onCount"></span></header><div class="lanes" id="lanes"></div></div>
           <div class="bucket off" id="offBucket" data-zone="off"><header><span class="shape dash"></span>可以放上去 <span class="n" id="offCount"></span><span class="drop-tip">松手就拿下来</span></header><div class="list" id="offList"></div></div>
@@ -229,7 +249,7 @@
       </div>
 
       <div class="sec">
-        <div class="sec-h"><h3>样式</h3><span class="hint">点上面带「样式」的标签会切到这里</span></div>
+        <div class="sec-h"><h3>样式</h3><span class="hint">点标签上的调色板会切到这里</span></div>
         <div class="styles" id="styles"><div class="stabs" id="stabs"></div><div class="scards" id="scards"></div><div class="foot" id="sfoot"></div></div>
       </div>
     </section>
@@ -238,7 +258,7 @@
   <div class="note">
     <h3>这一版定下的交互（确认后照这个做）</h3>
     <ul>
-      <li><b>分区照收起条的样子排</b>：左侧、中间、右侧横着排成一行，小面板在下面单独一条；每格标题前有一个小示意图，标出它是收起条的哪一段。窗口窄于 700px 时竖着排。</li>
+      <li><b>分区照收起条的样子排</b>：左侧、中间、右侧横着排成一行，小面板在下面单独一条；每格标题前有一个小示意图，标出它是收起条的哪一段。窗口窄了自动换行：先是右侧掉到第二行，再窄就三格竖着排；预览里的收起条放不下时整体缩小。</li>
       <li><b>两处都能拖</b>：拖标签，或者直接拖预览里的项目。拖的过程中预览实时更新，原位置留一个虚线占位；松手才保存，Esc 或拖到没有格子的地方松手都算取消。</li>
       <li><b>不能放的格子会说原因</b>：中间只收中心图案和剩余待办数；开始拖的时候，不能放的格子变暗，硬拖进去会变红并显示一句话。</li>
       <li><b>放不下的用一条虚线标出来</b>：按清单顺序先放（规则不变），第一个放不下的项目前面出现「放不下，后面的收进 +N」，把它往前拖就能留在条上。预览下面有一条用量，写着占了多少、几项被收起。</li>
@@ -247,7 +267,7 @@
       <li><b>右键菜单</b>（第一版的 C 方案并进来）：放在左侧 / 右侧 / 小面板、样式…、拿下来，当前位置打勾。</li>
       <li><b>此刻没内容的项目</b>（邮箱、更新、文件中转、音乐）：图标画成虚线框，悬停说明「有内容时才出现」；勾上「只看此刻有内容的」预览就和真岛现在一样。</li>
       <li><b>功能没开的项目</b>排在「可以放上去」最下面，变灰，给一个「去开启 ›」，不能直接拖上去。</li>
-      <li><b>样式</b>：有样式的标签上有「样式」小按钮；点它或选中标签，下面的卡片切到这一项并闪一下。换了样式，预览里那一项的图立刻换。</li>
+      <li><b>样式</b>：有样式的标签上有一个调色板小按钮；点它或选中标签，下面的卡片切到这一项并闪一下。换了样式，预览里那一项的图立刻换。</li>
       <li><b>定位</b>：功能页的「调整 ›」和预览上点一项，都会滚到对应标签并闪两下；它在「可以放上去」里时也一样。</li>
       <li><b>没覆盖的</b>：刘海屏两翼的预览（等 C139.3 定了规则再加）；触摸屏长按拖动（指针事件已经支持，没专门调）。</li>
     </ul>
@@ -260,28 +280,55 @@
 
 <script>
 const JELLY = '<svg class="jelly" viewBox="3 4 58 43" aria-hidden="true"><g fill="#F6E3D3"><circle cx="18" cy="39" r="6.6"/><circle cx="27.3" cy="39" r="6.6"/><circle cx="36.7" cy="39" r="6.6"/><circle cx="46" cy="39" r="6.6"/><path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"/></g><g fill="#fff"><ellipse cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)" opacity=".6"/><circle cx="28.5" cy="10" r="1.5" opacity=".7"/></g><g fill="#FF8FA0" opacity=".72"><ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2"/><ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2"/></g><g fill="#1D1B22"><ellipse cx="24" cy="25" rx="2.7" ry="3.9"/><ellipse cx="40" cy="25" rx="2.7" ry="3.9"/></g><g fill="#fff"><circle cx="25" cy="23.4" r=".9"/><circle cx="41" cy="23.4" r=".9"/></g></svg>';
+const lu = (d) => `<svg class="lu" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const ICON = {
+  mail: lu('<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>'),
+  update: lu('<circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/>'),
+  cpu: lu('<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/>'),
+  sun: lu('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>'),
+  video: lu('<path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>'),
+  inbox: lu('<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>'),
+  music: lu('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'),
+  gauge: lu('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>'),
+  grid: lu('<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>'),
+  timer: lu('<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>'),
+  battery: lu('<rect width="16" height="10" x="2" y="7" rx="2"/><line x1="22" x2="22" y1="11" y2="13"/><line x1="6" x2="6" y1="11" y2="13"/><line x1="10" x2="10" y1="11" y2="13"/>'),
+  todos: lu('<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/>'),
+  eye: lu('<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'),
+  tomato: lu('<circle cx="12" cy="13" r="8"/><path d="M12 5c0-2 1-3 3-3M9 5.5c1.5 1 4.500 1 6 0"/>'),
+  palette: lu('<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.500" r=".5" fill="currentColor"/><circle cx="8.500" cy="7.500" r=".5" fill="currentColor"/><circle cx="6.500" cy="12.500" r=".5" fill="currentColor"/><path d="M12 2C6.500 2 2 6.500 2 12s4.500 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.640 1.640 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>'),
+  x: lu('<path d="M18 6 6 18M6 6l12 12"/>'),
+  plus: lu('<path d="M5 12h14M12 5v14"/>'),
+};
 const ITEMS = [
-  { id: "status-light", name: "浮屿水母", g: JELLY, w: 32, kind: "side", styled: "light" },
-  { id: "center", name: "中心图案", g: "◎", w: 44, kind: "center", styled: "center" },
-  { id: "todos-count", name: "剩余待办数", g: "3", w: 26, kind: "center" },
-  { id: "mail", name: "邮箱", g: "✉", w: 34, kind: "side", transient: true },
-  { id: "update", name: "更新提醒", g: "↑", w: 24, kind: "side", transient: true },
-  { id: "plugin:system-monitor", name: "系统监控", g: "CPU", w: 64, kind: "side", plugin: true },
-  { id: "plugin:weather", name: "天气", g: "☀", w: 52, kind: "side", plugin: true },
-  { id: "device-use", name: "摄像头和麦克风", g: "●", w: 24, kind: "side" },
-  { id: "shelf", name: "文件中转", g: "⇩", w: 30, kind: "side", transient: true },
-  { id: "music", name: "音乐", g: "♪", w: 30, kind: "side", transient: true },
-  { id: "usage:claude", name: "用量环", g: "◔", w: 26, kind: "side" },
-  { id: "session-count", name: "会话环", g: "▦", w: 26, kind: "side", styled: "ring" },
-  { id: "timer", name: "计时器", g: "⏱", w: 54, kind: "side" },
-  { id: "peripheral-battery", name: "外设电量", g: "⌨", w: 44, kind: "side" },
-  { id: "plugin:pomodoro", name: "番茄钟", g: "🍅", w: 40, kind: "side", plugin: true, disabled: "插件 → 番茄钟" },
+  { id: "status-light", name: "浮屿水母", icon: JELLY, w: 32, kind: "side", styled: "light" },
+  { id: "center", name: "中心图案", icon: ICON.eye, w: 44, kind: "center", styled: "center" },
+  { id: "todos-count", name: "剩余待办数", icon: ICON.todos, bar: "3", w: 24, kind: "center" },
+  { id: "mail", name: "邮箱", icon: ICON.mail, bar: `${ICON.mail}2`, w: 36, kind: "side", transient: true },
+  { id: "update", name: "更新提醒", icon: ICON.update, bar: ICON.update, w: 24, kind: "side", transient: true },
+  { id: "plugin:system-monitor", name: "系统监控", icon: ICON.cpu, bar: "CPU 12%", w: 62, kind: "side", plugin: true },
+  { id: "plugin:weather", name: "天气", icon: ICON.sun, bar: `${ICON.sun}23°`, w: 46, kind: "side", plugin: true },
+  { id: "device-use", name: "摄像头和麦克风", icon: ICON.video, bar: '<div class="art-dot"></div>', w: 20, kind: "side", art: true },
+  { id: "shelf", name: "文件中转", icon: ICON.inbox, bar: `${ICON.inbox}3`, w: 36, kind: "side", transient: true },
+  { id: "music", name: "音乐", icon: ICON.music, bar: '<div class="wave"><i style="height:6px"></i><i style="height:13px"></i><i style="height:9px"></i><i style="height:12px"></i><i style="height:5px"></i></div>', w: 28, kind: "side", transient: true, art: true },
+  { id: "usage:claude", name: "用量环", icon: ICON.gauge, bar: '<svg class="ring2" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="none" stroke="#ffffff22" stroke-width="2.6"/><circle cx="11" cy="11" r="9" fill="none" stroke="#FFB27A" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="35 57" transform="rotate(-90 11 11)"/><circle cx="11" cy="11" r="5" fill="none" stroke="#ffffff22" stroke-width="2.6"/><circle cx="11" cy="11" r="5" fill="none" stroke="#FFB27A" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="9 32" transform="rotate(-90 11 11)"/></svg>', w: 24, kind: "side", art: true },
+  { id: "session-count", name: "会话环", icon: ICON.grid, w: 24, kind: "side", styled: "ring" },
+  { id: "timer", name: "计时器", icon: ICON.timer, bar: "12:30", w: 46, kind: "side" },
+  { id: "peripheral-battery", name: "外设电量", icon: ICON.battery, bar: `${ICON.battery}80`, w: 44, kind: "side" },
+  { id: "plugin:pomodoro", name: "番茄钟", icon: ICON.tomato, bar: "25:00", w: 46, kind: "side", plugin: true, disabled: "插件 → 番茄钟" },
 ];
 const DEFAULT = [
   ["status-light", "left"], ["center", "center"], ["mail", "right"], ["update", "right"], ["plugin:system-monitor", "right"],
   ["plugin:weather", "right"], ["device-use", "right"], ["shelf", "right"], ["music", "right"], ["usage:claude", "right"],
   ["session-count", "right"], ["todos-count", "off", "center"], ["timer", "off", "right"], ["peripheral-battery", "off", "right"], ["plugin:pomodoro", "off", "right"],
 ];
+const INK = "rgba(255,255,255,.94)", SHADE = "rgba(255,255,255,.62)", DARK = "#1c1c1e";
+const PATTERN = {
+  eyes: `<svg class="pat" viewBox="0 0 40 22">${[12, 28].map((cx) => `<ellipse cx="${cx}" cy="11" rx="6.6" ry="8.2" fill="${INK}"/><circle cx="${cx}" cy="11.4" r="3.3" fill="${DARK}"/><circle cx="${cx + 1.1}" cy="10.1" r=".95" fill="${INK}"/>`).join("")}</svg>`,
+  bird: `<svg class="pat" viewBox="0 0 34 22"><path d="M14.4 18.6 13.8 21.2M17.4 18.6l.4 2.6" fill="none" stroke="${SHADE}" stroke-width="1.1" stroke-linecap="round"/><path d="M8.6 12.2 2.4 9.6l1.6 4.2 4.6.8Z" fill="${INK}"/><ellipse cx="15.4" cy="13.6" rx="8" ry="5.4" fill="${INK}"/><path d="M9.6 12.6c3-3.4 7.8-3.6 10.8-.8-3 3.8-7.4 4.4-10.8.8Z" fill="${SHADE}"/><circle cx="22.6" cy="8.6" r="4.6" fill="${INK}"/><path d="m26.8 7.5 4.2 1.4-4.2 1.4Z" fill="#ffb86b"/><circle cx="24" cy="7.8" r="1.05" fill="${DARK}"/></svg>`,
+  orb: `<svg class="pat" viewBox="0 0 22 22"><defs><radialGradient id="orb-glow"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset=".55" stop-color="#fff" stop-opacity=".24"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><circle cx="11" cy="11" r="10" fill="url(#orb-glow)"/><circle cx="11" cy="11" r="3.4" fill="${INK}"/></svg>`,
+  cat: `<svg class="pat" viewBox="0 0 30 22"><path d="m5.6 10 .9-7.8 6 4.4Z" fill="${INK}"/><path d="m7.4 7.6.4-3.6 2.8 2.2Z" fill="#f4a3ae" opacity=".9"/><path d="m24.400 10-.9-7.8-6 4.4Z" fill="${INK}"/><path d="m22.6 7.6-.4-3.6-2.8 2.2Z" fill="#f4a3ae" opacity=".9"/><ellipse cx="15" cy="13.4" rx="10" ry="7.4" fill="${INK}"/><ellipse cx="10.8" cy="12.6" rx="1.45" ry="2" fill="${DARK}"/><ellipse cx="19.2" cy="12.6" rx="1.45" ry="2" fill="${DARK}"/><path d="M14 15.4h2l-1 1.1Z" fill="#f4a3ae"/><path d="M15 16.500q-.9 1.3-2.1.7M15 16.500q.9 1.3 2.100.7" fill="none" stroke="${DARK}" stroke-width=".7" stroke-linecap="round"/></svg>`,
+};
 const STYLES = {
   light: { name: "浮屿水母", options: [["mark", "水母", JELLY], ["dot", "圆点", '<div class="art-dot"></div>']] },
   ring: { name: "会话环", options: [
@@ -290,9 +337,8 @@ const STYLES = {
     ["bar", "横条", '<div class="art-bar"><i></i><i></i><i></i></div>'],
     ["signal", "信号格", '<div class="art-signal"><i style="height:9px"></i><i style="height:14px"></i><i style="height:20px;background:#f5c46e"></i></div>']] },
   center: { name: "中心图案", options: [
-    ["eyes", "眼睛", '<span class="art-text">◉ ◉</span>'], ["bird", "小鸟", '<span class="art-text">🐦</span>'],
-    ["orb", "光球", '<div class="art-dot" style="width:16px;height:16px;background:#74d6ff;box-shadow:0 0 12px #74d6ff"></div>'],
-    ["cat", "猫", '<span class="art-text">🐱</span>'], ["mark", "水母", JELLY], ["pet", "宠物", '<span class="art-text">🦊</span>']] },
+    ["eyes", "眼睛", PATTERN.eyes], ["bird", "小鸟", PATTERN.bird], ["orb", "光球", PATTERN.orb],
+    ["cat", "猫", PATTERN.cat], ["mark", "水母", JELLY], ["pet", "宠物", '<span class="art-ph">Codex 宠物</span>']] },
 };
 const LANES = [
   ["left", "左侧", "摘要左边", '<span class="pict"><i class="on"></i><i class="m"></i><i></i></span>'],
@@ -301,7 +347,7 @@ const LANES = [
   ["shelf", "小面板", "一直收在「+N」里，点开才看到，不占条上的位置", '<span class="pict shelf"><i></i><i class="m"></i><i></i><i class="on"></i></span>'],
 ];
 const ZONE_NAME = { left: "左侧", center: "中间", right: "右侧", shelf: "小面板", off: "可以放上去" };
-const SUMMARY_W = 132, GAP = 6, MORE_W = 36, PAD = 20;
+const SUMMARY_W = 132, GAP = 6, MORE_W = 36, PAD = 28;
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -365,7 +411,7 @@ function fit() {
 function glyph(id) {
   const item = byId[id];
   const style = item.styled && STYLES[item.styled].options.find(([value]) => value === chosen[item.styled]);
-  return style ? { html: style[2], art: true } : { html: item.g, art: false };
+  return style ? { html: style[2], art: true } : { html: item.bar ?? item.icon, art: Boolean(item.art) };
 }
 
 function chipHtml(s, out) {
@@ -378,14 +424,16 @@ function chipHtml(s, out) {
   if (out.has(s.id)) classes.push("spill");
   if (item.transient) classes.push("idle");
   if (item.disabled) classes.push("off-feature");
+  const lead = off && !item.disabled;
+  if (lead) classes.push("add");
   const title = item.disabled ? "功能没开，开启后才能放上去" : item.transient ? "有内容时才出现在收起条上" : "";
   const tag = out.has(s.id) ? '<span class="tag">+N</span>' : "";
-  const style = item.styled && !off ? '<button class="act style" data-act="style" tabindex="-1">样式</button>' : "";
+  const style = item.styled && !off ? `<button class="act style" data-act="style" tabindex="-1" title="样式" aria-label="${item.name}的样式">${ICON.palette}</button>` : "";
   const action = item.disabled
     ? `<button class="link" data-act="enable">去开启 ›</button>`
-    : off ? `<button class="act plus" data-act="add" aria-label="把${item.name}放上去" title="放回${ZONE_NAME[s.prev]}">＋</button>`
-      : `<button class="act" data-act="remove" aria-label="把${item.name}拿下来" title="拿下来">×</button>`;
-  return `<span class="${classes.join(" ")}" data-id="${s.id}" data-flip="chip:${s.id}" tabindex="0" role="option" aria-selected="${selected === s.id}" aria-label="${item.name}，${ZONE_NAME[s.zone]}" title="${title}"><span class="ic">${item.g}</span>${item.name}${tag}${style}${action}</span>`;
+    : off ? `<button class="act plus" data-act="add" aria-label="把${item.name}放上去" title="放回${ZONE_NAME[s.prev]}">${ICON.plus}</button>`
+      : `<button class="act" data-act="remove" aria-label="把${item.name}拿下来" title="拿下来">${ICON.x}</button>`;
+  return `<span class="${classes.join(" ")}" data-id="${s.id}" data-flip="chip:${s.id}" tabindex="0" role="option" aria-selected="${selected === s.id}" aria-label="${item.name}，${ZONE_NAME[s.zone]}" title="${title}">${lead ? action : ""}<span class="ic">${item.icon}</span><span class="name">${item.name}</span>${tag}${style}${lead ? "" : action}</span>`;
 }
 
 function paintLanes(out) {
@@ -425,12 +473,17 @@ function paintBar({ out, used }) {
   const center = zoneItems("center").filter((s) => live(s.id)).map(bi);
   $("#bar").innerHTML = `<div class="zone" data-zone="left">${shown("left")}</div><div class="mid" data-zone="center">${center[0] ?? ""}<span class="sum">Claude Code 正在运行</span>${center.slice(1).join("")}</div><div class="zone" data-zone="right">${shown("right")}</div>${shelved.length ? `<span class="bi more" id="more" data-zone="shelf" data-flip="bar:more">+${shelved.length}</span>` : ""}`;
   const pop = $("#shelfPop");
-  pop.innerHTML = shelved.map((s) => `<span class="bi${selected === s.id ? " sel" : ""}" data-id="${s.id}">${byId[s.id].g} ${byId[s.id].name}</span>`).join("");
+  pop.innerHTML = shelved.map((s) => `<span class="bi${selected === s.id ? " sel" : ""}" data-id="${s.id}">${byId[s.id].icon} ${byId[s.id].name}</span>`).join("");
   if (!shelved.length) pop.classList.remove("open");
+  const room = $("#barWrap").clientWidth;
+  const scale = Math.min(1, room / used);
+  $("#bar").style.transform = scale < 1 ? `scale(${scale})` : "";
+  $("#barWrap").style.height = 40 * scale + "px";
+  $("#barWrap").style.minHeight = "0";
   const spill = out.size;
   $("#meter").classList.toggle("over", spill > 0);
   $("#meterFill").style.width = Math.min(100, (used / maxWidth) * 100) + "%";
-  $("#meterText").textContent = `占 ${used} / ${maxWidth} px` + (spill ? ` · ${spill} 项放不下，收进 +N` : " · 都放得下");
+  $("#meterText").textContent = spill ? `最宽 ${maxWidth} px，放不下 ${spill} 项，收进 +N` : `占 ${used} px，最宽 ${maxWidth} px，都放得下`;
 }
 
 function paintStyles() {
@@ -440,7 +493,7 @@ function paintStyles() {
     return `<button class="${key === styleTab ? "on" : ""}" data-tab="${key}">${style.name}<span class="where">${zone === "off" ? "没放上去" : ZONE_NAME[zone]}</span></button>`;
   }).join("");
   $("#scards").innerHTML = STYLES[styleTab].options.map(([value, name, art]) => `<button class="scard${chosen[styleTab] === value ? " on" : ""}" data-style-value="${value}" aria-pressed="${chosen[styleTab] === value}"><div class="thumb">${art}</div><span>${name}</span></button>`).join("");
-  $("#sfoot").textContent = "用量环、剩余待办数没有样式可选（用量环在 AI Agent 页勾选显示哪几家），不在这里出现。";
+  $("#sfoot").textContent = "用量环、剩余待办数没有样式可选（用量环在 AI Agent 页勾选显示哪几家），不在这里出现。宠物是用户自己装的 Codex Pets 图集，这里只占位。";
 }
 
 function rects() {
@@ -546,6 +599,12 @@ function select(id, { scroll = false, flash = false } = {}) {
   if (flash && chip) { chip.classList.remove("flash"); void chip.offsetWidth; chip.classList.add("flash"); }
 }
 
+function flashChip(id) {
+  const chip = $(`.chip[data-id="${CSS.escape(id)}"]`);
+  if (!chip) return;
+  chip.classList.remove("flash"); void chip.offsetWidth; chip.classList.add("flash");
+}
+
 function showStyle(id) {
   select(id);
   const panel = $("#styles");
@@ -635,6 +694,7 @@ function dragEnd(commit) {
   if (keep) remember(snapshot, entry(id).zone === "off" ? `已拿下「${byId[id].name}」` : `「${byId[id].name}」放在${where(id)}`);
   else if (!same(snapshot, state) || commit) say("已取消");
   render();
+  if (keep) flashChip(id);
 }
 
 document.addEventListener("pointerdown", (event) => {
@@ -651,6 +711,8 @@ document.addEventListener("pointermove", (event) => {
   const ghost = source.cloneNode(true);
   ghost.className = "chip drag-ghost";
   ghost.removeAttribute("data-id"); ghost.removeAttribute("data-flip");
+  ghost.querySelectorAll(".tag, .act").forEach((el) => el.remove());
+  ghost.style.paddingRight = "12px";
   document.body.append(ghost);
   const inChip = press.el.classList.contains("chip");
   drag = { id: press.id, snapshot: clone(state), ghost, dx: inChip ? press.x - box.left : ghost.offsetWidth / 2, dy: inChip ? press.y - box.top : ghost.offsetHeight / 2, over: null };
@@ -790,6 +852,7 @@ $("#maxw").addEventListener("input", (event) => { maxWidth = Number(event.target
 $("#quiet").addEventListener("change", (event) => { quiet = event.target.checked; focusId = null; render(); });
 $("#reset").addEventListener("click", () => { focusId = null; selected = null; act("已还原默认排列", () => { state = fresh(); }); });
 $("#toastUndo").addEventListener("click", (event) => { event.stopPropagation(); undo(); });
+addEventListener("resize", () => { if (!drag) { focusId = null; render(); } });
 render();
 </script>
 </body>
