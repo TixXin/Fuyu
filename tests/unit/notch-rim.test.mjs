@@ -15,7 +15,7 @@ test("the notch border starts off for the island and the panel, status included,
     const look = notchRimLook(DEFAULT_SETTINGS, target);
     assert.equal(look.style, "off", target);
     assert.equal(look.status, false, target);
-    assert.equal(rimShown(look, { color: "#ff9f0a", pulse: true }), false, `${target} stays dark even when an agent waits`);
+    assert.equal(rimShown(look), false, `${target} stays dark`);
   }
   assert.equal(DEFAULT_SETTINGS.notchRimPanelSame, false);
   const fromOld = normalizeSettings({ appearanceMode: "classic" });
@@ -70,7 +70,7 @@ test("the rim path runs from the left curve tip around the bottom to the right c
 test("every style draws something except off, and only off draws nothing", () => {
   for (const style of NOTCH_RIM_STYLES) {
     const look = islandLook({ style });
-    assert.equal(rimShown(look, null), style !== "off", style);
+    assert.equal(rimShown(look), style !== "off", style);
     assert.equal(plan(look).layers.length > 0, style !== "off", style);
   }
 });
@@ -88,17 +88,18 @@ test("with reduced motion nothing loops and orbit, converge fall back to a still
   assert.deepEqual(switchedOff.layers.filter((layer) => layer.animation), [], "the motion switch stops it too");
 });
 
-test("follow status lights an off rim in the status colour and sweeps once when it arrives", () => {
-  const look = islandLook({ status: true });
+test("follow status recolours a drawn border and sweeps once; an off border stays dark and leaves it to the ring", () => {
+  const look = islandLook({ style: "hairline", status: true });
   const wait = { color: "#ff9f0a", pulse: true };
-  assert.equal(rimShown(look, wait), true);
+  assert.equal(rimShown(islandLook({ status: true })), false, "the camera notch ring is what lights up when the border is off");
+  assert.equal(plan(islandLook({ status: true }), { status: wait }).layers.length, 0);
   const lit = plan(look, { status: wait, ripple: true });
   assert.ok(lit.layers.every((layer) => layer.color === "#ff9f0a"), "every layer uses the status colour");
   assert.ok(lit.layers.some((layer) => layer.animation === "pulse"), "a waiting agent flashes");
   assert.ok(lit.layers.some((layer) => layer.animation === "ripple"), "the arrival sweeps once");
   const message = plan(look, { status: { color: "#12b7f5" } });
   assert.ok(message.layers.some((layer) => layer.animation === "breathe"), "a message glows without flashing");
-  assert.equal(rimShown(islandLook({ status: false }), wait), false, "with follow status off a status does not light it");
+  assert.equal(plan(islandLook({ style: "glow", status: false, color: "mint" }), { status: wait }).color, "#63e6be", "with follow status off a status does not recolour it");
   assert.equal(plan(islandLook({ style: "hairline", color: "pink" }), { status: wait }).color, "#ff375f", "status off keeps the chosen colour");
 });
 

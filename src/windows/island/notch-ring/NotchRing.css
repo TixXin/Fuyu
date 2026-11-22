@@ -105,7 +105,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .notch-ring__svg,
-  .notch-ring__anim {
+  .notch-ring__anim--breathe,
+  .notch-ring__anim--pulse,
+  .notch-ring__anim--scan,
+  .notch-ring__anim--twin,
+  .notch-ring__anim--drip,
+  .notch-ring__anim--progress,
+  .notch-ring__anim--beat,
+  .notch-ring__anim--turn {
     animation: none;
   }
 }

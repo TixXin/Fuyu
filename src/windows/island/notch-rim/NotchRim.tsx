@@ -52,7 +52,7 @@ export function NotchRim({ view, expanded, glow }: Props) {
   const ripple = useRimRipple(look.status ? status : null);
   const id = useId().replace(/:/g, "");
   const ids = { clip: `${id}c`, mask: `${id}m`, fade: `${id}f`, aurora: `${id}a`, under: `${id}u`, soft: `${id}s`, wide: `${id}w` };
-  const shown = rimShown(look, status) && box !== null && box.width > 0;
+  const shown = rimShown(look) && box !== null && box.width > 0;
   const geometry = box ? rimGeometry(box) : null;
   const plan = geometry ? rimPlan(look, { accent: view.accent, status, motion: !reducedMotion, length: geometry.length, width: box?.width ?? 0, ripple: ripple.active }) : null;
   const paused = view.paused;

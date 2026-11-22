@@ -93,7 +93,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .notch-rim__anim {
+  .notch-rim__anim--breathe,
+  .notch-rim__anim--pulse,
+  .notch-rim__anim--comet-tail,
+  .notch-rim__anim--comet-head,
+  .notch-rim__anim--twin,
+  .notch-rim__anim--flash,
+  .notch-rim__anim--ripple {
     animation: none;
   }
 }

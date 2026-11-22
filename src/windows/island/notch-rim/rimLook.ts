@@ -61,8 +61,8 @@ export function rimColor(look: Pick<NotchRimLook, "color" | "customColor">, acce
   return RIM_PALETTE[look.color];
 }
 
-export function rimShown(look: NotchRimLook, status: RimStatus) {
-  return look.style !== "off" || (look.status && status !== null);
+export function rimShown(look: NotchRimLook) {
+  return look.style !== "off";
 }
 
 export function rimDuration(length: number) {
@@ -71,7 +71,7 @@ export function rimDuration(length: number) {
 
 export function rimPlan(look: NotchRimLook, opts: { accent: string; status: RimStatus; motion: boolean; length: number; width: number; ripple: boolean }): RimPlan {
   const statusOn = look.status && opts.status !== null;
-  const style = statusOn && (look.style === "off" || look.style === "hairline") ? "glow" : look.style;
+  const style = statusOn && look.style === "hairline" ? "glow" : look.style;
   const color = statusOn && opts.status ? opts.status.color : rimColor(look, opts.accent);
   const t = look.width;
   const k = look.intensity / 100;

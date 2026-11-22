@@ -34,8 +34,7 @@ import type { SettingsAboutPluginsText } from "./aboutPlugins";
 import type { SettingsLanguageText } from "./language";
 import type { SettingsAppearanceText } from "./appearance";
 import type { SettingsLayoutText } from "./layout";
-import type { SettingsNotchRimText } from "./notchRim";
-import type { SettingsNotchRingText } from "./notchRing";
+import type { SettingsNotchText } from "./notch";
 import type { SettingsTodoText } from "./todo";
 import type { SettingsAgentText } from "./agent";
 import type { SettingsAgentNoticeText } from "./agentNotice";
@@ -83,8 +82,7 @@ import * as aboutPlugins from "./aboutPlugins.ts";
 import * as language from "./language.ts";
 import * as appearance from "./appearance.ts";
 import * as layout from "./layout.ts";
-import * as notchRim from "./notchRim.ts";
-import * as notchRing from "./notchRing.ts";
+import * as notch from "./notch.ts";
 import * as todo from "./todo.ts";
 import * as agent from "./agent.ts";
 import * as agentNotice from "./agentNotice.ts";
@@ -147,8 +145,7 @@ export type SettingsText = {
   appearance: SettingsAppearanceText;
 
   layout: SettingsLayoutText;
-  notchRim: SettingsNotchRimText;
-  notchRing: SettingsNotchRingText;
+  notch: SettingsNotchText;
 
   todo: SettingsTodoText;
 
@@ -219,8 +216,7 @@ export const zhCN: SettingsText = {
   appearance: appearance.zhCN,
 
   layout: layout.zhCN,
-  notchRim: notchRim.zhCN,
-  notchRing: notchRing.zhCN,
+  notch: notch.zhCN,
 
   todo: todo.zhCN,
 
@@ -291,8 +287,7 @@ export const en: SettingsText = {
   appearance: appearance.en,
 
   layout: layout.en,
-  notchRim: notchRim.en,
-  notchRing: notchRing.en,
+  notch: notch.en,
 
   todo: todo.en,
 

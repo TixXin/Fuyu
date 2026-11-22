@@ -1155,162 +1155,140 @@
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "刘海边框",
-        "title": "岛屿",
-        "description": "收起时的岛，包括新消息下拉出来的那一行。 和以前一样，岛和刘海连成一整块黑。"
+        "group": "刘海",
+        "title": "外框",
+        "description": "岛和面板的外轮廓"
       },
       "en": {
-        "group": "Notch border",
-        "title": "Island",
-        "description": "The collapsed island, including the row a new message drops down. As before: the island and the notch are one block of black."
+        "group": "Notch",
+        "title": "Border",
+        "description": "Around the island and the panel"
       }
     },
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "刘海边框",
-        "title": "动效",
-        "description": "呼吸、流动。岛隐藏、全屏、贴边收起时停下；系统开了「减少动态效果」时停在静止的样子。"
+        "group": "刘海",
+        "title": "内圈",
+        "description": "沿摄像头刘海画一圈"
       },
       "en": {
-        "group": "Notch border",
-        "title": "Motion",
-        "description": "Breathing and flowing. Stops while the island is hidden, a full-screen app is in front or the island is tucked away; with Reduce motion on, it stays still."
+        "group": "Notch",
+        "title": "Ring",
+        "description": "Around the camera notch"
       }
     },
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "刘海边框",
-        "title": "跟随状态变色",
-        "description": "新消息时用来源软件的颜色，Agent 等你时橙色闪，完成时绿色扫一下。样式是「关」时也会亮这一下。"
+        "group": "刘海",
+        "title": "颜色",
+        "description": "外框和内圈共用。"
       },
       "en": {
-        "group": "Notch border",
-        "title": "Change colour with status",
-        "description": "A new message lights it in that app's colour, an agent waiting for you flashes orange and a finished one sweeps green. This lights up even when the style is Off."
+        "group": "Notch",
+        "title": "Colour",
+        "description": "Shared by the border and the ring."
       }
     },
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "刘海边框",
-        "title": "面板同岛屿"
+        "group": "刘海",
+        "title": "什么时候亮",
+        "description": "亮在内圈，样式是「关」也会亮：摄像头绿、麦克风橙，新消息用来源软件的颜色，Agent 等你时橙色闪。外框开着时跟着变色。",
+        "options": [
+          "摄像头和麦克风",
+          "新消息和 Agent"
+        ]
       },
       "en": {
-        "group": "Notch border",
-        "title": "Panel same as island"
+        "group": "Notch",
+        "title": "Light up for",
+        "description": "The ring lights up even when its style is Off: green for the camera, orange for the mic, the app's colour for a message, pulsing orange while an agent waits. The border changes colour when it is on.",
+        "options": [
+          "Camera and mic",
+          "Messages and agents"
+        ]
       }
     },
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "摄像头刘海一圈",
-        "title": "收起的岛",
-        "description": "收起时围着刘海画。 和以前一样，看不出刘海在哪。"
+        "group": "刘海",
+        "title": "粗细",
+        "options": [
+          "细",
+          "中",
+          "粗"
+        ]
       },
       "en": {
-        "group": "Ring around the camera notch",
-        "title": "Collapsed island",
-        "description": "Around the notch while collapsed. As before: you can't tell where the notch is."
+        "group": "Notch",
+        "title": "Thickness",
+        "options": [
+          "Thin",
+          "Medium",
+          "Thick"
+        ]
       }
     },
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "摄像头刘海一圈",
-        "title": "粗细"
+        "group": "刘海",
+        "title": "亮度"
       },
       "en": {
-        "group": "Ring around the camera notch",
-        "title": "Width"
+        "group": "Notch",
+        "title": "Brightness"
       }
     },
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "摄像头刘海一圈",
-        "title": "离刘海",
+        "group": "刘海",
+        "title": "内圈离刘海",
         "description": "线和刘海边缘之间空出多少。"
       },
       "en": {
-        "group": "Ring around the camera notch",
-        "title": "Gap",
-        "description": "Space between the line and the edge of the notch."
+        "group": "Notch",
+        "title": "Ring gap",
+        "description": "Space between the ring and the edge of the notch."
       }
     },
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "摄像头刘海一圈",
-        "title": "强度"
+        "group": "刘海",
+        "title": "收起时内圈的底边",
+        "description": "收起的岛和刘海一样高，刘海下面没有地方。整圈时收起的岛会往下长几像素。",
+        "options": [
+          "只画两侧",
+          "岛加高画整圈"
+        ]
       },
       "en": {
-        "group": "Ring around the camera notch",
-        "title": "Intensity"
+        "group": "Notch",
+        "title": "Ring bottom when collapsed",
+        "description": "The collapsed island is as tall as the notch, so there is no room below it. A full ring makes the collapsed island a few pixels taller.",
+        "options": [
+          "Sides only",
+          "Taller island, full ring"
+        ]
       }
     },
     {
       "page": "islandLayout",
       "zh-CN": {
-        "group": "摄像头刘海一圈",
+        "group": "刘海",
         "title": "动效",
         "description": "呼吸、流动。岛隐藏、全屏、贴边收起时停下；系统开了「减少动态效果」时停在静止的样子。"
       },
       "en": {
-        "group": "Ring around the camera notch",
+        "group": "Notch",
         "title": "Motion",
         "description": "Breathing and flowing. Stops while the island is hidden, full screen or tucked; holds still when Reduce motion is on."
-      }
-    },
-    {
-      "page": "islandLayout",
-      "zh-CN": {
-        "group": "摄像头刘海一圈",
-        "title": "摄像头、麦克风开着时亮",
-        "description": "摄像头开着亮绿、麦克风开着亮橙，和系统隐私灯同色。样式是「关」时也亮。"
-      },
-      "en": {
-        "group": "Ring around the camera notch",
-        "title": "Light up while the camera or mic is on",
-        "description": "Green for the camera, orange for the microphone, like the system privacy dots. Works even when the style is Off."
-      }
-    },
-    {
-      "page": "islandLayout",
-      "zh-CN": {
-        "group": "摄像头刘海一圈",
-        "title": "新消息、Agent 等你时亮",
-        "description": "新消息用来源软件的颜色，Agent 等你时橙色闪，完成时绿色亮一下。样式是「关」时也亮。"
-      },
-      "en": {
-        "group": "Ring around the camera notch",
-        "title": "Light up for new messages and waiting agents",
-        "description": "The app's colour for a new message, pulsing orange while an agent waits, a green flash when it finishes. Works even when the style is Off."
-      }
-    },
-    {
-      "page": "islandLayout",
-      "zh-CN": {
-        "group": "摄像头刘海一圈",
-        "title": "收起时的底边",
-        "description": "收起的岛和刘海一样高，底边画不下。"
-      },
-      "en": {
-        "group": "Ring around the camera notch",
-        "title": "Bottom when collapsed",
-        "description": "The collapsed island is as tall as the notch, so there is no room below it."
-      }
-    },
-    {
-      "page": "islandLayout",
-      "zh-CN": {
-        "group": "摄像头刘海一圈",
-        "title": "面板同收起的岛"
-      },
-      "en": {
-        "group": "Ring around the camera notch",
-        "title": "Panel matches the collapsed island"
       }
     },
     {

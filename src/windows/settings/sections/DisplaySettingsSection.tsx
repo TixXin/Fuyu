@@ -7,8 +7,7 @@ import { DEFAULT_SETTINGS } from "../../../lib/settings/settingsDefaults";
 import { MAX_NOTCH_WING_MAX, MIN_NOTCH_WING_MAX } from "../../../lib/settings/settingsLimits";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { useIslandNotchShown } from "../useIslandNotchShown";
-import { NotchRimSettings } from "./NotchRimSettings";
-import { NotchRingSettings } from "./NotchRingSettings";
+import { NotchSettings } from "./notch/NotchSettings";
 
 export function DisplaySettingsSection({
   settings,
@@ -55,8 +54,7 @@ export function DisplaySettingsSection({
           />
         )}
       </SettingsGroup>
-      {notchGroups && <NotchRimSettings settings={settings} onSettingsChange={onSettingsChange} />}
-      {notchGroups && <NotchRingSettings settings={settings} onSettingsChange={onSettingsChange} />}
+      {notchGroups && <NotchSettings settings={settings} onSettingsChange={onSettingsChange} />}
     </>
   );
 }

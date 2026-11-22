@@ -398,6 +398,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 - 页头图标（C164，2026-11-21）：`fuyu-island-pages` 多可选字段 `icons`（格式见上面 localStorage 表），旧数据没有它照读，旧版本读到会忽略；`fuyu-settings` 的 `fuyuTabIcon` 去掉设置项，只作为 Fuyu 页没选过图标时的兜底读取。
 - 岛开合时跟随屏幕刷新率（2026-11-21 起）：新命令 `set_webview_follow_display_rate(follow)`（布尔，作用于调用它的窗口；Mac 上关掉 WebKit 的「页面渲染贴近 60fps」特性，其他平台空操作，无返回值）。岛展开、鼠标移上收起的岛时传 `true`，收起停稳 700ms 后传 `false`。
 - 摄像头刘海一圈（C167，2026-11-22）：岛屿设置（`fuyu-settings`）多 `notchRingIslandStyle` / `notchRingPanelStyle`（`off` / `hairline` / `glow` / `scan` / `drip` / `progress` / `beat` / `ticks` / `aurora`；岛屿缺省 `off`，面板在 Mac 上缺省 `hairline`、其他平台 `off`）、`notchRing{Island,Panel}Color`（`white` / `accent` / `violet` / `pink` / `mint` / `custom`，缺省 `white`）、`…CustomColor`（`#rrggbb`）、`…Width`（0.5–3，步长 0.5，缺省 1）、`…Gap`（0–6，岛缺省 2、面板 3）、`…Intensity`（10–100，岛缺省 60、面板 45）、`…Motion` / `…Device`（缺省 `true`）、`…Status`（缺省 `false`），以及 `notchRingPanelSame`（缺省 `false`）、`notchRingIslandBottom`（`sides` / `full`，缺省 `sides`）；缺失或越界按缺省，读取在 `lib/settings/notchRingSettings.ts`，除 `notchRingPanelStyle`（缺省值跟平台走，只存本机）外都进跨设备同步。`set_island_interaction` 新增可选参数 `notchRingExtra`（未缩放前的 px，Rust 夹在 0–12，缺省或不是数时按 0，老前端不传照旧）：刘海模式下收起且没贴边收起时，原生把岛的高度和点击区域加上它。岛的贡献表（插件内部，不对第三方）多 `glow`（`{ color, priority, reason, pulse? }`）和 `playback`（`{ startedAt, durationMs }`）两种，见 `v3-boundary.md`。
+- 刘海设置并组（C168，2026-11-22）：不改存储格式，`notchRim*` / `notchRing*` 的键和取值照旧。新界面把颜色、自定义颜色、粗细、亮度、动效写进外框和内圈、岛屿和面板四份，间距写进内圈两份，读的时候以内圈岛屿那份为准；「两边一样」同时写 `notchRimPanelSame` 和 `notchRingPanelSame`。外框的 `…Status` 只在外框样式不是 `off` 时起作用（原来 `off` 也会临时亮）。
 
 ## 改名兼容（D17）
 
