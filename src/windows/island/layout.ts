@@ -4,6 +4,7 @@ import { MAX_TOP_FILLET_RADIUS } from "../../lib/settings/settingsLimits.ts";
 import { maxPanelHeightFor, maxPanelWidthFor, STAGE_WINDOW_WIDTH } from "../../lib/settings/panelRoom.ts";
 
 export const MIN_COLLAPSED_ISLAND_WIDTH = 280;
+export const MIN_BARE_COLLAPSED_WIDTH = 72;
 export const MAX_COLLAPSED_ISLAND_WIDTH = 340;
 export const MIN_COLLAPSED_TEXT_UNITS = 2;
 export const MAX_COLLAPSED_TEXT_UNITS = 12;
@@ -75,6 +76,7 @@ export function alignCollapsedIslandWidth(
   devicePixelRatio: number,
   widthExtra = 0,
   maxWidth = MAX_COLLAPSED_ISLAND_WIDTH + widthExtra,
+  minWidth = MIN_COLLAPSED_ISLAND_WIDTH + widthExtra,
 ) {
   const isAligned = (candidate: number) => {
     const left = ((stageWidth - candidate) / 2) * devicePixelRatio;
@@ -84,7 +86,7 @@ export function alignCollapsedIslandWidth(
   for (let nudge = 0; nudge <= MAX_ALIGNMENT_NUDGE; nudge++) {
     for (const candidate of [width - nudge, width + nudge]) {
       if (
-        candidate >= MIN_COLLAPSED_ISLAND_WIDTH + widthExtra &&
+        candidate >= minWidth &&
         candidate <= maxWidth &&
         isAligned(candidate)
       ) {
@@ -94,6 +96,10 @@ export function alignCollapsedIslandWidth(
   }
 
   return width;
+}
+
+export function getBareCollapsedWidth(contentWidth: number, widthExtra = 0) {
+  return Math.max(MIN_BARE_COLLAPSED_WIDTH, Math.ceil(contentWidth) + Math.max(0, Math.round(widthExtra)));
 }
 
 export function getTodoScrollStartRows(maxPanelHeight: number) {

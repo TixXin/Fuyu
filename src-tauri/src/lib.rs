@@ -288,6 +288,7 @@ pub fn run() {
             agent_approval;
             claude_usage;
             device_use;
+            device_events;
             media_control;
             lyrics;
             clipboard_history;

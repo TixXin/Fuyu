@@ -31,9 +31,15 @@ function MonitorChip() {
 const OldChip = () => <span className="test-old-chip" style={chipStyle}>TYO</span>;
 const LongChip = () => <span className="test-long-chip" style={chipStyle}>{"一段很长很长的插件收起项文字，".repeat(4)}</span>;
 
+const WeatherChip = () => <span className="test-weather-chip" style={chipStyle}>晴 18°</span>;
+const CountdownChip = () => <span className="test-countdown-chip" style={chipStyle}>还有 12 天</span>;
+
 let width = 0;
+let setTodo: (title: string | null) => void = noop;
 function Collapsed() {
-  useFixtureLines({ todoTitle: "整理下周的发布说明" });
+  const [todoTitle, set] = useState<string | null>("整理下周的发布说明");
+  setTodo = set;
+  useFixtureLines({ todoTitle });
   const slots = useCollapsedGauges(false);
   width = useCollapsedWidth({ barText: true, noticeText: null, showTitle: false, widthExtra: 0, peeking: false, slots, collapsedScale: 1 });
   return <div className="stage stage--collapsed" style={{ "--collapsed-island-width": `${width}px` } as CSSProperties}>
@@ -120,6 +126,26 @@ async function runChecks() {
   });
   await settle(() => width === plain, "all removed");
   check(width === plain && !bar().querySelector(".island__collapsed-fit"), "插件收起项都撤掉后宽度回到原来");
+
+  const removeWeather = await act(async () => registry.add("island.collapsed/v1", { id: "weather-bar", component: WeatherChip }, "@test/weather", external));
+  const removeCountdown = await act(async () => registry.add("island.collapsed/v1", { id: "countdown-bar", component: CountdownChip }, "@test/countdown", external));
+  await settle(() => whole(".test-weather-chip") && whole(".test-countdown-chip"), "two items with a todo");
+  const withTodo = width;
+  await act(async () => setTodo(null));
+  await settle(() => width < 220 && whole(".test-weather-chip") && whole(".test-countdown-chip"), "bare bar");
+  const quietBox = bar().querySelector<HTMLElement>(".island__quiet-button")!.getBoundingClientRect();
+  const barBox = bar().getBoundingClientRect();
+  check(width < 220 && whole(".test-weather-chip") && whole(".test-countdown-chip") && quietBox.right <= barBox.right + 0.5, `没有待办、只有两个收起项时岛贴着内容变窄，两项都完整（${withTodo} → ${width}px）`);
+  const chipsRight = bar().querySelector<HTMLElement>(".test-countdown-chip")!.getBoundingClientRect().right;
+  check(barBox.right - quietBox.right <= 24 && quietBox.left - chipsRight <= 24, `变窄后没有大段空白（右边距 ${Math.round(barBox.right - quietBox.right)}px）`);
+  await act(async () => setTodo("整理下周的发布说明"));
+  await settle(() => width === withTodo, "todo back");
+  check(width === withTodo, `待办回来后宽度和原来一样（${width}px）`);
+  await act(async () => {
+    removeWeather();
+    removeCountdown();
+  });
+  await settle(() => width === plain, "bare items removed");
 
   results.textContent = `${messages.join("\n")}\n\nALL PASS (${messages.length})`;
   results.dataset.result = "passed";

@@ -135,7 +135,7 @@ function setup(kind, config = {}, outputs = {}) {
   const source =
     kind === "windows"
       ? createWindowsSource({ exec, helper, now: () => clock.now, cores })
-      : createMacSource(exec, cores);
+      : createMacSource(exec, cores, () => 16 * 1024 ** 3);
   const intervals = [];
   const published = [];
   const scheduler = new Scheduler({
@@ -321,6 +321,8 @@ test("macOS: the page reads memory, network, battery, programs and GPU; CPU temp
   assert.deepEqual(sample.battery, { status: "ok", value: { percent: 80, charging: false, pluggedIn: true } });
   assert.equal(sample.programs.value.byCpu[0].name, "WindowServer");
   assert.equal(sample.gpu.value.percent, 51);
+  assert.equal(sample.gpu.value.memoryShared, true, "Apple GPUs share system memory");
+  assert.equal(sample.gpu.value.memoryTotalBytes, 16 * 1024 ** 3);
   assert.deepEqual(sample.cpuTemperatureC, { status: "unsupported" });
   assert.equal(scheduler.features.cpuTemperature, false);
   assert.equal(exec.children.length, 0);

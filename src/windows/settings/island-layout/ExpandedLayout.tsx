@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from "react";
 import type { BarUsagePage, BarUsageWidget } from "../../../features/plugin-kernel/barUsage";
+import { skipMissingBattery, useHasBattery } from "../../../features/system-widgets/batteryPresence";
 import { fuyuPanel, fuyuPanels, type CustomPanel } from "../../../lib/settings/customPanels";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import { ExpandedPreview } from "./ExpandedPreview";
+import { PageIconPicker } from "./PageIconPicker";
 import { PageStrip } from "./PageStrip";
 import { PanelEditor } from "./PanelEditor";
 import { SizePicker } from "./SizePicker";
@@ -25,10 +27,10 @@ export function ExpandedLayout({ settings, pluginPages, pluginWidgets, stage }: 
   const [pageId, setPageId] = useState<string | null>(null);
   const [widgetId, setWidgetId] = useState<string | null>(null);
   const current = rows.find((row) => row.id === pageId) ?? rows.find((row) => !row.hidden && !row.off) ?? rows[0];
-  const sizesOf = (id: string) => {
+  const sizesOf = skipMissingBattery((id: string) => {
     const widget = library.find(id);
     return widget?.available ? widget.sizes : null;
-  };
+  }, useHasBattery());
   const panel = current?.panel ? fuyuPanel(panels, library.widgets.length > 0 ? sizesOf : undefined) : undefined;
   const selected = (panel?.items.find((item) => item.widget === widgetId) ?? panel?.items[0])?.widget;
 
@@ -38,6 +40,7 @@ export function ExpandedLayout({ settings, pluginPages, pluginWidgets, stage }: 
     <>
       {stage(<ExpandedPreview rows={rows} current={current} panel={panel} library={library} selected={selected} onPage={setPageId} onWidget={setWidgetId} onPanel={change} />)}
       <PageStrip rows={rows} layout={layout} save={save} current={current?.id} onPick={setPageId} pluginsListed={pluginsListed} />
+      {current ? <PageIconPicker key={current.id} row={current} layout={layout} save={save} legacyJellyfish={settings.fuyuTabIcon} /> : null}
       {panel ? (
         <div className="panel-editing" key={panel.id}>
           <PanelEditor panel={panel} library={library} selected={selected} onSelect={setWidgetId} onChange={change} />

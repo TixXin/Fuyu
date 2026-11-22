@@ -51,7 +51,8 @@ export function SystemStatusWidget() {
 
 export function BatteryWidget() {
   const t = useTranslation().islandWidgets;
-  const battery = useSystemStats().stats?.battery ?? null;
+  const { stats } = useSystemStats();
+  const battery = stats?.battery ?? null;
   const level = battery?.level ?? null;
   const state = !battery ? null : battery.pluggedIn ? (level !== null && level >= 100 ? t.content.charged : t.content.charging) : t.content.onBattery;
   return (
@@ -68,8 +69,13 @@ export function BatteryWidget() {
           </span>
           <span className="island-widget__sub">{state}</span>
         </>
+      ) : stats && !battery ? (
+        <>
+          <WidgetEmpty>{t.content.noBattery}</WidgetEmpty>
+          <span className="island-widget__sub sys-battery__hint">{t.content.noBatteryHint}</span>
+        </>
       ) : (
-        <WidgetEmpty>{t.content.noBattery}</WidgetEmpty>
+        <span className="island-widget__big sys-battery__level">–</span>
       )}
     </WidgetFrame>
   );

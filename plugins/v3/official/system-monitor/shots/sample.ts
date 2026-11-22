@@ -67,6 +67,7 @@ const state = {
         temperatureC: 52,
         memoryUsedBytes: 2.4 * GB,
         memoryTotalBytes: 8 * GB,
+        memoryShared: false,
         powerW: 41,
         engines: [
           { id: "3d", percent: 31 },

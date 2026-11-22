@@ -1,5 +1,6 @@
 #[cfg_attr(target_os = "macos", path = "readers_macos.rs")]
 mod readers;
+mod batteries;
 mod peripherals;
 mod tracker;
 
@@ -12,11 +13,14 @@ use crate::plugin_kernel::{
     builtins,
     worker::{Stop, Worker},
 };
+use batteries::{collect, latest, publish, Published};
+pub use batteries::PeripheralBattery;
 use peripherals::PeripheralTracker;
 use readers::{power_source, read_batteries, read_outputs, read_peripherals, start_thread};
 use tracker::{DeviceAlert, OutputTracker, PowerTracker};
 
 pub(crate) const DEVICE_ALERT_EVENT: &str = "device-alert";
+pub(crate) const PERIPHERAL_BATTERIES_EVENT: &str = "peripheral-batteries";
 const PLUGIN_ID: &str = "device-events";
 const WATCHER: &str = "watcher";
 
@@ -39,6 +43,8 @@ fn watch(app: &AppHandle, stop: &Stop) {
     let mut batteries_read: Option<Instant> = None;
     let mut power_read: Option<Instant> = None;
     let mut peripherals_read: Option<Instant> = None;
+    let mut peripherals = Vec::new();
+    let _published = Published;
     loop {
         let current = read_outputs(&mut thread);
         let has_bluetooth = current.iter().any(|output| output.bluetooth);
@@ -47,7 +53,7 @@ fn watch(app: &AppHandle, stop: &Stop) {
             batteries = read_batteries();
             batteries_read = Some(Instant::now());
         }
-        for alert in outputs.update(current, &batteries) {
+        for alert in outputs.update(current.clone(), &batteries) {
             emit(alert);
         }
         if power_read.is_none_or(|at| at.elapsed() >= POWER_POLL) {
@@ -59,14 +65,36 @@ fn watch(app: &AppHandle, stop: &Stop) {
         }
         if peripherals_read.is_none_or(|at| at.elapsed() >= PERIPHERAL_POLL) {
             peripherals_read = Some(Instant::now());
-            for alert in peripheral_tracker.update(read_peripherals()) {
+            peripherals = read_peripherals();
+            for alert in peripheral_tracker.update(peripherals.clone()) {
                 emit(alert);
             }
+        }
+        let list = collect(&current, &batteries, &peripherals);
+        if publish(&list) {
+            let _ = app.emit_to(WINDOW_LABEL, PERIPHERAL_BATTERIES_EVENT, list);
         }
         if stop.wait(OUTPUT_POLL) {
             return;
         }
     }
+}
+
+fn read_now() -> Vec<PeripheralBattery> {
+    let Some(mut thread) = start_thread() else {
+        return Vec::new();
+    };
+    let outputs = read_outputs(&mut thread);
+    let batteries = if outputs.iter().any(|output| output.bluetooth) { read_batteries() } else { HashMap::new() };
+    collect(&outputs, &batteries, &read_peripherals())
+}
+
+#[tauri::command]
+pub async fn get_peripheral_batteries() -> Vec<PeripheralBattery> {
+    if let Some(list) = latest() {
+        return list;
+    }
+    tauri::async_runtime::spawn_blocking(read_now).await.unwrap_or_default()
 }
 
 pub(crate) fn init(app: &AppHandle) {
@@ -76,6 +104,15 @@ pub(crate) fn init(app: &AppHandle) {
         eprintln!("[plugins-v3] {error}");
     }
 }
+
+macro_rules! tauri_commands {
+    ($next:ident [$($done:tt)*] $($rest:tt)*) => {
+        $next!([$($done)*
+            crate::device_events::get_peripheral_batteries,
+        ] $($rest)*)
+    };
+}
+pub(crate) use tauri_commands;
 
 #[cfg(test)]
 mod tests;

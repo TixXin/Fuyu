@@ -4,6 +4,7 @@ import { useIslandContributed } from "../../features/plugin-kernel/useIslandCont
 import { useTranslation } from "../../i18n";
 import { collapsedWidth } from "./collapsedWidth";
 import { collapsedFit } from "./collapsedFitStore";
+import { collapsedContent } from "./collapsedContent";
 import type { CollapsedSlots } from "./types";
 
 type CollapsedWidthInput = {
@@ -19,8 +20,10 @@ type CollapsedWidthInput = {
 
 export function useCollapsedWidth({ barText, noticeText, showTitle, widthExtra, peeking, slots, collapsedScale = 1, growWidth = 0 }: CollapsedWidthInput) {
   const t = useTranslation();
-  const { lines } = useIslandContributed();
+  const { lines, alerts } = useIslandContributed();
   const fitWidth = useSyncExternalStore(collapsedFit.subscribe, collapsedFit.total);
+  const contentWidth = useSyncExternalStore(collapsedContent.subscribe, collapsedContent.total);
+  const alerted = alerts.size > 0;
   return useMemo(() => collapsedWidth({
     lines: visibleLines(lines, barText),
     noticeText,
@@ -32,8 +35,10 @@ export function useCollapsedWidth({ barText, noticeText, showTitle, widthExtra, 
     centerWidth: slots.centerWidth ?? 0,
     sideWidth: slots.sideWidth ?? 0,
     fitWidth: fitWidth + Math.max(0, growWidth),
+    contentWidth: growWidth > 0 ? 0 : contentWidth,
+    alerted,
     collapsedScale,
     viewportWidth: window.innerWidth,
     devicePixelRatio: window.devicePixelRatio,
-  }), [lines, barText, noticeText, t, showTitle, widthExtra, peeking, slots, fitWidth, collapsedScale, growWidth]);
+  }), [lines, barText, noticeText, t, showTitle, widthExtra, peeking, slots, fitWidth, contentWidth, alerted, collapsedScale, growWidth]);
 }

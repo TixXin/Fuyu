@@ -1,6 +1,5 @@
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
-import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
@@ -9,6 +8,7 @@ import { isMacOS } from "../../../lib/platform";
 import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, MAX_TOP_FILLET_RADIUS, MIN_COLLAPSED_WIDTH_EXTRA, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "../../../lib/settings/settings";
 import { maxPanelHeightFor, maxPanelWidthFor } from "../../../lib/settings/panelRoom";
 import type { IslandCornerShape, IslandForm, IslandSettings } from "../../../lib/settings/types";
+import { PageSizesRows } from "./PageSizesRows";
 import { useIslandDockEdge } from "./useIslandDockEdge";
 
 const FORMS = ["top", "pill", "notch"] as const satisfies readonly IslandForm[];
@@ -100,15 +100,7 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           resetLabel={text.resetToDefault}
           onChange={(maxPanelHeight) => change({ ...settings, maxPanelHeight }, true)}
         />
-        <SettingsRow
-          title={text.pageSizes}
-          description={text.pageSizesHint}
-          control={(
-            <SettingsLinkButton disabled={Object.keys(settings.pageSizes).length === 0} onClick={() => change({ ...settings, pageSizes: {} }, true)}>
-              {text.pageSizesReset}
-            </SettingsLinkButton>
-          )}
-        />
+        <PageSizesRows pageSizes={settings.pageSizes} onChange={(pageSizes) => change({ ...settings, pageSizes }, true)} />
       </SettingsGroup>
       <SettingsGroup title={text.dragTitle}>
         <SettingsToggleRow

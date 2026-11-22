@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { AudioLines, Camera, Download, Inbox, LayoutGrid, Mail, Puzzle, Sparkles, Timer } from "lucide-react";
+import { AudioLines, BatteryMedium, Camera, Download, Inbox, LayoutGrid, Mail, Puzzle, Sparkles, Timer } from "lucide-react";
 import { USAGE_PROVIDERS } from "../../../features/claude-usage/usageRing";
 import { useTranslation } from "../../../i18n";
 import type { CollapsedPlacement } from "../../../lib/settings/collapsedItems";
@@ -14,6 +14,7 @@ const ICONS: Record<string, ReactNode> = {
   shelf: <Inbox size={13} strokeWidth={2.2} />,
   music: <AudioLines size={13} strokeWidth={2.2} />,
   timer: <Timer size={13} strokeWidth={2.2} />,
+  "peripheral-battery": <BatteryMedium size={13} strokeWidth={2.2} />,
   "session-count": <LayoutGrid size={13} strokeWidth={2.2} />,
 };
 

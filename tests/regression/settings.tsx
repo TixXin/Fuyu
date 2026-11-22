@@ -185,7 +185,7 @@ if (!automated) {
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
     const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean; shelf?: boolean }[] } | null;
     check(zoneRows("左侧").join("|") === "浮屿水母" && zoneRows("右侧")[0] === "新邮件提醒"
-      && zoneRows("右侧").slice(-2).join("|") === "会话数 / 会话环|计时器" && savedItems() === null, "The collapsed bar items list the default layout, the timer included, without saving anything");
+      && zoneRows("右侧").slice(-3).join("|") === "会话数 / 会话环|计时器|外设电量" && savedItems() === null, "The collapsed bar items list the default layout, the timer and the peripheral battery included, without saving anything");
     await act(async () => { itemButton("移到左侧：会话数 / 会话环")!.click(); });
     await act(async () => { itemButton("上移：会话数 / 会话环")!.click(); });
     check(zoneRows("左侧").join("|") === "会话数 / 会话环|浮屿水母" && savedItems()?.items[0].id === "session-count", "An item moves to the other side and up, and the order is saved");

@@ -28,6 +28,15 @@ export type SettingsIslandPagesText = {
     sizeCard: (size: string, cols: number, rows: number) => string;
     oneSize: string;
   };
+  icons: {
+    title: (name: string) => string;
+    hint: string;
+    fuyuHint: string;
+    useDefault: string;
+    text: string;
+    jellyfish: string;
+    names: Record<string, string>;
+  };
   page: {
     agents: string;
     todo: string;
@@ -76,6 +85,20 @@ export const zhCN: SettingsIslandPagesText = {
     sizeCard: (size, cols, rows) => `${size} · ${cols}×${rows} 格`,
     oneSize: "这个组件只有一种大小。",
   },
+  icons: {
+    title: (name) => `页头图标 · ${name}`,
+    hint: "展开后顶部这一页用哪个图标。选「默认」换回原来的。",
+    fuyuHint: "Fuyu 页默认显示文字，也可以换成水母或其他图标。",
+    useDefault: "默认",
+    text: "文字 Fuyu",
+    jellyfish: "水母",
+    names: {
+      star: "星星", heart: "爱心", sparkles: "闪光", zap: "闪电", flame: "火焰", sun: "太阳", moon: "月亮", cloud: "云",
+      leaf: "叶子", cat: "猫", smile: "笑脸", rocket: "火箭", coffee: "咖啡", music: "音符", headphones: "耳机", "book-open": "书",
+      briefcase: "公文包", "calendar-days": "日历", clock: "时钟", timer: "计时器", "list-todo": "清单", clipboard: "剪贴板", folder: "文件夹", camera: "相机",
+      image: "图片", "gamepad-2": "手柄", house: "房子", bell: "铃铛", "message-circle": "消息", bot: "机器人", globe: "地球", "layout-grid": "格子",
+    },
+  },
   page: {
     agents: "AI Agent",
     todo: "待办",
@@ -123,6 +146,20 @@ export const en: SettingsIslandPagesText = {
     sizeHint: "Pick a thumbnail to change the size; the island above follows.",
     sizeCard: (size, cols, rows) => `${size} · ${cols}×${rows}`,
     oneSize: "This widget comes in one size only.",
+  },
+  icons: {
+    title: (name) => `Tab icon · ${name}`,
+    hint: "Which icon this page uses at the top of the open island. Pick Default to go back.",
+    fuyuHint: "The Fuyu page shows the word Fuyu by default; it can use the jellyfish or another icon instead.",
+    useDefault: "Default",
+    text: "Word Fuyu",
+    jellyfish: "Jellyfish",
+    names: {
+      star: "Star", heart: "Heart", sparkles: "Sparkles", zap: "Lightning", flame: "Flame", sun: "Sun", moon: "Moon", cloud: "Cloud",
+      leaf: "Leaf", cat: "Cat", smile: "Smile", rocket: "Rocket", coffee: "Coffee", music: "Music note", headphones: "Headphones", "book-open": "Book",
+      briefcase: "Briefcase", "calendar-days": "Calendar", clock: "Clock", timer: "Timer", "list-todo": "Checklist", clipboard: "Clipboard", folder: "Folder", camera: "Camera",
+      image: "Picture", "gamepad-2": "Gamepad", house: "House", bell: "Bell", "message-circle": "Message", bot: "Robot", globe: "Globe", "layout-grid": "Grid",
+    },
   },
   page: {
     agents: "AI Agent",

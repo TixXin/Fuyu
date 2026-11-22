@@ -72,6 +72,7 @@ export function createWindowsSource({ exec, helper, now, cores }: WindowsSourceD
       temperatureC: smi?.temperatureC ?? null,
       memoryUsedBytes: smi?.memoryUsedBytes ?? counters?.memoryUsedBytes ?? null,
       memoryTotalBytes: smi?.memoryTotalBytes ?? null,
+      memoryShared: false,
       powerW: smi?.powerW ?? null,
       engines: counters?.engines ?? [],
     });

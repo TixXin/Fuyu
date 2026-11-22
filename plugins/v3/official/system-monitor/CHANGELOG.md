@@ -1,5 +1,13 @@
 # 更新记录 · Changelog
 
+## 1.1.2
+
+- Mac 上 GPU 一行显示「共享 已用 / 总量」：Apple 芯片的显卡和系统共用内存，总量是系统内存，不是独立显存。
+- 修好一处偶发的错位：两次读数恰好同一毫秒时，曲线记的是前一次，页面显示的是后一次。
+
+- On a Mac the GPU line shows "Shared used / total": Apple GPUs share system memory, so the total is the system memory, not dedicated VRAM.
+- Fixed an occasional mismatch: when two readings landed in the same millisecond, the chart kept the earlier one while the page showed the later one.
+
 ## 1.1.1
 
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。

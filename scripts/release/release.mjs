@@ -13,6 +13,7 @@ import { smokeTest } from "./smoke-test.mjs";
 import { finishMacBuild, macFiles, startMacBuild } from "./mac-build.mjs";
 import { finishWindowsBuild, startWindowsBuild } from "./windows-build.mjs";
 import { forgetPrebuild, matchingPrebuild, readPrebuild } from "./prebuild.mjs";
+import { publishToSite } from "./site-import.mjs";
 import { EXE_NAME, installExe, takeLock } from "../build-exe.mjs";
 import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 
@@ -40,6 +41,7 @@ const withMac = upload && !args.includes("--no-mac");
 const local = args.includes("--local");
 const shareImage = !args.includes("--no-share-image");
 const usePrebuild = !args.includes("--no-prebuild");
+const toSite = !args.includes("--no-site");
 
 if (baseFlag >= 0 && (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:")) {
   fail("--base-url requires a valid HTTPS URL.");
@@ -230,8 +232,14 @@ installLocally();
 
 updateBetaChannel(revision);
 verifyChannels();
+const siteProblems = toSite ? await publishToSite({ main: mainCheckout(), tag, version }) : [];
+if (siteProblems.length === 0 && toSite) console.log(`✓ The official site offers ${tag}.`);
 if (issueComments) await tellShippedIssues(revision);
 if (shareImage) renderShareImage();
+if (siteProblems.length > 0) {
+  console.error(`\n✗ ${tag} is on GitHub, but the official site is behind:\n${siteProblems.join("\n")}`);
+  process.exitCode = 1;
+}
 
 function renderShareImage() {
   const out = join(mainCheckout(), "src-tauri", "target", "release-share", tag);

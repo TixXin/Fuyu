@@ -17,6 +17,8 @@ const DEFAULT_ORDER: readonly { id: string; zone: CollapsedZone }[] = [
   { id: "session-count", zone: "right" },
 ];
 
+const HIDDEN_BY_DEFAULT: ReadonlySet<string> = new Set(["peripheral-battery"]);
+
 export const COLLAPSED_ITEM_PLUGINS: Readonly<Record<string, string>> = {
   mail: "messages",
   update: "updater",
@@ -84,7 +86,7 @@ export function arrangeCollapsedItems(offered: readonly string[], saved: readonl
     });
     const firstOfZone = result.findIndex((placement) => placement.zone === zone);
     const at = after >= 0 ? after + 1 : firstOfZone >= 0 ? firstOfZone : zone === "left" ? 0 : result.length;
-    result.splice(at, 0, { id, zone });
+    result.splice(at, 0, HIDDEN_BY_DEFAULT.has(id) ? { id, zone, hidden: true } : { id, zone });
   }
   return result;
 }
@@ -99,12 +101,15 @@ export function shelfIds(placements: readonly CollapsedPlacement[], offered: rea
   return placements.filter((placement) => placement.shelf && !placement.hidden && present.has(placement.id)).map(({ id }) => id);
 }
 
+const unplacedDefault = (placements: readonly CollapsedPlacement[], id: string) =>
+  HIDDEN_BY_DEFAULT.has(id) && !placements.some((placement) => placement.id === id);
+
 export function isCollapsedItemHidden(placements: readonly CollapsedPlacement[], id: string) {
-  return placements.some((placement) => placement.id === id && placement.hidden);
+  return unplacedDefault(placements, id) || placements.some((placement) => placement.id === id && placement.hidden);
 }
 
 export function isCollapsedItemOffBar(placements: readonly CollapsedPlacement[], id: string) {
-  return placements.some((placement) => placement.id === id && (placement.hidden === true || placement.shelf === true));
+  return unplacedDefault(placements, id) || placements.some((placement) => placement.id === id && (placement.hidden === true || placement.shelf === true));
 }
 
 export function moveCollapsedItem(placements: readonly CollapsedPlacement[], id: string, step: -1 | 1, listed: readonly string[]) {

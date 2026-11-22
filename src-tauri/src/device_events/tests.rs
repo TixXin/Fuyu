@@ -236,3 +236,30 @@ fn the_watcher_is_the_background_listed_for_device_events() {
     let plugin = catalog.iter().find(|plugin| plugin.id == super::PLUGIN_ID).expect("device-events is a built-in plugin");
     assert_eq!(plugin.background.as_deref(), Some(&[super::WATCHER.to_owned()][..]));
 }
+
+#[test]
+fn battery_list_keeps_every_device_with_a_reading_once() {
+    use super::batteries::collect;
+    use super::peripherals::{Peripheral, PeripheralKind};
+    let outputs = vec![output("buds-out", 3, "BTHENUM", "buds"), output("buds-mic", 5, "BTHENUM", "buds"), output("usb", 5, "USB", "usb")];
+    let peripheral = |device: &str, name: &str, battery| Peripheral { device: device.into(), name: name.into(), kind: PeripheralKind::Mouse, battery };
+    let list = collect(&outputs, &levels(&[("buds", 140), ("gone", 50)]), &[peripheral("m", "Mouse", Some(30)), peripheral("k", "Keys", None)]);
+    let found: Vec<(&str, u8)> = list.iter().map(|item| (item.id.as_str(), item.battery)).collect();
+    assert_eq!(found, vec![("m", 30), ("buds", 100)]);
+    let json = serde_json::to_value(&list).expect("serializes");
+    assert_eq!(json[0]["kind"], "mouse");
+    assert_eq!(json[1]["kind"], "headphones");
+    assert_eq!(json[1]["name"], "name buds-out");
+}
+
+#[test]
+fn battery_list_is_only_published_when_it_changes() {
+    use super::batteries::{collect, latest, publish, Published};
+    let guard = Published;
+    let list = collect(&[output("a", 3, "BTHENUM", "a")], &levels(&[("a", 60)]), &[]);
+    assert!(publish(&list));
+    assert!(!publish(&list));
+    assert_eq!(latest().map(|items| items.len()), Some(1));
+    drop(guard);
+    assert_eq!(latest(), None);
+}

@@ -64,6 +64,10 @@ pub(super) fn wants_notch(state: IslandWindowState) -> bool {
         && state.side().is_none()
 }
 
+pub(super) fn stale_after_drop(state: IslandWindowState) -> bool {
+    state.notch.is_some() && !wants_notch(state)
+}
+
 pub(super) fn collapsed_size(collapsed_width: f64, scale: f64, notch: Notch, tucked: bool, drop: bool) -> (f64, f64) {
     let scale = scale.max(0.01);
     let height = notch.height / scale;
@@ -221,6 +225,15 @@ mod tests {
         assert!(!wants_notch(IslandWindowState { under_menu_bar: true, ..base }));
         assert!(!wants_notch(IslandWindowState { margin_y: 8.0, ..base }));
         assert!(!wants_notch(IslandWindowState { custom_position: Some(super::super::IslandPosition::at(10, 0)), ..base }));
+    }
+
+    #[test]
+    fn a_notch_left_behind_by_a_drag_is_settled_again() {
+        let on_notch = IslandWindowState { fit_notch: true, notch: Some(NOTCH), ..IslandWindowState::default() };
+        assert!(!stale_after_drop(on_notch));
+        let dragged = IslandWindowState { custom_position: Some(super::super::IslandPosition::at(420, 180)), ..on_notch };
+        assert!(stale_after_drop(dragged));
+        assert!(!stale_after_drop(IslandWindowState { notch: None, ..dragged }));
     }
 
     #[test]

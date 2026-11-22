@@ -11,8 +11,6 @@ export type SettingsExpandText = {
   hoverCollapseDelay: string;
   hoverSwitchPage: string;
   hoverSwitchPageHint: string;
-  fuyuTabIcon: string;
-  fuyuTabIconHint: string;
   hoverSwitchDelay: string;
   tuckTitle: string;
   revealTitle: string;
@@ -100,8 +98,6 @@ export const zhCN: SettingsExpandText = {
   clickCollapseOnLeaveHint: "点开面板看完后，鼠标移出就自动收起，不用再点外部",
   hoverDelay: "悬停多久后展开",
   hoverCollapseDelay: "鼠标移开后收起前等待",
-  fuyuTabIcon: "Fuyu 页标签用图标",
-  fuyuTabIconHint: "展开后顶部最左边的 Fuyu 页标签换成水母图标，不显示文字",
   hoverSwitchPage: "悬停切换页面",
   hoverSwitchPageHint: "鼠标停在展开后顶部的页面图标上，就切到那一页，不用点击；划过的图标不会切换",
   hoverSwitchDelay: "悬停多久后切换",
@@ -205,8 +201,6 @@ export const en: SettingsExpandText = {
   clickCollapseOnLeaveHint: "Closes the panel after the pointer leaves, without clicking outside",
   hoverDelay: "Hover time before opening",
   hoverCollapseDelay: "Wait before closing after leaving",
-  fuyuTabIcon: "Icon for the Fuyu tab",
-  fuyuTabIconHint: "Show the jellyfish instead of the word Fuyu on the first page tab at the top of the open island",
   hoverSwitchPage: "Switch pages on hover",
   hoverSwitchPageHint: "Resting the pointer on a page icon at the top of the open island opens that page, no click needed; icons the pointer passes over do not",
   hoverSwitchDelay: "Hover time before switching",

@@ -271,10 +271,18 @@
 
 .cover-color .music-player::before {
   position: absolute;
-  inset: -36px -28px auto;
+  inset: 0 0 auto;
   z-index: -1;
   height: 200px;
   content: "";
   pointer-events: none;
   background: radial-gradient(ellipse 70% 100% at 18% 0%, color-mix(in srgb, var(--cover-accent) 26%, transparent), transparent 72%);
+  -webkit-mask:
+    linear-gradient(180deg, transparent, var(--color-black, #000) 24px),
+    linear-gradient(90deg, transparent, var(--color-black, #000) 16px, var(--color-black, #000) calc(100% - 16px), transparent);
+  -webkit-mask-composite: source-in;
+  mask:
+    linear-gradient(180deg, transparent, var(--color-black, #000) 24px),
+    linear-gradient(90deg, transparent, var(--color-black, #000) 16px, var(--color-black, #000) calc(100% - 16px), transparent);
+  mask-composite: intersect;
 }

@@ -10,7 +10,7 @@ const LIST_PAGES: ReadonlySet<string> = new Set(["todo", "calendar", "clipboard"
 type SizeDefaults = Pick<IslandSettings, "panelWidth" | "maxPanelHeight">;
 
 export function defaultPageSize(defaults: SizeDefaults, page: string): PanelPageSize {
-  if (page === FUYU_PAGE_ID) return { width: FUYU_ISLAND_SIZE.width, height: FUYU_ISLAND_SIZE.height };
+  if (page === FUYU_PAGE_ID) return { width: Math.max(FUYU_ISLAND_SIZE.width, defaults.panelWidth), height: FUYU_ISLAND_SIZE.height };
   const extra = LIST_PAGES.has(page) ? LIST_PAGE_EXTRA_HEIGHT : 0;
   return { width: defaults.panelWidth, height: Math.min(MAX_MAX_PANEL_HEIGHT, defaults.maxPanelHeight + extra) };
 }

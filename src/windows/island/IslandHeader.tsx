@@ -17,6 +17,8 @@ import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import { usePagePill } from "./usePagePill";
 import { FuyuTextIcon } from "../../components/island-widget/FuyuTextIcon";
 import { JellyfishMark } from "../../components/jellyfish/JellyfishMark";
+import { FUYU_TEXT_ICON, fuyuPageIconName, JELLYFISH_ICON, pageIconComponent } from "../../components/island-widget/pageIcons";
+import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { useIslandNotch } from "./notch";
@@ -89,7 +91,10 @@ export function IslandHeader({
   const notchHeader = Boolean(notch && !notch.simulated);
   useRowOverflow(dotsRef, notchHeader, dots.length);
   const headerRef = useRef<HTMLElement>(null);
-  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${fuyuTabIcon}|${dots.map((item) => item.id).join(",")}`);
+  const icons = features.pageLayout?.icons;
+  const iconName = (id: string) => (id === FUYU_PAGE_ID ? fuyuPageIconName(icons, id, fuyuTabIcon) : icons?.[id]);
+  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${dots.map((item) => `${item.id}:${iconName(item.id) ?? ""}`).join(",")}`);
+  const AgentsIcon = pageIconComponent(iconName("agents")) ?? Bot;
   useEffect(() => {
     const row = dotsRef.current;
     const active = row?.querySelector<HTMLElement>(".dot-button--active");
@@ -131,6 +136,8 @@ export function IslandHeader({
     const target: IslandPage = item.id;
     const Icon = item.icon;
     const label = pageLabel(item);
+    const chosen = iconName(target);
+    const Custom = chosen === FUYU_TEXT_ICON || chosen === JELLYFISH_ICON ? null : pageIconComponent(chosen);
     const named = item.external || !(target in builtinLabels);
     const kind = item.external ? "dot-button--plugin" : named ? "dot-button--custom" : `dot-button--${target}`;
     return (
@@ -148,11 +155,13 @@ export function IslandHeader({
           onPageChange(target);
         }}
       >
-        {item.external
-          ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
-          : Icon === FuyuTextIcon && fuyuTabIcon
-            ? <JellyfishMark mood="idle" paused height={FUYU_TAB_MARK_HEIGHT} />
-            : Icon && <Icon size={Icon === FuyuTextIcon ? 18 : 15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
+        {chosen === JELLYFISH_ICON
+          ? <JellyfishMark mood="idle" paused height={FUYU_TAB_MARK_HEIGHT} />
+          : Custom
+            ? <Custom size={15} strokeWidth={1.8} absoluteStrokeWidth />
+            : item.external
+              ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
+              : Icon && <Icon size={Icon === FuyuTextIcon ? 18 : 15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
       </button>
     );
   };
@@ -195,7 +204,7 @@ export function IslandHeader({
               onPageChange("agents");
             }}
           >
-            <Bot className={agentStatusIconClassName} size={16} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />
+            <AgentsIcon className={agentStatusIconClassName} size={16} strokeWidth={1.8} absoluteStrokeWidth />
           </button>
         ) : (
           <Bot

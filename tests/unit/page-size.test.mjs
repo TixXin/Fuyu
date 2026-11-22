@@ -15,6 +15,11 @@ test("pages share one width and two heights unless sized on the island", () => {
   assert.equal(defaultPageSize({ panelWidth: 640, maxPanelHeight: 4300 }, "todo").height, 4320, "the list bonus never passes the height cap");
 });
 
+test("the Fuyu page widens with the panel width but never drops below six columns", () => {
+  assert.deepEqual(defaultPageSize({ panelWidth: 1400, maxPanelHeight: 360 }, "panel:fuyu"), { width: 1400, height: FUYU_ISLAND_SIZE.height });
+  assert.deepEqual(defaultPageSize({ panelWidth: 560, maxPanelHeight: 900 }, "panel:fuyu"), { width: FUYU_ISLAND_SIZE.width, height: FUYU_ISLAND_SIZE.height });
+});
+
 test("a size dragged on the island wins over the page default", () => {
   const settings = { ...defaults, pageSizes: { todo: { width: 1000, height: 300 } } };
   assert.deepEqual(islandPageSize(settings, "todo"), { width: 1000, height: 300 });

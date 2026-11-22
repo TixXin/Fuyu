@@ -8,7 +8,8 @@ import { IslandPages } from "../../src/windows/island/IslandPages";
 import { useCustomPanelPages } from "../../src/windows/island/custom-panels/useCustomPanelPages";
 import { useCollapsedGauges } from "../../src/windows/island/useCollapsedGauges";
 import { useCollapsedWidth } from "../../src/windows/island/useCollapsedWidth";
-import { pageForAltDigit, type IslandFeatures } from "../../src/windows/island/features";
+import { pageForAltDigit, withPageLayout, type IslandFeatures } from "../../src/windows/island/features";
+import type { IslandPagesLayout } from "../../src/lib/settings/islandPages";
 import type { IslandPage } from "../../src/windows/island/types";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import { updatePluginNames } from "../../src/features/plugin-kernel/pluginNames";
@@ -48,6 +49,7 @@ const settings = normalizeSettings({ islandMotion: "none" });
 const noop = () => {};
 
 let goTo: (page: IslandPage) => void = noop;
+let setHeaderIcons: (icons: { layout: IslandPagesLayout | null; legacy: boolean }) => void = noop;
 const opened: IslandPage[] = [];
 const openFromBar = (page: IslandPage) => {
   opened.push(page);
@@ -67,12 +69,15 @@ function CustomPanelPages() {
 
 function Expanded() {
   const [page, setPage] = useState<IslandPage>("todo");
+  const [icons, setIcons] = useState<{ layout: IslandPagesLayout | null; legacy: boolean }>({ layout: null, legacy: false });
   goTo = setPage;
+  setHeaderIcons = setIcons;
+  const features = icons.layout ? withPageLayout(FEATURES, icons.layout) : FEATURES;
   return <div className="stage stage--expanded">
     <CustomPanelPages />
     <IslandShell
       mode="expanded" page={page} isTucked={false} isDetached={true} showTitle={false}
-      showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled" features={FEATURES}
+      showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled" features={features} fuyuTabIcon={icons.legacy}
       onOpenPage={setPage} onPageChange={setPage} onWindowDragStart={noop} onCollapse={noop}
       onResetPosition={noop} minimizesToTray onMinimize={noop} onOpenSettings={noop} onOpenTranslator={noop} onTuck={noop} onReveal={noop}
       pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
@@ -187,6 +192,23 @@ async function checkCustomPanel() {
   await act(async () => goTo("todo"));
 }
 
+async function checkPageIcons() {
+  const dot = (page: string) => expandedRoot.querySelector<HTMLElement>(`.dot-button[data-page="${page}"]`) ?? expandedRoot.querySelector<HTMLElement>(`.dot-button--${CSS.escape(page)}`);
+  const agents = () => expandedRoot.querySelector<HTMLElement>(".island__agent-button svg");
+  const plain = { order: [], hidden: [] };
+  await act(async () => setHeaderIcons({ layout: null, legacy: true }));
+  check(dot("panel:fuyu")?.querySelector(".center-jelly") && !dot("panel:fuyu")?.querySelector(".panel-text-icon"), "旧设置 fuyuTabIcon 开着、没选过图标时，Fuyu 页照旧显示水母");
+  await act(async () => setHeaderIcons({ layout: { ...plain, icons: { "panel:fuyu": "text" } }, legacy: true }));
+  check(dot("panel:fuyu")?.querySelector(".panel-text-icon")?.textContent === "Fuyu", "在岛屿布局里选了「文字」就显示文字，不管旧开关");
+  await act(async () => setHeaderIcons({ layout: { ...plain, icons: { "panel:fuyu": "rocket", todo: "star", agents: "cat", "world-clock": "globe" } }, legacy: false }));
+  check(dot("panel:fuyu")?.querySelector("svg.lucide-rocket") && dot("todo")?.querySelector("svg.lucide-star") && agents()?.classList.contains("lucide-cat")
+    && agents()?.classList.contains("island__agent-status-icon") && dot("world-clock")?.querySelector("svg.lucide-globe") && !dot("world-clock")?.querySelector(".test-globe"),
+    "fuyu-island-pages 的 icons 换掉页头对应页面的图标：Fuyu、内置页、Agent 按钮（保留状态颜色）和插件页");
+  await act(async () => setHeaderIcons({ layout: { ...plain, icons: { todo: "no-such-icon" } }, legacy: false }));
+  check(dot("todo")?.querySelector("svg.lucide-list-todo") && !dot("todo")?.querySelector("svg.lucide-star") && dot("panel:fuyu")?.querySelector(".panel-text-icon"), "不认识的图标名按默认图标画");
+  await act(async () => setHeaderIcons({ layout: null, legacy: false }));
+}
+
 async function runChecks() {
   const dots = () => [...expandedRoot.querySelectorAll<HTMLButtonElement>(".editor-dots .dot-button")];
   const labels = dots().map((dot) => dot.getAttribute("aria-label") ?? "");
@@ -295,6 +317,7 @@ async function runChecks() {
   for (let waited = 0; marked().length > 0 && waited < 180; waited += 1) await frame();
   check(marked().length === 0 && islandSpotlight.owner() === null, "亮完两下就结束，之后展开或收起都不再亮");
   await checkCustomPanel();
+  await checkPageIcons();
   results.textContent = `${messages.join("\n")}\n\nALL PASS (${messages.length})`;
   results.dataset.result = "passed";
 }
