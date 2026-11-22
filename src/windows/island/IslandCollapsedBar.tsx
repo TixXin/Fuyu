@@ -14,6 +14,7 @@ import { hasNotchDrop, MAX_NOTCH_WING, useIslandNotch } from "./notch";
 import { CollapsedMore } from "./CollapsedMore";
 import { BAR_UNIT, useCollapsedOverflow, type CollapsedOverflowState } from "./useCollapsedOverflow";
 import { useCollapsedItemNames } from "./useCollapsedItemNames";
+import { useCollapsedContent } from "./useCollapsedContent";
 import { AlertPopup, NotchAlertLeading, NotchAlertTrailing, useActiveAlert } from "./NotchAlert";
 import { IslandSummary } from "./IslandSummary";
 import { DevWatermark } from "../../components/DevWatermark";
@@ -127,6 +128,8 @@ export function IslandCollapsedBar({
   const wings = alerted ? "alert" : messaged ? `message:${preview?.key}` : dropped ? "dropped" : "idle";
   const leftWingRef = useRef<HTMLDivElement>(null);
   const rightWingRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  useCollapsedContent(barRef, notch === null);
   const leftItems = zone("left");
   const rightItems = zone("right");
   const placed = new Set(saved.map(({ id }) => id));
@@ -218,6 +221,7 @@ export function IslandCollapsedBar({
   );
   return (
     <div
+      ref={barRef}
       className="island__collapsed"
       aria-hidden={isExpanded}
       inert={isExpanded}
