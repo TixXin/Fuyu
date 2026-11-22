@@ -18,6 +18,8 @@ test("a frame that is not shown, has no markup or names an unknown form is read 
   assert.equal(readMirrorFrame(frame({ shown: false })).shown, false);
   assert.equal(readMirrorFrame(frame({ html: "" })).shown, false);
   assert.equal(readMirrorFrame(frame({ form: "cube" })).form, "bar");
+  assert.equal(readMirrorFrame(frame({ shown: false, miss: "big" })).miss, "big");
+  assert.equal(readMirrorFrame(frame({ miss: "lost" })).miss, null);
 });
 
 test("frames that are malformed or too large are dropped", () => {
@@ -26,4 +28,11 @@ test("frames that are malformed or too large are dropped", () => {
   assert.equal(readMirrorFrame(frame({ width: -1 })), null);
   assert.equal(readMirrorFrame(frame({ items: "none" })), null);
   assert.equal(readMirrorFrame(frame({ html: "x".repeat(MIRROR_HTML_LIMIT + 1) })), null);
+});
+
+test("copied styles leave out CSS variables, logical duplicates and motion, which WebKit lists and would bloat every element", async () => {
+  const { styleValues } = await import("../../src/features/plugin-kernel/barMirrorStyle.ts");
+  const names = ["--island-scale", "color", "block-size", "height", "margin-inline-start", "margin-left", "-webkit-margin-start", "transition-duration", "min-width", "border-start-start-radius", "border-top-left-radius"];
+  const style = Object.assign(Object.fromEntries(names.map((name, index) => [index, name])), { length: names.length, getPropertyValue: (name) => `v:${name}` });
+  assert.deepEqual([...styleValues(style).keys()], ["color", "height", "margin-left", "min-width", "border-top-left-radius"]);
 });

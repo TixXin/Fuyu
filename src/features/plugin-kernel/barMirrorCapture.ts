@@ -5,7 +5,7 @@ const BAR = ".island__collapsed";
 const MARK = "data-bar-mark";
 const UNIT = "data-bar-items";
 const AFTER_ITEMS = `[${MARK}], .island__open-button, .island__more-chip, .island__quiet-button`;
-const HIDDEN: MirrorFrame = { shown: false, form: "bar", width: 0, height: 0, html: "", items: [], more: null, middle: null, center: null };
+const HIDDEN: MirrorFrame = { shown: false, miss: "away", form: "bar", width: 0, height: 0, html: "", items: [], more: null, middle: null, center: null };
 
 type Above = { values: StyleValues; base: StyleValues };
 type Area = { left: number; top: number; right: number; bottom: number };
@@ -89,7 +89,10 @@ export function captureBarMirror(): MirrorFrame {
   if (!(root instanceof HTMLElement)) return HIDDEN;
   for (const [name, value] of [["position", "relative"], ["inset", "auto"], ["margin", "0"], ["transform", "none"], ["translate", "none"], ["scale", "none"]]) root.style.setProperty(name, value);
   const html = root.outerHTML;
-  if (html.length > MIRROR_HTML_LIMIT) return HIDDEN;
+  if (html.length > MIRROR_HTML_LIMIT) {
+    console.warn(`The collapsed bar is too large to mirror (${html.length} characters)`);
+    return { ...HIDDEN, miss: "big" };
+  }
   const items: MirrorItem[] = [];
   for (const { ids, elements } of unitParts(bar)) {
     const whole = box(areaOf(elements));
@@ -105,6 +108,7 @@ export function captureBarMirror(): MirrorFrame {
       : bar.querySelector(".island__notch-row") ? "notch" : "bar";
   return {
     shown: true,
+    miss: null,
     form,
     width: shell.offsetWidth,
     height: shell.offsetHeight,

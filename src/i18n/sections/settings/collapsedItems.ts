@@ -44,6 +44,7 @@ export type SettingsCollapsedLanesText = {
   mirrorLive: string;
   mirrorAway: string;
   mirrorSide: string;
+  mirrorMiss: Record<"silent" | "away" | "big", string>;
   offDrop: string;
   allOn: string;
   dropHere: string;
@@ -95,6 +96,11 @@ export const zhCN: SettingsCollapsedItemsText = {
     mirrorLive: "这是岛上现在的样子。点一项，下面定位到它；也可以直接拖",
     mirrorAway: "岛现在展开或收起着，这是收起条上一次的样子",
     mirrorSide: "岛贴在屏幕侧边，这时显示的是侧边栏，收起条上的项目不在上面",
+    mirrorMiss: {
+      silent: "没收到岛的画面（岛没在运行，或是旧版本），这里是示意图，可能和岛上不一样",
+      away: "岛现在展开或收起着，等它回到收起条再画；这里先是示意图",
+      big: "岛上的收起条太复杂，没法照原样画，这里是示意图",
+    },
     denyCenter: "中间只放中心图案和剩余待办数",
     fold: "放不下，后面的收进 +N",
     spilled: "刘海旁放不下，收进了 +N",
@@ -165,6 +171,11 @@ export const en: SettingsCollapsedItemsText = {
     mirrorLive: "This is the island right now. Click an item to find it below, or drag it",
     mirrorAway: "The island is open or tucked away; this is how the bar last looked",
     mirrorSide: "The island sits on a screen edge and shows its side column; the bar items are not on it",
+    mirrorMiss: {
+      silent: "No picture from the island (not running, or an older version); this is a sketch and may differ",
+      away: "The island is open or tucked away; it will be drawn once it is back on the bar. This is a sketch for now",
+      big: "The bar is too complex to copy as it is; this is a sketch",
+    },
     denyCenter: "Only the center pattern and the todo count go in the middle",
     fold: "No room from here on, these go behind +N",
     spilled: "No room beside the notch, kept behind +N",

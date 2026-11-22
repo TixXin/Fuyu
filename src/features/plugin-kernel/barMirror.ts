@@ -20,8 +20,11 @@ export type MirrorForm = (typeof MIRROR_FORMS)[number];
 export interface MirrorBox { left: number; top: number; width: number; height: number }
 export interface MirrorItem { id: string; box: MirrorBox }
 
+export type MirrorMiss = "away" | "big";
+
 export interface MirrorFrame {
   shown: boolean;
+  miss: MirrorMiss | null;
   form: MirrorForm;
   width: number;
   height: number;
@@ -44,7 +47,7 @@ function readBox(value: unknown): MirrorBox | null {
 
 export function readMirrorFrame(payload: unknown): MirrorFrame | null {
   if (!payload || typeof payload !== "object") return null;
-  const { shown, form, width, height, html, items, more, middle, center } = payload as Record<string, unknown>;
+  const { shown, miss, form, width, height, html, items, more, middle, center } = payload as Record<string, unknown>;
   const [w, h] = [size(width), size(height)];
   if (typeof html !== "string" || html.length > MIRROR_HTML_LIMIT || w === null || h === null || !Array.isArray(items)) return null;
   const read = items.slice(0, MIRROR_ITEM_LIMIT).flatMap((item): MirrorItem[] => {
@@ -55,6 +58,7 @@ export function readMirrorFrame(payload: unknown): MirrorFrame | null {
   });
   return {
     shown: shown === true && html !== "" && w > 0 && h > 0,
+    miss: miss === "away" || miss === "big" ? miss : null,
     form: MIRROR_FORMS.find((known) => known === form) ?? "bar",
     width: w,
     height: h,

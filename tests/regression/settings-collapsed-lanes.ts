@@ -121,6 +121,12 @@ async function checkMirror(check: Check) {
   });
   const hit = (item: string) => document.querySelector<HTMLElement>(`.bar-mirror__item[data-item='${item}']`);
   await reset();
+  await act(async () => {
+    await (await import("@tauri-apps/api/event")).emit("island-mirror-frame", { ...frame(false), miss: "big" });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+  check(!document.querySelector(".island-bar-preview[data-mirror]") && document.querySelector(".island-bar-preview__caption[data-miss='big']")?.textContent === "岛上的收起条太复杂，没法照原样画，这里是示意图",
+    "When the island says its bar is too large to copy, the sketch stays and the caption says why");
   await send(true);
   const painted = document.querySelector(".bar-mirror__paint")?.shadowRoot?.querySelector<HTMLElement>(".island");
   check(document.querySelector(".island-bar-preview[data-mirror='bar'][data-live]") && !document.querySelector(".island-bar-preview__bar") && painted

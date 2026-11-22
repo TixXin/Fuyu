@@ -7,7 +7,7 @@ import { useCollapsedOverflowIds } from "../../../lib/settings/useCollapsedOverf
 import type { IslandSettings } from "../../../lib/settings/types";
 import { hexToRgba } from "../../../lib/settings/settings";
 import { BarMirror } from "./BarMirror";
-import type { BarMirrorView } from "./useBarMirror";
+import type { BarMirrorState } from "./useBarMirror";
 import type { LaneDrag } from "./useLaneDrag";
 import "./IslandBarPreview.css";
 
@@ -33,10 +33,10 @@ export function ItemGlyph({ id }: { id: string }) {
   return ICONS[id] ?? <Puzzle size={13} strokeWidth={2.2} />;
 }
 
-export function IslandBarPreview({ settings, notch, mirror, names, placements, centers, openItem, drag, onPick, onDragStart }: {
+export function IslandBarPreview({ settings, notch, mirror: { view: mirror, miss }, names, placements, centers, openItem, drag, onPick, onDragStart }: {
   settings: IslandSettings;
   notch: boolean;
-  mirror: BarMirrorView | null;
+  mirror: BarMirrorState;
   names: ReadonlyMap<string, string>;
   placements: readonly CollapsedPlacement[];
   centers: readonly string[];
@@ -123,7 +123,7 @@ export function IslandBarPreview({ settings, notch, mirror, names, placements, c
           {more}
         </div>
       )}
-      <figcaption className="island-bar-preview__caption">{notch ? text.lanes.notchCaption : text.previewHint}</figcaption>
+      <figcaption className="island-bar-preview__caption" data-miss={miss ?? undefined}>{miss ? text.lanes.mirrorMiss[miss] : notch ? text.lanes.notchCaption : text.previewHint}</figcaption>
     </figure>
   );
 }
