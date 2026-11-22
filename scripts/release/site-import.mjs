@@ -39,6 +39,17 @@ async function readSiteVersion(channel, fetchImpl) {
   }
 }
 
+export async function siteDown(fetchImpl = fetch) {
+  const url = `${SITE_ORIGIN}/api/update/stable/latest.json`;
+  try {
+    const response = await fetchImpl(url, { cache: "no-store", signal: AbortSignal.timeout(10_000) });
+    if (response.ok) return null;
+    return `${url} answers ${response.status}: the site's update API looks down, so the import at the end will fail. Fix the site (fuyu-desktop) now, or pass --no-site and import later.`;
+  } catch (error) {
+    return `${url} cannot be read (${error.message}): the site's update API looks down, so the import at the end will fail. Fix the site (fuyu-desktop) now, or pass --no-site and import later.`;
+  }
+}
+
 export async function siteChannelProblems(version, fetchImpl = fetch) {
   return channelProblems(version, {
     stable: await readSiteVersion("stable", fetchImpl),

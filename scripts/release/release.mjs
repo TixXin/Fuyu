@@ -15,8 +15,9 @@ import { finishWindowsBuild, startWindowsBuild } from "./windows-build.mjs";
 import { forgetPrebuild, matchingPrebuild, readPrebuild } from "./prebuild.mjs";
 import { forgetPrefetch, PLATFORMS, prefetchSummary, readyPrefetch, takePrefetched } from "./prefetch.mjs";
 import { releaseClock } from "./timing.mjs";
-import { publishToSite } from "./site-import.mjs";
-import { EXE_NAME, installExe, takeLock } from "../build-exe.mjs";
+import { publishToSite, siteDown } from "./site-import.mjs";
+import { createNotifier } from "./notify.mjs";
+import { EXE_NAME, installExe, lockHeld, takeLock } from "../build-exe.mjs";
 import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 
 const CONFIG = "src-tauri/tauri.conf.json";
@@ -44,8 +45,13 @@ const local = args.includes("--local");
 const shareImage = !args.includes("--no-share-image");
 const usePrebuild = !args.includes("--no-prebuild");
 const toSite = !args.includes("--no-site");
-process.on("exit", () => {
-  for (const line of releaseClock.table()) console.log(line);
+let notify = null;
+process.on("exit", (code) => {
+  const table = releaseClock.table();
+  for (const line of table) console.log(line);
+  if (!notify) return;
+  if (code === 0) notify.finished(table.length ? `${table.at(-1).trim()}` : "Done.");
+  else notify.problem(`pnpm release stopped with exit code ${code}; see the log.`);
 });
 
 if (baseFlag >= 0 && (!baseUrl || !URL.canParse(baseUrl) || new URL(baseUrl).protocol !== "https:")) {
@@ -59,6 +65,7 @@ try {
 
 function fail(message) {
   console.error(`\n✗ ${message}`);
+  notify?.problem(message);
   process.exit(1);
 }
 
@@ -88,6 +95,12 @@ if (!version || versions.some(([, found]) => found !== version)) {
 }
 
 const tag = `v${version}`;
+if (upload) {
+  notify = createNotifier({ prefix: `Fuyu ${tag} · ` });
+  releaseClock.listen((line) => notify.step(line));
+  console.log(notify.enabled ? "Phone notices go to Bark." : "Bark is not set up on this machine (see docs/features/updater.md); no phone notices.");
+  notify.step(`Releasing ${tag}.`);
+}
 const notesFile = `docs/releases/${tag}.md`;
 if (!existsSync(notesFile)) fail(`Missing release notes: ${notesFile}`);
 if (readFileSync(notesFile, "utf8").includes(DRAFT_MARKER)) {
@@ -120,6 +133,17 @@ if (upload) {
   if (auth.status !== 0) fail("gh is not authenticated. Run `gh auth login` first.");
   const existing = run("gh", ["release", "view", tag, "--repo", REPO], { capture: true, allowFailure: true });
   if (existing.status === 0) fail(`Release ${tag} already exists. Bump the version instead of replacing published update packages.`);
+  let holder = null;
+  try {
+    holder = JSON.parse(readFileSync(PUBLISH_LOCK, "utf8"));
+  } catch {
+  }
+  if (lockHeld(holder)) fail(`Another pnpm release (pid ${holder.pid}) has been running since ${new Date(holder.since).toLocaleTimeString()}. Let it finish, or stop it first; two releases at once would publish twice.`);
+  const down = toSite ? await siteDown() : null;
+  if (down) {
+    console.error(`\n! ${down}`);
+    notify?.problem(down);
+  }
 }
 
 let macBuild = null;
