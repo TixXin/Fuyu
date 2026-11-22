@@ -31,11 +31,6 @@ export interface BarUsageWidget {
   icon?: string;
 }
 
-export interface BarUsageWings {
-  left: string[];
-  right: string[];
-}
-
 export interface BarUsageReport {
   id: number;
   collapsed: boolean;
@@ -43,7 +38,6 @@ export interface BarUsageReport {
   items: BarUsageItem[];
   pages?: BarUsagePage[];
   widgets?: BarUsageWidget[];
-  wings?: BarUsageWings;
 }
 
 export type BarUsageCandidate = { id: string; owner: string; external: boolean; group?: unknown; hideable?: unknown; label?: unknown };
@@ -94,7 +88,7 @@ export function barUsageReport(
 
 export function readBarUsageReport(payload: unknown): BarUsageReport | null {
   if (!payload || typeof payload !== "object") return null;
-  const { id, collapsed, barWidth, items, pages, widgets, wings } = payload as Record<string, unknown>;
+  const { id, collapsed, barWidth, items, pages, widgets } = payload as Record<string, unknown>;
   if (typeof id !== "number" || !Array.isArray(items)) return null;
   const width = px(barWidth);
   const read = items.flatMap((item): BarUsageItem[] => {
@@ -105,18 +99,7 @@ export function readBarUsageReport(payload: unknown): BarUsageReport | null {
     return [{ id: itemId, owner, hideable: hideable !== false, box: readBox(box), ...(label ? { name: label } : {}) }];
   });
   const report: BarUsageReport = { id, collapsed: collapsed === true && width !== null && width > 0, barWidth: width, items: read };
-  const sides = readWings(wings);
-  return { ...report, ...(Array.isArray(pages) ? { pages: readPages(pages) } : {}), ...(Array.isArray(widgets) ? { widgets: readWidgets(widgets) } : {}), ...(sides ? { wings: sides } : {}) };
-}
-
-const WING_LIMIT = 64;
-
-function readWings(value: unknown): BarUsageWings | null {
-  if (!value || typeof value !== "object") return null;
-  const { left, right } = value as Record<string, unknown>;
-  const side = (list: unknown) => Array.isArray(list) ? list.filter((id): id is string => typeof id === "string" && id !== "").slice(0, WING_LIMIT) : null;
-  const [l, r] = [side(left), side(right)];
-  return l && r ? { left: l, right: r } : null;
+  return { ...report, ...(Array.isArray(pages) ? { pages: readPages(pages) } : {}), ...(Array.isArray(widgets) ? { widgets: readWidgets(widgets) } : {}) };
 }
 
 const WIDGET_SIZES = ["bar", "s", "m", "l", "w"];

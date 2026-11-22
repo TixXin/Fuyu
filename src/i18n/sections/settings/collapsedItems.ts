@@ -41,6 +41,9 @@ export type SettingsCollapsedLanesText = {
   laneHint: Record<Exclude<LaneName, "off">, string>;
   notchHint: Record<"left" | "center" | "right", string>;
   notchCaption: string;
+  mirrorLive: string;
+  mirrorAway: string;
+  mirrorSide: string;
   offDrop: string;
   allOn: string;
   dropHere: string;
@@ -88,7 +91,10 @@ export const zhCN: SettingsCollapsedItemsText = {
     allOn: "都放上去了",
     dropHere: "拖到这里",
     notchHint: { left: "刘海左边", center: "排在刘海右边最前", right: "刘海右边" },
-    notchCaption: "刘海模式：中间被摄像头挡住；只画岛上此刻显示出来的项目，没内容的不画",
+    notchCaption: "现在是刘海模式：中间被摄像头挡住，不显示文字",
+    mirrorLive: "这是岛上现在的样子。点一项，下面定位到它；也可以直接拖",
+    mirrorAway: "岛现在展开或收起着，这是收起条上一次的样子",
+    mirrorSide: "岛贴在屏幕侧边，这时显示的是侧边栏，收起条上的项目不在上面",
     denyCenter: "中间只放中心图案和剩余待办数",
     fold: "放不下，后面的收进 +N",
     spilled: "刘海旁放不下，收进了 +N",
@@ -155,7 +161,10 @@ export const en: SettingsCollapsedItemsText = {
     allOn: "Everything is on the bar",
     dropHere: "Drag here",
     notchHint: { left: "Left of the notch", center: "First on the right of the notch", right: "Right of the notch" },
-    notchCaption: "Notch mode: the camera covers the middle; only items the island shows right now are drawn",
+    notchCaption: "Notch mode: the camera covers the middle and no text shows",
+    mirrorLive: "This is the island right now. Click an item to find it below, or drag it",
+    mirrorAway: "The island is open or tucked away; this is how the bar last looked",
+    mirrorSide: "The island sits on a screen edge and shows its side column; the bar items are not on it",
     denyCenter: "Only the center pattern and the todo count go in the middle",
     fold: "No room from here on, these go behind +N",
     spilled: "No room beside the notch, kept behind +N",

@@ -156,3 +156,17 @@
   border-radius: 50%;
   background: var(--color-white-a16);
 }
+
+.island-bar-preview[data-mirror="notch"],
+.island-bar-preview[data-mirror="bar"]:not([data-live]) {
+  overflow: hidden;
+}
+
+.island-bar-preview[data-mirror="notch"] {
+  padding-top: 0;
+  border-top: 3px solid var(--color-white-a12);
+}
+
+.island-bar-preview[data-mirror]:not([data-live]) .bar-mirror {
+  opacity: 0.55;
+}

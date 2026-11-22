@@ -21,7 +21,7 @@ import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import type { AgentApprovals } from "../../src/features/agent-status/approvals/useAgentApprovals";
 import { permission, SESSIONS } from "./agentNoticeGallery";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
-import { measureBarWings } from "../../src/features/plugin-kernel/barWings";
+import { mirrorDiffers } from "./mirrorCheck";
 import { collapsedFit } from "../../src/windows/island/collapsedFitStore";
 import { islandSpotlight, SPOTLIGHT_ANIMATION } from "../../src/features/plugin-kernel/islandSpotlight";
 import type { IslandPage } from "../../src/windows/island/types";
@@ -237,11 +237,8 @@ async function runChecks() {
     check(wideShown > shownCities.length && chip()?.textContent === (wideShown === 5 ? undefined : `+${5 - wideShown}`) && clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]"), "两翼最宽调到 170 后能多放几个，留下的仍然完整");
     check(bar().querySelector(".island__notch-wing--left .test-clock-chip") && bar().querySelector(".island__notch-wing--right .test-clock-chip"), "右翼放不下的时钟先借左翼的空位，两边都满了才收进「+N」");
     check(JSON.parse(localStorage.getItem("fuyu-collapsed-overflow") ?? "[]").length === 5 - wideShown, "放不下的项目记给设置窗口，清单里好标出来");
-    const sides = measureBarWings(bar());
-    const reported = [...(sides?.left ?? []), ...(sides?.right ?? [])];
-    check(sides?.left[0] === "status-light" && reported.filter((id) => id.startsWith("clock-")).length === wideShown && reported.includes("more") === Boolean(chip())
-      && sides?.left.some((id) => id.startsWith("clock-")) && !reported.includes("center"),
-      "岛把两翼此刻显示的项目按左右报给设置窗口：状态灯在左，借到左翼的时钟算左边，有「+N」就报它，没显示的中心图案不报");
+    const notchMirror = await mirrorDiffers();
+    check(notchMirror === null, `刘海形态：设置窗口照岛发来的内容画出的镜像，每个元素的位置、大小和颜色都和真岛一样（${notchMirror}）`);
     await set({ wing: 100 });
     await settleTransitions();
     const { arrangeCollapsedItems, saveCollapsedPlacements, setCollapsedItemShelf } = await import("../../src/lib/settings/collapsedItems");
@@ -318,6 +315,8 @@ async function runChecks() {
     await settleTransitions();
     check(!bar().querySelector(".island__notch-gap, .island__notch-wing"), "不贴合刘海时收起条照旧");
     check(Math.abs(box(island()).height - 38) < 1, "不贴合刘海时高度回到 38");
+    const pillMirror = await mirrorDiffers();
+    check(pillMirror === null, `普通形态：镜像同样和真岛逐个元素对得上（${pillMirror}）`);
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

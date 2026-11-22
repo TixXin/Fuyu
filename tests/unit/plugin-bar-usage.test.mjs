@@ -134,11 +134,3 @@ test("plugin widgets reach Settings with their sizes and an svg icon only (C156.
   ]);
   assert.equal(readBarUsageReport({ id: 4, items: [] }).widgets, undefined);
 });
-
-test("what the notch wings show is read only when both sides are lists of ids", () => {
-  const wings = (value) => readBarUsageReport({ id: 1, collapsed: true, barWidth: 300, items: [], wings: value })?.wings;
-  assert.deepEqual(wings({ left: ["status-light", "", 3], right: ["more", "center", "mail"] }), { left: ["status-light"], right: ["more", "center", "mail"] });
-  assert.equal(wings({ left: ["status-light"] }), undefined);
-  assert.equal(wings("left"), undefined);
-  assert.equal(wings(undefined), undefined);
-});

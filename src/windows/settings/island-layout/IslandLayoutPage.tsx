@@ -14,6 +14,7 @@ import { ExpandedLayout } from "./ExpandedLayout";
 import { IslandBarPreview } from "./IslandBarPreview";
 import { onIslandLayoutItem, takeIslandLayoutItem } from "./islandLayoutFocus";
 import { LayoutStage, type LayoutMode } from "./LayoutStage";
+import { useBarMirror } from "./useBarMirror";
 import { useCollapsedEditor } from "./useCollapsedEditor";
 import { useCollapsedLayout } from "./useCollapsedLayout";
 
@@ -27,6 +28,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
   const { names, listed } = layout;
   const editor = useCollapsedEditor(layout);
   const notch = useIslandNotchShown();
+  const mirror = useBarMirror();
   const text = useTranslation().settings.collapsedItems;
   const styles = useSlotEntries(islandItemStyles, "islandLayout");
   const styled = useCallback((item: string) => styles.some((entry) => islandItemStyleMatches(entry.id, item)), [styles]);
@@ -111,12 +113,12 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
             <IslandBarPreview
               settings={settings}
               notch={notch}
-              wings={layout.wings}
+              mirror={mirror}
               names={names}
               placements={editor.view}
               centers={centers}
               openItem={openItem}
-              dragging={editor.drag?.id ?? null}
+              drag={editor.drag}
               onPick={pick}
               onDragStart={editor.startDrag}
             />,

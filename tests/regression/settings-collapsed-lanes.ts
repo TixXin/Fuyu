@@ -97,21 +97,55 @@ async function checkNotch(check: Check) {
   check(document.querySelector(".collapsed-lanes__lane[data-lane='center'] .collapsed-lanes__lane-hint")?.textContent === "排在刘海右边最前"
     && document.querySelector(".collapsed-lanes__lane[data-lane='left'] .collapsed-lanes__lane-hint")?.textContent === "刘海左边",
     "The lanes say where things go around the notch");
-  await act(async () => {
-    await (await import("@tauri-apps/api/event")).emit("plugin-bar-usage-report", { id: 2, collapsed: false, barWidth: null, items: [], wings: { left: ["status-light"], right: ["more"] } });
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-  const live = [...document.querySelectorAll(".island-bar-preview[data-notch] .island-bar-preview__wing")];
-  check(itemsIn(live[0]).join("|") === "status-light" && itemsIn(live[1]).length === 0 && live[1]?.querySelector(".island-bar-preview__more")?.textContent === "+1",
-    "When the island reports what its wings show, the preview draws only those: items with nothing to show and the hidden center pattern drop out, and +N sits on the side the island put it");
-  await act(async () => {
-    await (await import("@tauri-apps/api/event")).emit("plugin-bar-usage-report", { id: 3, collapsed: false, barWidth: null, items: [] });
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
   await notch(null);
   await overflow(null);
   check(!document.querySelector(".island-bar-preview[data-notch]") && document.querySelector(".collapsed-lanes__lane[data-lane='left'] .collapsed-lanes__lane-hint")?.textContent === "摘要左边",
     "Without a notch the bar preview and hints go back to the pill");
+}
+
+async function checkMirror(check: Check) {
+  const frame = (shown: boolean) => ({
+    shown,
+    form: "bar",
+    width: 300,
+    height: 38,
+    html: shown ? `<section class="island" onclick="window.mirrorRan = true" style="position: relative; width: 300px; height: 38px; border-radius: 19px; background-color: rgb(12, 34, 56);"><b style="position: absolute; left: 14px; top: 14px; width: 10px; height: 10px;"></b><script>window.mirrorRan = true</script></section>` : "",
+    items: [{ id: "status-light", box: { left: 14, top: 14, width: 10, height: 10 } }, { id: "mail", box: { left: 240, top: 8, width: 22, height: 22 } }, { id: "not-listed", box: { left: 270, top: 8, width: 10, height: 10 } }],
+    more: null,
+    middle: { left: 40, top: 0, width: 180, height: 38 },
+    center: null,
+  });
+  const send = (shown: boolean) => act(async () => {
+    await (await import("@tauri-apps/api/event")).emit("island-mirror-frame", frame(shown));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+  const hit = (item: string) => document.querySelector<HTMLElement>(`.bar-mirror__item[data-item='${item}']`);
+  await reset();
+  await send(true);
+  const painted = document.querySelector(".bar-mirror__paint")?.shadowRoot?.querySelector<HTMLElement>(".island");
+  check(document.querySelector(".island-bar-preview[data-mirror='bar'][data-live]") && !document.querySelector(".island-bar-preview__bar") && painted
+    && getComputedStyle(painted).backgroundColor === "rgb(12, 34, 56)" && Math.round(painted.getBoundingClientRect().width) === 300,
+    "Once the island sends its bar, the preview paints that instead of the sketch, at the island's own size and colours");
+  check(!painted?.hasAttribute("onclick") && !painted?.querySelector("script") && !(window as unknown as { mirrorRan?: boolean }).mirrorRan,
+    "Scripts and handlers in what the island sent are stripped");
+  const mail = hit("mail");
+  check(mail?.closest("[data-lane]")?.getAttribute("data-lane") === "right" && hit("status-light")?.closest("[data-lane]")?.getAttribute("data-lane") === "left"
+    && !hit("not-listed") && Math.round(mail!.getBoundingClientRect().width) === 22,
+    "Each item the island reports gets a target over it, on the side of the summary it sits on; things that are not bar items get none");
+  await act(async () => { mail!.click(); });
+  check(mail?.getAttribute("aria-pressed") === "true" && chip("mail")?.classList.contains("lane-chip--found"), "Clicking an item in the mirror finds its chip below");
+  const from = middle(mail!);
+  const to = middle(document.querySelector(".bar-mirror__zone[data-lane='left']")!);
+  await act(async () => { pointer("pointerdown", mail!, from.x, from.y); pointer("pointermove", window, to.x, to.y); });
+  check(document.querySelector(".bar-mirror__zone[data-lane='left'][data-over]") && document.querySelector(".bar-mirror__drop") && lane("left").includes("新邮件提醒") && saved() === null,
+    "Dragging it over the left of the mirror marks where it will land and previews it in the lanes, without saving");
+  await act(async () => { pointer("pointerup", window, to.x, to.y); });
+  check(savedItem("mail")?.zone === "left" && !document.querySelector(".bar-mirror__drop"), "Letting go saves it on the left");
+  await send(false);
+  check(document.querySelector(".island-bar-preview[data-mirror]:not([data-live])") && document.querySelector(".island-bar-preview__caption")?.textContent === "岛现在展开或收起着，这是收起条上一次的样子"
+    && document.querySelector(".bar-mirror__paint")?.shadowRoot?.querySelector(".island"),
+    "While the island is open the last bar stays, dimmed, with a note");
+  await reset();
 }
 
 export async function checkCollapsedLanes(check: Check) {
@@ -131,5 +165,6 @@ export async function checkCollapsedLanes(check: Check) {
   await act(async () => { chip("weather")!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 40, clientY: 40 })); });
   await act(async () => { document.querySelector<HTMLButtonElement>(".lane-menu [data-place='left']")!.click(); });
   check(lane("left") === "浮屿水母|天气" && !lane("right").includes("待办环") && savedItem("weather")?.zone === "left", "A plugin item the island reports is listed by name and can change sides; one that cannot be hidden is left out");
+  await checkMirror(check);
   localStorage.removeItem("fuyu-collapsed-items");
 }

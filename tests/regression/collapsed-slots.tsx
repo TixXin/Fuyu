@@ -1,4 +1,5 @@
 import { act, StrictMode, useState, type CSSProperties } from "react";
+import { mirrorDiffers } from "./mirrorCheck";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
@@ -120,6 +121,8 @@ async function runChecks() {
     await set({ todoCount: null, slots: { center: <span className="test-center">中</span> } });
     await set({ task: null, agents: true, count: 2, slots: { center: <span className="test-center">中</span>, gauges: [{ id: "usage:claudeCode", node: <span className="test-gauge" style={{ display: "block", width: 42, height: 20 }} /> }] } });
     const box = (selector: string) => bar().querySelector(selector)!.getBoundingClientRect();
+    const mirrored = await mirrorDiffers();
+    check(mirrored === null, `带中心图案和仪表环的收起条，镜像和真岛逐个元素对得上（${mirrored}）`);
     const [pattern, slot, light, gauges] = [box(".test-center"), box(".island__center-slot"), box(".island__pulse"), box(".island__gauge-slot")];
     const shell = bar().getBoundingClientRect();
     check(light.right - shell.left !== shell.right - gauges.left
