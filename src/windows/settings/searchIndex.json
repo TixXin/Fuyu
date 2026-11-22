@@ -1349,19 +1349,6 @@
       "page": "behavior",
       "zh-CN": {
         "group": "展开",
-        "title": "Fuyu 页标签用图标",
-        "description": "展开后顶部最左边的 Fuyu 页标签换成水母图标，不显示文字"
-      },
-      "en": {
-        "group": "Opening",
-        "title": "Icon for the Fuyu tab",
-        "description": "Show the jellyfish instead of the word Fuyu on the first page tab at the top of the open island"
-      }
-    },
-    {
-      "page": "behavior",
-      "zh-CN": {
-        "group": "展开",
         "title": "悬停切换页面",
         "description": "鼠标停在展开后顶部的页面图标上，就切到那一页，不用点击；划过的图标不会切换"
       },

@@ -5,6 +5,7 @@ import { fuyuPanel, fuyuPanels, type CustomPanel } from "../../../lib/settings/c
 import type { IslandSettings } from "../../../lib/settings/types";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import { ExpandedPreview } from "./ExpandedPreview";
+import { PageIconPicker } from "./PageIconPicker";
 import { PageStrip } from "./PageStrip";
 import { PanelEditor } from "./PanelEditor";
 import { SizePicker } from "./SizePicker";
@@ -39,6 +40,7 @@ export function ExpandedLayout({ settings, pluginPages, pluginWidgets, stage }: 
     <>
       {stage(<ExpandedPreview rows={rows} current={current} panel={panel} library={library} selected={selected} onPage={setPageId} onWidget={setWidgetId} onPanel={change} />)}
       <PageStrip rows={rows} layout={layout} save={save} current={current?.id} onPick={setPageId} pluginsListed={pluginsListed} />
+      {current ? <PageIconPicker key={current.id} row={current} layout={layout} save={save} legacyJellyfish={settings.fuyuTabIcon} /> : null}
       {panel ? (
         <div className="panel-editing" key={panel.id}>
           <PanelEditor panel={panel} library={library} selected={selected} onSelect={setWidgetId} onChange={change} />

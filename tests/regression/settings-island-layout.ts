@@ -40,8 +40,31 @@ export async function checkIslandPages(check: (condition: unknown, message: stri
   check(pageRow("music")?.dataset.hidden !== undefined && savedPages()?.hidden.includes("music") && !previewTabs().includes("music"), "Hiding a page keeps the feature on and takes it off the preview's top bar");
   await act(async () => { pageRow("calendar")!.click(); });
   check(document.querySelector(".expanded-preview__page[data-page='calendar']") && pageRow("calendar")?.getAttribute("aria-selected") === "true", "Clicking a page chip shows that page on the preview");
+  await checkPageIcons(check);
+}
+
+const iconOption = (icon: string) => document.querySelector<HTMLButtonElement>(`.page-icon-picker [data-icon='${icon}']`);
+const savedIcons = () => (savedPages() as { icons?: Record<string, string> } | null)?.icons;
+
+async function checkPageIcons(check: (condition: unknown, message: string) => void) {
+  check(document.querySelector(".page-icon-picker[data-page='calendar']") && iconOption("default")?.getAttribute("aria-checked") === "true" && !iconOption("text"),
+    "The picked page shows a tab icon picker with Default chosen");
+  await act(async () => { iconOption("star")!.click(); });
+  check(savedIcons()?.calendar === "star" && iconOption("star")?.getAttribute("aria-checked") === "true"
+    && document.querySelector(".expanded-preview__tab[data-page='calendar'] svg.lucide-star") && pageRow("calendar")?.querySelector("svg.lucide-star"),
+    "Picking an icon saves it in fuyu-island-pages and the preview tab and page chip follow");
+  await act(async () => { pageRow("panel:fuyu")!.click(); });
+  check(iconOption("text")?.getAttribute("aria-checked") === "true" && iconOption("jellyfish") && !iconOption("default"), "The Fuyu page offers the word and the jellyfish, with the word chosen by default");
+  await act(async () => { iconOption("jellyfish")!.click(); });
+  check(savedIcons()?.["panel:fuyu"] === "jellyfish" && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] .center-jelly"), "Choosing the jellyfish for the Fuyu tab is saved and previewed");
+  await act(async () => { iconOption("text")!.click(); });
+  check(savedIcons()?.["panel:fuyu"] === undefined, "Going back to the word drops the Fuyu entry");
   await act(async () => { document.querySelector<HTMLButtonElement>(".layout-chips__reset")!.click(); });
-  check(savedPages() === null && pageIds()[0] === "panel:fuyu" && pageIds()[1] === "agents", "Restoring the default order removes the key");
+  check(savedPages()?.order.length === 0 && savedPages()?.hidden.length === 0 && savedIcons()?.calendar === "star" && pageIds()[0] === "panel:fuyu" && pageIds()[1] === "agents",
+    "Restoring the default order keeps the chosen icons");
+  await act(async () => { pageRow("calendar")!.click(); });
+  await act(async () => { iconOption("default")!.click(); });
+  check(savedPages() === null, "With the default order and no icons left the key is removed");
 }
 
 const savedPanels = () => JSON.parse(localStorage.getItem("fuyu-custom-panels") ?? "null") as { panels: { id: string; name: string; icon: string; items: { widget: string; size: string; x: number; y: number }[] }[] } | null;

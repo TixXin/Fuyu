@@ -89,12 +89,6 @@ export function ExpandSettingsSection({
           />
         )}
         <SettingsToggleRow
-          title={expand.fuyuTabIcon}
-          description={expand.fuyuTabIconHint}
-          checked={settings.fuyuTabIcon}
-          onChange={(fuyuTabIcon) => update({ fuyuTabIcon })}
-        />
-        <SettingsToggleRow
           title={expand.hoverSwitchPage}
           description={expand.hoverSwitchPageHint}
           checked={settings.hoverSwitchPage}

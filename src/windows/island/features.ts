@@ -31,7 +31,7 @@ export function foldScreenshotsIntoClipboard(features: IslandFeatures): IslandFe
 }
 
 export function withPageLayout(features: IslandFeatures, pageLayout: IslandPagesLayout): IslandFeatures {
-  return pageLayout.order.length === 0 && pageLayout.hidden.length === 0 ? features : { ...features, pageLayout };
+  return pageLayout.order.length === 0 && pageLayout.hidden.length === 0 && Object.keys(pageLayout.icons ?? {}).length === 0 ? features : { ...features, pageLayout };
 }
 
 type Orderable = { shortcutOrder?: number; headerDot?: boolean; external?: boolean };

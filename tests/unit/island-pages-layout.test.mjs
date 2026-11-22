@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import "./islandPageSlot.mjs";
-import { arrangeIslandPages, moveIslandPage, placeIslandPage, readIslandPages, setIslandPageHidden } from "../../src/lib/settings/islandPages.ts";
+import { arrangeIslandPages, moveIslandPage, placeIslandPage, readIslandPages, setIslandPageHidden, setIslandPageIcon } from "../../src/lib/settings/islandPages.ts";
 import { cycleShortcutPage, headerDotPages, isPageShown, pageForAltDigit, pageShortcutOrder, resolveIslandPage } from "../../src/windows/island/features.ts";
 import { pageSlot } from "../../src/windows/island/slots/pageSlot.ts";
 
@@ -58,4 +58,21 @@ test("dragging a page puts it before another one or at the end", () => {
   assert.deepEqual(placeIslandPage(empty, listed, "agents", null).order, ["todo", "music", "panel:a", "agents"]);
   assert.equal(placeIslandPage(empty, listed, "todo", "todo"), empty);
   assert.equal(placeIslandPage(empty, listed, "todo", "missing"), empty);
+});
+
+test("page icons are an optional map that old data does without and junk entries drop out of", () => {
+  assert.equal("icons" in readIslandPages(JSON.stringify({ version: 1, order: ["todo"], hidden: [] })), false);
+  assert.deepEqual(readIslandPages(JSON.stringify({ version: 1, order: [], hidden: [], icons: { todo: "star", music: 3, "": "cat", calendar: "", timer: "x".repeat(41), "panel:fuyu": "jellyfish" } })),
+    { order: [], hidden: [], icons: { todo: "star", "panel:fuyu": "jellyfish" } });
+  assert.equal("icons" in readIslandPages(JSON.stringify({ version: 1, order: [], hidden: [], icons: ["star"] })), false);
+});
+
+test("setting a page icon keeps order and hidden, and clearing the last one drops the map", () => {
+  const layout = { order: ["timer", "todo"], hidden: ["music"] };
+  const starred = setIslandPageIcon(layout, "todo", "star");
+  assert.deepEqual(starred, { order: ["timer", "todo"], hidden: ["music"], icons: { todo: "star" } });
+  assert.deepEqual(setIslandPageIcon(starred, "todo", "cat").icons, { todo: "cat" });
+  assert.deepEqual(setIslandPageIcon(starred, "todo", null), layout);
+  assert.deepEqual(setIslandPageHidden(starred, "todo", true).icons, { todo: "star" });
+  assert.deepEqual(moveIslandPage(starred, ["timer", "todo"], "todo", -1).icons, { todo: "star" });
 });
