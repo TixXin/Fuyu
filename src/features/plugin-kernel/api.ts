@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { ISLAND_MIRROR_FRAME, ISLAND_MIRROR_REQUEST, readMirrorFrame, type MirrorFrame } from "./barMirror.ts";
 import { PLUGIN_BAR_USAGE_REPORT, PLUGIN_BAR_USAGE_REQUEST, readBarUsageReport, type BarUsageReport } from "./barUsage.ts";
 import { ISLAND_PLUGIN_PAGE_EVENT, islandPluginPageRequest, readIslandPluginPageRequest, type IslandPluginPageRequest } from "./islandPageRequest.ts";
 import { ISLAND_PLUGIN_SPOTLIGHT_EVENT, readIslandSpotlightRequest, type IslandSpotlightRequest } from "./islandSpotlight.ts";
@@ -170,6 +171,25 @@ export function onPluginBarUsageReport(handler: (report: BarUsageReport) => void
   return listen<unknown>(PLUGIN_BAR_USAGE_REPORT, ({ payload }) => {
     const report = readBarUsageReport(payload);
     if (report) handler(report);
+  });
+}
+
+export function requestIslandMirror(): Promise<void> {
+  return emitTo("main", ISLAND_MIRROR_REQUEST, {});
+}
+
+export function onIslandMirrorRequest(handler: () => void): Promise<UnlistenFn> {
+  return listen(ISLAND_MIRROR_REQUEST, () => handler());
+}
+
+export function sendIslandMirrorFrame(frame: MirrorFrame): Promise<void> {
+  return emitTo("settings", ISLAND_MIRROR_FRAME, frame);
+}
+
+export function onIslandMirrorFrame(handler: (frame: MirrorFrame) => void): Promise<UnlistenFn> {
+  return listen<unknown>(ISLAND_MIRROR_FRAME, ({ payload }) => {
+    const frame = readMirrorFrame(payload);
+    if (frame) handler(frame);
   });
 }
 

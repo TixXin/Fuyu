@@ -1,4 +1,6 @@
+import { PawPrint } from "lucide-react";
 import { useMemo } from "react";
+import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
@@ -21,6 +23,14 @@ import { OWNER } from "./plugin/owner.ts";
 import { usePetChoices } from "./usePetChoices";
 import "./CenterPatternSettingsGroup.css";
 
+function PatternArt({ pattern }: { pattern: CenterPatternSelection }) {
+  return (
+    <span className="center-pattern-art" data-pattern={pattern}>
+      {pattern === "pet" ? <PawPrint size={18} strokeWidth={2.2} /> : <CenterPattern pattern={pattern} paused height={20} />}
+    </span>
+  );
+}
+
 export function CenterPatternSettingsGroup() {
   const text = useTranslation().settings.plugins.centerPattern;
   const errorText = useErrorText();
@@ -42,22 +52,14 @@ export function CenterPatternSettingsGroup() {
         checked
         onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch((reason: unknown) => flashFailure(errorText(reason)))}
       />
-      <SettingsRow
-        title={text.pattern}
-        control={
-          <>
-            <span className="center-pattern-preview" aria-hidden="true">
-              <CenterPattern pattern={config.pattern === "pet" ? "eyes" : config.pattern} paused height={18} />
-            </span>
-            <SettingsSelect<CenterPatternSelection>
-              value={config.pattern}
-              ariaLabel={text.pattern}
-              options={CENTER_PATTERN_OPTIONS.map((pattern) => ({ value: pattern, label: text.patterns[pattern] }))}
-              onChange={(pattern) => save("pattern", pattern)}
-            />
-          </>
-        }
-      />
+      <SettingsRow title={text.pattern}>
+        <SettingsChoiceCards<CenterPatternSelection>
+          value={config.pattern}
+          ariaLabel={text.pattern}
+          options={CENTER_PATTERN_OPTIONS.map((pattern) => ({ value: pattern, label: text.patterns[pattern], art: <PatternArt pattern={pattern} /> }))}
+          onChange={(pattern) => save("pattern", pattern)}
+        />
+      </SettingsRow>
       <SettingsRow
         indent={config.pattern === "pet"}
         title={text.pet}

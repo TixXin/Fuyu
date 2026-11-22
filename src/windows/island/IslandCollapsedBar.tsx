@@ -10,6 +10,7 @@ import { lineSlot, type CollapsedLineContext } from "./slots/line";
 import type { CollapsedSlots, IslandPage } from "./types";
 import { useCollapsedContextMenu } from "./useCollapsedContextMenu";
 import { useWindowDragGesture } from "./useWindowDragGesture";
+import { useBarMirrorWatched } from "../../features/plugin-kernel/barMirrorWatch";
 import { hasNotchDrop, MAX_NOTCH_WING, useIslandNotch } from "./notch";
 import { CollapsedMore } from "./CollapsedMore";
 import { BAR_UNIT, useCollapsedOverflow, type CollapsedOverflowState } from "./useCollapsedOverflow";
@@ -59,11 +60,16 @@ function barUnits(items: readonly CollapsedBarItem[], placed: ReadonlySet<string
   return units;
 }
 
-function renderUnits(units: readonly BarUnit[], overflow: CollapsedOverflowState) {
-  if (!overflow.fitting) return units.map((unit) => <Fragment key={unit.key}>{unit.node}</Fragment>);
+function renderUnits(units: readonly BarUnit[], overflow: CollapsedOverflowState, marked: boolean) {
+  if (!overflow.fitting) return units.map((unit) => (
+    <Fragment key={unit.key}>
+      {marked ? <i key="mark" hidden data-bar-mark={unit.ids.join(" ")} /> : null}
+      <Fragment key="node">{unit.node}</Fragment>
+    </Fragment>
+  ));
   return units
     .filter((unit) => !unit.ids.every((id) => overflow.shelved.has(id)))
-    .map((unit) => <span key={unit.key} className="island__bar-unit" {...{ [BAR_UNIT]: unit.key }}>{unit.node}</span>);
+    .map((unit) => <span key={unit.key} className="island__bar-unit" {...{ [BAR_UNIT]: unit.key, "data-bar-items": unit.ids.join(" ") }}>{unit.node}</span>);
 }
 
 export function IslandCollapsedBar({
@@ -85,6 +91,7 @@ export function IslandCollapsedBar({
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
   const notch = useIslandNotch();
+  const marked = useBarMirrorWatched();
   const { didDragRef, prepareWindowDrag, cancelWindowDrag } =
     useWindowDragGesture(isTucked, onWindowDragStart);
   const pulseClassName = [
@@ -157,7 +164,7 @@ export function IslandCollapsedBar({
 
   const stays = (unit: BarUnit) => !overflow.moved.has(unit.key);
   const crossed = (unit: BarUnit) => overflow.moved.has(unit.key);
-  const left = <>{renderUnits([...leftUnits.filter(stays), ...rightUnits.filter(crossed)], overflow)}{more("left")}</>;
+  const left = <>{renderUnits([...leftUnits.filter(stays), ...rightUnits.filter(crossed)], overflow, marked)}{more("left")}</>;
   const message = (
     <>
         <button
@@ -203,7 +210,7 @@ export function IslandCollapsedBar({
   );
   const right = (
     <>
-        {renderUnits([...leftUnits.filter(crossed), ...rightUnits.filter(stays)], overflow)}
+        {renderUnits([...leftUnits.filter(crossed), ...rightUnits.filter(stays)], overflow, marked)}
         {more("end")}
         {!contributed.hints.has("agents.count") && (
           <button

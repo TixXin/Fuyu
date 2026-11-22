@@ -154,18 +154,31 @@ fn panel_shift(width: f64, room_left: f64, room_right: f64) -> f64 {
     }
 }
 
+fn panel_window(
+    (left, top, width, height): (f64, f64, f64, f64),
+    state: IslandWindowState,
+) -> Option<(f64, f64, f64, f64, f64)> {
+    let space = panel().filter(|_| wanted(state) && matches!(state.mode, IslandMode::Expanded))?;
+    let lift = f64::from(space.lift);
+    let panel_width = super::geometry::island_rect(left, top, width, height, state).width;
+    let shift = panel_shift(panel_width, f64::from(space.room_left), f64::from(space.room_right));
+    Some((left + shift, top, width, height - lift, lift))
+}
+
+pub(super) fn panel_on_screen(window: (f64, f64, f64, f64), state: IslandWindowState) -> Option<super::geometry::IslandOnScreen> {
+    let (left, top, width, height, _) = panel_window(window, state)?;
+    Some(super::geometry::island_rect(left, top, width, height, state))
+}
+
 pub(super) fn cursor_on_bar_or_panel(
     (left, top, width, height): (f64, f64, f64, f64),
     (x, y): (f64, f64),
     state: IslandWindowState,
 ) -> Option<bool> {
-    let space = panel().filter(|_| wanted(state) && matches!(state.mode, IslandMode::Expanded))?;
-    let lift = f64::from(space.lift);
+    let (panel_left, panel_top, panel_width, panel_height, lift) = panel_window((left, top, width, height), state)?;
     let bar = IslandWindowState { mode: IslandMode::Collapsed, ..state };
     let on_bar = super::geometry::cursor_on_island(left, top, width, height, x, y, bar);
-    let panel_width = super::geometry::island_rect(left, top, width, height, state).width;
-    let shift = panel_shift(panel_width, f64::from(space.room_left), f64::from(space.room_right));
-    let on_panel = super::geometry::cursor_on_island(left + shift, top, width, height - lift, x, y, state);
+    let on_panel = super::geometry::cursor_on_island(panel_left, panel_top, panel_width, panel_height, x, y, state);
     let between = {
         let rect = super::geometry::island_rect(left, top, width, height, bar);
         x >= rect.left && x <= rect.left + rect.width && y >= top + height - lift && y <= rect.top
