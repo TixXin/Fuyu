@@ -232,3 +232,60 @@ fn append_market_entry_handles_empty_and_idempotent_inputs() {
     let second = append_market_entry(&from_empty, "@fuyu/weather", false).unwrap();
     assert_eq!(second, from_empty);
 }
+
+#[test]
+fn maps_legacy_focusd_system_monitor_alias_and_deduplicates_with_dev_id() {
+    let alias_only = TempHome::new("sysmon-alias-only");
+    std::fs::write(
+        alias_only.path().join("plugins.json"),
+        serde_json::to_string_pretty(&json!({
+            "plugins": {
+                "focusd.system-monitor": {
+                    "enabled": true,
+                    "settings": { "barCpu": true, "barMemory": false }
+                }
+            }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+
+    let snap = migrate_and_scan(alias_only.path());
+    assert_eq!(snap.official.len(), 1);
+    assert_eq!(snap.official[0].v2_id, "dev.focusd.system-monitor");
+    assert_eq!(snap.official[0].v3_id, "@fuyu/system-monitor");
+    assert!(snap.official[0].enabled_in_v2);
+    assert!(snap.official[0].config_migrated);
+    assert!(snap.other.is_empty());
+
+    let both = TempHome::new("sysmon-both-ids");
+    std::fs::write(
+        both.path().join("plugins.json"),
+        serde_json::to_string_pretty(&json!({
+            "plugins": {
+                "focusd.system-monitor": {
+                    "enabled": true,
+                    "settings": { "barCpu": true, "barMemory": true }
+                },
+                "dev.focusd.system-monitor": {
+                    "enabled": false,
+                    "settings": { "barCpu": false, "barMemory": true }
+                }
+            }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+
+    let merged = migrate_and_scan(both.path());
+    assert_eq!(merged.official.len(), 1);
+    assert_eq!(merged.official[0].v2_id, "dev.focusd.system-monitor");
+    assert!(!merged.official[0].enabled_in_v2);
+    assert!(merged.other.is_empty());
+    let cfg: Value = serde_json::from_str(
+        &std::fs::read_to_string(both.path().join("plugins-v3/data/@fuyu/system-monitor/config.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(cfg["barCpu"], false);
+    assert_eq!(cfg["barMemory"], true);
+}

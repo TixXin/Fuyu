@@ -35,6 +35,7 @@ type ConfigBuilder = fn(&Map<String, Value>) -> Option<Value>;
 
 struct OfficialMapping {
     v2_id: &'static str,
+    aliases: &'static [&'static str],
     v3_id: &'static str,
     slug: &'static str,
     zh_cn: &'static str,
@@ -45,6 +46,7 @@ struct OfficialMapping {
 const OFFICIAL_MAPPINGS: &[OfficialMapping] = &[
     OfficialMapping {
         v2_id: "dev.focusd.pomodoro",
+        aliases: &[],
         v3_id: "@fuyu/pomodoro",
         slug: "pomodoro",
         zh_cn: "番茄钟",
@@ -53,6 +55,7 @@ const OFFICIAL_MAPPINGS: &[OfficialMapping] = &[
     },
     OfficialMapping {
         v2_id: "dev.focusd.todo-digest",
+        aliases: &[],
         v3_id: "@fuyu/todo-digest",
         slug: "todo-digest",
         zh_cn: "待办摘要",
@@ -61,6 +64,7 @@ const OFFICIAL_MAPPINGS: &[OfficialMapping] = &[
     },
     OfficialMapping {
         v2_id: "dev.focusd.todo-ring",
+        aliases: &[],
         v3_id: "@fuyu/todo-ring",
         slug: "todo-ring",
         zh_cn: "待办进度环",
@@ -69,6 +73,7 @@ const OFFICIAL_MAPPINGS: &[OfficialMapping] = &[
     },
     OfficialMapping {
         v2_id: "dev.focusd.now-playing",
+        aliases: &[],
         v3_id: "@fuyu/now-playing",
         slug: "now-playing",
         zh_cn: "正在播放",
@@ -77,6 +82,7 @@ const OFFICIAL_MAPPINGS: &[OfficialMapping] = &[
     },
     OfficialMapping {
         v2_id: "dev.focusd.weather",
+        aliases: &[],
         v3_id: "@fuyu/weather",
         slug: "weather",
         zh_cn: "天气",
@@ -85,6 +91,7 @@ const OFFICIAL_MAPPINGS: &[OfficialMapping] = &[
     },
     OfficialMapping {
         v2_id: "dev.focusd.github-issues",
+        aliases: &[],
         v3_id: "@fuyu/github-issues",
         slug: "github-issues",
         zh_cn: "GitHub Issue",
@@ -93,6 +100,7 @@ const OFFICIAL_MAPPINGS: &[OfficialMapping] = &[
     },
     OfficialMapping {
         v2_id: "dev.focusd.system-monitor",
+        aliases: &["focusd.system-monitor"],
         v3_id: "@fuyu/system-monitor",
         slug: "system-monitor",
         zh_cn: "系统监控",
@@ -165,7 +173,13 @@ fn is_v2_builtin(id: &str) -> bool {
 }
 
 fn find_official(v2_id: &str) -> Option<&'static OfficialMapping> {
-    OFFICIAL_MAPPINGS.iter().find(|item| item.v2_id == v2_id)
+    OFFICIAL_MAPPINGS
+        .iter()
+        .find(|item| item.v2_id == v2_id || item.aliases.contains(&v2_id))
+}
+
+fn canonical_v2_id(v2_id: &str) -> &str {
+    find_official(v2_id).map_or(v2_id, |item| item.v2_id)
 }
 
 fn clamp_i64(value: Option<&Value>, default: i64, min: i64, max: i64) -> i64 {
@@ -290,6 +304,7 @@ fn read_manifest_meta(dir: &Path) -> Option<(String, Option<LocalizedTitle>)> {
 
 fn discover_v2_plugins(home: &Path) -> BTreeMap<String, DiscoveredV2> {
     let mut found: BTreeMap<String, DiscoveredV2> = BTreeMap::new();
+    let mut primary_seen: BTreeSet<String> = BTreeSet::new();
     if let Ok(text) = std::fs::read_to_string(home.join(V2_STATE_FILE)) {
         for (id, raw_grant) in v2_builtins::grants(&text) {
             let trimmed = id.trim();
@@ -297,10 +312,21 @@ fn discover_v2_plugins(home: &Path) -> BTreeMap<String, DiscoveredV2> {
                 continue;
             }
             if let Ok(grant) = serde_json::from_value::<v2_builtins::Grant>(raw_grant) {
-                found.insert(
-                    trimmed.to_owned(),
-                    DiscoveredV2 { enabled: grant.enabled, settings: grant.settings, title: None },
-                );
+                let canonical = canonical_v2_id(trimmed);
+                let is_primary = canonical == trimmed;
+                if is_primary {
+                    primary_seen.insert(canonical.to_owned());
+                    found.insert(
+                        canonical.to_owned(),
+                        DiscoveredV2 { enabled: grant.enabled, settings: grant.settings, title: None },
+                    );
+                } else if !primary_seen.contains(canonical) {
+                    found.entry(canonical.to_owned()).or_insert(DiscoveredV2 {
+                        enabled: grant.enabled,
+                        settings: grant.settings,
+                        title: None,
+                    });
+                }
             }
         }
     }
@@ -314,7 +340,8 @@ fn discover_v2_plugins(home: &Path) -> BTreeMap<String, DiscoveredV2> {
             if is_v2_builtin(&id) {
                 continue;
             }
-            let item = found.entry(id).or_default();
+            let canonical = canonical_v2_id(&id).to_owned();
+            let item = found.entry(canonical).or_default();
             if item.title.is_none() {
                 item.title = title;
             }
