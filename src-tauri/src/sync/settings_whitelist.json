@@ -221,7 +221,7 @@
         "notchRingIslandMotion": "sync",
         "notchRingIslandDevice": "sync",
         "notchRingIslandStatus": "sync",
-        "notchRingPanelStyle": "sync",
+        "notchRingPanelStyle": "local",
         "notchRingPanelColor": "sync",
         "notchRingPanelCustomColor": "sync",
         "notchRingPanelWidth": "sync",

@@ -1,5 +1,6 @@
 import { clamp } from "../../utils/number.ts";
 import { HEX_COLOR_PATTERN } from "../../utils/color.ts";
+import { isMacOS } from "../platform.ts";
 import { oneOf } from "./settingsLimits.ts";
 
 export const NOTCH_RING_STYLES = ["off", "hairline", "glow", "scan", "drip", "progress", "beat", "ticks", "aurora"] as const;
@@ -45,21 +46,28 @@ export const NOTCH_RING_SETTING_KEYS = [
   "notchRingIslandBottom",
 ] as const satisfies readonly (keyof NotchRingSettingValues)[];
 
-const DEFAULT_LOOKS: Record<NotchRingTarget, NotchRingLook> = {
-  Island: { style: "off", color: "white", customColor: "#ffd60a", width: 1, gap: 2, intensity: 60, motion: true, device: true, status: false },
-  Panel: { style: "off", color: "white", customColor: "#ffd60a", width: 1, gap: 3, intensity: 45, motion: true, device: true, status: false },
-};
+function defaultLooks(mac: boolean): Record<NotchRingTarget, NotchRingLook> {
+  return {
+    Island: { style: "off", color: "white", customColor: "#ffd60a", width: 1, gap: 2, intensity: 60, motion: true, device: true, status: false },
+    Panel: { style: mac ? "hairline" : "off", color: "white", customColor: "#ffd60a", width: 1, gap: 3, intensity: 45, motion: true, device: true, status: false },
+  };
+}
 
 function flatten(target: NotchRingTarget, look: NotchRingLook) {
   return Object.fromEntries(FIELDS.map((field) => [notchRingKey(target, field), look[field]]));
 }
 
-export const DEFAULT_NOTCH_RING_SETTINGS = {
-  ...flatten("Island", DEFAULT_LOOKS.Island),
-  ...flatten("Panel", DEFAULT_LOOKS.Panel),
-  notchRingPanelSame: false,
-  notchRingIslandBottom: "sides",
-} as NotchRingSettingValues;
+export function defaultNotchRingSettings(mac: boolean): NotchRingSettingValues {
+  const looks = defaultLooks(mac);
+  return {
+    ...flatten("Island", looks.Island),
+    ...flatten("Panel", looks.Panel),
+    notchRingPanelSame: false,
+    notchRingIslandBottom: "sides",
+  } as NotchRingSettingValues;
+}
+
+export const DEFAULT_NOTCH_RING_SETTINGS = defaultNotchRingSettings(isMacOS);
 
 export function notchRingLook(settings: NotchRingSettingValues, target: NotchRingTarget): NotchRingLook {
   const from = target === "Panel" && settings.notchRingPanelSame ? "Island" : target;
@@ -76,8 +84,8 @@ function readNumber(value: unknown, range: { min: number; max: number }, step: n
   return typeof value === "number" && Number.isFinite(value) ? clamp(Math.round(value / step) * step, range.min, range.max) : fallback;
 }
 
-function normalizeLook(saved: Record<string, unknown> | null | undefined, target: NotchRingTarget): NotchRingLook {
-  const fallback = DEFAULT_LOOKS[target];
+function normalizeLook(saved: Record<string, unknown> | null | undefined, target: NotchRingTarget, mac: boolean): NotchRingLook {
+  const fallback = defaultLooks(mac)[target];
   const read = (field: keyof NotchRingLook) => saved?.[notchRingKey(target, field)];
   const custom = read("customColor");
   const flag = (field: "motion" | "device" | "status") => (typeof read(field) === "boolean" ? read(field) as boolean : fallback[field]);
@@ -94,11 +102,11 @@ function normalizeLook(saved: Record<string, unknown> | null | undefined, target
   };
 }
 
-export function normalizeNotchRingSettings(saved: object | null | undefined): NotchRingSettingValues {
+export function normalizeNotchRingSettings(saved: object | null | undefined, mac = isMacOS): NotchRingSettingValues {
   const record = saved as Record<string, unknown> | null | undefined;
   return {
-    ...flatten("Island", normalizeLook(record, "Island")),
-    ...flatten("Panel", normalizeLook(record, "Panel")),
+    ...flatten("Island", normalizeLook(record, "Island", mac)),
+    ...flatten("Panel", normalizeLook(record, "Panel", mac)),
     notchRingPanelSame: record?.notchRingPanelSame === true,
     notchRingIslandBottom: oneOf(NOTCH_RING_BOTTOMS, record?.notchRingIslandBottom, "sides"),
   } as NotchRingSettingValues;

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   DEFAULT_NOTCH_RING_SETTINGS,
+  defaultNotchRingSettings,
   normalizeNotchRingSettings,
   notchRingExtra,
   notchRingLook,
@@ -15,7 +16,7 @@ const message = { color: "#12b7f5", reason: "messages.qq" };
 const plan = (look, extra = {}) => ringPlan({ ...notchRingLook(DEFAULT_NOTCH_RING_SETTINGS, "Island"), ...look }, { accent: "#0a84ff", glow: null, playback: null, motion: true, now: 0, ...extra });
 
 test("an upgraded user sees no ring until the camera or mic is on", () => {
-  const settings = normalizeNotchRingSettings({});
+  const settings = normalizeNotchRingSettings({}, false);
   assert.equal(settings.notchRingIslandStyle, "off");
   assert.equal(settings.notchRingPanelStyle, "off");
   assert.equal(settings.notchRingIslandBottom, "sides");
@@ -23,6 +24,14 @@ test("an upgraded user sees no ring until the camera or mic is on", () => {
   assert.equal(plan({}, { glow: message }), null, "messages only light the ring when that switch is on");
   assert.equal(plan({}, { glow: camera }).color, "#30d158");
   assert.equal(plan({ device: false }, { glow: camera }), null);
+});
+
+test("on a Mac the open panel rings the camera notch by default, the collapsed island does not", () => {
+  const mac = normalizeNotchRingSettings({}, true);
+  assert.equal(mac.notchRingPanelStyle, "hairline");
+  assert.equal(mac.notchRingIslandStyle, "off");
+  assert.equal(normalizeNotchRingSettings({ notchRingPanelStyle: "off" }, true).notchRingPanelStyle, "off", "a Mac user who turned it off keeps it off");
+  assert.equal(defaultNotchRingSettings(false).notchRingPanelStyle, "off");
 });
 
 test("saved values are kept and broken ones fall back", () => {
