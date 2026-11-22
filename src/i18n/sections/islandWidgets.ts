@@ -20,6 +20,7 @@ export type IslandWidgetsText = {
     translate: string;
     systemStatus: string;
     battery: string;
+    peripherals: string;
     network: string;
     launcher: string;
     levels: string;
@@ -87,6 +88,8 @@ export type IslandWidgetsText = {
     charged: string;
     onBattery: string;
     noBattery: string;
+    noPeripherals: string;
+    peripheralLevel: (name: string, level: number) => string;
     quickTargets: { files: string; terminal: string; calculator: string; settings: string };
     volume: string;
     brightness: string;
@@ -114,6 +117,7 @@ export const zhCN: IslandWidgetsText = {
     translate: "翻译",
     systemStatus: "系统状态",
     battery: "电池",
+    peripherals: "外设电量",
     network: "网速",
     launcher: "快捷启动",
     levels: "音量亮度",
@@ -181,6 +185,8 @@ export const zhCN: IslandWidgetsText = {
     charged: "已充满",
     onBattery: "使用电池",
     noBattery: "这台电脑没有电池",
+    noPeripherals: "没有连着能读到电量的设备",
+    peripheralLevel: (name, level) => `${name} 电量 ${level}%`,
     quickTargets: { files: "文件", terminal: "终端", calculator: "计算器", settings: "系统设置" },
     volume: "音量",
     brightness: "亮度",
@@ -208,6 +214,7 @@ export const en: IslandWidgetsText = {
     translate: "Translate",
     systemStatus: "System",
     battery: "Battery",
+    peripherals: "Device batteries",
     network: "Network",
     launcher: "Quick launch",
     levels: "Volume & brightness",
@@ -275,6 +282,8 @@ export const en: IslandWidgetsText = {
     charged: "Fully charged",
     onBattery: "On battery",
     noBattery: "No battery",
+    noPeripherals: "No connected device reports its battery",
+    peripheralLevel: (name, level) => `${name} battery ${level}%`,
     quickTargets: { files: "Files", terminal: "Terminal", calculator: "Calculator", settings: "System settings" },
     volume: "Volume",
     brightness: "Brightness",

@@ -89,3 +89,15 @@ test("hiding wins over the panel, and showing again keeps the panel choice", () 
   assert.deepEqual(shelfIds(setCollapsedItemZone(panel, "music", "left"), offered), ["music"]);
   assert.deepEqual(shelfIds(panel, offered.filter((id) => id !== "music")), []);
 });
+
+test("the peripheral battery item stays off the bar until it is shown, then stays on", () => {
+  const listed = ["status-light", "timer", "peripheral-battery"];
+  assert.equal(isCollapsedItemHidden([], "peripheral-battery"), true);
+  const placements = arrangeCollapsedItems(listed, []);
+  assert.deepEqual(zoneIds(placements, "right", listed), ["timer"]);
+  assert.equal(isCollapsedItemHidden(placements, "peripheral-battery"), true);
+  const shown = setCollapsedItemHidden(placements, "peripheral-battery", false);
+  assert.equal(isCollapsedItemHidden(shown, "peripheral-battery"), false);
+  assert.deepEqual(zoneIds(arrangeCollapsedItems(listed, shown), "right", listed), ["timer", "peripheral-battery"]);
+  assert.equal(isCollapsedItemHidden([], "timer"), false);
+});

@@ -1,0 +1,89 @@
+.peripheral-battery__list {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+}
+
+.peripheral-battery__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto 3px;
+  column-gap: 5px;
+  row-gap: 2px;
+  align-items: center;
+  min-width: 0;
+  font-size: 11.5px;
+}
+
+.peripheral-battery__icon {
+  color: var(--widget-text-3);
+}
+
+.peripheral-battery__name {
+  overflow: hidden;
+  color: var(--widget-text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.peripheral-battery__level {
+  color: var(--widget-text-1);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.peripheral-battery__bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.12);
+  border-radius: 2px;
+}
+
+.peripheral-battery__bar b {
+  display: block;
+  height: 100%;
+  background: var(--mint-text, #34c759);
+  border-radius: 2px;
+}
+
+.peripheral-battery__row[data-low] .peripheral-battery__level {
+  color: var(--error-text, #ff5f57);
+}
+
+.peripheral-battery__row[data-low] .peripheral-battery__bar b {
+  background: var(--error-text, #ff5f57);
+}
+
+.peripheral-battery-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  box-sizing: border-box;
+  max-width: 50px;
+  height: 18px;
+  padding: 0 5px;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.88);
+  background: rgba(var(--island-ink-rgb, 241, 240, 246), 0.1);
+  border-radius: var(--radius-pill);
+}
+
+.peripheral-battery-chip__level {
+  font-variant-numeric: tabular-nums;
+}
+
+.peripheral-battery-chip[data-low] {
+  color: var(--error-text, #ff5f57);
+  background: color-mix(in srgb, var(--error-text, #ff5f57) 18%, transparent);
+}

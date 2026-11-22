@@ -25,6 +25,7 @@ src/
 │   ├── system-widgets/      # Fuyu 面板的系统状态（CPU、内存）、电池、网速和快捷启动组件，几个组件共用一个 2 秒的轮询（statsStore.ts）
 │   ├── daily-widgets/       # Fuyu 面板的「日常」组件：今日、番茄钟、打卡、专注统计、习惯、喝水、便签、倒数日、世界时钟、日出日落、年进度，数据在 fuyu-daily-widgets
 │   ├── device-events/       # 耳机与蓝牙音频连接断开、蓝牙电量低、插拔电源时收起的小岛上显示的提示、设置项
+│   ├── peripheral-battery/  # Fuyu 面板的外设电量组件和收起条上的外设电量小块（默认不放上去）：读 get_peripheral_batteries、听 peripheral-batteries，两处共用一份（batteryStore.ts）
 │   ├── device-use/          # 摄像头、麦克风使用提示：折叠岛上的图标、设置项
 │   ├── clipboard/           # 剪贴板历史、快捷键
 │   ├── file-shelf/          # 文件中转：拖到岛上的文件（只存路径）、拖出、复制、打开
