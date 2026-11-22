@@ -1,10 +1,10 @@
-.center-pattern-preview {
+.center-pattern-art {
+  min-width: 64px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 48px;
-  height: 28px;
-  padding: 0 10px;
+  padding: 0 14px;
   background: var(--center-preview-bg, #14161a);
   border: 1px solid var(--color-white-a12);
   border-radius: var(--radius-pill);
