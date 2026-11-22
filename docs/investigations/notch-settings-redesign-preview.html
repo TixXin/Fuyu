@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>刘海设置改造预览</title>
+<style>
+  :root { color-scheme: dark; --accent: #0a84ff; --line: rgba(255,255,255,.07); --sub: #9a9aa2; --card: rgba(255,255,255,.04); }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 26px 30px 80px; background: #121316; color: #ececef; font: 13px/1.6 -apple-system, "PingFang SC", "Segoe UI", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  p.note { color: var(--sub); margin: 0 0 16px; max-width: 1080px; }
+  b.k { color: #fff; }
+  .tabs { display: inline-flex; gap: 4px; background: #1b1c20; padding: 4px; border-radius: 12px; margin: 6px 0 18px; }
+  .tabs button { background: none; border: 0; color: #b8b8be; font: inherit; padding: 6px 14px; border-radius: 9px; cursor: pointer; }
+  .tabs button.on { background: #2f3138; color: #fff; }
+  .tabs button small { color: #7e7e86; margin-left: 4px; }
+  .scheme { display: none; grid-template-columns: 700px minmax(260px, 1fr); gap: 26px; align-items: start; }
+  .scheme.on { display: grid; }
+  @media (max-width: 1080px) { .scheme.on { grid-template-columns: 1fr; } }
+  .why { background: #18191c; border: 1px solid #24252a; border-radius: 14px; padding: 14px 16px; position: sticky; top: 16px; }
+  .why h3 { margin: 0 0 6px; font-size: 14px; }
+  .why ul { margin: 0 0 10px; padding-left: 18px; color: #c9c9ce; }
+  .why li { margin: 3px 0; }
+  .why .cost { color: #e8b45a; }
+  .why .cnt { display: flex; gap: 14px; margin: 4px 0 10px; }
+  .why .cnt div { background: #202227; border-radius: 10px; padding: 6px 10px; }
+  .why .cnt b { display: block; font-size: 18px; color: #fff; }
+  .why .cnt span { color: var(--sub); font-size: 12px; }
+
+  .win { background: #1c1d21; border-radius: 16px; padding: 18px 20px 22px; border: 1px solid #26272c; }
+  .crumb { color: var(--sub); font-size: 12px; margin: 0 0 10px; }
+  .gtitle { font-size: 13px; font-weight: 600; color: #d8d8dc; margin: 14px 4px 6px; display: flex; align-items: center; gap: 8px; }
+  .gtitle .tag { font-weight: 400; font-size: 11px; color: #8d8d95; background: #26282d; border-radius: 6px; padding: 0 6px; }
+  .group { background: var(--card); border-radius: 14px; overflow: hidden; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 14px; min-height: 46px; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: 0; }
+  .row.indent { padding-left: 34px; }
+  .row.indent2 { padding-left: 54px; }
+  .row.col { flex-direction: column; align-items: stretch; gap: 8px; }
+  .row .t { color: #ececef; }
+  .row .d { color: var(--sub); font-size: 12px; line-height: 1.5; }
+  .row .ctl { flex: none; display: flex; align-items: center; gap: 8px; }
+  .foot { color: #7f7f87; font-size: 12px; margin: 6px 6px 0; }
+  .fakesel { background: #2a2c31; border: 1px solid #34363c; border-radius: 8px; padding: 3px 26px 3px 10px; color: #e6e6ea; position: relative; min-width: 96px; }
+  .fakesel::after { content: "⌄"; position: absolute; right: 9px; top: 0; color: #8d8d95; }
+  .fakeslider { width: 150px; height: 4px; background: #34363c; border-radius: 3px; position: relative; }
+  .fakeslider i { position: absolute; left: 0; top: 0; bottom: 0; width: 40%; background: var(--accent); border-radius: 3px; }
+  .fakeslider b { position: absolute; left: 40%; top: -5px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transform: translateX(-7px); }
+  .val { color: var(--sub); font-size: 12px; width: 40px; text-align: right; }
+
+  .switch { width: 38px; height: 22px; border-radius: 11px; background: #3a3c42; position: relative; cursor: pointer; border: 0; flex: none; transition: background .2s; }
+  .switch::after { content: ""; position: absolute; left: 2px; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .switch.on { background: #30d158; }
+  .switch.on::after { transform: translateX(16px); }
+  .seg { display: inline-flex; background: #26282d; border-radius: 9px; padding: 2px; gap: 2px; }
+  .seg button { background: none; border: 0; color: #b9b9bf; font: inherit; font-size: 12px; padding: 3px 11px; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .seg button.on { background: #3a3d44; color: #fff; }
+  .swatches { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+  .sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); position: relative; }
+  .sw.on { border-color: #fff; }
+  .sw.custom { background: conic-gradient(#ff375f, #ff9f0a, #ffd60a, #30d158, #0a84ff, #bf5af2, #ff375f); }
+  .sw.custom input { opacity: 0; position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+  .sw.accent::after { content: "A"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; }
+  input[type=range] { accent-color: var(--accent); width: 160px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: #26282d; border: 1px solid #30323a; color: #c9c9cf; font: inherit; font-size: 12px; padding: 4px 10px 4px 8px; border-radius: 999px; cursor: pointer; }
+  .chip svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #55575e; }
+  .chip.on { background: #2c3a30; border-color: #3f6b4b; color: #fff; }
+  .chip.on .dot { background: var(--c, #30d158); box-shadow: 0 0 6px var(--c, #30d158); }
+  .chip.sim.on { background: #33302a; border-color: #6b5a3f; }
+  details.adv { border-top: 1px solid var(--line); }
+  details.adv summary { list-style: none; cursor: pointer; padding: 10px 14px; color: #b9b9bf; display: flex; align-items: center; gap: 6px; }
+  details.adv summary::-webkit-details-marker { display: none; }
+  details.adv summary::before { content: "›"; display: inline-block; transition: transform .2s; color: #8d8d95; }
+  details.adv[open] summary::before { transform: rotate(90deg); }
+  details.adv summary small { color: #7f7f87; margin-left: 4px; }
+
+  .stagewrap { padding: 12px 14px 12px; }
+  .stage { position: relative; border-radius: 12px; overflow: hidden; height: 236px; background: radial-gradient(60% 90% at 18% 20%, #3b2f6b 0%, transparent 60%), radial-gradient(50% 70% at 82% 30%, #12456b 0%, transparent 65%), linear-gradient(160deg, #1b2240, #0d1020); }
+  .stage.big { height: 300px; }
+  .stage svg { position: absolute; left: 50%; top: 0; transform: translateX(-50%); overflow: visible; }
+  .stage .mb { position: absolute; top: 0; left: 0; right: 0; height: 26px; display: flex; justify-content: space-between; align-items: center; padding: 0 12px; font-size: 11px; color: rgba(255,255,255,.85); }
+  .stagebar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .stagebar .lbl { color: #8d8d95; font-size: 12px; margin-right: 2px; }
+  .linkbtn { background: #26282d; border: 1px solid #30323a; color: #b9b9bf; border-radius: 8px; font: inherit; font-size: 12px; padding: 3px 9px; cursor: pointer; display: inline-flex; gap: 5px; align-items: center; }
+  .linkbtn.on { color: #fff; border-color: #4a6fa5; background: #263246; }
+  .linkbtn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+  .strip { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: thin; }
+  .thumb { flex: none; width: 100px; background: #202227; border: 1.5px solid transparent; border-radius: 11px; padding: 5px 5px 4px; cursor: pointer; text-align: center; color: #c9c9cf; font: inherit; font-size: 12px; }
+  .thumb:hover { background: #26282e; }
+  .thumb.on { border-color: var(--accent); background: #1f2a3a; color: #fff; }
+  .thumb .pic { height: 46px; border-radius: 7px; background: linear-gradient(160deg, #222a48, #0f1326); position: relative; overflow: hidden; margin-bottom: 3px; }
+  .thumb .pic svg { position: absolute; left: 50%; top: 0; transform: translateX(-50%); overflow: visible; }
+  .thumb .off { position: absolute; inset: 0; display: grid; place-items: center; color: #6d6f78; font-size: 11px; }
+  .layerhead { display: flex; justify-content: space-between; align-items: baseline; }
+  .layerhead .d { margin-left: 8px; }
+
+  .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .preset { background: #202227; border: 1.5px solid transparent; border-radius: 13px; padding: 7px 7px 9px; cursor: pointer; color: #d8d8dc; font: inherit; text-align: left; }
+  .preset:hover { background: #26282e; }
+  .preset.on { border-color: var(--accent); background: #1f2a3a; }
+  .preset .pic { height: 92px; border-radius: 9px; position: relative; overflow: hidden; background: linear-gradient(160deg, #232b4a, #0e1225); margin-bottom: 6px; }
+  .preset .pic svg { position: absolute; left: 50%; top: 0; transform: translateX(-50%); overflow: visible; }
+  .preset b { display: block; font-size: 13px; padding: 0 3px; }
+  .preset span { display: block; color: var(--sub); font-size: 11.5px; padding: 0 3px; line-height: 1.45; }
+  .preset.mix .pic { display: grid; place-items: center; color: #8d8d95; font-size: 22px; background: repeating-linear-gradient(135deg, #1d1f25 0 8px, #202229 8px 16px); }
+
+  .cwrap { display: grid; grid-template-columns: 1fr 230px; gap: 12px; padding: 12px 14px; }
+  .inspector { background: #202227; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .inspector h4 { margin: 0; font-size: 13px; display: flex; justify-content: space-between; }
+  .inspector h4 small { color: var(--sub); font-weight: 400; }
+  .inspector .lab { color: var(--sub); font-size: 12px; margin-bottom: 4px; }
+  .inspector .stylegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .inspector .stylegrid button { background: #2a2c32; border: 1px solid transparent; color: #c9c9cf; font: inherit; font-size: 12px; padding: 4px 0; border-radius: 7px; cursor: pointer; }
+  .inspector .stylegrid button.on { border-color: var(--accent); color: #fff; background: #1f2a3a; }
+  .inspector .empty { color: #8d8d95; font-size: 12px; line-height: 1.6; }
+  .hit { cursor: pointer; }
+  .hit:hover + .hl, .hl.sel { opacity: 1; }
+  .hl { opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .bubble { position: absolute; font-size: 11px; color: #fff; background: #0a84ffcc; padding: 1px 7px; border-radius: 6px; pointer-events: none; transform: translate(-50%, 0); white-space: nowrap; }
+
+  .decide { margin-top: 34px; max-width: 1080px; }
+  .decide ol { padding-left: 20px; }
+  .decide li { margin: 0 0 10px; color: #d2d2d6; }
+  .lean { color: #7fd3a0; }
+
+  @keyframes breathe { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+  @keyframes pulse { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+  @keyframes scan { from { stroke-dashoffset: 120; } to { stroke-dashoffset: -1000; } }
+  @keyframes twin { 0% { stroke-dashoffset: 260; opacity: 1; } 60% { stroke-dashoffset: -1000; opacity: 1; } 61%, 100% { stroke-dashoffset: -1000; opacity: 0; } }
+  @keyframes drip { 0%, 52% { opacity: 0; transform: translateY(0) scale(.6); } 60% { opacity: 1; transform: translateY(0) scale(1); } 86% { opacity: 0; transform: translateY(7px) scale(.5); } 100% { opacity: 0; } }
+  @keyframes prog { from { stroke-dasharray: 0 2000; } to { stroke-dasharray: 1000 2000; } }
+  @keyframes beat { 0% { opacity: 1; } 18% { opacity: .35; } 50% { opacity: .8; } 66%, 100% { opacity: .3; } }
+  @keyframes turn { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -42; } }
+  @keyframes bars { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+  .a-breathe { animation: breathe 3.2s ease-in-out infinite; }
+  .a-pulse { animation: pulse 1.1s ease-in-out infinite; }
+  .a-scan { animation: scan 2.8s ease-in-out infinite alternate; }
+  .a-twin { animation: twin 2.6s ease-in infinite; }
+  .a-drip { transform-box: fill-box; transform-origin: center; animation: drip 2.6s ease-out infinite; }
+  .a-prog { animation: prog 24s linear infinite; }
+  .a-beat { animation: beat .5s ease-out infinite; }
+  .a-turn { animation: turn 2.4s linear infinite; }
+  .bar { transform-box: fill-box; transform-origin: 50% 100%; animation: bars .45s ease-in-out infinite alternate; }
+  @media (prefers-reduced-motion: reduce) { .a-breathe, .a-pulse, .a-scan, .a-twin, .a-drip, .a-prog, .a-beat, .a-turn, .bar { animation: none; } }
+</style>
+</head>
+<body>
+<h1>刘海设置改造预览</h1>
+<p class="note">「刘海边框」和「摄像头刘海一圈」现在是两组，全打开时有 <b class="k">25 行</b>：样式藏在下拉菜单里看不到长什么样，颜色要先选「自定义」再多出一行，粗细、间距、强度三根滑块，「面板同岛屿」出现两次，摄像头、新消息、Agent 的开关散在两组里。下面三套改法都<b class="k">只改设置界面，存的数据不变</b>（老设置原样读出来）。每套左边是能点的设置页，上面的小屏幕是实时效果；点「试一下」里的摄像头、新消息、音乐看亮起来的样子。右边写这套改了什么、代价是什么。页尾是要你定的。</p>
+
+<div class="tabs" id="tabs">
+  <button data-s="now">现在<small>对比用</small></button>
+  <button data-s="a" class="on">方案 A · 一组看着调<small>倾向</small></button>
+  <button data-s="b">方案 B · 先挑风格</button>
+  <button data-s="c">方案 C · 点刘海改</button>
+</div>
+
+<section class="scheme" id="s-now">
+  <div class="win">
+    <div class="crumb">设置 › 外观 › 显示</div>
+    <div class="gtitle">刘海边框</div>
+    <div class="group" id="now-rim"></div>
+    <div class="foot">只在刘海模式下生效（Mac 的刘海，或岛屿实验台的模拟刘海）。描边顺着反向弧钻进屏幕顶边，在弧尖淡出。</div>
+    <div class="gtitle">摄像头刘海一圈</div>
+    <div class="group" id="now-ring"></div>
+    <div class="foot">只在刘海模式下生效。线画在岛里面，沿 Mac 的摄像头刘海绕一圈。</div>
+  </div>
+  <div class="why">
+    <h3>现在的问题</h3>
+    <div class="cnt"><div><b>25</b><span>全打开的行数</span></div><div><b>0</b><span>能直接看到效果的地方</span></div></div>
+    <ul>
+      <li>两组讲的是同一块地方（刘海），却分开放，名字也不好区分。</li>
+      <li>九种、七种样式都在下拉菜单里，只能靠一句说明去想象。</li>
+      <li>岛屿、面板各一整套，再加两次「面板同岛屿」。</li>
+      <li>「跟随状态」在两组各有一个，摄像头只在一组里，不好猜谁管什么。</li>
+      <li>粗细、间距、强度这些大多数人不会动，却和样式平级摆着。</li>
+    </ul>
+  </div>
+</section>
+
+<section class="scheme on" id="s-a">
+  <div class="win">
+    <div class="crumb">设置 › 外观 › 显示</div>
+    <div class="gtitle">刘海 <span class="tag">只在 Mac 或模拟刘海时出现</span></div>
+    <div class="group">
+      <div class="stagewrap">
+        <div class="stage" id="a-stage"><div class="mb"><span> Finder　文件　编辑</span><span>周六 21:40</span></div></div>
+        <div class="stagebar">
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="seg" id="a-state"><button data-v="collapsed" class="on">收起时</button><button data-v="expanded">展开时</button></div>
+            <button class="linkbtn" id="a-link" title="收起和展开用同一套"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>两边一样</button>
+          </div>
+          <div class="chips" id="a-sim"></div>
+        </div>
+      </div>
+      <div class="row col">
+        <div class="layerhead"><span><span class="t">外框</span><span class="d" id="a-rim-d">岛和面板的外轮廓</span></span></div>
+        <div class="strip" id="a-rim"></div>
+      </div>
+      <div class="row col">
+        <div class="layerhead"><span><span class="t">内圈</span><span class="d" id="a-ring-d">沿摄像头刘海画一圈</span></span></div>
+        <div class="strip" id="a-ring"></div>
+      </div>
+      <div class="row"><div><div class="t">颜色</div><div class="d">外框和内圈共用；极光是固定的几种颜色</div></div><div class="ctl swatches" id="a-color"></div></div>
+      <div class="row col">
+        <div><div class="t">什么时候亮</div><div class="d">亮在内圈，样式是「关」也会亮；外框开着时跟着变色</div></div>
+        <div class="chips" id="a-lights"></div>
+      </div>
+      <details class="adv" id="a-adv"><summary>细调<small>粗细、亮度、间距、底边、动效</small></summary><div id="a-fine"></div></details>
+    </div>
+  </div>
+  <div class="why">
+    <h3>方案 A：合成一组，上面看着、下面点图</h3>
+    <div class="cnt"><div><b>6</b><span>平时看到的行</span></div><div><b>11</b><span>打开「细调」后</span></div></div>
+    <ul>
+      <li>两组合成一组「刘海」，最上面一块实时预览，改什么马上看到。</li>
+      <li>预览下面切「收起时 / 展开时」，下面的选择就改那一边；「两边一样」是一个链条按钮，代替两次「面板同岛屿」。</li>
+      <li>样式从下拉菜单换成会动的小图，外框一排、内圈一排，横着滑。</li>
+      <li>颜色是一排色点，最后一个是取色器，不再多出一行「自定义颜色」。</li>
+      <li>摄像头、新消息、Agent 合成一排「什么时候亮」，一眼知道谁会亮。</li>
+      <li>粗细、亮度、间距、底边、动效收进「细调」，默认收着。</li>
+    </ul>
+    <p class="cost">代价：颜色、细调变成外框和内圈共用（现在各存一份，界面上改的时候两份一起写）；想让外框白、内圈紫就做不到了，除非细调里再放「分开设颜色」。</p>
+  </div>
+</section>
+
+<section class="scheme" id="s-b">
+  <div class="win">
+    <div class="crumb">设置 › 外观 › 显示</div>
+    <div class="gtitle">刘海 <span class="tag">只在 Mac 或模拟刘海时出现</span></div>
+    <div class="group">
+      <div class="stagewrap">
+        <div class="stage" id="b-stage"><div class="mb"><span> Finder　文件　编辑</span><span>周六 21:40</span></div></div>
+        <div class="stagebar">
+          <div class="seg" id="b-state"><button data-v="collapsed" class="on">收起时</button><button data-v="expanded">展开时</button></div>
+          <div class="chips" id="b-sim"></div>
+        </div>
+      </div>
+      <div class="row col"><div class="t">风格</div><div class="presets" id="b-presets"></div></div>
+      <div id="b-mix" style="display:none">
+        <div class="row col"><div class="layerhead"><span><span class="t">外框</span><span class="d">收起和展开分开挑时，预览上面切换</span></span></div><div class="strip" id="b-rim"></div></div>
+        <div class="row col"><div class="layerhead"><span><span class="t">内圈</span></span></div><div class="strip" id="b-ring"></div></div>
+      </div>
+      <div class="row"><div><div class="t">颜色</div></div><div class="ctl swatches" id="b-color"></div></div>
+      <div class="row col"><div><div class="t">什么时候亮</div></div><div class="chips" id="b-lights"></div></div>
+      <details class="adv"><summary>细调<small>粗细、亮度、间距、底边、动效</small></summary><div id="b-fine"></div></details>
+    </div>
+  </div>
+  <div class="why">
+    <h3>方案 B：先挑一套风格，想自己配再展开</h3>
+    <div class="cnt"><div><b>5</b><span>平时看到的行</span></div><div><b>1 次</b><span>点一下就换好</span></div></div>
+    <ul>
+      <li>七张风格卡片，每张同时画收起和展开的样子，一次把外框、内圈、收起、展开都配好。</li>
+      <li>最后一张「自己搭配」打开和方案 A 一样的两排小图。</li>
+      <li>颜色、什么时候亮、细调和方案 A 一样。</li>
+    </ul>
+    <p class="cost">代价：风格是我们搭好的组合，用户改了里面一项，卡片就变成「自己搭配」。卡片要画两种状态，比 A 占地方。九种和七种样式里有几种（刻度、汇流）不会出现在任何一张卡片上，只在「自己搭配」里。</p>
+  </div>
+</section>
+
+<section class="scheme" id="s-c">
+  <div class="win">
+    <div class="crumb">设置 › 外观 › 显示</div>
+    <div class="gtitle">刘海 <span class="tag">只在 Mac 或模拟刘海时出现</span></div>
+    <div class="group">
+      <div class="cwrap">
+        <div>
+          <div class="stage big" id="c-stage"><div class="mb"><span> Finder　文件　编辑</span><span>周六 21:40</span></div></div>
+          <div class="stagebar">
+            <div class="seg" id="c-state"><button data-v="collapsed" class="on">收起时</button><button data-v="expanded">展开时</button></div>
+            <div class="chips" id="c-sim"></div>
+          </div>
+        </div>
+        <div class="inspector" id="c-insp"></div>
+      </div>
+      <div class="row col"><div><div class="t">什么时候亮</div></div><div class="chips" id="c-lights"></div></div>
+      <details class="adv"><summary>细调<small>间距、底边、动效</small></summary><div id="c-fine"></div></details>
+    </div>
+  </div>
+  <div class="why">
+    <h3>方案 C：直接点预览里的线</h3>
+    <div class="cnt"><div><b>3</b><span>平时看到的行</span></div><div><b>大</b><span>预览占地</span></div></div>
+    <ul>
+      <li>预览放大，鼠标移到外框或内圈上会高亮，点一下，右边的小面板就只显示那一圈的设置。</li>
+      <li>没选中时右边写「点岛的外轮廓或刘海周围」。</li>
+      <li>外框和内圈的颜色、粗细、亮度各自独立，和现在存的一样。</li>
+    </ul>
+    <p class="cost">代价：要先知道「点线」这回事，第一次会找不到；键盘和读屏要另做一套操作（Tab 到两圈上）。设置搜索搜到某一项时没有固定的行可以高亮。窄窗口下右边小面板得挪到下面。</p>
+  </div>
+</section>
+
+<div class="decide">
+  <h2>要你定的</h2>
+  <ol>
+    <li><b>用哪套。</b>A 一组看着调、B 先挑风格、C 点刘海改。<span class="lean">我倾向 A</span>：行最少里最好懂的，和设置窗口别处（消息页的演示、主题页的预览）一个路子；C 好玩但第一次找不到，B 的卡片搭配要我们替用户猜。</li>
+    <li><b>两组合成一组「刘海」。</b>外框、内圈放在同一块预览底下。<span class="lean">我倾向合</span>，三套都按合并画的。</li>
+    <li><b>颜色和细调两圈共用。</b>A、B 里外框和内圈用同一个颜色、粗细、亮度（存的时候两份写成一样，数据格式不变）。<span class="lean">我倾向共用</span>，要分开的人少；想分开就在细调里加一个「外框和内圈分开设颜色」。</li>
+    <li><b>粗细改成三档。</b>细调里粗细从 0.5–3 的滑块换成「细 / 中 / 粗」（1、1.5、2.5px），老设置就近归到一档。<span class="lean">我倾向改</span>；亮度、间距还是滑块。</li>
+    <li><b>「什么时候亮」合成一排。</b>摄像头和麦克风、新消息、Agent 等你三个开关一排，亮在内圈，外框开着时跟着变色。默认只开摄像头和麦克风，和现在一样。<span class="lean">我倾向合</span>。</li>
+    <li><b>预览里能「试一下」。</b>预览旁边一排按钮，点了假装摄像头开了、来了新消息、在放音乐，看亮起来的样子；只在设置窗口里演，不碰真岛。<span class="lean">我倾向留</span>。</li>
+  </ol>
+</div>
+
+<script>
+const PALETTE = { accent: "#0a84ff", white: "#ffffff", violet: "#bf5af2", pink: "#ff375f", mint: "#63e6be" };
+const AURORA = ["#5ac8fa", "#bf5af2", "#ff375f", "#ff9f0a", "#63e6be", "#5ac8fa"];
+const RIM_STYLES = [["off", "关"], ["hairline", "发丝"], ["glow", "辉光"], ["comet", "环游"], ["twin", "汇流"], ["aurora", "极光"], ["under", "下沿光"]];
+const RING_STYLES = [["off", "关"], ["hairline", "发丝"], ["glow", "辉光"], ["scan", "扫描"], ["drip", "滴落"], ["progress", "进度"], ["beat", "律动"], ["ticks", "刻度"], ["aurora", "极光"]];
+const ICON = {
+  cam: '<svg viewBox="0 0 24 24"><path d="M15 10l5-3v10l-5-3z"/><rect x="2" y="6" width="13" height="12" rx="2"/></svg>',
+  msg: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  bot: '<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 4v4M9 13v2M15 13v2"/></svg>',
+  mic: '<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>',
+  music: '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+};
+const W = 560, CX = 280, NW = 150, NH = 30, NR = 8, EAR = 4, FR = 10;
+const NL = CX - NW / 2, NRT = CX + NW / 2;
+let uid = 0;
+
+function islandBox(state, extra) {
+  return state === "expanded" ? { x: 70, w: 420, h: 196, br: 30 } : { x: 128, w: 304, h: NH + extra, br: 12 };
+}
+function outline(b) {
+  const { x, w, h, br } = b;
+  return `M${x - FR} 0 Q${x} 0 ${x} ${FR} L${x} ${h - br} Q${x} ${h} ${x + br} ${h} L${x + w - br} ${h} Q${x + w} ${h} ${x + w} ${h - br} L${x + w} ${FR} Q${x + w} 0 ${x + w + FR} 0`;
+}
+function rimGeo(b) {
+  const { x, w, h, br } = b;
+  return {
+    full: outline(b),
+    left: `M${x - FR} 0 Q${x} 0 ${x} ${FR} L${x} ${h - br} Q${x} ${h} ${x + br} ${h} L${CX} ${h}`,
+    right: `M${x + w + FR} 0 Q${x + w} 0 ${x + w} ${FR} L${x + w} ${h - br} Q${x + w} ${h} ${x + w - br} ${h} L${CX} ${h}`,
+    bottom: `M${x + br} ${h} L${x + w - br} ${h}`,
+    dropY: h + 4,
+  };
+}
+function ringGeo(g) {
+  const L = NL - g, R = NRT + g, B = NH + g, r = NR + g, e = EAR;
+  return {
+    full: `M${L - e} 0 Q${L} 0 ${L} ${e} L${L} ${B - r} Q${L} ${B} ${L + r} ${B} L${R - r} ${B} Q${R} ${B} ${R} ${B - r} L${R} ${e} Q${R} 0 ${R + e} 0`,
+    left: `M${L - e} 0 Q${L} 0 ${L} ${e} L${L} ${B - r} Q${L} ${B} ${L + r} ${B} L${CX} ${B}`,
+    right: `M${R + e} 0 Q${R} 0 ${R} ${e} L${R} ${B - r} Q${R} ${B} ${R - r} ${B} L${CX} ${B}`,
+    bottom: `M${L + r} ${B} L${R - r} ${B}`,
+    dropY: B + 3,
+  };
+}
+const NOTCH = `M${NL - EAR} 0 Q${NL} 0 ${NL} ${EAR} L${NL} ${NH - NR} Q${NL} ${NH} ${NL + NR} ${NH} L${NRT - NR} ${NH} Q${NRT} ${NH} ${NRT} ${NH - NR} L${NRT} ${EAR} Q${NRT} 0 ${NRT + EAR} 0 Z`;
+
+function colorOf(cfg) { return cfg.color.startsWith("#") ? cfg.color : PALETTE[cfg.color]; }
+
+function litOf(cfg, sim) {
+  const l = cfg.lights;
+  if (sim.camera && l.device) return { color: "#30d158", device: true };
+  if (sim.mic && l.device) return { color: "#ff9f0a", device: true };
+  if (sim.agent && l.agent) return { color: "#ff9f43", pulse: true };
+  if (sim.message && l.message) return { color: "#12b7f5" };
+  return null;
+}
+
+function layers(style, geo, color, w, k, motion, pulse, ids) {
+  const p = (d, extra) => `<path d="${d}" fill="none" stroke-linecap="round" ${extra}/>`;
+  const out = [];
+  const anim = (name) => (motion ? `class="a-${name}"` : "");
+  const glowAnim = motion ? (pulse ? 'class="a-pulse"' : 'class="a-breathe"') : "";
+  switch (style) {
+    case "hairline": out.push(p(geo.full, `stroke="${color}" stroke-width="${w}" opacity="${0.22 + k * 0.5}"`)); break;
+    case "glow":
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w * 4}" opacity="${k}" filter="url(#${ids.wide})" ${glowAnim}`));
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w}" opacity="${0.6 + k * 0.4}" ${pulse && motion ? 'class="a-pulse"' : ""}`));
+      break;
+    case "scan": case "comet":
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w}" opacity="${0.12 + k * 0.15}"`));
+      if (motion) {
+        out.push(p(geo.full, `stroke="${color}" stroke-width="${w * 5}" opacity="${k}" filter="url(#${ids.soft})" pathLength="1000" stroke-dasharray="120 3000" ${anim("scan")}`));
+        out.push(p(geo.full, `stroke="#fff" stroke-width="${w * 1.5}" pathLength="1000" stroke-dasharray="120 3000" ${anim("scan")}`));
+      } else out.push(p(geo.full, `stroke="${color}" stroke-width="${w * 4}" opacity="${k}" filter="url(#${ids.wide})"`));
+      break;
+    case "drip": case "twin":
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w}" opacity="${0.12 + k * 0.15}"`));
+      for (const d of [geo.left, geo.right]) {
+        out.push(p(d, `stroke="${color}" stroke-width="${w * 4}" opacity="${k}" filter="url(#${ids.soft})" pathLength="1000" stroke-dasharray="260 3000" ${motion ? 'class="a-twin"' : 'stroke-dashoffset="-740"'}`));
+        out.push(p(d, `stroke="${color}" stroke-width="${w * 1.5}" pathLength="1000" stroke-dasharray="260 3000" ${motion ? 'class="a-twin"' : 'stroke-dashoffset="-740"'}`));
+      }
+      if (style === "drip" && motion) out.push(`<circle cx="${CX}" cy="${geo.dropY}" r="${2 + w}" fill="${color}" class="a-drip"/>`);
+      if (style === "twin" && motion) out.push(`<circle cx="${CX}" cy="${geo.dropY - 4}" r="${3 + w * 2}" fill="${color}" opacity="${k}" filter="url(#${ids.soft})" class="a-drip"/>`);
+      break;
+    case "progress":
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w}" opacity="${0.12 + k * 0.12}"`));
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w * 4}" opacity="${k}" filter="url(#${ids.soft})" pathLength="1000" stroke-dasharray="${motion ? "0 2000" : "420 2000"}" ${anim("prog")}`));
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w * 1.5}" pathLength="1000" stroke-dasharray="${motion ? "0 2000" : "420 2000"}" ${anim("prog")}`));
+      break;
+    case "beat":
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w * 4}" opacity="${k}" filter="url(#${ids.wide})" ${anim("beat")}`));
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w * 1.5}" ${anim("beat")}`));
+      break;
+    case "ticks":
+      out.push(p(geo.full, `stroke="${color}" stroke-width="${w * 0.6}" opacity="${0.2 + k * 0.2}"`));
+      out.push(`<path d="${geo.full}" fill="none" stroke="${color}" stroke-width="${3 + w}" stroke-dasharray="1 6" opacity="${0.35 + 0.6 * k}" ${anim("turn")}/>`);
+      break;
+    case "aurora":
+      out.push(p(geo.full, `stroke="url(#${ids.aur})" stroke-width="${w * 5}" opacity="${k}" filter="url(#${ids.wide})"`));
+      out.push(p(geo.full, `stroke="url(#${ids.aur})" stroke-width="${w * 1.3}" opacity="${0.75 + k * 0.25}"`));
+      break;
+    case "under":
+      out.push(p(geo.bottom, `stroke="${color}" stroke-width="${w * 8}" opacity="${k * 0.8}" filter="url(#${ids.wide})" ${glowAnim}`));
+      out.push(p(geo.bottom, `stroke="${color}" stroke-width="${w}" opacity="${0.6 + k * 0.4}"`));
+      break;
+  }
+  return out.join("");
+}
+
+function effective(style, kind, lit, music, motion) {
+  if ((style === "progress" || style === "beat") && !music) return lit ? "glow" : "hairline";
+  if (kind === "ring" && lit && (style === "off" || style === "hairline" || style === "ticks")) return "glow";
+  if (!motion && (style === "scan" || style === "drip")) return "glow";
+  return style;
+}
+
+function scene(cfg, sim, opts = {}) {
+  const state = opts.state ?? sim.state;
+  const look = cfg.linked ? cfg.looks.collapsed : cfg.looks[state];
+  const rimLook = cfg.split ? cfg.split.rim : cfg;
+  const ringLook = cfg.split ? cfg.split.ring : cfg;
+  const lit = opts.only ? null : litOf(cfg, sim);
+  const ringStyle = effective(opts.only === "rim" ? "off" : look.ring, "ring", lit, sim.music, cfg.motion);
+  const rimStyle = opts.only === "ring" ? "off" : effective(look.rim, "rim", null, sim.music, cfg.motion);
+  const ringShown = ringStyle !== "off";
+  const extra = state === "collapsed" && cfg.bottom === "full" && ringShown ? cfg.gap + ringLook.width + 2 : 0;
+  const box = islandBox(state, extra);
+  const id = `s${uid++}`;
+  const ids = { wide: `${id}w`, soft: `${id}s`, aur: `${id}a`, clip: `${id}c`, fade: `${id}f`, mask: `${id}m` };
+  const k = (look === null ? 0.6 : (cfg.intensity ?? 60) / 100);
+  const ringColor = lit ? lit.color : colorOf(ringLook);
+  const rimColor = lit && !lit.device && look.rim !== "off" ? lit.color : colorOf(rimLook);
+  const vb = opts.viewBox ?? `0 0 ${W} 236`;
+  const [, , vw, vh] = vb.split(" ").map(Number);
+  const scale = opts.scale ?? 1;
+  const rg = ringGeo(cfg.gap);
+  const content = state === "expanded"
+    ? `<rect x="${box.x + 24}" y="${NH + 20}" width="56" height="56" rx="12" fill="url(#${id}art)"/><rect x="${box.x + 94}" y="${NH + 28}" width="150" height="9" rx="4.5" fill="#fff" opacity=".85"/><rect x="${box.x + 94}" y="${NH + 46}" width="96" height="8" rx="4" fill="#fff" opacity=".4"/><rect x="${box.x + 24}" y="${NH + 96}" width="${box.w - 48}" height="4" rx="2" fill="#fff" opacity=".18"/><rect x="${box.x + 24}" y="${NH + 96}" width="${(box.w - 48) * 0.42}" height="4" rx="2" fill="#fff" opacity=".8"/><g fill="#fff" opacity=".85"><circle cx="${CX - 50}" cy="${NH + 130}" r="7"/><circle cx="${CX}" cy="${NH + 130}" r="11"/><circle cx="${CX + 50}" cy="${NH + 130}" r="7"/></g>`
+    : `<rect x="${box.x + 12}" y="${(NH - 18) / 2}" width="18" height="18" rx="5" fill="url(#${id}art)"/>${sim.music ? [0, 1, 2, 3].map((i) => `<rect class="bar" style="animation-delay:-${i * 0.17}s" x="${box.x + box.w - 34 + i * 5}" y="${NH / 2 - 7}" width="3" height="14" rx="1.5" fill="#ff8fa3"/>`).join("") : `<circle cx="${box.x + box.w - 22}" cy="${NH / 2}" r="4" fill="#30d158"/>`}`;
+  const svg = `<svg width="${vw * scale}" height="${vh * scale}" viewBox="${vb}">
+  <defs>
+    <linearGradient id="${id}art" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#845ef7"/></linearGradient>
+    <filter id="${ids.wide}" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="${3 + ringLook.width * 1.5}"/></filter>
+    <filter id="${ids.soft}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="${1.5 + ringLook.width}"/></filter>
+    <linearGradient id="${ids.aur}" gradientUnits="userSpaceOnUse" x1="${NL - 40}" y1="0" x2="${NL + 160}" y2="40" spreadMethod="reflect">${AURORA.map((c, i) => `<stop offset="${i / (AURORA.length - 1)}" stop-color="${c}"/>`).join("")}${cfg.motion ? `<animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="400 0" dur="7s" repeatCount="indefinite"/>` : ""}</linearGradient>
+    <clipPath id="${ids.clip}"><path d="${outline(box)} Z"/></clipPath>
+    <linearGradient id="${ids.fade}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="6"><stop offset="0" stop-color="#000"/><stop offset=".25" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
+    <mask id="${ids.mask}" maskUnits="userSpaceOnUse" x="-100" y="-10" width="${W + 200}" height="400"><rect x="-100" y="-10" width="${W + 200}" height="400" fill="url(#${ids.fade})"/></mask>
+  </defs>
+  <path d="${outline(box)} Z" fill="#000"/>
+  ${opts.noContent ? "" : content}
+  <g clip-path="url(#${ids.clip})" mask="url(#${ids.mask})">${layers(ringStyle, rg, ringColor, ringLook.width, (ringLook.intensity ?? 60) / 100, cfg.motion, lit?.pulse, ids)}</g>
+  <path d="${NOTCH}" fill="#000"/>
+  <circle cx="${CX + 42}" cy="${NH / 2}" r="4" fill="#10121a" stroke="#1e2130"/>
+  ${lit?.device ? `<circle cx="${CX + 30}" cy="${NH / 2}" r="2" fill="${lit.color}"/>` : ""}
+  <g mask="url(#${ids.mask})">${layers(rimStyle, rimGeo(box), rimColor, rimLook.width, (rimLook.intensity ?? 60) / 100, cfg.motion, false, ids)}</g>
+  ${opts.after ? opts.after(box, rg) : ""}
+</svg>`;
+  return svg;
+}
+
+function newCfg() {
+  return {
+    looks: { collapsed: { rim: "off", ring: "off" }, expanded: { rim: "off", ring: "hairline" } },
+    linked: false, color: "white", width: 1, intensity: 60, gap: 3, bottom: "sides", motion: true,
+    lights: { device: true, message: false, agent: false },
+  };
+}
+function newSim() { return { state: "collapsed", camera: false, mic: false, message: false, agent: false, music: false }; }
+
+function simChips(el, sim, redraw) {
+  const items = [["camera", "摄像头", ICON.cam], ["mic", "麦克风", ICON.mic], ["message", "新消息", ICON.msg], ["agent", "Agent 等你", ICON.bot], ["music", "放音乐", ICON.music]];
+  el.innerHTML = `<span class="lbl">试一下</span>` + items.map(([key, label, icon]) => `<button class="chip sim" data-k="${key}">${icon}${label}</button>`).join("");
+  el.querySelectorAll("button").forEach((b) => b.onclick = () => { sim[b.dataset.k] = !sim[b.dataset.k]; b.classList.toggle("on", sim[b.dataset.k]); redraw(); });
+}
+function lightChips(el, cfg, redraw) {
+  const items = [["device", "摄像头和麦克风", ICON.cam, "#30d158"], ["message", "新消息", ICON.msg, "#12b7f5"], ["agent", "Agent 等你", ICON.bot, "#ff9f43"]];
+  el.innerHTML = items.map(([key, label, icon, c]) => `<button class="chip ${cfg.lights[key] ? "on" : ""}" data-k="${key}" style="--c:${c}"><span class="dot"></span>${icon}${label}</button>`).join("");
+  el.querySelectorAll("button").forEach((b) => b.onclick = () => { cfg.lights[b.dataset.k] = !cfg.lights[b.dataset.k]; b.classList.toggle("on", cfg.lights[b.dataset.k]); redraw(); });
+}
+function swatches(el, target, redraw) {
+  const keys = ["white", "accent", "violet", "pink", "mint"];
+  el.innerHTML = keys.map((k) => `<button class="sw ${k === "accent" ? "accent" : ""}" data-k="${k}" title="${{ white: "白", accent: "跟随强调色", violet: "紫", pink: "粉", mint: "薄荷" }[k]}" style="background:${PALETTE[k]}"></button>`).join("") + `<label class="sw custom" title="自定义"><input type="color" value="#ffd60a"/></label>`;
+  const mark = () => el.querySelectorAll(".sw").forEach((s) => s.classList.toggle("on", s.dataset.k ? s.dataset.k === target.color : target.color.startsWith("#")));
+  el.querySelectorAll("button").forEach((b) => b.onclick = () => { target.color = b.dataset.k; mark(); redraw(); });
+  el.querySelector("input").oninput = (e) => { target.color = e.target.value; mark(); redraw(); };
+  mark();
+}
+function seg(el, value, onPick) {
+  el.querySelectorAll("button").forEach((b) => {
+    b.classList.toggle("on", b.dataset.v === String(value));
+    b.onclick = () => { el.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); onPick(b.dataset.v); };
+  });
+}
+function fineRows(el, cfg, redraw, { lookOnly = false } = {}) {
+  const widthSeg = `<div class="seg" data-f="width"><button data-v="1">细</button><button data-v="1.5">中</button><button data-v="2.5">粗</button></div>`;
+  const rows = [];
+  if (!lookOnly) rows.push(`<div class="row indent"><div class="t">粗细</div><div class="ctl">${widthSeg}</div></div>`);
+  if (!lookOnly) rows.push(`<div class="row indent"><div class="t">亮度</div><div class="ctl"><input type="range" min="10" max="100" step="5" data-f="intensity" value="${cfg.intensity}"/><span class="val">${cfg.intensity}%</span></div></div>`);
+  rows.push(`<div class="row indent"><div><div class="t">内圈离刘海</div><div class="d">线和刘海边之间空多少</div></div><div class="ctl"><input type="range" min="0" max="6" step="1" data-f="gap" value="${cfg.gap}"/><span class="val">${cfg.gap} px</span></div></div>`);
+  rows.push(`<div class="row indent"><div><div class="t">收起时内圈的底边</div><div class="d">收起的岛和刘海一样高，底下没有地方</div></div><div class="ctl"><div class="seg" data-f="bottom"><button data-v="sides">只画两侧</button><button data-v="full">岛加高画整圈</button></div></div></div>`);
+  rows.push(`<div class="row indent"><div><div class="t">动效</div><div class="d">呼吸、流动；岛隐藏、全屏时停下</div></div><div class="ctl"><button class="switch ${cfg.motion ? "on" : ""}" data-f="motion"></button></div></div>`);
+  el.innerHTML = rows.join("");
+  el.querySelectorAll("input[type=range]").forEach((r) => r.oninput = () => { cfg[r.dataset.f] = Number(r.value); r.nextElementSibling.textContent = r.dataset.f === "gap" ? `${r.value} px` : `${r.value}%`; redraw(); });
+  const ws = el.querySelector('[data-f="width"]'); if (ws) seg(ws, cfg.width, (v) => { cfg.width = Number(v); redraw(); });
+  seg(el.querySelector('[data-f="bottom"]'), cfg.bottom, (v) => { cfg.bottom = v; redraw(); });
+  const sw = el.querySelector('[data-f="motion"]'); sw.onclick = () => { cfg.motion = !cfg.motion; sw.classList.toggle("on", cfg.motion); redraw(); };
+}
+function strip(el, kind, cfg, sim, redraw) {
+  const list = kind === "rim" ? RIM_STYLES : RING_STYLES;
+  const state = () => (cfg.linked ? "collapsed" : sim.state);
+  const thumbSim = { ...newSim(), music: true };
+  const vb = kind === "rim" ? `${CX - 6} -4 178 50` : `${CX - 4} -4 ${NW / 2 + 26} 50`;
+  const scale = kind === "rim" ? 90 / 178 : 90 / (NW / 2 + 30);
+  const draw = () => {
+    el.innerHTML = list.map(([v, label]) => {
+      const tcfg = { ...cfg, width: Math.max(cfg.width, 1.5), intensity: Math.max(cfg.intensity, 70), looks: { collapsed: { rim: kind === "rim" ? v : "off", ring: kind === "ring" ? v : "off" }, expanded: { rim: "off", ring: "off" } }, linked: true, bottom: kind === "ring" ? "full" : cfg.bottom, lights: { device: false, message: false, agent: false } };
+      const pic = v === "off" ? `<div class="off">原样</div>` : scene(tcfg, thumbSim, { state: "collapsed", only: kind, viewBox: vb, scale, noContent: true });
+      return `<button class="thumb ${cfg.looks[state()][kind] === v ? "on" : ""}" data-v="${v}"><div class="pic">${pic}</div>${label}</button>`;
+    }).join("");
+    el.querySelectorAll("button").forEach((b) => b.onclick = () => {
+      cfg.looks[state()][kind] = b.dataset.v;
+      if (cfg.linked) cfg.looks.expanded[kind] = b.dataset.v;
+      el.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+      redraw(false);
+    });
+  };
+  draw();
+  return draw;
+}
+
+function setupNow() {
+  const rowsFor = (kind) => {
+    const sel = (t, v, d, cls = "") => `<div class="row ${cls}"><div><div class="t">${t}</div>${d ? `<div class="d">${d}</div>` : ""}</div><div class="ctl"><span class="fakesel">${v}</span></div></div>`;
+    const sl = (t, v, d) => `<div class="row indent"><div><div class="t">${t}</div>${d ? `<div class="d">${d}</div>` : ""}</div><div class="ctl"><span class="fakeslider"><i></i><b></b></span><span class="val">${v}</span></div></div>`;
+    const tg = (t, on, d, cls = "indent") => `<div class="row ${cls}"><div><div class="t">${t}</div>${d ? `<div class="d">${d}</div>` : ""}</div><div class="ctl"><span class="switch ${on ? "on" : ""}"></span></div></div>`;
+    const look = (name, hint, style, ring) => [
+      sel(name, style, hint + (ring ? " 一圈细线，贴着刘海。" : " 带颜色的描边加一层外发光，开动效时慢慢呼吸。")),
+      sel("颜色", "白", "", "indent"), `<div class="row indent2"><div class="t">自定义颜色</div><div class="ctl"><span class="sw" style="background:#ffd60a;display:inline-block"></span></div></div>`,
+      sl("粗细", "1 px"), ring ? sl("离刘海的间距", "2 px", "线和刘海边之间空多少。") : "", sl("强度", "60%"),
+      tg("动效", true, "呼吸、流动。岛隐藏、全屏时停下；系统开了「减少动态效果」时停在静止的样子。"),
+      ring ? tg("摄像头和麦克风", true, "摄像头在用时亮绿光，麦克风亮橙光，样式是「关」时也亮。") : "",
+      tg(ring ? "新消息和 Agent" : "跟随状态变色", false, "新消息时用来源软件的颜色，Agent 等你时橙色闪。"),
+    ].join("");
+    if (kind === "rim") return look("岛屿", "收起时的岛，包括新消息下拉出来的那一行。", "辉光") + tg("面板同岛屿", false, "", "") + look("面板", "展开后的面板。", "辉光");
+    return look("岛屿", "收起时的岛。", "发丝", true) + `<div class="row indent"><div><div class="t">收起时的底边</div><div class="d">收起的岛和刘海一样高，刘海下面没有地方。</div></div><div class="ctl"><span class="fakesel">只画两侧</span></div></div>` + tg("面板同岛屿", false, "", "") + look("面板", "展开后的面板。", "发丝", true);
+  };
+  document.getElementById("now-rim").innerHTML = rowsFor("rim");
+  document.getElementById("now-ring").innerHTML = rowsFor("ring");
+}
+
+function setupA() {
+  const cfg = newCfg(), sim = { ...newSim(), state: "expanded" };
+  const stage = document.getElementById("a-stage");
+  let drawRim, drawRing;
+  const redraw = (strips = true) => {
+    stage.querySelector("svg")?.remove();
+    stage.insertAdjacentHTML("beforeend", scene(cfg, sim));
+    if (strips) { drawRim?.(); drawRing?.(); }
+  };
+  const which = () => (cfg.linked ? "收起和展开" : sim.state === "expanded" ? "展开时" : "收起时");
+  const labels = () => {
+    document.getElementById("a-rim-d").textContent = `岛和面板的外轮廓 · 正在改${which()}`;
+    document.getElementById("a-ring-d").textContent = `沿摄像头刘海画一圈 · 正在改${which()}`;
+  };
+  seg(document.getElementById("a-state"), sim.state, (v) => { sim.state = v; labels(); redraw(); });
+  const link = document.getElementById("a-link");
+  link.onclick = () => { cfg.linked = !cfg.linked; link.classList.toggle("on", cfg.linked); if (cfg.linked) cfg.looks.expanded = { ...cfg.looks.collapsed }; labels(); redraw(); };
+  simChips(document.getElementById("a-sim"), sim, () => redraw(false));
+  drawRim = strip(document.getElementById("a-rim"), "rim", cfg, sim, redraw);
+  drawRing = strip(document.getElementById("a-ring"), "ring", cfg, sim, redraw);
+  swatches(document.getElementById("a-color"), cfg, redraw);
+  lightChips(document.getElementById("a-lights"), cfg, () => redraw(false));
+  fineRows(document.getElementById("a-fine"), cfg, redraw);
+  labels();
+  redraw();
+}
+
+const PRESETS = [
+  { id: "plain", name: "原样", desc: "看不出刘海，摄像头开着才亮。", looks: { collapsed: { rim: "off", ring: "off" }, expanded: { rim: "off", ring: "off" } } },
+  { id: "line", name: "细描", desc: "展开时刘海一圈细线。Mac 默认。", looks: { collapsed: { rim: "off", ring: "off" }, expanded: { rim: "off", ring: "hairline" } } },
+  { id: "edge", name: "轮廓", desc: "岛和刘海都描细线。", looks: { collapsed: { rim: "hairline", ring: "hairline" }, expanded: { rim: "hairline", ring: "hairline" } } },
+  { id: "neon", name: "霓虹", desc: "外框、刘海都发光呼吸。", color: "accent", looks: { collapsed: { rim: "glow", ring: "glow" }, expanded: { rim: "glow", ring: "glow" } } },
+  { id: "aurora", name: "极光", desc: "几种颜色沿边流动。", looks: { collapsed: { rim: "aurora", ring: "off" }, expanded: { rim: "aurora", ring: "aurora" } } },
+  { id: "music", name: "跟着音乐", desc: "放歌时刘海走进度条。", color: "pink", looks: { collapsed: { rim: "under", ring: "progress" }, expanded: { rim: "under", ring: "progress" } } },
+];
+
+function setupB() {
+  const cfg = newCfg(), sim = { ...newSim(), state: "expanded" };
+  let current = "line";
+  const stage = document.getElementById("b-stage");
+  const presetsEl = document.getElementById("b-presets");
+  const mix = document.getElementById("b-mix");
+  let drawRim, drawRing;
+  const drawPresets = () => {
+    presetsEl.innerHTML = PRESETS.map((p) => {
+      const pcfg = { ...cfg, width: Math.max(cfg.width, 1.5), intensity: Math.max(cfg.intensity, 70), color: p.color ?? cfg.color, looks: p.looks, lights: { device: false, message: false, agent: false } };
+      const psim = { ...newSim(), music: true };
+      const pic = scene(pcfg, psim, { state: "expanded", viewBox: "40 -6 480 212", scale: 0.42, noContent: true });
+      return `<button class="preset ${current === p.id ? "on" : ""}" data-id="${p.id}"><div class="pic">${pic}</div><b>${p.name}</b><span>${p.desc}</span></button>`;
+    }).join("") + `<button class="preset mix ${current === "mix" ? "on" : ""}" data-id="mix"><div class="pic">＋</div><b>自己搭配</b><span>两圈、两种状态分开挑。</span></button>`;
+    presetsEl.querySelectorAll("button").forEach((btn) => btn.onclick = () => {
+      current = btn.dataset.id;
+      const p = PRESETS.find((x) => x.id === current);
+      if (p) { cfg.looks = JSON.parse(JSON.stringify(p.looks)); if (p.color) cfg.color = p.color; }
+      mix.style.display = current === "mix" ? "" : "none";
+      presetsEl.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === btn));
+      redraw();
+    });
+  };
+  const redraw = (strips = true) => {
+    stage.querySelector("svg")?.remove();
+    stage.insertAdjacentHTML("beforeend", scene(cfg, sim));
+    if (strips) { drawRim?.(); drawRing?.(); }
+  };
+  seg(document.getElementById("b-state"), sim.state, (v) => { sim.state = v; redraw(); });
+  simChips(document.getElementById("b-sim"), sim, () => redraw(false));
+  drawPresets();
+  drawRim = strip(document.getElementById("b-rim"), "rim", cfg, sim, (s) => { current = "mix"; redraw(s); });
+  drawRing = strip(document.getElementById("b-ring"), "ring", cfg, sim, (s) => { current = "mix"; redraw(s); });
+  swatches(document.getElementById("b-color"), cfg, () => { redraw(); drawPresets(); });
+  lightChips(document.getElementById("b-lights"), cfg, () => redraw(false));
+  fineRows(document.getElementById("b-fine"), cfg, () => { redraw(); drawPresets(); });
+  redraw();
+}
+
+function setupC() {
+  const cfg = newCfg(), sim = { ...newSim(), state: "expanded" };
+  cfg.split = { rim: { color: "accent", width: 1, intensity: 60 }, ring: { color: "white", width: 1, intensity: 60 } };
+  let selected = null;
+  const stage = document.getElementById("c-stage");
+  const insp = document.getElementById("c-insp");
+  let scale = 1;
+  const hitLayer = (box, rg) => `
+    <path class="hit" d="${outline(box)}" fill="none" stroke="transparent" stroke-width="16" pointer-events="stroke" data-layer="rim"/>
+    <path class="hl ${selected === "rim" ? "sel" : ""}" d="${outline(box)}" fill="none" stroke="#0a84ff" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <path class="hit" d="${rg.full}" fill="none" stroke="transparent" stroke-width="12" pointer-events="stroke" data-layer="ring"/>
+    <path class="hl ${selected === "ring" ? "sel" : ""}" d="${rg.full}" fill="none" stroke="#0a84ff" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+  const redraw = () => {
+    stage.querySelectorAll("svg, .bubble").forEach((n) => n.remove());
+    scale = Math.min(1.2, (stage.clientWidth || 420) / 500);
+    stage.style.height = `${Math.round(250 * scale)}px`;
+    stage.insertAdjacentHTML("beforeend", scene(cfg, sim, { viewBox: "30 0 500 250", scale, after: hitLayer }));
+    stage.querySelectorAll(".hit").forEach((h) => h.addEventListener("click", () => { selected = h.dataset.layer; redraw(); drawInsp(); }));
+    if (selected) {
+      const svg = stage.querySelector("svg");
+      const left = stage.clientWidth / 2 - (svg.clientWidth / 2) + (selected === "rim" ? (islandBox(sim.state, 0).x + islandBox(sim.state, 0).w - 30) : NRT + 10 - 30) * scale;
+      const top = (selected === "rim" ? islandBox(sim.state, 0).h + 6 : NH + 14) * scale;
+      stage.insertAdjacentHTML("beforeend", `<div class="bubble" style="left:${left}px;top:${top}px">${selected === "rim" ? "外框" : "内圈"}</div>`);
+    }
+  };
+  const drawInsp = () => {
+    if (!selected) { insp.innerHTML = `<h4>还没选</h4><div class="empty">点预览里岛的外轮廓，或者刘海周围那一圈，这里就显示那一圈的设置。<br><br>移上去会有虚线提示。</div>`; return; }
+    const list = selected === "rim" ? RIM_STYLES : RING_STYLES;
+    const state = cfg.linked ? "collapsed" : sim.state;
+    const target = cfg.split[selected];
+    insp.innerHTML = `<h4>${selected === "rim" ? "外框" : "内圈"}<small>${cfg.linked ? "收起和展开" : state === "expanded" ? "展开时" : "收起时"}</small></h4>
+      <div><div class="lab">样式</div><div class="stylegrid">${list.map(([v, l]) => `<button data-v="${v}" class="${cfg.looks[state][selected] === v ? "on" : ""}">${l}</button>`).join("")}</div></div>
+      <div><div class="lab">颜色</div><div class="swatches" id="c-sw"></div></div>
+      <div><div class="lab">粗细</div><div class="seg" id="c-w"><button data-v="1">细</button><button data-v="1.5">中</button><button data-v="2.5">粗</button></div></div>
+      <div><div class="lab">亮度</div><input type="range" min="10" max="100" step="5" value="${target.intensity}" id="c-int"/></div>
+      <label style="display:flex;gap:8px;align-items:center;color:#c9c9cf;font-size:12px"><button class="switch ${cfg.linked ? "on" : ""}" id="c-link"></button>收起和展开一样</label>`;
+    insp.querySelectorAll(".stylegrid button").forEach((b) => b.onclick = () => { cfg.looks[state][selected] = b.dataset.v; if (cfg.linked) cfg.looks.expanded[selected] = b.dataset.v; redraw(); drawInsp(); });
+    swatches(insp.querySelector("#c-sw"), target, redraw);
+    seg(insp.querySelector("#c-w"), target.width, (v) => { target.width = Number(v); redraw(); });
+    insp.querySelector("#c-int").oninput = (e) => { target.intensity = Number(e.target.value); redraw(); };
+    insp.querySelector("#c-link").onclick = () => { cfg.linked = !cfg.linked; if (cfg.linked) cfg.looks.expanded = { ...cfg.looks.collapsed }; redraw(); drawInsp(); };
+  };
+  seg(document.getElementById("c-state"), sim.state, (v) => { sim.state = v; redraw(); drawInsp(); });
+  simChips(document.getElementById("c-sim"), sim, redraw);
+  lightChips(document.getElementById("c-lights"), cfg, redraw);
+  fineRows(document.getElementById("c-fine"), cfg, redraw, { lookOnly: true });
+  redraw();
+  drawInsp();
+  redrawC = redraw;
+}
+
+let redrawC = () => {};
+document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".scheme").forEach((s) => s.classList.toggle("on", s.id === `s-${b.dataset.s}`));
+  if (b.dataset.s === "c") redrawC();
+});
+setupNow();
+setupA();
+setupB();
+setupC();
+</script>
+</body>
+</html>
