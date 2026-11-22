@@ -31,7 +31,7 @@ description: >
 6. 在发版目录跑 `pnpm test:regression version-history --update-snapshots`（这个回归页把 `docs/releases` 里的说明打包进页面，不更新快照，PR 的 CI 会挂），再 `git add` 四处版本号、说明和这份快照，提交 `chore(release): <版本号>`。写一份中文 PR 正文（`## 改了什么` 写版本号和这版的要点，`## 关联` 写发布说明文件）。`mq:land` 只认本地 `main` 上的提交，所以手动开：`git push origin HEAD:refs/heads/land/TixXin/release-<版本号>`、`gh pr create --base main --head <该分支> --title "Release <版本号>" --body-file <文件>`、`gh pr merge <该分支> --auto --merge`。**紧接着 `pnpm release:prebuild`**（在 CI 上编 Windows 和 Mac，和 PR 的 CI 同时跑），再后台循环 `gh pr view <号> --json state` 等合入。没合入就不要往下走。
    - **陷阱**：合入前别的 PR 先合入，这个 PR 会被更新到新的 `main` 上，那批提交就进了这一版，预构建也作废、`pnpm release` 要重编。所以开发版 PR 前，用 `gh pr list --repo TixXin/Fuyu --state open --json number,author,autoMergeRequest` 列出**所有**开着自动合并的 PR（协作者的也算，不只总控提的），逐个 `gh pr merge <号> --disable-auto`，告诉开它的会话或人；发版 PR 合入后逐个重新打开。
    - PR 的 CI 某一项卡满时限被取消（Mac runner 常见），不是代码问题，马上 `gh run rerun <运行号> --failed` 重跑，别等。
-7. 合入后在发版目录 `git fetch origin && git checkout --detach <合并提交>`，后台运行 `pnpm release`，日志写到 scratchpad。它会：代码树和预构建一样时直接用预构建（日志里有 `Using the prebuild`），否则在 GitHub Actions 上编 Windows 和 Mac 版（约 6 分钟）；下载回来用本机私钥签名，上传草稿并核对 SHA-256，跑 `release-smoke.yml` 冒烟测试（约 1 分钟），通过才公开；然后换主工作区的本机程序、刷新 beta 通道、读回两个通道、在 issue 下留言，关联任务都完成的 issue 顺手关掉。
+7. 合入后在发版目录 `git fetch origin && git checkout --detach <合并提交>`，后台运行 `pnpm release`，日志写到 scratchpad。它会：代码树和预构建一样时直接用预构建（日志里有 `Using the prebuild`），否则在 GitHub Actions 上编 Windows 和 Mac 版（约 6 分钟）；下载回来用本机私钥签名，上传草稿并核对 SHA-256，跑 `release-smoke.yml` 冒烟测试（约 1 分钟），通过才公开；然后换主工作区的本机程序、刷新 beta 通道、读回两个通道、把这一版导入官网 fuyu.tix.xin 并读回、在 issue 下留言，关联任务都完成的 issue 顺手关掉。
 8. **看日志，不只看退出码**（管道到 `tail` 时退出码总是 0）。要看到 `✓ Published` 和 `✓ Channels read back`。
 
 ## 出问题
@@ -40,6 +40,7 @@ description: >
 - 发版目录被删了或坏了：`git worktree prune`，再按第 1 步重建。
 - 冒烟测试没过：Release 停在草稿，不会公开。看日志里的运行地址；修好后发下一个版本号，草稿用 `gh release delete <tag> --repo TixXin/Fuyu` 删掉（只删草稿，已公开的不删）。
 - 已公开但通道核对不对，或版本本身有问题：按 updater.md「撤回有问题的版本」，先告诉用户再动。
+- 最后报「the official site is behind」：GitHub 已发好，官网没导入。客户端先读官网、读到就不看 GitHub，不补的话用户收不到这一版。按日志给的命令在 `fuyu-desktop` 跑 `pnpm releases:import <tag>`（要它的 `.env.deploy`），再看 `https://fuyu.tix.xin/api/update/beta/latest.json`。
 - 版本号已存在：脚本会拒绝；换更高的版本号，不要覆盖。
 
 ## 回报

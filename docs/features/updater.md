@@ -19,6 +19,7 @@
 - **稳定版**读 `plugins.updater.endpoints`：先读官网 `https://fuyu.tix.xin/api/update/stable/latest.json`（D63，2026-11-20 起），取不到再读 GitHub 的 `releases/latest/download/latest.json` 和它的两个加速前缀。GitHub 的 latest 永远不会是 Pre-release，而 beta 版都发成 Pre-release。0.3.0 及更早的客户端没有通道设置，也只读这里；0.3.12-beta.1 及更早的客户端只读 GitHub 的三个端点。
 - **测试版**读官网的 `https://fuyu.tix.xin/api/update/beta/latest.json`（正式版和测试版里版本号最新的那个）和同一组 GitHub 镜像下的 `releases/download/beta-channel/latest.json`（都由 `src-tauri/src/system/update_channel.rs` 从稳定端点换算：官网把结尾的 `/api/update/stable/latest.json` 换成 `/api/update/beta/latest.json`），全部取不到时再退回稳定版端点，所以 beta 清单缺失或下载失败时，测试版用户仍能收到正式版。`beta-channel` 是一个固定的 Pre-release，只放这份清单，**不要删除**。
 - 每次 `pnpm release`（正式版和 beta 版都算）发布后会刷新 `beta-channel` 上的清单，除非它已经指向更新的版本。所以测试版用户也会收到正式版；从测试版切回稳定版不会降级，要等稳定版追上当前版本才收到更新。
+- 官网的两份清单由官网数据库生成，`pnpm release` 在刷新 `beta-channel` 之后调官网仓库（默认 `../fuyu-desktop`，`FUYU_SITE_DIR` 可改）的 `pnpm releases:import <tag>`，从 GitHub 下载这一版、核对 SHA-256 后导入，再读回两个通道（`scripts/release/site-import.mjs`）。失败时重试 3 次，仍不行就在最后报错、退出码 1，并给出手动导入的命令；`--no-site` 跳过。客户端先读官网，官网能返回旧清单就不会再看 GitHub，所以漏导入等于这一版谁也收不到（0.3.12-beta.2、beta.3 就是这样漏的）。
 
 版本号带 `-`（如 `0.3.1-beta.1`）就算 beta：`release.mjs` 会把它发成 Pre-release、不设为 latest，判断与比较在 `scripts/release/channel.mjs`。
 

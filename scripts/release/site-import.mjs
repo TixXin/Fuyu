@@ -1,0 +1,71 @@
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { channelProblems } from "./after-release.mjs";
+import { commandLine } from "./command-line.mjs";
+
+export const SITE_ORIGIN = "https://fuyu.tix.xin";
+const ATTEMPTS = 3;
+
+export function siteCheckout(main, env = process.env) {
+  return env.FUYU_SITE_DIR || join(dirname(main), "fuyu-desktop");
+}
+
+export const siteImportCommand = (dir, tag) => `cd ${dir} && pnpm releases:import ${tag}`;
+
+function pause(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function importOnce(dir, tag) {
+  const windows = process.platform === "win32";
+  const args = ["releases:import", tag];
+  const result = spawnSync(windows ? commandLine("pnpm", args) : "pnpm", windows ? [] : args, {
+    cwd: dir,
+    stdio: "inherit",
+    shell: windows,
+    windowsHide: true,
+  });
+  return result.status === 0;
+}
+
+async function readSiteVersion(channel, fetchImpl) {
+  try {
+    const response = await fetchImpl(`${SITE_ORIGIN}/api/update/${channel}/latest.json`, { cache: "no-store" });
+    if (!response.ok) return null;
+    return (await response.json()).version ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function siteChannelProblems(version, fetchImpl = fetch) {
+  return channelProblems(version, {
+    stable: await readSiteVersion("stable", fetchImpl),
+    beta: await readSiteVersion("beta", fetchImpl),
+  });
+}
+
+export async function publishToSite({ main, tag, version }) {
+  const dir = siteCheckout(main);
+  const manual = siteImportCommand(dir, tag);
+  if (!existsSync(join(dir, "scripts", "import-release.mjs"))) {
+    return [`The site checkout is not at ${dir} (set FUYU_SITE_DIR); ${SITE_ORIGIN} still offers the old version. Import by hand: ${manual}`];
+  }
+  let imported = false;
+  for (let attempt = 1; attempt <= ATTEMPTS && !imported; attempt += 1) {
+    if (attempt > 1) {
+      console.log(`  Retrying the site import (${attempt}/${ATTEMPTS})…`);
+      pause(10_000);
+    }
+    imported = importOnce(dir, tag);
+  }
+  if (!imported) return [`Could not import ${tag} to ${SITE_ORIGIN}; clients that read it first stay on the old version. Import by hand: ${manual}`];
+  let problems = [];
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    if (attempt > 0) pause(5_000);
+    problems = await siteChannelProblems(version);
+    if (problems.length === 0) break;
+  }
+  return problems.map((problem) => `${SITE_ORIGIN}: ${problem}`);
+}
