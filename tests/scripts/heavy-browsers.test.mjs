@@ -79,8 +79,9 @@ test("regression pages do not wait for a Rust build holding every heavy slot", (
   const dir = scratch();
   try {
     hold(path.join(dir, "slots"), "slot-0", { pid: process.pid, label: "cargo test", lane: "target:agents", since: Date.now() });
-    const printArgs = "console.log('ARGS ' + process.argv.slice(1).join(' '))";
-    const result = spawnSync(process.execPath, ["scripts/heavy/heavy.mjs", "--label", "test:regression", "--", process.execPath, "-e", printArgs, "scripts/run-regression.mjs", "--jobs", "3", "settings"], {
+    const printArgs = path.join(dir, "print-args.mjs");
+    writeFileSync(printArgs, "console.log('ARGS ' + process.argv.slice(2).join(' '));\n");
+    const result = spawnSync(process.execPath, ["scripts/heavy/heavy.mjs", "--label", "test:regression", "--", "node", printArgs, "scripts/run-regression.mjs", "--jobs", "3", "settings"], {
       cwd: ROOT,
       encoding: "utf8",
       timeout: 20_000,
