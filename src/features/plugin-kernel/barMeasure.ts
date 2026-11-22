@@ -1,5 +1,6 @@
 import { loadLocale } from "../../i18n";
 import { barItemName, barUsageReport, type BarUsageBox, type BarUsageCandidate, type BarUsagePage, type BarUsageReport, type BarUsageWidget } from "./barUsage.ts";
+import { measureBarWings } from "./barWings";
 import { iconMarkup } from "./iconMarkup";
 import { pluginNames } from "./pluginNames";
 import { localizedTitle } from "./slotTitle";
@@ -39,5 +40,6 @@ export function measureBarUsage(id: number): BarUsageReport {
       const icon = iconMarkup(widget.icon);
       return { id: widget.id, owner: widget.owner, name: localizedTitle(widget.label, locale) ?? plugin, plugin, sizes: (widget.sizes as unknown[]).filter((size): size is string => typeof size === "string"), ...(icon ? { icon } : {}) };
     });
-  return { ...report, pages, widgets };
+  const wings = shown ? measureBarWings(bar) : null;
+  return { ...report, pages, widgets, ...(wings ? { wings } : {}) };
 }

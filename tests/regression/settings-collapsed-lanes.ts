@@ -97,6 +97,17 @@ async function checkNotch(check: Check) {
   check(document.querySelector(".collapsed-lanes__lane[data-lane='center'] .collapsed-lanes__lane-hint")?.textContent === "排在刘海右边最前"
     && document.querySelector(".collapsed-lanes__lane[data-lane='left'] .collapsed-lanes__lane-hint")?.textContent === "刘海左边",
     "The lanes say where things go around the notch");
+  await act(async () => {
+    await (await import("@tauri-apps/api/event")).emit("plugin-bar-usage-report", { id: 2, collapsed: false, barWidth: null, items: [], wings: { left: ["status-light"], right: ["more"] } });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+  const live = [...document.querySelectorAll(".island-bar-preview[data-notch] .island-bar-preview__wing")];
+  check(itemsIn(live[0]).join("|") === "status-light" && itemsIn(live[1]).length === 0 && live[1]?.querySelector(".island-bar-preview__more")?.textContent === "+1",
+    "When the island reports what its wings show, the preview draws only those: items with nothing to show and the hidden center pattern drop out, and +N sits on the side the island put it");
+  await act(async () => {
+    await (await import("@tauri-apps/api/event")).emit("plugin-bar-usage-report", { id: 3, collapsed: false, barWidth: null, items: [] });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
   await notch(null);
   await overflow(null);
   check(!document.querySelector(".island-bar-preview[data-notch]") && document.querySelector(".collapsed-lanes__lane[data-lane='left'] .collapsed-lanes__lane-hint")?.textContent === "摘要左边",

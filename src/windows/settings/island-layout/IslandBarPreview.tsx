@@ -1,6 +1,7 @@
 import type { CSSProperties, PointerEvent, ReactNode } from "react";
 import { AudioLines, BatteryMedium, Camera, Download, Inbox, LayoutGrid, ListTodo, Mail, Puzzle, Sparkles, Timer } from "lucide-react";
 import { USAGE_PROVIDERS } from "../../../features/claude-usage/usageRing";
+import type { BarUsageWings } from "../../../features/plugin-kernel/barUsage";
 import { useTranslation } from "../../../i18n";
 import type { CollapsedPlacement } from "../../../lib/settings/collapsedItems";
 import { useCollapsedOverflowIds } from "../../../lib/settings/useCollapsedOverflowIds";
@@ -30,9 +31,10 @@ export function ItemGlyph({ id }: { id: string }) {
   return ICONS[id] ?? <Puzzle size={13} strokeWidth={2.2} />;
 }
 
-export function IslandBarPreview({ settings, notch, names, placements, centers, openItem, dragging, onPick, onDragStart }: {
+export function IslandBarPreview({ settings, notch, wings, names, placements, centers, openItem, dragging, onPick, onDragStart }: {
   settings: IslandSettings;
   notch: boolean;
+  wings: BarUsageWings | null;
   names: ReadonlyMap<string, string>;
   placements: readonly CollapsedPlacement[];
   centers: readonly string[];
@@ -44,7 +46,8 @@ export function IslandBarPreview({ settings, notch, names, placements, centers, 
   const text = useTranslation().settings.collapsedItems;
   const noRoom = useCollapsedOverflowIds();
   const onBar = placements.filter((placement) => names.has(placement.id) && !placement.hidden);
-  const shown = (zone: "left" | "right") => onBar.filter((placement) => placement.zone === zone && !placement.shelf && !noRoom.has(placement.id));
+  const live = notch && wings ? new Set([...wings.left, ...wings.right]) : null;
+  const shown = (zone: "left" | "right") => onBar.filter((placement) => placement.zone === zone && !placement.shelf && !noRoom.has(placement.id) && (!live || live.has(placement.id)));
   const shelved = onBar.filter((placement) => placement.shelf || noRoom.has(placement.id));
   const chip = (id: string, label: string, glyph: ReactNode, movable: boolean) => (
     <button
@@ -72,7 +75,7 @@ export function IslandBarPreview({ settings, notch, names, placements, centers, 
     : notch ? <ListTodo size={13} strokeWidth={2.2} /> : <span className="island-bar-preview__text">{text.place.text}</span>;
   const center = (
     <span className="island-bar-preview__center" data-lane="center">
-      {centers.map((id) => chip(id, centerName[id] ?? id, centerGlyph(id), false))}
+      {centers.filter((id) => !live || live.has(id === "center" ? "center" : "text")).map((id) => chip(id, centerName[id] ?? id, centerGlyph(id), false))}
     </span>
   );
   const more = shelved.length > 0 ? (
@@ -80,7 +83,9 @@ export function IslandBarPreview({ settings, notch, names, placements, centers, 
       {text.more(shelved.length)}
     </button>
   ) : null;
-  const moreLeft = shown("right").length + centers.length < shown("left").length ? null : more;
+  const centered = centers.filter((id) => !live || live.has(id === "center" ? "center" : "text")).length;
+  const chipLeft = wings?.left.includes("more") ? true : wings?.right.includes("more") ? false : shown("right").length + centered >= shown("left").length;
+  const moreLeft = chipLeft ? more : null;
   const style = notch
     ? undefined
     : { "--bar-fill": hexToRgba(settings.islandBackgroundColor, settings.opacity / 100), "--bar-ink": settings.taskTextColor } as CSSProperties;

@@ -111,6 +111,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
             <IslandBarPreview
               settings={settings}
               notch={notch}
+              wings={layout.wings}
               names={names}
               placements={editor.view}
               centers={centers}

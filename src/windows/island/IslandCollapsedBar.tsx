@@ -63,7 +63,7 @@ function renderUnits(units: readonly BarUnit[], overflow: CollapsedOverflowState
   if (!overflow.fitting) return units.map((unit) => <Fragment key={unit.key}>{unit.node}</Fragment>);
   return units
     .filter((unit) => !unit.ids.every((id) => overflow.shelved.has(id)))
-    .map((unit) => <span key={unit.key} className="island__bar-unit" {...{ [BAR_UNIT]: unit.key }}>{unit.node}</span>);
+    .map((unit) => <span key={unit.key} className="island__bar-unit" {...{ [BAR_UNIT]: unit.key, "data-bar-items": unit.ids.join(" ") }}>{unit.node}</span>);
 }
 
 export function IslandCollapsedBar({

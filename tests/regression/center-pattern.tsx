@@ -249,7 +249,7 @@ async function runChecks() {
   const triggers = fixture.querySelectorAll<HTMLButtonElement>(".select-control__trigger");
   const cards = [...fixture.querySelectorAll<HTMLButtonElement>(".settings-cards__card")];
   expect(triggers.length === 1 && fixture.querySelectorAll(".settings-row").length === 4, "岛屿布局里中心图案那一行展开后是开关、图案、宠物、大小四行");
-  expect(cards.length === 6 && cards[0].getAttribute("aria-pressed") === "true" && cards.slice(0, 5).every((card) => card.querySelector(".center-pattern-art .center-pattern svg")) && cards[5].querySelector(".center-pattern-art svg"),
+  expect(cards.length === 6 && cards[0].getAttribute("aria-pressed") === "true" && cards.slice(0, 5).every((card) => card.querySelector(".center-pattern-art .center-pattern svg")) && cards[5].querySelector(".center-pattern-art svg") !== null,
     "图案是六张缩略图卡片，前五张画出真实的图案，默认选中眼睛，宠物那张画爪印");
   await act(async () => { cards[5].click(); });
   await act(async () => { triggers[0].click(); });
