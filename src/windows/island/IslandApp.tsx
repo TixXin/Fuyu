@@ -63,6 +63,9 @@ import { IslandResize } from "./resize/IslandResize";
 import { useIslandResize } from "./resize/useIslandResize";
 import { islandPageSize } from "./pageSize";
 import { useNotchRimView } from "./notch-rim/useNotchRimView";
+import { useNotchRingView } from "./notch-ring/useNotchRingView";
+import { ringLit } from "./notch-ring/ringPlan";
+import { notchRingExtra, notchRingLook } from "../../lib/settings/notchRingSettings";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
@@ -101,7 +104,7 @@ export function IslandApp() {
   const notch = useIslandNotch();
   const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
-  const { lines: contributedLines, alerts, popups, style, settled, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus, summaryGrow } = useIslandContributed();
+  const { lines: contributedLines, alerts, popups, style, settled, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus, summaryGrow, glow: contributedGlow } = useIslandContributed();
   const grow = mode === "collapsed" && !isTucked && notch === null && side === null ? summaryGrow : null;
   const textWidth = useCollapsedWidth({
     barText,
@@ -167,6 +170,8 @@ export function IslandApp() {
   const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
   const notchRim = useNotchRimView(settings, accent, game.quiet);
+  const notchRing = useNotchRingView(settings, accent, game.quiet);
+  const ringExtra = notch && mode === "collapsed" && !isTucked ? notchRingExtra(settings, ringLit(notchRingLook(settings, "Island"), contributedGlow), settings.collapsedScale) : 0;
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
   const { glass, glassStyle, layerState } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
@@ -181,12 +186,13 @@ export function IslandApp() {
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
       ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion, settings.islandBounce),
       ...(collapsedIslandHeight !== COLLAPSED_ISLAND_HEIGHT ? { "--collapsed-island-height": `${collapsedIslandHeight}px` } : {}),
+      ...(ringExtra > 0 ? { "--island-notch-ring-extra": `${ringExtra}px` } : {}),
       ...(islandOpacity < 1 ? { "--island-opacity": String(islandOpacity) } : {}),
       ...(settings.islandMotion === "none" ? { "--island-opacity-duration": "0ms" } : {}),
       ...style.vars,
       ...glassStyle,
     }),
-    [collapsedIslandWidth, collapsedIslandHeight, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, settings.islandBounce, reducedMotion, islandOpacity, style.vars, glassStyle],
+    [collapsedIslandWidth, collapsedIslandHeight, ringExtra, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, settings.islandBounce, reducedMotion, islandOpacity, style.vars, glassStyle],
   );
 
   const {
@@ -207,6 +213,7 @@ export function IslandApp() {
     expandedIslandWidth,
     collapsedIslandWidth,
     collapsedIslandHeight,
+    notchRingExtra: ringExtra,
     ready: settled,
     onCollapse: collapseIsland,
   });
@@ -266,6 +273,7 @@ export function IslandApp() {
     overflowMore: settings.collapsedOverflowMore,
     notchWingMax: settings.notchWingMax,
     notchRim,
+    notchRing,
     features,
     onOpenPage: openEnabledPage,
     taskbarHandle: onTaskbar.placed ? (settings.expandTrigger === "hover" ? "modifier" : "hover") : null,

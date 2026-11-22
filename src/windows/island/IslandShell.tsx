@@ -37,6 +37,7 @@ import { setPanelAwake } from "../../components/island-widget/panelAwake";
 import "./IslandOutline.css";
 import { IslandTaskbarHandle, type TaskbarHandleShow } from "./IslandTaskbarHandle";
 import { NotchRim, type NotchRimView } from "./notch-rim/NotchRim";
+import { NotchRing, type NotchRingView } from "./notch-ring/NotchRing";
 
 export type IslandShellPart = "bar" | "panel";
 
@@ -63,6 +64,7 @@ export type IslandShellProps = {
   overflowMore?: boolean;
   notchWingMax?: number;
   notchRim?: NotchRimView | null;
+  notchRing?: NotchRingView | null;
   features: IslandFeatures;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -165,6 +167,7 @@ export function IslandShell({
   overflowMore = true,
   notchWingMax,
   notchRim = null,
+  notchRing = null,
   features,
   onOpenPage,
   onWindowDragStart,
@@ -268,6 +271,7 @@ export function IslandShell({
       >
         <div className="island__surface">
           {isLiquidGlass && <IslandGlassLayer glass={glass} />}
+          {notchRing && notch && !side && !part && !isDetached && !isTucked && <NotchRing view={notchRing} expanded={isExpanded} notch={notch} glow={contributed.glow} playback={contributed.playback} />}
           {side && (
             <IslandSideHandle
               label={collapsedLabel}

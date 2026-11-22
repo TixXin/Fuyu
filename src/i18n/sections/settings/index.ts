@@ -35,6 +35,7 @@ import type { SettingsLanguageText } from "./language";
 import type { SettingsAppearanceText } from "./appearance";
 import type { SettingsLayoutText } from "./layout";
 import type { SettingsNotchRimText } from "./notchRim";
+import type { SettingsNotchRingText } from "./notchRing";
 import type { SettingsTodoText } from "./todo";
 import type { SettingsAgentText } from "./agent";
 import type { SettingsAgentNoticeText } from "./agentNotice";
@@ -83,6 +84,7 @@ import * as language from "./language.ts";
 import * as appearance from "./appearance.ts";
 import * as layout from "./layout.ts";
 import * as notchRim from "./notchRim.ts";
+import * as notchRing from "./notchRing.ts";
 import * as todo from "./todo.ts";
 import * as agent from "./agent.ts";
 import * as agentNotice from "./agentNotice.ts";
@@ -146,6 +148,7 @@ export type SettingsText = {
 
   layout: SettingsLayoutText;
   notchRim: SettingsNotchRimText;
+  notchRing: SettingsNotchRingText;
 
   todo: SettingsTodoText;
 
@@ -217,6 +220,7 @@ export const zhCN: SettingsText = {
 
   layout: layout.zhCN,
   notchRim: notchRim.zhCN,
+  notchRing: notchRing.zhCN,
 
   todo: todo.zhCN,
 
@@ -288,6 +292,7 @@ export const en: SettingsText = {
 
   layout: layout.en,
   notchRim: notchRim.en,
+  notchRing: notchRing.en,
 
   todo: todo.en,
 

@@ -32,6 +32,7 @@ type InteractionSnapshot = {
   expandedWidth: number;
   collapsedWidth: number;
   collapsedHeight: number;
+  notchRingExtra: number;
   isTucked: boolean;
   isDimmed: boolean;
   gamePassthrough: boolean;
@@ -50,6 +51,7 @@ type IslandWindowOptions = {
   expandedIslandWidth: number;
   collapsedIslandWidth: number;
   collapsedIslandHeight?: number;
+  notchRingExtra?: number;
   ready: boolean;
   onCollapse: () => void;
 };
@@ -66,6 +68,7 @@ export function useIslandWindow({
   expandedIslandWidth,
   collapsedIslandWidth,
   collapsedIslandHeight = COLLAPSED_ISLAND_HEIGHT,
+  notchRingExtra = 0,
   ready,
   onCollapse,
 }: IslandWindowOptions) {
@@ -86,6 +89,7 @@ export function useIslandWindow({
       expandedWidth,
       collapsedWidth,
       collapsedHeight,
+      notchRingExtra: nextNotchRingExtra,
       isTucked: nextIsTucked,
       isDimmed: nextIsDimmed,
       gamePassthrough: nextGamePassthrough,
@@ -120,6 +124,7 @@ export function useIslandWindow({
           tuckStyle: nextSettings.tuckStyle,
           gamePassthrough: nextGamePassthrough,
           collapsedHeight,
+          notchRingExtra: nextNotchRingExtra,
         });
         setNativeGlassState(glassState);
       } catch (error) {
@@ -237,6 +242,7 @@ export function useIslandWindow({
       expandedWidth: expandedIslandWidth,
       collapsedWidth: collapsedIslandWidth,
       collapsedHeight: collapsedIslandHeight,
+      notchRingExtra,
       isTucked,
       isDimmed,
       gamePassthrough,
@@ -254,6 +260,7 @@ export function useIslandWindow({
     expandedIslandWidth,
     collapsedIslandWidth,
     collapsedIslandHeight,
+    notchRingExtra,
     isTucked,
     isDimmed,
     gamePassthrough,
