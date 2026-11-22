@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { collapsedFit } from "./collapsedFitStore";
-import { fitCollapsedZones, type OverflowSide } from "./collapsedOverflow";
-import { NOTCH_WING } from "./notch";
+import { balancedLanes, fitCollapsedZones, isUnbalanced, leastWing, NOTCH_SIDE_LEAST, type OverflowSide } from "./collapsedOverflow";
+import { NOTCH_WING, reportNotchWing } from "./notch";
+import { MAX_NOTCH_WING_MAX } from "../../lib/settings/settingsLimits";
 
 export type OverflowUnit = { key: string; ids: readonly string[]; movable?: boolean };
-export type CollapsedOverflowState = { fitting: boolean; shelved: ReadonlySet<string>; moved: ReadonlySet<string>; chip: OverflowSide | null };
+export type CollapsedOverflowState = { fitting: boolean; shelved: ReadonlySet<string>; moved: ReadonlySet<string>; chip: OverflowSide | null; wing: number | null };
 
 export const BAR_UNIT = "data-bar-unit";
 export const MORE_CHIP_CLASS = "island__more-chip";
@@ -12,7 +13,7 @@ const MORE_CHIP_WIDTH = 28;
 const HOLD_ID = "overflow:hold";
 const HOLD_WIDTH = 400;
 const SIDES: readonly OverflowSide[] = ["left", "right"];
-const NONE: CollapsedOverflowState = { fitting: false, shelved: new Set(), moved: new Set(), chip: null };
+const NONE: CollapsedOverflowState = { fitting: false, shelved: new Set(), moved: new Set(), chip: null, wing: null };
 
 function ownWidth(element: Element) {
   if (!(element instanceof HTMLElement)) return element.getBoundingClientRect().width;
@@ -23,6 +24,7 @@ function ownWidth(element: Element) {
 const px = (value: string) => Number.parseFloat(value) || 0;
 const isOpenButton = (element: Element) => element.classList.contains("island__open-button");
 const isMoreChip = (element: Element) => element.classList.contains(MORE_CHIP_CLASS);
+const isBarControl = (element: Element) => isOpenButton(element) || element.classList.contains("island__quiet-button");
 
 function flexBoxes(children: Iterable<Element>): Element[] {
   const boxes: Element[] = [];
@@ -61,9 +63,11 @@ function isSqueezed(wing: HTMLElement) {
   return spanOf(flexBoxes(wing.children), gap) > content + 1;
 }
 
+const itemCount = (wing: HTMLElement) => flexBoxes(wing.children).filter((box) => !isBarControl(box) && ownWidth(box) > 0).length;
+
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((id) => b.has(id));
 const sameState = (a: CollapsedOverflowState, b: CollapsedOverflowState) =>
-  a.fitting === b.fitting && a.chip === b.chip && sameSet(a.shelved, b.shelved) && sameSet(a.moved, b.moved);
+  a.fitting === b.fitting && a.chip === b.chip && a.wing === b.wing && sameSet(a.shelved, b.shelved) && sameSet(a.moved, b.moved);
 
 export type CollapsedOverflowOptions = { auto: boolean; forceChip: boolean; maxWing: number };
 
@@ -100,7 +104,7 @@ export function useCollapsedOverflow(
     const evaluate = () => {
       const current = stateRef.current;
       if (!current.fitting) {
-        if (forceChip || (auto && (isSqueezed(left) || isSqueezed(right)))) setState({ ...NONE, fitting: true });
+        if (forceChip || isUnbalanced(itemCount(left), itemCount(right)) || (auto && (isSqueezed(left) || isSqueezed(right)))) setState({ ...NONE, fitting: true });
         return;
       }
       const units = zonesRef.current;
@@ -114,12 +118,16 @@ export function useCollapsedOverflow(
           widths.set(node.getAttribute(BAR_UNIT) ?? "", spanOf(flexBoxes(node.children), measured[side].gap));
         }
       }
+      const sized = { left: units.left.map((unit) => widths.get(unit.key) ?? 0), right: units.right.map((unit) => widths.get(unit.key) ?? 0) };
+      const reserved = { left: measured.left.reserved, right: measured.right.reserved };
+      const least = leastWing(balancedLanes(sized.left, sized.right, NOTCH_SIDE_LEAST), reserved, measured.left.gap, MORE_CHIP_WIDTH);
+      const wing = Math.min(Math.max(maxWing, MAX_NOTCH_WING_MAX), Math.max(maxWing, Math.ceil(least)));
       const zone = (side: OverflowSide) => ({
-        widths: units[side].map((unit) => widths.get(unit.key) ?? 0),
-        capacity: maxWing - measured[side].reserved,
+        widths: sized[side],
+        capacity: wing - reserved[side],
         movable: units[side].map((unit) => unit.movable === true),
       });
-      const fit = fitCollapsedZones(zone("left"), zone("right"), measured.left.gap, MORE_CHIP_WIDTH, { auto, forceChip });
+      const fit = fitCollapsedZones(zone("left"), zone("right"), measured.left.gap, MORE_CHIP_WIDTH, { auto, forceChip, least: NOTCH_SIDE_LEAST });
       const shelved = new Set<string>();
       const moved = new Set<string>();
       for (const side of SIDES) fit[side].forEach((away, index) => {
@@ -127,7 +135,7 @@ export function useCollapsedOverflow(
         if (fit.moved[side][index]) moved.add(units[side][index].key);
       });
       const fitsNarrow = SIDES.every((side) => fit.used[side] <= NOTCH_WING - measured[side].reserved);
-      const next: CollapsedOverflowState = shelved.size === 0 && moved.size === 0 && !forceChip && fitsNarrow ? NONE : { fitting: true, shelved, moved, chip: fit.chip };
+      const next: CollapsedOverflowState = shelved.size === 0 && moved.size === 0 && !forceChip && fitsNarrow ? NONE : { fitting: true, shelved, moved, chip: fit.chip, wing: wing > maxWing ? wing : null };
       if (!sameState(current, next)) setState(next);
     };
 
@@ -146,6 +154,11 @@ export function useCollapsedOverflow(
     collapsedFit.report(HOLD_ID, HOLD_WIDTH);
     return () => collapsedFit.drop(HOLD_ID);
   }, [state.fitting]);
+
+  useEffect(() => {
+    reportNotchWing(state.wing);
+    return () => reportNotchWing(null);
+  }, [state.wing]);
 
   return state;
 }

@@ -123,7 +123,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
               onDragStart={editor.startDrag}
             />,
           )}
-          <CollapsedLanes layout={layout} editor={editor} notch={notch} centers={centers} styled={styled} selected={openItem} onSelect={setOpenItem} onStyle={showStyle} />
+          <CollapsedLanes layout={layout} editor={editor} notch={notch} frame={mirror.view?.live ? mirror.view.frame : null} centers={centers} styled={styled} selected={openItem} onSelect={setOpenItem} onStyle={showStyle} />
           <ItemStyleTabs items={styleItems} current={openItem} onPick={setOpenItem} settings={settings} onSettingsChange={onSettingsChange} />
           <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />
         </>

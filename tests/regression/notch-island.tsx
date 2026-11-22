@@ -4,7 +4,7 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
-import { applyIslandNotch, notchExpandedExtra, notchFittedWidth, notchPanelWidth } from "../../src/windows/island/notch";
+import { applyIslandNotch, notchExpandedExtra, notchFittedWidth, notchPanelWidth, useNotchWingNeed } from "../../src/windows/island/notch";
 import type { IslandNotch } from "../../src/windows/island/api";
 import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
@@ -67,7 +67,8 @@ function Fixture() {
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const fitWidth = useSyncExternalStore(collapsedFit.subscribe, collapsedFit.total);
-  const width = notchFittedWidth(Math.min(520, 300 + fitWidth), state.notch, 1, Boolean(state.level || state.device), state.wing);
+  const wingNeed = useNotchWingNeed();
+  const width = notchFittedWidth(Math.min(520, 300 + fitWidth), state.notch, 1, Boolean(state.level || state.device), Math.max(state.wing, wingNeed ?? 0));
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: state.preview }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, barText: !state.notch, todoTitle: "写周报和整理会议记录", translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device });
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${state.popup ? notchPanelWidth(400, state.notch, 1, true) : notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
     <IslandShell
@@ -205,6 +206,8 @@ async function runChecks() {
     check(shownCities.length >= 1 && shownCities.length < 5 && shownCities.join() === CITIES.slice(0, shownCities.length).join(), "两翼放不下五个时钟时，按清单顺序留下前面的");
     check(chip()?.textContent === `+${5 - shownCities.length}`, "其余的收进「+N」，N 是收起来的个数");
     check(clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]"), "留下的项目完整显示在两翼里，没有被挤扁");
+    const wingItems = (side: string) => [...bar().querySelectorAll(`.island__notch-wing--${side} :is(.island__pulse, .test-clock-chip)`)].map((item) => item.textContent || "light");
+    check(wingItems("left").join() === "light,TYO" && wingItems("right").length >= 2 && wingItems("right")[0] === "LON", `刘海两侧各至少两项：左翼只有状态灯时，右翼最靠刘海的时钟挪到左翼最后，顺序不乱（${wingItems("left")} | ${wingItems("right")}）`);
     const gapBox = box(bar().querySelector(".island__notch-gap")!);
     check(box(chip()!).right <= gapBox.left + 0.5 || box(chip()!).left >= gapBox.right - 0.5, "「+N」不压刘海");
     check(box(chip()!).left >= box(island()).left && box(chip()!).right <= box(island()).right && chip() === hit(chip()!), "「+N」在岛上看得见、点得到");

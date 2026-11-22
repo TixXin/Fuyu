@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fitCollapsedZones, overflowCount } from "../../src/windows/island/collapsedOverflow.ts";
+import { balancedLanes, fitCollapsedZones, isUnbalanced, leastWing, overflowCount } from "../../src/windows/island/collapsedOverflow.ts";
 
 const GAP = 8;
 const CHIP = 26;
@@ -98,4 +98,39 @@ test("with putting away switched off nothing is put away, and the chip appears o
   const forced = fitCollapsedZones(zone([9]), zone([50, 50, 50]), GAP, CHIP, { auto: false, forceChip: true });
   assert.deepEqual(forced.right, [false, false, false]);
   assert.equal(forced.chip, "left");
+});
+
+test("with a least of two, a wing short of two items takes the items next to the notch from the other wing, keeping the reading order", () => {
+  const lanes = balancedLanes([31], [20, 66, 34], 2);
+  assert.deepEqual(lanes.left.map((entry) => [entry.from, entry.index]), [["left", 0], ["right", 0]]);
+  assert.deepEqual(lanes.right.map((entry) => [entry.from, entry.index]), [["right", 1], ["right", 2]]);
+  const back = balancedLanes([10, 20, 30, 40], [], 2);
+  assert.deepEqual(back.left.map((entry) => entry.index), [0, 1]);
+  assert.deepEqual(back.right.map((entry) => [entry.from, entry.index]), [["left", 2], ["left", 3]]);
+});
+
+test("balancing skips items that draw nothing and leaves wings alone when neither is short", () => {
+  const lanes = balancedLanes([9], [0, 50, 0, 40, 30], 2);
+  assert.deepEqual(lanes.left.map((entry) => entry.index), [0, 1]);
+  assert.equal(lanes.left[1].from, "right");
+  assert.deepEqual(balancedLanes([9], [50, 40], 2).left.length, 1);
+  assert.deepEqual(balancedLanes([9, 9], [50, 40, 30], 2).left.length, 2);
+  assert.equal(isUnbalanced(1, 3), true);
+  assert.equal(isUnbalanced(1, 2), false);
+  assert.equal(isUnbalanced(3, 0), true);
+});
+
+test("user-placed items are balanced too: one left and three right become two and two, nothing behind the chip", () => {
+  const result = fitCollapsedZones({ widths: [31], capacity: 110 }, { widths: [20, 66, 34], capacity: 110, movable: [false, false, false] }, GAP, CHIP, { least: 2 });
+  assert.deepEqual(result.right, [false, false, false]);
+  assert.deepEqual(result.moved.right, [true, false, false]);
+  assert.equal(result.chip, null);
+  assert.deepEqual(result.used, { left: 31 + GAP + 20, right: 66 + GAP + 34 });
+});
+
+test("the least wing fits the first two items of each balanced wing, plus the chip when more are waiting", () => {
+  const reserved = { left: 20, right: 28 };
+  assert.equal(leastWing(balancedLanes([31], [20, 66, 34], 2), reserved, GAP, CHIP), 28 + 66 + GAP + 34);
+  const crowded = balancedLanes([31, 20, 40], [66, 34], 2);
+  assert.equal(leastWing(crowded, reserved, GAP, CHIP), Math.max(20 + 31 + GAP + 20, 28 + 66 + GAP + 34, 20 + 31 + GAP + 20 + CHIP + GAP));
 });

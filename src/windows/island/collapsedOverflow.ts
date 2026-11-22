@@ -9,12 +9,49 @@ export type OverflowFit = {
 };
 
 type Room = { used: number; count: number };
+type Entry = { from: OverflowSide; index: number; width: number };
+type Lanes = Record<OverflowSide, Entry[]>;
 type Packed = { shown: Record<OverflowSide, boolean[]>; moved: Record<OverflowSide, boolean[]>; room: Record<OverflowSide, Room> };
 
 const SIDES: readonly OverflowSide[] = ["left", "right"];
 const OTHER: Record<OverflowSide, OverflowSide> = { left: "right", right: "left" };
+export const NOTCH_SIDE_LEAST = 2;
 
-function pack(zones: Record<OverflowSide, OverflowZone>, capacity: Record<OverflowSide, number>, gap: number, everything: boolean): Packed {
+const visibleCount = (lane: readonly Entry[]) => lane.filter((entry) => entry.width > 0).length;
+
+export function balancedLanes(left: readonly number[], right: readonly number[], least = 0): Lanes {
+  const own = (from: OverflowSide, widths: readonly number[]) => widths.map((width, index) => ({ from, index, width }));
+  const lanes: Lanes = { left: own("left", left), right: own("right", right) };
+  if (least <= 0) return lanes;
+  const counts = { left: visibleCount(lanes.left), right: visibleCount(lanes.right) };
+  if (counts.left < least && counts.right > least) {
+    for (let step = Math.min(least - counts.left, counts.right - least); step > 0; step -= 1) {
+      lanes.left.push(...lanes.right.splice(lanes.right.findIndex((entry) => entry.width > 0), 1));
+    }
+  } else if (counts.right < least && counts.left > least) {
+    for (let step = Math.min(least - counts.right, counts.left - least); step > 0; step -= 1) {
+      const at = lanes.left.map((entry) => entry.width > 0).lastIndexOf(true);
+      lanes.right.unshift(...lanes.left.splice(at, 1));
+    }
+  }
+  return lanes;
+}
+
+export function isUnbalanced(left: number, right: number, least = NOTCH_SIDE_LEAST) {
+  return (left < least && right > least) || (right < least && left > least);
+}
+
+const span = (entries: readonly Entry[], gap: number) =>
+  entries.reduce((total, entry) => total + entry.width, 0) + gap * Math.max(0, entries.length - 1);
+
+export function leastWing(lanes: Lanes, reserved: Record<OverflowSide, number>, gap: number, chipWidth: number, least = NOTCH_SIDE_LEAST) {
+  const need = (side: OverflowSide) => reserved[side] + span(lanes[side].filter((entry) => entry.width > 0).slice(0, least), gap);
+  const sides = SIDES.map(need);
+  const more = SIDES.some((side) => visibleCount(lanes[side]) > least);
+  return Math.max(...sides, more ? Math.min(...sides) + chipWidth + gap : 0);
+}
+
+function pack(zones: Record<OverflowSide, OverflowZone>, lanes: Lanes, capacity: Record<OverflowSide, number>, gap: number, everything: boolean): Packed {
   const room: Record<OverflowSide, Room> = { left: { used: 0, count: 0 }, right: { used: 0, count: 0 } };
   const shown = { left: zones.left.widths.map((width) => !(width > 0)), right: zones.right.widths.map((width) => !(width > 0)) };
   const moved = { left: zones.left.widths.map(() => false), right: zones.right.widths.map(() => false) };
@@ -24,22 +61,28 @@ function pack(zones: Record<OverflowSide, OverflowZone>, capacity: Record<Overfl
     room[side] = { used: next, count: room[side].count + 1 };
     return true;
   };
-  for (const side of SIDES) zones[side].widths.forEach((width, index) => {
-    if (width > 0 && put(side, width)) shown[side][index] = true;
-  });
-  if (!everything) for (const side of SIDES) zones[side].widths.forEach((width, index) => {
-    if (shown[side][index] || zones[side].movable?.[index] !== true || !put(OTHER[side], width)) return;
-    shown[side][index] = true;
-    moved[side][index] = true;
-  });
+  const place = (entry: Entry, side: OverflowSide) => {
+    shown[entry.from][entry.index] = true;
+    moved[entry.from][entry.index] = entry.from !== side;
+  };
+  for (const side of SIDES) for (const entry of lanes[side]) {
+    if (entry.width > 0 && put(side, entry.width)) place(entry, side);
+  }
+  if (!everything) for (const side of SIDES) for (const entry of lanes[side]) {
+    if (shown[entry.from][entry.index]) continue;
+    const returning = entry.from !== side;
+    if (!returning && zones[entry.from].movable?.[entry.index] !== true) continue;
+    if (put(OTHER[side], entry.width)) place(entry, OTHER[side]);
+  }
   return { shown, moved, room };
 }
 
-export type OverflowOptions = { auto?: boolean; forceChip?: boolean };
+export type OverflowOptions = { auto?: boolean; forceChip?: boolean; least?: number };
 
 export function fitCollapsedZones(left: OverflowZone, right: OverflowZone, gap: number, chipWidth: number, options: OverflowOptions = {}): OverflowFit {
   const everything = options.auto === false;
   const zones: Record<OverflowSide, OverflowZone> = { left, right };
+  const lanes = balancedLanes(left.widths, right.widths, options.least ?? 0);
   const result = (packed: Packed, chip: OverflowSide | null): OverflowFit => {
     const used = { left: packed.room.left.used, right: packed.room.right.used };
     if (chip) used[chip] += chipWidth + (packed.room[chip].count > 0 ? gap : 0);
@@ -51,14 +94,14 @@ export function fitCollapsedZones(left: OverflowZone, right: OverflowZone, gap: 
       used,
     };
   };
-  const first = pack(zones, { left: left.capacity, right: right.capacity }, gap, everything);
+  const first = pack(zones, lanes, { left: left.capacity, right: right.capacity }, gap, everything);
   const hidden = SIDES.some((side) => first.shown[side].includes(false));
   if (!hidden && options.forceChip !== true) return result(first, null);
   const free = (side: OverflowSide) => zones[side].capacity - first.room[side].used;
   const preferred: OverflowSide = free("right") > free("left") ? "right" : "left";
   const withChip = (chip: OverflowSide) => {
     if (everything || free(chip) >= chipWidth + (first.room[chip].count > 0 ? gap : 0)) return first;
-    return pack(zones, { left: left.capacity, right: right.capacity, [chip]: zones[chip].capacity - chipWidth - gap }, gap, false);
+    return pack(zones, lanes, { left: left.capacity, right: right.capacity, [chip]: zones[chip].capacity - chipWidth - gap }, gap, false);
   };
   const best = withChip(preferred);
   const other = withChip(OTHER[preferred]);

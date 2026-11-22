@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { useTranslation } from "../../../i18n";
 import type { CollapsedPlacement } from "../../../lib/settings/collapsedItems";
@@ -8,6 +8,8 @@ import { firstSpilled, laneIds, laneOf, type LaneId, type StepKey } from "./lane
 import { LaneChip, type ChipKind } from "./LaneChip";
 import type { CollapsedEditor } from "./useCollapsedEditor";
 import type { CollapsedLayout } from "./useCollapsedLayout";
+import { seenOnBar } from "./mirrorItemState";
+import type { MirrorFrame } from "../../../features/plugin-kernel/barMirror";
 import "./CollapsedLanes.css";
 
 type BarLane = "left" | "center" | "right" | "shelf";
@@ -27,9 +29,10 @@ function Pict({ lane }: { lane: BarLane }) {
   );
 }
 
-export function CollapsedLanes({ layout, editor, notch, centers, styled, selected, onSelect, onStyle }: {
+export function CollapsedLanes({ layout, editor, notch, frame, centers, styled, selected, onSelect, onStyle }: {
   layout: CollapsedLayout;
   notch: boolean;
+  frame: MirrorFrame | null;
   editor: CollapsedEditor;
   centers: readonly string[];
   styled: (id: string) => boolean;
@@ -42,6 +45,7 @@ export function CollapsedLanes({ layout, editor, notch, centers, styled, selecte
   const { names, saved } = layout;
   const { view, listed, drag, picked, history } = editor;
   const noRoom = useCollapsedOverflowIds();
+  const seen = useMemo(() => seenOnBar(frame, view.filter((placement) => listed.has(placement.id) && !placement.hidden && !placement.shelf), noRoom), [frame, view, listed, noRoom]);
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const centerName: Record<string, string> = { center: t.item.center, "todos-count": t.item.todoCount };
@@ -102,6 +106,7 @@ export function CollapsedLanes({ layout, editor, notch, centers, styled, selecte
   };
 
   const chip = (placement: CollapsedPlacement | null, id: string, kind: ChipKind, spilled = false) => {
+    const state = kind === "bar" && !spilled ? seen.get(id) : undefined;
     const lane = placement ? laneOf(placement) : "center";
     const back: LaneId = placement?.shelf ? "shelf" : (placement?.zone ?? "right");
     return (
@@ -115,6 +120,7 @@ export function CollapsedLanes({ layout, editor, notch, centers, styled, selecte
         picked={picked === id}
         dragging={drag?.id === id}
         spilled={spilled}
+        seen={state}
         styled={styled(id)}
         onPointerDown={kind === "center" ? undefined : (event) => editor.startDrag(event, id)}
         onSelect={() => onSelect(id)}
