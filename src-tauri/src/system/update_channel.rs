@@ -74,8 +74,44 @@ fn configured_endpoints(app: &AppHandle) -> Result<Vec<Url>, String> {
         .map_err(|error| error.to_string())
 }
 
-async fn check(app: &AppHandle, channel: &str) -> Result<Option<Update>, String> {
-    let endpoints = channel_endpoints(&configured_endpoints(app)?, channel)?;
+pub(crate) fn source_groups(endpoints: Vec<Url>) -> Vec<Vec<Url>> {
+    let (site, github): (Vec<Url>, Vec<Url>) = endpoints.into_iter().partition(|endpoint| {
+        let path = endpoint.path();
+        path.ends_with(SITE_STABLE_MANIFEST) || path.ends_with(SITE_BETA_MANIFEST)
+    });
+    [site, github].into_iter().filter(|group| !group.is_empty()).collect()
+}
+
+pub(crate) fn pick_newest<T>(results: Vec<Result<Option<T>, String>>, version: impl Fn(&T) -> &str) -> Result<Option<T>, String> {
+    let parsed = |found: &T| semver::Version::parse(version(found)).ok();
+    let mut newest: Option<T> = None;
+    let mut answered = false;
+    let mut errors = Vec::new();
+    for result in results {
+        match result {
+            Ok(found) => {
+                answered = true;
+                if let Some(found) = found {
+                    let better = match &newest {
+                        None => true,
+                        Some(current) => parsed(&found) > parsed(current),
+                    };
+                    if better {
+                        newest = Some(found);
+                    }
+                }
+            }
+            Err(error) => errors.push(error),
+        }
+    }
+    if answered {
+        Ok(newest)
+    } else {
+        Err(errors.join("; "))
+    }
+}
+
+async fn check_group(app: AppHandle, endpoints: Vec<Url>) -> Result<Option<Update>, String> {
     let mut builder = app
         .updater_builder()
         .endpoints(endpoints)
@@ -87,6 +123,19 @@ async fn check(app: &AppHandle, channel: &str) -> Result<Option<Update>, String>
     }
     builder.build().map_err(|error| error.to_string())?
         .check().await.map_err(|error| error.to_string())
+}
+
+async fn check(app: &AppHandle, channel: &str) -> Result<Option<Update>, String> {
+    let endpoints = channel_endpoints(&configured_endpoints(app)?, channel)?;
+    let tasks: Vec<_> = source_groups(endpoints)
+        .into_iter()
+        .map(|group| tauri::async_runtime::spawn(check_group(app.clone(), group)))
+        .collect();
+    let mut results = Vec::with_capacity(tasks.len());
+    for task in tasks {
+        results.push(task.await.map_err(|error| error.to_string()).and_then(|result| result));
+    }
+    pick_newest(results, |update| update.version.as_str())
 }
 
 #[tauri::command]
@@ -333,5 +382,39 @@ mod tests {
         assert_eq!(beta.len(), 2 * updater.endpoints.len());
         assert_eq!(beta[0].as_str(), "https://fuyu.tix.xin/api/update/beta/latest.json");
         assert_eq!(updater.endpoints[0].as_str(), "https://fuyu.tix.xin/api/update/stable/latest.json");
+    }
+
+    #[test]
+    fn the_site_and_github_are_checked_as_separate_sources() {
+        let endpoints = urls(&[
+            "https://fuyu.tix.xin/api/update/beta/latest.json",
+            "https://github.com/o/r/releases/download/beta-channel/latest.json",
+            "https://fuyu.tix.xin/api/update/stable/latest.json",
+            "https://ghfast.top/https://github.com/o/r/releases/latest/download/latest.json",
+        ]);
+        let groups = source_groups(endpoints.clone());
+        assert_eq!(groups, vec![
+            vec![endpoints[0].clone(), endpoints[2].clone()],
+            vec![endpoints[1].clone(), endpoints[3].clone()],
+        ]);
+        assert_eq!(source_groups(urls(&["https://github.com/o/r/releases/latest/download/latest.json"])).len(), 1);
+    }
+
+    fn pick(results: Vec<Result<Option<&'static str>, String>>) -> Result<Option<&'static str>, String> {
+        pick_newest(results, |version| version)
+    }
+
+    #[test]
+    fn a_stale_site_does_not_hide_a_newer_github_release() {
+        assert_eq!(pick(vec![Ok(Some("0.3.12-beta.1")), Ok(Some("0.3.12-beta.3"))]), Ok(Some("0.3.12-beta.3")));
+        assert_eq!(pick(vec![Ok(Some("0.3.12")), Ok(Some("0.3.12-beta.3"))]), Ok(Some("0.3.12")));
+        assert_eq!(pick(vec![Ok(None), Ok(Some("0.3.12-beta.3"))]), Ok(Some("0.3.12-beta.3")));
+    }
+
+    #[test]
+    fn one_unreachable_source_is_not_an_error_but_both_are() {
+        assert_eq!(pick(vec![Err("site down".into()), Ok(Some("0.3.12"))]), Ok(Some("0.3.12")));
+        assert_eq!(pick(vec![Ok(None), Err("github down".into())]), Ok(None));
+        assert_eq!(pick(vec![Err("a".into()), Err("b".into())]), Err("a; b".to_string()));
     }
 }

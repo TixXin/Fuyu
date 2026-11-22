@@ -16,10 +16,10 @@
 
 「更新」页的「更新通道」可选**稳定版**或**测试版（beta）**，保存在 `fuyu-update-channel`。没选过时，beta 版本的程序默认测试版（是用户特意装的），其他版本默认稳定版，所以**不主动选测试版的用户永远收不到 beta**：
 
-- **稳定版**读 `plugins.updater.endpoints`：先读官网 `https://fuyu.tix.xin/api/update/stable/latest.json`（D63，2026-11-20 起），取不到再读 GitHub 的 `releases/latest/download/latest.json` 和它的两个加速前缀。GitHub 的 latest 永远不会是 Pre-release，而 beta 版都发成 Pre-release。0.3.0 及更早的客户端没有通道设置，也只读这里；0.3.12-beta.1 及更早的客户端只读 GitHub 的三个端点。
+- **稳定版**读 `plugins.updater.endpoints`：官网 `https://fuyu.tix.xin/api/update/stable/latest.json`（D63，2026-11-20 起）和 GitHub 的 `releases/latest/download/latest.json` 及它的两个加速前缀，两边同时查、取版本高的（见下面「检查与安装流程」）。GitHub 的 latest 永远不会是 Pre-release，而 beta 版都发成 Pre-release。0.3.0 及更早的客户端没有通道设置，也只读这里；0.3.12-beta.1 及更早的客户端只读 GitHub 的三个端点。
 - **测试版**读官网的 `https://fuyu.tix.xin/api/update/beta/latest.json`（正式版和测试版里版本号最新的那个）和同一组 GitHub 镜像下的 `releases/download/beta-channel/latest.json`（都由 `src-tauri/src/system/update_channel.rs` 从稳定端点换算：官网把结尾的 `/api/update/stable/latest.json` 换成 `/api/update/beta/latest.json`），全部取不到时再退回稳定版端点，所以 beta 清单缺失或下载失败时，测试版用户仍能收到正式版。`beta-channel` 是一个固定的 Pre-release，只放这份清单，**不要删除**。
 - 每次 `pnpm release`（正式版和 beta 版都算）发布后会刷新 `beta-channel` 上的清单，除非它已经指向更新的版本。所以测试版用户也会收到正式版；从测试版切回稳定版不会降级，要等稳定版追上当前版本才收到更新。
-- 官网的两份清单由官网数据库生成，`pnpm release` 在刷新 `beta-channel` 之后调官网仓库（默认 `../fuyu-desktop`，`FUYU_SITE_DIR` 可改）的 `pnpm releases:import <tag>`，从 GitHub 下载这一版、核对 SHA-256 后导入，再读回两个通道（`scripts/release/site-import.mjs`）。失败时重试 3 次，仍不行就在最后报错、退出码 1，并给出手动导入的命令；`--no-site` 跳过。客户端先读官网，官网能返回旧清单就不会再看 GitHub，所以漏导入等于这一版谁也收不到（0.3.12-beta.2、beta.3 就是这样漏的）。
+- 官网的两份清单由官网数据库生成，`pnpm release` 在刷新 `beta-channel` 之后调官网仓库（默认 `../fuyu-desktop`，`FUYU_SITE_DIR` 可改）的 `pnpm releases:import <tag>`，从 GitHub 下载这一版、核对 SHA-256 后导入，再读回两个通道（`scripts/release/site-import.mjs`）。失败时重试 3 次，仍不行就在最后报错、退出码 1，并给出手动导入的命令；`--no-site` 跳过。0.3.12-beta.3 及更早的客户端先读官网、读到就不再看 GitHub，漏导入时它们收不到这一版（0.3.12-beta.2、beta.3 就是这样漏的）；之后的客户端两边都查，官网落后时仍从 GitHub 拿到新版，但官网用户多、下载快，照样要导入。
 
 版本号带 `-`（如 `0.3.1-beta.1`）就算 beta：`release.mjs` 会把它发成 Pre-release、不设为 latest，判断与比较在 `scripts/release/channel.mjs`。
 
@@ -35,7 +35,7 @@
 
 ## 检查与安装流程
 
-1. 设置页调用 `updater_check`（按通道选端点，`src-tauri/src/system/update_channel.rs`），依次尝试各端点：GitHub 直连、`ghfast.top`、`gh-proxy.com`，第一个能取到清单的胜出。
+1. 设置页调用 `updater_check`（按通道选端点，`src-tauri/src/system/update_channel.rs`），端点分成官网和 GitHub 两组同时查：每组内按顺序尝试（GitHub 组是直连、`ghfast.top`、`gh-proxy.com`），第一个能取到清单的代表这一组；两组都有结果时取版本高的，版本相同取官网的；一组连不上不算失败，两组都连不上才报错（`source_groups`、`pick_newest`）。
 2. 清单里的 `version` 高于当前版本时，界面显示「发现新版本 vX.Y.Z」。
 3. 点「下载并安装」后，安装包下载到本地临时目录，边下边用清单里的 `signature` 校验。
 4. Windows 走 NSIS 安装模式 `passive`：显示安装进度条，装完由安装器拉起新版本，旧进程自动退出。
@@ -66,7 +66,7 @@
 
 GitHub 的 `github.com` 在国内经常连不上（`api.github.com` 往往还能通），所以检查更新做了两层兜底：
 
-- **多端点**：`tauri.conf.json` 里先配官网 `fuyu.tix.xin` 的接口（D63），再配 GitHub 直连和两个公共加速前缀，插件会按顺序尝试，任一成功即返回。官网清单和 GitHub 上的 `latest.json` 格式相同，安装包地址是 `https://fuyu.tix.xin/files/<哈希>/<文件名>`，签名和 GitHub 上的是同一份。面板失败时会显示「原因：…」方便判断是网络问题还是清单缺失。
+- **多端点**：`tauri.conf.json` 里先配官网 `fuyu.tix.xin` 的接口（D63），再配 GitHub 直连和两个公共加速前缀，官网和 GitHub 两组同时查、取版本高的，组内按顺序尝试、任一成功即代表这一组。官网清单和 GitHub 上的 `latest.json` 格式相同，安装包地址是 `https://fuyu.tix.xin/files/<哈希>/<文件名>`，签名和 GitHub 上的是同一份。面板失败时会显示「原因：…」方便判断是网络问题还是清单缺失。
 - **安装包换源**（D57）：清单里的安装包地址只有一个（默认 GitHub 直连）。下载失败时（连不上、超时、返回错误状态或签名对不上），`system/update_channel.rs` 把地址套上和清单端点相同的两个前缀（`system/download_mirrors.rs` 的 `MIRROR_PREFIXES`，有测试保证和 `tauri.conf.json` 一致）依次重下，顺序是「直连 → ghfast.top → gh-proxy.com」。官网清单里的安装包在 `fuyu.tix.xin` 上，只直连、不套前缀，下载源显示为 `fuyu.tix.xin`；它下载失败就报错，不会再换到 GitHub（清单是哪个端点给的，安装包就从哪里下）。三个源下回来的都是同一个文件，都用内置公钥验同一份 minisign 签名，换源不放松校验。每个源连接超时 10 秒、30 秒没收到数据算卡住（`configure_client` 设到 updater 插件的 HTTP 客户端上），整次下载上限仍是 10 分钟。正在用 / 最后成功的源写进更新状态快照的 `downloadSource`（`"GitHub"`、`"ghfast.top"`、`"gh-proxy.com"`），关于页的更新面板在下载中、待安装、安装中和装完时显示「本次下载源」。
 - **InfLink-rs 和插件市场**：网易云插件 InfLink-rs 的一键安装（`lyrics/inflink.rs`，D53）和插件市场的索引、插件包、主题与点赞数据（`plugin_host/market.rs`）用同一个换源工具：GitHub 地址（`github.com`、`raw.githubusercontent.com` 等）按同样顺序重试，sha256 / 签名校验不变，镜像返回的文件对不上就换下一个源。`api.github.com` 不走前缀（公共前缀不代理它），InfLink-rs 查最新版本失败时直接报「连不上 GitHub（api.github.com）」。
 - **系统代理**：`updater_check` 每次检查时在 Rust 里读代理（`src-tauri/src/system/updater.rs` 的 `get_updater_proxy`），依次读 `HTTPS_PROXY` / `HTTP_PROXY` 环境变量和 Windows 系统代理（`Internet Settings\ProxyServer`），设到这次检查上，下载和安装沿用。开了 Clash 之类的系统代理时，更新自动走代理。代理地址里可能写着账号密码，所以只在 Rust 里用，不交给窗口（E36.3.13，2026-11-15 起；之前前端启动时取一次再传回 `updater_check`）；地址解析不了时报 `net.proxy`，错误里也不带地址。歌词、日历、cc-connect 和换源下载用同一个代理（`reqwest_proxy()`），报错方式一样。
