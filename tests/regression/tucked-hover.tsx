@@ -35,6 +35,7 @@ let setClickCollapseOnLeave: (value: boolean) => void;
 let setDimEnabled: (value: boolean) => void;
 let setAutoTuckEnabled: (value: boolean) => void;
 let setAgentWaiting: (value: boolean) => void;
+let setPeekDelay: (value: number) => void;
 
 function Harness() {
   const [opensPanel, changeOpensPanel] = useState(false);
@@ -43,6 +44,8 @@ function Harness() {
   const [dimEnabled, changeDimEnabled] = useState(false);
   const [autoTuckEnabled, changeAutoTuckEnabled] = useState(false);
   const [agentWaiting, changeAgentWaiting] = useState(false);
+  const [peekDelay, changePeekDelay] = useState(0);
+  setPeekDelay = changePeekDelay;
   const navigation = useIslandNavigation();
   island = navigation;
   setOpensPanel = changeOpensPanel;
@@ -75,6 +78,7 @@ function Harness() {
   enter = useTuckedHoverOpen({
     opensPanel,
     delayMs: HOVER_DELAY_MS,
+    peekDelayMs: peekDelay,
     isTucked: navigation.isTucked,
     isPeeking: navigation.isPeeking && navigation.mode === "collapsed",
     onPeek: navigation.peekIsland,
@@ -122,6 +126,24 @@ async function runChecks() {
     await hover(false);
     await until(() => state() === "collapsed/tucked");
     check(state() === "collapsed/tucked", "只露出岛屿：鼠标移开后岛屿收回边缘");
+
+    await act(async () => setPeekDelay(150));
+    await hover(true);
+    await wait(60);
+    await hover(false);
+    await wait(200);
+    check(state() === "collapsed/tucked" && !island.isPeeking, "悬停露出延迟：鼠标擦过露边条、没停够 150ms 就移开，岛不滑出");
+    await act(async () => enter());
+    await wait(200);
+    check(state() === "collapsed/tucked" && !island.isPeeking, "悬停露出延迟：鼠标只是进了岛壳又离开，同样不滑出");
+    await hover(true);
+    await wait(70);
+    check(state() === "collapsed/tucked", "悬停露出延迟：停留还不到 150ms 时仍收在边缘");
+    await until(() => state() === "collapsed/out" && island.isPeeking);
+    check(state() === "collapsed/out" && island.isPeeking, "悬停露出延迟：停够 150ms 后露出岛屿");
+    await hover(false);
+    await until(() => state() === "collapsed/tucked");
+    await act(async () => setPeekDelay(0));
 
     await act(async () => setOpensPanel(true));
     await arrive();

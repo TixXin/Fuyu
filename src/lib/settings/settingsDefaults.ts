@@ -10,6 +10,7 @@ import {
   DEFAULT_HOVER_EXPAND_DELAY_MS, DEFAULT_HOVER_SWITCH_DELAY_MS, DEFAULT_IDLE_DIM_OPACITY, DEFAULT_IDLE_DIM_SECONDS, DEFAULT_ISLAND_CORNER_RADIUS, DEFAULT_ISLAND_OPACITY, DEFAULT_MAX_PANEL_HEIGHT, DEFAULT_PANEL_WIDTH, DEFAULT_SHELF_ITEMS, DEFAULT_SIDE_HEIGHT, DEFAULT_TASK_TEXT_COLOR,
 } from "./settingsLimits.ts";
 import { isMacOS } from "../platform.ts";
+import { DEFAULT_TUCKED_HOVER_DELAY_MS } from "./tuckLip.ts";
 import type { IslandSettings } from "./types";
 
 export const DEFAULT_SETTINGS: IslandSettings = {
@@ -92,6 +93,9 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   minimizeAction: "tuck",
   tuckedHoverAction: "reveal",
   tuckStyle: "edge",
+  tuckLipHeight: 0,
+  tuckLipWidth: 0,
+  tuckedHoverDelayMs: DEFAULT_TUCKED_HOVER_DELAY_MS,
   tuckHintStyle: "dot",
   tuckHintColor: "contrast",
   tuckHintCustomColor: "#74d6ff",

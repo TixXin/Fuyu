@@ -3,7 +3,7 @@ import { MousePointer2 } from "lucide-react";
 import type { TuckHintStyle, TuckStyle } from "../../../../lib/settings/types";
 import "./TuckMock.css";
 
-const ISLAND = { width: 150, height: 38, expandedWidth: 236, expandedHeight: 92, margin: 10 } as const;
+const ISLAND = { width: 150, height: 38, expandedWidth: 236, expandedHeight: 92, margin: 10, realWidth: 300 } as const;
 const VISIBLE: Record<TuckStyle, number> = { edge: 10, line: 4, hidden: 0 };
 
 export type TuckMockHint = { style: TuckHintStyle; paint: string; ring: "dark" | "light"; breathe: boolean };
@@ -16,8 +16,12 @@ export function TuckMock({
   revealed = false,
   expanded = false,
   pointer = null,
+  lipHeight,
+  lipWidth = 0,
 }: {
   tuckStyle: TuckStyle;
+  lipHeight?: number;
+  lipWidth?: number;
   hint: TuckMockHint | null;
   islandColor: string;
   scale?: number;
@@ -26,9 +30,10 @@ export function TuckMock({
   pointer?: "away" | "edge" | null;
 }) {
   const open = revealed && expanded;
-  const width = (open ? ISLAND.expandedWidth : ISLAND.width) * scale;
+  const narrow = !revealed && lipWidth > 0 ? Math.min(ISLAND.width, (lipWidth * ISLAND.width) / ISLAND.realWidth) : ISLAND.width;
+  const width = (open ? ISLAND.expandedWidth : narrow) * scale;
   const height = (open ? ISLAND.expandedHeight : ISLAND.height) * scale;
-  const offset = revealed ? ISLAND.margin * scale : -(ISLAND.height - VISIBLE[tuckStyle]) * scale;
+  const offset = revealed ? ISLAND.margin * scale : -(ISLAND.height - (lipHeight ?? VISIBLE[tuckStyle])) * scale;
   const hidden = tuckStyle === "hidden" && !revealed;
   const islandStyle = { width, height, transform: `translate(-50%, ${offset}px)`, background: islandColor } as CSSProperties;
   const showHint = hint && hidden && hint.style !== "none";

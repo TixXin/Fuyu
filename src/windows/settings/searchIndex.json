@@ -1344,6 +1344,19 @@
       "page": "behaviorTuck",
       "zh-CN": {
         "group": "隐藏后的样子",
+        "title": "露出宽度",
+        "description": "调窄后只在中间露一小段，两侧的点击直接给下面的窗口，比如浏览器的标签页；贴左右侧边和有刘海时不变"
+      },
+      "en": {
+        "group": "When tucked",
+        "title": "Strip width",
+        "description": "A narrower strip shows only in the middle, and clicks on either side go to the window below, such as browser tabs. Side edges and the notch are not affected."
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "隐藏后的样子",
         "title": "隐身记号",
         "description": "隐身提示：贴边隐身时在屏幕边缘留个小记号，表示岛还在运行，不挡鼠标"
       },
@@ -1455,6 +1468,19 @@
           "Slides it out",
           "Opens the panel"
         ]
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "露出",
+        "title": "停多久才露出",
+        "description": "鼠标在隐藏的岛上停够这么久才滑出来，快速擦过不会弹出"
+      },
+      "en": {
+        "group": "Sliding out",
+        "title": "Hover time before it slides out",
+        "description": "The island slides out only after the pointer rests on it this long, so brushing past the edge doesn't open it."
       }
     },
     {
@@ -4630,6 +4656,19 @@
       "en": {
         "group": "Opening",
         "title": "Hover time before opening"
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "隐藏后的样子",
+        "title": "露出高度",
+        "description": "露出的那一条有多高；点上面的样式会回到那一档的高度"
+      },
+      "en": {
+        "group": "When tucked",
+        "title": "Strip height",
+        "description": "How tall the visible strip is. Picking a style above resets it to that style's height."
       }
     }
   ]

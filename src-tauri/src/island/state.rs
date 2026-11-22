@@ -56,7 +56,22 @@ pub(crate) enum TuckStyle {
     Hidden,
 }
 
+pub(crate) const TUCK_LIP_HEIGHT_RANGE: (f64, f64) = (2.0, 14.0);
+pub(crate) const TUCK_LIP_WIDTH_RANGE: (f64, f64) = (80.0, 340.0);
+
+pub(super) fn tuck_lip(value: f64, (min, max): (f64, f64)) -> Option<f64> {
+    (value.is_finite() && value > 0.0).then(|| value.clamp(min, max))
+}
+
 impl TuckStyle {
+    pub(super) fn visible_height(self, lip: Option<f64>) -> Option<f64> {
+        match self {
+            Self::Edge => Some(lip.unwrap_or(super::geometry::TUCKED_VISIBLE_EDGE_HEIGHT)),
+            Self::Line => Some(lip.unwrap_or(super::geometry::TUCKED_VISIBLE_LINE_HEIGHT)),
+            Self::Hidden => None,
+        }
+    }
+
     pub(super) fn from_value(value: &str) -> Option<Self> {
         match value {
             "edge" => Some(Self::Edge),
@@ -108,6 +123,8 @@ pub(crate) struct IslandWindowState {
     pub(super) is_dimmed: bool,
     pub(super) game_passthrough: bool,
     pub(super) tuck_style: TuckStyle,
+    pub(super) tuck_lip_height: Option<f64>,
+    pub(super) tuck_lip_width: Option<f64>,
     pub(super) collapsed_scale: f64,
     pub(super) expanded_scale: f64,
     pub(super) margin_y: f64,
@@ -181,6 +198,9 @@ impl IslandWindowState {
         }
         if matches!(self.mode, IslandMode::Collapsed) && !self.is_tucked {
             return (self.collapsed_width, self.collapsed_height);
+        }
+        if let (IslandMode::Collapsed, Some(width)) = (self.mode, self.tuck_lip_width) {
+            return (self.collapsed_width.min(width), COLLAPSED_ISLAND_HEIGHT);
         }
         self.mode.base_size(self.collapsed_width, self.expanded_width, self.expanded_height)
     }
@@ -269,6 +289,8 @@ impl Default for IslandWindowState {
             is_dimmed: false,
             game_passthrough: false,
             tuck_style: TuckStyle::Edge,
+            tuck_lip_height: None,
+            tuck_lip_width: None,
             collapsed_scale: DEFAULT_COLLAPSED_SCALE,
             expanded_scale: DEFAULT_EXPANDED_SCALE,
             margin_y: DEFAULT_MARGIN_Y,

@@ -10,6 +10,7 @@ import {
   MIN_AUTO_TUCK_RETRACT_DELAY_MS, MIN_HOVER_COLLAPSE_DELAY_MS, MIN_HOVER_EXPAND_DELAY_MS, MIN_HOVER_SWITCH_DELAY_MS, MIN_IDLE_DIM_OPACITY, MIN_SHELF_ITEMS, MIN_SIDE_HEIGHT,
   MESSAGE_NOTICES, MESSAGE_PANEL_SECONDS, SHELF_CLEANUP_DAYS, TUCK_HINT_COLORS, TUCK_HINT_STYLES, TUCK_STYLES, oneOf,
 } from "./settingsLimits.ts";
+import { normalizeTuckedHoverDelay, normalizeTuckLip, TUCK_LIP_HEIGHT_RANGE, TUCK_LIP_WIDTH_RANGE } from "./tuckLip.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
 function chosenIslandLayerShortcut(settings: LegacyIslandSettings | null | undefined) {
@@ -74,6 +75,9 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     minimizeAction: settings?.minimizeAction === "tuck" ? "tuck" : "tray",
     tuckedHoverAction: settings?.tuckedHoverAction === "expand" ? "expand" : "reveal",
     tuckStyle: oneOf(TUCK_STYLES, settings?.tuckStyle, DEFAULT_SETTINGS.tuckStyle),
+    tuckLipHeight: normalizeTuckLip(settings?.tuckLipHeight, TUCK_LIP_HEIGHT_RANGE),
+    tuckLipWidth: normalizeTuckLip(settings?.tuckLipWidth, TUCK_LIP_WIDTH_RANGE),
+    tuckedHoverDelayMs: normalizeTuckedHoverDelay(settings?.tuckedHoverDelayMs),
     tuckHintStyle: oneOf(TUCK_HINT_STYLES, settings?.tuckHintStyle, DEFAULT_SETTINGS.tuckHintStyle),
     tuckHintColor: oneOf(TUCK_HINT_COLORS, settings?.tuckHintColor, DEFAULT_SETTINGS.tuckHintColor),
     tuckHintCustomColor: getColorSetting(settings?.tuckHintCustomColor, DEFAULT_SETTINGS.tuckHintCustomColor),
