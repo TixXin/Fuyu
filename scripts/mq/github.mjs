@@ -30,6 +30,7 @@ export const github = {
   prBody: (number) => gh(["pr", "view", String(number), "--json", "body", "-q", ".body"]),
   setBody: (number, body) => gh(["pr", "edit", String(number), "--body-file", "-"], body),
   runs: (branch) => JSON.parse(gh(["run", "list", "--branch", branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,url"])),
+  runJobs: (runId) => JSON.parse(gh(["run", "view", String(runId), "--json", "jobs", "-q", "[.jobs[] | {name, status, conclusion}]"])),
   ciRuns: (limit) => JSON.parse(gh(["run", "list", "--workflow", "ci.yml", "--limit", String(limit), "--json", "databaseId,headBranch,conclusion,attempt,url"])),
   attemptJobs: (runId, attempt) => JSON.parse(gh(["api", `repos/{owner}/{repo}/actions/runs/${runId}/attempts/${attempt}/jobs`, "-q", "[.jobs[] | {id, name, conclusion}]"])),
   jobLog: (jobId) => gh(["run", "view", "--job", String(jobId), "--log"]),

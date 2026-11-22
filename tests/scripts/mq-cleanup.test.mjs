@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { land } from "../../scripts/mq/land.mjs";
-import { tryCi } from "../../scripts/mq/try.mjs";
+import { pushTry, tryCi } from "../../scripts/mq/try.mjs";
 
 const git = (args, cwd) => execFileSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 
@@ -145,4 +145,12 @@ test("try --clean deletes only this machine's try branches whose CI has finished
   assert.match(output, /留着 try\/tester\/test-pc-mini-main：别的机器的或手推的/);
   assert.match(output, /留着 try\/tester\/old-mac-main：CI 还在跑/, "this machine's branch under its earlier name, still running");
   assert.match(output, /留着 try\/tester\/older-mac-main：没找到这次推送的 CI 记录/, "a finished run for an older push does not count");
+}));
+
+test("pushTry for mq:verify pushes the commit being verified, not the newer local HEAD (D121.3)", () => inTempRepo("mq-try-verify-", async ({ remote, main }) => {
+  const verified = commit(main, "b.txt", "verified");
+  commit(main, "c.txt", "committed later by another session");
+  const pushed = pushTry({ github: { login: () => "tester" }, host: "Test-PC", head: verified, what: "提交 x", tag: "verify" });
+  assert.deepEqual(pushed, { rev: verified, remoteBranch: "try/tester/test-pc-main" }, "the same branch mq:try uses, so mq:try --clean recognises it");
+  assert.equal(git(["rev-parse", "try/tester/test-pc-main"], remote), verified);
 }));

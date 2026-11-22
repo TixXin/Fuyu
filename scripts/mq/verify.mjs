@@ -2,8 +2,9 @@ import { spawn, spawnSync } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { INTEGRATION_BRANCH, git, mainCheckoutOf, tryGit } from "./settings.mjs";
+import { runCi } from "./verifyCi.mjs";
 
-export const STEPS = ["verify", "regression", "exe"];
+export const STEPS = ["verify", "regression", "exe", "ci"];
 const REGRESSION_JOBS = 3;
 const COMMANDS = {
   verify: ["pnpm", "verify"],
@@ -38,6 +39,7 @@ export function verifyRequest(args) {
   const pages = [];
   let commit = null;
   let force = false;
+  let noCi = false;
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "--only") {
@@ -50,6 +52,8 @@ export function verifyRequest(args) {
       if (!pages.length) return { error: "--pages 后面写页面名中的词。" };
     } else if (arg === "--force") {
       force = true;
+    } else if (arg === "--no-ci") {
+      noCi = true;
     } else if (arg.startsWith("-")) {
       return { error: `verify 不认识参数 ${arg}。` };
     } else if (commit) {
@@ -58,7 +62,8 @@ export function verifyRequest(args) {
       commit = arg;
     }
   }
-  const chosen = steps.length ? [...new Set(steps)] : pages.length ? ["regression"] : STEPS;
+  if (noCi && steps.includes("ci")) return { error: "--no-ci 和 --only ci 不能一起写。" };
+  const chosen = steps.length ? [...new Set(steps)] : pages.length ? ["regression"] : STEPS.filter((step) => !noCi || step !== "ci");
   if (pages.length && !chosen.includes("regression")) return { error: "--pages 只对 regression 有用。" };
   return { commit, steps: chosen, pages, force };
 }
@@ -156,6 +161,17 @@ function startHeartbeat(running) {
   return () => clearInterval(timer);
 }
 
+function runCiStep(sha, running) {
+  const state = { step: "ci", start: Date.now(), lastLine: "" };
+  running.set("ci", state);
+  console.log("▶ ci 开始（推到 try 分支，在 GitHub Actions 上跑 Windows 和 macOS 的检查）");
+  return runCi({ sha, state }).then(({ ok, detail }) => {
+    running.delete("ci");
+    console.log(`${ok ? "✓" : "✗"} ci ${formatElapsed(Date.now() - state.start)}${detail ? ` ${detail}` : ""}`);
+    return { step: "ci", ok };
+  });
+}
+
 function runStep(step, dir, pages, logDir, running) {
   const [command, ...args] = COMMANDS[step];
   const file = path.join(logDir, `${step}.log`);
@@ -199,13 +215,14 @@ export async function verifyCommand(args) {
   }
   const sha = found.out;
   const dir = verifyDirOf(main);
-  if (!prepare(dir, sha, request.force)) return 1;
+  const local = request.steps.filter((step) => step !== "ci");
+  if (local.length && !prepare(dir, sha, request.force)) return 1;
   const logDir = path.join(commonDir(main), "fuyu-verify-logs");
   mkdirSync(logDir, { recursive: true });
   console.log(`[verify] 在 ${sha.slice(0, 9)} 上跑 ${request.steps.join("、")}${request.pages.length ? `（页面：${request.pages.join(" ")}）` : ""}，并行，各自排队…`);
   const running = new Map();
   const stopHeartbeat = startHeartbeat(running);
-  const results = await Promise.all(request.steps.map((step) => runStep(step, dir, request.pages, logDir, running)));
+  const results = await Promise.all(request.steps.map((step) => (step === "ci" ? runCiStep(sha, running) : runStep(step, dir, request.pages, logDir, running))));
   stopHeartbeat();
   const previous = readRecord(main);
   const carry = Boolean(previous && previous.sha !== sha && tryGit(["merge-base", "--is-ancestor", previous.sha, sha], main).ok);
@@ -222,5 +239,6 @@ export async function verifyCommand(args) {
   const missing = STEPS.filter((step) => !record.passed[step]);
   console.log(`\n[verify] ${sha.slice(0, 9)} 还差：${missing.join("、")}${record.failedPages.length ? `；挂的页：${record.failedPages.join(" ")}` : ""}`);
   console.log("  在主工作区修好、提交，再 pnpm mq:verify 验新的提交；只重跑挂的：--only <项> 或 --pages <词…>");
+  if (missing.includes("ci")) console.log("  ci 没跑或没过：有网后 pnpm mq:verify --only ci；用户同意不等 CI 时 land 加 --unverified");
   return 1;
 }
