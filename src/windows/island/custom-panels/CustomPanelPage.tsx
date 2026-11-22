@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CirclePlus, RotateCcw } from "lucide-react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
+import { skipMissingBattery, useHasBattery } from "../../../features/system-widgets/batteryPresence";
 import type { LibraryWidget } from "../../../features/plugin-kernel/widgetLibrary";
 import { useTranslation } from "../../../i18n";
 import { addPanelItem, cellsToPx, defaultWidgetSize, fuyuPanel, fuyuPanels, GRID_CELL_PX, GRID_GAP_PX, GRID_UNIT_PX, layoutStrip, PANEL_MODES, placeFreeItem, removePanelItem, setPanelMode, stripRightPx, type CustomPanel } from "../../../lib/settings/customPanels";
@@ -98,7 +99,7 @@ export function CustomPanelPage({ panelId, entrance = "fade", dataMotion = false
   const { panels, save } = useCustomPanels();
   const library = useIslandWidgets();
   const editing = usePanelEditing() === panelId;
-  const sizesOf = (id: string) => library.find(id)?.sizes ?? null;
+  const sizesOf = skipMissingBattery((id: string) => library.find(id)?.sizes ?? null, useHasBattery());
   const { ref, scale, board, panel, pages, pageStepPx } = useStrip(fuyuPanel(panels, library.widgets.length > 0 ? sizesOf : undefined), editing);
   const empty = panel.items.length === 0;
   const reducedMotion = useReducedMotion();

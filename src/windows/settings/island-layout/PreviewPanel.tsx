@@ -3,6 +3,7 @@ import { MoveDiagonal2, Puzzle } from "lucide-react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import { snapPx, useBoxDrag } from "../../../components/island-widget/useBoxDrag";
 import type { WidgetLibrary } from "../../../features/plugin-kernel/widgetLibrary";
+import { skipMissingBattery, useHasBattery } from "../../../features/system-widgets/batteryPresence";
 import { useTranslation } from "../../../i18n";
 import { boardHeightPx, cellsToPx, GRID_UNIT_PX, gridWidthPx, itemBoxPx, placeFreeItem, stretchFreeItem, type CustomPanel } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
@@ -23,6 +24,7 @@ export function PreviewPanel({ panel, library, selected, scale, onWidget, onChan
   const t = useTranslation();
   const text = t.settings.islandPages;
   const free = panel.mode === "free";
+  const sizesOf = skipMissingBattery((id: string) => library.find(id)?.sizes ?? null, useHasBattery());
   const { drag, begin } = useBoxDrag({
     scale,
     onTap: onWidget,
@@ -39,7 +41,7 @@ export function PreviewPanel({ panel, library, selected, scale, onWidget, onChan
     return (
       <div className="expanded-preview__empty">
         <p>{text.preview.empty}</p>
-        <PanelTemplateButtons onPick={(template) => onChange(applyPanelTemplate(panel, template, (id) => library.find(id)?.sizes ?? null))} />
+        <PanelTemplateButtons onPick={(template) => onChange(applyPanelTemplate(panel, template, sizesOf))} />
       </div>
     );
   }

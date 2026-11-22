@@ -77,6 +77,10 @@
   font-size: 0.5em;
 }
 
+.sys-battery__hint {
+  text-align: center;
+}
+
 .sys-battery__bar {
   display: block;
   height: 6px;

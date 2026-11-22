@@ -88,6 +88,7 @@ export type IslandWidgetsText = {
     charged: string;
     onBattery: string;
     noBattery: string;
+    noBatteryHint: string;
     noPeripherals: string;
     peripheralLevel: (name: string, level: number) => string;
     quickTargets: { files: string; terminal: string; calculator: string; settings: string };
@@ -185,6 +186,7 @@ export const zhCN: IslandWidgetsText = {
     charged: "已充满",
     onBattery: "使用电池",
     noBattery: "这台电脑没有电池",
+    noBatteryHint: "长按可移除这一格",
     noPeripherals: "没有连着能读到电量的设备",
     peripheralLevel: (name, level) => `${name} 电量 ${level}%`,
     quickTargets: { files: "文件", terminal: "终端", calculator: "计算器", settings: "系统设置" },
@@ -282,6 +284,7 @@ export const en: IslandWidgetsText = {
     charged: "Fully charged",
     onBattery: "On battery",
     noBattery: "No battery",
+    noBatteryHint: "Long-press to remove",
     noPeripherals: "No connected device reports its battery",
     peripheralLevel: (name, level) => `${name} battery ${level}%`,
     quickTargets: { files: "Files", terminal: "Terminal", calculator: "Calculator", settings: "System settings" },
