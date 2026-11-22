@@ -8,6 +8,9 @@ export type SettingsAppearanceText = {
   liquidGlass: string;
   glassStrength: string;
   styleTitle: string;
+  opacityTitle: string;
+  opacityFillHint: string;
+  opacityWholeHint: string;
   idleDim: {
     title: string;
     enable: string;
@@ -25,6 +28,8 @@ export type SettingsAppearanceText = {
     style: string;
     styles: { static: string; flow: string; aurora: string; shader: string };
     shaderHint: string;
+    styleHints: { static: string; flow: string; aurora: string };
+    colorNow: string;
     colorSource: string;
     colorSources: { accent: string; cover: string; custom: string };
     coverHint: string;
@@ -79,6 +84,9 @@ export const zhCN: SettingsAppearanceText = {
   liquidGlass: "液态玻璃",
   glassStrength: "玻璃强度",
   styleTitle: "质感与形状",
+  opacityTitle: "透明度",
+  opacityFillHint: "只淡底色，字和图标照常",
+  opacityWholeHint: "连字、图标和面板一起淡",
   idleDim: {
     title: "闲置变淡",
     enable: "闲置时自动变淡",
@@ -96,6 +104,8 @@ export const zhCN: SettingsAppearanceText = {
     style: "风格",
     styles: { static: "静态", flow: "慢流动", aurora: "极光", shader: "着色器（实验）" },
     shaderHint: "用 WebGL 画流体，效果最细，但显卡一直在工作；不支持时自动换回慢流动。",
+    styleHints: { static: "颜色铺好就不动，最省电。", flow: "几团颜色慢慢漂。", aurora: "一条条光带缓缓摆动。" },
+    colorNow: "现在取到的颜色；选「自定义」后可以改",
     colorSource: "颜色来源",
     colorSources: { accent: "主题色", cover: "跟封面", custom: "自定义" },
     coverHint: "放歌时跟着封面换色，没在放时用主题色。",
@@ -150,6 +160,9 @@ export const en: SettingsAppearanceText = {
   liquidGlass: "Liquid glass",
   glassStrength: "Glass strength",
   styleTitle: "Look and shape",
+  opacityTitle: "Transparency",
+  opacityFillHint: "Fades only the fill; text and icons stay solid",
+  opacityWholeHint: "Fades text, icons and the panel too",
   idleDim: {
     title: "Idle dimming",
     enable: "Dim when idle",
@@ -167,6 +180,8 @@ export const en: SettingsAppearanceText = {
     style: "Style",
     styles: { static: "Still", flow: "Slow flow", aurora: "Aurora", shader: "Shader (experimental)" },
     shaderHint: "Draws a fluid with WebGL. Finest detail, but keeps the GPU busy; falls back to slow flow when unsupported.",
+    styleHints: { static: "Colours stay put. Uses the least power.", flow: "A few blobs of colour drift slowly.", aurora: "Bands of light sway gently." },
+    colorNow: "The colours in use now; choose Custom to change them",
     colorSource: "Colours from",
     colorSources: { accent: "Accent", cover: "Album art", custom: "Custom" },
     coverHint: "Follows the album art while music plays, the accent colour otherwise.",
