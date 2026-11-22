@@ -1069,12 +1069,12 @@
       "zh-CN": {
         "group": "展开面板",
         "title": "面板宽度",
-        "description": "所有页面默认都用这个宽度和高度，切换页面时面板大小不变。Fuyu 页的组件固定两行，面板更宽时多显示几列；面板窄到放不下 6 列时，这一页会加宽到正好放下。在岛上改过尺寸的页面记着自己的尺寸，不跟这两项，见下面。"
+        "description": "所有页面默认都用这个宽度和高度，切换页面时面板大小不变。Fuyu 页也跟着变：组件固定两行，面板更宽时多显示几列，窄到放不下 6 列时组件整体缩小。在岛上改过尺寸的页面记着自己的尺寸，不跟这两项，见下面。"
       },
       "en": {
         "group": "Open panel",
         "title": "Panel width",
-        "description": "Every page uses this width and height by default, so the panel keeps its size when you switch pages. The Fuyu page shows two rows of widgets and more columns when the panel is wider; if the panel is too narrow for 6 columns, that page widens just enough. Pages resized on the island keep their own size instead, listed below."
+        "description": "Every page uses this width and height by default, so the panel keeps its size when you switch pages. The Fuyu page follows too: two rows of widgets, more columns when the panel is wider, and smaller widgets when it is too narrow for 6 columns. Pages resized on the island keep their own size instead, listed below."
       }
     },
     {
