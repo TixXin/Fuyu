@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { builtinsOffReached, featureOfFile, isBuiltinsOffPage } from "./regression/builtins-off-pages.mjs";
 import { PAGES } from "./run-regression.mjs";
+import { selectByCoverage } from "./regression/coverageSelect.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SPECIFIER = /\bfrom\s*["']([^"']+)["']|\bimport\s*["']([^"']+)["']|\bimport\(\s*["']([^"']+)["']\s*\)|@import\s+["']([^"']+)["']/g;
@@ -129,7 +130,13 @@ function main(args) {
     return 0;
   }
   const unitTests = [path.join(ROOT, "tests", "unit"), path.join(ROOT, "tests", "scripts"), ...readdirSync(path.join(ROOT, "packages")).map((name) => path.join(ROOT, "packages", name, "test"))].flatMap(testFiles);
-  const { pages, tests, rust } = select({ changed, pages: PAGES, unitTests, root: ROOT });
+  const picked = select({ changed, pages: PAGES, unitTests, root: ROOT });
+  const byCoverage = args.includes("--by-imports")
+    ? { pages: null, note: "--by-imports，按 import 关系挑页" }
+    : selectByCoverage({ root: ROOT, changed, pages: PAGES, importPages: (pages, files) => select({ changed: files, pages, unitTests: [], root: ROOT }).pages, entryOf: (page) => pageEntry(page, ROOT) });
+  const { tests, rust } = picked;
+  const pages = byCoverage.pages ?? picked.pages;
+  console.log(`[test:changed] ${byCoverage.note}${byCoverage.pages ? `：${pages.length} 页，按 import 关系是 ${picked.pages.length} 页` : ""}`);
   console.log(`[test:changed] ${changed.length} 个改动的文件 → 回归页 ${pages.length} 页、单元测试 ${tests.length} 个文件${rust ? `、Rust ${rust.length ? rust.join(" ") : "整个 lib"}` : ""}`);
   for (const page of pages) console.log(`  页  ${page}`);
   for (const test of tests) console.log(`  测  ${test}`);

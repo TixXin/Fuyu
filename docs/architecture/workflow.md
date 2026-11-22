@@ -92,6 +92,10 @@ pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
   - 快照可以在验证目录里 `--update-snapshots`，看过差异后复制回主工作区提交；验证目录里留着改动时 `mq:verify` 不会切走，复制完加 `--force`。验证目录不提交（`mq:land` 只认本地 `main` 上的提交）。
   - 全过了 `pnpm mq:land --yes --upto <验过的提交> --body <文件>`。land 检查这份记录：要带上的提交没验完就拒绝，只改了 `docs/` 和 `*.md` 的、`--only` 的紧急修复不查，用户同意这批不验时加 `--unverified`。之后别的会话提交的跟下一批走。
 - **开发中：`pnpm test:changed`**。从没提交的改动（或 `--since <提交>`、直接给的文件）出发，顺着 import 找出碰到它们的回归页、单元测试文件（`tests/unit`、`tests/scripts`、`packages/*/test`）和 Rust 模块（`cargo test --lib -- <模块>::`），只跑这些；回归页开 3 个浏览器（页数更少时按页数），`--dry-run` 只列出来。扫整个目录的检查（减少动画、颜色字面量）一个文件改动挑不出来，推的时候全量会跑到。
+  - **回归页按覆盖率表挑**（2026-11-22 起，D120.3）。全量跑回归页（不带页面名、不分片、不在 CI，`mq:verify` 就是）时，每页打开 Chrome 的精确块覆盖率，记下这一页执行到了哪些源文件的哪几行：Vite 开发服务器按源文件提供模块，用它内联的 source map 换回源码行号。跑完写进 git 公共目录的 `fuyu-regression-coverage.json`（主工作区和验证目录共用，不进仓库），只在 `src`、`tests`、`packages`、`vendor` 没有没提交的改动、HEAD 没动时写，行号才对得上提交，所以主工作区里的全量一般不写；没过的页不记。`REGRESSION_COVERAGE=0` 关掉，`=1` 带页面名的运行也收（写不写照样看上面的条件）。
+  - `test:changed` 用表时拿 `git diff <表的提交>` 的改动行，挑执行过这些行的页：函数里的一行只挑调用过这个函数的页，改顶层代码（import、常量）等于挑所有加载这个文件的页，只有类型的改动和没被任何页加载的代码文件一页不挑。文案文件（`src/i18n/sections/`、`src/i18n/locales/` 里 `key: "文字"` 的行）不看行号：挑快照里有这段文字、或回归页自己的源码里有这段文字或其中一个词（搜索关键词就是这样漏过的）的页；不是这种行就按行号。
+  - 退回 import 关系：没有表、表超过 14 天、表的提交不在本地时整个退回；表里没有的页（新页、上次没过的页），表的提交之后才有的文件，以及 TS / JS、CSS、JSON 之外的文件（图片等）各自退回。`--by-imports` 强制按 import 关系。第一行输出写用了哪种、两种各挑几页。漏挑由推 PR 前的全量 `mq:verify` 兜底。
+  - 表不进仓库：每次全量都会变（几 MB），进仓库各会话一推就冲突；每次推前都跑 `mq:verify`，本地这份总是新的。另一台机器在第一次 `mq:verify` 之前按 import 关系挑。
 - 在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
 - 多个会话共用一份代码：别的会话改到一半时，`pnpm check` 可能因为它的文件失败。先看失败是不是自己的文件；不是就等一会儿或问对方，不要去改别人的文件。
 - 浏览器回归页 `pnpm test:regression [页面名中的词] [--update-snapshots]`：自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页（给了词就只跑页面名里带它的）并汇总结果。每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败。深色、浅色两轮的 DOM 都和 `tests/regression/snapshots/` 里的快照逐行比对，不一致或没有快照就失败并打印差异；界面本该变时加 `--update-snapshots` 重写，规范化规则见 `scripts/regression/snapshots.mjs`。Mac 上找 `/Applications` 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH` 指向浏览器的可执行文件。
