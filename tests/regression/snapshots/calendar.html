@@ -573,4 +573,130 @@
       </div>
     </section>
   </div>
+  <div id="alerts">
+    <section class="settings-group">
+      <div class="settings-group__card">
+        <div class="calendar-stage" data-search="off">
+          <div aria-label="会议提醒演示: 示例：14:00 的「产品周会」，还有 10 分钟。有会议链接时旁边带「加入」。" class="calendar-stage__scene" role="img">
+            <span class="calendar-stage__bar calendar-stage__bar--line calendar-stage__bar--played">
+              <span class="island-meeting island-meeting--compact">
+                <svg aria-hidden="true" class="lucide lucide-calendar-clock island-meeting__icon" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                <span class="island-meeting__when">
+                  10m
+                </span>
+              </span>
+              <span class="island-meeting-join">
+                加入
+              </span>
+            </span>
+          </div>
+          <p class="calendar-stage__caption">
+            示例：14:00 的「产品周会」，还有 10 分钟。有会议链接时旁边带「加入」。
+          </p>
+          <div class="calendar-stage__controls">
+            <button class="settings-link-button" type="button">
+              <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              演示强提醒
+            </button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <span class="settings-row__title">
+                收起条显示格式
+              </span>
+              <span class="settings-row__description">
+                选择收起条上怎么写会议的开始时间、标题和剩余分钟数。
+              </span>
+            </div>
+          </div>
+          <div class="settings-thumbs">
+            <div aria-label="收起条显示格式" class="settings-thumbs__strip" role="group">
+              <button aria-pressed="false" class="settings-thumbs__item settings-thumbs__item--wide" data-thumb="titleMinutes" title="写会议标题和「10 分钟后」。" type="button">
+                <span aria-hidden="true" class="settings-thumbs__art">
+                  <span class="calendar-format-art">
+                    <span class="calendar-format-art__bar">
+                      <span class="island-meeting">
+                        <svg aria-hidden="true" class="lucide lucide-calendar-clock island-meeting__icon" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <span class="island-meeting__title">
+                          会议
+                        </span>
+                        <span class="island-meeting__when">
+                          ·
+                          10 分钟后
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+                <span class="settings-thumbs__label">
+                  标题和倒计时
+                </span>
+              </button>
+              <button aria-pressed="false" class="settings-thumbs__item settings-thumbs__item--wide" data-thumb="timeTitle" title="先写开始时间，再写标题和剩余分钟，例如「14:00 周会 · 10m」。" type="button">
+                <span aria-hidden="true" class="settings-thumbs__art">
+                  <span class="calendar-format-art">
+                    <span class="calendar-format-art__bar">
+                      <span class="island-meeting">
+                        <svg aria-hidden="true" class="lucide lucide-calendar-clock island-meeting__icon" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <span class="island-meeting__title">
+                          14:00 会议
+                        </span>
+                        <span class="island-meeting__when">
+                          ·
+                          10m
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+                <span class="settings-thumbs__label">
+                  时间和标题
+                </span>
+              </button>
+              <button aria-pressed="true" class="settings-thumbs__item settings-thumbs__item--active settings-thumbs__item--wide" data-thumb="compact" title="只有图标和剩余分钟，最省地方。" type="button">
+                <span aria-hidden="true" class="settings-thumbs__art">
+                  <span class="calendar-format-art">
+                    <span class="calendar-format-art__bar">
+                      <span class="island-meeting island-meeting--compact">
+                        <svg aria-hidden="true" class="lucide lucide-calendar-clock island-meeting__icon" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <span class="island-meeting__when">
+                          10m
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+                <span class="settings-thumbs__label">
+                  紧凑
+                </span>
+              </button>
+            </div>
+            <p class="settings-thumbs__hint">
+              只有图标和剩余分钟，最省地方。
+            </p>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <label class="settings-row__title" for="_id2_">
+                显示会议标题
+              </label>
+              <span class="settings-row__description">
+                关掉后收起条与横幅提醒只写「会议」，共享屏幕时不会露出会议内容。
+              </span>
+            </div>
+            <div class="settings-row__control">
+              <span class="settings-switch">
+                <input id="_id2_" role="switch" type="checkbox">
+                <span aria-hidden="true" class="settings-switch__track"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 </body>

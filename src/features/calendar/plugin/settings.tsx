@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
 import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
@@ -7,7 +8,7 @@ import { isBuiltinEnabled, switchBuiltinPlugin } from "../../plugin-kernel/built
 import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { settingsRunners, settingsSections, shortcutSections, type SettingsRunnerProps, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
 import { useBuiltinPlugins } from "../../plugin-kernel/useBuiltinPlugins";
-import { CalendarSettingsPage } from "../CalendarSettingsPage";
+import { CalendarSettingsPage, type CalendarSettingsTab } from "../CalendarSettingsPage";
 import { CalendarShortcutSection } from "../CalendarShortcutSection";
 import { useCalendarJoinShortcut } from "../useCalendarShortcut";
 import { OWNER } from "./owner.ts";
@@ -59,7 +60,13 @@ function CalendarShortcutsPageSection({ settings, onSettingsChange, onOpenPage, 
 
 const calendarSections = settingsSections<CalendarSectionProps, "calendar">();
 
-addSettingsCategory("calendar", ({ settings, onSettingsChange }: PageProps) => <CalendarSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
-calendarSections.add({ id: "calendar.shortcuts", category: "calendar", order: 18, component: CalendarPageShortcutSection }, OWNER);
+const calendarPage = (tab: CalendarSettingsTab): ComponentType<PageProps> =>
+  function CalendarPage({ settings, onSettingsChange }) {
+    return <CalendarSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
+  };
+
+addSettingsCategory("calendar", calendarPage("calendar"), OWNER);
+addSettingsCategory("calendarAlerts", calendarPage("calendarAlerts"), OWNER);
+calendarSections.add({ id: "calendar.shortcuts", category: "calendar", order: 40, component: CalendarPageShortcutSection }, OWNER);
 shortcutSections.add({ id: "shortcuts.calendar", category: "shortcuts", order: 44, component: CalendarShortcutsPageSection }, OWNER);
 settingsRunners.add({ id: "calendar.shortcut-owners", component: CalendarShortcutOwners }, OWNER);

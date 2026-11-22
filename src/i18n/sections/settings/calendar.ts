@@ -15,7 +15,15 @@ export type SettingsCalendarText = {
   countdownScopes: Record<CountdownScope, string>;
   countdownFormat: string;
   countdownFormatHint: string;
-  countdownFormats: Record<CountdownFormat, string>;
+  countdownFormatNames: Record<CountdownFormat, string>;
+  countdownFormatHints: Record<CountdownFormat, string>;
+  demoLabel: string;
+  demoTitle: string;
+  demoCaption: (time: string, title: string, minutes: number) => string;
+  demoCaptionOff: string;
+  demoCaptionBanner: (detail: string) => string;
+  demoBanner: string;
+  demoBannerOff: string;
   showTitle: string;
   showTitleHint: string;
   holdMinutes: string;
@@ -35,6 +43,7 @@ export type SettingsCalendarText = {
   customDomainPlaceholder: string;
   customDomainInvalid: string;
   panelGroup: string;
+  filterGroup: string;
   agendaRange: string;
   agendaRangeHint: string;
   rangeTwoDays: string;
@@ -84,7 +93,7 @@ export type SettingsCalendarText = {
 };
 
 export const zhCN: SettingsCalendarText = {
-  island: "小岛倒计时显示",
+  island: "小岛倒计时",
   remind: "会前倒计时",
   remindHint: "会议开始前这么久，收起的小岛显示会前倒计时，有会议链接时旁边带「加入」按钮。",
   remindOption: (minutes) => (minutes === 0 ? "不显示" : `${minutes} 分钟`),
@@ -92,12 +101,20 @@ export const zhCN: SettingsCalendarText = {
   countdownScopeHint: "只在关注视频会议时，可以把没有会议链接的普通日程排除在收起条倒计时外。",
   countdownScopes: { all: "全部非全天日程", meetingsOnly: "仅含视频会议链接" },
   countdownFormat: "收起条显示格式",
-  countdownFormatHint: "选择收起条展示会议时间与标题的详略方式。",
-  countdownFormats: {
-    titleMinutes: "标题 · 10 分钟后",
-    timeTitle: "14:00 标题 · 10m",
-    compact: "紧凑（仅图标与时间）",
+  countdownFormatHint: "选择收起条上怎么写会议的开始时间、标题和剩余分钟数。",
+  countdownFormatNames: { titleMinutes: "标题和倒计时", timeTitle: "时间和标题", compact: "紧凑" },
+  countdownFormatHints: {
+    titleMinutes: "写会议标题和「10 分钟后」。",
+    timeTitle: "先写开始时间，再写标题和剩余分钟，例如「14:00 周会 · 10m」。",
+    compact: "只有图标和剩余分钟，最省地方。",
   },
+  demoLabel: "会议提醒演示",
+  demoTitle: "产品周会",
+  demoCaption: (time, title, minutes) => `示例：${time} 的「${title}」，还有 ${minutes} 分钟。有会议链接时旁边带「加入」。`,
+  demoCaptionOff: "会前倒计时关着，收起的小岛不显示会议。在下面「小岛倒计时」里打开。",
+  demoCaptionBanner: (detail) => `强提醒：${detail}弹一次横幅，有会议链接时带「立即加入」。`,
+  demoBanner: "演示强提醒",
+  demoBannerOff: "会前强提醒关着，打开后才会弹横幅。",
   showTitle: "显示会议标题",
   showTitleHint: "关掉后收起条与横幅提醒只写「会议」，共享屏幕时不会露出会议内容。",
   holdMinutes: "开始后保留时长",
@@ -107,9 +124,9 @@ export const zhCN: SettingsCalendarText = {
     if (minutes === -1) return "直至会议结束（显示剩余分钟）";
     return `开始后 ${minutes} 分钟`;
   },
-  alertsGroup: "会前强提醒与入会动作",
+  alertsGroup: "会前强提醒",
   bannerEnabled: "会前弹出岛屿强提醒横幅",
-  bannerEnabledHint: "临近开会时在岛屿弹出一次提醒横幅，有会议链接时附带「立即加入」按钮。",
+  bannerEnabledHint: "按右边的提前量，临近开会时在岛屿弹出一次提醒横幅，有会议链接时附带「立即加入」按钮。",
   bannerMinutes: "强提醒提前量",
   bannerOption: (minutes) => (minutes === 0 ? "准点" : `会前 ${minutes} 分钟`),
   holidayEveReminder: "调休和放假前一晚提醒",
@@ -120,7 +137,8 @@ export const zhCN: SettingsCalendarText = {
   customDomainHint: "填写企业私有视频会议域名后，日程地点里的 https://<域名>/… 链接也会识别为会议链接。",
   customDomainPlaceholder: "vc.corp.example.com",
   customDomainInvalid: "请输入有效的域名（如 vc.corp.example.com）",
-  panelGroup: "日历面板与过滤规则",
+  panelGroup: "日历面板",
+  filterGroup: "哪些日程不算",
   agendaRange: "默认日程视图",
   agendaRangeHint: "打开日历页时默认展示的议程跨度，面板右上角也可以随时切换。",
   rangeTwoDays: "近两日",
@@ -187,11 +205,19 @@ export const en: SettingsCalendarText = {
   countdownScopes: { all: "All timed events", meetingsOnly: "Video meetings only" },
   countdownFormat: "Collapsed bar format",
   countdownFormatHint: "Choose how the start time, title and remaining minutes appear on the bar.",
-  countdownFormats: {
-    titleMinutes: "Title · in 10 min",
-    timeTitle: "14:00 Title · 10m",
-    compact: "Compact (icon & time)",
+  countdownFormatNames: { titleMinutes: "Title + countdown", timeTitle: "Time + title", compact: "Compact" },
+  countdownFormatHints: {
+    titleMinutes: "The meeting's title and \"in 10 min\".",
+    timeTitle: "The start time first, then the title and minutes left, like \"14:00 Standup · 10m\".",
+    compact: "Only an icon and the minutes left, the narrowest.",
   },
+  demoLabel: "Meeting reminder demo",
+  demoTitle: "Product sync",
+  demoCaption: (time, title, minutes) => `Example: "${title}" at ${time}, ${minutes} min away. A Join button shows when it has a meeting link.`,
+  demoCaptionOff: "The countdown is off, so the collapsed island shows no meetings. Turn it on under Collapsed countdown below.",
+  demoCaptionBanner: (detail) => `Strong reminder: one banner (${detail}), with Join now when it has a meeting link.`,
+  demoBanner: "Show the banner",
+  demoBannerOff: "The strong reminder is off; turn it on to get the banner.",
   showTitle: "Show the meeting's title",
   showTitleHint: "Off shows only \"Meeting\" on the bar and banner, so a shared screen does not reveal what the meeting is about.",
   holdMinutes: "Keep after start",
@@ -201,9 +227,9 @@ export const en: SettingsCalendarText = {
     if (minutes === -1) return "Until meeting ends (time left)";
     return `${minutes} min after start`;
   },
-  alertsGroup: "Strong reminder & joining",
+  alertsGroup: "Strong reminder",
   bannerEnabled: "Pop up an island reminder banner",
-  bannerEnabledHint: "Show a one-time banner on the island right before a meeting, with a Join now button when a link is available.",
+  bannerEnabledHint: "Show a one-time banner on the island at the lead time on the right, with a Join now button when a link is available.",
   bannerMinutes: "Banner lead time",
   bannerOption: (minutes) => (minutes === 0 ? "At start" : `${minutes} min before`),
   holidayEveReminder: "Remind the evening before make-up workdays and days off",
@@ -214,7 +240,8 @@ export const en: SettingsCalendarText = {
   customDomainHint: "Recognize https://<domain>/… links in event locations for self-hosted video conferencing.",
   customDomainPlaceholder: "vc.corp.example.com",
   customDomainInvalid: "Enter a valid domain such as vc.corp.example.com",
-  panelGroup: "Calendar panel & filters",
+  panelGroup: "Calendar panel",
+  filterGroup: "Events to leave out",
   agendaRange: "Default agenda view",
   agendaRangeHint: "How many days open by default in the calendar panel; also switchable in the panel header.",
   rangeTwoDays: "2 days",

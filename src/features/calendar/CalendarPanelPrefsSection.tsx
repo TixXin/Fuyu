@@ -27,30 +27,6 @@ export function CalendarPanelPrefsSection() {
           />
         }
       />
-      <SettingsToggleRow
-        title={text.hideDeclined}
-        description={text.hideDeclinedHint}
-        checked={prefs.hideDeclined}
-        onChange={(hideDeclined) => setPrefs({ ...prefs, hideDeclined })}
-      />
-      <SettingsToggleRow
-        title={text.ignoreFreeInCountdown}
-        description={text.ignoreFreeInCountdownHint}
-        checked={prefs.ignoreFreeInCountdown}
-        onChange={(ignoreFreeInCountdown) => setPrefs({ ...prefs, ignoreFreeInCountdown })}
-      />
-      <SettingsToggleRow
-        title={text.foldAllDay}
-        description={text.foldAllDayHint}
-        checked={prefs.foldAllDay}
-        onChange={(foldAllDay) => setPrefs({ ...prefs, foldAllDay })}
-      />
-      <SettingsToggleRow
-        title={text.showWeekNumbers}
-        description={text.showWeekNumbersHint}
-        checked={prefs.showWeekNumbers}
-        onChange={(showWeekNumbers) => setPrefs({ ...prefs, showWeekNumbers })}
-      />
       <SettingsRow
         title={text.weekStartsOn}
         control={
@@ -63,10 +39,16 @@ export function CalendarPanelPrefsSection() {
         }
       />
       <SettingsToggleRow
-        title={text.includeTimedTodos}
-        description={text.includeTimedTodosHint}
-        checked={prefs.includeTimedTodos}
-        onChange={(includeTimedTodos) => setPrefs({ ...prefs, includeTimedTodos })}
+        title={text.showWeekNumbers}
+        description={text.showWeekNumbersHint}
+        checked={prefs.showWeekNumbers}
+        onChange={(showWeekNumbers) => setPrefs({ ...prefs, showWeekNumbers })}
+      />
+      <SettingsToggleRow
+        title={text.foldAllDay}
+        description={text.foldAllDayHint}
+        checked={prefs.foldAllDay}
+        onChange={(foldAllDay) => setPrefs({ ...prefs, foldAllDay })}
       />
     </SettingsGroup>
   );
