@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { auditLight, MIN_CONTRAST, SKIPPED_PAGES, pageName } from "./regression-contrast.mjs";
+import { BUILTINS_OFF_PAGES } from "./regression/builtins-off-pages.mjs";
 import { connect, PIPE_STDIO } from "./regression/cdp.mjs";
 import { parseJobs, parseShard, readTimings, shardOf, slowestFirst } from "./regression/shards.mjs";
 import { captureSnapshot, prepareSnapshotBrowser, settledSnapshot } from "./regression/snapshots.mjs";
@@ -53,7 +54,7 @@ export const PAGES = [
   "plugin-market.html",
   "plugin-market-en.html",
   "plugin-diagnostics.html",
-  "builtins-off.html",
+  ...BUILTINS_OFF_PAGES,
   "todos-off.html",
   "plugin-slot.html",
   "plugin-detail-settings.html",

@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { TIMINGS_FILE } from "./shards.mjs";
+import { pageKey, TIMINGS_FILE } from "./shards.mjs";
 
 const REPO = "TixXin/fuyu";
 const PAGE_LINE = /^(?:\S+Z )?[✓✗] (\S+)\s+[^,]+, \d+ checks, ([\d.]+)s$/;
@@ -13,7 +13,7 @@ export function pageSeconds(logs) {
   for (const log of logs) {
     for (const line of log.split(/\r?\n/)) {
       const match = PAGE_LINE.exec(line.trim());
-      if (match) (samples[match[1].split("?")[0]] ??= []).push(Number(match[2]));
+      if (match) (samples[pageKey(match[1])] ??= []).push(Number(match[2]));
     }
   }
   const seconds = {};

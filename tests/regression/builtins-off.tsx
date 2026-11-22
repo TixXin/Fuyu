@@ -15,6 +15,7 @@ import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 const query = new URLSearchParams(location.search);
 const everyone = query.has("all");
 const only = query.get("only")?.split(",").filter(Boolean) ?? null;
+const selfOnly = query.has("self");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const original = new Map(Object.entries(localStorage).filter(([key]) => key.startsWith("fuyu-")));
 window.addEventListener("beforeunload", () => {
@@ -88,6 +89,19 @@ const check = (condition: unknown, message: string) => {
 
 try {
   const owners = ownersOfItems();
+  if (!only) await selfChecks();
+  if (!selfOnly) await featureChecks(owners);
+  results.textContent = `${messages.join("\n")}\nALL PASS`;
+  document.documentElement.dataset.testResult = "passed";
+} catch (error) {
+  results.textContent = `${messages.join("\n")}\nFAIL ${error instanceof Error ? error.message : String(error)}`;
+  document.documentElement.dataset.testResult = "failed";
+  console.error(error);
+} finally {
+  await unmount();
+}
+
+async function selfChecks() {
   await mount();
   const baseline = await walk();
   await unmount();
@@ -103,10 +117,13 @@ try {
   check(leaky.some((line) => line.includes(".lab-leaky-badge")) && leaky.every((line) => !line.includes("lab-leaky-owned") && !line.includes("still shows")), "The check sees a class left on screen, and not the item that went away with its owner");
   check(leaky.some((line) => line.includes("called lab_leaky_poll")) && leaky.some((line) => line.includes("still listens to lab-leaky-changed")), "The check sees a command still called and a listener still alive");
   check(leaky.some((line) => line.includes("still contributes hint lab-leaky")), "The check sees a contribution left in the island's table");
+}
 
+async function featureChecks(owners: Set<string>) {
   const candidates = BUILTINS.filter((plugin) => !plugin.essential).map((plugin) => plugin.id);
-  const checked = candidates.filter((id) => (only ? only.includes(id) : everyone || owners.has(id)));
-  const skipped = candidates.filter((id) => !checked.includes(id));
+  const wanted = candidates.filter((id) => !only || only.includes(id));
+  const checked = wanted.filter((id) => everyone || owners.has(id));
+  const skipped = wanted.filter((id) => !checked.includes(id));
   if (skipped.length) messages.push(`SKIP not moved to their plugin yet (no slot item owned by the id): ${skipped.join(", ")}`);
   const found: string[] = [];
   for (const id of checked) {
@@ -114,13 +131,7 @@ try {
     found.push(...left);
     messages.push(`${left.length ? "LEFT" : "PASS"} ${id}${left.length ? ` (${left.length})` : ""}: switched off, ${left.length ? "it leaves things behind" : "nothing of it is left in the island or settings"}`);
   }
-  check(found.length === 0, `No checked built-in plugin leaves anything behind${found.length ? `:\n  ${found.join("\n  ")}` : ""}`);
-  results.textContent = `${messages.join("\n")}\nALL PASS`;
-  document.documentElement.dataset.testResult = "passed";
-} catch (error) {
-  results.textContent = `${messages.join("\n")}\nFAIL ${error instanceof Error ? error.message : String(error)}`;
-  document.documentElement.dataset.testResult = "failed";
-  console.error(error);
-} finally {
-  await unmount();
+  const summary = `No checked built-in plugin leaves anything behind${found.length ? `:\n  ${found.join("\n  ")}` : ""}`;
+  if (only && found.length) throw new Error(summary);
+  if (!only && checked.length) check(found.length === 0, summary);
 }

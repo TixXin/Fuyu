@@ -85,7 +85,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 |---|---|---|
 | Rust | `plugin_kernel/builtins_tests.rs`（E36.3.23） | 逐个关、逐个开，登记的后台都停了、又起来了；清单没写 `background` 的跳过 |
 | 宿主 | `tests/unit/builtins-off.test.mjs` | 带全部内置插件起宿主，经 `plugins.yml` 逐个关：状态是 `disabled`，用量（受管定时器、监听器、服务、客户端）全是 0，不留服务和界面文件；关 → 开 → 关一轮后进程里的句柄（`process.getActiveResourcesInfo()`）不比关掉时多。另有一个故意用裸 `setInterval` 的假插件，证明漏了能查出来 |
-| 窗口 | 回归页 `builtins-off`（`pnpm test:regression builtins-off`） | 岛和设置窗口挂在一起，按插件逐个关掉后走一遍：折叠的岛、展开的岛、`island.page/v1` 的每一页、消息、设置的每个分类和标签页。三样算残留：注册表里它拥有的插槽项；只在它自己的 CSS 里定义的 class 还在页面上；只在它自己 `api.ts` 里出现的命令关掉后还在调、事件还在听 |
+| 窗口 | 回归页 `builtins-off`（`pnpm test:regression builtins-off`） | 岛和设置窗口挂在一起，按插件逐个关掉后走一遍：折叠的岛、展开的岛、`island.page/v1` 的每一页、消息、设置的每个分类和标签页。三样算残留：注册表里它拥有的插槽项；只在它自己的 CSS 里定义的 class 还在页面上；只在它自己 `api.ts` 里出现的命令关掉后还在调、事件还在听。按功能分成几页跑（D120.2）：`builtins-off.html?self` 只验检查本身（基线走得到、假插件的残留查得出），`?only=<id>` 只关那一个，页面清单由 `scripts/regression/builtins-off-pages.mjs` 按 `builtins.json` 生成；`pnpm test:changed` 改到某个功能目录里的文件只跑它那一页，改到共用代码全跑 |
 
 窗口层的细节：
 

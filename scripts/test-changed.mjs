@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { builtinsOffReached, featureOfFile, isBuiltinsOffPage } from "./regression/builtins-off-pages.mjs";
 import { PAGES } from "./run-regression.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -77,7 +78,11 @@ export function select({ changed, pages, unitTests, root, read = (file) => readF
   const hits = (deps) => [...deps].some((file) => touched.has(file));
   const selectedPages = pages.filter((page) => {
     const entry = pageEntry(page, root, read);
-    return entry && (touched.has(rel(root, path.join(root, "tests", "regression", page.split("?")[0]))) || hits(closure(entry, root, read, exists, cache)));
+    if (!entry) return false;
+    if (touched.has(rel(root, path.join(root, "tests", "regression", page.split("?")[0])))) return true;
+    const deps = closure(entry, root, read, exists, cache);
+    if (!isBuiltinsOffPage(page)) return hits(deps);
+    return builtinsOffReached(page, changed.filter((file) => deps.has(file) || featureOfFile(file)));
   });
   const selectedTests = unitTests.filter((test) => {
     if (touched.has(rel(root, test))) return true;
@@ -111,7 +116,7 @@ function changedFiles(since) {
   ])];
 }
 
-const pageWord = (page) => page.split("?")[0];
+const pageWord = (page) => (isBuiltinsOffPage(page) ? page : page.split("?")[0]);
 
 function main(args) {
   const at = args.indexOf("--since");
