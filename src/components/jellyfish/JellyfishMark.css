@@ -35,7 +35,7 @@
   pointer-events: auto;
 }
 .center-jelly[data-mood="idle"] .center-jelly-eye {
-  translate: calc(var(--center-jelly-look-x, 0) * 1.8px) calc(var(--center-jelly-look-y, 0) * 1.4px);
+  translate: calc(var(--center-jelly-look-x, 0) * 2.6px) calc(var(--center-jelly-look-y, 0) * 2px);
   transition: translate var(--motion-fast) var(--motion-ease);
 }
 

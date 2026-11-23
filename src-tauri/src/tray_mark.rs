@@ -1,4 +1,8 @@
+use std::{fs, io, path::Path};
+
 use tauri::image::Image;
+
+pub(crate) const FILE_NAME: &str = "tray-mark.bin";
 
 pub(crate) const WIDTH: u32 = 52;
 pub(crate) const HEIGHT: u32 = 36;
@@ -111,9 +115,24 @@ pub(crate) fn from_alpha(alpha: &[u8]) -> Option<Image<'static>> {
     Some(Image::new_owned(rgba, WIDTH, HEIGHT))
 }
 
+pub(crate) fn saved(dir: &Path) -> Option<Image<'static>> {
+    fs::read(dir.join(FILE_NAME)).ok().and_then(|alpha| from_alpha(&alpha))
+}
+
+pub(crate) fn remember(dir: &Path, alpha: Option<&[u8]>) -> io::Result<()> {
+    let path = dir.join(FILE_NAME);
+    match alpha {
+        Some(alpha) => fs::write(path, alpha),
+        None => match fs::remove_file(path) {
+            Err(error) if error.kind() != io::ErrorKind::NotFound => Err(error),
+            _ => Ok(()),
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{alpha, bell, from_alpha, image, scale, x_offset, HEIGHT, VIEW_X, VIEW_Y, WIDTH};
+    use super::{alpha, bell, from_alpha, image, remember, saved, scale, x_offset, FILE_NAME, HEIGHT, VIEW_X, VIEW_Y, WIDTH};
 
     fn at(x: f64, y: f64) -> u8 {
         let px = ((x - VIEW_X) * scale() + x_offset()).floor() as u32;
@@ -147,5 +166,21 @@ mod tests {
         assert_eq!(&mark.rgba()[20..28], &[0, 0, 0, 255, 0, 0, 0, 41]);
         assert!(from_alpha(&drawn[1..]).is_none());
         assert!(from_alpha(&[]).is_none());
+    }
+    #[test]
+    fn the_last_drawn_mark_is_kept_for_the_next_start_and_forgotten_with_the_smooth_look() {
+        let dir = std::env::temp_dir().join(format!("fuyu-tray-mark-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("temp dir");
+        assert!(saved(&dir).is_none(), "nothing saved yet");
+        assert!(remember(&dir, None).is_ok(), "forgetting when nothing is saved is fine");
+        let mut drawn = vec![0u8; (WIDTH * HEIGHT) as usize];
+        drawn[7] = 200;
+        remember(&dir, Some(&drawn)).expect("saved");
+        assert_eq!(saved(&dir).expect("read back").rgba()[31], 200);
+        std::fs::write(dir.join(FILE_NAME), [1, 2, 3]).expect("truncated file");
+        assert!(saved(&dir).is_none(), "a file of the wrong size is ignored");
+        remember(&dir, None).expect("forgotten");
+        assert!(!dir.join(FILE_NAME).exists());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

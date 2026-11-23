@@ -6,9 +6,11 @@ import { JellyfishStyleContext } from "../../src/components/jellyfish/jellyfishS
 import { fitPixelGrid } from "../../src/components/jellyfish/pixel/pixelFit";
 import { PIXEL_GRIDS } from "../../src/components/jellyfish/pixel/pixelGrids";
 import { PIXEL_STYLES } from "../../src/components/jellyfish/pixel/pixelStyles";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
 import { JELLYFISH_STYLES } from "../../src/lib/settings/settingsLimits";
-import type { JellyfishStyle } from "../../src/lib/settings/types";
+import type { IslandPreset, JellyfishStyle } from "../../src/lib/settings/types";
 import { JellyfishStyleArt } from "../../src/windows/settings/island-layout/JellyfishStyleArt";
+import { PresetSettingsSection } from "../../src/windows/settings/sections/PresetSettingsSection";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -17,6 +19,12 @@ const live = new URLSearchParams(window.location.search).has("live");
 const SMALL = [12, 16];
 const THEMED = { "--center-jelly-running": "color-mix(in srgb, #ff0000 50%, #0000ff)" } as CSSProperties;
 const ROWS: Record<JellyfishStyle, number> = { vector: 0, flat: 12, sticker: 12, mono: 12, neon: 12, chunky: 8, fine: 24 };
+const PRESETS: IslandPreset[] = [
+  { id: "with-look", name: "带画风的", settings: DEFAULT_SETTINGS, jellyfishStyle: "neon", createdAt: 1 },
+  { id: "light-look", name: "浅色带画风", settings: { ...DEFAULT_SETTINGS, islandBackgroundColor: "#f2f2f5" }, jellyfishStyle: "chunky", createdAt: 1 },
+  { id: "no-look", name: "之前存的", settings: DEFAULT_SETTINGS, createdAt: 1 },
+];
+const nothing = () => {};
 const results = document.querySelector<HTMLElement>("#results")!;
 const root = createRoot(document.querySelector("#fixture")!);
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -57,6 +65,17 @@ function Sheet({ moods }: { moods: Record<JellyfishStyle, JellyMood[]> }) {
         </div>
       ))}
       <button type="button" className="jelly-card"><JellyfishStyleArt style="flat" /></button>
+      <div className="jelly-presets">
+        <PresetSettingsSection
+          presets={PRESETS}
+          onSavePreset={nothing}
+          onApplyPreset={nothing}
+          onRenamePreset={nothing}
+          onDeletePreset={nothing}
+          onExportPreset={() => Promise.resolve("")}
+          onImportPreset={() => ({ name: "" })}
+        />
+      </div>
     </>
   );
 }
@@ -188,6 +207,11 @@ async function runChecks() {
       if (style === "vector") check(!lively()[0].style.getPropertyValue("--center-jelly-look-x"), "vector：鼠标离开窗口，眼睛回正");
       else check(await settle(() => inkLeft(lively()[0].querySelector("canvas")!) === inkLeft(marks(style)[0].querySelector("canvas")!)), `${style}：鼠标离开窗口，眼睛回正`);
     }
+
+    const cards = [...document.querySelectorAll<HTMLElement>(".jelly-presets .preset-card")];
+    check(cards.length === 3 && cards[0].querySelector('.preset-card__island .center-jelly[data-pixel-style="neon"] canvas') && cards[0].querySelector(".preset-card__look")?.textContent === "水母画风：霓虹", "带画风的预设：卡片的小岛上画那种画风的水母，下面写明是哪种");
+    check(cards[1].querySelector(".preset-card__island.island-light .center-jelly[data-pixel-style=\"chunky\"]") && colours(cards[1].querySelector("canvas")!).has("236,220,200"), "浅色的预设：小岛上的水母用浅色岛的颜色");
+    check(!cards[2].querySelector(".center-jelly") && cards[2].querySelector(".preset-card__island i") && !cards[2].querySelector(".preset-card__look"), "没带画风的预设：还是原来的圆点，不写画风");
 
     const swapped = everyMood();
     swapped.flat = ["done", "failed", "idle", "sleep", "running", "waiting", "compacting", "stale"];

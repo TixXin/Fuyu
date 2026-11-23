@@ -145,13 +145,19 @@ pub fn set_tray_language(app: AppHandle, locale: String) {
 pub fn set_tray_mark(app: AppHandle, alpha: Option<Vec<u8>>) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
-        let image = match alpha {
-            Some(alpha) => crate::tray_mark::from_alpha(&alpha)
+        let image = match alpha.as_deref() {
+            Some(alpha) => crate::tray_mark::from_alpha(alpha)
                 .ok_or_else(|| format!("The menu bar icon must be {} by {} pixels.", crate::tray_mark::WIDTH, crate::tray_mark::HEIGHT))?,
             None => crate::tray_mark::image(),
         };
         if let Some(tray) = app.tray_by_id(TRAY_ID) {
             tray.set_icon_with_as_template(Some(image), true).map_err(|error| error.to_string())?;
+        }
+        let kept = crate::home_dir::fuyu_home(app.path())
+            .map_err(|error| error.to_string())
+            .and_then(|dir| crate::tray_mark::remember(&dir, alpha.as_deref()).map_err(|error| error.to_string()));
+        if let Err(error) = kept {
+            eprintln!("failed to keep the menu bar icon for the next start: {error}");
         }
     }
     #[cfg(not(target_os = "macos"))]
@@ -193,7 +199,11 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
 
     #[cfg(target_os = "macos")]
     {
-        tray = tray.icon(crate::tray_mark::image()).icon_as_template(true);
+        let mark = crate::home_dir::fuyu_home(app.path())
+            .ok()
+            .and_then(|dir| crate::tray_mark::saved(&dir))
+            .unwrap_or_else(crate::tray_mark::image);
+        tray = tray.icon(mark).icon_as_template(true);
     }
     #[cfg(not(target_os = "macos"))]
     if let Some(icon) = app.default_window_icon() {
