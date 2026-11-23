@@ -14,6 +14,7 @@ export function useFoundRow(found: FoundRow | null, category: SettingsCategory, 
     if (!found || found.page !== category) return;
     const wanted = normalizeSearchText(found.title);
     let tries = 0;
+    let opened = 0;
     let timer: number | undefined;
     let marked: HTMLElement | undefined;
     const look = () => {
@@ -21,7 +22,13 @@ export function useFoundRow(found: FoundRow | null, category: SettingsCategory, 
         (candidate) => normalizeSearchText(candidate.querySelector(".settings-row__title")?.textContent ?? "") === wanted,
       );
       if (!row) {
-        if (++tries < LOOK_TRIES) timer = window.setTimeout(look, LOOK_EVERY_MS);
+        if (++tries >= LOOK_TRIES) return;
+        const tab = panel.current?.querySelectorAll<HTMLElement>("[data-search-tab]")[opened];
+        if (tab) {
+          opened += 1;
+          tab.click();
+        }
+        timer = window.setTimeout(look, LOOK_EVERY_MS);
         return;
       }
       marked = row;
