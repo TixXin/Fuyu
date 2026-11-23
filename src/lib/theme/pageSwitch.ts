@@ -33,6 +33,7 @@ const PIXEL_MS = 400;
 const PIXEL_COLUMNS = 12;
 const PIXEL_ROWS = 8;
 const PIXEL_FRAMES = 10;
+const RIPPLE_HEADROOM = 1.25;
 export const INDICATOR_MS = 280;
 
 export function pageSwitchSpeed(speed: PageSwitchSpeed): number {
@@ -68,45 +69,51 @@ function mask(image: string, size: string, position: string): Record<string, str
 
 const xy = (x: number, y: number) => `${Math.round(x)}px ${Math.round(y)}px`;
 
-function wipeFrames({ direction, axis, box }: SwitchRequest): SwitchFrames {
-  const { width, height } = box;
+const percent = (value: number) => `${Math.round(value * 10000) / 100}%`;
+const HALF_HIDDEN: Record<"x" | "y", Record<"1" | "-1", string>> = {
+  x: { "1": "linear-gradient(to right, transparent 50%, #000 50%)", "-1": "linear-gradient(to right, #000 50%, transparent 50%)" },
+  y: { "1": "linear-gradient(to bottom, transparent 50%, #000 50%)", "-1": "linear-gradient(to bottom, #000 50%, transparent 50%)" },
+};
+
+function wipeFrames({ direction, axis }: SwitchRequest): SwitchFrames {
   const horizontal = axis === "x";
-  const span = horizontal ? width : height;
-  const start = direction > 0 ? span : direction < 0 ? 0 : span / 2;
-  const at = (offset: number) => (horizontal ? xy(offset, 0) : xy(0, offset));
-  const size = (length: number) => (horizontal ? xy(length, height) : xy(width, length));
-  return [mask(SOLID, size(0), at(start)), mask(SOLID, size(span), at(0))];
+  if (direction === 0) {
+    const start = horizontal ? "0% 100%" : "100% 0%";
+    return [mask(SOLID, start, "50% 50%"), mask(SOLID, "100% 100%", "50% 50%")];
+  }
+  const image = HALF_HIDDEN[axis][direction > 0 ? "1" : "-1"];
+  const size = horizontal ? "200% 100%" : "100% 200%";
+  const at = (share: number) => (horizontal ? `${share}% 0%` : `0% ${share}%`);
+  return direction > 0 ? [mask(image, size, at(0)), mask(image, size, at(100))] : [mask(image, size, at(100)), mask(image, size, at(0))];
 }
 
 function rippleFrames(request: SwitchRequest): SwitchFrames {
   const { x, y } = switchOrigin(request);
   const { width, height } = request.box;
-  const radius = Math.ceil(Math.hypot(Math.max(x, width - x), Math.max(y, height - y))) + 1;
+  const radius = Math.ceil(Math.hypot(Math.max(x, width - x), Math.max(y, height - y)) * RIPPLE_HEADROOM) + 1;
   return [mask(DOT, xy(0, 0), xy(x, y)), mask(DOT, xy(radius * 2, radius * 2), xy(x - radius, y - radius))];
 }
 
 function pixelFrames(request: SwitchRequest): SwitchFrames {
-  const { box, direction, axis, random } = request;
-  const cellWidth = Math.ceil(box.width / PIXEL_COLUMNS);
-  const cellHeight = Math.ceil(box.height / PIXEL_ROWS);
+  const { direction, axis, random } = request;
   const cells: { at: number; position: string }[] = [];
   for (let row = 0; row < PIXEL_ROWS; row += 1) {
     for (let column = 0; column < PIXEL_COLUMNS; column += 1) {
       const line = axis === "x" ? column / PIXEL_COLUMNS : row / PIXEL_ROWS;
       const bias = direction === 0 ? 0 : direction > 0 ? line : 1 - 1 / (axis === "x" ? PIXEL_COLUMNS : PIXEL_ROWS) - line;
-      cells.push({ at: bias * 0.6 + random() * 0.4, position: xy(column * cellWidth, row * cellHeight) });
+      cells.push({ at: bias * 0.6 + random() * 0.4, position: `${percent(column / (PIXEL_COLUMNS - 1))} ${percent(row / (PIXEL_ROWS - 1))}` });
     }
   }
-  const cell = xy(cellWidth, cellHeight);
+  const cell = `calc(${percent(1 / PIXEL_COLUMNS)} + 1px) calc(${percent(1 / PIXEL_ROWS)} + 1px)`;
   const frames: SwitchFrames = [];
   for (let step = 0; step < PIXEL_FRAMES; step += 1) {
     const shown = cells.filter((item) => item.at < step / PIXEL_FRAMES);
     const frame = shown.length === 0
-      ? mask("linear-gradient(transparent, transparent)", cell, xy(0, 0))
+      ? mask("linear-gradient(transparent, transparent)", cell, "0% 0%")
       : mask(shown.map(() => SOLID).join(", "), shown.map(() => cell).join(", "), shown.map((item) => item.position).join(", "));
-    frames.push({ ...frame, offset: step / PIXEL_FRAMES });
+    frames.push({ ...frame, offset: step / PIXEL_FRAMES, easing: "steps(1, end)" });
   }
-  frames.push({ ...mask(SOLID, xy(box.width, box.height), xy(0, 0)), offset: 1 });
+  frames.push({ ...mask(SOLID, "100% 100%", "0% 0%"), offset: 1 });
   return frames;
 }
 
@@ -122,32 +129,32 @@ export function pageLayers(request: SwitchRequest): SwitchLayer[] {
 }
 
 export function overlayLayers(request: SwitchRequest): SwitchOverlay[] {
-  const { effect, speed, direction, axis, box } = request;
+  const { effect, speed, direction, axis } = request;
   const ms = (value: number) => Math.round(value * speed);
   if (effect === "wipe") {
     const horizontal = axis === "x";
-    const span = horizontal ? box.width : box.height;
+    const near = "0%";
+    const far = "calc(100% - 2px)";
     const edges: (1 | -1)[] = direction === 0 ? [-1, 1] : [direction];
     return edges.map((edge) => {
-      const start = direction === 0 ? span / 2 : edge > 0 ? span - 2 : 0;
-      const end = direction === 0 ? (edge > 0 ? span - 2 : 0) : edge > 0 ? 0 : span - 2;
-      const move = (at: number) => (horizontal ? `translateX(${Math.round(at)}px)` : `translateY(${Math.round(at)}px)`);
+      const start = direction === 0 ? "50%" : edge > 0 ? far : near;
+      const end = direction === 0 ? (edge > 0 ? far : near) : edge > 0 ? near : far;
+      const along = horizontal ? "left" : "top";
       return {
         kind: "edge",
-        style: horizontal ? { top: `${Math.round(box.height * 0.06)}px`, height: `${Math.round(box.height * 0.88)}px`, width: "2px", left: "0px" } : { left: `${Math.round(box.width * 0.04)}px`, width: `${Math.round(box.width * 0.92)}px`, height: "2px", top: "0px" },
-        layer: { frames: [{ transform: move(start), opacity: 0.95 }, { transform: move(end), opacity: 0 }], duration: ms(WIPE_MS), delay: 0, easing: MOTION_EASE_OUT },
+        style: horizontal ? { top: "6%", height: "88%", width: "2px" } : { left: "4%", width: "92%", height: "2px" },
+        layer: { frames: [{ [along]: start, opacity: 0.95 }, { [along]: end, opacity: 0 }], duration: ms(WIPE_MS), delay: 0, easing: MOTION_EASE_OUT },
       };
     });
   }
   if (effect === "sheen") {
-    const band = Math.round(box.width * 0.45);
     const back = direction < 0;
-    const from = back ? box.width * 1.1 : -band;
-    const to = back ? -band : box.width * 1.1;
+    const from = back ? "245%" : "-100%";
+    const to = back ? "-100%" : "245%";
     return [{
       kind: "sheen",
-      style: { top: `${Math.round(-box.height * 0.1)}px`, height: `${Math.round(box.height * 1.2)}px`, width: `${band}px`, left: "0px" },
-      layer: { frames: [{ transform: `translateX(${Math.round(from)}px) skewX(-12deg)` }, { transform: `translateX(${Math.round(to)}px) skewX(-12deg)` }], duration: ms(SHEEN_BAND_MS), delay: 0, easing: MOTION_EASE_IN_OUT },
+      style: { top: "-10%", height: "120%", width: "45%", left: "0px" },
+      layer: { frames: [{ transform: `translateX(${from}) skewX(-12deg)` }, { transform: `translateX(${to}) skewX(-12deg)` }], duration: ms(SHEEN_BAND_MS), delay: 0, easing: MOTION_EASE_IN_OUT },
     }];
   }
   return [];

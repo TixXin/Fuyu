@@ -29,7 +29,7 @@ test("text on the incoming page only fades or is revealed by a mask that leaves 
     for (const direction of [-1, 0, 1]) {
       for (const layer of pageLayers(request(effect, { direction }))) {
         for (const frame of layer.frames) {
-          for (const key of Object.keys(frame)) assert.ok(key === "opacity" || key === "offset" || /^(webkitM|m)ask[A-Z]/.test(key), `${effect} animates ${key}`);
+          for (const key of Object.keys(frame)) assert.ok(key === "opacity" || key === "offset" || key === "easing" || /^(webkitM|m)ask[A-Z]/.test(key), `${effect} animates ${key}`);
         }
       }
     }
@@ -62,12 +62,31 @@ test("keyboard turns start from the side you are heading to, or the middle when 
   assert.deepEqual(switchOrigin({ direction: -1, axis: "y", box, origin: null }), { x: 280, y: 0 });
   assert.deepEqual(switchOrigin({ direction: 0, axis: "x", box, origin: null }), { x: 280, y: 150 });
   const wipe = (extra) => pageLayers(request("wipe", extra))[0].frames.map((frame) => `${frame.maskSize} @ ${frame.maskPosition}`);
-  assert.deepEqual(wipe({ direction: 1 }), ["0px 300px @ 560px 0px", "560px 300px @ 0px 0px"]);
-  assert.deepEqual(wipe({ direction: -1, axis: "y" }), ["560px 0px @ 0px 0px", "560px 300px @ 0px 0px"]);
-  assert.deepEqual(wipe({ direction: 1, axis: "y" }), ["560px 0px @ 0px 300px", "560px 300px @ 0px 0px"]);
-  assert.deepEqual(wipe({ direction: 0 }), ["0px 300px @ 280px 0px", "560px 300px @ 0px 0px"]);
+  const image = (extra) => pageLayers(request("wipe", extra))[0].frames[0].maskImage;
+  assert.deepEqual(wipe({ direction: 1 }), ["200% 100% @ 0% 0%", "200% 100% @ 100% 0%"]);
+  assert.equal(image({ direction: 1 }), "linear-gradient(to right, transparent 50%, #000 50%)");
+  assert.deepEqual(wipe({ direction: -1 }), ["200% 100% @ 100% 0%", "200% 100% @ 0% 0%"]);
+  assert.equal(image({ direction: -1 }), "linear-gradient(to right, #000 50%, transparent 50%)");
+  assert.deepEqual(wipe({ direction: 1, axis: "y" }), ["100% 200% @ 0% 0%", "100% 200% @ 0% 100%"]);
+  assert.equal(image({ direction: 1, axis: "y" }), "linear-gradient(to bottom, transparent 50%, #000 50%)");
+  assert.deepEqual(wipe({ direction: 0 }), ["0% 100% @ 50% 50%", "100% 100% @ 50% 50%"]);
   assert.equal(overlayLayers(request("wipe", { direction: 0 })).length, 2);
   assert.equal(overlayLayers(request("wipe", { direction: 1 })).length, 1);
+});
+
+test("the curtain, its edge line, the sheen and the pixels are sized in percent, so a panel that changes size mid-switch is still fully revealed", () => {
+  for (const effect of ["wipe", "pixel", "sheen"]) {
+    for (const direction of [-1, 0, 1]) {
+      for (const axis of ["x", "y"]) {
+        const layers = [...pageLayers(request(effect, { direction, axis })), ...overlayLayers(request(effect, { direction, axis })).map((overlay) => overlay.layer)];
+        for (const layer of layers) {
+          for (const frame of layer.frames) {
+            for (const [key, value] of Object.entries(frame)) assert.ok(typeof value !== "string" || !/\d+px/.test(value.replace(/calc\([\d.]+% [-+] \dpx\)/g, "")), `${effect} ${direction} ${axis}: ${key} ${value}`);
+          }
+        }
+      }
+    }
+  }
 });
 
 test("pixel dissolve only ever adds cells, starts empty, ends covering the page, and sweeps the way you turn", () => {
@@ -77,14 +96,13 @@ test("pixel dissolve only ever adds cells, starts empty, ends covering the page,
   for (let index = 1; index < forward.length - 1; index += 1) {
     for (const cell of shown(forward[index - 1])) assert.ok(shown(forward[index]).includes(cell), `frame ${index} drops ${cell}`);
   }
+  for (const frame of forward.slice(0, -1)) assert.equal(frame.easing, "steps(1, end)", "cells jump in, they never slide between frames");
   const last = forward.at(-1);
-  assert.equal(last.maskPosition, "0px 0px");
-  const [width, height] = last.maskSize.split(" ").map((value) => Number.parseInt(value, 10));
-  assert.ok(width >= 560 && height >= 300, last.maskSize);
-  const firstCell = (frames) => Number.parseInt(shown(frames[1])[0], 10);
+  assert.equal(`${last.maskSize} @ ${last.maskPosition}`, "100% 100% @ 0% 0%");
+  const firstCell = (frames) => Number.parseFloat(shown(frames[1])[0]);
   const backward = pageLayers(request("pixel", { random: () => 0, direction: -1 }))[0].frames;
   assert.equal(firstCell(forward), 0);
-  assert.ok(firstCell(backward) > 280, backward[1].maskPosition);
+  assert.ok(firstCell(backward) > 50, backward[1].maskPosition);
 });
 
 test("the highlight stretches over both tabs before letting go of the old one", () => {

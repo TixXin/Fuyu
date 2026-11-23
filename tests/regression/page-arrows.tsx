@@ -89,7 +89,8 @@ async function runChecks() {
     const reveal = (element: Element | null) => (element?.getAnimations() ?? []).flatMap((animation) => (animation.effect as KeyframeEffect).getKeyframes())
       .map((frame) => `${String(frame.maskSize ?? frame.webkitMaskSize ?? "")} @ ${String(frame.maskPosition ?? frame.webkitMaskPosition ?? "")}`)
       .filter((frame) => frame !== " @ ");
-    check(/^0px \d+px @ [1-9]\d*px 0px$/.test(reveal(document.querySelector(".page-arrows-fixture"))[0] ?? ""), `翻到下一页时新页从右边拉开（${reveal(document.querySelector(".page-arrows-fixture"))[0]}）`);
+    const pageReveal = reveal(document.querySelector(".page-arrows-fixture"));
+    check(pageReveal[0] === "200% 100% @ 0% 0%" && pageReveal[1] === "200% 100% @ 100% 0%", `翻到下一页时新页从右边拉开（${pageReveal.join(" → ")}）`);
     check(reveal(arrow("next")).length === 0 && reveal(arrow("previous")).length === 0, "翻页动效不遮两边的箭头");
     check(document.querySelector("[data-page-switch-overlay='edge']"), "幕布边上有一道亮线");
     await act(async () => { for (const animation of document.getAnimations()) animation.finish(); await settle(); });

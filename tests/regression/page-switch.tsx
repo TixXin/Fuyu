@@ -60,10 +60,10 @@ try {
   await click(later!);
   check(document.querySelector(".settings-sidebar__ghost"), "点侧栏后高亮块从原来那一项挪过去");
   check(later!.classList.contains("settings-switch-arriving"), "挪的时候新那一项先不画自己的高亮");
-  check(/^\d+px 0px @ 0px [1-9]\d*px$/.test(reveal()[0] ?? ""), `往下点的页从下面拉开（${reveal()[0]}）`);
+  check(reveal()[0] === "100% 200% @ 0% 0%" && reveal()[1] === "100% 200% @ 0% 100%", `往下点的页从下面拉开（${reveal().join(" → ")}）`);
   check(hitsPanel(), "拉开的过程中还没露出来的地方也点得到");
   await click(first);
-  check(/^\d+px 0px @ 0px 0px$/.test(reveal()[0] ?? ""), `连着往上点，上一段立刻收尾，新页从上面拉开（${reveal()[0]}）`);
+  check(reveal()[0] === "100% 200% @ 0% 100%" && reveal().length === 2, `连着往上点，上一段立刻收尾，新页从上面拉开（${reveal().join(" → ")}）`);
   check(document.querySelectorAll(".settings-sidebar__ghost").length === 1, "连着点只留一个高亮块");
   await finishAll();
   check(!document.querySelector(".settings-sidebar__ghost") && !document.querySelector(".settings-switch-arriving"), "播完高亮块删掉，新那一项画回自己的高亮");
@@ -76,7 +76,7 @@ try {
   check(tabs().length >= 2, "行为页有几个标签");
   await click(tabs()[1]);
   check(document.querySelector(".settings-tabs__ghost"), "点标签后下划线挪过去");
-  check(/^0px \d+px @ [1-9]\d*px 0px$/.test(reveal()[0] ?? ""), `往右的标签从右边拉开（${reveal()[0]}）`);
+  check(reveal()[0] === "200% 100% @ 0% 0%" && reveal()[1] === "200% 100% @ 100% 0%", `往右的标签从右边拉开（${reveal().join(" → ")}）`);
   await finishAll();
   await click(tabs()[0]);
   await finishAll();
