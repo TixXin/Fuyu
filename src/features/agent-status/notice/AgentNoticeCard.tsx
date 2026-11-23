@@ -61,9 +61,9 @@ export function AgentNoticeCard(props: AgentNoticeCardProps) {
     </button>
   ) : null;
   const stateText = <span className="agent-notice__state">{state}</span>;
-  const jelly = useContext(SessionLightStyleContext) === "mark" && noticeStyle !== "wings";
+  const jelly = useContext(SessionLightStyleContext) === "mark";
   const brand = jelly && noticeStyle === "compact" ? <NoticeBrand provider={provider} /> : null;
-  const icon = (size: number) => iconOverride ?? (jelly ? <NoticeJelly mood={noticeMood(tone, compacting)} provider={provider} badge={size > 16} /> : (
+  const icon = (size: number) => iconOverride ?? (jelly ? <NoticeJelly mood={noticeMood(tone, compacting)} provider={provider} size={noticeStyle === "wings" ? "band" : size > 16 ? "card" : "row"} /> : (
     <span className="agent-notice__icon" style={{ "--notice-icon": `${size}px` } as CSSProperties}>
       <AgentProviderIcon provider={provider} size={size} />
     </span>

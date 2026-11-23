@@ -10,13 +10,19 @@ export function noticeMood(tone: AgentNoticeTone, compacting: boolean): JellyMoo
   return compacting ? "compacting" : MOODS[tone];
 }
 
-export function NoticeJelly({ mood, provider, badge }: { mood: JellyMood; provider: string; badge: boolean }) {
+export type NoticeJellySize = "card" | "band" | "row";
+
+const HEIGHTS: Record<NoticeJellySize, number> = { card: 24, band: 18, row: 16 };
+const BADGES: Partial<Record<NoticeJellySize, number>> = { card: 12, band: 10 };
+
+export function NoticeJelly({ mood, provider, size }: { mood: JellyMood; provider: string; size: NoticeJellySize }) {
+  const badge = BADGES[size];
   return (
-    <span className={`agent-notice__jelly${badge ? " agent-notice__jelly--badged" : ""}`}>
-      <SessionJelly className="agent-notice__jelly-mark" mood={mood} height={badge ? 24 : 16} />
+    <span className={`agent-notice__jelly agent-notice__jelly--${size}`}>
+      <SessionJelly className="agent-notice__jelly-mark" mood={mood} height={HEIGHTS[size]} />
       {badge ? (
         <span className="agent-notice__badge">
-          <AgentProviderIcon provider={provider} size={12} />
+          <AgentProviderIcon provider={provider} size={badge} />
         </span>
       ) : null}
     </span>
