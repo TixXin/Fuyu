@@ -13,6 +13,7 @@ export type ClaudeUsageText = {
   resettingSoon: string;
   ago: AgeText;
   fromHud: string;
+  fromStatusline: string;
   fromApi: string;
   fromMagpie: string;
   fromCodex: string;
@@ -26,7 +27,7 @@ export type ClaudeUsageText = {
   fromDshAccount: string;
   updated: (ago: string, source: string) => string;
   staleUpdated: (ago: string, source: string) => string;
-  staleReason: Partial<Record<"hud" | "codex", string>>;
+  staleReason: Partial<Record<"hud" | "statusline" | "codex", string>>;
   ringLabel: (details: string) => string;
   hoverOnlyLabel: (details: string) => string;
   hoverOnlyItemName: string;
@@ -112,6 +113,7 @@ export const zhCN: ClaudeUsageText = {
   resettingSoon: "即将重置",
   ago: commonZhCN.ago,
   fromHud: "来自 claude-hud",
+  fromStatusline: "来自 Claude Code 状态栏",
   fromApi: "来自 Anthropic",
   fromMagpie: "来自 magpie",
   fromCodex: "来自 Codex 会话记录",
@@ -127,6 +129,7 @@ export const zhCN: ClaudeUsageText = {
   staleUpdated: (ago, source) => `可能已过时：${ago}更新 · ${source}`,
   staleReason: {
     hud: "claude-hud 只在终端里的 Claude Code 刷新状态栏时写这份快照，用一下 Claude Code 就会更新",
+    statusline: "终端里的 Claude Code 每回复一次就更新；隔得久了会向 Anthropic 补查一次",
     codex: "Codex 跑完一轮才会写入新的额度",
   },
   ringLabel: (details) => `用量：${details}。点击刷新`,
@@ -301,6 +304,7 @@ export const en: ClaudeUsageText = {
   resettingSoon: "resetting soon",
   ago: commonEn.ago,
   fromHud: "via claude-hud",
+  fromStatusline: "from the Claude Code status line",
   fromApi: "from Anthropic",
   fromMagpie: "from magpie",
   fromCodex: "from Codex's session logs",
@@ -316,6 +320,7 @@ export const en: ClaudeUsageText = {
   staleUpdated: (ago, source) => `May be stale: updated ${ago} · ${source}`,
   staleReason: {
     hud: "claude-hud writes this snapshot only when Claude Code redraws its status line in a terminal; use Claude Code once to refresh it",
+    statusline: "Claude Code in a terminal updates this with every reply; after a long gap the island asks Anthropic once",
     codex: "Codex writes new limits only after it finishes a turn",
   },
   ringLabel: (details) => `Usage: ${details}. Click to refresh`,

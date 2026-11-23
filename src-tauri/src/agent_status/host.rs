@@ -4,7 +4,7 @@ use plugin_base::{host_service, ServeError};
 use serde::Serialize;
 
 use super::{
-    background, codex_usage, external, focus, magpie, notifications, remote_sessions, session_host, session_scan, sessions::AgentSessionSummary, usage,
+    background, codex_usage, external, focus, notifications, remote_sessions, session_host, session_scan, sessions::AgentSessionSummary, usage,
 };
 use crate::system::windows_home_dir;
 
@@ -186,9 +186,8 @@ fn sessions_for_host() -> Result<AgentSessions, ServeError> {
 async fn usage_for_host() -> Result<AgentUsages, ServeError> {
     switched_on()?;
     let home_dir = windows_home_dir().map_err(|error| ServeError::new("failed", error))?;
-    let magpie = magpie::read_usage(&usage::claude_dir(&home_dir)).await;
-    let local = magpie.or_else(|| usage::read_usage(&home_dir));
-    let claude = usage::merge(local, crate::claude_usage::current()).map(report);
+    let agent_dir = dirs().ok().map(|(_, agent_dir)| agent_dir);
+    let claude = usage::claude_usage(&home_dir, agent_dir.as_deref()).await.map_err(|error| ServeError::new("failed", error))?.map(report);
     let codex = codex_usage::read_usage(&home_dir).map(report);
     Ok(AgentUsages { claude, codex })
 }

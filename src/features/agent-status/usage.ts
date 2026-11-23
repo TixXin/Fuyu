@@ -83,6 +83,17 @@ export function usageLines(usages: AgentUsages, view: UsageView): UsageLine[] {
     .filter((line) => !line.usage || hasUsageNumbers(line.usage));
 }
 
+export type ExpiredLine = { source: AgentUsageSource; usage: AgentUsage; updatedAt: number };
+
+export function expiredLines(usages: AgentUsages, view: Pick<UsageView, "hidden" | "agentsOff">): ExpiredLine[] {
+  return AGENT_USAGE_SOURCES.flatMap((source) => {
+    if (view.agentsOff?.includes(source) || view.hidden.includes(source)) return [];
+    const usage = percentOf(usages, source);
+    if (!usage || usage.updatedAt === null || !hasUsageNumbers(usage) || hasUsageNumbers(liveUsage(usage, usages.readAt))) return [];
+    return [{ source, usage, updatedAt: usage.updatedAt }];
+  });
+}
+
 export function hasUsageNumbers(usage: AgentUsage | null): boolean {
   return Boolean(usage && (usage.fiveHour || usage.sevenDay || usage.models.length > 0));
 }

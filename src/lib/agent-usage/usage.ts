@@ -47,6 +47,7 @@ export function usageSourceLines(usage: AgentUsage, now: number, text: ClaudeUsa
       magpie: text.fromMagpie,
       codex: text.fromCodex,
       hud: text.fromHud,
+      statusline: text.fromStatusline,
       glm: text.fromGlm,
       kimi: text.fromKimi,
       antigravity: text.fromAntigravity,
@@ -56,7 +57,7 @@ export function usageSourceLines(usage: AgentUsage, now: number, text: ClaudeUsa
     const ago = formatAge(Math.max(0, now - usage.updatedAt), text.ago);
     if (isStale(usage, now)) {
       lines.push({ text: text.staleUpdated(ago, source) });
-      const reason = kind === "hud" || kind === "codex" ? text.staleReason[kind] : undefined;
+      const reason = kind === "hud" || kind === "statusline" || kind === "codex" ? text.staleReason[kind] : undefined;
       if (reason) lines.push({ text: reason, muted: true });
     } else {
       lines.push({ text: text.updated(ago, source), muted: true });

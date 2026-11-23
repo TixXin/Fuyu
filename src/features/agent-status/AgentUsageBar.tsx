@@ -1,11 +1,12 @@
 import { useRef } from "react";
 import { AgentUsageChips } from "./AgentUsageChips";
+import { AgentUsageExpired } from "./AgentUsageExpired";
 import { AgentUsageLead } from "./AgentUsageLead";
 import { AgentUsageRuler } from "./AgentUsageRuler";
 import { AgentUsageTable } from "./AgentUsageTable";
 import { AgentUsageTiles } from "./AgentUsageTiles";
 import type { UsageToggle } from "./UsageBits";
-import { availableLines, usageLines, DEFAULT_USAGE_VIEW, type AgentUsages, type UsageLine, type UsageView } from "./usage";
+import { availableLines, expiredLines, usageLines, DEFAULT_USAGE_VIEW, type AgentUsages, type UsageLine, type UsageView } from "./usage";
 import { useAgentUsages } from "./useAgentUsages";
 import { AgentUsageMenu, type UsageViewChange } from "./AgentUsageMenu";
 import "./AgentUsageBar.css";
@@ -33,7 +34,8 @@ export function AgentUsageBar({ usages: given, view = DEFAULT_USAGE_VIEW, onView
   const box = useRef<HTMLDivElement>(null);
   const usages = given ?? own;
   const lines = usageLines(usages, view);
-  if (lines.length === 0) return null;
+  const expired = expiredLines(usages, view);
+  if (lines.length === 0 && expired.length === 0) return null;
   const layout = view.layout ?? "chips";
   const sources = availableLines(usages, view.agentsOff).map((line) => line.source);
 
@@ -48,7 +50,8 @@ export function AgentUsageBar({ usages: given, view = DEFAULT_USAGE_VIEW, onView
       })}
     >
       <div key={layout} className="agent-usage-layout">
-        <UsageLayout lines={lines} now={usages.readAt} view={view} onToggle={onToggle} />
+        {lines.length > 0 && <UsageLayout lines={lines} now={usages.readAt} view={view} onToggle={onToggle} />}
+        {expired.length > 0 && <AgentUsageExpired lines={expired} now={usages.readAt} onToggle={onToggle} />}
       </div>
       {onViewChange && <AgentUsageMenu view={view} sources={sources} onChange={onViewChange} />}
     </div>

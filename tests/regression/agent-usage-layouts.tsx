@@ -52,6 +52,12 @@ export async function checkUsageLayouts({ root, sessions, usages, check }: Conte
   check(pins.length === 3 && spots[0] === 27 && spots[1] === 91 && spots[2] === 40, `水位刻度：每家一枚标记，挨得近的错开：${spots}`);
   check(document.querySelectorAll(".agent-usage-ruler__cash .agent-usage-chip").length === 1, "没有百分比的积分放在刻度下面");
 
+  const expiredUsages = { ...usages, claude: usages.claude && { ...usages.claude, updatedAt: usages.readAt - 10 * 86_400_000, fiveHour: { name: "", used: 29, resetsAt: usages.readAt - 9 * 86_400_000 }, sevenDay: null, models: [] } };
+  await show(<AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={expiredUsages} usageView={DEFAULT_USAGE_VIEW} />);
+  const expired = document.querySelector<HTMLElement>(".agent-usage-chip--expired");
+  check(expired?.getAttribute("aria-label") === "Claude Code 用量 已过期 · 10 天前" && !labels(".agent-usage-chips .agent-usage-chip").some((label) => label?.startsWith("Claude Code")),
+    `Claude 的额度全都过了重置时间时不消失，变成一颗灰的「已过期」：${expired?.getAttribute("aria-label")}`);
+
   const patches: Partial<AgentSettingValues>[] = [];
   await show(panel({ layout: "tiles" }, (patch) => patches.push(patch)));
   await act(async () => {

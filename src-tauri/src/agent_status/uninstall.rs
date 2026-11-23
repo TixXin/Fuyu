@@ -13,7 +13,7 @@ use super::{
 
 pub(super) const UNINSTALLED_HOOKS_FILE_NAME: &str = "uninstalled-hooks.json";
 
-const SCRIPT_PREFIXES: [&str; 2] = ["fuyu-agent-", "focusd-agent-"];
+const SCRIPT_PREFIXES: [&str; 3] = ["fuyu-agent-", "focusd-agent-", "fuyu-claude-statusline"];
 const SCRIPT_EXTENSIONS: [&str; 3] = ["cmd", "ps1", "sh"];
 const KNOWN_SCRIPT_NAMES: [&str; 12] = [
     "fuyu-agent-running.cmd",

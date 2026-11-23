@@ -192,7 +192,7 @@ pub(super) fn claude_code_running_command(script_path: &Path, rest: &[&str]) -> 
 }
 
 #[cfg(windows)]
-fn claude_code_powershell_command(script_path: &Path, rest: &[&str]) -> String {
+pub(super) fn claude_code_powershell_command(script_path: &Path, rest: &[&str]) -> String {
     let mut command = format!("powershell.exe -NoProfile -ExecutionPolicy Bypass -File {}", quoted_script(script_path));
     for arg in rest {
         command.push(' ');
@@ -214,7 +214,7 @@ pub(super) fn claude_code_running_command(script_path: &Path, rest: &[&str]) -> 
 }
 
 #[cfg(not(windows))]
-fn claude_code_powershell_command(script_path: &Path, rest: &[&str]) -> String {
+pub(super) fn claude_code_powershell_command(script_path: &Path, rest: &[&str]) -> String {
     claude_code_running_command(script_path, rest)
 }
 

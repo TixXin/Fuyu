@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { availableLines, EMPTY_USAGES, formatCredit, rulerSpots, shownUsage, usageLines, usageWindows } from "../../src/features/agent-status/usage.ts";
+import { availableLines, EMPTY_USAGES, expiredLines, formatCredit, rulerSpots, shownUsage, usageLines, usageWindows } from "../../src/features/agent-status/usage.ts";
 import { emptyTide, normalizeTide, recordTide, tideArea, tideDayKey, tideMinutes, tideSlot } from "../../src/features/agent-status/tide.ts";
 
 const window = (name, used, resetsAt = null) => ({ name, used, resetsAt });
@@ -35,6 +35,16 @@ test("ruler markers never sit on top of each other and stay on the scale", () =>
   assert.ok(crowdedTop[1] - crowdedTop[0] >= 13 && crowdedTop[2] - crowdedTop[1] >= 13, `markers near 100 spread to the left: ${crowdedTop}`);
   const reordered = rulerSpots([80, 20]);
   assert.ok(reordered[0] > reordered[1], "each marker keeps its own value's place");
+});
+
+test("an agent whose every window is past its reset shows as expired instead of vanishing", () => {
+  const readAt = 10_000_000;
+  const old = { updatedAt: 1_000, fiveHour: window("5h", 40, 2_000), sevenDay: window("7d", 60, 3_000), models: [], plan: null, source: "hud" };
+  const usages = { claude: old, codex: { ...old, updatedAt: readAt - 60_000, sevenDay: window("7d", 20, readAt + 60_000) }, others: {}, credits: {}, readAt };
+  assert.deepEqual(availableLines(usages).map((line) => line.source), ["codex"], "the expired one has no live line");
+  assert.deepEqual(expiredLines(usages, { hidden: [] }).map((line) => [line.source, line.updatedAt]), [["claudeCode", 1_000]]);
+  assert.deepEqual(expiredLines(usages, { hidden: ["claudeCode"] }), [], "a hidden agent stays hidden");
+  assert.deepEqual(expiredLines(usages, { hidden: [], agentsOff: ["claudeCode"] }), [], "an agent turned off stays off");
 });
 
 test("credits read without long decimals and raw window names get readable labels", () => {

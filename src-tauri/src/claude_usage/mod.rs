@@ -4,6 +4,7 @@ mod cursor;
 mod cursor_token;
 mod dsh;
 mod dsh_credentials;
+mod fallback;
 mod plan;
 mod plan_config;
 mod source;
@@ -12,6 +13,7 @@ mod workbuddy;
 mod tests;
 
 pub(crate) use background::init;
+pub(crate) use fallback::usage as fallback_usage;
 use serde::Serialize;
 use source::{FetchError, Limits};
 use std::{

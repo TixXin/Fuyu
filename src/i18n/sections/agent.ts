@@ -99,6 +99,9 @@ export type AgentText = {
     moreSources: (count: number) => string;
     moreWindows: (count: number) => string;
     stale: string;
+    expired: (ago: string) => string;
+    expiredDetail: (ago: string, source: string) => string;
+    expiredFix: string;
     fiveHour: string;
     sevenDay: string;
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
@@ -269,6 +272,9 @@ export const zhCN: AgentText = {
     moreSources: (count) => `还有 ${count} 家`,
     moreWindows: (count) => `还有 ${count} 项`,
     stale: "可能已过时",
+    expired: (ago) => `已过期 · ${ago}`,
+    expiredDetail: (ago, source) => `额度已过重置时间，${ago}更新 · ${source}`,
+    expiredFix: "在设置 → Agent 里给 Claude Code「重新安装钩子」，再用一下 Claude Code 就会更新",
     fiveHour: "5 小时",
     sevenDay: "7 天",
     resetsIn: ({ days, hours, minutes }) =>
@@ -445,6 +451,9 @@ export const en: AgentText = {
     moreSources: (count) => `${count} more`,
     moreWindows: (count) => `${count} more`,
     stale: "May be out of date",
+    expired: (ago) => `Expired · ${ago}`,
+    expiredDetail: (ago, source) => `Past its reset time; updated ${ago} · ${source}`,
+    expiredFix: "Reinstall the hooks for Claude Code under Settings → Agent, then use Claude Code once",
     fiveHour: "5h",
     sevenDay: "7d",
     resetsIn: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d${hours}h` : hours > 0 ? `resets in ${hours}h${minutes}m` : `resets in ${minutes}m`),

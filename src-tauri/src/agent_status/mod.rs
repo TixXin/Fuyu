@@ -5,6 +5,7 @@ mod background_tasks;
 mod claude_code;
 mod claude_desktop;
 mod claude_hooks;
+mod claude_statusline;
 mod codex;
 mod codex_hooks;
 mod codex_threads;
@@ -558,15 +559,10 @@ pub async fn agent_sessions_in_front(app: AppHandle, sessions: Vec<focus::Sessio
 }
 
 #[tauri::command]
-pub async fn get_agent_usage() -> Result<Option<usage::AgentUsage>, String> {
+pub async fn get_agent_usage(app: AppHandle) -> Result<Option<usage::AgentUsage>, String> {
     let home_dir = windows_home_dir()?;
-    let magpie = magpie::read_usage(&usage::claude_dir(&home_dir)).await;
-    tauri::async_runtime::spawn_blocking(move || {
-        let local = magpie.or_else(|| usage::read_usage(&home_dir));
-        usage::merge(local, crate::claude_usage::current())
-    })
-        .await
-        .map_err(|error| format!("Failed to join the usage task: {error}"))
+    let app_dir = crate::home_dir::agent_home(app.path()).ok();
+    usage::claude_usage(&home_dir, app_dir.as_deref()).await
 }
 
 #[tauri::command]
