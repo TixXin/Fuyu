@@ -111,6 +111,18 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   });
   const moods = [...host.querySelectorAll<HTMLElement>(".agent-session__jelly .center-jelly")].map((jelly) => jelly.dataset.mood).join();
   check(moods === "compacting,stale", `压缩上下文和可能中断各有自己的水母表情，不再借用失败：${moods}`);
+  host.style.cssText = "position: fixed; left: 0; top: -2000px; width: 400px";
+  await act(async () => {
+    lights.render(<StrictMode><I18nProvider><SessionLightStyleContext.Provider value="mark"><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" /></SessionLightStyleContext.Provider></I18nProvider></StrictMode>);
+  });
+  const paused = () => [...host.querySelectorAll<HTMLElement>(".agent-session__jelly .center-jelly")].map((jelly) => jelly.dataset.paused === "true");
+  const settle = async (want: boolean) => {
+    for (let i = 0; i < 40 && !paused().every((value) => value === want); i++) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    return paused();
+  };
+  check((await settle(true)).every(Boolean), "看不见的行（滚出去、岛收起）里的水母停下，不白占 CPU");
+  host.style.top = "0";
+  check((await settle(false)).every((value) => !value), "回到视野里的水母接着动");
   act(() => lights.unmount());
   host.remove();
 }
