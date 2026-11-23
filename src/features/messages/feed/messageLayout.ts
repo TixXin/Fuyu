@@ -2,7 +2,7 @@ export const MESSAGE_LAYOUTS = ["focus", "inbox", "reader", "stacks", "board", "
 
 export type MessageLayout = (typeof MESSAGE_LAYOUTS)[number];
 
-export const DEFAULT_MESSAGE_LAYOUT: MessageLayout = "focus";
+export const DEFAULT_MESSAGE_LAYOUT: MessageLayout = "reader";
 
 export const MESSAGE_LAYOUT_CONFIG_KEY = "layout";
 
