@@ -43,6 +43,7 @@ export type ClaudeUsageText = {
   dshErrors: Record<AgentUsageErrorKind, string>;
   errors: Record<AgentUsageErrorKind, string>;
   needsAgents: string;
+  widget: { noData: string; agentsOff: string; setUp: string; resets: (parts: ResetParts) => string };
   settings: {
     title: string;
     optionsTitle: string;
@@ -233,6 +234,12 @@ export const zhCN: ClaudeUsageText = {
     customEndpoint: "当前 DSH 使用自定义模型或网关，无法查询 DeepSeek 官方余额",
   },
   needsAgents: "需要打开 AI Agent 插件",
+  widget: {
+    noData: "还没有用量",
+    agentsOff: "AI Agent 插件没开",
+    setUp: "去设置",
+    resets: ({ days, hours, minutes }) => (days > 0 ? `${days} 天后重置` : hours > 0 ? `${hours} 小时后重置` : `${Math.max(1, minutes)} 分钟后重置`),
+  },
   settings: {
     title: "用量环",
     optionsTitle: "显示口径与直连查询",
@@ -416,6 +423,12 @@ export const en: ClaudeUsageText = {
     customEndpoint: "DSH uses a custom model or gateway; official DeepSeek balance unavailable",
   },
   needsAgents: "Needs the AI Agent plugin switched on",
+  widget: {
+    noData: "No usage yet",
+    agentsOff: "AI Agent plugin is off",
+    setUp: "Set up",
+    resets: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d` : hours > 0 ? `resets in ${hours}h` : `resets in ${Math.max(1, minutes)}m`),
+  },
   settings: {
     title: "Usage rings",
     optionsTitle: "Display and direct query",

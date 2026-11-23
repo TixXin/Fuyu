@@ -1,15 +1,20 @@
 import { useMemo } from "react";
 import type { IslandContribution } from "../../plugin-kernel/islandContributions";
 import { defineSlot } from "../../plugin-kernel/slots";
-import { useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useBuiltinConfig } from "../../plugin-kernel/useBuiltinPlugins";
 import { HOVER_ONLY_HINT, shownHoverProviders, shownUsageProviders, usageHint } from "../usageRing";
 import { useUsagePresence } from "../useUsagePresence";
 import { OWNER } from "./owner.ts";
+import { OPEN_USAGE_SETTINGS_ACTION } from "./widgets.ts";
 
-const runnerSlot = defineSlot<object>("island.runner/v1");
+type RunnerProps = {
+  openSettings: (section: "agentRings") => void;
+};
 
-function UsageRings() {
+const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
+
+function UsageRings({ openSettings }: RunnerProps) {
   const config = useBuiltinConfig(OWNER);
   const chosen = useMemo(() => shownUsageProviders(config), [config]);
   const shown = useUsagePresence(chosen);
@@ -21,6 +26,7 @@ function UsageRings() {
     return rings;
   }, [config, shown]);
   useIslandContributions(OWNER, "claude-usage.rings", list);
+  useIslandAction(OPEN_USAGE_SETTINGS_ACTION, () => openSettings("agentRings"));
   return null;
 }
 

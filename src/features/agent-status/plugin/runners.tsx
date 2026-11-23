@@ -5,7 +5,7 @@ import { ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-ke
 import { useIslandDecor } from "../../plugin-kernel/islandDecor";
 import type { IslandHost } from "../../plugin-kernel/islandHost";
 import { defineSlot } from "../../plugin-kernel/slots";
-import { useIslandContributed, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useIslandAction, useIslandContributed, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useTextRanks } from "../../plugin-kernel/useTextRanks";
 import type { AgentSessionSummary } from "../api";
 import { AGENT_POPUP_LIST_SAVING, getAgentAlertExpandedHeight } from "../islandLayout";
@@ -22,6 +22,7 @@ import { useAgentGlow } from "./agentGlow";
 import { agentLineContribution, pickAgentSession } from "./agentLine";
 import { agentArrange, agentLine, agentPage, agentShell, quotaAlertState, type AgentArrange } from "./islandState";
 import { OWNER } from "./owner.ts";
+import { OPEN_AGENTS_ACTION } from "./widgets.ts";
 
 type RunnerProps = {
   mode: string;
@@ -77,6 +78,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   }));
   const feed = useMemo(() => agentFeedOf(agentSessions, listedAgentSessions, unseenAgentSessions.keys, agentOthers), [agentSessions, listedAgentSessions, unseenAgentSessions.keys, agentOthers]);
   agentFeed.useProvide(feed);
+  useIslandAction(OPEN_AGENTS_ACTION, features.agents ? () => openIslandPage("agents") : null);
   useEffect(() => announceAgentsChanged(feed.sessions.length), [feed]);
   agentPage.useProvide(useMemo(
     () => ({ sessions: listedAgentSessions, unseen: unseenAgentSessions, removal: agentRemoval, usages: agentUsages, alerted: alertedSession, alertedStack, approvals }),

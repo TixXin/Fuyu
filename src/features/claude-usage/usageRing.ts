@@ -180,3 +180,18 @@ export function hoverProviderLines(
   }
   return lines;
 }
+
+export function hasRingNumbers(given: AgentUsage | null, now: number): boolean {
+  const usage = given && liveUsage(given, now);
+  return Boolean(usage && (usage.fiveHour || longWindow(usage)));
+}
+
+export function nextUsageReset(given: AgentUsage | null, now: number) {
+  const usage = given && liveUsage(given, now);
+  if (!usage) return null;
+  for (const limit of [usage.fiveHour, longWindow(usage)]) {
+    const parts = limit ? untilReset(limit.resetsAt, now) : null;
+    if (parts) return parts;
+  }
+  return null;
+}
