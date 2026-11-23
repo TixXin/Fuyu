@@ -228,6 +228,19 @@ export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: 
   return { ...panel, items: pushedAway([...panel.items.filter((candidate) => candidate !== item), next], widget, heightUnits !== Infinity) };
 }
 
+export function fitFreeItems(panel: CustomPanel, heightUnits: number): CustomPanel {
+  if (panel.mode !== "free") return panel;
+  const moved: string[] = [];
+  const fitted = panel.items.map((item) => {
+    if (item.y + item.h <= heightUnits) return item;
+    const h = Math.max(minBox(item.size).h, Math.min(item.h, heightUnits));
+    moved.push(item.widget);
+    return { ...item, h, y: Math.max(0, heightUnits - h) };
+  });
+  if (moved.length === 0) return panel;
+  return { ...panel, items: moved.reduce((items, widget) => pushedAway(items, widget, true), fitted) };
+}
+
 export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number, widthUnits = FREE_WIDTH_UNITS, heightUnits = Infinity): CustomPanel {
   const item = panel.items.find((candidate) => candidate.widget === widget);
   if (!item || panel.mode !== "free") return panel;
@@ -271,9 +284,9 @@ export function stripInsertIndexAt(panel: CustomPanel, x: number, y: number, ski
   return rest.length;
 }
 
-export function setPanelMode(panel: CustomPanel, mode: PanelMode, byColumn = false): CustomPanel {
+export function setPanelMode(panel: CustomPanel, mode: PanelMode, byColumn = false, heightUnits = Infinity): CustomPanel {
   if (panel.mode === mode) return panel;
-  if (mode === "free") return { ...panel, mode };
+  if (mode === "free") return fitFreeItems({ ...panel, mode }, heightUnits);
   const ordered = [...panel.items].sort((a, b) => (byColumn ? a.x - b.x || a.y - b.y : a.y - b.y || a.x - b.x));
   return { ...panel, mode, items: flowPanelItems(ordered) };
 }
