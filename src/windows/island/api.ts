@@ -109,7 +109,7 @@ export function listenIslandResize(handler: (delta: IslandResizeDelta) => void):
 
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
-export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; autoForm: boolean; animate?: boolean; dragGrid?: boolean; tuckStyle?: TuckStyle };
+export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; autoForm: boolean; animate?: boolean; dragGrid?: boolean; tuckStyle?: TuckStyle; tuckLipHeight?: number; tuckLipWidth?: number };
 
 export type IslandGlassFrame = {
   left: number;
@@ -143,6 +143,8 @@ export type IslandInteraction = {
   cornerShape: IslandCornerShape;
   monitorFollow: IslandMonitor;
   tuckStyle?: TuckStyle;
+  tuckLipHeight?: number;
+  tuckLipWidth?: number;
   isDimmed?: boolean;
   gamePassthrough?: boolean;
   collapsedHeight?: number;

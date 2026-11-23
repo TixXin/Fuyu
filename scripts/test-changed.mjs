@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { builtinsOffReached, featureOfFile, isBuiltinsOffPage } from "./regression/builtins-off-pages.mjs";
 import { PAGES } from "./run-regression.mjs";
+import { selectByCoverage } from "./regression/coverageSelect.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SPECIFIER = /\bfrom\s*["']([^"']+)["']|\bimport\s*["']([^"']+)["']|\bimport\(\s*["']([^"']+)["']\s*\)|@import\s+["']([^"']+)["']/g;
@@ -58,11 +59,49 @@ export function pageEntry(page, root, read = (file) => readFileSync(file, "utf8"
   return src.startsWith("/") ? path.join(root, src.slice(1)) : path.resolve(path.dirname(html), src);
 }
 
-export function rustFilters(changed) {
-  const rust = changed.filter((file) => file.startsWith("src-tauri/"));
-  if (!rust.length) return null;
-  if (rust.some((file) => !/^src-tauri\/src\/.+\.rs$/.test(file))) return [];
+const RUST_PATH = /"((?:\.\.\/)+[^"\\\s]+)"/g;
+const RUST_TEST = /(^|\/)(tests\.rs|[^/]+_tests\.rs)$|\/tests\//;
+
+function rustSources(dir) {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).flatMap((name) => {
+    const full = path.join(dir, name);
+    if (statSync(full).isDirectory()) return rustSources(full);
+    return name.endsWith(".rs") ? [full] : [];
+  });
+}
+
+export function rustReaders(root, files = rustSources(path.join(root, "src-tauri", "src")), read = (file) => readFileSync(file, "utf8"), stat = (file) => (existsSync(file) ? statSync(file) : null)) {
+  const readers = [];
+  for (const file of files) {
+    const source = rel(root, file);
+    const module = source.slice("src-tauri/src/".length).split("/")[0].replace(/\.rs$/, "");
+    for (const [, literal] of read(file).matchAll(RUST_PATH)) {
+      for (const candidate of [path.resolve(path.dirname(file), literal), path.resolve(root, "src-tauri", literal)]) {
+        const target = rel(root, candidate);
+        if (target.startsWith("..") || target.startsWith("src-tauri/")) continue;
+        const info = stat(candidate);
+        if (!info) continue;
+        const dir = info.isDirectory();
+        if (!dir || RUST_TEST.test(source)) readers.push({ path: target, dir, module });
+      }
+    }
+  }
+  return readers;
+}
+
+export function rustFilters(changed, readers = []) {
   const modules = new Set();
+  for (const file of changed) {
+    for (const reader of readers) {
+      if (file !== reader.path && !(reader.dir && file.startsWith(`${reader.path}/`))) continue;
+      if (reader.module === "lib" || reader.module === "main") return [];
+      modules.add(`${reader.module}::`);
+    }
+  }
+  const rust = changed.filter((file) => file.startsWith("src-tauri/"));
+  if (!rust.length) return modules.size ? [...modules].sort() : null;
+  if (rust.some((file) => !/^src-tauri\/src\/.+\.rs$/.test(file))) return [];
   for (const file of rust) {
     const [first] = file.slice("src-tauri/src/".length).split("/");
     const name = first.replace(/\.rs$/, "");
@@ -72,7 +111,7 @@ export function rustFilters(changed) {
   return [...modules].sort();
 }
 
-export function select({ changed, pages, unitTests, root, read = (file) => readFileSync(file, "utf8"), exists = existsSync }) {
+export function select({ changed, pages, unitTests, root, read = (file) => readFileSync(file, "utf8"), exists = existsSync, readers = [] }) {
   const cache = new Map();
   const touched = new Set(changed);
   const hits = (deps) => [...deps].some((file) => touched.has(file));
@@ -95,7 +134,7 @@ export function select({ changed, pages, unitTests, root, read = (file) => readF
     }
     return changed.some((file) => text.includes(file));
   });
-  return { pages: selectedPages, tests: selectedTests.map((test) => rel(root, test)), rust: rustFilters(changed) };
+  return { pages: selectedPages, tests: selectedTests.map((test) => rel(root, test)), rust: rustFilters(changed, readers) };
 }
 
 function testFiles(dir) {
@@ -129,7 +168,13 @@ function main(args) {
     return 0;
   }
   const unitTests = [path.join(ROOT, "tests", "unit"), path.join(ROOT, "tests", "scripts"), ...readdirSync(path.join(ROOT, "packages")).map((name) => path.join(ROOT, "packages", name, "test"))].flatMap(testFiles);
-  const { pages, tests, rust } = select({ changed, pages: PAGES, unitTests, root: ROOT });
+  const picked = select({ changed, pages: PAGES, unitTests, root: ROOT, readers: rustReaders(ROOT) });
+  const byCoverage = args.includes("--by-imports")
+    ? { pages: null, note: "--by-imports，按 import 关系挑页" }
+    : selectByCoverage({ root: ROOT, changed, pages: PAGES, importPages: (pages, files) => select({ changed: files, pages, unitTests: [], root: ROOT }).pages, entryOf: (page) => pageEntry(page, ROOT) });
+  const { tests, rust } = picked;
+  const pages = byCoverage.pages ?? picked.pages;
+  console.log(`[test:changed] ${byCoverage.note}${byCoverage.pages ? `：${pages.length} 页，按 import 关系是 ${picked.pages.length} 页` : ""}`);
   console.log(`[test:changed] ${changed.length} 个改动的文件 → 回归页 ${pages.length} 页、单元测试 ${tests.length} 个文件${rust ? `、Rust ${rust.length ? rust.join(" ") : "整个 lib"}` : ""}`);
   for (const page of pages) console.log(`  页  ${page}`);
   for (const test of tests) console.log(`  测  ${test}`);

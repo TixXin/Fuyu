@@ -170,9 +170,10 @@ Mac 上的 `~/.tauri/fuyu/release.json` 不写 `passwordFile`，改写 `keychain
 
    脚本会依次：
 
-   - 校验四处版本号一致、`docs/releases/vX.Y.Z.md` 存在且不是草稿、版本号和发布说明没有未提交改动、当前提交已在 GitHub 上、`gh` 已登录。工作区里别的文件有改动不要紧：安装包不在本机工作区里编（F35）；
+   - 每完成一步（下面每行 `✓`）、出错和结束时各推一条 Bark 到手机（D121.5）：地址和设备 Key 放在本机的 `~/.tauri/fuyu/bark.json`（`{ "endpoint": "https://…", "deviceKeys": ["…"] }`，只本机可读，不进仓库），也可以用环境变量 `FUYU_BARK_ENDPOINT`、`FUYU_BARK_KEYS`（逗号分隔）覆盖，`FUYU_BARK=0` 关掉。没配时只打一行提示，照常发布；推送失败不影响发布；
+   - 校验四处版本号一致、`docs/releases/vX.Y.Z.md` 存在且不是草稿、版本号和发布说明没有未提交改动、当前提交已在 GitHub 上、`gh` 已登录，并先读一次官网的 `/api/update/stable/latest.json`：读不到时立刻提示并推到手机（官网接口挂了，最后的导入会失败），发布照常继续，可以先修官网，或加 `--no-site` 之后补导入。工作区里别的文件有改动不要紧：安装包不在本机工作区里编（F35）；
    - 触发 `.github/workflows/release-windows.yml` 和 `release-macos.yml`，在 GitHub 的 runner 上按当前提交编 Windows 的 NSIS、MSI 和 Mac 的 dmg（两边同时跑，构建时不碰任何 Secrets 里的 updater 私钥），本机等它们跑完，下载到主工作区的 `src-tauri/target/publish/release`，再用本机的 updater 私钥签出各自的 `.sig`。设计和密钥的取舍见 [release-ci.md](/docs/architecture/release-ci.md)；
-   - 加 `--local` 时照旧在本机编 Windows 版：生成 `src-tauri/tauri.release.conf.json`（公钥 + `createUpdaterArtifacts`，该文件已被 git 忽略），`tauri build --config` 出带签名的 NSIS、MSI 安装包与各自 `.sig`，这时要求整个工作区没有未提交改动。GitHub Actions 不可用时用它兜底。不管在哪个 lane 发布，都编译到主工作区的 `src-tauri/target/publish`（D24，`scripts/build-dirs.mjs`），每次都是增量编译，lane 里不再各留一份几 GB 的产物；两个 lane 同时发布时后来的等前一个（`target/publish/.release.lock`）。`pnpm prune:target` 也清理这个目录；
+   - 加 `--local` 时照旧在本机编 Windows 版：生成 `src-tauri/tauri.release.conf.json`（公钥 + `createUpdaterArtifacts`，该文件已被 git 忽略），`tauri build --config` 出带签名的 NSIS、MSI 安装包与各自 `.sig`，这时要求整个工作区没有未提交改动。GitHub Actions 不可用时用它兜底。不管在哪个 lane 发布，都编译到主工作区的 `src-tauri/target/publish`（D24，`scripts/build-dirs.mjs`），每次都是增量编译，lane 里不再各留一份几 GB 的产物；同一台机器上已有一份 `pnpm release` 在跑（`target/publish/.release.lock`，进程还活着）时，后启动的直接报错退出，不排队，免得同一版本发两次（D121.5）。`pnpm prune:target` 也清理这个目录；
    - 生成 `latest.json`；
    - 生成两种安装包的 `SHA256SUMS.txt`；
    - 创建指向当前提交的 Release 草稿，上传安装包、`.sig`、`latest.json` 与校验文件；

@@ -55,6 +55,7 @@ export type IslandShellProps = {
   hoverGrow?: IslandHover;
   hoverBounce?: IslandBounce;
   tuckStyle?: TuckStyle;
+  tuckLipWidth?: number;
   tuckHint?: TuckHintSettings;
   isDetached: boolean;
   side?: IslandSide | null;
@@ -159,6 +160,7 @@ export function IslandShell({
   hoverGrow = "near",
   hoverBounce = "regular",
   tuckStyle = "edge",
+  tuckLipWidth = 0,
   tuckHint,
   isDetached,
   side = null,
@@ -219,6 +221,7 @@ export function IslandShell({
   useEffect(() => setPanelAwake(isExpanded), [isExpanded]);
   useShellMotionGuard(shellRef, mode);
   useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow, hoverBounce);
+  const narrowTuck = isTucked && !side && !notch && !isExpanded && tuckLipWidth > 0;
   const className = [
     "island",
     `island--${mode}`,
@@ -228,6 +231,7 @@ export function IslandShell({
     isDetached ? "island--detached" : "island--docked",
     isTucked ? "island--tucked" : "",
     isTucked && tuckStyle === "hidden" ? "island--tucked-hidden" : "",
+    narrowTuck ? "island--tuck-narrow" : "",
     isDimmed ? "island--dimmed" : "",
     side ? `island--side island--side-${side}` : "",
     popup ? "island--popup" : "",
@@ -251,7 +255,11 @@ export function IslandShell({
       <section
         ref={shellRef}
         className={className}
-        style={side ? ({ ...ISLAND_OUTLINE_STYLE, "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : (ISLAND_OUTLINE_STYLE as CSSProperties)}
+        style={{
+          ...ISLAND_OUTLINE_STYLE,
+          ...(side ? { "--island-side-column-height": `${sideLayout.height}px` } : {}),
+          ...(narrowTuck ? { "--island-tuck-width": `${tuckLipWidth}px` } : {}),
+        } as CSSProperties}
         aria-label={collapsedLabel}
         onClick={(event) => {
           if (!isExpanded && event.target === event.currentTarget) {

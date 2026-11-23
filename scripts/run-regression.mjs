@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { auditLight, MIN_CONTRAST, SKIPPED_PAGES, pageName } from "./regression-contrast.mjs";
 import { BUILTINS_OFF_PAGES } from "./regression/builtins-off-pages.mjs";
 import { connect, PIPE_STDIO } from "./regression/cdp.mjs";
+import { coverageRecorder, wantsCoverage } from "./regression/coverage.mjs";
 import { parseJobs, parseShard, readTimings, shardOf, slowestFirst } from "./regression/shards.mjs";
 import { captureSnapshot, prepareSnapshotBrowser, settledSnapshot } from "./regression/snapshots.mjs";
 
@@ -177,7 +178,15 @@ const READ_STATE = `(() => {
   });
 })()`;
 
+export async function clearPageStorage(session, url) {
+  const { origin } = new URL(url);
+  await session.send("Page.navigate", { url: "about:blank" });
+  await session.send("Storage.clearDataForOrigin", { origin, storageTypes: "all" });
+  await session.send("DOMStorage.clear", { storageId: { securityOrigin: origin, isLocalStorage: false } });
+}
+
 export async function runPage(session, url) {
+  await clearPageStorage(session, url);
   session.errors.length = 0;
   await session.send("Page.navigate", { url });
   const deadline = Date.now() + PAGE_TIMEOUT_MS;
@@ -269,11 +278,13 @@ export function recordSnapshotOutcome(page, variant, outcome, snapshotTally, { c
   return false;
 }
 
-async function checkPage({ root, session, base, page, update, contrastAllowlist, snapshotTally }) {
+async function checkPage({ root, session, base, page, update, contrastAllowlist, snapshotTally, coverage }) {
   const lines = [];
   const log = (line) => lines.push(line);
+  if (coverage) await coverage.start(session);
   const started = Date.now();
   const { outcome, state, errors } = await runPage(session, base + page);
+  if (coverage) await coverage.finish(session, page, outcome === "passed");
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
   log(`${outcome === "passed" ? "✓" : "✗"} ${page}  ${outcome}, ${passedChecks(state.text ?? "")} checks, ${seconds}s`);
   if (outcome !== "passed") {
@@ -337,14 +348,16 @@ async function main() {
   const contrastAllowlist = JSON.parse(readFileSync(path.join(root, "tests/regression/contrast-allowlist.json"), "utf8")).pages;
   const snapshotTally = { same: 0, created: 0, updated: 0, removed: 0 };
   const queue = jobs > 1 ? slowestFirst(pages, timings) : [...pages];
+  const coverage = wantsCoverage({ words, shard }) ? coverageRecorder({ root }) : null;
   await withRegressionVite(root, pages[0], (base) => Promise.all(Array.from({ length: jobs }, () => withBrowser(async (session) => {
     await prepareSnapshotBrowser(session);
     while (queue.length) {
-      const result = await checkPage({ root, session, base, page: queue.shift(), update, contrastAllowlist, snapshotTally });
+      const result = await checkPage({ root, session, base, page: queue.shift(), update, contrastAllowlist, snapshotTally, coverage });
       if (!result.passed) failed += 1;
       console.log(result.lines.join("\n"));
     }
   }))));
+  if (coverage) console.log(coverage.write());
   const { same, created, updated, removed } = snapshotTally;
   console.log(`Snapshots: ${same} unchanged${created + updated + removed ? `, ${created} created, ${updated} updated, ${removed} removed` : ""}.`);
   console.log(failed === 0 ? `All ${pages.length} regression pages passed.` : `${failed} of ${pages.length} regression pages did not pass.`);

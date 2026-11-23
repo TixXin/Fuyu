@@ -200,6 +200,10 @@
   pointer-events: none;
 }
 
+.island--collapsed.island--tucked.island--tuck-narrow {
+  --island-shell-width: calc(min(var(--collapsed-island-width), var(--island-tuck-width)) * var(--island-scale, 1));
+}
+
 .island--tucked.island--tucked-hidden {
   --island-shell-opacity: 0;
   opacity: 0;

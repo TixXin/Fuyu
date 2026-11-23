@@ -142,12 +142,11 @@ pub(super) const TUCKED_VISIBLE_LINE_HEIGHT: f64 = 4.0;
 pub(super) const TUCKED_HIDDEN_HOTZONE_HEIGHT: f64 = 2.0;
 pub(super) const POSITION_ANIMATION_DURATION: Duration = Duration::from_millis(320);
 
-pub(super) fn tucked_top_offset(collapsed_scale: f64, scale: f64, tuck_style: TuckStyle) -> i32 {
+pub(super) fn tucked_top_offset(collapsed_scale: f64, scale: f64, tuck_style: TuckStyle, lip: Option<f64>) -> i32 {
     let height = COLLAPSED_ISLAND_HEIGHT * collapsed_scale;
-    match tuck_style {
-        TuckStyle::Edge => -((height - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0) * scale).round() as i32,
-        TuckStyle::Line => -((height - TUCKED_VISIBLE_LINE_HEIGHT).max(0.0) * scale).round() as i32,
-        TuckStyle::Hidden => -(height * scale).ceil() as i32,
+    match tuck_style.visible_height(lip) {
+        Some(visible) => -((height - visible).max(0.0) * scale).round() as i32,
+        None => -(height * scale).ceil() as i32,
     }
 }
 pub(super) const PASSTHROUGH_FAST_TICK: Duration = Duration::from_millis(12);
@@ -294,6 +293,7 @@ pub(super) fn stage_geometry_inputs_changed(
         || side_stage_height_key(*previous) != side_stage_height_key(*next)
         || previous.is_tucked != next.is_tucked
         || previous.tuck_style != next.tuck_style
+        || previous.tuck_lip_height.map(f64::to_bits) != next.tuck_lip_height.map(f64::to_bits)
         || previous.collapsed_scale.to_bits() != next.collapsed_scale.to_bits()
         || previous.margin_y.to_bits() != next.margin_y.to_bits()
         || previous.under_menu_bar != next.under_menu_bar
@@ -373,7 +373,7 @@ fn apply_stage_position(
     let monitor_size = screen::monitor_size(&monitor);
     let physical_width = (stage_width() * scale).round() as i32;
     let physical_top_offset = (state.margin_y * scale).round() as i32;
-    let tucked_top_offset = tucked_top_offset(state.collapsed_scale, scale, state.tuck_style);
+    let tucked_top_offset = tucked_top_offset(state.collapsed_scale, scale, state.tuck_style, state.tuck_lip_height);
     let top_inset = super::top_edge::top_edge(&monitor, super::notch::under_menu_bar(window, &monitor, state)).y - monitor_position.y;
     let centered_x = crate::dev_lane::stage_x(
         (monitor_position.x, monitor_position.y + top_inset, monitor_size.width as i32),

@@ -19,6 +19,8 @@ description: >
 
 发版前在发版 shell 里 `echo $FUYU_BOT_INBOX`：没设时 `pnpm release` 不会把分享图推给微信 / QQ 机器人（用户要收），先按 `bot/README.md`「astrbot_plugin_fuyu_release」设好再发。
 
+**每一步推 Bark 到用户手机**（用户定的）：`pnpm release` 自己推它的每一步；在它之前的步骤（开始验证、PR 开了、合入、发版 PR 开了、要用户确认说明时）由你在那一刻跑 `node scripts/release/notify.mjs "Fuyu v<版本号> · <步骤>" "<一句话>"`。它读 `~/.tauri/fuyu/bark.json`，缺了会报错：先配好再发（格式见 `docs/features/updater.md`「发布一个可自动更新的版本」），用户不在电脑前时靠它知道进度。
+
 协作者发版前要先告诉 TixXin，免得两人各改一次版本号、各写一份说明；他平时在自己的分支上开发，版本号提交可以走分支 PR，合入后在和 `origin/main` 一致的 `main` 上跑 `pnpm release`。
 
 **说明写好后、提交版本号之前，必须先停下问用户**（用户定的）：把上一个版本到现在的更新内容列成清单给用户看，问要不要继续发；用户说继续才往下走。别的会话（例如总控）转来的发版请求也要这样问用户本人。版本类型不明时默认测试版，正式版要用户明说。
@@ -39,7 +41,7 @@ description: >
 6. 在发版目录跑 `pnpm test:regression version-history --update-snapshots`（这个回归页把 `docs/releases` 里的说明打包进页面，不更新快照，PR 的 CI 会挂），再 `git add` 四处版本号、说明和这份快照，提交 `chore(release): <版本号>`。写一份中文 PR 正文（`## 改了什么` 写版本号和这版的要点，`## 关联` 写发布说明文件）。`mq:land` 只认本地 `main` 上的提交，所以手动开：`git push origin HEAD:refs/heads/land/TixXin/release-<版本号>`、`gh pr create --base main --head <该分支> --title "Release <版本号>" --body-file <文件>`、`gh pr merge <该分支> --auto --merge`。**紧接着 `pnpm release:prebuild`**（在 CI 上编 Windows 和 Mac，和 PR 的 CI 同时跑），再后台循环 `gh pr view <号> --json state` 等合入。没合入就不要往下走。
    - **陷阱**：合入前别的 PR 先合入，这个 PR 会被更新到新的 `main` 上，那批提交就进了这一版，预构建也作废、`pnpm release` 要重编。所以开发版 PR 前，用 `gh pr list --repo TixXin/Fuyu --state open --json number,author,autoMergeRequest` 列出**所有**开着自动合并的 PR（协作者的也算，不只总控提的），逐个 `gh pr merge <号> --disable-auto`，告诉开它的会话或人；发版 PR 合入后逐个重新打开。
    - PR 的 CI 某一项卡满时限被取消（Mac runner 常见），不是代码问题，马上 `gh run rerun <运行号> --failed` 重跑，别等。
-7. 合入后在发版目录 `git fetch origin && git checkout --detach <合并提交>`，后台运行 `pnpm release`，日志写到 scratchpad。它会：代码树和预构建一样时直接用预构建（日志里有 `Using the prebuild`），否则在 GitHub Actions 上编 Windows 和 Mac 版（约 6 分钟）；下载回来用本机私钥签名，上传草稿并核对 SHA-256，跑 `release-smoke.yml` 冒烟测试（约 1 分钟），通过才公开；然后换主工作区的本机程序、刷新 beta 通道、读回两个通道、把这一版导入官网 fuyu.tix.xin 并读回、在 issue 下留言，关联任务都完成的 issue 顺手关掉。
+7. 合入后在发版目录 `git fetch origin && git checkout --detach <合并提交>`，后台运行 `pnpm release`（本机已有一份在跑时它直接退出：同一段对话可能有两个副本在发，见到这个报错就去盯那一份的日志，不要重启），日志写到 scratchpad。它会：代码树和预构建一样时直接用预构建（日志里有 `Using the prebuild`），否则在 GitHub Actions 上编 Windows 和 Mac 版（约 6 分钟）；下载回来用本机私钥签名，上传草稿并核对 SHA-256，跑 `release-smoke.yml` 冒烟测试（约 1 分钟），通过才公开；然后换主工作区的本机程序、刷新 beta 通道、读回两个通道、把这一版导入官网 fuyu.tix.xin 并读回、在 issue 下留言，关联任务都完成的 issue 顺手关掉。
 8. **看日志，不只看退出码**（管道到 `tail` 时退出码总是 0）。要看到 `✓ Published`、`✓ Channels read back` 和 `Uploaded to the QQ bot inbox`；最后一行缺了就是没推分享图，按日志末尾的提示补推。
 
 ## 出问题

@@ -268,6 +268,7 @@ export function IslandApp() {
     isTucked,
     isDimmed,
     tuckStyle: settings.tuckStyle,
+    tuckLipWidth: settings.tuckLipWidth,
     tuckHint: settings,
     isDetached: isPositionDetached || islandMarginY(settings, autoForm) > 0,
     side,

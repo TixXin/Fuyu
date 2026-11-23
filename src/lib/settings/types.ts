@@ -119,6 +119,9 @@ export type IslandSettings = CalendarSettingValues &
   minimizeAction: MinimizeAction;
   tuckedHoverAction: TuckedHoverAction;
   tuckStyle: TuckStyle;
+  tuckLipHeight: number;
+  tuckLipWidth: number;
+  tuckedHoverDelayMs: number;
   tuckHintStyle: TuckHintStyle;
   tuckHintColor: TuckHintColor;
   tuckHintCustomColor: string;

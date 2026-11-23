@@ -19,6 +19,7 @@ export function createClock({ now = Date.now, log = console.log } = {}) {
   const start = now();
   let last = start;
   const stages = [];
+  const listeners = [];
   const close = (stage, message) => {
     const at = now();
     stages.push({ stage, ms: at - last, ...(message ? { message } : {}) });
@@ -28,7 +29,12 @@ export function createClock({ now = Date.now, log = console.log } = {}) {
   return {
     stamp: () => `[+${clockText(now() - start)}]`,
     done(stage, message) {
-      log(`✓ [+${clockText(close(stage, message))}] ${message}`);
+      const line = `✓ [+${clockText(close(stage, message))}] ${message}`;
+      log(line);
+      for (const listener of listeners) listener(line);
+    },
+    listen(listener) {
+      listeners.push(listener);
     },
     mark(stage) {
       close(stage);

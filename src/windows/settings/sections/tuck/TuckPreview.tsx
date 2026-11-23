@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
+import { tuckLipHeight } from "../../../../lib/settings/tuckLip";
 import type { IslandSettings } from "../../../../lib/settings/types";
 import { TuckMock } from "./TuckMock";
 import { tuckHintPaint, tuckHintRing } from "./tuckHintPaint";
@@ -36,12 +37,13 @@ export function TuckPreview({ settings, label, tryLabel, tryHint }: { settings: 
   const play = () => {
     timers.current.forEach((timer) => window.clearTimeout(timer));
     const retract = Math.max(settings.autoTuckRetractDelayMs, MIN_RETRACT_MS);
-    const leave = 30 + MOVE_MS + SHOWN_MS;
+    const reveal = 30 + MOVE_MS + settings.tuckedHoverDelayMs;
+    const leave = reveal + SHOWN_MS;
     setRevealed(false);
     setPointer("away");
     timers.current = [
       window.setTimeout(() => setPointer("edge"), 30),
-      window.setTimeout(() => setRevealed(true), 30 + MOVE_MS),
+      window.setTimeout(() => setRevealed(true), reveal),
       window.setTimeout(() => setPointer("away"), leave),
       window.setTimeout(() => setRevealed(false), leave + retract),
       window.setTimeout(() => setPointer(null), leave + retract + MOVE_MS),
@@ -56,6 +58,8 @@ export function TuckPreview({ settings, label, tryLabel, tryHint }: { settings: 
       <div className="tuck-preview__stage" onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)}>
         <TuckMock
           tuckStyle={settings.tuckStyle}
+          lipHeight={tuckLipHeight(settings.tuckStyle, settings.tuckLipHeight)}
+          lipWidth={settings.tuckLipWidth}
           hint={hint}
           islandColor={settings.islandBackgroundColor}
           revealed={revealed}

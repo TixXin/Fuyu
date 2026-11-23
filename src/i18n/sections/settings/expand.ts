@@ -81,6 +81,14 @@ export type SettingsExpandText = {
   pageKeysOpen: string;
   alertsTitle: string;
   tuckLookTitle: string;
+  tuckLipHeight: string;
+  tuckLipHeightHint: string;
+  tuckLipWidth: string;
+  tuckLipWidthHint: string;
+  tuckLipWidthFull: string;
+  tuckedHoverDelay: string;
+  tuckedHoverDelayHint: string;
+  pixels: (value: number) => string;
   tuckWhenTitle: string;
   tuckPreviewLabel: string;
   tuckTry: string;
@@ -188,6 +196,14 @@ export const zhCN: SettingsExpandText = {
   pageKeysOpen: "去设置",
   alertsTitle: "在小岛上提示",
   tuckLookTitle: "隐藏后的样子",
+  tuckLipHeight: "露出高度",
+  tuckLipHeightHint: "露出的那一条有多高；点上面的样式会回到那一档的高度",
+  tuckLipWidth: "露出宽度",
+  tuckLipWidthHint: "调窄后只在中间露一小段，两侧的点击直接给下面的窗口，比如浏览器的标签页；贴左右侧边和有刘海时不变",
+  tuckLipWidthFull: "和岛一样宽",
+  tuckedHoverDelay: "停多久才露出",
+  tuckedHoverDelayHint: "鼠标在隐藏的岛上停够这么久才滑出来，快速擦过不会弹出",
+  pixels: (value) => `${value} 像素`,
   tuckWhenTitle: "什么时候收起",
   tuckPreviewLabel: "屏幕顶边，按下面的设置画",
   tuckTry: "试一下",
@@ -323,6 +339,14 @@ export const en: SettingsExpandText = {
   pageKeysOpen: "Open",
   alertsTitle: "Shown on the island",
   tuckLookTitle: "When tucked",
+  tuckLipHeight: "Strip height",
+  tuckLipHeightHint: "How tall the visible strip is. Picking a style above resets it to that style's height.",
+  tuckLipWidth: "Strip width",
+  tuckLipWidthHint: "A narrower strip shows only in the middle, and clicks on either side go to the window below, such as browser tabs. Side edges and the notch are not affected.",
+  tuckLipWidthFull: "Same as the island",
+  tuckedHoverDelay: "Hover time before it slides out",
+  tuckedHoverDelayHint: "The island slides out only after the pointer rests on it this long, so brushing past the edge doesn't open it.",
+  pixels: (value) => `${value} px`,
   tuckWhenTitle: "When to tuck",
   tuckPreviewLabel: "The top of the screen, drawn with the settings below",
   tuckTry: "Try it",

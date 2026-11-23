@@ -122,6 +122,8 @@ export function useIslandWindow({
           cornerShape: nextSettings.islandCornerShape,
           monitorFollow: nextSettings.islandMonitor,
           tuckStyle: nextSettings.tuckStyle,
+          tuckLipHeight: nextSettings.tuckLipHeight,
+          tuckLipWidth: nextSettings.tuckLipWidth,
           gamePassthrough: nextGamePassthrough,
           collapsedHeight,
           notchRingExtra: nextNotchRingExtra,
@@ -277,6 +279,8 @@ export function useIslandWindow({
     settings.islandCornerShape,
     settings.islandMonitor,
     settings.tuckStyle,
+    settings.tuckLipHeight,
+    settings.tuckLipWidth,
     reducedMotion,
     showReadyIsland,
   ]);

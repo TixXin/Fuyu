@@ -72,8 +72,8 @@ use glass::apply_glass_material;
 #[cfg(windows)]
 use crate::win32;
 use state::{
-    mutate_window_state, parse_hex_rgb, read_window_state, window_state, CornerShape,
-    IslandGlassFrame, IslandMode, MonitorFollow, TuckStyle,
+    mutate_window_state, parse_hex_rgb, read_window_state, tuck_lip, window_state, CornerShape,
+    IslandGlassFrame, IslandMode, MonitorFollow, TuckStyle, TUCK_LIP_HEIGHT_RANGE, TUCK_LIP_WIDTH_RANGE,
 };
 
 pub(crate) use geometry::apply_stage_geometry;
@@ -119,6 +119,19 @@ pub struct IslandLayout {
     drag_grid: Option<bool>,
     #[serde(default)]
     tuck_style: Option<String>,
+    #[serde(default)]
+    tuck_lip_height: Option<f64>,
+    #[serde(default)]
+    tuck_lip_width: Option<f64>,
+}
+
+fn set_tuck_lip(state: &mut state::IslandWindowState, height: Option<f64>, width: Option<f64>) {
+    if let Some(height) = height {
+        state.tuck_lip_height = tuck_lip(height, TUCK_LIP_HEIGHT_RANGE);
+    }
+    if let Some(width) = width {
+        state.tuck_lip_width = tuck_lip(width, TUCK_LIP_WIDTH_RANGE);
+    }
 }
 
 #[tauri::command]
@@ -137,6 +150,7 @@ pub fn set_island_layout(app: AppHandle, layout: IslandLayout) -> Result<(), Str
         if let Some(tuck_style) = layout.tuck_style.as_deref().and_then(TuckStyle::from_value) {
             state.tuck_style = tuck_style;
         }
+        set_tuck_lip(state, layout.tuck_lip_height, layout.tuck_lip_width);
         *state
     });
     apply_stage_geometry(&window, state, layout.animate)
@@ -170,6 +184,8 @@ pub fn set_island_interaction(
     corner_shape: Option<String>,
     monitor_follow: Option<String>,
     tuck_style: Option<String>,
+    tuck_lip_height: Option<f64>,
+    tuck_lip_width: Option<f64>,
     game_passthrough: Option<bool>,
     collapsed_height: Option<f64>,
     notch_ring_extra: Option<f64>,
@@ -245,6 +261,7 @@ pub fn set_island_interaction(
         if let Some(tuck_style) = tuck_style.as_deref().and_then(TuckStyle::from_value) {
             state.tuck_style = tuck_style;
         }
+        set_tuck_lip(state, tuck_lip_height, tuck_lip_width);
         *state
     });
     if previous_state.monitor_follow != state.monitor_follow {
@@ -257,7 +274,9 @@ pub fn set_island_interaction(
             animate_position.unwrap_or(true)
                 && (previous_state.is_tucked != state.is_tucked
                     || previous_state.out_at_top != state.out_at_top
-                    || (state.is_tucked && previous_state.tuck_style != state.tuck_style)),
+                    || (state.is_tucked
+                        && (previous_state.tuck_style != state.tuck_style
+                            || previous_state.tuck_lip_height != state.tuck_lip_height))),
         )?;
     }
     if !state.is_dragging {

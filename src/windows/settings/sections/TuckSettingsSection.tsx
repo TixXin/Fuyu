@@ -11,6 +11,15 @@ import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRo
 import { SettingsThumbStrip } from "../../../components/settings/SettingsThumbStrip";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, MAX_AUTO_TUCK_RETRACT_DELAY_MS, MIN_AUTO_TUCK_RETRACT_DELAY_MS } from "../../../lib/settings/settings";
+import {
+  DEFAULT_TUCKED_HOVER_DELAY_MS,
+  MAX_TUCKED_HOVER_DELAY_MS,
+  MIN_TUCKED_HOVER_DELAY_MS,
+  TUCK_LIP_HEIGHT_RANGE,
+  TUCK_LIP_WIDTH_RANGE,
+  TUCK_PRESET_HEIGHT,
+  tuckLipHeight,
+} from "../../../lib/settings/tuckLip";
 import { TuckHintRows } from "./TuckHintRows";
 import { useThumbPointer } from "./useThumbPointer";
 import { TuckMock } from "./tuck/TuckMock";
@@ -21,6 +30,7 @@ import "./TuckSettingsSection.css";
 
 const IDLE_SECONDS = [5, 10, 15, 30, 60, 120, 300, 600];
 const TUCK_STYLES = ["edge", "line", "hidden"] as const satisfies readonly TuckStyle[];
+const FULL_WIDTH_STEP = TUCK_LIP_WIDTH_RANGE.max + TUCK_LIP_WIDTH_RANGE.step;
 const HOLDS = ["todo", "agent", "music", "messages"] as const satisfies readonly TuckHold[];
 const HOLD_KEYS = {
   todo: "autoTuckHoldTodo",
@@ -57,6 +67,8 @@ export function TuckSettingsSection({
   const styleLabels: Record<TuckStyle, string> = { edge: expand.tuckStyleEdge, line: expand.tuckStyleLine, hidden: expand.tuckStyleHidden };
   const paint = tuckHintPaint(settings.tuckHintColor, settings);
   const hint = { style: settings.tuckHintStyle, paint, ring: tuckHintRing(settings.tuckHintColor, paint), breathe: false };
+  const presetHeight = TUCK_PRESET_HEIGHT[settings.tuckStyle];
+  const lipWidth = settings.tuckLipWidth > 0 ? settings.tuckLipWidth : FULL_WIDTH_STEP;
 
   return (
     <>
@@ -68,13 +80,39 @@ export function TuckSettingsSection({
               options={TUCK_STYLES.map((value) => ({ value, label: styleLabels[value], hint: expand.tuckStyleHints[value] }))}
               value={settings.tuckStyle}
               ariaLabel={expand.tuckStyle}
-              onChange={(tuckStyle) => update({ tuckStyle })}
+              onChange={(tuckStyle) => update({ tuckStyle, tuckLipHeight: 0 })}
               renderArt={(value) => (
                 <TuckMock tuckStyle={value} hint={{ ...hint, breathe: pointed === value && settings.tuckHintBreathe }} islandColor={settings.islandBackgroundColor} scale={0.6} />
               )}
             />
           </div>
         </SettingsRow>
+        {settings.tuckStyle !== "hidden" && (
+          <SettingsSliderRow
+            title={expand.tuckLipHeight}
+            description={expand.tuckLipHeightHint}
+            value={tuckLipHeight(settings.tuckStyle, settings.tuckLipHeight)}
+            min={TUCK_LIP_HEIGHT_RANGE.min}
+            max={TUCK_LIP_HEIGHT_RANGE.max}
+            step={1}
+            format={expand.pixels}
+            defaultValue={presetHeight}
+            resetLabel={layout.resetToDefault}
+            onChange={(value) => update({ tuckLipHeight: value === presetHeight ? 0 : value })}
+          />
+        )}
+        <SettingsSliderRow
+          title={expand.tuckLipWidth}
+          description={expand.tuckLipWidthHint}
+          value={lipWidth}
+          min={TUCK_LIP_WIDTH_RANGE.min}
+          max={FULL_WIDTH_STEP}
+          step={TUCK_LIP_WIDTH_RANGE.step}
+          format={(value) => (value >= FULL_WIDTH_STEP ? expand.tuckLipWidthFull : expand.pixels(value))}
+          defaultValue={FULL_WIDTH_STEP}
+          resetLabel={layout.resetToDefault}
+          onChange={(value) => update({ tuckLipWidth: value >= FULL_WIDTH_STEP ? 0 : value })}
+        />
         {settings.tuckStyle === "hidden" && <TuckHintRows settings={settings} update={update} />}
       </SettingsGroup>
 
@@ -144,6 +182,18 @@ export function TuckSettingsSection({
               onChange={(tuckedHoverAction) => update({ tuckedHoverAction })}
             />
           }
+        />
+        <SettingsSliderRow
+          title={expand.tuckedHoverDelay}
+          description={expand.tuckedHoverDelayHint}
+          value={settings.tuckedHoverDelayMs}
+          min={MIN_TUCKED_HOVER_DELAY_MS}
+          max={MAX_TUCKED_HOVER_DELAY_MS}
+          step={50}
+          format={delay}
+          defaultValue={DEFAULT_TUCKED_HOVER_DELAY_MS}
+          resetLabel={layout.resetToDefault}
+          onChange={(tuckedHoverDelayMs) => update({ tuckedHoverDelayMs })}
         />
         <SettingsToggleRow
           title={expand.revealOnMessage}

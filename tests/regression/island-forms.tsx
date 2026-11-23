@@ -24,11 +24,11 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { form: IslandForm; notch: IslandNotch | null; tucked: boolean; expanded: boolean; popup: boolean; light: boolean };
+type State = { form: IslandForm; notch: IslandNotch | null; tucked: boolean; expanded: boolean; popup: boolean; light: boolean; lip: number };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ form: "top", notch: null, tucked: false, expanded: false, popup: false, light: false });
+  const [state, setState] = useState<State>({ form: "top", notch: null, tucked: false, expanded: false, popup: false, light: false, lip: 0 });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
@@ -37,7 +37,7 @@ function Fixture() {
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: null }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, barText: !state.notch, todoTitle: "写周报和整理会议记录" });
   return <div className={state.light ? "stage island-light" : "stage"} style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${state.popup ? notchPanelWidth(400, state.notch, 1, true) : notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
     <IslandShell
-      mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={islandFormLayout({ islandForm: state.form, marginY: 0, menuBarPlacement: "notch" }).marginY > 0} showTitle={false}
+      mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} tuckLipWidth={state.lip} isDetached={islandFormLayout({ islandForm: state.form, marginY: 0, menuBarPlacement: "notch" }).marginY > 0} showTitle={false}
       showCollapsedText={!state.notch} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       onOpenPage={() => {}}
@@ -129,6 +129,20 @@ async function runChecks() {
     await set({ notch: REAL, tucked: true });
     await settleTransitions();
     check(document.documentElement.dataset.islandNotch === "on" && Math.abs(box(island()).width - (REAL.width - 4)) < 1, "真刘海收起照旧缩进刘海里");
+
+    await set({ lip: 120 });
+    await settleTransitions();
+    check(Math.abs(box(island()).width - (REAL.width - 4)) < 1, "调窄露出宽度不影响刘海收起");
+    await set({ form: "top", notch: null });
+    await settleTransitions();
+    check(Math.abs(box(island()).width - 120) < 1, "贴顶收起时露出的那一条缩到设置的 120 宽");
+    await set({ tucked: false });
+    await settleTransitions();
+    check(box(island()).width > 200, "露出来后恢复整座岛的宽度");
+    await set({ tucked: true, lip: 400 });
+    await settleTransitions();
+    check(box(island()).width > 200 && box(island()).width < 400, "露出宽度比岛宽时按岛宽");
+    await set({ lip: 0 });
 
     await set({ form: "top", notch: null, tucked: false });
     await settleTransitions();
