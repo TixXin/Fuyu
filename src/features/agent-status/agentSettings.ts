@@ -19,6 +19,7 @@ export type AgentUsageSource = "claudeCode" | "codex" | "antigravity" | "cursor"
 export type AgentUsageItem = AgentUsageSource | "fiveHour" | "sevenDay" | "models";
 export type AgentUsageReset = "tightest" | "each" | "off";
 export type AgentUsageStyle = "number" | "bar" | "ring";
+export type AgentUsageLayout = "chips" | "tiles" | "lead" | "ruler" | "table";
 export type AgentEmptyStyle = "sleep" | "standby" | "recent" | "quota" | "tide" | "minimal";
 
 export const AGENT_HOST_DISPLAYS: readonly AgentHostDisplay[] = ["both", "icon", "name", "off"];
@@ -40,6 +41,7 @@ export const AGENT_USAGE_COLUMNS = ["fiveHour", "sevenDay", "models"] as const;
 export const AGENT_USAGE_ITEMS: readonly AgentUsageItem[] = [...AGENT_USAGE_SOURCES, ...AGENT_USAGE_COLUMNS];
 export const AGENT_USAGE_RESETS: readonly AgentUsageReset[] = ["tightest", "each", "off"];
 export const AGENT_USAGE_STYLES: readonly AgentUsageStyle[] = ["number", "bar", "ring"];
+export const AGENT_USAGE_LAYOUTS: readonly AgentUsageLayout[] = ["chips", "tiles", "lead", "ruler", "table"];
 export const AGENT_EMPTY_STYLES: readonly AgentEmptyStyle[] = ["sleep", "standby", "recent", "quota", "tide", "minimal"];
 export const AGENT_NOTICE_MESSAGE_LINES = [4, 6, 8, 12, 0] as const;
 export const AGENT_NOTICE_COMMAND_LINES = [1, 2, 3, 5] as const;
@@ -68,6 +70,7 @@ export type AgentSettingValues = {
   agentUsageTightest: boolean;
   agentUsageReset: AgentUsageReset;
   agentUsageStyle: AgentUsageStyle;
+  agentUsageLayout: AgentUsageLayout;
   agentEmptyStyle: AgentEmptyStyle;
   agentExpandChildren: boolean;
   agentAlertCompleted: boolean;
@@ -114,6 +117,7 @@ export const DEFAULT_AGENT_SETTINGS: AgentSettingValues = {
   agentUsageTightest: false,
   agentUsageReset: "tightest",
   agentUsageStyle: "number",
+  agentUsageLayout: "chips",
   agentEmptyStyle: "sleep",
   agentExpandChildren: false,
   agentAlertCompleted: true,
@@ -171,6 +175,7 @@ export function normalizeAgentSettings(settings: LegacyIslandSettings | null | u
     agentUsageTightest: settings?.agentUsageTightest === true,
     agentUsageReset: oneOf(AGENT_USAGE_RESETS, settings?.agentUsageReset, DEFAULT_AGENT_SETTINGS.agentUsageReset),
     agentUsageStyle: oneOf(AGENT_USAGE_STYLES, settings?.agentUsageStyle, DEFAULT_AGENT_SETTINGS.agentUsageStyle),
+    agentUsageLayout: oneOf(AGENT_USAGE_LAYOUTS, settings?.agentUsageLayout, DEFAULT_AGENT_SETTINGS.agentUsageLayout),
     agentEmptyStyle: oneOf(AGENT_EMPTY_STYLES, settings?.agentEmptyStyle, DEFAULT_AGENT_SETTINGS.agentEmptyStyle),
     agentExpandChildren: settings?.agentExpandChildren === true,
     agentAlertCompleted: settings?.agentAlertCompleted !== false,

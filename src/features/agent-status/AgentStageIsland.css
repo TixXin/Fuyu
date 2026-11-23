@@ -115,3 +115,7 @@
   margin-top: 12px;
   border-radius: 12px;
 }
+
+.agent-stage-island .agent-usage-layout > * {
+  margin-bottom: 0;
+}

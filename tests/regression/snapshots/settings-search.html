@@ -509,93 +509,63 @@
                       </button>
                       <div aria-label="水母打盹" class="agent-stage-island agent-stage-island--dark" role="group" style="background: rgb(3, 3, 3); --overlay-rgb: 241, 240, 246; --text-1: rgba(241, 240, 246, 0.95); --text-2: rgba(241, 240, 246, 0.7); --text-3: rgba(241, 240, 246, 0.55)">
                         <div class="agent-empty-picker__page">
-                          <div class="agent-usage-box">
-                            <div class="agent-usage-table agent-usage-table--number" style="--agent-usage-columns: 14px auto auto auto minmax(0, 1fr) auto">
-                              <span class="island-hover-card__anchor agent-usage__hover">
-                                <div aria-label="Claude Code 用量" class="agent-usage" role="status">
-                                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
-                                  <span class="agent-usage__window" style="grid-column: 2">
-                                    <span class="agent-usage__label">
-                                      5 小时
-                                    </span>
-                                    <strong class="agent-usage__value agent-usage__value--low">
-                                      42
-                                      %
-                                    </strong>
-                                  </span>
-                                  <span class="agent-usage__window" style="grid-column: 3">
-                                    <span class="agent-usage__label">
-                                      7 天
-                                    </span>
-                                    <strong class="agent-usage__value agent-usage__value--low">
-                                      16
-                                      %
-                                    </strong>
-                                  </span>
-                                  <span class="agent-usage__window" style="grid-column: 4">
-                                    <span class="agent-usage__label">
-                                      Opus
-                                    </span>
+                          <div class="agent-usage-box agent-usage-box--chips" data-layout="chips">
+                            <div class="agent-usage-layout">
+                              <div class="agent-usage-chips agent-usage-chips--number">
+                                <span class="island-hover-card__anchor agent-usage-chip__hover">
+                                  <span aria-label="Claude Code 用量 Opus 63%" class="agent-usage-chip" role="status">
+                                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
                                     <strong class="agent-usage__value agent-usage__value--medium">
                                       63
                                       %
                                     </strong>
-                                  </span>
-                                  <span aria-label="5 天 0 小时后重置" class="agent-usage__reset" style="grid-column: 5">
-                                    <svg aria-hidden="true" class="lucide lucide-rotate-ccw" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
-                                    5天0小时
-                                  </span>
-                                </div>
-                              </span>
-                              <span class="island-hover-card__anchor agent-usage__hover">
-                                <div aria-label="Codex 用量" class="agent-usage" role="status">
-                                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
-                                  <span class="agent-usage__window" style="grid-column: 2">
-                                    <span class="agent-usage__label">
-                                      5 小时
+                                    <span class="agent-usage-chip__label">
+                                      Opus
                                     </span>
-                                    <strong class="agent-usage__value agent-usage__value--low">
-                                      8
-                                      %
-                                    </strong>
-                                  </span>
-                                  <span class="agent-usage__window" style="grid-column: 3">
-                                    <span class="agent-usage__label">
-                                      7 天
+                                    <span aria-hidden="true" class="agent-usage-chip__more">
+                                      +
+                                      2
                                     </span>
+                                  </span>
+                                </span>
+                                <span class="island-hover-card__anchor agent-usage-chip__hover">
+                                  <span aria-label="Codex 用量 7 天 16%" class="agent-usage-chip" role="status">
+                                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
                                     <strong class="agent-usage__value agent-usage__value--low">
                                       16
                                       %
                                     </strong>
-                                  </span>
-                                  <span aria-label="23 天 0 小时后重置" class="agent-usage__reset" style="grid-column: 5">
-                                    <svg aria-hidden="true" class="lucide lucide-rotate-ccw" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
-                                    23天0小时
-                                  </span>
-                                </div>
-                              </span>
-                              <span class="island-hover-card__anchor agent-usage__hover">
-                                <div aria-label="Antigravity 用量" class="agent-usage" role="status">
-                                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--antigravity" draggable="false" height="14" src="/src/assets/brands/antigravity.png" width="14">
-                                  <span class="agent-usage__window" style="grid-column: 4">
-                                    <span class="agent-usage__label">
-                                      Gemini 3 Pro
+                                    <span class="agent-usage-chip__label">
+                                      7 天
                                     </span>
+                                    <span aria-hidden="true" class="agent-usage-chip__more">
+                                      +
+                                      1
+                                    </span>
+                                  </span>
+                                </span>
+                                <span class="island-hover-card__anchor agent-usage-chip__hover">
+                                  <span aria-label="Antigravity 用量 Gemini 3 Pro 30%" class="agent-usage-chip" role="status">
+                                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--antigravity" draggable="false" height="14" src="/src/assets/brands/antigravity.png" width="14">
                                     <strong class="agent-usage__value agent-usage__value--low">
                                       30
                                       %
                                     </strong>
+                                    <span class="agent-usage-chip__label">
+                                      Gemini 3 Pro
+                                    </span>
                                   </span>
-                                  <span aria-label="4 小时 30 分后重置" class="agent-usage__reset" style="grid-column: 5">
-                                    <svg aria-hidden="true" class="lucide lucide-rotate-ccw" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
-                                    4小时30分
+                                </span>
+                                <span class="island-hover-card__anchor agent-usage-chip__hover">
+                                  <span aria-label="WorkBuddy 用量 今日 1,240 · 7 天 8,930 积分" class="agent-usage-chip" role="status">
+                                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--workbuddy" draggable="false" height="14" src="/src/assets/brands/workbuddy.svg" width="14">
+                                    <strong class="agent-usage-chip__money">
+                                      8,930
+                                    </strong>
+                                    <span class="agent-usage-chip__label">
+                                      积分 · 7 天
+                                    </span>
                                   </span>
-                                </div>
-                              </span>
-                              <div aria-label="WorkBuddy 用量" class="agent-usage agent-usage--credit" role="status">
-                                <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--workbuddy" draggable="false" height="14" src="/src/assets/brands/workbuddy.svg" width="14">
-                                <span class="agent-usage__credit" style="grid-column: 2 / 5">
-                                  今日 1,240 积分 · 7 天 8,930
                                 </span>
                               </div>
                             </div>

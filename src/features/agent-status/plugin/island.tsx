@@ -31,7 +31,7 @@ type AgentsPageProps = {
     agentExpandChildren: Panel["expandChildren"];
     agentNoticeStack: Panel["stackMode"];
     agentNoticeNotch: Panel["notch"];
-  } & AgentNoticeSettings & Pick<AgentSettingValues, "agentUsageHidden" | "agentUsageTightest" | "agentUsageReset" | "agentUsageStyle" | "agentEmptyStyle" | "agentSessionHours" | "agentHiddenProviders">;
+  } & AgentNoticeSettings & Pick<AgentSettingValues, "agentUsageHidden" | "agentUsageTightest" | "agentUsageReset" | "agentUsageStyle" | "agentUsageLayout" | "agentEmptyStyle" | "agentSessionHours" | "agentHiddenProviders">;
   onOpenSettings: (section: "agentConnect") => void;
 };
 
@@ -42,7 +42,7 @@ function AgentsPage({ settings, onOpenSettings }: AgentsPageProps) {
   const onChange = agentArrange.use()?.onChange;
   const sessions = agentShell.use().sessions;
   if (!agents) return null;
-  const usageView = { hidden: settings.agentUsageHidden, tightest: settings.agentUsageTightest, reset: settings.agentUsageReset, style: settings.agentUsageStyle, agentsOff: settings.agentHiddenProviders, onChange };
+  const usageView = { hidden: settings.agentUsageHidden, tightest: settings.agentUsageTightest, reset: settings.agentUsageReset, style: settings.agentUsageStyle, layout: settings.agentUsageLayout, agentsOff: settings.agentHiddenProviders, onChange };
   const empty = (
     <AgentEmptyState
       style={settings.agentEmptyStyle}

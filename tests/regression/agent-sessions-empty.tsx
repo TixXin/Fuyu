@@ -27,7 +27,7 @@ export async function checkUsageViewAndEmpty({ root, sessions, check }: Context)
     });
   };
   const panel = (view: Partial<UsageView>, onChange?: (patch: Partial<AgentSettingValues>) => void) => (
-    <AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={usages} usageView={{ ...DEFAULT_USAGE_VIEW, ...view, onChange }} />
+    <AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={usages} usageView={{ ...DEFAULT_USAGE_VIEW, layout: "table", ...view, onChange }} />
   );
   const windows = (index: number) => [...document.querySelectorAll<HTMLElement>(".agent-usage")[index]?.querySelectorAll(".agent-usage__label") ?? []].map((label) => label.textContent);
 
@@ -51,8 +51,8 @@ export async function checkUsageViewAndEmpty({ root, sessions, check }: Context)
     await wait(20);
   });
   const items = [...document.querySelectorAll<HTMLButtonElement>(".row-menu [role=menuitem]")];
-  check(items.map((item) => item.textContent).join() === "Claude Code,Codex,5 小时,7 天,其他额度,只看最紧的一项,重置时间", `右键额度行弹出菜单：${items.map((item) => item.textContent)}`);
-  await act(async () => { items[1].click(); });
+  check(items.map((item) => item.textContent).join() === "一行胶囊,小方块,最紧的领头,水位刻度,表格,Claude Code,Codex,5 小时,7 天,其他额度,只看最紧的一项,重置时间", `右键额度行弹出菜单：${items.map((item) => item.textContent)}`);
+  await act(async () => { items[6].click(); });
   check(JSON.stringify(patches[patches.length - 1]) === JSON.stringify({ agentUsageHidden: ["codex"] }) && document.querySelector(".row-menu"), "勾掉 Codex 改设置，菜单不关");
   await act(async () => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });
   await show(panel({}));
@@ -77,9 +77,9 @@ async function checkEmptyStates({ usages, sessions, check }: { usages: AgentUsag
       empty={<AgentEmptyState style={style} sessions={[]} sessionHours={24} showUsage usages={usages} usageView={DEFAULT_USAGE_VIEW} {...extra} />} />
   );
   await show(empty("sleep"));
-  check(host.querySelector(".agent-empty--sleep .center-jelly[data-mood='sleep']") && host.querySelector(".agent-empty")?.textContent?.includes("都歇着呢") && host.querySelector(".agent-usage"), "默认空状态是打盹的水母，上面照样有额度行");
+  check(host.querySelector(".agent-empty--sleep .center-jelly[data-mood='sleep']") && host.querySelector(".agent-empty")?.textContent?.includes("都歇着呢") && host.querySelector(".agent-usage-box"), "默认空状态是打盹的水母，上面照样有额度行");
   await show(empty("quota"));
-  check(host.querySelectorAll(".agent-quota-gauge").length === 5 && !host.querySelector(".agent-usage"), "额度当主角：每项一个大圆环，顶上不再重复额度行");
+  check(host.querySelectorAll(".agent-quota-gauge").length === 5 && !host.querySelector(".agent-usage-box"), "额度当主角：每项一个大圆环，顶上不再重复额度行");
   await show(empty("quota", { showUsage: false }));
   check(host.querySelector(".agent-empty--sleep"), "关掉额度时，额度当主角退回成打盹的水母");
   await show(empty("standby"));

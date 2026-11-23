@@ -4159,12 +4159,12 @@
       "zh-CN": {
         "group": "Agent 页顶部的额度",
         "title": "显示哪家、哪些额度",
-        "description": "额度样式、重置时间和只看最紧的也在这里调，改了马上在下面的岛上看到。"
+        "description": "布局、样式、重置时间也在这里调，改了马上在下面的岛上看到；某个布局用不上的选项会收起来。"
       },
       "en": {
         "group": "Usage on the agent page",
         "title": "Which agents and windows",
-        "description": "Usage style, reset time and only the tightest are set here too; the island below shows each change at once."
+        "description": "Layout, style and reset time are set here too; the island below shows each change at once, and options a layout does not use are hidden."
       }
     },
     {

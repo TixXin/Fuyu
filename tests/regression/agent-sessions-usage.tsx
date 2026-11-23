@@ -4,16 +4,18 @@ import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
-import { DEFAULT_USAGE_VIEW } from "../../src/features/agent-status/usage";
+import { DEFAULT_USAGE_VIEW, type UsageView } from "../../src/features/agent-status/usage";
+import { checkUsageLayouts } from "./agent-usage-layouts";
 
 type Context = { root: Root; fixture: HTMLElement; sessions: AgentSessionSummary[]; check: (condition: unknown, label: string) => void; chromeHeight: number };
 
 export async function checkUsage({ root, fixture, sessions, check, chromeHeight }: Context) {
+  const table: UsageView = { ...DEFAULT_USAGE_VIEW, layout: "table" };
   const ISLAND_CHROME_HEIGHT = chromeHeight;
   check(!document.querySelector(".agent-usage"), "没打开用量时不显示用量行");
   fixture.style.height = `${getAgentPageExpandedHeight(3, true) - ISLAND_CHROME_HEIGHT}px`;
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usageView={table} /></I18nProvider></StrictMode>);
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
   const usage = document.querySelector<HTMLElement>(".agent-usage");
@@ -53,7 +55,7 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   };
   fixture.style.height = `${getAgentPageExpandedHeight(3, 2) - ISLAND_CHROME_HEIGHT}px`;
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={usages} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={usages} usageView={table} /></I18nProvider></StrictMode>);
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
   const lines = [...document.querySelectorAll<HTMLElement>(".agent-usage")];
@@ -63,11 +65,11 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   const twoLineList = document.querySelector<HTMLElement>(".agent-sessions__list")!;
   check(twoLineList.scrollHeight <= twoLineList.clientHeight + 1, "两行用量时，设为 3 条仍放下 3 个会话");
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={{ ...usages, claude: null }} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={{ ...usages, claude: null }} usageView={table} /></I18nProvider></StrictMode>);
   });
   check(document.querySelectorAll(".agent-usage").length === 1 && document.querySelector(".agent-usage")?.getAttribute("aria-label") === "Codex 用量", "只有 Codex 有额度时只显示 Codex 一行");
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={{ ...usages, claude: { ...usages.claude, updatedAt: readAt - 40 * 60_000 } }} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={{ ...usages, claude: { ...usages.claude, updatedAt: readAt - 40 * 60_000 } }} usageView={table} /></I18nProvider></StrictMode>);
   });
   const staleLines = [...document.querySelectorAll<HTMLElement>(".agent-usage")];
   const clock = staleLines[0].querySelector(".agent-usage__stale");
@@ -81,13 +83,14 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
     credits: { workbuddy: { provider: "workbuddy" as const, updatedAt: readAt, source: null, available: true, credits: { today: 1240, sevenDay: 8930, total: 20000, totalTokens: 0, sessions: 3 }, wallets: [], error: null } },
   };
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} usageView={table} /></I18nProvider></StrictMode>);
   });
   const wideLines = [...document.querySelectorAll<HTMLElement>(".agent-usage")];
   check(wideLines.map((line) => line.getAttribute("aria-label")).join() === "Claude Code 用量,Codex 用量,Antigravity 用量,WorkBuddy 用量", `这台电脑上读得到额度的每家各占一行：${wideLines.map((line) => line.getAttribute("aria-label")).join()}`);
-  check(wideLines[3].querySelector(".agent-usage__credit")?.textContent === "今日 1,240 积分 · 7 天 8,930" && !wideLines[3].querySelector(".agent-usage__value"), "WorkBuddy 没有百分比，写今日和 7 天的积分");
+  check(wideLines[3].querySelector(".agent-usage__credit")?.textContent === "今日 1,240 · 7 天 8,930 积分" && !wideLines[3].querySelector(".agent-usage__value"), "WorkBuddy 没有百分比，写今日和 7 天的积分");
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} usageView={{ ...DEFAULT_USAGE_VIEW, agentsOff: ["antigravity"], hidden: ["workbuddy"] }} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} usageView={{ ...table, agentsOff: ["antigravity"], hidden: ["workbuddy"] }} /></I18nProvider></StrictMode>);
   });
   check([...document.querySelectorAll(".agent-usage")].map((line) => line.getAttribute("aria-label")).join() === "Claude Code 用量,Codex 用量", "在「接入哪些 Agent」里关掉的和在额度里隐藏的都不占行");
+  await checkUsageLayouts({ root, sessions, usages: wide, check });
 }

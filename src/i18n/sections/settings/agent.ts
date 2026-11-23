@@ -132,6 +132,8 @@ export type SettingsAgentText = {
   usageResetOptions: Record<"tightest" | "each" | "off", string>;
   usageStyle: string;
   usageStyleOptions: Record<"number" | "bar" | "ring", string>;
+  usageLayout: string;
+  usageLayoutHints: Record<"chips" | "tiles" | "lead" | "ruler" | "table", string>;
   emptyStyle: string;
   emptyStyleHint: string;
   emptyStyleOptions: Record<"sleep" | "standby" | "recent" | "quota" | "tide" | "minimal", string>;
@@ -388,10 +390,10 @@ export const zhCN: SettingsAgentText = {
   usagePageHint: "跟着这台电脑上开着的 Agent 走，读得到额度的才列一行。新接入的默认显示，点图标或下面的胶囊隐藏那一家，点列隐藏整列；岛上右键额度行有同样的菜单。Claude Code 读 claude-hud 状态栏保存的用量文件，Codex 读会话记录，其余几家和用量环用同一套读取；WorkBuddy 和 DeepSeek Harness 没有百分比，写的是积分和余额，GLM、Kimi 套餐在用量环里填了 Key 才有。",
   usagePreview: "额度预览",
   usageShowTitle: "显示哪家、哪些额度",
-  usageShowHint: "额度样式、重置时间和只看最紧的也在这里调，改了马上在下面的岛上看到。",
+  usageShowHint: "布局、样式、重置时间也在这里调，改了马上在下面的岛上看到；某个布局用不上的选项会收起来。",
   usageReading: "正在读取额度…",
   usageNone: "这台电脑上开着的 Agent 都还读不到额度",
-  usageNoRead: (names) => `读不到额度、不占一行：${names.join("、")}`,
+  usageNoRead: (names) => `现在读不到额度（没登录、没数据或数据已过期），不占位置：${names.join("、")}`,
   usagePlanTag: "套餐",
   usageCreditTag: "积分/余额",
   usageProviders: "显示哪家",
@@ -402,6 +404,8 @@ export const zhCN: SettingsAgentText = {
   usageResetOptions: { tightest: "最紧的那项", each: "每项都写", off: "不显示" },
   usageStyle: "额度样式",
   usageStyleOptions: { number: "数字", bar: "进度条", ring: "圆环" },
+  usageLayout: "布局",
+  usageLayoutHints: { chips: "一家一颗，只写最紧的", tiles: "大数字，一眼看全", lead: "只突出最紧的一项", ruler: "都摆在一根刻度上", table: "每个窗口都列出来" },
   emptyStyle: "没有会话时显示",
   emptyStyleHint: "Agent 页上没有会话可列时的画面。",
   emptyStyleOptions: { sleep: "水母打盹", standby: "待命台", recent: "上一个会话", quota: "额度大圆环", tide: "今天的潮汐", minimal: "极简水平线" },
@@ -665,10 +669,10 @@ export const en: SettingsAgentText = {
   usagePageHint: "Follows the agents turned on for this computer: each one whose usage can be read gets a row. New agents show by default; click an icon or a chip below to hide that agent, or a window chip to hide that column; right-clicking the usage row on the island opens the same menu. Claude Code is read from the usage file the claude-hud status line keeps, Codex from its session logs, and the rest the same way as the usage rings; WorkBuddy and DeepSeek Harness have no percentages, so their credits and balance are shown, and the GLM and Kimi plans need a key set under the usage rings.",
   usagePreview: "Usage preview",
   usageShowTitle: "Which agents and windows",
-  usageShowHint: "Usage style, reset time and only the tightest are set here too; the island below shows each change at once.",
+  usageShowHint: "Layout, style and reset time are set here too; the island below shows each change at once, and options a layout does not use are hidden.",
   usageReading: "Reading usage…",
   usageNone: "None of the agents turned on for this computer has usage to read yet",
-  usageNoRead: (names) => `No usage to read, so no row: ${names.join(", ")}`,
+  usageNoRead: (names) => `No usage to read right now (signed out, no data or out of date), so not shown: ${names.join(", ")}`,
   usagePlanTag: "plan",
   usageCreditTag: "credits",
   usageProviders: "Show usage for",
@@ -679,6 +683,8 @@ export const en: SettingsAgentText = {
   usageResetOptions: { tightest: "Tightest only", each: "For each", off: "Hidden" },
   usageStyle: "Usage style",
   usageStyleOptions: { number: "Numbers", bar: "Bars", ring: "Rings" },
+  usageLayout: "Layout",
+  usageLayoutHints: { chips: "One per agent, tightest only", tiles: "Big numbers at a glance", lead: "Only the tightest stands out", ruler: "All on one scale", table: "Every window listed" },
   emptyStyle: "When there are no sessions",
   emptyStyleHint: "What the agent page shows when it has no sessions to list.",
   emptyStyleOptions: { sleep: "Sleeping jellyfish", standby: "Standby", recent: "Last session", quota: "Big usage rings", tide: "Today's tide", minimal: "Minimal waterline" },

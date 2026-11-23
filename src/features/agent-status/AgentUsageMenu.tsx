@@ -1,10 +1,10 @@
 import { Check, SlidersHorizontal } from "lucide-react";
 import { RowMenu, type RowMenuItem } from "../../components/list/RowMenu";
 import { useTranslation } from "../../i18n";
-import { AGENT_USAGE_COLUMNS, type AgentUsageItem, type AgentUsageReset, type AgentUsageSource } from "./agentSettings";
-import { USAGE_SOURCE_LABELS, type UsageView } from "./usage";
+import { AGENT_USAGE_COLUMNS, AGENT_USAGE_LAYOUTS, type AgentUsageItem, type AgentUsageLayout, type AgentUsageReset, type AgentUsageSource } from "./agentSettings";
+import { LAYOUT_CONTROLS, USAGE_SOURCE_LABELS, type UsageView } from "./usage";
 
-export type UsageViewChange = (patch: { agentUsageHidden?: AgentUsageItem[]; agentUsageTightest?: boolean; agentUsageReset?: AgentUsageReset }) => void;
+export type UsageViewChange = (patch: { agentUsageHidden?: AgentUsageItem[]; agentUsageTightest?: boolean; agentUsageReset?: AgentUsageReset; agentUsageLayout?: AgentUsageLayout }) => void;
 
 function mark(on: boolean) {
   return <Check size={14} strokeWidth={2.4} style={{ opacity: on ? 1 : 0 }} aria-hidden="true" />;
@@ -27,11 +27,14 @@ export function AgentUsageMenu({ view, sources, onChange }: { view: UsageView; s
       onSelect: () => onChange({ agentUsageHidden: on ? [...view.hidden, item] : view.hidden.filter((hidden) => hidden !== item) }),
     };
   };
+  const layout = view.layout ?? "chips";
+  const controls = LAYOUT_CONTROLS[layout];
   const items: RowMenuItem[] = [
+    ...AGENT_USAGE_LAYOUTS.map((value): RowMenuItem => ({ key: `layout-${value}`, label: text.layouts[value], icon: mark(layout === value), keepOpen: true, onSelect: () => onChange({ agentUsageLayout: value }) })),
     ...(sources.length > 1 ? sources.map((item) => toggle(item, sources)) : []),
     ...AGENT_USAGE_COLUMNS.map((item) => toggle(item, AGENT_USAGE_COLUMNS)),
-    { key: "tightest", label: text.tightest, icon: mark(view.tightest), keepOpen: true, onSelect: () => onChange({ agentUsageTightest: !view.tightest }) },
-    { key: "reset", label: text.reset, icon: mark(view.reset !== "off"), keepOpen: true, onSelect: () => onChange({ agentUsageReset: view.reset === "off" ? "tightest" : "off" }) },
+    ...(controls.tightest ? [{ key: "tightest", label: text.tightest, icon: mark(view.tightest), keepOpen: true, onSelect: () => onChange({ agentUsageTightest: !view.tightest }) }] : []),
+    ...(controls.reset ? [{ key: "reset", label: text.reset, icon: mark(view.reset !== "off"), keepOpen: true, onSelect: () => onChange({ agentUsageReset: view.reset === "off" ? "tightest" : "off" }) }] : []),
   ];
 
   return (

@@ -1,6 +1,6 @@
 import { liveUsage } from "../../lib/agent-usage/usage.ts";
 import type { AgentUsage, HoverUsage, UsageWindow } from "./api";
-import { AGENT_USAGE_SOURCES, type AgentUsageItem, type AgentUsageReset, type AgentUsageSource, type AgentUsageStyle } from "./agentSettings.ts";
+import { AGENT_USAGE_SOURCES, type AgentUsageItem, type AgentUsageLayout, type AgentUsageReset, type AgentUsageSource, type AgentUsageStyle } from "./agentSettings.ts";
 
 export { isStale, liveUsage, untilReset, USAGE_STALE_MS, usageSourceLines } from "../../lib/agent-usage/usage.ts";
 
@@ -93,11 +93,11 @@ export function usageLineCount(usages: AgentUsages): number {
 
 export type UsageWindowCell = { key: string; label: string; window: UsageWindow };
 
-export function usageWindows(usage: AgentUsage, labels: { fiveHour: string; sevenDay: string }): UsageWindowCell[] {
+export function usageWindows(usage: AgentUsage, labels: { fiveHour: string; sevenDay: string; names?: Readonly<Record<string, string>> }): UsageWindowCell[] {
   return [
     ...(usage.fiveHour ? [{ key: "fiveHour", label: labels.fiveHour, window: usage.fiveHour }] : []),
     ...(usage.sevenDay ? [{ key: "sevenDay", label: labels.sevenDay, window: usage.sevenDay }] : []),
-    ...usage.models.map((model, index) => ({ key: `model:${index}`, label: model.name, window: model })),
+    ...usage.models.map((model, index) => ({ key: `model:${index}`, label: labels.names?.[model.name] ?? model.name, window: model })),
   ];
 }
 
@@ -117,9 +117,42 @@ export function usageColumns(usages: readonly AgentUsage[]): UsageColumns {
   };
 }
 
-export type UsageView = { hidden: readonly AgentUsageItem[]; tightest: boolean; reset: AgentUsageReset; style: AgentUsageStyle; agentsOff?: readonly string[] };
+export type UsageView = { hidden: readonly AgentUsageItem[]; tightest: boolean; reset: AgentUsageReset; style: AgentUsageStyle; layout?: AgentUsageLayout; agentsOff?: readonly string[] };
 
-export const DEFAULT_USAGE_VIEW: UsageView = { hidden: [], tightest: false, reset: "tightest", style: "number" };
+export const DEFAULT_USAGE_VIEW: UsageView = { hidden: [], tightest: false, reset: "tightest", style: "number", layout: "chips" };
+
+export const LAYOUT_CONTROLS: Record<AgentUsageLayout, { style: boolean; reset: boolean; tightest: boolean }> = {
+  chips: { style: true, reset: false, tightest: false },
+  tiles: { style: false, reset: true, tightest: false },
+  lead: { style: false, reset: true, tightest: false },
+  ruler: { style: false, reset: false, tightest: false },
+  table: { style: true, reset: true, tightest: true },
+};
+
+export function formatCredit(value: number): string {
+  const digits = Math.abs(value) >= 100 ? 0 : 2;
+  return value.toLocaleString("en-US", { maximumFractionDigits: digits });
+}
+
+export function rulerSpots(values: readonly number[], gap = 13): number[] {
+  const order = values.map((value, index) => ({ value: Math.max(0, Math.min(100, value)), index })).sort((a, b) => a.value - b.value || a.index - b.index);
+  const spots: number[] = Array.from({ length: values.length }, () => 0);
+  let last = -Infinity;
+  for (const { value, index } of order) {
+    const spot = Math.max(value, last + gap);
+    spots[index] = spot;
+    last = spot;
+  }
+  const over = Math.max(0, last - 100);
+  if (over === 0) return spots;
+  const shifted = order.map(({ index }) => spots[index] - over);
+  let floor = -Infinity;
+  order.forEach(({ index }, at) => {
+    spots[index] = Math.max(shifted[at], floor === -Infinity ? 0 : floor + gap, 0);
+    floor = spots[index];
+  });
+  return spots;
+}
 
 export function shownUsage(usage: AgentUsage, view: Pick<UsageView, "hidden" | "tightest">): AgentUsage {
   const picked: AgentUsage = {
