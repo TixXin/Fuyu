@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -7,6 +7,8 @@ import { RELEASED_MARKER, tellIssues } from "../../scripts/release/after-release
 import { betaTags, mergeBetaNotes, sectionItems } from "../../scripts/release/beta-notes.mjs";
 import { draftNotes } from "../../scripts/release/notes-draft.mjs";
 import { matchingPrebuild, readPrebuild } from "../../scripts/release/prebuild.mjs";
+import { prefetchDir, smokeAhead } from "../../scripts/release/prefetch.mjs";
+import { openRequest, versionCommitProblem } from "../../scripts/release/open-pr.mjs";
 
 const notes = (zh, en) => `## 关于这个版本\n\nx\n\n## 更新内容\n\n${zh}\n\n---\n\n## About this release\n\ny\n\n## What's New\n\n${en}\n\n## Downloads\n\n- a\n`;
 
@@ -95,4 +97,24 @@ test("a finished issue that is still open is closed after it is told", async () 
   assert.ok(calls.includes("issue close 1"));
   assert.ok(!calls.includes("issue close 2") && !calls.includes("issue view 3"));
   assert.deepEqual(lines.filter((line) => line.includes("Closed")), ["✓ Closed #1: all its tasks are done."]);
+});
+
+test("a smoke test started ahead counts only for the Windows build the release uses", () => {
+  const root = mkdtempSync(join(tmpdir(), "fuyu-smoke-ahead-"));
+  const record = { windows: 41, mac: 42 };
+  assert.equal(smokeAhead(record, root), null);
+  mkdirSync(prefetchDir(record, root), { recursive: true });
+  writeFileSync(join(prefetchDir(record, root), "smoke.json"), JSON.stringify({ buildRun: 41, databaseId: 9, url: "u/9" }));
+  assert.deepEqual(smokeAhead(record, root), { buildRun: 41, databaseId: 9, url: "u/9" });
+  writeFileSync(join(prefetchDir(record, root), "smoke.json"), JSON.stringify({ buildRun: 40, databaseId: 9, url: "u/9" }));
+  assert.equal(smokeAhead(record, root), null);
+});
+
+test("the release PR starts only from a version commit that changes nothing but the version, the notes and their snapshot", () => {
+  const files = ["package.json", "src-tauri/tauri.conf.json", "src-tauri/Cargo.toml", "src-tauri/Cargo.lock", "docs/releases/v1.2.0-beta.1.md", "tests/regression/snapshots/version-history.html"];
+  assert.equal(versionCommitProblem({ subject: "chore(release): 1.2.0-beta.1", files, version: "1.2.0-beta.1" }), null);
+  assert.match(versionCommitProblem({ subject: "feat(x): y", files, version: "1.2.0-beta.1" }), /not "chore\(release\): 1\.2\.0-beta\.1"/);
+  assert.match(versionCommitProblem({ subject: "chore(release): 1.2.0-beta.1", files: [...files, "src/main.tsx"], version: "1.2.0-beta.1" }), /also changes src\/main\.tsx/);
+  assert.match(openRequest([]).error, /--body/);
+  assert.deepEqual(openRequest(["--body", "package.json", "--unverified"]), { body: "package.json", unverified: true });
 });

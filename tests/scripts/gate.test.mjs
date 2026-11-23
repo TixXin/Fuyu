@@ -234,6 +234,7 @@ test("command rows match the command that is run, not text that mentions it", ()
   assert.equal(release("pnpm release"), "pnpm release");
   assert.equal(release("cd /repo && pnpm -s release:version 0.4.0 2>&1 | tail -3"), "pnpm release:version");
   assert.equal(release("pnpm run release:prebuild"), "pnpm release:prebuild");
+  assert.equal(release("pnpm release:open --body pr.md"), "pnpm release:open");
   assert.equal(release("FUYU_SYNC_SHORTCUT=1 node scripts/release/release.mjs --dry-run"), "scripts/release/release.mjs");
   assert.equal(release("pwsh -File scripts/release/smoke-test.ps1"), "scripts/release/smoke-test.ps1");
   assert.equal(release("cat scripts/release/release.mjs; git add scripts/release/bump.mjs; rg \"pnpm release\" docs"), null);

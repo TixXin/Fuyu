@@ -13,7 +13,7 @@ import { smokeTest } from "./smoke-test.mjs";
 import { finishMacBuild, macFiles, startMacBuild } from "./mac-build.mjs";
 import { finishWindowsBuild, startWindowsBuild } from "./windows-build.mjs";
 import { forgetPrebuild, matchingPrebuild, readPrebuild } from "./prebuild.mjs";
-import { forgetPrefetch, PLATFORMS, prefetchSummary, readyPrefetch, takePrefetched } from "./prefetch.mjs";
+import { forgetPrefetch, PLATFORMS, prefetchSummary, readyPrefetch, smokeAhead, takePrefetched } from "./prefetch.mjs";
 import { releaseClock } from "./timing.mjs";
 import { publishToSite, siteDown } from "./site-import.mjs";
 import { createNotifier } from "./notify.mjs";
@@ -264,7 +264,7 @@ for (const path of assets) {
 }
 releaseClock.done("upload", `The draft release has all ${assets.length} files and their SHA-256 match.`);
 if (smoke) {
-  const problem = smokeTest(run, tag, REPO);
+  const problem = smokeTest(run, tag, REPO, { ahead: prebuilt ? smokeAhead(prebuilt) : null });
   if (problem) fail(`${problem}\nThe release remains a draft; fix it and release a new version, or delete the draft.`);
   releaseClock.done("smoke test", "The installer installs and starts on a clean Windows runner.");
 }
@@ -277,17 +277,18 @@ releaseClock.done("publish", `Published ${tag}${prerelease ? " as a pre-release 
 
 forgetPrebuild();
 forgetPrefetch();
+const siteImport = toSite ? publishToSite({ main: mainCheckout(), tag, version }) : Promise.resolve([]);
 installLocally();
 
 updateBetaChannel(revision);
 verifyChannels();
-const siteProblems = toSite ? await publishToSite({ main: mainCheckout(), tag, version }) : [];
-if (siteProblems.length === 0 && toSite) releaseClock.done("official site", `The official site offers ${tag}.`);
-else releaseClock.mark("official site");
 if (issueComments) await tellShippedIssues(revision);
 releaseClock.mark("issue comments");
 if (shareImage) renderShareImage();
 releaseClock.mark("share image");
+const siteProblems = await siteImport;
+if (siteProblems.length === 0 && toSite) releaseClock.done("official site", `The official site offers ${tag}.`);
+else releaseClock.mark("official site");
 if (siteProblems.length > 0) {
   console.error(`\n✗ ${tag} is on GitHub, but the official site is behind:\n${siteProblems.join("\n")}`);
   process.exitCode = 1;

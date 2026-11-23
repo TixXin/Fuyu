@@ -37,6 +37,27 @@ export function resolveWeekStart(weekStartsOn: WeekStartsOn = "auto"): "monday" 
   return weekStartsOn === "sunday" ? "sunday" : "monday";
 }
 
+const SUNDAY_FIRST_REGIONS = new Set(["US", "CA", "JP", "KR", "TW", "HK", "MO", "IL", "BR", "MX", "PH", "IN", "ZA", "SA", "AU"]);
+
+type WeekInfoLocale = Intl.Locale & { getWeekInfo?: () => { firstDay?: number }; weekInfo?: { firstDay?: number } };
+
+export function localeWeekStart(locale: string): "monday" | "sunday" {
+  try {
+    const parsed = new Intl.Locale(locale) as WeekInfoLocale;
+    const firstDay = (parsed.getWeekInfo?.() ?? parsed.weekInfo)?.firstDay;
+    if (firstDay === 7) return "sunday";
+    if (typeof firstDay === "number") return "monday";
+    const region = parsed.maximize().region;
+    return region && SUNDAY_FIRST_REGIONS.has(region) ? "sunday" : "monday";
+  } catch {
+    return "monday";
+  }
+}
+
+export function effectiveWeekStart(weekStartsOn: WeekStartsOn, locale: string): "monday" | "sunday" {
+  return weekStartsOn === "auto" ? localeWeekStart(locale) : weekStartsOn;
+}
+
 export function monthDays(month: number, weekStartsOn: WeekStartsOn = "auto") {
   const first = new Date(month);
   const sundayFirst = resolveWeekStart(weekStartsOn) === "sunday";

@@ -240,7 +240,7 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 | `fuyu-agent-harness` | 写各家 AI 代理的接入点文件，或在 `src-tauri/src/agent_status/` 下新建 `.rs` | 加载过这个 skill |
 | `src-rules` | 写 `src/` | 读过 `src/AGENTS.md` |
 | `src-tauri-rules` | 写 `src-tauri/`（不含 `target/`、`gen/`） | 读过 `src-tauri/AGENTS.md` |
-| `fuyu-release` | 跑 `pnpm release`、`release:version`、`release:prebuild`，或直接跑 `scripts/release/` 下的脚本 | 加载过这个 skill |
+| `fuyu-release` | 跑 `pnpm release`、`release:version`、`release:prebuild`、`release:open`，或直接跑 `scripts/release/` 下的脚本 | 加载过这个 skill |
 | `fuyu-video` | 写 `video/` | 加载过这个 skill |
 | `fuyu-task` | `pnpm task:claim`、`pnpm tasks add … --claim` | 加载过这个 skill |
 | `fuyu-skill-writing` | 写 `.claude/skills/` | 加载过这个 skill |

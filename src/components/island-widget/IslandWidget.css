@@ -3,6 +3,7 @@
   --widget-text-1: rgba(var(--widget-ink), 0.95);
   --widget-text-2: rgba(var(--widget-ink), 0.68);
   --widget-text-3: rgba(var(--widget-ink), 0.48);
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;

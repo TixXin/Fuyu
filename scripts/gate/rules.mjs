@@ -46,7 +46,7 @@ export const RULES = [
   },
   {
     id: "fuyu-release",
-    when: { commands: ["pnpm release", "pnpm release:version", "pnpm release:prebuild"], scripts: ["scripts/release/"] },
+    when: { commands: ["pnpm release", "pnpm release:version", "pnpm release:prebuild", "pnpm release:open"], scripts: ["scripts/release/"] },
     require: { skill: "fuyu-release" },
     hint: "{target} 是发版流程里的一步",
   },

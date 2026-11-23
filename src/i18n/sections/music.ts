@@ -1,5 +1,6 @@
 export type MusicText = {
   playerLabel: string;
+  openPage: string;
   controlFailed: string;
   noMedia: string;
   lyricsLabel: string;
@@ -41,6 +42,7 @@ export type MusicText = {
 
 export const zhCN: MusicText = {
   playerLabel: "音乐播放器",
+  openPage: "打开音乐",
   controlFailed: "控制失败",
   noMedia: "暂无媒体",
   lyricsLabel: "歌词",
@@ -91,6 +93,7 @@ export const zhCN: MusicText = {
 
 export const en: MusicText = {
   playerLabel: "Music player",
+  openPage: "Open music",
   controlFailed: "Control failed",
   noMedia: "No media",
   lyricsLabel: "Lyrics",

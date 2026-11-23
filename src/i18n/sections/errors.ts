@@ -259,7 +259,9 @@ export type ErrorCode =
   | "notificationVerify.start"
   | "quickLaunch.target"
   | "quickLaunch.failed"
+  | "quickLaunch.notApp"
   | "systemLevels.volume"
+  | "systemLevels.brightness"
   | "messenger.notInteractive"
   | "messenger.foreground"
   | "remoteHosts.save"
@@ -642,7 +644,9 @@ export const zhCN: ErrorsText = {
     "notificationVerify.start": "无法启动通知验收记录。",
     "quickLaunch.target": "不认识这个快捷启动项。",
     "quickLaunch.failed": "没能打开这个程序。",
+    "quickLaunch.notApp": "这不是能打开的应用，可能已经卸载或移走了。",
     "systemLevels.volume": "没能调整系统音量。",
+    "systemLevels.brightness": "没能调整屏幕亮度。",
     "messenger.notInteractive": ({ name }) => `${name}尚未恢复可交互的主窗口，请从系统托盘打开。`,
     "messenger.foreground": ({ name }) => `已找到${name}窗口，但未能切换到前台，请点击任务栏或托盘中的${name}。`,
     "remoteHosts.save": "没能保存远程电脑设置。",
@@ -1022,7 +1026,9 @@ export const en: ErrorsText = {
     "notificationVerify.start": "Could not start recording notification verification.",
     "quickLaunch.target": "Unknown quick launch item.",
     "quickLaunch.failed": "Could not open the program.",
+    "quickLaunch.notApp": "This isn't an app that can be opened. It may have been uninstalled or moved.",
     "systemLevels.volume": "Could not change the system volume.",
+    "systemLevels.brightness": "Could not change the screen brightness.",
     "messenger.notInteractive": ({ name }) => `${name} has not restored an interactive main window yet; open it from the system tray.`,
     "messenger.foreground": ({ name }) => `Found the ${name} window, but could not bring it to the front; click ${name} in the taskbar or tray.`,
     "remoteHosts.save": "Could not save the remote computers.",

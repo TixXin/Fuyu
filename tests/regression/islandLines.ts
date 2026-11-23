@@ -91,6 +91,6 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
   useIslandContributions("builtin", "fixture.todos", todoLineContributions(todo, t, ranks));
   meetingState.useProvide(meeting);
   useIslandContributions("calendar", "fixture.meeting", useMeetingContributions(meeting, barText, ranks.meeting));
-  shelfIsland.useProvide(useMemo(() => ({ shelf: null, dropping: false, count: shelfCount }), [shelfCount]));
+  shelfIsland.useProvide(useMemo(() => ({ shelf: null, dropping: false, count: shelfCount, enabled: true, openPage: null }), [shelfCount]));
   useIslandContributions("file-shelf", "fixture.shelf", shelfContributions(shelfCount));
 }

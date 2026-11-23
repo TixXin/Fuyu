@@ -48,9 +48,9 @@ export function waitForJobs(run, { repo, id, polls = 20, pause = 15000 }) {
   return !sawNone;
 }
 
-function dispatchSmoke(run, tag, repo, findPause) {
+export function startSmoke(run, input, repo, findPause = 5000) {
   const since = Date.now();
-  const started = run("gh", ["workflow", "run", SMOKE_WORKFLOW, "--repo", repo, "--ref", "main", "-f", `tag=${tag}`], { capture: true, allowFailure: true });
+  const started = run("gh", ["workflow", "run", SMOKE_WORKFLOW, "--repo", repo, "--ref", "main", "-f", input], { capture: true, allowFailure: true });
   if (started.status !== 0) return `could not start ${SMOKE_WORKFLOW}: ${started.stderr.trim()}`;
   for (let attempt = 0; attempt < 12; attempt += 1) {
     sleep(findPause);
@@ -61,9 +61,17 @@ function dispatchSmoke(run, tag, repo, findPause) {
   return `${SMOKE_WORKFLOW} was started but its run did not show up within a minute`;
 }
 
-export function smokeTest(run, tag, repo, { dispatches = 3, findPause = 5000, jobPolls = 20, pause = 15000 } = {}) {
+export function smokeTest(run, tag, repo, { ahead = null, dispatches = 3, findPause = 5000, jobPolls = 20, pause = 15000 } = {}) {
+  if (ahead) {
+    console.log(`Smoke test of the same installer, started when its build finished: ${ahead.url}`);
+    if (waitForJobs(run, { repo, id: ahead.databaseId, polls: jobPolls, pause })) {
+      return watchRun(run, { repo, id: ahead.databaseId, interval: 15, pause }) ? null : `the smoke test failed: ${ahead.url}`;
+    }
+    run("gh", ["run", "cancel", String(ahead.databaseId), "--repo", repo], { capture: true, allowFailure: true });
+    console.log(`  GitHub never gave run ${ahead.databaseId} a job; testing the draft instead.`);
+  }
   for (let dispatch = 1; dispatch <= dispatches; dispatch += 1) {
-    const found = dispatchSmoke(run, tag, repo, findPause);
+    const found = startSmoke(run, `tag=${tag}`, repo, findPause);
     if (typeof found === "string") return found;
     console.log(`Smoke test running on a clean Windows runner: ${found.url}`);
     if (waitForJobs(run, { repo, id: found.databaseId, polls: jobPolls, pause })) {

@@ -18,6 +18,8 @@ export type TimerText = {
   timeUp: (length: string) => string;
   moreUp: (count: number) => string;
   chip: string;
+  quickPreset: (minutes: number) => string;
+  quickStart: (minutes: number) => string;
   breaks: BreakText;
   settings: TimerSettingsText;
 };
@@ -79,6 +81,8 @@ export const zhCN: TimerText = {
   timeUp: (length) => `${length} 的计时到了`,
   moreUp: (count) => `还有 ${count} 个也到了`,
   chip: "打开计时器",
+  quickPreset: (minutes) => `${minutes}分`,
+  quickStart: (minutes) => `开始 ${minutes} 分钟倒计时`,
   breaks: {
     title: "休息提醒",
     toggle: "休息提醒",
@@ -141,6 +145,8 @@ export const en: TimerText = {
   timeUp: (length) => `Your ${length} timer is up`,
   moreUp: (count) => `${count} more ${count === 1 ? "is" : "are"} up too`,
   chip: "Open the timer",
+  quickPreset: (minutes) => `${minutes}m`,
+  quickStart: (minutes) => `Start a ${minutes}-minute timer`,
   breaks: {
     title: "Break reminders",
     toggle: "Break reminders",

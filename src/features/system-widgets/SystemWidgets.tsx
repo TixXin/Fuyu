@@ -1,18 +1,10 @@
-import { Activity, BatteryCharging, BatteryFull, Calculator, Cpu, Folder, Settings2, SquareTerminal } from "lucide-react";
-import { clickOnly } from "../../components/island-widget/clickOnly";
+import { Activity, BatteryCharging, BatteryFull, Cpu } from "lucide-react";
 import { WidgetEmpty, WidgetFrame } from "../../components/island-widget/WidgetFrame";
 import { useTranslation } from "../../i18n";
-import { launchQuickApp, type QuickTarget } from "./api";
 import { useSystemStats } from "./statsStore";
 
 const RING_R = 17;
 const RING_LENGTH = 2 * Math.PI * RING_R;
-const TARGETS = [
-  ["terminal", SquareTerminal],
-  ["files", Folder],
-  ["calculator", Calculator],
-  ["settings", Settings2],
-] as const;
 
 function rateText(bytesPerSecond: number): string {
   if (bytesPerSecond < 1024) return `${Math.round(bytesPerSecond)} B/s`;
@@ -97,19 +89,5 @@ export function NetworkWidget() {
         {downs.length > 1 ? <polyline points={points} /> : null}
       </svg>
     </WidgetFrame>
-  );
-}
-
-export function LauncherWidget() {
-  const t = useTranslation().islandWidgets;
-  const open = (target: QuickTarget) => clickOnly(() => void launchQuickApp(target).catch((failure: unknown) => console.error("Failed to open a quick launch item", failure)));
-  return (
-    <div className="island-widget sys-launcher">
-      {TARGETS.map(([target, Icon]) => (
-        <button key={target} className="sys-launcher__app" type="button" data-target={target} aria-label={t.content.quickTargets[target]} title={t.content.quickTargets[target]} onClick={open(target)}>
-          <Icon size={19} strokeWidth={2} />
-        </button>
-      ))}
-    </div>
   );
 }

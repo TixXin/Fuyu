@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "../../../i18n";
 import type { IslandContribution } from "../../plugin-kernel/islandContributions";
 import { defineSlot } from "../../plugin-kernel/slots";
-import { useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useTextRanks } from "../../plugin-kernel/useTextRanks";
 import type { LyricsIslandPriority } from "../../../lib/settings/lyricsSettings";
 import { listenCalendarJoinShortcut } from "../api";
@@ -13,19 +13,22 @@ import { useCalendarPrefs } from "../useCalendarPrefs";
 import { useHolidayEve } from "../useHolidayEve";
 import { useMeetingBanner } from "../useMeetingBanner";
 import { useTodoLink } from "../useTodoLink";
+import { requestCalendarDay } from "./dayRequest";
 import { calendarState, meetingBannerState, meetingState, todoLinkState } from "./islandState";
 import { resolveJoinShortcutTarget } from "./joinShortcut";
 import { useMeetingContributions } from "./meetingLines";
 import { OWNER } from "./owner.ts";
+import { OPEN_CALENDAR_ACTION } from "./widgets.ts";
 
 type RunnerProps = {
   barText: boolean;
   settings: { todoEnabled: boolean; calendarEnabled: boolean; calendarRemindMinutes: number; calendarShowTitle: boolean; lyricsIslandPriority: LyricsIslandPriority };
+  openIslandPage: (page: "calendar") => void;
 };
 
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
-function CalendarRunner({ barText, settings }: RunnerProps) {
+function CalendarRunner({ barText, settings, openIslandPage }: RunnerProps) {
   const t = useTranslation();
   const [prefs] = useCalendarPrefs();
   const link = useTodoLink(settings.todoEnabled);
@@ -37,6 +40,10 @@ function CalendarRunner({ barText, settings }: RunnerProps) {
   );
   const calendar = useCalendar(settings.calendarEnabled, settings.calendarRemindMinutes, timedTodos, prefs);
   calendarState.useProvide(calendar);
+  useIslandAction(OPEN_CALENDAR_ACTION, settings.calendarEnabled ? (day) => {
+    requestCalendarDay(typeof day === "number" ? day : null);
+    openIslandPage("calendar");
+  } : null);
   const { upcoming } = calendar;
   const joinContext = useRef({
     enabled: settings.calendarEnabled,

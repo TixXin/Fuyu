@@ -1,3 +1,4 @@
+mod apps;
 mod launch;
 mod stats;
 
@@ -96,11 +97,27 @@ pub async fn launch_quick_app(target: String) -> Result<(), UserError> {
     launch::launch(&target).map_err(|error| UserError::new("quickLaunch.failed", "Could not open the program.").detail(error))
 }
 
+#[tauri::command]
+pub async fn quick_app_info(path: String) -> Result<apps::QuickAppInfo, UserError> {
+    apps::info(&path).ok_or_else(|| UserError::new("quickLaunch.notApp", "This isn't an app that can be opened.").arg("path", path))
+}
+
+#[tauri::command]
+pub async fn launch_quick_app_path(path: String) -> Result<(), UserError> {
+    if !apps::is_app(&path) {
+        return Err(UserError::new("quickLaunch.notApp", "This isn't an app that can be opened.").arg("path", path));
+    }
+    tauri_plugin_opener::open_path(&path, None::<&str>)
+        .map_err(|error| UserError::new("quickLaunch.failed", "Could not open the program.").detail(error.to_string()))
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::system_widgets::get_system_stats,
             crate::system_widgets::launch_quick_app,
+            crate::system_widgets::quick_app_info,
+            crate::system_widgets::launch_quick_app_path,
         ] $($rest)*)
     };
 }

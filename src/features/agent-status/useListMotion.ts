@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import type { SessionLight } from "./sessionLight";
 import "./AgentListMotion.css";
+import { layoutZoom } from "../../lib/layoutZoom";
 import { MOTION_BASE_MS, MOTION_EASE, MOTION_MEDIUM_MS } from "../../lib/theme/motionTokens";
 
 const MOVE_MS = MOTION_MEDIUM_MS;
@@ -31,11 +32,12 @@ function rows(list: HTMLElement) {
 
 function boxOf(row: HTMLElement, list: HTMLElement, frame: DOMRect): Box {
   const rect = row.getBoundingClientRect();
+  const zoom = layoutZoom(list, frame);
   return {
-    top: rect.top - frame.top + list.scrollTop,
-    left: rect.left - frame.left + list.scrollLeft,
-    width: rect.width,
-    height: rect.height,
+    top: (rect.top - frame.top) / zoom + list.scrollTop,
+    left: (rect.left - frame.left) / zoom + list.scrollLeft,
+    width: rect.width / zoom,
+    height: rect.height / zoom,
   };
 }
 

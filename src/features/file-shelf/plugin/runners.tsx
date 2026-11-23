@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useFileShelfDrop } from "../island/useFileShelfDrop";
@@ -51,7 +51,10 @@ function ShelfRunner({ settings, mode, page, isTucked, isPeeking, openIslandPage
     minimizeToEdge,
   });
   const count = settings.shelfEnabled && settings.shelfShowCount ? shelf.items.length : null;
-  shelfIsland.useProvide(useMemo(() => ({ shelf, dropping, count }), [shelf, dropping, count]));
+  const enabled = settings.shelfEnabled;
+  const openShelfPage = useCallback(() => openIslandPage("shelf"), [openIslandPage]);
+  const openPage = enabled ? openShelfPage : null;
+  shelfIsland.useProvide(useMemo(() => ({ shelf, dropping, count, enabled, openPage }), [shelf, dropping, count, enabled, openPage]));
   useIslandContributions(OWNER, "file-shelf.count", shelfContributions(count));
   return null;
 }

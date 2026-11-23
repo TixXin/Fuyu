@@ -48,7 +48,7 @@ export function useFileShelf(
       return snapshot;
     } catch (caught) {
       setError(errorText(caught));
-      return null;
+      return false;
     }
   }, [errorText]);
 
@@ -112,7 +112,7 @@ export function useFileShelf(
     remove: (ids: string[]) => run(() => removeFileShelfItems(ids)),
     togglePin: (id: string) => run(() => toggleFileShelfPin(id)),
     clear: () => run(clearFileShelf),
-    copy: async (ids: string[]) => (await run(() => copyFileShelfItems(ids))) !== null,
+    copy: async (ids: string[]) => (await run(() => copyFileShelfItems(ids))) !== false,
     open: (id: string) => run(() => openFileShelfItem(id)),
     reveal: (id: string) => run(() => revealFileShelfItem(id)),
   }), [addPaths, error, isDraggingOut, items, recentDrop, refresh, run, startDrag]);

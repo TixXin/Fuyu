@@ -19,7 +19,7 @@ description: >
 
 发版前在发版 shell 里 `echo $FUYU_BOT_INBOX`：没设时 `pnpm release` 不会把分享图推给微信 / QQ 机器人（用户要收），先按 `bot/README.md`「astrbot_plugin_fuyu_release」设好再发。
 
-**每一步推 Bark 到用户手机**（用户定的）：`pnpm release` 自己推它的每一步；在它之前的步骤（开始验证、PR 开了、合入、发版 PR 开了、要用户确认说明时）由你在那一刻跑 `node scripts/release/notify.mjs "Fuyu v<版本号> · <步骤>" "<一句话>"`。它读 `~/.tauri/fuyu/bark.json`，缺了会报错：先配好再发（格式见 `docs/features/updater.md`「发布一个可自动更新的版本」），用户不在电脑前时靠它知道进度。
+**每一步推 Bark 到用户手机**（用户定的）：`pnpm release` 自己推它的每一步；在它之前的步骤（开始验证、验证结果、要用户确认说明、PR 合入时；`pnpm release:open` 自己推「发版 PR 开了」）由你在那一刻跑 `node scripts/release/notify.mjs "Fuyu v<版本号> · <步骤>" "<一句话>"`。它读 `~/.tauri/fuyu/bark.json`，缺了会报错：先配好再发（格式见 `docs/features/updater.md`「发布一个可自动更新的版本」），用户不在电脑前时靠它知道进度。
 
 协作者发版前要先告诉 TixXin，免得两人各改一次版本号、各写一份说明；他平时在自己的分支上开发，版本号提交可以走分支 PR，合入后在和 `origin/main` 一致的 `main` 上跑 `pnpm release`。
 
@@ -27,21 +27,19 @@ description: >
 
 ## 顺序
 
-1. **在发版目录里做，不在主工作区**：`../Fuyu-release`（主仓库的一个 detached worktree，只用来发版，不在里面开发；没有就 `git worktree add --detach ../Fuyu-release origin/main`，第一次 `pnpm install`）。`git fetch origin && git checkout --detach origin/main`。这样主工作区里别的会话没提交的文件、本地 `main` 上没推的提交都不挡发版，也不会混进来。
+1. **在发版目录里做，不在主工作区**：`../Fuyu-release`（主仓库的一个 detached worktree，只用来发版，不在里面开发；没有就 `git worktree add --detach ../Fuyu-release origin/main`，第一次 `pnpm install`）。先 `git fetch origin`。这样主工作区里别的会话没提交的文件、本地 `main` 上没推的提交都不挡发版，也不会混进来。
    - **先一次问清这一版带什么**：在主工作区跑 `pnpm mq:pending`（没推的提交）和 `pnpm tasks dirty`（没提交的文件，看是谁的），一起列给用户，问要不要进这一版。要等没提交的改动，就先找到改它的会话（`ListAgents` 问）等它提交，再开始验证。原因：验证、land 开始后再加东西，前一轮验证和 PR 的 CI 全部作废，要重来一轮（约 15 分钟）。
-   - 要带上的，按根 `AGENTS.md`「Git 与协作」推：`pnpm mq:verify`，再 `pnpm mq:land --yes --upto <验过的提交>`，后台 `pnpm mq:wait`。合入后回发版目录 checkout 新的 `origin/main`。
-   - **等最后一轮 land 的 CI 时就做第 2–5 步**，不要等合入。原因：CI 要 9 分钟左右，用户确认说明也要几分钟，两段可以重叠。做法：
-     - 在发版目录 `git checkout --detach <验过的提交>`（本地 `main` 上的提交在发版目录里也看得到），照第 2–5 步写说明、问用户。
-     - 合入后 `git checkout --detach origin/main`，四处版本号的改动和说明文件会跟过来。checkout 因为版本文件冲突被拒时（期间有人改了 `Cargo.lock` 这类文件）：先把说明拷到 scratchpad，丢掉发版目录里的改动，重新 checkout、`pnpm release:version`，再把说明拷回来。发版目录只用来发版，里面没有别人的改动，丢掉是安全的；`pnpm release:version` 见到说明已存在不会覆盖。
-     - 再对一下 `git log --oneline --no-merges <上一个 tag>..HEAD`：这期间别人合入、草稿里没有的提交补进说明；有用户能感觉到的新条目，再问用户一次。
+   - 要带上的：主工作区 `pnpm mq:verify` 验这批（按根 `AGENTS.md`「验证」），**不 `mq:land`**：这批和版本号提交在第 6 步合成一个 PR，开 PR 就开始预构建。原因：先合代码再开发版 PR 要等两轮 CI（各约 6 分钟），预构建也只能等第一轮合完才开始。
+   - **验证的同时做第 2–5 步**：发版目录 `git checkout --detach <在验的提交>`（本地 `main` 上的提交在发版目录里也看得到；不带这批就用 `origin/main`），写说明、问用户。验证挂了、修好又验了新的提交，就把说明拷到 scratchpad，丢掉发版目录里的改动，checkout 新的提交，`pnpm release:version`，再把说明拷回来（发版目录只用来发版，丢掉是安全的；说明已存在时 `pnpm release:version` 不覆盖）。
+   - 对一下 `git log --oneline --no-merges <上一个 tag>..HEAD`：草稿里没有的提交补进说明，有用户能感觉到的新条目再问用户一次。
 2. **定版本号**：看 `gh release list --repo TixXin/Fuyu --limit 5` 和 `package.json`，按 `docs/releases/README.md`。
 3. `pnpm release:version <版本号>`：改四处版本号，写草稿 `docs/releases/v<版本号>.md`。
 4. **写说明**：草稿的「更新内容」和 What's New 里已经放了提交自带的 `Release note:` 行，合并、重排，再读没写这一行的提交的正文（不只标题），按 `docs/releases/README.md` 补成中英文，删掉草稿标记。正式版的草稿已经把这一轮各测试版的说明拼好（新的测试版在前，修复合成一组），只要去重、按重要程度重排，再补上草稿里列出的、最后一个测试版之后的提交。说明同时给 Windows 和 Mac 用户看：按其中「平台」一节，只属于一个系统的条目标「（Windows）」/「（Mac）」，快捷键两边不同时都写。在 Windows 上写也要这样，别照 Windows 的习惯写。
 5. **问用户要不要继续**：用中文列出版本号和说明里的更新内容（按新功能、AI Agent、修复等分组，每条一句话；不面向用户的改动合成一句带过），再列草稿注释里的 `Manual check:` 项（真岛上要看的，标明哪台机器；用户开着 `pnpm tauri dev` 时可以用 `pnpm lab` 帮着展开收起），问「看过了吗，继续发布吗」。用户要删改条目就先改说明再问一次；说不发就停下，发版目录里的改动留着不提交。到这一步为止只改了发版目录里的本地文件，什么都还没推。
-6. 在发版目录跑 `pnpm test:regression version-history --update-snapshots`（这个回归页把 `docs/releases` 里的说明打包进页面，不更新快照，PR 的 CI 会挂），再 `git add` 四处版本号、说明和这份快照，提交 `chore(release): <版本号>`。写一份中文 PR 正文（`## 改了什么` 写版本号和这版的要点，`## 关联` 写发布说明文件）。`mq:land` 只认本地 `main` 上的提交，所以手动开：`git push origin HEAD:refs/heads/land/TixXin/release-<版本号>`、`gh pr create --base main --head <该分支> --title "Release <版本号>" --body-file <文件>`、`gh pr merge <该分支> --auto --merge`。**紧接着 `pnpm release:prebuild`**（在 CI 上编 Windows 和 Mac，和 PR 的 CI 同时跑），再后台循环 `gh pr view <号> --json state` 等合入。没合入就不要往下走。
-   - **陷阱**：合入前别的 PR 先合入，这个 PR 会被更新到新的 `main` 上，那批提交就进了这一版，预构建也作废、`pnpm release` 要重编。所以开发版 PR 前，用 `gh pr list --repo TixXin/Fuyu --state open --json number,author,autoMergeRequest` 列出**所有**开着自动合并的 PR（协作者的也算，不只总控提的），逐个 `gh pr merge <号> --disable-auto`，告诉开它的会话或人；发版 PR 合入后逐个重新打开。
+6. 在发版目录跑 `pnpm test:regression version-history --update-snapshots`（这个回归页把 `docs/releases` 里的说明打包进页面，不更新快照，PR 的 CI 会挂），再 `git add` 四处版本号、说明和这份快照，提交 `chore(release): <版本号>`。写一份中文 PR 正文（`## 改了什么` 写版本号、这版的要点和带上的这批改动，`## 关联` 写发布说明文件），然后 `pnpm release:open --body <文件>`：它查这批验过没有（没验完要用户同意才加 `--unverified`），合上最新的 `origin/main`，推到 `land/TixXin/release-<版本号>`，开 PR 并开启自动合并，紧接着开始预构建。然后在主工作区后台 `pnpm mq:wait <PR 号>` 等合入（合入后本地 `main` 自动跟上）。没合入就不要往下走。
+   - **陷阱**：合入前别的 PR 先合入，这个 PR 会被更新到新的 `main` 上，那批提交就进了这一版，预构建也作废、`pnpm release` 要重编。所以 `pnpm release:open` 前，用 `gh pr list --repo TixXin/Fuyu --state open --json number,author,autoMergeRequest` 列出**所有**开着自动合并的 PR（协作者的也算，不只总控提的），逐个 `gh pr merge <号> --disable-auto`，告诉开它的会话或人；发版 PR 合入后逐个重新打开。
    - PR 的 CI 某一项卡满时限被取消（Mac runner 常见），不是代码问题，马上 `gh run rerun <运行号> --failed` 重跑，别等。
-7. 合入后在发版目录 `git fetch origin && git checkout --detach <合并提交>`，后台运行 `pnpm release`（本机已有一份在跑时它直接退出：同一段对话可能有两个副本在发，见到这个报错就去盯那一份的日志，不要重启），日志写到 scratchpad。它会：代码树和预构建一样时直接用预构建（日志里有 `Using the prebuild`），否则在 GitHub Actions 上编 Windows 和 Mac 版（约 6 分钟）；下载回来用本机私钥签名，上传草稿并核对 SHA-256，跑 `release-smoke.yml` 冒烟测试（约 1 分钟），通过才公开；然后换主工作区的本机程序、刷新 beta 通道、读回两个通道、把这一版导入官网 fuyu.tix.xin 并读回、在 issue 下留言，关联任务都完成的 issue 顺手关掉。
+7. 合入后在发版目录 `git fetch origin && git checkout --detach <合并提交>`，后台运行 `pnpm release`（本机已有一份在跑时它直接退出：同一段对话可能有两个副本在发，见到这个报错就去盯那一份的日志，不要重启），日志写到 scratchpad。它会：代码树和预构建一样时直接用预构建（日志里有 `Using the prebuild`），否则在 GitHub Actions 上编 Windows 和 Mac 版（约 6 分钟）；下载回来用本机私钥签名，上传草稿并核对 SHA-256，等 `release-smoke.yml` 冒烟测试（用了预构建时 Windows 一编完就开始测，否则测草稿，约 1 分钟），通过才公开；然后换主工作区的本机程序、刷新 beta 通道、读回两个通道、把这一版导入官网 fuyu.tix.xin 并读回、在 issue 下留言，关联任务都完成的 issue 顺手关掉。
 8. **看日志，不只看退出码**（管道到 `tail` 时退出码总是 0）。要看到 `✓ Published`、`✓ Channels read back` 和 `Uploaded to the QQ bot inbox`；最后一行缺了就是没推分享图，按日志末尾的提示补推。
 
 ## 出问题

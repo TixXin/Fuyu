@@ -6,11 +6,13 @@ export type ShelfIsland = {
   shelf: FileShelfController | null;
   dropping: boolean;
   count: number | null;
+  enabled: boolean;
+  openPage: (() => void) | null;
 };
 
 export const SHELF_COUNT_HINT = "shelf.count";
 
-export const shelfIsland = createRunnerStore<ShelfIsland>({ shelf: null, dropping: false, count: null });
+export const shelfIsland = createRunnerStore<ShelfIsland>({ shelf: null, dropping: false, count: null, enabled: false, openPage: null });
 
 export function shelfContributions(count: number | null): IslandContribution[] {
   return count !== null && count > 0

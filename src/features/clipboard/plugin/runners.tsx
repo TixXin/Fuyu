@@ -48,7 +48,9 @@ function ClipboardRunner(props: RunnerProps) {
   const copyCard = useClipboardCopyCard(!props.quiet);
   const { settings } = clipboard.clipboardHistory;
   useShortcutKey(settings.enabled && settings.shortcutEnabled, settings.shortcut, toggle);
-  clipboardIsland.useProvide(useMemo(() => ({ clipboard, copyCard }), [clipboard, copyCard]));
+  const { openIslandPage } = props;
+  const openPage = useCallback(() => openIslandPage("clipboard"), [openIslandPage]);
+  clipboardIsland.useProvide(useMemo(() => ({ clipboard, copyCard, openPage }), [clipboard, copyCard, openPage]));
   const list: IslandContribution[] = copyCard.current ? [{ kind: "notice", item: "copy" }] : [];
   useIslandContributions(OWNER, "clipboard.island", list);
   return null;

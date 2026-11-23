@@ -16,6 +16,7 @@
     "release": "node scripts/release/release.mjs",
     "release:version": "node scripts/release/bump.mjs",
     "release:prebuild": "node scripts/release/prebuild.mjs",
+    "release:open": "node scripts/release/open-pr.mjs",
     "release:share": "node scripts/release/share-card.mjs",
     "plugins:resign": "node scripts/plugins/resign-market.mjs",
     "plugins:keygen": "node scripts/plugins/plugin-signing.mjs keygen",

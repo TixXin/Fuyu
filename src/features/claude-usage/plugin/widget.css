@@ -1,14 +1,38 @@
 .usage-widget__body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
+  margin: auto 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.usage-widget__body:focus-visible,
+.usage-widget__empty button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.usage-widget__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
 
 .usage-widget__numbers {
+  flex: 1;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 1px 6px;
+  gap: 1px 4px;
+  min-width: 0;
   margin: 0;
   font-size: 11px;
   white-space: nowrap;
@@ -23,4 +47,40 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   text-align: right;
+}
+
+.usage-widget__reset {
+  overflow: hidden;
+  color: var(--widget-text-3);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usage-widget__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: auto 0;
+  min-width: 0;
+  color: var(--widget-text-3);
+  font-size: 11.5px;
+  line-height: 1.3;
+}
+
+.usage-widget__empty button {
+  height: 22px;
+  padding: 0 10px;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+}
+
+.usage-widget__empty button:hover {
+  background: color-mix(in srgb, var(--color-accent) 28%, transparent);
 }

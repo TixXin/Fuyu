@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
+import { layoutZoom } from "../../lib/layoutZoom";
 
 const ACTIVE = ".dot-button--active, .island__agent-button--active";
 
@@ -18,16 +19,17 @@ export function usePagePill(headerRef: RefObject<HTMLElement | null>, scrollRef:
     }
     const box = header.getBoundingClientRect();
     const rect = active.getBoundingClientRect();
-    const left = rect.left - box.left;
+    const zoom = layoutZoom(header, box);
+    const left = (rect.left - box.left) / zoom;
     const fresh = lastLeft.current === null || pill.dataset.shown !== "true";
     pill.dataset.instant = instant || fresh ? "true" : "false";
     if (!instant && !fresh && lastLeft.current !== null && left !== lastLeft.current) {
       pill.dataset.dir = left > lastLeft.current ? "forward" : "back";
     }
     pill.style.left = `${left}px`;
-    pill.style.right = `${box.right - rect.right}px`;
-    pill.style.top = `${rect.top - box.top}px`;
-    pill.style.height = `${rect.height}px`;
+    pill.style.right = `${(box.right - rect.right) / zoom}px`;
+    pill.style.top = `${(rect.top - box.top) / zoom}px`;
+    pill.style.height = `${rect.height / zoom}px`;
     pill.dataset.shown = "true";
     lastLeft.current = left;
   }, [headerRef]);

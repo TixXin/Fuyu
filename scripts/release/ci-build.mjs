@@ -49,12 +49,13 @@ export function dirBytes(dir) {
   return total;
 }
 
-export function downloadCiBuild(run, { workflow, label, repo, artifact, since, runId, dir, clock = releaseClock, wait = sleep, now = Date.now }) {
+export function downloadCiBuild(run, { workflow, label, repo, artifact, since, runId, dir, clock = releaseClock, wait = sleep, now = Date.now, onBuilt = null }) {
   const found = runId ? { databaseId: runId, url: `https://github.com/${repo}/actions/runs/${runId}` } : findCiRun(run, { workflow, repo, since });
   if (!found) return `${workflow} was started but its run did not show up within a minute`;
   console.log(`${clock.stamp()} ${label} build running: ${found.url}`);
   if (!watchRun(run, { repo, id: found.databaseId, interval: 20 })) return `the ${label} build failed: ${found.url}`;
   clock.done(`${label} build`, `The ${label} build finished on GitHub Actions.`);
+  onBuilt?.(found);
   mkdirSync(dir, { recursive: true });
   const before = dirBytes(dir);
   const started = now();

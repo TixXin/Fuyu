@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
+import type { WidgetFlashState } from "./useWidgetFlash";
+import { WidgetFlash } from "./WidgetFlash";
 import "./IslandWidget.css";
 
 type WidgetFrameProps = {
@@ -7,10 +9,11 @@ type WidgetFrameProps = {
   title: string;
   aside?: ReactNode;
   className?: string;
+  flash?: WidgetFlashState;
   children: ReactNode;
 };
 
-export function WidgetFrame({ icon: Icon, title, aside, className, children }: WidgetFrameProps) {
+export function WidgetFrame({ icon: Icon, title, aside, className, flash = null, children }: WidgetFrameProps) {
   return (
     <div className={className ? `island-widget ${className}` : "island-widget"}>
       <div className="island-widget__head">
@@ -19,6 +22,7 @@ export function WidgetFrame({ icon: Icon, title, aside, className, children }: W
         {aside ? <span className="island-widget__aside">{aside}</span> : null}
       </div>
       <div className="island-widget__body">{children}</div>
+      <WidgetFlash flash={flash} />
     </div>
   );
 }

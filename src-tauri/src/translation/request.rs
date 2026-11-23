@@ -57,8 +57,11 @@ pub(super) async fn request(
     on_chunk: Option<Pieces<'_>>,
 ) -> Result<Translated, UserError> {
     let name = provider.name;
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(30))
+    let mut client = reqwest::Client::builder().timeout(Duration::from_secs(30));
+    if is_loopback_url(&endpoint) {
+        client = client.no_proxy();
+    }
+    let client = client
         .build()
         .map_err(|error| UserError::new("http.client", "Could not set up the connection.").detail(error))?;
 
