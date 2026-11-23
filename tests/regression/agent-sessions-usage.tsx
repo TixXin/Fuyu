@@ -1,11 +1,13 @@
 import { act, StrictMode } from "react";
-import type { Root } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
 import { DEFAULT_USAGE_VIEW, type UsageView } from "../../src/features/agent-status/usage";
 import { checkUsageLayouts } from "./agent-usage-layouts";
+import { SessionLightStyleContext } from "../../src/features/agent-status/SessionLightMark";
+import { JellyfishStyleContext } from "../../src/components/jellyfish/jellyfishStyleContext";
 
 type Context = { root: Root; fixture: HTMLElement; sessions: AgentSessionSummary[]; check: (condition: unknown, label: string) => void; chromeHeight: number };
 
@@ -93,4 +95,17 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   });
   check([...document.querySelectorAll(".agent-usage")].map((line) => line.getAttribute("aria-label")).join() === "Claude Code 用量,Codex 用量", "在「接入哪些 Agent」里关掉的和在额度里隐藏的都不占行");
   await checkUsageLayouts({ root, sessions, usages: wide, check });
+
+  const host = document.createElement("div");
+  fixture.after(host);
+  const lights = createRoot(host);
+  await act(async () => {
+    lights.render(<StrictMode><I18nProvider><JellyfishStyleContext.Provider value="neon"><SessionLightStyleContext.Provider value="mark"><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" /></SessionLightStyleContext.Provider></JellyfishStyleContext.Provider></I18nProvider></StrictMode>);
+  });
+  const jellies = [...host.querySelectorAll<HTMLElement>(".agent-session > .agent-session__jelly .center-jelly")];
+  check(jellies.length === sessions.length && !host.querySelector(".agent-session__dot") && jellies.every((jelly) => jelly.dataset.pixelStyle === "neon"),
+    `状态灯设成水母时，列表每行的灯也换成水母，跟着像素样式：${jellies.length}`);
+  check(jellies.map((jelly) => jelly.dataset.mood).join() === "running,waiting,idle", `水母表情跟着会话状态：${jellies.map((jelly) => jelly.dataset.mood).join()}`);
+  act(() => lights.unmount());
+  host.remove();
 }

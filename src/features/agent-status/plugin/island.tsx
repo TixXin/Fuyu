@@ -8,6 +8,8 @@ import { AgentArrangeButton } from "../AgentArrangeButton";
 import { QuotaAlertPopup } from "../QuotaAlertPopup";
 import { AgentSessionsPanel } from "../AgentSessionsPanel";
 import { AgentEmptyState } from "../AgentEmptyState";
+import { SessionLightStyleContext } from "../SessionLightMark";
+import type { AgentLightStyle } from "../../../lib/settings/types";
 import type { AgentSettingValues } from "../agentSettings";
 import { noticeOptionsOf, type AgentNoticeSettings } from "../notice/noticeOptions";
 import { agentArrange, agentPage, agentShell, quotaAlertState } from "./islandState";
@@ -31,7 +33,7 @@ type AgentsPageProps = {
     agentExpandChildren: Panel["expandChildren"];
     agentNoticeStack: Panel["stackMode"];
     agentNoticeNotch: Panel["notch"];
-  } & AgentNoticeSettings & Pick<AgentSettingValues, "agentUsageHidden" | "agentUsageTightest" | "agentUsageReset" | "agentUsageStyle" | "agentUsageLayout" | "agentEmptyStyle" | "agentSessionHours" | "agentHiddenProviders">;
+  } & AgentNoticeSettings & Pick<AgentSettingValues, "agentUsageHidden" | "agentUsageTightest" | "agentUsageReset" | "agentUsageStyle" | "agentUsageLayout" | "agentEmptyStyle" | "agentSessionHours" | "agentHiddenProviders"> & { agentLightStyle: AgentLightStyle };
   onOpenSettings: (section: "agentConnect") => void;
 };
 
@@ -55,7 +57,7 @@ function AgentsPage({ settings, onOpenSettings }: AgentsPageProps) {
       onOpenConnect={() => onOpenSettings("agentConnect")}
     />
   );
-  return <AgentSessionsPanel usageView={usageView} empty={empty} sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} expandChildren={settings.agentExpandChildren} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} stack={agents.alertedStack} stackMode={settings.agentNoticeStack} notch={settings.agentNoticeNotch} onOpenAgentPage={agents.alerted?.openAgentPage} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} notice={noticeOptionsOf(settings)} />;
+  return <SessionLightStyleContext.Provider value={settings.agentLightStyle}><AgentSessionsPanel usageView={usageView} empty={empty} sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} expandChildren={settings.agentExpandChildren} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} stack={agents.alertedStack} stackMode={settings.agentNoticeStack} notch={settings.agentNoticeNotch} onOpenAgentPage={agents.alerted?.openAgentPage} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} notice={noticeOptionsOf(settings)} /></SessionLightStyleContext.Provider>;
 }
 
 pageSlot.add({ ...islandPage, component: AgentsPage }, OWNER);
