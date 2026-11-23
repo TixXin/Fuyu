@@ -1,5 +1,3 @@
-const DAY_MS = 86_400_000;
-
 const pad = (value: number) => String(value).padStart(2, "0");
 
 export function dayKey(date: Date): string {
@@ -33,11 +31,6 @@ export function yearProgress(now: Date): number {
   const start = new Date(now.getFullYear(), 0, 1).getTime();
   const end = new Date(now.getFullYear() + 1, 0, 1).getTime();
   return (now.getTime() - start) / (end - start);
-}
-
-export function daysUntil(now: Date, target: Date): number {
-  const from = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  return Math.max(0, Math.round((target.getTime() - from) / DAY_MS));
 }
 
 const LUNAR_NEW_YEAR: readonly [number, number, number][] = [

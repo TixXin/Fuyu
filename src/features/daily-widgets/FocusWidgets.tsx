@@ -3,8 +3,8 @@ import { Flame, Pause, Play, RotateCcw, Target } from "lucide-react";
 import { WidgetFrame } from "../../components/island-widget/WidgetFrame";
 import { useTranslation } from "../../i18n";
 import { dayKey, focusText, lastDays, streakLength } from "./days.ts";
-import { POMODORO_MS } from "./storage.ts";
-import { pausePomodoro, pomodoroLeft, resetPomodoro, settlePomodoro, startPomodoro, toggleCheckin, useDaily, useNow } from "./store.ts";
+import { cyclePomodoroLength, pausePomodoro, pomodoroLeft, resetPomodoro, settlePomodoro, startPomodoro } from "./pomodoro.ts";
+import { toggleCheckin, useDaily, useNow } from "./store.ts";
 import { clickOnly } from "../../components/island-widget/clickOnly";
 
 const RING_R = 36;
@@ -20,17 +20,26 @@ export function PomodoroWidget() {
   const data = useDaily();
   const now = useNow(1000).getTime();
   const running = data.pomodoro.endsAt !== null;
-  useEffect(() => settlePomodoro(now), [now]);
+  useEffect(() => {
+    settlePomodoro(now);
+  }, [now]);
   const left = pomodoroLeft(now);
-  const touched = !running && left < POMODORO_MS;
+  const total = data.pomodoro.minutes * 60_000;
+  const touched = !running && left < total;
   return (
     <div className="island-widget daily-pomodoro" data-running={running || undefined}>
       <svg className="daily-ring" viewBox="0 0 84 84" aria-hidden="true">
         <circle className="daily-ring__track" cx="42" cy="42" r={RING_R} />
-        <circle className="daily-ring__value" cx="42" cy="42" r={RING_R} strokeDasharray={RING_LENGTH} strokeDashoffset={RING_LENGTH * (left / POMODORO_MS)} />
+        <circle className="daily-ring__value" cx="42" cy="42" r={RING_R} strokeDasharray={RING_LENGTH} strokeDashoffset={RING_LENGTH * (left / total)} />
       </svg>
       <div className="daily-pomodoro__center">
-        <div className="daily-big daily-pomodoro__time">{clock(left)}</div>
+        {running || touched ? (
+          <div className="daily-big daily-pomodoro__time">{clock(left)}</div>
+        ) : (
+          <button className="daily-big daily-pomodoro__time daily-pomodoro__length" type="button" title={t.pomodoroLength(data.pomodoro.minutes)} onClick={clickOnly(cyclePomodoroLength)}>
+            {clock(left)}
+          </button>
+        )}
         <div className="daily-pomodoro__buttons">
           <button className="daily-button" type="button" aria-label={running ? t.pause : t.start} title={running ? t.pause : t.start} onClick={clickOnly(() => (running ? pausePomodoro(Date.now()) : startPomodoro(Date.now())))}>
             {running ? <Pause size={11} strokeWidth={2.6} /> : <Play size={11} strokeWidth={2.6} />}
