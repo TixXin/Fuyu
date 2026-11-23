@@ -100,9 +100,20 @@ pub(crate) fn image() -> Image<'static> {
     Image::new_owned(rgba, WIDTH, HEIGHT)
 }
 
+pub(crate) fn from_alpha(alpha: &[u8]) -> Option<Image<'static>> {
+    if alpha.len() != (WIDTH * HEIGHT) as usize {
+        return None;
+    }
+    let mut rgba = Vec::with_capacity(alpha.len() * 4);
+    for &value in alpha {
+        rgba.extend_from_slice(&[0, 0, 0, value]);
+    }
+    Some(Image::new_owned(rgba, WIDTH, HEIGHT))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{alpha, bell, image, scale, x_offset, HEIGHT, VIEW_X, VIEW_Y, WIDTH};
+    use super::{alpha, bell, from_alpha, image, scale, x_offset, HEIGHT, VIEW_X, VIEW_Y, WIDTH};
 
     fn at(x: f64, y: f64) -> u8 {
         let px = ((x - VIEW_X) * scale() + x_offset()).floor() as u32;
@@ -125,5 +136,16 @@ mod tests {
         let mark = image();
         assert_eq!((mark.width(), mark.height()), (WIDTH, HEIGHT));
         assert!(mark.rgba().chunks(4).all(|pixel| pixel[..3] == [0, 0, 0]), "a template image is black, macOS tints it");
+    }
+    #[test]
+    fn a_drawn_mark_keeps_its_alpha_and_is_refused_at_any_other_size() {
+        let mut drawn = vec![0u8; (WIDTH * HEIGHT) as usize];
+        drawn[5] = 255;
+        drawn[6] = 41;
+        let mark = from_alpha(&drawn).expect("a full-size mark is accepted");
+        assert_eq!((mark.width(), mark.height()), (WIDTH, HEIGHT));
+        assert_eq!(&mark.rgba()[20..28], &[0, 0, 0, 255, 0, 0, 0, 41]);
+        assert!(from_alpha(&drawn[1..]).is_none());
+        assert!(from_alpha(&[]).is_none());
     }
 }

@@ -934,12 +934,12 @@
       "zh-CN": {
         "group": "",
         "title": "水母画风",
-        "description": "水母出现的地方一起换：收起条、中心图案、Fuyu 页签、Agent 空页面和今日小组件。像素画风一格一格地动，并按屏幕像素对齐，系统缩放是 125%、175% 时会比矢量的小一圈。鼠标停在卡片上可以看各个状态的样子。应用图标和托盘图标不变。"
+        "description": "水母出现的地方一起换：收起条、中心图案、Fuyu 页签、Agent 空页面和今日小组件。像素画风一格一格地动，并按屏幕像素对齐，系统缩放是 125%、175% 时会比矢量的小一圈。鼠标停在卡片上可以看各个状态的样子。Mac 菜单栏上的图标也跟着换成像素的；应用图标和 Windows 托盘图标不变。"
       },
       "en": {
         "group": "",
         "title": "Jellyfish look",
-        "description": "Changes the jellyfish everywhere it appears: the collapsed bar, the centre pattern, the Fuyu tab, the empty Agent page and the Today widget. The pixel looks move one square at a time and line up with screen pixels, so at 125% or 175% display scaling they come out a little smaller than the smooth one. Rest the pointer on a card to see each state. The app and tray icons stay the same."
+        "description": "Changes the jellyfish everywhere it appears: the collapsed bar, the centre pattern, the Fuyu tab, the empty Agent page and the Today widget. The pixel looks move one square at a time and line up with screen pixels, so at 125% or 175% display scaling they come out a little smaller than the smooth one. Rest the pointer on a card to see each state. On a Mac the menu bar icon turns into pixels too; the app icon and the Windows tray icon stay the same."
       }
     },
     {

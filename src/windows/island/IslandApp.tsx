@@ -37,6 +37,7 @@ import { useAccentColor } from "../../lib/theme/useAccentColor";
 import { useCollapsedGauges } from "./useCollapsedGauges";
 import { mergeIslandDecor, useIslandDecor } from "../../features/plugin-kernel/islandDecor";
 import { useTrayLanguage } from "./useTrayLanguage";
+import { useTrayMark } from "./useTrayMark";
 import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../lib/settings-backup/useSettingsFileSync";
 import { useOnboardingDemo } from "./useOnboardingDemo";
@@ -86,6 +87,7 @@ export function IslandApp() {
   const [storedSettings, setSettings] = useIslandSettings();
   useMigrateLegacySwitches(storedSettings);
   const settings = useResolvedTheme(useSettingsWithBuiltinSwitches(storedSettings));
+  useTrayMark(settings.jellyfishStyle);
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
   useFirstRunGuide();
   const demo = useOnboardingDemo();

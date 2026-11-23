@@ -141,6 +141,24 @@ pub fn set_tray_language(app: AppHandle, locale: String) {
     refresh(&app, Some(language));
 }
 
+#[tauri::command]
+pub fn set_tray_mark(app: AppHandle, alpha: Option<Vec<u8>>) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let image = match alpha {
+            Some(alpha) => crate::tray_mark::from_alpha(&alpha)
+                .ok_or_else(|| format!("The menu bar icon must be {} by {} pixels.", crate::tray_mark::WIDTH, crate::tray_mark::HEIGHT))?,
+            None => crate::tray_mark::image(),
+        };
+        if let Some(tray) = app.tray_by_id(TRAY_ID) {
+            tray.set_icon_with_as_template(Some(image), true).map_err(|error| error.to_string())?;
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (app, alpha);
+    Ok(())
+}
+
 pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
     let [toggle_text, settings_text, quit_text] = labels(TrayLanguage::Chinese, true);
     let toggle = MenuItem::with_id(app, "toggle", toggle_text, true, None::<&str>)?;
@@ -191,6 +209,7 @@ macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::tray::set_tray_language,
+            crate::tray::set_tray_mark,
         ] $($rest)*)
     };
 }
