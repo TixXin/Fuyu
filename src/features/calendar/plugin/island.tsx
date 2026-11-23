@@ -1,6 +1,7 @@
 import { defineSlot, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { CalendarPanel } from "../CalendarPanel";
 import { MeetingBannerActions, MeetingBannerNotice } from "../MeetingBannerNotice";
+import { useCalendarDayRequest } from "./dayRequest";
 import { calendarState, meetingBannerState, todoLinkState } from "./islandState";
 import { islandPage } from "./page.ts";
 import { OWNER } from "./owner.ts";
@@ -14,9 +15,12 @@ const pageSlot = defineSlot<CalendarPageProps, IslandPageMeta<Readonly<Record<st
 function CalendarPage({ onOpenSettings }: CalendarPageProps) {
   const calendar = calendarState.use();
   const link = todoLinkState.use() ?? undefined;
+  const request = useCalendarDayRequest();
   if (!calendar) return null;
   return (
     <CalendarPanel
+      key={request?.at ?? 0}
+      initialDay={request?.day ?? null}
       snapshot={calendar.snapshot}
       now={calendar.now}
       onRefresh={calendar.refresh}

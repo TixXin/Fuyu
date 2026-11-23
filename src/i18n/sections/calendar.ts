@@ -49,6 +49,8 @@ export type CalendarText = {
   eveOffDetail: (length: number) => string;
   dayLabel: (title: string, events: number) => string;
   notRead: string;
+  openPage: string;
+  openDay: (title: string) => string;
 };
 
 const ZH_WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
@@ -105,6 +107,8 @@ export const zhCN: CalendarText = {
   eveOffDetail: (length) => `共 ${length} 天`,
   dayLabel: (title, events) => (events > 0 ? `${title}，${events} 个日程` : title),
   notRead: "只读取上个月到下个月的日程，这一天的看不到",
+  openPage: "打开日历",
+  openDay: (title) => `${title}，再点一次打开日历`,
 };
 
 export const en: CalendarText = {
@@ -158,4 +162,6 @@ export const en: CalendarText = {
   eveOffDetail: (length) => `${length} days off`,
   dayLabel: (title, events) => (events === 0 ? title : `${title}, ${events === 1 ? "1 event" : `${events} events`}`),
   notRead: "Only last month to next month are read; this day's events are not shown",
+  openPage: "Open calendar",
+  openDay: (title) => `${title}, click again to open the calendar`,
 };

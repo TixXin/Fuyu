@@ -6,4 +6,6 @@ export const NEXT_MEETING_WIDGET: BuiltinWidget = { id: "next-meeting", icon: Ca
 
 export const MONTH_WIDGET: BuiltinWidget = { id: "month-calendar", icon: CalendarDays, owner: OWNER, group: "calendar", sizes: ["l"], order: 21, label: (t) => t.islandWidgets.widgets.monthCalendar };
 
+export const OPEN_CALENDAR_ACTION = "calendar.open-page";
+
 export const islandWidgets: readonly BuiltinWidget[] = [NEXT_MEETING_WIDGET, MONTH_WIDGET];

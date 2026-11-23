@@ -10,7 +10,7 @@ import { prepareCalendarEvents, resolveCalendarColor } from "./calendarPrefs";
 import { nextHolidayBreak } from "./holidayBreaks.ts";
 import { joinCalendarMeeting } from "./joinMeeting";
 import { chineseDay } from "../../utils/lunar.ts";
-import { agendaDayStarts, eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
+import { agendaDayStarts, effectiveWeekStart, eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
 import { SCHEDULED_TODO_UID, scheduledTodoEvents } from "./todoEvents";
 import { clockTime } from "./upcoming";
 import { useCalendarPrefs } from "./useCalendarPrefs";
@@ -22,20 +22,23 @@ export function CalendarPanel({
   onRefresh,
   onOpenSettings,
   todos,
+  initialDay = null,
 }: {
   snapshot: CalendarSnapshot;
   now: number;
   onRefresh: () => void;
   onOpenSettings: () => void;
   todos?: { scheduled: readonly { id: string; title: string; date: string }[]; onAdd: (title: string, date: string) => void };
+  initialDay?: number | null;
 }) {
   const t = useTranslation();
   const text = t.calendar;
   const errorText = useErrorText();
-  const lunar = useLocale().locale === "zh-CN";
+  const { locale } = useLocale();
+  const lunar = locale === "zh-CN";
   const [prefs, setPrefs] = useCalendarPrefs();
   const today = startOfDay(now);
-  const [picked, setPicked] = useState<number | null>(null);
+  const [picked, setPicked] = useState<number | null>(() => (initialDay !== null && initialDay !== today ? initialDay : null));
   const [month, setMonth] = useState<number | null>(null);
   const [unfoldedDays, setUnfoldedDays] = useState<ReadonlySet<number>>(() => new Set());
   const selected = picked ?? today;
@@ -199,7 +202,7 @@ export function CalendarPanel({
         selected={selected}
         events={events}
         showWeekNumbers={prefs.showWeekNumbers}
-        weekStartsOn={prefs.weekStartsOn}
+        weekStartsOn={effectiveWeekStart(prefs.weekStartsOn, locale)}
         onSelect={select}
         onMonth={(delta) => setMonth(monthStart(shownMonth, delta))}
       />
