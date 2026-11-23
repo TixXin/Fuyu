@@ -1,0 +1,57 @@
+.agent-empty--quota {
+  gap: 14px;
+}
+
+.agent-quota-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 22px;
+}
+
+.agent-quota-hero__divider {
+  width: 1px;
+  height: 80px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+}
+
+.agent-quota-gauge {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.agent-quota-gauge__ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.agent-quota-gauge__value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-quota-gauge__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.agent-quota-gauge__reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-placeholder);
+  font-size: 11px;
+  white-space: nowrap;
+}

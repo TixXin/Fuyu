@@ -494,6 +494,140 @@
                     </div>
                   </div>
                 </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        显示哪家
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <div aria-label="显示哪家" class="settings-choice settings-choice--multi" role="group">
+                        <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                          Claude Code
+                        </button>
+                        <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                          Codex
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        显示哪些额度
+                      </span>
+                      <span class="settings-row__description">
+                        某家没有的额度会自动跳过。也可以在岛上右键额度行直接调整。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <div aria-label="显示哪些额度" class="settings-choice settings-choice--multi" role="group">
+                        <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                          5 小时
+                        </button>
+                        <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                          7 天
+                        </button>
+                        <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                          按模型
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id11_">
+                        只看最紧的一项
+                      </label>
+                      <span class="settings-row__description">
+                        每家只显示上面选中的额度里用得最多的那一项，一行最短。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id11_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        重置时间
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <div class="settings-select">
+                        <div class="select-control">
+                          <button aria-controls="_id12_" aria-expanded="false" aria-haspopup="listbox" aria-label="重置时间" class="select-control__trigger" role="combobox" type="button">
+                            <span>
+                              最紧的那项
+                            </span>
+                            <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        额度样式
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <div aria-label="额度样式" class="settings-choice" role="group">
+                        <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                          数字
+                        </button>
+                        <button aria-pressed="false" class="settings-choice__option" type="button">
+                          进度条
+                        </button>
+                        <button aria-pressed="false" class="settings-choice__option" type="button">
+                          圆环
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        没有会话时显示
+                      </span>
+                      <span class="settings-row__description">
+                        Agent 页上没有会话可列时的画面。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <div class="settings-select">
+                        <div class="select-control">
+                          <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="没有会话时显示" class="select-control__trigger" role="combobox" type="button">
+                            <span>
+                              水母打盹
+                            </span>
+                            <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
             <section class="settings-group">

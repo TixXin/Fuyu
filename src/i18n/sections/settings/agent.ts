@@ -116,6 +116,19 @@ export type SettingsAgentText = {
   showActivityHint: string;
   showUsage: string;
   showUsageHint: string;
+  usageProviders: string;
+  usageWindows: string;
+  usageWindowsHint: string;
+  usageWindowOptions: Record<"fiveHour" | "sevenDay" | "models", string>;
+  usageTightest: string;
+  usageTightestHint: string;
+  usageReset: string;
+  usageResetOptions: Record<"tightest" | "each" | "off", string>;
+  usageStyle: string;
+  usageStyleOptions: Record<"number" | "bar" | "ring", string>;
+  emptyStyle: string;
+  emptyStyleHint: string;
+  emptyStyleOptions: Record<"sleep" | "standby" | "recent" | "quota" | "tide" | "minimal", string>;
   alerts: {
     title: string;
     hint: string;
@@ -361,6 +374,19 @@ export const zhCN: SettingsAgentText = {
   showActivityHint: "进行中的会话在回复上方显示你最近一次的提问，运行时显示它正在调用的工具（如 Bash 命令、正在改的文件）。",
   showUsage: "在顶部显示 Claude 用量",
   showUsageHint: "5 小时、7 天和各模型的用量，以及最紧的那个何时重置。读的是 claude-hud 状态栏保存的用量文件（它的 externalUsagePath 或 externalUsageWritePath 设置）；没有时不显示。",
+  usageProviders: "显示哪家",
+  usageWindows: "显示哪些额度",
+  usageWindowsHint: "某家没有的额度会自动跳过。也可以在岛上右键额度行直接调整。",
+  usageWindowOptions: { fiveHour: "5 小时", sevenDay: "7 天", models: "按模型" },
+  usageTightest: "只看最紧的一项",
+  usageTightestHint: "每家只显示上面选中的额度里用得最多的那一项，一行最短。",
+  usageReset: "重置时间",
+  usageResetOptions: { tightest: "最紧的那项", each: "每项都写", off: "不显示" },
+  usageStyle: "额度样式",
+  usageStyleOptions: { number: "数字", bar: "进度条", ring: "圆环" },
+  emptyStyle: "没有会话时显示",
+  emptyStyleHint: "Agent 页上没有会话可列时的画面。",
+  emptyStyleOptions: { sleep: "水母打盹", standby: "待命台（各家接好没有）", recent: "上一个会话", quota: "额度大圆环", tide: "今天的潮汐", minimal: "极简水平线" },
   alerts: {
     title: "弹出提醒",
     hint: "收起的岛屿会自动打开 Agent 页。会话所在窗口已在前台、游戏模式勿扰时，或你正在用展开的岛屿时不弹。",
@@ -606,6 +632,19 @@ export const en: SettingsAgentText = {
   showActivityHint: "Sessions in progress show your latest prompt above the reply and, while running, the tool they are calling (a Bash command, the file being edited).",
   showUsage: "Show Claude usage at the top",
   showUsageHint: "The 5-hour, 7-day and per-model usage, and when the fullest resets. Read from the usage file the claude-hud status line keeps (its externalUsagePath or externalUsageWritePath setting); hidden without one.",
+  usageProviders: "Show usage for",
+  usageWindows: "Usage windows",
+  usageWindowsHint: "Windows an agent does not have are skipped. You can also right-click the usage row on the island.",
+  usageWindowOptions: { fiveHour: "5 hours", sevenDay: "7 days", models: "Per model" },
+  usageTightest: "Only the tightest",
+  usageTightestHint: "Each agent shows just the fullest of the windows above, keeping the row short.",
+  usageReset: "Reset time",
+  usageResetOptions: { tightest: "Tightest only", each: "For each", off: "Hidden" },
+  usageStyle: "Usage style",
+  usageStyleOptions: { number: "Numbers", bar: "Bars", ring: "Rings" },
+  emptyStyle: "When there are no sessions",
+  emptyStyleHint: "What the agent page shows when it has no sessions to list.",
+  emptyStyleOptions: { sleep: "Sleeping jellyfish", standby: "Standby (what is connected)", recent: "Last session", quota: "Big usage rings", tide: "Today's tide", minimal: "Minimal waterline" },
   alerts: {
     title: "Pop-up alerts",
     hint: "A collapsed island opens the Agent page by itself. Not while the session's window is in front, game mode keeps the island quiet, or you are using the open island.",

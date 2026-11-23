@@ -13,7 +13,7 @@
 .center-jelly[data-mood="waiting"] { --center-jelly-fill: var(--center-jelly-waiting, #ffcd3c); }
 .center-jelly[data-mood="failed"] { --center-jelly-fill: var(--center-jelly-failed, #f2554c); }
 .center-jelly[data-mood="done"] { --center-jelly-fill: var(--center-jelly-done, #5ed69e); }
-.island-light .center-jelly[data-mood="idle"] { --center-jelly-fill: var(--center-jelly-idle-light, #ecdcc8); }
+.island-light .center-jelly:is([data-mood="idle"], [data-mood="sleep"]) { --center-jelly-fill: var(--center-jelly-idle-light, #ecdcc8); }
 
 .center-pattern .center-jelly svg,
 .center-jelly svg {
@@ -34,7 +34,7 @@
   transition: fill var(--motion-medium) var(--motion-ease);
 }
 .center-jelly-outline { fill: none; }
-.island-light .center-jelly[data-mood="idle"] .center-jelly-outline {
+.island-light .center-jelly:is([data-mood="idle"], [data-mood="sleep"]) .center-jelly-outline {
   stroke: var(--center-jelly-outline-light, #b49d82);
   stroke-width: 2.2;
 }
@@ -70,6 +70,8 @@
 .center-jelly:is([data-mood="idle"], [data-mood="waiting"], [data-mood="failed"]) .center-jelly-lids {
   animation: center-jelly-blink 5.8s var(--motion-ease-in-out) infinite;
 }
+
+.center-jelly[data-mood="sleep"] .center-jelly-body { animation: center-jelly-bob 4.8s var(--motion-ease-in-out) infinite; }
 
 .center-jelly[data-mood="running"] .center-jelly-body { animation: center-jelly-bob 1.2s var(--motion-ease-in-out) infinite; }
 .center-jelly[data-mood="running"] .center-jelly-lobe { animation: center-jelly-paddle 1.2s var(--motion-ease-in-out) infinite; }

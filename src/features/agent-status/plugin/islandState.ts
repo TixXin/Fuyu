@@ -1,5 +1,5 @@
 import { createRunnerStore } from "../../plugin-kernel/runnerStore";
-import type { AgentSessionGroup, AgentSessionSort } from "../agentSettings";
+import type { AgentSettingValues } from "../agentSettings";
 import type { AgentSessionSummary } from "../api";
 import type { QuotaAlert } from "../quotaAlerts";
 import type { AgentSession } from "../session";
@@ -30,9 +30,9 @@ export type AgentShell = {
 };
 
 export type AgentArrange = {
-  sort: AgentSessionSort;
-  group: AgentSessionGroup;
-  onChange: (patch: { agentSessionSort?: AgentSessionSort; agentSessionGroup?: AgentSessionGroup }) => void;
+  sort: AgentSettingValues["agentSessionSort"];
+  group: AgentSettingValues["agentSessionGroup"];
+  onChange: (patch: Partial<AgentSettingValues>) => void;
 };
 
 export const agentArrange = createRunnerStore<AgentArrange | null>(null);

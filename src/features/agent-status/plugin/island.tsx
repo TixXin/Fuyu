@@ -7,6 +7,8 @@ import { defineSlot, type IslandAlertMeta, type IslandCollapsedMeta, type Island
 import { AgentArrangeButton } from "../AgentArrangeButton";
 import { QuotaAlertPopup } from "../QuotaAlertPopup";
 import { AgentSessionsPanel } from "../AgentSessionsPanel";
+import { AgentEmptyState } from "../AgentEmptyState";
+import type { AgentSettingValues } from "../agentSettings";
 import { noticeOptionsOf, type AgentNoticeSettings } from "../notice/noticeOptions";
 import { agentArrange, agentPage, agentShell, quotaAlertState } from "./islandState";
 import { islandPage } from "./page.ts";
@@ -29,15 +31,31 @@ type AgentsPageProps = {
     agentExpandChildren: Panel["expandChildren"];
     agentNoticeStack: Panel["stackMode"];
     agentNoticeNotch: Panel["notch"];
-  } & AgentNoticeSettings;
+  } & AgentNoticeSettings & Pick<AgentSettingValues, "agentUsageHidden" | "agentUsageTightest" | "agentUsageReset" | "agentUsageStyle" | "agentEmptyStyle" | "agentSessionHours">;
+  onOpenSettings: (section: "agentConnect") => void;
 };
 
 const pageSlot = defineSlot<AgentsPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
-function AgentsPage({ settings }: AgentsPageProps) {
+function AgentsPage({ settings, onOpenSettings }: AgentsPageProps) {
   const agents = agentPage.use();
+  const onChange = agentArrange.use()?.onChange;
+  const sessions = agentShell.use().sessions;
   if (!agents) return null;
-  return <AgentSessionsPanel sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} expandChildren={settings.agentExpandChildren} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} stack={agents.alertedStack} stackMode={settings.agentNoticeStack} notch={settings.agentNoticeNotch} onOpenAgentPage={agents.alerted?.openAgentPage} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} notice={noticeOptionsOf(settings)} />;
+  const usageView = { hidden: settings.agentUsageHidden, tightest: settings.agentUsageTightest, reset: settings.agentUsageReset, style: settings.agentUsageStyle, onChange };
+  const empty = (
+    <AgentEmptyState
+      style={settings.agentEmptyStyle}
+      sessions={sessions}
+      sessionHours={settings.agentSessionHours}
+      showUsage={settings.agentShowUsage === true}
+      usages={agents.usages}
+      usageView={usageView}
+      onSettingsChange={onChange}
+      onOpenConnect={() => onOpenSettings("agentConnect")}
+    />
+  );
+  return <AgentSessionsPanel usageView={usageView} empty={empty} sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} expandChildren={settings.agentExpandChildren} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} stack={agents.alertedStack} stackMode={settings.agentNoticeStack} notch={settings.agentNoticeNotch} onOpenAgentPage={agents.alerted?.openAgentPage} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} notice={noticeOptionsOf(settings)} />;
 }
 
 pageSlot.add({ ...islandPage, component: AgentsPage }, OWNER);

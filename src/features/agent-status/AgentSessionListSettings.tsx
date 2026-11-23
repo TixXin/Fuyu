@@ -5,6 +5,7 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { SessionViewArt } from "./AgentAppearanceGlyphs";
+import { AgentUsageSettings } from "./AgentUsageSettings";
 import {
   AGENT_HOST_DISPLAYS,
   AGENT_ARCHIVE_MOTIONS,
@@ -104,6 +105,7 @@ export function AgentSessionListSettings({
         {toggle("agentHideFinished", text.hideFinished, text.hideFinishedHint)}
         {toggle("agentHideClosed", text.hideClosed, text.hideClosedHint)}
         {toggle("agentShowUsage", text.showUsage, text.showUsageHint)}
+        <AgentUsageSettings settings={settings} update={update} />
       </SettingsGroup>
     </>
   );

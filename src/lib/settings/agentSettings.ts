@@ -15,6 +15,10 @@ export type AgentNoticeScrollbar = "auto" | "always";
 export type AgentNoticeClick = "window" | "page";
 export type AgentNoticeStack = "peek" | "count" | "wings";
 export type AgentNoticeButtonOrder = "allowRight" | "allowLeft";
+export type AgentUsageItem = "claudeCode" | "codex" | "fiveHour" | "sevenDay" | "models";
+export type AgentUsageReset = "tightest" | "each" | "off";
+export type AgentUsageStyle = "number" | "bar" | "ring";
+export type AgentEmptyStyle = "sleep" | "standby" | "recent" | "quota" | "tide" | "minimal";
 
 export const AGENT_HOST_DISPLAYS: readonly AgentHostDisplay[] = ["both", "icon", "name", "off"];
 export const AGENT_SESSION_VIEWS: readonly AgentSessionView[] = ["list", "cards", "compact"];
@@ -30,6 +34,10 @@ export const AGENT_NOTICE_SCROLLBARS: readonly AgentNoticeScrollbar[] = ["auto",
 export const AGENT_NOTICE_CLICKS: readonly AgentNoticeClick[] = ["window", "page"];
 export const AGENT_NOTICE_STACKS: readonly AgentNoticeStack[] = ["peek", "count", "wings"];
 export const AGENT_NOTICE_BUTTON_ORDERS: readonly AgentNoticeButtonOrder[] = ["allowRight", "allowLeft"];
+export const AGENT_USAGE_ITEMS: readonly AgentUsageItem[] = ["claudeCode", "codex", "fiveHour", "sevenDay", "models"];
+export const AGENT_USAGE_RESETS: readonly AgentUsageReset[] = ["tightest", "each", "off"];
+export const AGENT_USAGE_STYLES: readonly AgentUsageStyle[] = ["number", "bar", "ring"];
+export const AGENT_EMPTY_STYLES: readonly AgentEmptyStyle[] = ["sleep", "standby", "recent", "quota", "tide", "minimal"];
 export const AGENT_NOTICE_MESSAGE_LINES = [4, 6, 8, 12, 0] as const;
 export const AGENT_NOTICE_COMMAND_LINES = [1, 2, 3, 5] as const;
 export const AGENT_NOTICE_YOUR_TURN_SECONDS = [0, 15, 30] as const;
@@ -53,6 +61,11 @@ export type AgentSettingValues = {
   agentShowModel: boolean;
   agentShowActivity: boolean;
   agentShowUsage: boolean;
+  agentUsageHidden: AgentUsageItem[];
+  agentUsageTightest: boolean;
+  agentUsageReset: AgentUsageReset;
+  agentUsageStyle: AgentUsageStyle;
+  agentEmptyStyle: AgentEmptyStyle;
   agentExpandChildren: boolean;
   agentAlertCompleted: boolean;
   agentAlertFailed: boolean;
@@ -94,6 +107,11 @@ export const DEFAULT_AGENT_SETTINGS: AgentSettingValues = {
   agentShowModel: true,
   agentShowActivity: true,
   agentShowUsage: true,
+  agentUsageHidden: [],
+  agentUsageTightest: false,
+  agentUsageReset: "tightest",
+  agentUsageStyle: "number",
+  agentEmptyStyle: "sleep",
   agentExpandChildren: false,
   agentAlertCompleted: true,
   agentAlertFailed: true,
@@ -146,6 +164,11 @@ export function normalizeAgentSettings(settings: LegacyIslandSettings | null | u
     agentShowModel: settings?.agentShowModel !== false,
     agentShowActivity: settings?.agentShowActivity !== false,
     agentShowUsage: settings?.agentShowUsage !== false,
+    agentUsageHidden: normalizeUsageHidden(settings?.agentUsageHidden),
+    agentUsageTightest: settings?.agentUsageTightest === true,
+    agentUsageReset: oneOf(AGENT_USAGE_RESETS, settings?.agentUsageReset, DEFAULT_AGENT_SETTINGS.agentUsageReset),
+    agentUsageStyle: oneOf(AGENT_USAGE_STYLES, settings?.agentUsageStyle, DEFAULT_AGENT_SETTINGS.agentUsageStyle),
+    agentEmptyStyle: oneOf(AGENT_EMPTY_STYLES, settings?.agentEmptyStyle, DEFAULT_AGENT_SETTINGS.agentEmptyStyle),
     agentExpandChildren: settings?.agentExpandChildren === true,
     agentAlertCompleted: settings?.agentAlertCompleted !== false,
     agentAlertFailed: settings?.agentAlertFailed !== false,
@@ -180,4 +203,9 @@ function normalizeHiddenProviders(settings: LegacyIslandSettings | null | undefi
     ...(settings?.agentShowClaudeCode === false ? ["claudeCode"] : []),
     ...(settings?.agentShowCodex === false ? ["codex"] : []),
   ];
+}
+
+function normalizeUsageHidden(saved: unknown): AgentUsageItem[] {
+  if (!Array.isArray(saved)) return [];
+  return AGENT_USAGE_ITEMS.filter((item) => saved.includes(item));
 }

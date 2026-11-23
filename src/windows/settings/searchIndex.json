@@ -4016,6 +4016,106 @@
     {
       "page": "agentSessions",
       "zh-CN": {
+        "group": "会话列表",
+        "title": "显示哪家",
+        "options": [
+          "Claude Code",
+          "Codex"
+        ]
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Show usage for",
+        "options": [
+          "Claude Code",
+          "Codex"
+        ]
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "显示哪些额度",
+        "description": "某家没有的额度会自动跳过。也可以在岛上右键额度行直接调整。",
+        "options": [
+          "5 小时",
+          "7 天",
+          "按模型"
+        ]
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Usage windows",
+        "description": "Windows an agent does not have are skipped. You can also right-click the usage row on the island.",
+        "options": [
+          "5 hours",
+          "7 days",
+          "Per model"
+        ]
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "只看最紧的一项",
+        "description": "每家只显示上面选中的额度里用得最多的那一项，一行最短。"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Only the tightest",
+        "description": "Each agent shows just the fullest of the windows above, keeping the row short."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "重置时间"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Reset time"
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "额度样式",
+        "options": [
+          "数字",
+          "进度条",
+          "圆环"
+        ]
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Usage style",
+        "options": [
+          "Numbers",
+          "Bars",
+          "Rings"
+        ]
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "没有会话时显示",
+        "description": "Agent 页上没有会话可列时的画面。"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "When there are no sessions",
+        "description": "What the agent page shows when it has no sessions to list."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
         "group": "隐藏会话",
         "title": "添加规则",
         "options": [

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Archive } from "lucide-react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { ArchivedNotice } from "./ArchivedNotice";
@@ -10,7 +10,8 @@ import { sessionLight } from "./sessionLight";
 import { useTranslation } from "../../i18n";
 import { AgentSessionCard } from "./AgentSessionCard";
 import { AgentUsageBar } from "./AgentUsageBar";
-import type { AgentUsages } from "./usage";
+import type { AgentUsages, UsageView } from "./usage";
+import type { UsageViewChange } from "./AgentUsageMenu";
 import { focusAgentWindow, listenAgentFocusWindowOnly, type AgentSessionSummary } from "./api";
 import { arrangeSessions, isActivePhase, modelLabel, sessionAge, sessionProject } from "./sessionList";
 import { shownEffort } from "./effortLabels";
@@ -68,6 +69,8 @@ export function AgentSessionsPanel({
   notch = "band",
   showUsage: usageOn = false,
   usages,
+  usageView,
+  empty,
   approvals,
   notice = DEFAULT_AGENT_NOTICE_OPTIONS,
   onOpenAgentPage,
@@ -91,6 +94,8 @@ export function AgentSessionsPanel({
   notch?: AgentNoticeNotch;
   showUsage?: boolean;
   usages?: AgentUsages;
+  usageView?: UsageView & { onChange?: UsageViewChange };
+  empty?: ReactNode;
   approvals?: AgentApprovals;
   notice?: AgentNoticeOptions;
   onOpenAgentPage?: () => void;
@@ -245,11 +250,7 @@ export function AgentSessionsPanel({
   if (sessions.length === 0) {
     return (
       <section className="agent-sessions" aria-label={t.agent.sessions.title}>
-        {showUsage && <AgentUsageBar usages={usages} />}
-        <div className="agent-sessions__empty">
-          <strong>{t.agent.sessions.empty}</strong>
-          <span>{t.agent.sessions.emptyHint}</span>
-        </div>
+        {empty ?? <>{showUsage && <AgentUsageBar usages={usages} view={usageView} onViewChange={usageView?.onChange} />}<div className="agent-sessions__empty"><strong>{t.agent.sessions.empty}</strong><span>{t.agent.sessions.emptyHint}</span></div></>}
         {removedNotice}
       </section>
     );
@@ -260,7 +261,7 @@ export function AgentSessionsPanel({
 
   return (
     <section className="agent-sessions" aria-label={t.agent.sessions.title}>
-      {showUsage && <AgentUsageBar usages={usages} />}
+      {showUsage && <AgentUsageBar usages={usages} view={usageView} onViewChange={usageView?.onChange} />}
       <ul
         ref={list.ref}
         className={`agent-sessions__list${view === "list" ? "" : ` agent-sessions__list--${view}`}${removal && !reveal ? " agent-sessions__list--archivable" : ""}${reveal ? "" : " agent-sessions__list--menu"}`}

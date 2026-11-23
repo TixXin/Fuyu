@@ -1,4 +1,5 @@
 import type { AgentUsage, UsageWindow } from "./api";
+import type { AgentUsageItem, AgentUsageReset, AgentUsageStyle } from "./agentSettings";
 
 export { isStale, liveUsage, untilReset, USAGE_STALE_MS, usageSourceLines } from "../../lib/agent-usage/usage.ts";
 
@@ -48,5 +49,26 @@ export function usageColumns(usages: readonly AgentUsage[]): UsageColumns {
     of: (key) => keys.indexOf(key) + 2,
     reset: keys.length + 2,
     stale: keys.length + 3,
+  };
+}
+
+export type UsageView = { hidden: readonly AgentUsageItem[]; tightest: boolean; reset: AgentUsageReset; style: AgentUsageStyle };
+
+export const DEFAULT_USAGE_VIEW: UsageView = { hidden: [], tightest: false, reset: "tightest", style: "number" };
+
+export function shownUsage(usage: AgentUsage, view: Pick<UsageView, "hidden" | "tightest">): AgentUsage {
+  const picked: AgentUsage = {
+    ...usage,
+    fiveHour: view.hidden.includes("fiveHour") ? null : usage.fiveHour,
+    sevenDay: view.hidden.includes("sevenDay") ? null : usage.sevenDay,
+    models: view.hidden.includes("models") ? [] : usage.models,
+  };
+  if (!view.tightest) return picked;
+  const top = tightestWindow(picked);
+  return {
+    ...picked,
+    fiveHour: picked.fiveHour === top ? top : null,
+    sevenDay: picked.sevenDay === top ? top : null,
+    models: picked.models.filter((model) => model === top),
   };
 }

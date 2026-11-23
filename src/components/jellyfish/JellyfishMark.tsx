@@ -3,7 +3,7 @@ import "./JellyfishMark.css";
 
 export const JELLY_VIEW_WIDTH = 58;
 export const JELLY_VIEW_HEIGHT = 43;
-export type JellyMood = "idle" | "running" | "waiting" | "failed" | "done";
+export type JellyMood = "idle" | "running" | "waiting" | "failed" | "done" | "sleep";
 
 const VIEW_BOX = `3 4 ${JELLY_VIEW_WIDTH} ${JELLY_VIEW_HEIGHT}`;
 const BELL = "M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z";
@@ -32,6 +32,9 @@ function Eyes() {
 }
 
 function Face({ mood }: { mood: JellyMood }) {
+  if (mood === "sleep") {
+    return <path className="center-jelly-line" d="M20.6 25.2a3.4 3.4 0 0 0 6.8 0M36.6 25.2a3.4 3.4 0 0 0 6.8 0" />;
+  }
   if (mood === "done") {
     return (
       <g className="center-jelly-lids">

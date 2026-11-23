@@ -1,0 +1,67 @@
+.agent-empty--tide {
+  gap: 4px;
+}
+
+.agent-tide {
+  width: 100%;
+  max-width: 640px;
+  margin-top: 6px;
+  overflow: visible;
+}
+
+.agent-tide__base {
+  stroke: rgba(var(--overlay-rgb, 255, 255, 255), 0.12);
+}
+
+.agent-tide__past {
+  stroke: rgba(var(--overlay-rgb, 255, 255, 255), 0.3);
+  stroke-dasharray: 2 4;
+}
+
+.agent-tide__area--claude {
+  fill: var(--agent-tide-claude, rgba(217, 119, 87, 0.6));
+  background: var(--agent-tide-claude, rgba(217, 119, 87, 0.6));
+}
+
+.agent-tide__area--codex {
+  fill: rgba(var(--overlay-rgb, 255, 255, 255), 0.42);
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.42);
+}
+
+.agent-tide__area--other {
+  fill: var(--agent-tide-other, rgba(61, 139, 255, 0.5));
+  background: var(--agent-tide-other, rgba(61, 139, 255, 0.5));
+}
+
+.agent-tide__now {
+  fill: var(--color-accent);
+}
+
+.agent-tide__tick {
+  fill: var(--text-placeholder);
+  font-size: 10px;
+}
+
+.agent-tide__legend {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 14px;
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.agent-tide__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.agent-tide__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
