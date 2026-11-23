@@ -4,14 +4,12 @@ import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { PluginIcon } from "../../features/plugin-kernel/PluginIcon";
-import { usePluginNames } from "../../features/plugin-kernel/pluginNames";
-import { localizedTitle, packageLabel } from "../../features/plugin-kernel/slotTitle";
-import { useLocale, useTranslation } from "../../i18n";
+import { useTranslation } from "../../i18n";
 import { headerDotPages, isPageEnabled, isPageShown, pageShortcutOrder, type IslandFeatures } from "./features";
 import { headerSlot, TRAILING_HEADER_IDS, withShortcut, type IslandHeaderContext } from "./slots/header";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
-import type { HeaderDotPage, IslandPage } from "./types";
+import type { IslandPage } from "./types";
 import { usePanelEditing } from "./custom-panels/panelEditing";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import { usePagePill } from "./usePagePill";
@@ -23,6 +21,7 @@ import { useHeaderSpotlight } from "./usePluginSpotlight";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { useIslandNotch } from "./notch";
 import { useRowOverflow } from "./useRowOverflow";
+import { usePageLabel } from "./usePageLabel";
 import "./IslandHeader.css";
 
 const FUYU_TAB_MARK_HEIGHT = 15;
@@ -70,8 +69,7 @@ export function IslandHeader({
   onWindowDragStart,
 }: IslandHeaderProps) {
   const t = useTranslation();
-  const { locale } = useLocale();
-  const pluginNames = usePluginNames();
+  const { builtinLabels, pageLabel } = usePageLabel();
   const { hints } = useIslandContributed();
   const editing = usePanelEditing() !== null;
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage && !editing, hoverSwitchDelayMs, page, onPageChange);
@@ -118,20 +116,6 @@ export function IslandHeader({
     isPageEnabled: (target) => isPageEnabled(target, features),
     isPageShown: (target) => isPageShown(target, features),
   };
-  const builtinLabels: Record<HeaderDotPage, string> = {
-    todo: t.island.todoList,
-    music: t.island.music,
-    calendar: t.island.calendar,
-    clipboard: t.island.clipboardHistory,
-    shelf: t.island.shelf,
-    screenshots: t.island.screenshots,
-    timer: t.island.timer,
-  };
-  const pageLabel = (item: (typeof dots)[number]) =>
-    (item.external ? null : builtinLabels[item.id as HeaderDotPage])
-    ?? localizedTitle(item.title, locale)
-    ?? localizedTitle(pluginNames.get(item.owner), locale)
-    ?? packageLabel(item.owner === "builtin" ? item.id : item.owner);
   const renderDot = (item: (typeof dots)[number]) => {
     const target: IslandPage = item.id;
     const Icon = item.icon;
