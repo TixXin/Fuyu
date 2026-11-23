@@ -6,20 +6,21 @@ import "./SessionLightMark.css";
 
 export const SessionLightStyleContext = createContext<AgentLightStyle>("dot");
 
-const MOODS: Record<SessionLight, JellyMood> = { needs: "waiting", yourTurn: "waiting", working: "running", stale: "failed", failed: "failed", done: "idle" };
+const MOODS: Record<SessionLight, JellyMood> = { needs: "waiting", yourTurn: "waiting", working: "running", stale: "stale", failed: "failed", done: "idle" };
 
-export function sessionLightMood(light: SessionLight, quiet: boolean, fresh: boolean): JellyMood {
+export function sessionLightMood(light: SessionLight, quiet: boolean, fresh: boolean, compacting = false): JellyMood {
+  if (compacting) return "compacting";
   if (quiet) return "idle";
   if (light === "done" && fresh) return "done";
   return MOODS[light];
 }
 
-export function SessionLightMark({ light, quiet, fresh, label }: { light: SessionLight; quiet: boolean; fresh: boolean; label: string }) {
+export function SessionLightMark({ light, quiet, fresh, compacting = false, label }: { light: SessionLight; quiet: boolean; fresh: boolean; compacting?: boolean; label: string }) {
   const style = useContext(SessionLightStyleContext);
   if (style === "dot") return <span className="agent-session__dot" role="img" aria-label={label} title={label} />;
   return (
     <span className="agent-session__jelly" role="img" aria-label={label} title={label}>
-      <JellyfishMark mood={sessionLightMood(light, quiet, fresh)} height={12} />
+      <JellyfishMark mood={sessionLightMood(light, quiet, fresh, compacting)} height={12} />
     </span>
   );
 }

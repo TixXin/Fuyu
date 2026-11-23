@@ -106,6 +106,11 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   check(jellies.length === sessions.length && !host.querySelector(".agent-session__dot") && jellies.every((jelly) => jelly.dataset.pixelStyle === "neon"),
     `状态灯设成水母时，列表每行的灯也换成水母，跟着像素样式：${jellies.length}`);
   check(jellies.map((jelly) => jelly.dataset.mood).join() === "running,waiting,idle", `水母表情跟着会话状态：${jellies.map((jelly) => jelly.dataset.mood).join()}`);
+  await act(async () => {
+    lights.render(<StrictMode><I18nProvider><SessionLightStyleContext.Provider value="mark"><AgentSessionsPanel sort="recent" sessions={[{ ...sessions[0], sessionId: "light-compact", compacting: true }, { ...sessions[0], sessionId: "light-stale", phase: "stale" }]} hostDisplay="both" /></SessionLightStyleContext.Provider></I18nProvider></StrictMode>);
+  });
+  const moods = [...host.querySelectorAll<HTMLElement>(".agent-session__jelly .center-jelly")].map((jelly) => jelly.dataset.mood).join();
+  check(moods === "compacting,stale", `压缩上下文和可能中断各有自己的水母表情，不再借用失败：${moods}`);
   act(() => lights.unmount());
   host.remove();
 }

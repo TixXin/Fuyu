@@ -98,7 +98,7 @@ export function AgentSessionRow({
       type="button"
       onClick={onOpen}
     >
-      <SessionLightMark light={light} quiet={looked} fresh={Boolean(unseen?.keys.has(key))} label={lightText} />
+      <SessionLightMark light={light} compacting={session.compacting === true} quiet={looked} fresh={Boolean(unseen?.keys.has(key))} label={lightText} />
       <span className="agent-session__main">
         <span className="agent-session__heading">
           <span className="agent-session__title">
