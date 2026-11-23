@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from "react";
-import { Calculator, Check, Folder, Plus, Settings2, SquareTerminal, X } from "lucide-react";
+import { Calculator, Check, Folder, Pencil, Plus, Settings2, SquareTerminal, X } from "lucide-react";
 import { clickOnly } from "../../components/island-widget/clickOnly";
 import { useTranslation } from "../../i18n";
 import type { IslandWidgetProps } from "../plugin-kernel/slots";
@@ -161,6 +161,11 @@ export function LauncherWidget({ width, height }: IslandWidgetProps) {
           </div>
         );
       })}
+      {editing ? null : (
+        <button className="sys-launcher__edit" type="button" aria-label={t.system.editLauncher} title={t.system.editLauncher} onClick={clickOnly(() => setEditing(true))}>
+          <Pencil size={11} strokeWidth={2.4} />
+        </button>
+      )}
     </div>
   );
 }
