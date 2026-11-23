@@ -1,3 +1,4 @@
+pub(crate) mod island_menu;
 mod place;
 mod window;
 
@@ -173,6 +174,9 @@ macro_rules! tauri_commands {
             crate::tray_menu::tray_menu_state,
             crate::tray_menu::tray_menu_action,
             crate::tray_menu::tray_menu_resize,
+            crate::tray_menu::island_menu::island_menu_open,
+            crate::tray_menu::island_menu::island_menu_rows,
+            crate::tray_menu::island_menu::island_menu_action,
         ] $($rest)*)
     };
 }

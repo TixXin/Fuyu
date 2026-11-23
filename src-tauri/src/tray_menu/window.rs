@@ -22,6 +22,7 @@ const IDLE_DESTROY_DELAY: Duration = Duration::from_secs(10 * 60);
 #[derive(Clone, Copy)]
 struct Anchor {
     icon: Option<Rect>,
+    island: Option<Rect>,
     cursor: (f64, f64),
 }
 
@@ -126,6 +127,7 @@ pub(crate) fn toggle(app: &AppHandle, icon: Option<&tauri::Rect>) {
         return;
     }
     cancel_idle_destroy();
+    super::island_menu::forget();
     let icon = icon_rect_copy(icon);
     let trace = WindowTrace::begin(WINDOW_LABEL, if card_window(app).is_some() { "reuse" } else { "create" });
     let handle = app.clone();
@@ -147,7 +149,23 @@ fn icon_rect_copy(rect: Option<&tauri::Rect>) -> Option<tauri::Rect> {
 fn icon_anchor(app: &AppHandle, icon: Option<&tauri::Rect>) -> Anchor {
     let displays = displays(app);
     let cursor = screen::cursor_position().unwrap_or((0.0, 0.0));
-    Anchor { icon: icon.and_then(|rect| icon_in_screen_units(rect, &displays)), cursor }
+    Anchor { icon: icon.and_then(|rect| icon_in_screen_units(rect, &displays)), island: None, cursor }
+}
+
+pub(super) fn open_beside_island(app: &AppHandle, island: Rect) {
+    cancel_idle_destroy();
+    let cursor = screen::cursor_position().unwrap_or(((island.left + island.right) / 2.0, island.top));
+    let anchor = Anchor { icon: None, island: Some(island), cursor };
+    let trace = WindowTrace::begin(WINDOW_LABEL, if card_window(app).is_some() { "reuse" } else { "create" });
+    let handle = app.clone();
+    let queued = app.run_on_main_thread(move || {
+        if let Err(error) = open(&handle, anchor, trace) {
+            eprintln!("failed to open the island menu: {error}");
+        }
+    });
+    if let Err(error) = queued {
+        eprintln!("failed to open the island menu: {error}");
+    }
 }
 
 fn open(app: &AppHandle, anchor: Anchor, mut trace: WindowTrace) -> Result<(), String> {
@@ -164,7 +182,7 @@ fn open(app: &AppHandle, anchor: Anchor, mut trace: WindowTrace) -> Result<(), S
     *ANCHOR.lock().unwrap_or_else(PoisonError::into_inner) = Some(anchor);
     let generation = GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
     position(app, &window);
-    let _ = window.emit_to(WINDOW_LABEL, OPEN_EVENT, ());
+    let _ = window.emit_to(WINDOW_LABEL, OPEN_EVENT, super::island_menu::rows());
     let app = app.clone();
     thread::spawn(move || {
         thread::sleep(SHOW_FALLBACK);
@@ -198,11 +216,14 @@ fn position(app: &AppHandle, window: &WebviewWindow) {
     let Some(anchor) = *ANCHOR.lock().unwrap_or_else(PoisonError::into_inner) else { return };
     let size = *SIZE.lock().unwrap_or_else(PoisonError::into_inner);
     let screens: Vec<Screen> = displays(app).into_iter().map(|display| display.screen).collect();
-    let probe = anchor.icon.map_or(anchor.cursor, |icon| ((icon.left + icon.right) / 2.0, (icon.top + icon.bottom) / 2.0));
+    let probe = anchor.island.or(anchor.icon).map_or(anchor.cursor, |rect| ((rect.left + rect.right) / 2.0, (rect.top + rect.bottom) / 2.0));
     let Some(screen) = place::screen_for(&screens, probe).or_else(|| place::screen_for(&screens, anchor.cursor)).or_else(|| screens.first().copied()) else {
         return;
     };
-    let (x, y) = place::place(PLATFORM, anchor.icon, anchor.cursor, &screen, size);
+    let (x, y) = match anchor.island {
+        Some(island) => place::place_beside_island(island, anchor.cursor.0, &screen, size),
+        None => place::place(PLATFORM, anchor.icon, anchor.cursor, &screen, size),
+    };
     let width = (size.0 * screen.scale).round().max(1.0) as u32;
     let height = (size.1 * screen.scale).round().max(1.0) as u32;
     let _ = screen::set_window_size(window, PhysicalSize::new(width, height));

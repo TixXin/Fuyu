@@ -9,7 +9,7 @@ src-tauri/src/
 ├── main.rs                  # 只调用 fuyu_lib::run()
 ├── lib.rs                   # 只有 mod 声明和 run()：插件、setup、托盘、collect_commands!（汇总各模块的 tauri_commands!）
 ├── tray.rs                  # 托盘图标与事件：左键、右键都开关托盘卡片（tray_menu/），卡片窗口打不开时才弹原生精简菜单（显示 / 隐藏岛屿、设置、退出），文字跟随岛屿语言（命令 set_tray_language）
-├── tray_menu/               # 托盘卡片（C99.2）：窗口 tray-menu 的创建、显示、失焦关闭（window.rs），弹出位置的纯函数（place.rs），命令 tray_menu_state / tray_menu_action / tray_menu_resize；Mac 上的面板在 macos/tray_panel.rs
+├── tray_menu/               # 托盘卡片（C99.2）：窗口 tray-menu 的创建、显示、失焦关闭（window.rs），弹出位置的纯函数（place.rs），命令 tray_menu_state / tray_menu_action / tray_menu_resize；岛的右键菜单也借这个窗口显示（island_menu.rs，命令 island_menu_open / island_menu_rows / island_menu_action）；Mac 上的面板在 macos/tray_panel.rs
 ├── tray_mark.rs             # 只在 macOS 上编译：菜单栏用的单色模板图，按 docs/assets/logo/menubar-template.svg 的水母剪影在代码里画
 ├── tray_visibility.rs       # 托盘 / 菜单栏图标显示与否（tray-icon.json，建托盘时页面还没加载所以放原生侧）；隐藏后再次打开浮屿时显示岛并打开设置
 ├── taskbar_host/            # 把窗口挂到 Win11 任务栏上（C154）：窗口所有者设成任务栏、加 NOACTIVATE | TOOLWINDOW；岛的预留槽位另由一个透明原生占位窗口（win32/taskbar_slot.rs）挂在任务栏上，岛的窗口挂在占位窗口下面（dock.rs，每 500ms 跟随任务栏位置、自动隐藏、全屏和 Explorer 重启，发 taskbar-dock-changed）；空白区域和排位的纯计算在 layout.rs，读任务栏在 snapshot.rs；命令 get_taskbar_layout / taskbar_dock / taskbar_undock；Mac 上是 unsupported.rs

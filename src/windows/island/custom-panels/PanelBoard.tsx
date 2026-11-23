@@ -95,7 +95,7 @@ export function PanelBoard({ panel, shown: preview, library, editing, board, inc
   const t = useTranslation().islandWidgets.panel;
   const free = panel.mode === "free";
   const drag = rawDrag && keptInside(panel, rawDrag, board);
-  const shown = preview ?? layoutStrip(previewOf(panel, drag, incoming, board), FUYU_ROWS, board.page);
+  const shown = preview ?? layoutStrip(previewOf(panel, drag, incoming, board), board.rows ?? FUYU_ROWS, board.page);
   const target = drag ? freeTarget(panel, drag, board) : null;
   const slotItem = drag && !free && drag.kind === "move" ? shown.items.find((item) => item.widget === drag.widget) : null;
   const slot = slotItem ? itemBoxPx(shown, slotItem) : null;

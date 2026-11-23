@@ -9,6 +9,7 @@ type PagerSource = {
   panel: CustomPanel;
   pageCount: number;
   pageColumns: number;
+  rows: number;
   carried: string | null;
   pushed: ReadonlySet<string>;
   nav: PageNav;
@@ -16,11 +17,11 @@ type PagerSource = {
   hot: PagerHot | null;
 };
 
-export function usePublishPager({ active, placement, panel, pageCount, pageColumns, carried, pushed, nav, overview, hot }: PagerSource) {
+export function usePublishPager({ active, placement, panel, pageCount, pageColumns, rows, carried, pushed, nav, overview, hot }: PagerSource) {
   useEffect(() => {
     if (!active) return publishPager(null);
     publishPager({
-      pages: pagerBlocks(panel, pageCount, pageColumns, carried, pushed),
+      pages: pagerBlocks(panel, pageCount, pageColumns, carried, pushed, rows),
       page: nav.page,
       dragging: carried !== null,
       canAdd: true,

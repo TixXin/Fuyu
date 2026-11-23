@@ -1,4 +1,4 @@
-use super::{place, screen_for, taskbar_edge, Edge, Platform, Rect, Screen};
+use super::{place, place_beside_island, screen_for, taskbar_edge, Edge, Platform, Rect, Screen};
 
 const CARD: (f64, f64) = (320.0, 400.0);
 
@@ -84,4 +84,19 @@ fn an_untrustworthy_mac_rect_falls_back_to_the_pointer() {
     assert_eq!(place(Platform::MacOs, icon(1300.0, 500.0, 30.0), (1250.0, 12.0), &screen, CARD), (930.0, 41.0));
     assert_eq!(place(Platform::MacOs, None, (1250.0, 12.0), &screen, CARD), (930.0, 41.0));
     assert_eq!(place(Platform::MacOs, icon(3000.0, 0.0, 30.0), (1250.0, 12.0), &screen, CARD), (930.0, 41.0));
+}
+
+#[test]
+fn the_island_menu_opens_above_an_island_on_the_taskbar_without_covering_it() {
+    let screen = bottom_taskbar();
+    let island = Rect::new(800.0, 1044.0, 240.0, 32.0);
+    assert_eq!(place_beside_island(island, 900.0, &screen, (240.0, 300.0)), (780.0, 732.0));
+    assert_eq!(place_beside_island(island, 1900.0, &screen, (240.0, 300.0)), (920.0, 732.0));
+}
+
+#[test]
+fn the_island_menu_opens_below_an_island_at_the_top_and_stays_on_screen() {
+    let screen = screen((0.0, 0.0, 2880.0, 1800.0), (0.0, 0.0, 2880.0, 1800.0), 2.0);
+    let island = Rect::new(20.0, 10.0, 400.0, 70.0);
+    assert_eq!(place_beside_island(island, 40.0, &screen, (240.0, 300.0)), (16.0, 96.0));
 }

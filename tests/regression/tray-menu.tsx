@@ -202,6 +202,24 @@ async function runChecks() {
     check(actions().slice(-1)[0] === 'tray_menu_action:{"action":"raise_island","arg":null}' && islandButton().getAttribute("aria-pressed") === "true", "这时点岛按钮是叫回最前，不是隐藏");
     windowState = fx.state;
 
+    const islandRows = [
+      { id: "mail", name: english ? "New mail notifications from every account" : "新邮件提醒", shown: true },
+      { id: "music", name: english ? "Music" : "音乐", shown: false },
+    ];
+    await act(async () => { await emit("tray-menu-open", islandRows); });
+    await settle();
+    const islandCard = () => $("#window .tray-card--island");
+    const rowSwitches = () => $$("[role=switch]", islandCard()!);
+    check(islandCard() && rowSwitches().map((sw) => sw.getAttribute("aria-checked")).join() === "true,false", "带行打开时显示岛屿菜单，开关对上每项显不显示");
+    check(overflowing(islandCard()!).length === 0, `岛屿菜单：${english ? "英文" : "中文"}长名字不溢出卡片`);
+    await act(async () => rowSwitches()[1].click());
+    check(rowSwitches()[1].getAttribute("aria-checked") === "true" && calls.slice(-1)[0] === 'island_menu_action:{"action":"toggle","id":"music"}', "点一行就切换并发 island_menu_action toggle，不关菜单");
+    await act(async () => $$<HTMLButtonElement>(".tray-card__menu-row", islandCard()!)[1].click());
+    check(calls.slice(-1)[0] === 'island_menu_action:{"action":"resize","id":null}', "调整大小走 island_menu_action");
+    await act(async () => { await emit("tray-menu-open", null); });
+    await settle();
+    check(!islandCard() && card()?.dataset.layout === "entry", "再从托盘打开时换回托盘卡片");
+
     restoreStorage();
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

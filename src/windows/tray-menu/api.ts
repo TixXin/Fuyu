@@ -15,6 +15,8 @@ export type TrayMenuState = {
   platform: "windows" | "macos";
 };
 
+export type IslandMenuRow = { id: string; name: string; shown: boolean };
+
 export type TrayMenuPage = "todo" | "notes" | "calendar" | "file-shelf" | "agent";
 
 export type TrayMenuAction =
@@ -43,8 +45,16 @@ export function resizeTrayMenu(width: number, height: number) {
   return invoke("tray_menu_resize", { width, height });
 }
 
-export function listenTrayMenuOpen(handler: () => void) {
-  return listen(TRAY_MENU_OPEN_EVENT, () => handler());
+export function listenTrayMenuOpen(handler: (islandRows: IslandMenuRow[] | null) => void) {
+  return listen<IslandMenuRow[] | null>(TRAY_MENU_OPEN_EVENT, ({ payload }) => handler(payload ?? null));
+}
+
+export function getIslandMenuRows() {
+  return invoke<IslandMenuRow[] | null>("island_menu_rows");
+}
+
+export function islandMenuAction(action: "toggle" | "arrange" | "resize", id?: string) {
+  return invoke("island_menu_action", { action, id: id ?? null });
 }
 
 export function listenTrayMenuState(handler: (state: TrayMenuState) => void) {

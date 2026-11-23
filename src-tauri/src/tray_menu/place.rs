@@ -123,6 +123,20 @@ pub(crate) fn place(platform: Platform, icon: Option<Rect>, cursor: (f64, f64), 
     (clamp(x, min_x, max_x).round(), clamp(y, min_y, max_y).round())
 }
 
+pub(crate) fn place_beside_island(island: Rect, cursor_x: f64, screen: &Screen, size: (f64, f64)) -> (f64, f64) {
+    let (width, height) = (size.0 * screen.scale, size.1 * screen.scale);
+    let gap = GAP * screen.scale;
+    let work = screen.work;
+    let min_x = work.left + gap;
+    let max_x = (work.right - width - gap).max(min_x);
+    let min_y = work.top + gap;
+    let max_y = (work.bottom - height - gap).max(min_y);
+    let center_x = clamp(cursor_x, island.left, island.right);
+    let above = island.center().1 > (screen.bounds.top + screen.bounds.bottom) / 2.0;
+    let y = if above { island.top - height - gap } else { island.bottom + gap };
+    (clamp(center_x - width / 2.0, min_x, max_x).round(), clamp(y, min_y, max_y).round())
+}
+
 #[cfg(test)]
 #[path = "place_tests.rs"]
 mod tests;
