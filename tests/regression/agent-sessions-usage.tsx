@@ -123,6 +123,13 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   check((await settle(true)).every(Boolean), "看不见的行（滚出去、岛收起）里的水母停下，不白占 CPU");
   host.style.top = "0";
   check((await settle(false)).every((value) => !value), "回到视野里的水母接着动");
+  for (const view of ["cards", "compact"] as const) {
+    await act(async () => {
+      lights.render(<StrictMode><I18nProvider><SessionLightStyleContext.Provider value="mark"><AgentSessionsPanel sort="recent" view={view} sessions={sessions} hostDisplay="both" /></SessionLightStyleContext.Provider></I18nProvider></StrictMode>);
+    });
+    const cardMoods = [...host.querySelectorAll<HTMLElement>(".agent-card__heading > .agent-card__jelly .center-jelly")].map((jelly) => jelly.dataset.mood).join();
+    check(cardMoods === "running,waiting,idle" && !host.querySelector(".agent-card__bar"), `${view} 视图的标题前面也是水母，紧凑视图不再画色条：${cardMoods}`);
+  }
   act(() => lights.unmount());
   host.remove();
 }

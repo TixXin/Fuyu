@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { useTranslation } from "../../i18n";
 import { AgentProviderIcon } from "./AgentProviderIcon";
 import type { AgentSessionSummary } from "./api";
@@ -6,6 +7,7 @@ import { SessionElapsed } from "./SessionElapsed";
 import { SessionHostLabel } from "./SessionHostLabel";
 import { sessionLight, type SessionLight } from "./sessionLight";
 import { getAgentProviderLabel, getAgentPhaseLabel } from "./status";
+import { SessionJelly, SessionLightStyleContext, sessionLightMood } from "./SessionLightMark";
 import "./AgentSessionCard.css";
 import "./AgentCardEffects.css";
 import type { AgentCardEffects, AgentHostDisplay } from "./agentSettings";
@@ -53,6 +55,7 @@ export function AgentSessionCard({
   const age = sessionAge(session.updatedAt, now);
   const time = showElapsed && session.turnStartedAt !== null && session.phase === "running" ? <SessionElapsed session={session} /> : age;
   const state = session.compacting ? text.compacting : light === "yourTurn" ? text.yourTurn : getAgentPhaseLabel(session.phase, t);
+  const jelly = useContext(SessionLightStyleContext) === "mark" ? <SessionJelly className="agent-card__jelly" mood={sessionLightMood(light, looked, unseen, session.compacting === true)} label={state} /> : null;
 
   const tool = showActivity && active ? session.currentTool : null;
   const prompt = showActivity && active ? session.lastPrompt : null;
@@ -95,7 +98,7 @@ export function AgentSessionCard({
       {effects === "sparkle" && <span className="agent-card__band" aria-hidden="true" />}
       {orbit && <span className="agent-orbit-ring" aria-hidden="true" />}
       <span className="agent-card__heading">
-        {compact && <span className="agent-card__bar" aria-hidden="true" />}
+        {jelly ?? (compact && <span className="agent-card__bar" aria-hidden="true" />)}
         <span className="agent-card__title">
           {project && project !== title ? <span>{project} · </span> : null}
           {title}
