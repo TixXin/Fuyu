@@ -2,7 +2,6 @@ import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { useTranslation } from "../../i18n";
 import { isMacOS, useDevBuild } from "../../lib/platform";
 import type { DevPriorityState } from "./api";
-import { DevMaterialPicker } from "./DevMaterialPicker";
 import { useDevPriority } from "./useDevPriority";
 import "./DevBar.css";
 
@@ -34,7 +33,6 @@ export function DevBar() {
           <span className="dev-bar__status" role="status">{text.status[statusOf(state)]}</span>
         </>
       )}
-      {isMacOS && <DevMaterialPicker />}
     </div>
   );
 }
