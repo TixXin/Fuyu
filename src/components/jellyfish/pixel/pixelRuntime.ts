@@ -10,6 +10,31 @@ export type PixelRenderOptions = { style: PixelJellyfishStyle; mood: PixelMood; 
 
 const FALLBACK_FILL: Rgb = [246, 227, 211];
 const BLEND_STEPS = 3;
+const resolved = new Map<string, Rgb | null>();
+let probe: CanvasRenderingContext2D | null | undefined;
+
+function fillOf(color: string): Rgb | null {
+  const plain = parseRgb(color);
+  if (plain) return plain;
+  const known = resolved.get(color);
+  if (known !== undefined) return known;
+  if (probe === undefined) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    probe = canvas.getContext("2d", { willReadFrequently: true });
+  }
+  let found: Rgb | null = null;
+  if (probe && color && CSS.supports("color", color)) {
+    probe.clearRect(0, 0, 1, 1);
+    probe.fillStyle = color;
+    probe.fillRect(0, 0, 1, 1);
+    const [red, green, blue, alpha] = probe.getImageData(0, 0, 1, 1).data;
+    if (alpha > 0) found = [red, green, blue];
+  }
+  resolved.set(color, found);
+  return found;
+}
 
 export function createPixelRenderer(wrap: HTMLElement, canvas: HTMLCanvasElement) {
   const context = canvas.getContext("2d");
@@ -33,7 +58,7 @@ export function createPixelRenderer(wrap: HTMLElement, canvas: HTMLCanvasElement
     const moving = !options.still && !options.paused;
     const tick = (frozenAt ?? now) - started;
     const pose = options.still ? stillPose(options.mood) : poseAt(options.mood, tick);
-    const target = parseRgb(window.getComputedStyle(wrap).color) ?? FALLBACK_FILL;
+    const target = fillOf(window.getComputedStyle(wrap).color) ?? FALLBACK_FILL;
     const blendStep = blend && moving ? now - blend.at + 1 : BLEND_STEPS;
     const blending = blend !== null && blendStep < BLEND_STEPS;
     const fill = blend && blending ? mixRgb(blend.from, target, blendStep / BLEND_STEPS) : target;
@@ -79,6 +104,17 @@ export function createPixelRenderer(wrap: HTMLElement, canvas: HTMLCanvasElement
   const classes = new MutationObserver(renderSoon);
   for (let node = wrap.parentElement; node; node = node.parentElement) classes.observe(node, { attributes: true, attributeFilter: ["class"] });
   window.addEventListener("resize", renderSoon);
+  let ratio: MediaQueryList | null = null;
+  const watchRatio = () => {
+    ratio?.removeEventListener("change", ratioChanged);
+    ratio = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+    ratio.addEventListener("change", ratioChanged);
+  };
+  function ratioChanged() {
+    watchRatio();
+    renderSoon();
+  }
+  watchRatio();
 
   return {
     update(next: PixelRenderOptions) {
@@ -102,6 +138,7 @@ export function createPixelRenderer(wrap: HTMLElement, canvas: HTMLCanvasElement
       resize.disconnect();
       classes.disconnect();
       window.removeEventListener("resize", renderSoon);
+      ratio?.removeEventListener("change", ratioChanged);
     },
   };
 }

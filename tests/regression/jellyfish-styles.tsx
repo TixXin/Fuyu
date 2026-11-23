@@ -1,15 +1,21 @@
-import { act, StrictMode } from "react";
+import { act, StrictMode, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import { JellyfishMark, type JellyMood } from "../../src/components/jellyfish/JellyfishMark";
 import { JellyfishStyleContext } from "../../src/components/jellyfish/jellyfishStyleContext";
+import { fitPixelGrid } from "../../src/components/jellyfish/pixel/pixelFit";
+import { PIXEL_GRIDS } from "../../src/components/jellyfish/pixel/pixelGrids";
+import { PIXEL_STYLES } from "../../src/components/jellyfish/pixel/pixelStyles";
 import { JELLYFISH_STYLES } from "../../src/lib/settings/settingsLimits";
 import type { JellyfishStyle } from "../../src/lib/settings/types";
+import { JellyfishStyleArt } from "../../src/windows/settings/island-layout/JellyfishStyleArt";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const MOODS: JellyMood[] = ["idle", "running", "waiting", "failed", "done", "sleep", "stale", "compacting"];
 const live = new URLSearchParams(window.location.search).has("live");
+const SMALL = [12, 16];
+const THEMED = { "--center-jelly-running": "color-mix(in srgb, #ff0000 50%, #0000ff)" } as CSSProperties;
 const ROWS: Record<JellyfishStyle, number> = { vector: 0, flat: 12, sticker: 12, mono: 12, neon: 12, chunky: 8, fine: 24 };
 const results = document.querySelector<HTMLElement>("#results")!;
 const root = createRoot(document.querySelector("#fixture")!);
@@ -36,9 +42,16 @@ function Sheet({ moods }: { moods: Record<JellyfishStyle, JellyMood[]> }) {
               <JellyfishMark mood="running" paused height={24} />
               <JellyfishMark mood="stale" paused height={24} />
             </span>
+            <span className="jelly-pill jelly-small">
+              {SMALL.map((size) => <JellyfishMark key={size} mood="running" paused height={size} />)}
+            </span>
+            <span className="jelly-pill jelly-themed" style={THEMED}>
+              <JellyfishMark mood="running" paused height={24} />
+            </span>
           </JellyfishStyleContext.Provider>
         </div>
       ))}
+      <button type="button" className="jelly-card"><JellyfishStyleArt style="flat" /></button>
     </>
   );
 }
@@ -59,7 +72,7 @@ function colours(canvas: HTMLCanvasElement) {
   return seen;
 }
 
-const marks = (style: JellyfishStyle, pill = ".jelly-pill:not(.island-light)") => [...document.querySelectorAll<HTMLElement>(`[data-style="${style}"] ${pill} .center-jelly`)];
+const marks = (style: JellyfishStyle, pill = ".jelly-pill:not(.island-light):not(.jelly-small):not(.jelly-themed)") => [...document.querySelectorAll<HTMLElement>(`[data-style="${style}"] ${pill} .center-jelly`)];
 
 async function runChecks() {
   try {
@@ -96,6 +109,40 @@ async function runChecks() {
     check(colours(marks("mono", ".island-light")[0].querySelector("canvas")!).has("184,159,130"), "单色在浅色岛上空闲用深一点的棕色");
     check(!colours(marks("mono")[1].querySelector("canvas")!).has("29,27,34"), "单色不画黑眼睛，眼睛是镂空的");
     check(colours(marks("sticker")[1].querySelector("canvas")!).size > running.size, "描边比扁平多一圈深色");
+
+    for (const style of JELLYFISH_STYLES.filter((value): value is Exclude<JellyfishStyle, "vector"> => value !== "vector")) {
+      marks(style, ".jelly-small").forEach((mark, index) => {
+        const canvas = mark.querySelector("canvas")!;
+        const cell = (Number.parseFloat(canvas.style.height) * window.devicePixelRatio) / canvas.height;
+        const rows = PIXEL_STYLES[style].grids.map((key) => PIXEL_GRIDS[key].height);
+        const fit = fitPixelGrid(SMALL[index], window.devicePixelRatio, rows);
+        const body = (cell * rows[fit.index]) / window.devicePixelRatio;
+        check(Number.isInteger(cell) && cell === fit.cell, `${style} ${SMALL[index]}px：每格还是整数个屏幕像素（${cell}）`);
+        check(body <= SMALL[index] * 1.25 && body >= SMALL[index] * 0.66, `${style} ${SMALL[index]}px：身体 ${body} 像素高，没有撑出占位太多，也没小到看不清`);
+      });
+    }
+    const neonLight = marks("neon", ".island-light")[1].querySelector("canvas")!;
+    const neonData = neonLight.getContext("2d")!.getImageData(0, 0, neonLight.width, neonLight.height).data;
+    let faint = 0;
+    for (let i = 3; i < neonData.length; i += 4) if (neonData[i] === 77) faint += 1;
+    const neonLines = [...colours(neonLight)].map((value) => value.split(",").map(Number));
+    check(faint === 0 && neonLines.some(([red, green, blue]) => red < 109 && green < 182 && blue < 244 && blue > green && green > red), "霓虹在浅色岛上不画半透明的光圈，轮廓比身体色深");
+    const themed = [...colours(marks("flat", ".jelly-themed")[0].querySelector("canvas")!)].map((value) => value.split(",").map(Number));
+    check(themed.some(([red, green, blue]) => Math.abs(red - 128) <= 1 && green === 0 && Math.abs(blue - 128) <= 1), "主题把状态色写成 color-mix() 时照样画对颜色");
+
+    const card = document.querySelector<HTMLButtonElement>(".jelly-card")!;
+    const shown = () => card.querySelector<HTMLElement>(".center-jelly")!.dataset.mood;
+    check(shown() === "idle" && card.querySelector(".center-jelly canvas"), "设置里的画风卡片平时画空闲的样子");
+    await act(async () => { card.dispatchEvent(new PointerEvent("pointerenter")); });
+    check(shown() === "running", "鼠标停在卡片上，先演运行");
+    let toured = false;
+    for (let spent = 0; spent < 4000 && !toured; spent += 50) {
+      await act(async () => { await wait(50); });
+      toured = shown() === "waiting";
+    }
+    check(toured, "过一会儿换到下一个状态（等你）");
+    await act(async () => { card.dispatchEvent(new PointerEvent("pointerleave")); });
+    check(shown() === "idle", "鼠标移开回到空闲");
 
     const swapped = everyMood();
     swapped.flat = ["done", "failed", "idle", "sleep", "running", "waiting", "compacting", "stale"];

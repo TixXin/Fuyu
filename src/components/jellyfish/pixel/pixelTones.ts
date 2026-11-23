@@ -10,6 +10,7 @@ export type PixelTones = {
   cheek: Rgb;
   tongue: Rgb;
   rim: Rgb | null;
+  halo: boolean;
 };
 
 const WHITE: Rgb = [255, 255, 255];
@@ -21,6 +22,7 @@ const DEEP_SHADE: Rgb = [44, 29, 92];
 const OUTLINE: Rgb = [21, 15, 34];
 const PALE_LINE: Rgb = [184, 159, 130];
 const PALE_RIM: Rgb = [180, 157, 130];
+const LIGHT_NEON_INK = 0.36;
 
 export function mixRgb(from: Rgb, to: Rgb, amount: number): Rgb {
   return [0, 1, 2].map((i) => Math.round(from[i] + (to[i] - from[i]) * amount)) as unknown as Rgb;
@@ -31,6 +33,7 @@ export function sameRgb(a: Rgb, b: Rgb): boolean {
 }
 
 export function parseRgb(color: string): Rgb | null {
+  if (!/^rgba?\(/i.test(color.trim())) return null;
   const parts = color.match(/-?\d+(\.\d+)?/g);
   if (!parts || parts.length < 3) return null;
   const channels = parts.slice(0, 3).map((part) => Math.min(255, Math.max(0, Math.round(Number(part)))));
@@ -40,7 +43,8 @@ export function parseRgb(color: string): Rgb | null {
 export function pixelTones(paint: PixelPaint, fill: Rgb, light: boolean, pale: boolean): PixelTones {
   const thin = paint === "mono" || paint === "neon";
   let base = fill;
-  if (thin && pale) base = PALE_LINE;
+  if (paint === "neon" && light) base = mixRgb(pale ? PALE_LINE : fill, INK, LIGHT_NEON_INK);
+  else if (thin && pale) base = PALE_LINE;
   else if (thin && light) base = mixRgb(fill, INK, 0.18);
   else if (paint === "neon") base = mixRgb(fill, WHITE, 0.12);
   return {
@@ -53,5 +57,6 @@ export function pixelTones(paint: PixelPaint, fill: Rgb, light: boolean, pale: b
     cheek: CHEEK,
     tongue: TONGUE,
     rim: pale && (paint === "flat" || paint === "fine") ? PALE_RIM : null,
+    halo: paint === "neon" && !light,
   };
 }

@@ -141,8 +141,29 @@ test("still frames rest on the baseline", () => {
   }
 });
 
-test("computed colours parse to channels", () => {
+test("computed colours parse to channels, and other colour syntaxes are left to the browser", () => {
   assert.deepEqual(parseRgb("rgb(109, 182, 244)"), [109, 182, 244]);
   assert.deepEqual(parseRgb("rgba(255, 205, 60, 0.5)"), [255, 205, 60]);
   assert.equal(parseRgb("transparent"), null);
+  assert.equal(parseRgb("oklch(0.7 0.1 250)"), null);
+  assert.equal(parseRgb("color(srgb 0.5 0 0.5)"), null);
+});
+
+test("neon glows on the dark island and turns into a solid darker line on the light one", () => {
+  const grid = PIXEL_GRIDS.M;
+  const blue = [109, 182, 244];
+  const count = (buffer, alpha) => {
+    let total = 0;
+    for (let i = 3; i < buffer.data.length; i += 4) if (buffer.data[i] === alpha) total += 1;
+    return total;
+  };
+  const dark = composePixelJellyfish(grid, "neon", stillPose("running"), pixelTones("neon", blue, false, false));
+  const lightTones = pixelTones("neon", blue, true, false);
+  const light = composePixelJellyfish(grid, "neon", stillPose("running"), lightTones);
+  assert.ok(count(dark, 77) > 20, "a halo ring on the dark island");
+  assert.equal(count(light, 77), 0, "no halo on the light island");
+  assert.ok(count(light, 255) > 20, "the outline is still drawn");
+  assert.ok(lightTones.base.every((channel, index) => channel < blue[index]), "the line is darker than the body colour");
+  const paleLine = pixelTones("neon", FILL, true, true).base;
+  assert.ok(paleLine.every((channel) => channel < 160), `idle on the light island is a readable brown, got ${paleLine}`);
 });

@@ -63,7 +63,7 @@ export function composePixelJellyfish(grid: PixelGrid, paint: PixelPaint, pose: 
     for (let x = 0; x < width; x += 1) {
       const kind = part[y * width + x];
       if (!kind) {
-        if (paint !== "neon") continue;
+        if (!tones.halo) continue;
         let near = false;
         for (let dy = -1; dy <= 1 && !near; dy += 1) for (let dx = -1; dx <= 1 && !near; dx += 1) near = bodyAt(x + dx, y + dy) !== 0;
         if (near) set(x, y, tones.base, NEON_HALO_ALPHA);
