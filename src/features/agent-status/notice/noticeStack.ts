@@ -10,6 +10,7 @@ export type AgentNoticeStackItem = {
   tone: AgentNoticeTone;
   title: string;
   state: string;
+  compacting?: boolean;
 };
 
 export const PILE_ICONS = 3;
@@ -41,5 +42,5 @@ export function pileOf(items: readonly AgentNoticeStackItem[], index: number, li
 export function stackItemOf(key: string, session: AgentSessionSummary, states: Readonly<Record<AgentNoticeTone, string>>): AgentNoticeStackItem {
   const tone = noticeTone(session);
   const title = session.title ?? sessionProject(session.cwd) ?? getAgentProviderLabel(session.provider);
-  return { key, provider: session.provider, tone, title, state: states[tone] };
+  return { key, provider: session.provider, tone, title, state: states[tone], compacting: session.compacting === true };
 }

@@ -77,7 +77,7 @@ export function useIslandPageRows(settings: IslandSettings, pluginPages: readonl
       const row = byId.get(id);
       if (!row) return [];
       const iconName = id === FUYU_PAGE_ID ? fuyuPageIconName(layout.icons, id, settings.fuyuTabIcon) : layout.icons?.[id];
-      return [{ ...row, icon: pageIconComponent(iconName) ?? row.icon, defaultIcon: row.icon, iconName, hidden: hidden.has(id) }];
+      return [{ ...row, icon: pageIconComponent(iconName, row.icon) ?? row.icon, defaultIcon: row.icon, iconName, hidden: hidden.has(id) }];
     });
     return { rows: list, screenshotOn };
   }, [appName, layout, pluginPages, plugins, settings, text, unsupported]);

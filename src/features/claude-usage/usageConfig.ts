@@ -15,6 +15,7 @@ export const USAGE_CONFIG_DEFAULTS = {
   dsh: false,
   show: "used",
   askAnthropic: false,
+  askWhenStale: true,
   proxy: "",
   intervalMinutes: 5,
 } as const satisfies Record<string, boolean | number | string>;
@@ -25,6 +26,7 @@ export type UsageConfig = {
   providers: Record<AllUsageProviderId, boolean>;
   show: UsageShow;
   askAnthropic: boolean;
+  askWhenStale: boolean;
   proxy: string;
   intervalMinutes: number;
 };
@@ -48,6 +50,7 @@ export function usageConfig(raw: Readonly<Record<string, unknown>>): UsageConfig
     },
     show: raw.show === "remaining" ? "remaining" : "used",
     askAnthropic: raw.askAnthropic === true,
+    askWhenStale: raw.askWhenStale !== false,
     proxy: typeof raw.proxy === "string" ? raw.proxy : "",
     intervalMinutes: Math.min(USAGE_INTERVAL.max, Math.max(USAGE_INTERVAL.min, interval)),
   };

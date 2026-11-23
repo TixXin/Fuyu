@@ -10,6 +10,7 @@ const MANAGED_HOME_ITEMS: &[&str] = &[
     "settings-sync-meta.json",
     "settings-window.json",
     "tray-icon.json",
+    "tray-mark.bin",
     "webview-crashes.log",
     "panic.log",
     "crash.log",

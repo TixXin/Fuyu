@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>换页动效预览</title>
+<style>
+  :root { color-scheme: dark; --accent: #74d6ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 72px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 36px 0 6px; }
+  h3 { font-size: 14px; margin: 18px 0 4px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1180px; }
+  ul.points { color: #c8c8cc; max-width: 1180px; padding-left: 20px; margin: 6px 0; }
+  ul.points li { margin: 5px 0; }
+  code, kbd { background: #232428; padding: 1px 6px; border-radius: 4px; font-family: Consolas, "SF Mono", monospace; font-size: 12.5px; }
+  table { border-collapse: collapse; max-width: 1180px; width: 100%; margin: 8px 0 12px; }
+  th, td { border: 1px solid #2c2d32; padding: 6px 10px; text-align: left; vertical-align: top; color: #c8c8cc; font-size: 13px; }
+  th { background: #1b1c1f; color: #e8e8ea; white-space: nowrap; }
+  .rec { color: #8fd18f; font-weight: 600; }
+  .tag { font-size: 11px; padding: 1px 7px; border-radius: 99px; margin-left: 6px; white-space: nowrap; }
+  .tag.ok { background: #1f3a26; color: #8fd18f; }
+  .tag.mv { background: #3d2f17; color: #ffd166; }
+  .tag.now { background: #24304a; color: #cfe2ff; }
+  .wrap { overflow-x: auto; max-width: 100%; padding-bottom: 4px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0; color: #9a9aa0; font-size: 13px; }
+  .bar button { background: #24304a; color: #cfe2ff; border: 1px solid #3a4f7a; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+
+  /* ---------- 换页引擎通用 ---------- */
+  .vp { position: relative; overflow: hidden; }
+  .vp > .pg { position: absolute; inset: 0; visibility: hidden; }
+  .vp > .pg.on { visibility: visible; }
+  .fx-edge { position: absolute; pointer-events: none; z-index: 6; background: var(--accent); box-shadow: 0 0 14px 3px color-mix(in srgb, var(--accent) 70%, transparent); border-radius: 2px; opacity: .9; }
+  .fx-sheen { position: absolute; inset: -10% auto -10% 0; width: 45%; pointer-events: none; z-index: 6; background: linear-gradient(100deg, transparent, rgba(255,255,255,.13) 45%, rgba(255,255,255,.22) 50%, rgba(255,255,255,.13) 55%, transparent); }
+  .fx-grid { position: absolute; inset: 0; z-index: 6; display: grid; pointer-events: none; }
+  .fx-grid i { background: var(--fx-bg, #111); opacity: 0; }
+
+  /* ---------- 设置窗口 ---------- */
+  .sw { --bg: #1b1c20; --card: #232429; --line: rgba(255,255,255,.07); --ink: #e9e9ec; --sub: #9b9ca3; --acc: #5aa9ff;
+    width: 1080px; height: 660px; border-radius: 12px; background: var(--bg); color: var(--ink); display: grid; grid-template-columns: 232px 1fr; overflow: hidden; box-shadow: 0 30px 80px #0008; border: 1px solid #2a2b30; font-size: 13px; }
+  .sw.light { --bg: #f4f5f8; --card: #ffffff; --line: rgba(0,0,0,.08); --ink: #1d1d22; --sub: #6b6d75; --acc: #1a73e8; }
+  .sw-side { position: relative; padding: 14px 10px; border-right: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 80%, #000 20%); }
+  .sw.light .sw-side { background: #eceef3; }
+  .sw-search { height: 30px; border-radius: 8px; background: var(--card); border: 1px solid var(--line); color: var(--sub); display: flex; align-items: center; padding: 0 10px; margin: 0 4px 12px; font-size: 12.5px; }
+  .sw-items { position: relative; display: flex; flex-direction: column; gap: 2px; }
+  .sw-hl { position: absolute; left: 0; right: 0; border-radius: 8px; background: color-mix(in srgb, var(--acc) 16%, transparent); pointer-events: none; }
+  .sw-hl::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; width: 3px; border-radius: 2px; background: var(--acc); }
+  .sw-item { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px; border: 0; background: none; color: var(--sub); font: inherit; text-align: left; border-radius: 8px; cursor: pointer; }
+  .sw-item:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .sw-item.on { color: var(--ink); font-weight: 600; }
+  .sw-item .ic { width: 16px; text-align: center; opacity: .8; }
+  .sw-main { display: flex; flex-direction: column; min-width: 0; }
+  .sw-head { padding: 18px 24px 6px; font-size: 20px; font-weight: 650; }
+  .sw-tabs { position: relative; display: flex; gap: 2px; padding: 2px 24px 0; border-bottom: 1px solid var(--line); flex: none; }
+  .sw-tab { position: relative; z-index: 1; padding: 8px 10px 10px; border: 0; background: none; color: var(--sub); font: inherit; cursor: pointer; border-radius: 6px 6px 0 0; }
+  .sw-tab:hover { color: var(--ink); }
+  .sw-tab.on { color: var(--ink); font-weight: 600; }
+  .sw-ul { position: absolute; bottom: -1px; height: 2px; border-radius: 2px; background: var(--acc); pointer-events: none; }
+  .sw-tabs.pill .sw-ul { bottom: 4px; height: auto; top: 4px; border-radius: 8px; background: color-mix(in srgb, var(--acc) 16%, transparent); }
+  .sw-body { flex: 1; min-height: 0; margin-top: 10px; --fx-bg: var(--bg); }
+  .sw-body > .pg { overflow-y: auto; padding: 4px 28px 24px 24px; scrollbar-width: thin; }
+  .grp { max-width: 760px; margin-bottom: 16px; }
+  .grp-t { font-size: 12px; color: var(--sub); margin: 4px 4px 6px; display: flex; align-items: center; gap: 6px; }
+  .grp-t .new { font-size: 10.5px; padding: 0 6px; border-radius: 99px; background: color-mix(in srgb, var(--acc) 22%, transparent); color: var(--acc); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+  .row { display: flex; align-items: center; gap: 16px; padding: 11px 14px; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: 0; }
+  .row .tx { flex: 1; min-width: 0; }
+  .row .t1 { font-size: 13px; }
+  .row .t2 { font-size: 11.5px; color: var(--sub); margin-top: 1px; }
+  .tg { width: 34px; height: 20px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 18%, transparent); position: relative; flex: none; cursor: pointer; transition: background-color 160ms; }
+  .tg::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: translate 160ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .tg.on { background: var(--acc); }
+  .tg.on::after { translate: 14px 0; }
+  .sel { height: 28px; border-radius: 7px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); font: inherit; padding: 0 8px; min-width: 150px; }
+  .sel option { background: #232429; color: #eee; }
+  .sw.light .sel option { background: #fff; color: #111; }
+  .seg { display: inline-flex; padding: 2px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 7%, transparent); flex: none; }
+  .seg button { border: 0; background: none; color: var(--sub); font: inherit; font-size: 12.5px; padding: 3px 10px; border-radius: 6px; cursor: pointer; }
+  .seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px #0003; }
+  .try { border: 1px solid var(--line); background: none; color: var(--acc); border-radius: 7px; padding: 3px 10px; font: inherit; font-size: 12.5px; cursor: pointer; flex: none; }
+  .mini { width: 132px; height: 64px; border-radius: 9px; background: color-mix(in srgb, var(--ink) 6%, #000 30%); flex: none; --fx-bg: #2a2b31; border: 1px solid var(--line); }
+  .sw.light .mini { background: #e6e8ee; --fx-bg: #e6e8ee; }
+  .mini .pg { padding: 8px; display: grid; gap: 5px; align-content: start; }
+  .mini .pg b { display: block; height: 7px; border-radius: 4px; }
+
+  /* ---------- 岛 ---------- */
+  .desk { position: relative; width: 1080px; height: 430px; border-radius: 12px; overflow: hidden; background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); outline: none; }
+  .isl { --ink: 248, 246, 240; position: absolute; left: 50%; top: 0; translate: -50% 0; width: 560px; height: 330px; border-radius: 0 0 30px 30px; background: #050505; color: rgba(var(--ink), .95); display: flex; flex-direction: column; padding: 10px 20px 20px; box-shadow: 0 14px 40px #0006; }
+  .ihead { flex: none; display: flex; align-items: center; gap: 8px; height: 38px; }
+  .itabs { position: relative; display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: rgba(var(--ink), .06); }
+  .ipill { position: absolute; top: 3px; bottom: 3px; border-radius: 9px; background: rgba(var(--ink), .15); pointer-events: none; }
+  .itab { position: relative; z-index: 1; border: 0; background: none; color: rgba(var(--ink), .55); font: inherit; font-size: 12.5px; padding: 3px 11px; border-radius: 9px; cursor: pointer; }
+  .itab.on { color: rgba(var(--ink), .96); }
+  .ibody { flex: 1; margin-top: 12px; --fx-bg: #050505; border-radius: 6px; }
+  .ibody .pg { padding: 2px 0; }
+  .arw { position: absolute; top: calc(48px + 136px); translate: 0 -50%; width: 20px; height: 56px; border: 0; border-radius: 8px; background: none; color: rgba(var(--ink), .92); opacity: 0; cursor: pointer; font-size: 18px; line-height: 1; transition: opacity 160ms cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 8; }
+  .arw.l { left: 0; } .arw.r { right: 0; }
+  .isl:hover .arw { opacity: .28; }
+  .isl .arw:hover { opacity: 1; background: rgba(var(--ink), .08); }
+  .irow { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 10px; font-size: 13px; }
+  .irow .ck { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(var(--ink), .4); }
+  .irow .sub { margin-left: auto; font-size: 11.5px; color: rgba(var(--ink), .45); }
+  .imusic { display: flex; gap: 16px; align-items: center; padding: 20px 10px; }
+  .icover { width: 110px; height: 110px; border-radius: 18px; background: linear-gradient(135deg, #e0a96d, #7b4fa1); }
+  .igrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 4px; }
+  .igrid div { height: 96px; border-radius: 16px; background: rgba(var(--ink), .07); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .ical { display: grid; grid-template-columns: 60px 1fr; gap: 6px 12px; padding: 6px 10px; font-size: 13px; }
+  .ical .tm { color: rgba(var(--ink), .5); }
+  .ical .ev { padding: 6px 10px; border-radius: 10px; background: rgba(var(--ink), .06); border-left: 3px solid #74d6ff; }
+  .deskhint { position: absolute; right: 14px; bottom: 12px; font-size: 12px; color: #c8c8cc; background: #000a; padding: 4px 10px; border-radius: 8px; }
+
+  /* ---------- 墙 ---------- */
+  .wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; max-width: 1180px; }
+  .tile { background: #1b1c1f; border: 1px solid #2c2d32; border-radius: 12px; padding: 10px; }
+  .tile h4 { margin: 0 0 2px; font-size: 14px; display: flex; align-items: center; }
+  .tile p { margin: 0 0 8px; color: #9a9aa0; font-size: 12.5px; min-height: 38px; }
+  .tile .vp { height: 128px; border-radius: 10px; background: #050505; --fx-bg: #050505; }
+  .tile .pg { padding: 10px; display: grid; gap: 7px; align-content: start; }
+  .tile .pg .h { height: 10px; width: 40%; border-radius: 5px; background: rgba(255,255,255,.75); }
+  .tile .pg .r { height: 18px; border-radius: 6px; background: rgba(255,255,255,.08); display: flex; align-items: center; padding: 0 8px; font-size: 11px; color: rgba(255,255,255,.75); }
+  .tile .acts { display: flex; gap: 6px; margin-top: 8px; }
+  .tile .acts button { flex: 1; background: #24262b; color: #cfd2d8; border: 1px solid #34363c; border-radius: 6px; padding: 3px 0; font: inherit; font-size: 12px; cursor: pointer; }
+  .tile .acts button:hover { border-color: #5a7ab8; color: #fff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tg::after { transition: none; }
+  }
+</style>
+</head>
+<body>
+<h1>换页动效：面板、设置窗口、设置页的标签</h1>
+<p class="note">三处换页现在各管各的：岛的面板只淡入（240ms）；设置窗口换页时整页各块一个接一个上移 6px 淡入；设置页的标签下划线直接跳过去，侧栏高亮条原地从短拉长。下面先是一个仿真的设置窗口，打开在 行为 → 展开，新的「切换动效」一组就在那里，<b>改它会同时改这页所有演示</b>；点侧栏、点标签就是实际效果。再往下是岛的面板实景，和所有效果并排轮播的一面墙。</p>
+
+<h2>1. 设置页面（也是实际效果）</h2>
+<p class="note">点左边侧栏换页、点上面的标签换标签，都按「切换动效」里选的来。往下翻的页从下面来，往上翻的页从上面来（打开「跟着方向」时）。</p>
+<div class="bar"><span>设置窗口：</span><button id="swTheme">切换浅色 / 深色</button><button id="swTour">自动逛一圈</button></div>
+<div class="wrap"><div class="sw" id="sw">
+  <aside class="sw-side">
+    <div class="sw-search">⌕ 搜索设置</div>
+    <div class="sw-items" id="swItems"><span class="sw-hl" id="swHl"></span></div>
+  </aside>
+  <section class="sw-main">
+    <div class="sw-head" id="swTitle">行为</div>
+    <div class="sw-tabs" id="swTabs"><span class="sw-ul" id="swUl"></span></div>
+    <div class="sw-body vp" id="swBody"></div>
+  </section>
+</div></div>
+
+<h2>2. 岛的面板（实际效果）</h2>
+<p class="note">点页签、点两边的箭头，或者先点一下桌面再按 <kbd>←</kbd> <kbd>→</kbd>。「涟漪」从你点的位置扩散，键盘翻页时从那一侧扩散。页签底下的胶囊跟着「标签和侧栏」那一项走。</p>
+<div class="bar"><span>面板：</span><button id="islAuto">自动翻页 开 / 关</button></div>
+<div class="wrap"><div class="desk" id="desk" tabindex="0">
+  <div class="isl" id="isl">
+    <div class="ihead"><div class="itabs" id="itabs"><span class="ipill" id="ipill"></span></div></div>
+    <div class="ibody vp" id="ibody"></div>
+    <button class="arw l" id="arwL" aria-label="上一页">‹</button>
+    <button class="arw r" id="arwR" aria-label="下一页">›</button>
+  </div>
+  <span class="deskhint" id="deskHint">先点一下桌面，再按 ← →</span>
+</div></div>
+
+<h2>3. 所有效果并排</h2>
+<p class="note">每张卡片自己轮着翻。<span class="tag ok">文字不动</span>：文字只淡入或被遮罩露出来，守 motion.md「文字不动位置」；<span class="tag mv">文字会动</span>：文字跟着位移、缩放、模糊或翻转，要你点头才能用（之前小组件出场的「对焦」「翻牌」就是这样放行的）。卡片下面的按钮把它设到面板或设置窗口上。</p>
+<div class="wall" id="wall"></div>
+
+<h2>4. 我的推荐</h2>
+<p class="note"><b>用户定的（2026-11-23）</b>：都按推荐来，之后又把面板的默认也改成幕布（下表第一行的涟漪留作可选项）。会让文字跟着动的五种没有放进设置。</p>
+<table>
+  <tr><th>位置</th><th>推荐</th><th>为什么</th></tr>
+  <tr><td>岛的面板</td><td class="rec">涟漪</td><td>从点的那个页签或箭头扩散出去，一眼就知道「新页是从这里打开的」；文字不动，只是被一个圆形遮罩露出来。键盘、滑动翻页时从那一侧扩散，和箭头的方向一致。时长 280ms，比开合动画短，不拖沓。</td></tr>
+  <tr><td>设置窗口换页</td><td class="rec">幕布（竖向）</td><td>侧栏是竖的，往下点的页从下往上拉开、往上点的从上往下，边上一道强调色的亮线带出方向；文字不动，比现在「每块上移 6px、一块接一块」更利落，也顺手把现在违反规矩的上移去掉。</td></tr>
+  <tr><td>设置页的标签</td><td class="rec">幕布（横向）+ 下划线伸缩</td><td>下划线先伸到新标签、再把尾巴收过去（毛毛虫式），新内容同方向拉开。标签就在内容正上方，方向感最强。</td></tr>
+  <tr><td>侧栏高亮</td><td class="rec">伸缩</td><td>和标签下划线同一个手感：高亮块先拉长覆盖到新的一项，再收过去。</td></tr>
+  <tr><td>默认值</td><td class="rec">都按上面推荐</td><td>另外在下拉里放「轮播」（每次换一种，和小组件出场的默认一样）给喜欢新鲜感的人，不做默认：设置窗口里反复换页时风格一直变，会显得乱。</td></tr>
+</table>
+
+<h2>5. 细节</h2>
+<ul class="points">
+  <li><b>连续快速翻页</b>：上一段动画没播完又翻页时，立刻把上一段跳到结尾，从当前页开始播新的，不排队、不叠加。按住箭头（之前定的只翻一页）和滑动不会触发连播。</li>
+  <li><b>方向</b>：按页的先后算，往后翻是「下一个」方向。循环翻页从最后一页跳到第一页时按「往后」算，不反过来走一大圈。「跟着方向」关掉时，有方向的效果都从中间开始（幕布从中间往两边拉开，涟漪从中心扩散）。</li>
+  <li><b>和开合动画分开</b>：面板刚展开时不播换页动效，由开合动画负责；收起时也不播。只在面板已经打开、换到另一页时播。</li>
+  <li><b>页面大小不一样时</b>：有的页面板高度不同，外壳的高度过渡照旧，和换页动效同时跑；遮罩类效果按新页的大小算，不会露出空白。</li>
+  <li><b>设置的搜索结果跳转</b>：从搜索框点进某一项时，跳过去不播动效，直接定位、高亮那一行，免得等动画。</li>
+  <li><b>减少动画</b>：系统开了「减少动态效果」时，所有效果都换成淡入，下划线和高亮块直接跳。</li>
+  <li><b>性能</b>：遮罩（<code>clip-path</code>）、透明度和整页的位移都能交给合成器，不重排；「像素溶解」用一层 12×8 的小方块盖住再揭开，最多 96 个元素，动完就删。面板展开的性能约束（expansion-performance.md）只管开合那一下，换页不在里面。</li>
+  <li><b>插件页、Fuyu 页</b>：整页作为一块参与，不管页面里面怎么排；Fuyu 页自己的小组件出场动效只在面板刚展开时播，换页进来时不再叠一遍（否则两套动画打架）。要不要换页进来也播，由你定。</li>
+  <li><b>设置项放哪</b>：设置 → 行为 → 展开，「开合动画」「小组件出场」下面新加一组「切换动效」：面板换页、设置窗口换页、标签和侧栏、速度、跟着方向。每个下拉右边带一个小缩略图，选中就演一遍，点「试一下」再演。</li>
+</ul>
+
+<script>
+const EFFECTS = [
+  { id: "carousel", name: "轮播", tag: "", desc: "每次换一种，适合喜欢新鲜感的人。" },
+  { id: "fade", name: "淡入", tag: "ok", now: "面板现在用的", desc: "新页面淡入，旧页面淡出。最安静。" },
+  { id: "ripple", name: "涟漪", tag: "ok", desc: "从点的位置画一个圆扩散开，新页从圆里露出来。" },
+  { id: "wipe", name: "幕布", tag: "ok", desc: "按翻页方向拉开，边上一道亮线带出方向。" },
+  { id: "sheen", name: "光扫", tag: "ok", desc: "新页淡入时一道斜光扫过，像翻过一张亮面卡片。" },
+  { id: "pixel", name: "像素溶解", tag: "ok", desc: "小方块一格格盖住旧页再揭开新页，和「像素」风格是一家。" },
+  { id: "slide", name: "顺向滑入", tag: "mv", desc: "新页从翻页方向滑进来 16px，旧页往反方向退一点。" },
+  { id: "focus", name: "对焦", tag: "mv", desc: "旧页模糊淡出，新页从模糊变清楚，像镜头换焦点。" },
+  { id: "stack", name: "层叠", tag: "mv", desc: "旧页往后退、变小变暗，新页从稍大落到原位。" },
+  { id: "flip", name: "翻页", tag: "mv", desc: "整页绕竖轴翻过去，像翻一张卡片。" },
+  { id: "stagger", name: "交错上浮", tag: "mv", now: "设置窗口现在用的", desc: "每块上移 6px 淡入，一块接一块。" },
+  { id: "none", name: "无", tag: "ok", desc: "直接换，没有动画。" },
+];
+const INDICATORS = [["stretch", "伸缩"], ["slide", "滑动"], ["pill", "胶囊"], ["jump", "直接跳"]];
+const SPEEDS = [["0.7", "快"], ["1", "标准"], ["1.4", "慢"]];
+const S = { panel: "wipe", settings: "wipe", indicator: "stretch", speed: 1, directional: true };
+const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+const EASE_STD = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const carousel = { i: 0 };
+const ROTATE = EFFECTS.filter((e) => !["carousel", "none"].includes(e.id)).map((e) => e.id);
+
+function finishRunning(vp) {
+  for (const a of vp._anims ?? []) try { a.finish(); } catch {}
+  for (const n of vp._extra ?? []) n.remove();
+  for (const t of vp._timers ?? []) clearTimeout(t);
+  vp._anims = []; vp._extra = []; vp._timers = [];
+  vp._done?.();
+}
+
+function swap(vp, from, to, { effect, dir = 1, axis = "x", origin = null, speed = S.speed }) {
+  finishRunning(vp);
+  if (effect === "carousel") { effect = ROTATE[carousel.i++ % ROTATE.length]; }
+  if (reduced() && effect !== "none") effect = "fade";
+  if (!S.directional && vp.dataset.wall !== "1") dir = 0;
+  const k = (ms) => Math.round(ms * speed);
+  const anims = vp._anims, extra = vp._extra;
+  const play = (el, frames, opts) => { const a = el.animate(frames, { fill: "backwards", easing: EASE, ...opts }); anims.push(a); return a; };
+  const W = vp.clientWidth, H = vp.clientHeight;
+  for (const p of vp.querySelectorAll(":scope > .pg")) { p.classList.toggle("on", p === to || p === from); p.style.zIndex = p === to ? 2 : 1; }
+  const end = () => { from?.classList.remove("on"); if (from) from.style.zIndex = ""; vp._done = null; };
+  vp._done = end;
+  const after = (ms) => vp._timers.push(setTimeout(() => { if (vp._done === end) { vp._anims = []; for (const n of extra) n.remove(); vp._extra = []; end(); } }, ms));
+  if (!from || from === to || effect === "none") { end(); return; }
+  const tr = (v) => (axis === "x" ? `translateX(${v}px)` : `translateY(${v}px)`);
+
+  if (effect === "fade") {
+    play(from, [{ opacity: 1 }, { opacity: 0 }], { duration: k(160), easing: EASE_STD, fill: "forwards" });
+    play(to, [{ opacity: 0 }, { opacity: 1 }], { duration: k(240) });
+    after(k(240));
+  } else if (effect === "slide") {
+    play(from, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: tr(-8 * (dir || 0)) }], { duration: k(180), fill: "forwards" });
+    play(to, [{ opacity: 0, transform: tr(16 * (dir || 0) || 0) }, { opacity: 1, transform: "none" }], { duration: k(300), delay: k(40) });
+    after(k(340));
+  } else if (effect === "focus") {
+    play(from, [{ opacity: 1, filter: "blur(0)" }, { opacity: 0, filter: "blur(6px)" }], { duration: k(200), fill: "forwards" });
+    play(to, [{ opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0)" }], { duration: k(320), delay: k(60) });
+    after(k(380));
+  } else if (effect === "stack") {
+    play(from, [{ opacity: 1, transform: "scale(1)", filter: "brightness(1)" }, { opacity: 0, transform: "scale(.93)", filter: "brightness(.6)" }], { duration: k(260), fill: "forwards" });
+    play(to, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, transform: "scale(1)" }], { duration: k(320), delay: k(70) });
+    after(k(390));
+  } else if (effect === "flip") {
+    vp.style.perspective = "900px";
+    const rot = (d) => (axis === "x" ? `rotateY(${d}deg)` : `rotateX(${-d}deg)`);
+    const d = dir || 1;
+    play(from, [{ transform: rot(0), opacity: 1 }, { transform: rot(-80 * d), opacity: 0 }], { duration: k(200), easing: "cubic-bezier(0.45, 0, 0.55, 1)", fill: "forwards" });
+    play(to, [{ transform: rot(80 * d), opacity: 0 }, { transform: rot(0), opacity: 1 }], { duration: k(260), delay: k(180) });
+    after(k(440));
+  } else if (effect === "stagger") {
+    play(from, [{ opacity: 1 }, { opacity: 0 }], { duration: k(120), fill: "forwards" });
+    const kids = [...to.children].slice(0, 8);
+    kids.forEach((c, i) => play(c, [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: k(240), delay: k(60 + Math.min(i, 3) * 30), easing: EASE_STD }));
+    after(k(400));
+  } else if (effect === "wipe") {
+    const x = axis === "x";
+    const startInset = dir > 0 ? (x ? "inset(0 0 0 100%)" : "inset(100% 0 0 0)") : dir < 0 ? (x ? "inset(0 100% 0 0)" : "inset(0 0 100% 0)") : (x ? "inset(0 50% 0 50%)" : "inset(50% 0 50% 0)");
+    play(to, [{ clipPath: startInset }, { clipPath: "inset(0 0 0 0)" }], { duration: k(340) });
+    play(from, [{ opacity: 1 }, { opacity: .25 }], { duration: k(340), fill: "forwards" });
+    const edges = dir === 0 ? [-1, 1] : [dir];
+    for (const e of edges) {
+      const edge = document.createElement("i");
+      edge.className = "fx-edge";
+      if (x) { Object.assign(edge.style, { top: "6%", bottom: "6%", width: "2px" }); } else { Object.assign(edge.style, { left: "4%", right: "4%", height: "2px" }); }
+      vp.append(edge); extra.push(edge);
+      const span = x ? W : H;
+      const fromPos = dir === 0 ? span / 2 : e > 0 ? span - 2 : 0;
+      const toPos = dir === 0 ? (e > 0 ? span - 2 : 0) : e > 0 ? 0 : span - 2;
+      const prop = x ? "left" : "top";
+      play(edge, [{ [prop]: `${fromPos}px`, opacity: .95 }, { [prop]: `${toPos}px`, opacity: 0 }], { duration: k(340), fill: "forwards" });
+    }
+    after(k(340));
+  } else if (effect === "ripple") {
+    const o = origin ?? (dir > 0 ? (axis === "x" ? { x: W, y: H / 2 } : { x: W / 2, y: H }) : dir < 0 ? (axis === "x" ? { x: 0, y: H / 2 } : { x: W / 2, y: 0 }) : { x: W / 2, y: H / 2 });
+    const r = Math.hypot(Math.max(o.x, W - o.x), Math.max(o.y, H - o.y));
+    play(to, [{ clipPath: `circle(0px at ${o.x}px ${o.y}px)` }, { clipPath: `circle(${r}px at ${o.x}px ${o.y}px)` }], { duration: k(360), easing: "cubic-bezier(0.5, 0, 0.2, 1)" });
+    play(from, [{ opacity: 1 }, { opacity: .3 }], { duration: k(360), fill: "forwards" });
+    after(k(360));
+  } else if (effect === "sheen") {
+    play(from, [{ opacity: 1 }, { opacity: 0 }], { duration: k(160), fill: "forwards" });
+    play(to, [{ opacity: 0 }, { opacity: 1 }], { duration: k(260) });
+    const band = document.createElement("i");
+    band.className = "fx-sheen";
+    vp.append(band); extra.push(band);
+    const d = dir < 0 ? -1 : 1;
+    play(band, [{ transform: `translateX(${d > 0 ? -W * 0.5 : W * 1.1}px) skewX(-12deg)` }, { transform: `translateX(${d > 0 ? W * 1.1 : -W * 0.5}px) skewX(-12deg)` }], { duration: k(520), easing: "cubic-bezier(0.45, 0, 0.55, 1)", fill: "forwards" });
+    after(k(520));
+  } else if (effect === "pixel") {
+    const cols = 12, rows = 8;
+    const grid = document.createElement("div");
+    grid.className = "fx-grid";
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    const cells = [];
+    for (let i = 0; i < cols * rows; i++) { const c = document.createElement("i"); grid.append(c); cells.push(c); }
+    vp.append(grid); extra.push(grid);
+    to.style.visibility = "hidden";
+    const half = k(190);
+    cells.forEach((c, i) => {
+      const col = i % cols;
+      const bias = dir === 0 ? 0 : (dir > 0 ? col : cols - 1 - col) / cols;
+      const t1 = (bias * 0.6 + Math.random() * 0.4) * k(150);
+      const t2 = (bias * 0.6 + Math.random() * 0.4) * k(150);
+      play(c, [{ opacity: 0 }, { opacity: 1 }], { duration: k(60), delay: t1, easing: "steps(2, end)", fill: "both" });
+      play(c, [{ opacity: 1 }, { opacity: 0 }], { duration: k(60), delay: half + t2, easing: "steps(2, end)", fill: "forwards" });
+    });
+    vp._timers.push(setTimeout(() => { to.style.visibility = ""; from.classList.remove("on"); }, half));
+    vp._timers.push(setTimeout(() => { to.style.visibility = ""; }, half + 5));
+    after(half + k(220));
+  }
+}
+
+function animateIndicator(el, axis, fromBox, toBox) {
+  const mode = reduced() ? "jump" : S.indicator === "pill" ? "slide" : S.indicator;
+  const [pos, size] = axis === "x" ? ["left", "width"] : ["top", "height"];
+  el.getAnimations().forEach((a) => a.cancel());
+  el.style[pos] = `${toBox.p}px`;
+  el.style[size] = `${toBox.s}px`;
+  if (!fromBox || mode === "jump") return;
+  const dur = Math.round(280 * S.speed);
+  if (mode === "slide") {
+    el.animate([{ [pos]: `${fromBox.p}px`, [size]: `${fromBox.s}px` }, { [pos]: `${toBox.p}px`, [size]: `${toBox.s}px` }], { duration: dur, easing: EASE_STD });
+  } else {
+    const forward = toBox.p > fromBox.p;
+    const mid = forward ? { p: fromBox.p, s: toBox.p + toBox.s - fromBox.p } : { p: toBox.p, s: fromBox.p + fromBox.s - toBox.p };
+    el.animate([
+      { [pos]: `${fromBox.p}px`, [size]: `${fromBox.s}px`, easing: "cubic-bezier(0.4, 0, 0.6, 1)" },
+      { [pos]: `${mid.p}px`, [size]: `${mid.s}px`, offset: 0.45, easing: EASE_STD },
+      { [pos]: `${toBox.p}px`, [size]: `${toBox.s}px` },
+    ], { duration: Math.round(dur * 1.15) });
+  }
+}
+const boxX = (el) => ({ p: el.offsetLeft, s: el.offsetWidth });
+const boxY = (el) => ({ p: el.offsetTop, s: el.offsetHeight });
+
+/* ---------------- 设置窗口 ---------------- */
+const rowsOf = (list) => `<div class="card">${list.map(([t, d, c]) => `<div class="row"><div class="tx"><div class="t1">${t}</div>${d ? `<div class="t2">${d}</div>` : ""}</div>${c ?? '<span class="tg on"></span>'}</div>`).join("")}</div>`;
+const group = (title, list, isNew) => `<div class="grp"><div class="grp-t">${title}${isNew ? '<span class="new">新</span>' : ""}</div>${list}</div>`;
+const fakeSel = (v) => `<select class="sel"><option>${v}</option></select>`;
+const SECTIONS = [
+  { id: "overview", ic: "◎", name: "概览", tabs: [["概览", [group("常用", rowsOf([["待办", "收起条显示剩余待办"], ["音乐", "播放时显示歌名和歌词"], ["Agent 状态", "Claude Code、Codex 在跑时亮灯"], ["剪贴板历史", "Win+V 弹出"]]))]]] },
+  { id: "general", ic: "⚙", name: "通用", tabs: [["通用", [group("启动与语言", rowsOf([["开机自启动"], ["语言", "", fakeSel("简体中文")], ["在托盘显示图标"]]))]], ["数据", [group("数据", rowsOf([["数据文件夹", "~/.fuyu", '<button class="try">打开</button>'], ["自动备份", "每天一次，保留 7 份"]]))]], ["同步", [group("跨设备同步", rowsOf([["同步方式", "", fakeSel("文件夹")], ["端到端加密"]]))]], ["本机接口", [group("本机接口", rowsOf([["启用本机接口", "127.0.0.1:43127"], ["允许弹消息"]]))]]] },
+  { id: "behavior", ic: "↕", name: "行为", tabs: [["展开", "MOTION"], ["贴边", [group("贴边收起", rowsOf([["闲置后贴边", "30 秒没动就收到屏幕边上"], ["待办时不收起"], ["Agent 在等你时不收起"]]))]], ["系统提示", [group("系统提示", rowsOf([["音量、亮度提示"], ["耳机和蓝牙"], ["摄像头、麦克风"]]))]]] },
+  { id: "appearance", ic: "▭", name: "外观", tabs: [["位置与尺寸", [group("位置", rowsOf([["显示器", "", fakeSel("主显示器")], ["吸附到", "", fakeSel("屏幕顶边")]]))]], ["收起条", [group("收起条", rowsOf([["显示标题"], ["显示剩余待办数"]]))]], ["面板", [group("面板", rowsOf([["面板宽度", "", fakeSel("560")], ["页面顺序", "拖动排列页签", '<button class="try">编辑</button>']]))]]] },
+  { id: "theme", ic: "◐", name: "主题", tabs: [["主题", [group("主题", rowsOf([["深色、浅色", "", fakeSel("跟随系统")], ["强调色", "", fakeSel("跟随 Windows")]]))]], ["风格", [group("风格", rowsOf([["风格", "", fakeSel("液态玻璃")], ["圆角", "", fakeSel("超椭圆")]]))]]] },
+  { id: "keys", ic: "⌨", name: "快捷键", tabs: [["全局", [group("全局快捷键", rowsOf([["打开剪贴板", "", fakeSel("Win+V")], ["截图", "", fakeSel("Ctrl+Shift+1")]]))]], ["岛上按键", [group("页面切换", rowsOf([["下一页", "", fakeSel("Ctrl+Tab")], ["面板两侧显示翻页箭头"], ["方向键翻页和展开收起"], ["触控板左右滑动翻页"]]))]]] },
+  { id: "todos", ic: "☑", name: "待办", tabs: [["待办", [group("待办", rowsOf([["回车添加"], ["完成后移到底部"]]))]], ["提醒", [group("提醒", rowsOf([["到点提醒"], ["提前", "", fakeSel("10 分钟")]]))]], ["归档", [group("归档", rowsOf([["跨天顺延未完成"], ["导出 Markdown"]]))]]] },
+  { id: "agents", ic: "✦", name: "Agent", tabs: [["接入", [group("接入", rowsOf([["Claude Code", "钩子已安装"], ["Codex", "钩子已安装"]]))]], ["外观", [group("外观", rowsOf([["会话标题"], ["状态灯样式", "", fakeSel("水母")]]))]], ["提醒", [group("提醒", rowsOf([["等你确认时弹出"], ["完成时提醒"]]))]]] },
+];
+
+function effectSelect(key) {
+  return `<select class="sel" data-key="${key}">${EFFECTS.map((e) => `<option value="${e.id}"${S[key] === e.id ? " selected" : ""}>${e.name}${e.tag === "mv" ? "（文字会动）" : ""}</option>`).join("")}</select>`;
+}
+function motionTab() {
+  const miniPages = (n) => [0, 1, 2].map((i) => `<div class="pg${i === 0 ? " on" : ""}">${["#74d6ff", "#ffd166", "#8fd18f"].map((c, j) => `<b style="width:${[70, 92, 56][(i + j) % 3]}%;background:${j === 0 ? c : "rgba(127,127,127,.35)"}"></b>`).join("")}</div>`).join("");
+  return [
+    group("展开", rowsOf([["展开方式", "", fakeSel("点击")], ["悬停延迟", "", fakeSel("300ms")]])),
+    group("动画", rowsOf([["开合动画", "面板展开、收起时外壳怎么动", fakeSel("灵动")], ["小组件出场", "Fuyu 页的组件怎么出现", fakeSel("轮播")]])),
+    group("切换动效", `<div class="card">
+      <div class="row"><div class="tx"><div class="t1">面板换页</div><div class="t2">点页签、箭头、按 ← → 或滑动换页时</div></div><div class="mini vp" data-mini="panel">${miniPages()}</div>${effectSelect("panel")}<button class="try" data-try="panel">试一下</button></div>
+      <div class="row"><div class="tx"><div class="t1">设置窗口换页</div><div class="t2">点侧栏换页时；标签也用它</div></div><div class="mini vp" data-mini="settings">${miniPages()}</div>${effectSelect("settings")}<button class="try" data-try="settings">试一下</button></div>
+      <div class="row"><div class="tx"><div class="t1">标签和侧栏的高亮</div><div class="t2">下划线、侧栏高亮块、面板页签的胶囊怎么挪过去</div></div><div class="seg" data-seg="indicator">${INDICATORS.map(([v, n]) => `<button data-v="${v}"${S.indicator === v ? ' class="on"' : ""}>${n}</button>`).join("")}</div></div>
+      <div class="row"><div class="tx"><div class="t1">速度</div></div><div class="seg" data-seg="speed">${SPEEDS.map(([v, n]) => `<button data-v="${v}"${String(S.speed) === v ? ' class="on"' : ""}>${n}</button>`).join("")}</div></div>
+      <div class="row"><div class="tx"><div class="t1">跟着方向</div><div class="t2">往后翻从后面来、往前翻从前面来；关掉时都从中间开始</div></div><span class="tg${S.directional ? " on" : ""}" data-tg="directional"></span></div>
+    </div>`, true),
+  ].join("");
+}
+
+const sw = { sec: 2, tab: 0 };
+const swItems = document.getElementById("swItems"), swHl = document.getElementById("swHl"), swTabs = document.getElementById("swTabs"), swUl = document.getElementById("swUl"), swBody = document.getElementById("swBody"), swTitle = document.getElementById("swTitle");
+swItems.insertAdjacentHTML("beforeend", SECTIONS.map((s, i) => `<button class="sw-item" data-i="${i}"><span class="ic">${s.ic}</span>${s.name}</button>`).join(""));
+
+function buildPage(si, ti) {
+  const content = SECTIONS[si].tabs[ti][1];
+  const pg = document.createElement("div");
+  pg.className = "pg";
+  pg.innerHTML = content === "MOTION" ? motionTab() : content.join("");
+  swBody.append(pg);
+  wireMotion(pg);
+  return pg;
+}
+function renderTabs(si) {
+  for (const b of swTabs.querySelectorAll(".sw-tab")) b.remove();
+  swTabs.insertAdjacentHTML("beforeend", SECTIONS[si].tabs.map(([n], i) => `<button class="sw-tab" data-i="${i}">${n}</button>`).join(""));
+}
+function syncChrome(prevItem, prevTab, tabsRebuilt) {
+  for (const b of swItems.querySelectorAll(".sw-item")) b.classList.toggle("on", Number(b.dataset.i) === sw.sec);
+  for (const b of swTabs.querySelectorAll(".sw-tab")) b.classList.toggle("on", Number(b.dataset.i) === sw.tab);
+  swTabs.classList.toggle("pill", S.indicator === "pill");
+  const item = swItems.querySelector(`.sw-item[data-i="${sw.sec}"]`);
+  animateIndicator(swHl, "y", prevItem, boxY(item));
+  const tab = swTabs.querySelector(`.sw-tab[data-i="${sw.tab}"]`);
+  animateIndicator(swUl, "x", tabsRebuilt ? null : prevTab, boxX(tab));
+}
+let swCurrent = null;
+function swGo(si, ti, opts = {}) {
+  const prevItem = boxY(swItems.querySelector(`.sw-item[data-i="${sw.sec}"]`));
+  const prevTab = swTabs.querySelector(".sw-tab.on") ? boxX(swTabs.querySelector(".sw-tab.on")) : null;
+  const dir = si !== sw.sec ? Math.sign(si - sw.sec) : Math.sign(ti - sw.tab);
+  const axis = si !== sw.sec ? "y" : "x";
+  const rebuilt = si !== sw.sec;
+  sw.sec = si; sw.tab = ti;
+  if (rebuilt) renderTabs(si);
+  swTitle.textContent = SECTIONS[si].name;
+  const next = buildPage(si, ti);
+  const old = swCurrent;
+  swCurrent = next;
+  if (old) {
+    const cleanup = () => { if (old !== swCurrent && !old.classList.contains("on")) old.remove(); };
+    swap(swBody, old, next, { effect: opts.instant ? "none" : S.settings, dir, axis, origin: opts.origin });
+    setTimeout(cleanup, 1200);
+    setTimeout(() => { for (const p of [...swBody.querySelectorAll(":scope > .pg")]) if (p !== swCurrent && !p.classList.contains("on")) p.remove(); }, 1300);
+  } else next.classList.add("on");
+  syncChrome(prevItem, prevTab, rebuilt);
+}
+swItems.addEventListener("click", (e) => {
+  const b = e.target.closest(".sw-item"); if (!b) return;
+  const si = Number(b.dataset.i); if (si === sw.sec) return;
+  swGo(si, 0, { origin: null });
+});
+swTabs.addEventListener("click", (e) => {
+  const b = e.target.closest(".sw-tab"); if (!b) return;
+  const ti = Number(b.dataset.i); if (ti === sw.tab) return;
+  const r = b.getBoundingClientRect(), v = swBody.getBoundingClientRect();
+  swGo(sw.sec, ti, { origin: { x: r.left + r.width / 2 - v.left, y: 0 } });
+});
+
+function wireMotion(root) {
+  for (const sel of root.querySelectorAll("select[data-key]")) sel.onchange = () => { S[sel.dataset.key] = sel.value; demoMini(sel.dataset.key); syncWallButtons(); };
+  for (const seg of root.querySelectorAll("[data-seg]")) for (const b of seg.querySelectorAll("button")) b.onclick = () => {
+    const key = seg.dataset.seg;
+    S[key] = key === "speed" ? Number(b.dataset.v) : b.dataset.v;
+    for (const x of seg.querySelectorAll("button")) x.classList.toggle("on", x === b);
+    if (key === "indicator") { swTabs.classList.toggle("pill", S.indicator === "pill"); placeIslandPill(null); }
+  };
+  for (const t of root.querySelectorAll("[data-tg]")) t.onclick = () => { S[t.dataset.tg] = !S[t.dataset.tg]; t.classList.toggle("on", S[t.dataset.tg]); };
+  for (const b of root.querySelectorAll("[data-try]")) b.onclick = () => demoMini(b.dataset.try);
+}
+function demoMini(key) {
+  const mini = swBody.querySelector(`.pg.on [data-mini="${key}"]`) ?? document.querySelector(`[data-mini="${key}"]`);
+  if (!mini) return;
+  const pages = [...mini.querySelectorAll(":scope > .pg")];
+  const at = pages.findIndex((p) => p.classList.contains("on"));
+  const nextI = (at + 1) % pages.length;
+  swap(mini, pages[at], pages[nextI], { effect: S[key], dir: 1, axis: key === "settings" ? "y" : "x" });
+}
+
+document.getElementById("swTheme").onclick = () => document.getElementById("sw").classList.toggle("light");
+let tourTimer = null;
+document.getElementById("swTour").onclick = () => {
+  if (tourTimer) { clearInterval(tourTimer); tourTimer = null; return; }
+  const steps = [[3, 0], [3, 1], [3, 2], [4, 0], [4, 1], [6, 0], [6, 2], [6, 1], [1, 0], [1, 3], [2, 0]];
+  let i = 0;
+  tourTimer = setInterval(() => { const [s, t] = steps[i++ % steps.length]; swGo(s, t); }, 1100);
+};
+
+/* ---------------- 岛 ---------------- */
+const IPAGES = [
+  ["Fuyu", `<div class="igrid"><div>21°</div><div>☀</div><div>3</div><div>62%</div><div>14:30</div><div>♪</div><div>⏱</div><div>✓</div></div>`],
+  ["待办", ["回复设计稿的评论|今天", "整理周会纪要|14:30 前", "给浮屿写发布说明|明天", "订下周的会议室|周五", "换页动效挑一个|现在"].map((s) => { const [a, b] = s.split("|"); return `<div class="irow"><span class="ck"></span>${a}<span class="sub">${b}</span></div>`; }).join("")],
+  ["日历", `<div class="ical"><span class="tm">09:30</span><span class="ev">站会</span><span class="tm">14:30</span><span class="ev">周会 · 3 楼大会议室</span><span class="tm">16:00</span><span class="ev">过一遍换页动效</span><span class="tm">19:00</span><span class="ev">健身</span></div>`],
+  ["音乐", `<div class="imusic"><span class="icover"></span><div><div style="font-size:17px;font-weight:600">夜航星</div><div style="color:rgba(248,246,240,.55)">不才 · 正在播放</div><div style="margin-top:14px;height:4px;width:280px;border-radius:2px;background:linear-gradient(90deg,rgba(248,246,240,.85) 40%,rgba(248,246,240,.16) 40%)"></div></div></div>`],
+  ["Agent", ["fuyu · 换页动效|运行中", "blog · 修复 RSS|等你审批", "video · 渲染竖版|完成", "bot · 群消息摘要|空闲"].map((s) => { const [a, b] = s.split("|"); return `<div class="irow"><span class="ck" style="border-color:#35e985;background:#35e98533"></span>${a}<span class="sub">${b}</span></div>`; }).join("")],
+];
+const itabs = document.getElementById("itabs"), ipill = document.getElementById("ipill"), ibody = document.getElementById("ibody");
+itabs.insertAdjacentHTML("beforeend", IPAGES.map(([n], i) => `<button class="itab" data-i="${i}">${n}</button>`).join(""));
+ibody.innerHTML = IPAGES.map(([, h], i) => `<div class="pg${i === 0 ? " on" : ""}" data-i="${i}">${h}</div>`).join("");
+let ipage = 0;
+function placeIslandPill(prev) {
+  for (const t of itabs.querySelectorAll(".itab")) t.classList.toggle("on", Number(t.dataset.i) === ipage);
+  animateIndicator(ipill, "x", prev, boxX(itabs.querySelector(`.itab[data-i="${ipage}"]`)));
+}
+function islandGo(next, dir, origin) {
+  if (next === ipage) return;
+  const prev = boxX(itabs.querySelector(`.itab[data-i="${ipage}"]`));
+  const from = ibody.querySelector(`.pg[data-i="${ipage}"]`), to = ibody.querySelector(`.pg[data-i="${next}"]`);
+  ipage = next;
+  swap(ibody, from, to, { effect: S.panel, dir, axis: "x", origin });
+  placeIslandPill(prev);
+}
+const step = (d) => islandGo((ipage + d + IPAGES.length) % IPAGES.length, d, null);
+itabs.addEventListener("click", (e) => {
+  const b = e.target.closest(".itab"); if (!b) return;
+  const n = Number(b.dataset.i);
+  const r = b.getBoundingClientRect(), v = ibody.getBoundingClientRect();
+  islandGo(n, Math.sign(n - ipage), { x: r.left + r.width / 2 - v.left, y: 0 });
+});
+document.getElementById("arwL").onclick = () => step(-1);
+document.getElementById("arwR").onclick = () => step(1);
+const desk = document.getElementById("desk");
+desk.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); if (!e.repeat) step(e.key === "ArrowLeft" ? -1 : 1); } });
+desk.addEventListener("focus", () => { document.getElementById("deskHint").textContent = "可以按 ← → 了"; });
+desk.addEventListener("blur", () => { document.getElementById("deskHint").textContent = "先点一下桌面，再按 ← →"; });
+let islTimer = null;
+document.getElementById("islAuto").onclick = () => { if (islTimer) { clearInterval(islTimer); islTimer = null; } else islTimer = setInterval(() => step(1), 1300); };
+
+/* ---------------- 墙 ---------------- */
+const wall = document.getElementById("wall");
+const wallPage = (i) => `<div class="pg${i === 0 ? " on" : ""}"><span class="h" style="width:${[38, 52, 30][i]}%"></span>${[["待办", "日历", "音乐"][i], ["回复评论", "14:30 周会", "夜航星"][i], ["发布说明", "健身", "不才"][i], ["订会议室", "站会", "下一首"][i]].map((t) => `<span class="r">${t}</span>`).join("")}</div>`;
+wall.innerHTML = EFFECTS.filter((e) => e.id !== "carousel").map((e) => `<div class="tile" data-e="${e.id}">
+  <h4>${e.name}${e.tag === "ok" ? '<span class="tag ok">文字不动</span>' : e.tag === "mv" ? '<span class="tag mv">文字会动</span>' : ""}${e.now ? `<span class="tag now">${e.now}</span>` : ""}</h4>
+  <p>${e.desc}</p>
+  <div class="vp" data-wall="1">${[0, 1, 2].map(wallPage).join("")}</div>
+  <div class="acts"><button data-use="panel">用在面板</button><button data-use="settings">用在设置窗口</button></div>
+</div>`).join("");
+const tiles = [...wall.querySelectorAll(".tile")];
+let wallTick = 0;
+setInterval(() => {
+  wallTick++;
+  for (const t of tiles) {
+    const vp = t.querySelector(".vp");
+    const pages = [...vp.querySelectorAll(":scope > .pg")];
+    const at = pages.findIndex((p) => p.classList.contains("on") && p.style.zIndex !== "1") >= 0 ? pages.findIndex((p) => p.classList.contains("on") && p.style.zIndex !== "1") : 0;
+    const dir = wallTick % 6 < 3 ? 1 : -1;
+    const nextI = (at + dir + 3) % 3;
+    swap(vp, pages[at], pages[nextI], { effect: t.dataset.e, dir, axis: "x", speed: 1 });
+  }
+}, 1700);
+function syncWallButtons() {
+  for (const t of tiles) for (const b of t.querySelectorAll("[data-use]")) {
+    const on = S[b.dataset.use] === t.dataset.e;
+    b.style.borderColor = on ? "#5a7ab8" : ""; b.style.color = on ? "#fff" : "";
+    b.textContent = (b.dataset.use === "panel" ? "用在面板" : "用在设置窗口") + (on ? " ✓" : "");
+  }
+}
+wall.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-use]"); if (!b) return;
+  const id = b.closest(".tile").dataset.e;
+  S[b.dataset.use] = id;
+  for (const sel of document.querySelectorAll(`select[data-key="${b.dataset.use}"]`)) sel.value = id;
+  syncWallButtons();
+});
+
+renderTabs(sw.sec);
+swGo(2, 0, { instant: true });
+placeIslandPill(null);
+syncWallButtons();
+</script>
+</body>
+</html>

@@ -1,19 +1,23 @@
 import { act, StrictMode } from "react";
-import type { Root } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
-import { DEFAULT_USAGE_VIEW } from "../../src/features/agent-status/usage";
+import { DEFAULT_USAGE_VIEW, type UsageView } from "../../src/features/agent-status/usage";
+import { checkUsageLayouts } from "./agent-usage-layouts";
+import { SessionLightStyleContext } from "../../src/features/agent-status/SessionLightMark";
+import { JellyfishStyleContext } from "../../src/components/jellyfish/jellyfishStyleContext";
 
 type Context = { root: Root; fixture: HTMLElement; sessions: AgentSessionSummary[]; check: (condition: unknown, label: string) => void; chromeHeight: number };
 
 export async function checkUsage({ root, fixture, sessions, check, chromeHeight }: Context) {
+  const table: UsageView = { ...DEFAULT_USAGE_VIEW, layout: "table" };
   const ISLAND_CHROME_HEIGHT = chromeHeight;
   check(!document.querySelector(".agent-usage"), "没打开用量时不显示用量行");
   fixture.style.height = `${getAgentPageExpandedHeight(3, true) - ISLAND_CHROME_HEIGHT}px`;
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usageView={table} /></I18nProvider></StrictMode>);
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
   const usage = document.querySelector<HTMLElement>(".agent-usage");
@@ -53,7 +57,7 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   };
   fixture.style.height = `${getAgentPageExpandedHeight(3, 2) - ISLAND_CHROME_HEIGHT}px`;
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={usages} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={usages} usageView={table} /></I18nProvider></StrictMode>);
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
   const lines = [...document.querySelectorAll<HTMLElement>(".agent-usage")];
@@ -63,11 +67,11 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   const twoLineList = document.querySelector<HTMLElement>(".agent-sessions__list")!;
   check(twoLineList.scrollHeight <= twoLineList.clientHeight + 1, "两行用量时，设为 3 条仍放下 3 个会话");
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={{ ...usages, claude: null }} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={{ ...usages, claude: null }} usageView={table} /></I18nProvider></StrictMode>);
   });
   check(document.querySelectorAll(".agent-usage").length === 1 && document.querySelector(".agent-usage")?.getAttribute("aria-label") === "Codex 用量", "只有 Codex 有额度时只显示 Codex 一行");
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={{ ...usages, claude: { ...usages.claude, updatedAt: readAt - 40 * 60_000 } }} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={{ ...usages, claude: { ...usages.claude, updatedAt: readAt - 40 * 60_000 } }} usageView={table} /></I18nProvider></StrictMode>);
   });
   const staleLines = [...document.querySelectorAll<HTMLElement>(".agent-usage")];
   const clock = staleLines[0].querySelector(".agent-usage__stale");
@@ -81,13 +85,51 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
     credits: { workbuddy: { provider: "workbuddy" as const, updatedAt: readAt, source: null, available: true, credits: { today: 1240, sevenDay: 8930, total: 20000, totalTokens: 0, sessions: 3 }, wallets: [], error: null } },
   };
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} usageView={table} /></I18nProvider></StrictMode>);
   });
   const wideLines = [...document.querySelectorAll<HTMLElement>(".agent-usage")];
   check(wideLines.map((line) => line.getAttribute("aria-label")).join() === "Claude Code 用量,Codex 用量,Antigravity 用量,WorkBuddy 用量", `这台电脑上读得到额度的每家各占一行：${wideLines.map((line) => line.getAttribute("aria-label")).join()}`);
-  check(wideLines[3].querySelector(".agent-usage__credit")?.textContent === "今日 1,240 积分 · 7 天 8,930" && !wideLines[3].querySelector(".agent-usage__value"), "WorkBuddy 没有百分比，写今日和 7 天的积分");
+  check(wideLines[3].querySelector(".agent-usage__credit")?.textContent === "今日 1,240 · 7 天 8,930 积分" && !wideLines[3].querySelector(".agent-usage__value"), "WorkBuddy 没有百分比，写今日和 7 天的积分");
   await act(async () => {
-    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} usageView={{ ...DEFAULT_USAGE_VIEW, agentsOff: ["antigravity"], hidden: ["workbuddy"] }} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} usageView={{ ...table, agentsOff: ["antigravity"], hidden: ["workbuddy"] }} /></I18nProvider></StrictMode>);
   });
   check([...document.querySelectorAll(".agent-usage")].map((line) => line.getAttribute("aria-label")).join() === "Claude Code 用量,Codex 用量", "在「接入哪些 Agent」里关掉的和在额度里隐藏的都不占行");
+  await checkUsageLayouts({ root, sessions, usages: wide, check });
+
+  const host = document.createElement("div");
+  fixture.after(host);
+  const lights = createRoot(host);
+  await act(async () => {
+    lights.render(<StrictMode><I18nProvider><JellyfishStyleContext.Provider value="neon"><SessionLightStyleContext.Provider value="mark"><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" /></SessionLightStyleContext.Provider></JellyfishStyleContext.Provider></I18nProvider></StrictMode>);
+  });
+  const jellies = [...host.querySelectorAll<HTMLElement>(".agent-session > .agent-session__jelly .center-jelly")];
+  check(jellies.length === sessions.length && !host.querySelector(".agent-session__dot") && jellies.every((jelly) => jelly.dataset.pixelStyle === "neon"),
+    `状态灯设成水母时，列表每行的灯也换成水母，跟着像素样式：${jellies.length}`);
+  check(jellies.map((jelly) => jelly.dataset.mood).join() === "running,waiting,idle", `水母表情跟着会话状态：${jellies.map((jelly) => jelly.dataset.mood).join()}`);
+  await act(async () => {
+    lights.render(<StrictMode><I18nProvider><SessionLightStyleContext.Provider value="mark"><AgentSessionsPanel sort="recent" sessions={[{ ...sessions[0], sessionId: "light-compact", compacting: true }, { ...sessions[0], sessionId: "light-stale", phase: "stale" }]} hostDisplay="both" /></SessionLightStyleContext.Provider></I18nProvider></StrictMode>);
+  });
+  const moods = [...host.querySelectorAll<HTMLElement>(".agent-session__jelly .center-jelly")].map((jelly) => jelly.dataset.mood).join();
+  check(moods === "compacting,stale", `压缩上下文和可能中断各有自己的水母表情，不再借用失败：${moods}`);
+  host.style.cssText = "position: fixed; left: 0; top: -2000px; width: 400px";
+  await act(async () => {
+    lights.render(<StrictMode><I18nProvider><SessionLightStyleContext.Provider value="mark"><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" /></SessionLightStyleContext.Provider></I18nProvider></StrictMode>);
+  });
+  const paused = () => [...host.querySelectorAll<HTMLElement>(".agent-session__jelly .center-jelly")].map((jelly) => jelly.dataset.paused === "true");
+  const settle = async (want: boolean) => {
+    for (let i = 0; i < 40 && !paused().every((value) => value === want); i++) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    return paused();
+  };
+  check((await settle(true)).every(Boolean), "看不见的行（滚出去、岛收起）里的水母停下，不白占 CPU");
+  host.style.top = "0";
+  check((await settle(false)).every((value) => !value), "回到视野里的水母接着动");
+  for (const view of ["cards", "compact"] as const) {
+    await act(async () => {
+      lights.render(<StrictMode><I18nProvider><SessionLightStyleContext.Provider value="mark"><AgentSessionsPanel sort="recent" view={view} sessions={sessions} hostDisplay="both" /></SessionLightStyleContext.Provider></I18nProvider></StrictMode>);
+    });
+    const cardMoods = [...host.querySelectorAll<HTMLElement>(".agent-card__heading > .agent-card__jelly .center-jelly")].map((jelly) => jelly.dataset.mood).join();
+    check(cardMoods === "running,waiting,idle" && !host.querySelector(".agent-card__bar"), `${view} 视图的标题前面也是水母，紧凑视图不再画色条：${cardMoods}`);
+  }
+  act(() => lights.unmount());
+  host.remove();
 }

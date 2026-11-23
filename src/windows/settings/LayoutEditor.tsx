@@ -7,6 +7,7 @@ import { DevBar } from "./DevBar";
 import { SettingsTabs } from "./SettingsTabs";
 import { SettingsSidebar } from "./SettingsSidebar";
 import { useFoundRow, type FoundRow } from "./useFoundRow";
+import { useSettingsPageSwitch, type SettingsSwitchMotion } from "./useSettingsPageSwitch";
 import { WindowControls } from "./WindowControls";
 import "./LayoutEditor.css";
 import "./SettingsSidebarNarrow.css";
@@ -16,17 +17,21 @@ export function LayoutEditor({
   category,
   hidden,
   titleAction,
+  motion,
   children,
   onCategoryChange,
 }: {
   category: SettingsCategory;
   hidden?: ReadonlySet<SettingsCategory>;
   titleAction?: ReactNode;
+  motion: SettingsSwitchMotion;
   children: ReactNode;
   onCategoryChange: (category: SettingsCategory) => void;
 }) {
   const t = useTranslation();
   const panel = useRef<HTMLDivElement>(null);
+  const layout = useRef<HTMLDivElement>(null);
+  const skipSwitch = useSettingsPageSwitch(category, layout, panel, motion);
   const [found, setFound] = useState<FoundRow | null>(null);
   useFoundRow(found, category, panel);
   const parent = parentOf(category);
@@ -35,7 +40,7 @@ export function LayoutEditor({
     return owner ? t.settings.categories.entries[owner] : t.settings.categories[page];
   };
   return (
-    <div className="settings-layout" data-tauri-drag-region>
+    <div className="settings-layout" ref={layout} data-tauri-drag-region>
       {!isMacOS && <WindowControls style="windows" />}
       <DevBar />
       <div className="settings-sidebar-card" data-tauri-drag-region>
@@ -44,6 +49,7 @@ export function LayoutEditor({
           hidden={hidden}
           onCategoryChange={onCategoryChange}
           onRowOpen={(page, title) => {
+            skipSwitch();
             onCategoryChange(page);
             setFound({ page, title, at: Date.now() });
           }}

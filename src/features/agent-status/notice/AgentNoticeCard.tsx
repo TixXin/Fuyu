@@ -1,7 +1,9 @@
-import type { CSSProperties, KeyboardEvent, MouseEvent, ReactNode, Ref } from "react";
+import { useContext, type CSSProperties, type KeyboardEvent, type MouseEvent, type ReactNode, type Ref } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { IslandHoverCard, type HoverCardLine } from "../../../components/IslandHoverCard";
 import { AgentProviderIcon } from "../AgentProviderIcon";
+import { SessionLightStyleContext } from "../SessionLightMark";
+import { NoticeBrand, NoticeJelly, noticeMood } from "./NoticeJelly";
 import type { AgentNoticeScrollbar, AgentNoticeStyle } from "../agentSettings";
 import type { AgentNoticeTone } from "./noticeOptions";
 import "./AgentNoticeCard.css";
@@ -22,6 +24,7 @@ export type AgentNoticeCardProps = {
   scrollbar: AgentNoticeScrollbar;
   count?: string | null;
   icon?: ReactNode;
+  compacting?: boolean;
   meta?: ReactNode;
   body?: ReactNode;
   actions?: ReactNode;
@@ -35,7 +38,7 @@ export type AgentNoticeCardProps = {
 };
 
 export function AgentNoticeCard(props: AgentNoticeCardProps) {
-  const { noticeStyle, tone, provider, headline, state, title, titlePrefix, scrollbar, count, icon: iconOverride, meta, body, actions, hoverLines, onOpen, corner, role = "group", ariaLabel, cardRef, className } = props;
+  const { noticeStyle, tone, provider, headline, state, title, titlePrefix, scrollbar, count, icon: iconOverride, compacting = false, meta, body, actions, hoverLines, onOpen, corner, role = "group", ariaLabel, cardRef, className } = props;
   const open = (event: MouseEvent<HTMLElement>) => {
     if (!onOpen || (event.target instanceof Element && event.target.closest(INTERACTIVE))) return;
     onOpen();
@@ -58,11 +61,13 @@ export function AgentNoticeCard(props: AgentNoticeCardProps) {
     </button>
   ) : null;
   const stateText = <span className="agent-notice__state">{state}</span>;
-  const icon = (size: number) => iconOverride ?? (
+  const jelly = useContext(SessionLightStyleContext) === "mark";
+  const brand = jelly && noticeStyle === "compact" ? <NoticeBrand provider={provider} /> : null;
+  const icon = (size: number) => iconOverride ?? (jelly ? <NoticeJelly mood={noticeMood(tone, compacting)} provider={provider} size={noticeStyle === "wings" ? "band" : size > 16 ? "card" : "row"} /> : (
     <span className="agent-notice__icon" style={{ "--notice-icon": `${size}px` } as CSSProperties}>
       <AgentProviderIcon provider={provider} size={size} />
     </span>
-  );
+  ));
   const bodyBlock = body || meta ? <div className="agent-notice__body">{meta}{body}</div> : null;
 
   let content: ReactNode;
@@ -90,6 +95,7 @@ export function AgentNoticeCard(props: AgentNoticeCardProps) {
           {icon(16)}
           {titleText}
           {stateText}
+          {brand}
           {countChip}
           {cornerButton}
         </div>

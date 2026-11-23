@@ -157,6 +157,14 @@ The extension is on the VS Code Marketplace as `TixXin.fuyu` since 0.2.0 (publis
 
 What gets installed is the extension as it is in `packages/vscode-extension/` (`tixxin.fuyu`; the .vsix manifest takes its name, publisher, version and description from `package.json`). An editor that still has the extension from before the rename counts as having it, since the island links to that one too ([rename compatibility](../architecture/contracts.md#改名兼容d17)).
 
+## Claude Code Usage from the Status Line
+
+Install/Repair also takes over Claude Code's `statusLine.command` in `~/.claude/settings.json` (B91). Claude Code passes the official `rate_limits` (5-hour and 7-day `used_percentage` and `resets_at`) to the status line command on stdin after every reply, so `fuyu-claude-statusline.ps1` (`.sh` on macOS and Linux) saves that input to `claude-statusline.json` in the app data folder and then hands the same input to the user's own status line command, printing its output unchanged. The original command is kept in `claude-statusline-next.txt`; Remove hooks puts it back (or removes `statusLine` when there was none). On Windows the original command runs through Git Bash when it can be found (`CLAUDE_CODE_GIT_BASH_PATH`, or `bin\bash.exe` next to `git.exe`), otherwise `cmd /c`.
+
+Reading Claude's usage picks the newer of this file and the claude-hud snapshot. When both are missing, more than 30 minutes old or past their reset time, the island asks Anthropic's OAuth usage endpoint once, at most every 15 minutes, read-only with the Claude Code token and never refreshing it. Usage that is past its reset time shows as a grey "Expired · n days ago" chip instead of vanishing.
+
+The status line counts towards the "hooks out of date" check only until it has been installed once: installing writes `claude-statusline-installed` to the app data folder, and without that file (and with a `statusLine.command` that is not ours) the Claude Code hooks report out of date, so automatic hook updates install it for existing users. After that, another tool taking `statusLine` over is left alone so the two do not fight; it is only hooked up again on Install/Repair. When Claude's usage has expired, a Fix button next to the grey chip on the agent page reinstalls the Claude Code hooks directly. Claude Code only runs the status line in a terminal, and some versions and plans leave `rate_limits` out ([research](/docs/research/claude-code-usage-sources.md)), which is why the API fallback stays.
+
 ## Reply Status Marker
 
 **Settings → AI Agent → reply status marker** asks each agent to end every reply with one character (`↩` your turn, `⋯` waiting on a background task, `✓` done), so the Agent page can tell what a finished session waits for. The island appends a marked section (`<!-- fuyu: reply marker v5 -->` … `<!-- /fuyu: reply marker -->`) to the end of each agent's global prompt file, and only where that agent's folder already exists:

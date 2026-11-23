@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { availableLines, EMPTY_USAGES, shownUsage, usageLines } from "../../src/features/agent-status/usage.ts";
+import { availableLines, EMPTY_USAGES, expiredLines, formatCredit, rulerSpots, shownUsage, usageLines, usageWindows } from "../../src/features/agent-status/usage.ts";
 import { emptyTide, normalizeTide, recordTide, tideArea, tideDayKey, tideMinutes, tideSlot } from "../../src/features/agent-status/tide.ts";
 
 const window = (name, used, resetsAt = null) => ({ name, used, resetsAt });
@@ -20,6 +20,41 @@ test("settings saved before the usage options keep showing every window and the 
   assert.deepEqual(normalizeSettings({ agentUsageHidden: ["cursor", "dsh", "grok"] }).agentUsageHidden, ["cursor", "dsh"], "only sources that have usage can be hidden");
   assert.equal(normalizeSettings({ agentEmptyStyle: "rainbow" }).agentEmptyStyle, "sleep");
   assert.equal(normalizeSettings({ agentUsageStyle: "ring" }).agentUsageStyle, "ring");
+  assert.equal(old.agentUsageLayout, "chips", "settings saved before the layouts open on the one-row chips");
+  assert.equal(normalizeSettings({ agentUsageLayout: "ruler" }).agentUsageLayout, "ruler");
+  assert.equal(normalizeSettings({ agentUsageLayout: "grid" }).agentUsageLayout, "chips");
+});
+
+test("ruler markers never sit on top of each other and stay on the scale", () => {
+  assert.deepEqual(rulerSpots([]), []);
+  assert.deepEqual(rulerSpots([10, 60]), [10, 60]);
+  const close = rulerSpots([40, 41, 42]);
+  assert.ok(close[1] - close[0] >= 13 && close[2] - close[1] >= 13, `markers spread apart: ${close}`);
+  const crowdedTop = rulerSpots([99, 100, 100]);
+  assert.ok(crowdedTop.every((spot) => spot >= 0 && spot <= 100), `markers stay on the scale: ${crowdedTop}`);
+  assert.ok(crowdedTop[1] - crowdedTop[0] >= 13 && crowdedTop[2] - crowdedTop[1] >= 13, `markers near 100 spread to the left: ${crowdedTop}`);
+  const reordered = rulerSpots([80, 20]);
+  assert.ok(reordered[0] > reordered[1], "each marker keeps its own value's place");
+});
+
+test("an agent whose every window is past its reset shows as expired instead of vanishing", () => {
+  const readAt = 10_000_000;
+  const old = { updatedAt: 1_000, fiveHour: window("5h", 40, 2_000), sevenDay: window("7d", 60, 3_000), models: [], plan: null, source: "hud" };
+  const usages = { claude: old, codex: { ...old, updatedAt: readAt - 60_000, sevenDay: window("7d", 20, readAt + 60_000) }, others: {}, credits: {}, readAt };
+  assert.deepEqual(availableLines(usages).map((line) => line.source), ["codex"], "the expired one has no live line");
+  assert.deepEqual(expiredLines(usages, { hidden: [] }).map((line) => [line.source, line.updatedAt]), [["claudeCode", 1_000]]);
+  assert.deepEqual(expiredLines(usages, { hidden: ["claudeCode"] }), [], "a hidden agent stays hidden");
+  assert.deepEqual(expiredLines(usages, { hidden: [], agentsOff: ["claudeCode"] }), [], "an agent turned off stays off");
+});
+
+test("credits read without long decimals and raw window names get readable labels", () => {
+  assert.equal(formatCredit(1240), "1,240");
+  assert.equal(formatCredit(31.416), "31.42");
+  assert.equal(formatCredit(8930.1234), "8,930", "big balances drop the decimals so they fit a tile");
+  assert.equal(formatCredit(0), "0");
+  const cursor = { updatedAt: 0, fiveHour: null, sevenDay: null, models: [window("month", 12), window("cursorAuto", 30), window("Opus", 5)], plan: null };
+  const labels = usageWindows(cursor, { fiveHour: "5h", sevenDay: "7d", names: { month: "This month", cursorAuto: "Auto" } }).map((cell) => cell.label);
+  assert.deepEqual(labels, ["This month", "Auto", "Opus"]);
 });
 
 test("hidden windows drop out and 'tightest' keeps only the fullest of what is left", () => {

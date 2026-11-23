@@ -1,5 +1,5 @@
 import type { Translations } from "../../i18n";
-import { createPresetId, DEFAULT_SETTINGS, getDefaultSettingPresets, mergeWithDefaultSettingPresets, normalizeSettings } from "./settings.ts";
+import { carriedJellyfishStyle, createPresetId, DEFAULT_SETTINGS, getDefaultSettingPresets, mergeWithDefaultSettingPresets, normalizeSettings } from "./settings.ts";
 import { ISLAND_SETTINGS_KEY } from "./installState.ts";
 import { readString } from "../storage.ts";
 import type { IslandPreset, IslandSettings } from "./types";
@@ -99,6 +99,7 @@ export function loadSettingPresets(t: Translations): IslandPreset[] {
             ? preset.name.trim()
             : t.settings.presets.defaultName(index + 1),
         settings: normalizeSettings(preset.settings),
+        ...carriedJellyfishStyle(preset.jellyfishStyle),
         createdAt:
           typeof preset.createdAt === "number" ? preset.createdAt : Date.now(),
         isDefault: false,

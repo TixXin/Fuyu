@@ -37,6 +37,7 @@ import { useAccentColor } from "../../lib/theme/useAccentColor";
 import { useCollapsedGauges } from "./useCollapsedGauges";
 import { mergeIslandDecor, useIslandDecor } from "../../features/plugin-kernel/islandDecor";
 import { useTrayLanguage } from "./useTrayLanguage";
+import { useTrayMark } from "./useTrayMark";
 import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../lib/settings-backup/useSettingsFileSync";
 import { useOnboardingDemo } from "./useOnboardingDemo";
@@ -70,6 +71,7 @@ import { useNotchRimView } from "./notch-rim/useNotchRimView";
 import { useNotchRingView } from "./notch-ring/useNotchRingView";
 import { ringLit } from "./notch-ring/ringPlan";
 import { notchRingExtra, notchRingLook } from "../../lib/settings/notchRingSettings";
+import { JellyfishStyleContext } from "../../components/jellyfish/jellyfishStyleContext";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
@@ -85,6 +87,7 @@ export function IslandApp() {
   const [storedSettings, setSettings] = useIslandSettings();
   useMigrateLegacySwitches(storedSettings);
   const settings = useResolvedTheme(useSettingsWithBuiltinSwitches(storedSettings));
+  useTrayMark(settings.jellyfishStyle);
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
   useFirstRunGuide();
   const demo = useOnboardingDemo();
@@ -271,6 +274,10 @@ export function IslandApp() {
 
   useSettleIslandContributions();
 
+  const pageSwitch = useMemo(
+    () => ({ effect: settings.pageSwitchPanel, speed: settings.pageSwitchSpeed, directional: settings.pageSwitchDirectional }),
+    [settings.pageSwitchPanel, settings.pageSwitchSpeed, settings.pageSwitchDirectional],
+  );
   const shell: IslandShellBase = {
     page,
     homePage,
@@ -314,6 +321,7 @@ export function IslandApp() {
     fuyuTabIcon: settings.fuyuTabIcon,
     notice: islandNotice,
     collapsedSlots,
+    pageSwitch,
     pageArrows: settings.pageArrows && !hasOpenPopup && !panelEditing && side === null ? <IslandPageArrows features={features} page={page} onPageChange={setPage} /> : null,
     resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled} size={pageSize} extra={settings[resizeModel.barKey]} barWidth={notch ? (wing) => notchBarWidth(notch, settings.collapsedScale, wing) : undefined} />,
   };
@@ -330,18 +338,20 @@ export function IslandApp() {
   );
 
   return (
-    <main className={`stage stage--font-${settings.fontFamily}${lightStage ? " island-light" : ""}${taskbarClear ? " stage--taskbar-clear" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
-      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText || notchText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
-      {taskbarParts.panelled ? (
-        <IslandTaskbarParts shell={shell} mode={mode} parts={taskbarParts} lift={onTaskbar.lift}>
-          {pages}
-        </IslandTaskbarParts>
-      ) : (
-        <IslandShell mode={mode} {...shell}>
-          {pages}
-        </IslandShell>
-      )}
-      <SlotView slot={overlaySlot} props={{}} />
-    </main>
+    <JellyfishStyleContext.Provider value={settings.jellyfishStyle}>
+      <main className={`stage stage--font-${settings.fontFamily}${lightStage ? " island-light" : ""}${taskbarClear ? " stage--taskbar-clear" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
+        <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText || notchText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
+        {taskbarParts.panelled ? (
+          <IslandTaskbarParts shell={shell} mode={mode} parts={taskbarParts} lift={onTaskbar.lift}>
+            {pages}
+          </IslandTaskbarParts>
+        ) : (
+          <IslandShell mode={mode} {...shell}>
+            {pages}
+          </IslandShell>
+        )}
+        <SlotView slot={overlaySlot} props={{}} />
+      </main>
+    </JellyfishStyleContext.Provider>
   );
 }

@@ -88,6 +88,24 @@ export type AgentText = {
     hide: (name: string) => string;
     credits: (today: string, sevenDay: string) => string;
     balance: (total: string) => string;
+    creditsUnit: string;
+    creditsToday: (today: string) => string;
+    balanceUnit: string;
+    windowNames: Readonly<Record<string, string>>;
+    layouts: Record<"chips" | "tiles" | "lead" | "ruler" | "table", string>;
+    lead: (name: string) => string;
+    showAll: string;
+    collapse: string;
+    moreSources: (count: number) => string;
+    moreWindows: (count: number) => string;
+    stale: string;
+    expired: (ago: string) => string;
+    expiredDetail: (ago: string, source: string) => string;
+    expiredFix: string;
+    fix: string;
+    fixing: string;
+    fixed: string;
+    fixFailed: string;
     fiveHour: string;
     sevenDay: string;
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
@@ -245,8 +263,26 @@ export const zhCN: AgentText = {
   usage: {
     of: (name) => `${name} 用量`,
     hide: (name) => `隐藏 ${name} 的额度`,
-    credits: (today, sevenDay) => `今日 ${today} 积分 · 7 天 ${sevenDay}`,
+    credits: (today, sevenDay) => `今日 ${today} · 7 天 ${sevenDay} 积分`,
     balance: (total) => `余额 ${total}`,
+    creditsUnit: "积分 · 7 天",
+    creditsToday: (today) => `今日 ${today}`,
+    balanceUnit: "余额",
+    windowNames: { month: "本月", cursorAuto: "Auto", cursorApi: "指定模型", mcpMonth: "MCP 本月", "3p5h": "Claude / GPT 5 小时", "3p7d": "Claude / GPT 7 天" },
+    layouts: { chips: "一行胶囊", tiles: "小方块", lead: "最紧的领头", ruler: "水位刻度", table: "表格" },
+    lead: (name) => `最紧 · ${name}`,
+    showAll: "全部额度",
+    collapse: "收起",
+    moreSources: (count) => `还有 ${count} 家`,
+    moreWindows: (count) => `还有 ${count} 项`,
+    stale: "可能已过时",
+    expired: (ago) => `已过期 · ${ago}`,
+    expiredDetail: (ago, source) => `额度已过重置时间，${ago}更新 · ${source}`,
+    expiredFix: "点「修复」重新安装 Claude Code 的钩子，再用一下 Claude Code 就会更新",
+    fix: "修复",
+    fixing: "修复中…",
+    fixed: "已修复，用一下 Claude Code 就会更新",
+    fixFailed: "没修好，到设置 → Agent 里重新安装钩子",
     fiveHour: "5 小时",
     sevenDay: "7 天",
     resetsIn: ({ days, hours, minutes }) =>
@@ -410,8 +446,26 @@ export const en: AgentText = {
   usage: {
     of: (name) => `${name} usage`,
     hide: (name) => `Hide ${name} usage`,
-    credits: (today, sevenDay) => `${today} credits today · ${sevenDay} in 7d`,
+    credits: (today, sevenDay) => `${today} today · ${sevenDay} credits in 7d`,
     balance: (total) => `Balance ${total}`,
+    creditsUnit: "credits · 7d",
+    creditsToday: (today) => `${today} today`,
+    balanceUnit: "balance",
+    windowNames: { month: "This month", cursorAuto: "Auto", cursorApi: "Named models", mcpMonth: "MCP this month", "3p5h": "Claude / GPT 5h", "3p7d": "Claude / GPT 7d" },
+    layouts: { chips: "Chips", tiles: "Tiles", lead: "Tightest first", ruler: "Ruler", table: "Table" },
+    lead: (name) => `Tightest · ${name}`,
+    showAll: "All usage",
+    collapse: "Less",
+    moreSources: (count) => `${count} more`,
+    moreWindows: (count) => `${count} more`,
+    stale: "May be out of date",
+    expired: (ago) => `Expired · ${ago}`,
+    expiredDetail: (ago, source) => `Past its reset time; updated ${ago} · ${source}`,
+    expiredFix: "Click Fix to reinstall the Claude Code hooks, then use Claude Code once",
+    fix: "Fix",
+    fixing: "Fixing…",
+    fixed: "Fixed; use Claude Code once to update",
+    fixFailed: "Could not fix; reinstall the hooks under Settings → Agent",
     fiveHour: "5h",
     sevenDay: "7d",
     resetsIn: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d${hours}h` : hours > 0 ? `resets in ${hours}h${minutes}m` : `resets in ${minutes}m`),

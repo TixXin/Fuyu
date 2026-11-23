@@ -10,6 +10,7 @@ import { SessionHostLabel } from "./SessionHostLabel";
 import { getAgentPhaseLabel } from "./status";
 import { asksUser, sessionKey } from "./unseen";
 import { sessionLight } from "./sessionLight";
+import { SessionLightMark } from "./SessionLightMark";
 import { pillParts } from "./sessionPill";
 import type { UnseenSessions } from "./useUnseenSessions";
 import "./AgentSessionRow.css";
@@ -97,7 +98,7 @@ export function AgentSessionRow({
       type="button"
       onClick={onOpen}
     >
-      <span className="agent-session__dot" role="img" aria-label={lightText} title={lightText} />
+      <SessionLightMark light={light} compacting={session.compacting === true} quiet={looked} fresh={Boolean(unseen?.keys.has(key))} label={lightText} />
       <span className="agent-session__main">
         <span className="agent-session__heading">
           <span className="agent-session__title">

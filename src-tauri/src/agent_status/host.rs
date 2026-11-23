@@ -4,7 +4,7 @@ use plugin_base::{host_service, ServeError};
 use serde::Serialize;
 
 use super::{
-    background, codex_usage, external, focus, magpie, notifications, remote_sessions, session_host, session_scan, sessions::AgentSessionSummary, usage,
+    background, codex_usage, external, focus, notifications, remote_sessions, session_host, session_scan, sessions::AgentSessionSummary, usage,
 };
 use crate::system::windows_home_dir;
 
@@ -24,6 +24,9 @@ pub(crate) struct AgentSessionEntry {
     remote_host: Option<String>,
     listed: bool,
     unseen: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, ts(optional))]
+    compacting: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -146,6 +149,7 @@ fn entry(session: AgentSessionSummary) -> AgentSessionEntry {
         remote_host: session.remote_host,
         listed: !session.closed,
         unseen: false,
+        compacting: session.compacting.then_some(true),
     }
 }
 
@@ -186,9 +190,8 @@ fn sessions_for_host() -> Result<AgentSessions, ServeError> {
 async fn usage_for_host() -> Result<AgentUsages, ServeError> {
     switched_on()?;
     let home_dir = windows_home_dir().map_err(|error| ServeError::new("failed", error))?;
-    let magpie = magpie::read_usage(&usage::claude_dir(&home_dir)).await;
-    let local = magpie.or_else(|| usage::read_usage(&home_dir));
-    let claude = usage::merge(local, crate::claude_usage::current()).map(report);
+    let agent_dir = dirs().ok().map(|(_, agent_dir)| agent_dir);
+    let claude = usage::claude_usage(&home_dir, agent_dir.as_deref()).await.map_err(|error| ServeError::new("failed", error))?.map(report);
     let codex = codex_usage::read_usage(&home_dir).map(report);
     Ok(AgentUsages { claude, codex })
 }
@@ -252,6 +255,14 @@ mod tests {
         assert_eq!((entry.phase.as_str(), entry.light.as_str()), ("running", "working"));
         assert!(!entry.listed);
         assert!(!entry.unseen);
+    }
+
+    #[test]
+    fn only_a_compacting_session_carries_the_flag() {
+        let quiet = serde_json::to_value(entry(summary("running"))).unwrap_or_default();
+        assert!(quiet.get("compacting").is_none());
+        let busy = serde_json::to_value(entry(AgentSessionSummary { compacting: true, ..summary("running") })).unwrap_or_default();
+        assert_eq!(busy.get("compacting"), Some(&serde_json::Value::Bool(true)));
     }
 
     #[test]

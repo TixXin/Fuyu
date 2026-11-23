@@ -57,12 +57,9 @@ export function UsageSettingsGroup() {
 
       <SettingsGroup title={text.optionsTitle}>
         <SettingsToggleRow title={text.askAnthropic} description={text.askAnthropicHint} checked={config.askAnthropic} onChange={(on) => update("askAnthropic", on)} />
-        {config.askAnthropic ? (
-          <>
-            <ProxyRow proxy={config.proxy} onChange={(proxy) => update("proxy", proxy)} />
-            <SettingsNumberRow indent title={text.interval} value={config.intervalMinutes} min={USAGE_INTERVAL.min} max={USAGE_INTERVAL.max} unit={text.minutes} onChange={(minutes) => update("intervalMinutes", minutes)} />
-          </>
-        ) : null}
+        {config.askAnthropic ? null : <SettingsToggleRow title={text.askWhenStale} description={text.askWhenStaleHint} checked={config.askWhenStale} onChange={(on) => update("askWhenStale", on)} />}
+        {config.askAnthropic || config.askWhenStale ? <ProxyRow proxy={config.proxy} onChange={(proxy) => update("proxy", proxy)} /> : null}
+        {config.askAnthropic ? <SettingsNumberRow indent title={text.interval} value={config.intervalMinutes} min={USAGE_INTERVAL.min} max={USAGE_INTERVAL.max} unit={text.minutes} onChange={(minutes) => update("intervalMinutes", minutes)} /> : null}
       </SettingsGroup>
     </>
   );

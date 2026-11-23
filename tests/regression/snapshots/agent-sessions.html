@@ -1,74 +1,43 @@
 <body>
   <div id="fixture" style="height: 286px">
     <section aria-label="Agent 会话" class="agent-sessions">
-      <div class="agent-usage-box">
-        <div class="agent-usage-table agent-usage-table--number" style="--agent-usage-columns: 14px auto auto auto minmax(0, 1fr) auto">
-          <span class="island-hover-card__anchor agent-usage__hover">
-            <div aria-label="Claude Code 用量" class="agent-usage" role="status">
-              <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
-              <span class="agent-usage__window" style="grid-column: 2">
-                <span class="agent-usage__label">
-                  5 小时
-                </span>
-                <strong class="agent-usage__value agent-usage__value--low">
-                  27
-                  %
-                </strong>
-              </span>
-              <span class="agent-usage__window" style="grid-column: 3">
-                <span class="agent-usage__label">
-                  7 天
-                </span>
-                <strong class="agent-usage__value agent-usage__value--medium">
-                  62
-                  %
-                </strong>
-              </span>
-              <span class="agent-usage__window" style="grid-column: 4">
-                <span class="agent-usage__label">
-                  Fable
-                </span>
+      <div class="agent-usage-box agent-usage-box--chips" data-layout="chips">
+        <div class="agent-usage-layout">
+          <div class="agent-usage-chips agent-usage-chips--number">
+            <span class="island-hover-card__anchor agent-usage-chip__hover">
+              <span aria-label="Claude Code 用量 Fable 91%" class="agent-usage-chip" role="status">
+                <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
                 <strong class="agent-usage__value agent-usage__value--high">
                   91
                   %
                 </strong>
-              </span>
-              <span aria-label="34 分后重置" class="agent-usage__reset" style="grid-column: 5">
-                <svg aria-hidden="true" class="lucide lucide-rotate-ccw" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
-                34分钟
-              </span>
-            </div>
-          </span>
-          <span class="island-hover-card__anchor agent-usage__hover">
-            <div aria-label="Codex 用量" class="agent-usage agent-usage--stale" role="status">
-              <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
-              <span class="agent-usage__window" style="grid-column: 2">
-                <span class="agent-usage__label">
-                  5 小时
+                <span class="agent-usage-chip__label">
+                  Fable
                 </span>
-                <strong class="agent-usage__value agent-usage__value--low">
-                  9
-                  %
-                </strong>
-              </span>
-              <span class="agent-usage__window" style="grid-column: 3">
-                <span class="agent-usage__label">
-                  7 天
+                <span aria-hidden="true" class="agent-usage-chip__more">
+                  +
+                  2
                 </span>
+              </span>
+            </span>
+            <span class="island-hover-card__anchor agent-usage-chip__hover">
+              <span aria-label="Codex 用量 7 天 54%" class="agent-usage-chip agent-usage-chip--stale" role="status">
+                <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
                 <strong class="agent-usage__value agent-usage__value--medium">
                   54
                   %
                 </strong>
+                <span class="agent-usage-chip__label">
+                  7 天
+                </span>
+                <span aria-hidden="true" class="agent-usage-chip__more">
+                  +
+                  1
+                </span>
+                <span aria-label="可能已过时" class="agent-usage-chip__stale" role="img"></span>
               </span>
-              <span aria-label="2 天 0 小时后重置" class="agent-usage__reset" style="grid-column: 5">
-                <svg aria-hidden="true" class="lucide lucide-rotate-ccw" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
-                2天0小时
-              </span>
-              <span aria-label="可能已过时：40 分钟前更新 · 来自 Codex 会话记录" class="agent-usage__stale" role="img" style="grid-column: 6">
-                <svg aria-hidden="true" class="lucide lucide-clock" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
-              </span>
-            </div>
-          </span>
+            </span>
+          </div>
         </div>
       </div>
       <ul class="agent-sessions__list agent-sessions__list--archivable agent-sessions__list--menu">

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { LyricsIslandPriority } from "./lyricsSettings";
 
 export const COLLAPSED_TEXT_KEY = "fuyu-collapsed-text";
+export const NOTCH_FLASH_MIGRATION_KEY = "fuyu-collapsed-text-flash-v1";
 const VERSION = 1;
 
 export const NOTCH_TEXT_KINDS = ["todos", "lyrics", "agent", "meeting"] as const;
@@ -14,7 +15,8 @@ export type TextOrder = readonly NotchTextKind[];
 
 export type CollapsedText = { notch: NotchTextModes; order: TextOrder | null; hidden: readonly NotchTextKind[] };
 
-export const DEFAULT_NOTCH_TEXT: NotchTextModes = { todos: "panel", lyrics: "panel", agent: "panel", meeting: "panel" };
+export const DEFAULT_NOTCH_TEXT: NotchTextModes = { todos: "panel", lyrics: "panel", agent: "flash", meeting: "flash" };
+const FLASH_BY_DEFAULT: readonly NotchTextKind[] = ["agent", "meeting"];
 const DEFAULT_TEXT: CollapsedText = { notch: DEFAULT_NOTCH_TEXT, order: null, hidden: [] };
 
 const isMode = (value: unknown): value is NotchTextMode => typeof value === "string" && (NOTCH_TEXT_MODES as readonly string[]).includes(value);
@@ -53,7 +55,25 @@ export function lyricsBeforeAgent(order: TextOrder) {
   return order.indexOf("lyrics") < order.indexOf("agent");
 }
 
+export function flashEventTexts(raw: string | null): string | null {
+  if (raw === null) return null;
+  const text = readCollapsedText(raw);
+  if (!FLASH_BY_DEFAULT.some((kind) => text.notch[kind] === "panel")) return null;
+  const notch = { ...text.notch };
+  for (const kind of FLASH_BY_DEFAULT) if (notch[kind] === "panel") notch[kind] = "flash";
+  const value = JSON.parse(raw) as Record<string, unknown>;
+  return JSON.stringify({ ...value, notch });
+}
+
+function migrateFlash() {
+  if (localStorage.getItem(NOTCH_FLASH_MIGRATION_KEY) === "1") return;
+  localStorage.setItem(NOTCH_FLASH_MIGRATION_KEY, "1");
+  const next = flashEventTexts(localStorage.getItem(COLLAPSED_TEXT_KEY));
+  if (next !== null) localStorage.setItem(COLLAPSED_TEXT_KEY, next);
+}
+
 export function loadCollapsedText(): CollapsedText {
+  migrateFlash();
   return readCollapsedText(localStorage.getItem(COLLAPSED_TEXT_KEY));
 }
 

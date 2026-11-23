@@ -1,0 +1,223 @@
+.page-icon-drop {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  background: var(--color-white-a04);
+  border: 1.5px dashed var(--color-white-a12);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast) var(--motion-ease);
+}
+
+.page-icon-drop:hover,
+.page-icon-drop[data-over] {
+  border-color: var(--color-accent);
+}
+
+.page-icon-drop[data-over] {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.page-icon-drop:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.page-icon-drop__mark {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-muted);
+  background: var(--color-white-a08);
+  border-radius: var(--radius-xl);
+}
+
+.page-icon-drop__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.page-icon-drop__text strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.page-icon-drop__text span {
+  color: var(--color-text-subtle);
+  font-size: 12px;
+}
+
+.page-icon-note a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.page-icon-note a:hover {
+  text-decoration: underline;
+}
+
+.page-icon-editor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 12px;
+  animation: page-icon-fade var(--motion-medium) var(--motion-ease-out) backwards;
+}
+
+.page-icon-crop {
+  position: relative;
+  flex: none;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  background: repeating-conic-gradient(var(--color-white-a08) 0 25%, transparent 0 50%) 0 0 / 16px 16px;
+  border-radius: var(--radius-xl);
+  box-shadow: inset 0 0 0 1px var(--color-white-a12);
+}
+
+.page-icon-crop canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.page-icon-crop canvas:active {
+  cursor: grabbing;
+}
+
+.page-icon-crop__tip {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  left: 0;
+  color: var(--color-white);
+  font-size: 11px;
+  text-align: center;
+  text-shadow: 0 1px 2px var(--color-black);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.page-icon-editor__options {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.page-icon-auto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 10px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  background: var(--color-white-a04);
+  border-radius: var(--radius-md);
+}
+
+.page-icon-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.page-icon-option > span {
+  color: var(--color-text-subtle);
+  font-size: 12px;
+}
+
+.page-icon-option input[type="range"] {
+  width: min(220px, 100%);
+  accent-color: var(--color-accent);
+}
+
+.page-icon-editor__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-icon-primary {
+  padding: 6px 14px;
+  color: var(--color-on-accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.page-icon-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.page-icon-link {
+  padding: 4px 6px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 13px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.page-icon-library__item {
+  position: relative;
+  display: grid;
+}
+
+.page-icon-library__remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-surface-dark);
+  border: 1px solid var(--color-white-a12);
+  border-radius: var(--radius-circle);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.page-icon-library__item:hover .page-icon-library__remove,
+.page-icon-library__remove:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .page-icon-library__remove {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-icon-editor {
+    animation-duration: var(--motion-fast);
+  }
+}

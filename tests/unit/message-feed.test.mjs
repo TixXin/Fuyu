@@ -88,9 +88,10 @@ test("handled keys drop ones no longer shown and keep the newest few hundred", (
   assert.deepEqual(normalizeHandled("broken"), []);
 });
 
-test("unknown or missing layouts fall back to one at a time", () => {
-  assert.equal(DEFAULT_MESSAGE_LAYOUT, "focus");
+test("unknown or missing layouts fall back to the three-column reader", () => {
+  assert.equal(DEFAULT_MESSAGE_LAYOUT, "reader");
   assert.equal(normalizeMessageLayout("timeline"), "timeline");
-  assert.equal(normalizeMessageLayout("cards"), "focus");
-  assert.equal(normalizeMessageLayout(undefined), "focus");
+  assert.equal(normalizeMessageLayout("focus"), "focus");
+  assert.equal(normalizeMessageLayout("cards"), "reader");
+  assert.equal(normalizeMessageLayout(undefined), "reader");
 });

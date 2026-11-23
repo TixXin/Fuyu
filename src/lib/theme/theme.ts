@@ -1,6 +1,6 @@
-import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "../settings/settings.ts";
+import { THEME_SETTING_KEYS, carriedJellyfishStyle, normalizeSettings, withThemeFrom } from "../settings/settings.ts";
 import { expandNestedThemeColors, themeAppearanceDefaults, themeColors } from "./themeMode.ts";
-import type { IslandSettings } from "../settings/types";
+import type { IslandSettings, JellyfishStyle } from "../settings/types";
 
 export const MAX_THEME_NAME_LENGTH = 60;
 
@@ -14,16 +14,17 @@ export type ThemeFile = {
   version: 1;
   name: string;
   exportedAt: string;
-  appearance: Pick<IslandSettings, ThemeKey>;
+  appearance: Pick<IslandSettings, ThemeKey> & { jellyfishStyle?: JellyfishStyle };
 };
 
 export type ThemeProblem = "notJson" | "notTheme" | "newerVersion";
 
-export function buildTheme(name: string, settings: IslandSettings, now: Date): ThemeFile {
+export function buildTheme(name: string, settings: IslandSettings, now: Date, jellyfishStyle?: JellyfishStyle): ThemeFile {
   const shown = { ...settings, ...themeColors(settings, settings.themeMode === "light" ? "light" : "dark") };
-  const appearance = Object.fromEntries(
-    THEME_SETTING_KEYS.map((key) => [key, shown[key]]),
-  ) as ThemeFile["appearance"];
+  const appearance = {
+    ...Object.fromEntries(THEME_SETTING_KEYS.map((key) => [key, shown[key]])),
+    ...carriedJellyfishStyle(jellyfishStyle),
+  } as ThemeFile["appearance"];
   return { app: "fuyu", kind: "theme", version: 1, name, exportedAt: now.toISOString(), appearance };
 }
 
@@ -36,7 +37,7 @@ export function themeFileName(now: Date) {
 export function parseTheme(
   text: string,
   current: IslandSettings,
-): { name: string; settings: IslandSettings } | { problem: ThemeProblem } {
+): { name: string; settings: IslandSettings; jellyfishStyle?: JellyfishStyle } | { problem: ThemeProblem } {
   let value: unknown;
   try {
     value = JSON.parse(text.replace(/^\uFEFF/, ""));
@@ -57,5 +58,5 @@ export function parseTheme(
   const merged = normalizeSettings({ ...current, ...defaults, ...picked });
   const settings = withThemeFrom(current, { ...merged, ...themeColors(merged, merged.themeMode === "light" ? "light" : "dark") });
   const name = typeof file.name === "string" ? file.name.trim().slice(0, MAX_THEME_NAME_LENGTH) : "";
-  return { name, settings };
+  return { name, settings, ...carriedJellyfishStyle(source.jellyfishStyle) };
 }

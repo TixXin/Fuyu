@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { anyNotchText, changedTexts, routeNotchText } from "../../src/windows/island/notchText.ts";
-import { DEFAULT_NOTCH_TEXT, readNotchText } from "../../src/lib/settings/collapsedText.ts";
+import { DEFAULT_NOTCH_TEXT, flashEventTexts, readNotchText } from "../../src/lib/settings/collapsedText.ts";
 
 const line = (item, extra = {}) => ({ kind: "line", item, priority: 0, ...extra });
 const TODO = line("todos.title", { measure: "写周报", label: "当前任务：写周报" });
@@ -10,10 +10,20 @@ const AGENT = line("agent-status.session", { measure: "MM修复登录", label: "
 const MEETING = line("calendar.meeting", { bare: true });
 const modes = (overrides) => ({ ...DEFAULT_NOTCH_TEXT, ...overrides });
 
-test("by default every kind of text goes to the +N panel and nothing takes the row under the notch", () => {
-  const route = routeNotchText([TODO, LYRIC, AGENT, MEETING], DEFAULT_NOTCH_TEXT, new Set());
-  assert.deepEqual(route.panel.map((entry) => entry.item), ["todos.title", "media.lyric", "agent-status.session", "calendar.meeting"]);
-  assert.equal(route.row, null);
+test("by default lasting text goes to the +N panel, while agent and meeting changes drop below the notch for a moment", () => {
+  const quiet = routeNotchText([TODO, LYRIC, AGENT, MEETING], DEFAULT_NOTCH_TEXT, new Set());
+  assert.deepEqual(quiet.panel.map((entry) => entry.item), ["todos.title", "media.lyric"], "a +N that only shows while an agent changes would flicker");
+  assert.equal(quiet.row, null);
+  assert.equal(routeNotchText([AGENT, TODO], DEFAULT_NOTCH_TEXT, new Set(["agent-status.session"])).row, AGENT);
+  assert.equal(routeNotchText([MEETING], DEFAULT_NOTCH_TEXT, new Set(["calendar.meeting"])).row, MEETING);
+});
+
+test("stored settings that still send agent and meeting text to +N are moved to the moment below the notch once", () => {
+  const stored = JSON.stringify({ version: 1, notch: { todos: "row", lyrics: "panel", agent: "panel", meeting: "panel" }, order: ["agent", "todos"] });
+  assert.deepEqual(JSON.parse(flashEventTexts(stored)), { version: 1, notch: { todos: "row", lyrics: "panel", agent: "flash", meeting: "flash" }, order: ["agent", "todos"] });
+  assert.equal(flashEventTexts(JSON.stringify({ version: 1, notch: { agent: "off", meeting: "row" } })), null, "a choice other than +N is kept");
+  assert.equal(flashEventTexts(null), null);
+  assert.equal(flashEventTexts("{"), null);
 });
 
 test("an always-on row takes the first such line in priority order; hidden kinds go nowhere", () => {

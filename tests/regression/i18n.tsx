@@ -149,7 +149,7 @@ else {
     check(document.querySelector(".todo-island__archive-preview")?.textContent === "No tasks were written down", "Archive empty states follow the selected language");
     check(document.querySelectorAll("[title]").length === 0, "No hover tooltips on the island");
     await click("button.island-message-button[aria-label^='Messages']");
-    check(document.querySelector(".feed-layout")?.getAttribute("aria-label") === "One at a time", "Messages page opens one at a time, in English");
+    check(document.querySelector(".feed-layout")?.getAttribute("aria-label") === "Three panes", "Messages page opens in three panes, in English");
     await click("button[aria-label='More actions']");
     const qqDetails = [...document.querySelectorAll<HTMLButtonElement>("[role='menuitem']")].find((item) => item.textContent === "QQ details and settings");
     await act(async () => { qqDetails?.click(); });

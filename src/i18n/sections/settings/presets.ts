@@ -15,6 +15,7 @@ export type SettingsPresetsText = {
   reveal: string;
   revealMac: string;
   imported: (name: string) => string;
+  look: (name: string) => string;
   problems: { notJson: string; notTheme: string; newerVersion: string };
 };
 
@@ -30,11 +31,12 @@ export const zhCN: SettingsPresetsText = {
   import: "导入…",
   exportNamed: (name) => `导出 ${name}`,
   importedName: "导入的样式",
-  hint: "样式预设可以导出成主题文件发给别人，或在另一台电脑上导入。主题只含外观页的设置（颜色、字体、尺寸、圆角、玻璃效果等），导入后出现在列表最上面，点「启用」才会应用。",
+  hint: "样式预设可以导出成主题文件发给别人，或在另一台电脑上导入。主题只含外观页的设置（颜色、字体、尺寸、圆角、玻璃效果等），导入后出现在列表最上面，点「启用」才会应用。保存预设时会记下当前的水母画风，启用时画风一起换；卡片上没写画风的预设不改画风。",
   exported: (path) => `已导出到 ${path}`,
   reveal: "在文件夹中显示",
   revealMac: "在访达中显示",
   imported: (name) => `已导入「${name}」，点「启用」应用它。`,
+  look: (name) => `水母画风：${name}`,
   problems: {
     notJson: "这个文件不是有效的 JSON，无法导入。",
     notTheme: "这不是浮屿导出的主题文件。完整的设置备份请在 通用 → 备份与恢复 里恢复。",
@@ -54,11 +56,12 @@ export const en: SettingsPresetsText = {
   import: "Import…",
   exportNamed: (name) => `Export ${name}`,
   importedName: "Imported style",
-  hint: "Export a style preset as a theme file to share it or import it on another computer. A theme holds only the Appearance settings (colours, font, sizes, corners, glass and so on); an imported one appears at the top of the list and applies when you click Apply.",
+  hint: "Export a style preset as a theme file to share it or import it on another computer. A theme holds only the Appearance settings (colours, font, sizes, corners, glass and so on); an imported one appears at the top of the list and applies when you click Apply. Saving a preset also records the current jellyfish look, and applying it switches the look too; a preset whose card names no look leaves it alone.",
   exported: (path) => `Exported to ${path}`,
   reveal: "Show in folder",
   revealMac: "Show in Finder",
   imported: (name) => `Imported "${name}". Click Apply to use it.`,
+  look: (name) => `Jellyfish look: ${name}`,
   problems: {
     notJson: "This file is not valid JSON and cannot be imported.",
     notTheme: "This is not a theme file exported by Fuyu. Restore a full settings backup under General → Backup and restore.",

@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState, type ChangeEvent, type CSSProperties } from "react";
 import { Download, FolderOpen, Trash2, Upload } from "lucide-react";
+import { JellyfishMark } from "../../../components/jellyfish/JellyfishMark";
+import { JellyfishStyleContext } from "../../../components/jellyfish/jellyfishStyleContext";
 import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
@@ -9,6 +11,7 @@ import { isMacOS } from "../../../lib/platform";
 import { revealThemeFile } from "../../../lib/settings/api";
 import type { ThemeProblem } from "../../../lib/theme/theme.ts";
 import type { IslandPreset } from "../../../lib/settings/types";
+import { isLightIsland } from "../../../utils/color";
 import "./PresetSettingsSection.css";
 
 type Status =
@@ -153,7 +156,16 @@ export function PresetSettingsSection({
                   "--preset-radius": `${Math.min(preset.settings.islandCornerRadius, 22) / 2}px`,
                 } as CSSProperties}
               >
-                <span className="preset-card__island"><i /><b /></span>
+                <span className={isLightIsland(preset.settings.islandBackgroundColor) ? "preset-card__island island-light" : "preset-card__island"}>
+                  {preset.jellyfishStyle ? (
+                    <JellyfishStyleContext.Provider value={preset.jellyfishStyle}>
+                      <JellyfishMark mood="idle" paused height={12} />
+                    </JellyfishStyleContext.Provider>
+                  ) : (
+                    <i />
+                  )}
+                  <b />
+                </span>
               </span>
               <span className="preset-card__name">{name(preset)}</span>
               <span className="preset-actions">
@@ -178,6 +190,7 @@ export function PresetSettingsSection({
                   </button>
                 )}
               </span>
+              {preset.jellyfishStyle && <span className="preset-card__look">{text.look(t.settings.agent.jellyStyleOptions[preset.jellyfishStyle])}</span>}
             </div>
           ))}
         </div>

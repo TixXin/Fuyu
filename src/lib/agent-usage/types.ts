@@ -10,7 +10,7 @@ export type AgentUsage = {
   sevenDay: UsageWindow | null;
   models: UsageWindow[];
   plan: string | null;
-  source?: "hud" | "api" | "magpie" | "codex" | "glm" | "kimi" | "antigravity" | "antigravityCloud" | "cursor";
+  source?: "hud" | "statusline" | "api" | "magpie" | "codex" | "glm" | "kimi" | "antigravity" | "antigravityCloud" | "cursor";
   error?: AgentUsageError | null;
 };
 

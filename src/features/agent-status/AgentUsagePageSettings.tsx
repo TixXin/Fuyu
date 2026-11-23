@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -9,10 +10,11 @@ import type { IslandSettings } from "../../lib/settings/types";
 import { AgentProviderIcon } from "./AgentProviderIcon";
 import { AgentStageIsland } from "./AgentStageIsland";
 import { AgentUsageBar } from "./AgentUsageBar";
+import { AgentUsageLayoutArt } from "./AgentUsageLayoutArt";
 import { AGENTS } from "./agents";
-import { AGENT_USAGE_COLUMNS, AGENT_USAGE_RESETS, AGENT_USAGE_SOURCES, AGENT_USAGE_STYLES, type AgentUsageItem, type AgentUsageReset, type AgentUsageStyle } from "./agentSettings";
+import { AGENT_USAGE_COLUMNS, AGENT_USAGE_LAYOUTS, AGENT_USAGE_RESETS, AGENT_USAGE_SOURCES, AGENT_USAGE_STYLES, type AgentUsageItem, type AgentUsageLayout, type AgentUsageReset, type AgentUsageStyle } from "./agentSettings";
 import { getAgentHooksState, type AgentHooksState, type SessionProvider } from "./api";
-import { availableLines, PLAN_SOURCES, USAGE_SOURCE_ICONS, USAGE_SOURCE_LABELS, type UsageView } from "./usage";
+import { availableLines, LAYOUT_CONTROLS, PLAN_SOURCES, USAGE_SOURCE_ICONS, USAGE_SOURCE_LABELS, type UsageView } from "./usage";
 import { useAgentUsages } from "./useAgentUsages";
 
 type Props = { settings: IslandSettings; onSettingsChange: (settings: IslandSettings) => void };
@@ -42,7 +44,8 @@ export function AgentUsagePageSettings({ settings, onSettingsChange }: Props) {
   const agentsOff = settings.agentHiddenProviders;
   const usages = useAgentUsages(on, AGENT_USAGE_SOURCES.filter((source) => !agentsOff.includes(source)));
   const hooks = useHooksState();
-  const view: UsageView = { hidden: settings.agentUsageHidden, tightest: settings.agentUsageTightest, reset: settings.agentUsageReset, style: settings.agentUsageStyle, agentsOff };
+  const view: UsageView = { hidden: settings.agentUsageHidden, tightest: settings.agentUsageTightest, reset: settings.agentUsageReset, style: settings.agentUsageStyle, layout: settings.agentUsageLayout, agentsOff };
+  const controls = LAYOUT_CONTROLS[settings.agentUsageLayout];
   const sources = availableLines(usages, agentsOff).map((line) => line.source);
   const hidden = settings.agentUsageHidden;
   const shown = (item: AgentUsageItem) => !hidden.includes(item);
@@ -66,19 +69,26 @@ export function AgentUsagePageSettings({ settings, onSettingsChange }: Props) {
       {on && (
         <SettingsRow title={text.usageShowTitle} description={text.usageShowHint}>
           <div className="agent-stage">
+            <SettingsChoiceCards<AgentUsageLayout>
+              value={settings.agentUsageLayout}
+              ariaLabel={text.usageLayout}
+              columns={5}
+              options={AGENT_USAGE_LAYOUTS.map((value) => ({ value, label: t.agent.usage.layouts[value], hint: text.usageLayoutHints[value], art: <AgentUsageLayoutArt layout={value} /> }))}
+              onChange={(agentUsageLayout) => update({ agentUsageLayout })}
+            />
             <div className="agent-stage__toolbar">
-              <span className="agent-stage__tool">
+              {controls.style && <span className="agent-stage__tool">
                 {text.usageStyle}
                 <SettingsChoice<AgentUsageStyle> value={settings.agentUsageStyle} ariaLabel={text.usageStyle} options={AGENT_USAGE_STYLES.map((value) => ({ value, label: text.usageStyleOptions[value] }))} onChange={(agentUsageStyle) => update({ agentUsageStyle })} />
-              </span>
-              <span className="agent-stage__tool">
+              </span>}
+              {controls.reset && <span className="agent-stage__tool">
                 {text.usageReset}
                 <SettingsChoice<AgentUsageReset> value={settings.agentUsageReset} ariaLabel={text.usageReset} options={AGENT_USAGE_RESETS.map((value) => ({ value, label: text.usageResetOptions[value] }))} onChange={(agentUsageReset) => update({ agentUsageReset })} />
-              </span>
-              <label className="agent-stage__tool" htmlFor={tightestId}>
+              </span>}
+              {controls.tightest && <label className="agent-stage__tool" htmlFor={tightestId}>
                 {text.usageTightest}
                 <SettingsSwitch id={tightestId} checked={settings.agentUsageTightest} onChange={(agentUsageTightest) => update({ agentUsageTightest })} />
-              </label>
+              </label>}
             </div>
             <AgentStageIsland settings={settings} label={text.usagePreview}>
               {usages.readAt === 0 ? (

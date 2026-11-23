@@ -10,6 +10,7 @@ export type TranslationTarget = "window" | "island";
 
 export type AgentTitleMode = "changes" | "running";
 export type AgentLightStyle = "mark" | "dot";
+export type JellyfishStyle = "vector" | "flat" | "sticker" | "mono" | "neon" | "chunky" | "fine";
 
 export type AppearanceMode = "classic" | "liquidGlass";
 export type IslandFont = "system" | "pixel";
@@ -33,6 +34,9 @@ export type MessageNotice = "line" | "banner" | "panel";
 export type IslandMotion = "pop" | "lively" | "spring" | "snappy" | "soft" | "unfold" | "grow" | "smooth" | "fast" | "bouncy" | "none";
 export type IslandHover = "bounce" | "near" | "subtle" | "bold" | "drop" | "touch" | "none";
 export type IslandBounce = "subtle" | "regular" | "bouncy";
+export type PageSwitchEffect = "carousel" | "fade" | "ripple" | "wipe" | "sheen" | "pixel" | "none";
+export type PageSwitchIndicator = "stretch" | "slide" | "jump";
+export type PageSwitchSpeed = "fast" | "normal" | "slow";
 export type WidgetEntrance = "shuffle" | "fade" | "spread" | "curtain" | "wave" | "ripple" | "skeleton" | "trace" | "glow" | "drop" | "bubble" | "focus" | "flip";
 export type ShelfDoubleClick = "open" | "reveal";
 
@@ -174,18 +178,26 @@ export type IslandSettings = CalendarSettingValues &
   agentTitleEnabled: boolean;
   agentTitleMode: AgentTitleMode;
   agentLightStyle: AgentLightStyle;
+  jellyfishStyle: JellyfishStyle;
+  jellyfishNightDoze: boolean;
   gameDoNotDisturb: boolean;
   gameAutoTuck: boolean;
   hoverTakesKeyboard: boolean;
   pageArrows: boolean;
   pageArrowKeys: boolean;
   pageSwipe: boolean;
+  pageSwitchPanel: PageSwitchEffect;
+  pageSwitchSettings: PageSwitchEffect;
+  pageSwitchIndicator: PageSwitchIndicator;
+  pageSwitchSpeed: PageSwitchSpeed;
+  pageSwitchDirectional: boolean;
 };
 
 export type IslandPreset = {
   id: string;
   name: string;
   settings: IslandSettings;
+  jellyfishStyle?: JellyfishStyle;
   createdAt: number;
   isDefault?: boolean;
 };

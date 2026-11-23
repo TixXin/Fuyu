@@ -19,6 +19,7 @@ export function ItemStyleTabs({ items, current, onPick, ...props }: IslandItemSt
             type="button"
             role="tab"
             data-item={item.id}
+            data-search-tab
             aria-selected={item.id === shown.id}
             aria-label={text.styleOf(item.name)}
             onClick={() => onPick(item.id)}

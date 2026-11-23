@@ -16,9 +16,9 @@ export function useMarkLightShown(markLight: boolean) {
   return markLight && !isCollapsedItemOffBar(placements, "status-light");
 }
 
-export function useStatusLightDecor({ paused, agents, markLight }: { paused: boolean; agents: readonly AgentActivity[]; markLight: boolean }): IslandDecor {
+export function useStatusLightDecor({ paused, agents, markLight, doze = false }: { paused: boolean; agents: readonly AgentActivity[]; markLight: boolean; doze?: boolean }): IslandDecor {
   const shown = useMarkLightShown(markLight);
-  const mood = usePetMood(agents, shown);
+  const mood = usePetMood(agents, shown, doze);
   const hidden = usePageHidden();
   const still = paused || hidden;
   return useMemo(

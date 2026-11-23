@@ -1,4 +1,5 @@
 .settings-tabs {
+  position: relative;
   flex: none;
   max-width: 908px;
   display: flex;
@@ -63,6 +64,19 @@
   height: 2px;
   background: var(--color-accent);
   border-radius: var(--radius-pill);
+}
+
+.settings-tabs__ghost {
+  position: absolute;
+  bottom: -1px;
+  height: 2px;
+  pointer-events: none;
+  background: var(--color-accent);
+  border-radius: var(--radius-pill);
+}
+
+.settings-tabs__tab--active.settings-switch-arriving::after {
+  opacity: 0;
 }
 
 .settings-tabs__tab:focus-visible {

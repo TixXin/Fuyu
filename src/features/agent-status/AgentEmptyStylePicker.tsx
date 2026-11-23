@@ -20,7 +20,7 @@ export function AgentEmptyStylePicker({ settings, onSettingsChange }: { settings
   const usages = useAgentUsages(settings.agentShowUsage, AGENT_USAGE_SOURCES.filter((source) => !agentsOff.includes(source)));
   const style = AGENT_EMPTY_STYLES[index];
   const inUse = settings.agentEmptyStyle === style;
-  const view: UsageView = { hidden: settings.agentUsageHidden, tightest: settings.agentUsageTightest, reset: settings.agentUsageReset, style: settings.agentUsageStyle, agentsOff };
+  const view: UsageView = { hidden: settings.agentUsageHidden, tightest: settings.agentUsageTightest, reset: settings.agentUsageReset, style: settings.agentUsageStyle, layout: settings.agentUsageLayout, agentsOff };
   const step = (by: number) => setIndex((current) => (current + by + AGENT_EMPTY_STYLES.length) % AGENT_EMPTY_STYLES.length);
 
   return (

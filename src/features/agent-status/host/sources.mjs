@@ -23,6 +23,7 @@ export function normalizeSessionEntry(session, fallbackProvider = "") {
     remoteHost: text(session?.remoteHost),
     listed: session?.listed !== false,
     unseen: session?.unseen === true,
+    ...(session?.compacting === true ? { compacting: true } : {}),
   };
 }
 

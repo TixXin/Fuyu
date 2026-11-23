@@ -180,7 +180,7 @@ async function runChecks() {
       check(fill.includes("/") || fill.startsWith("rgba("), `${tone}：原生透出激活时主壳底色改为半透明（${fill}）`);
     }
     document.documentElement.dataset.islandNotch = "on";
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 450)); });
+    await settle(() => islands().every((island) => getComputedStyle(island).backgroundColor === "rgb(0, 0, 0)"), 3000);
     for (const island of islands()) {
       const cs = getComputedStyle(island);
       check(cs.backgroundColor === "rgb(0, 0, 0)" && cs.backgroundImage === "none", `原生透出在刘海折叠时仍保持纯黑 (${cs.backgroundColor} | ${cs.backgroundImage})`);

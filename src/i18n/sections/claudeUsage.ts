@@ -13,6 +13,7 @@ export type ClaudeUsageText = {
   resettingSoon: string;
   ago: AgeText;
   fromHud: string;
+  fromStatusline: string;
   fromApi: string;
   fromMagpie: string;
   fromCodex: string;
@@ -26,7 +27,7 @@ export type ClaudeUsageText = {
   fromDshAccount: string;
   updated: (ago: string, source: string) => string;
   staleUpdated: (ago: string, source: string) => string;
-  staleReason: Partial<Record<"hud" | "codex", string>>;
+  staleReason: Partial<Record<"hud" | "statusline" | "codex", string>>;
   ringLabel: (details: string) => string;
   hoverOnlyLabel: (details: string) => string;
   hoverOnlyItemName: string;
@@ -62,6 +63,8 @@ export type ClaudeUsageText = {
     remaining: string;
     askAnthropic: string;
     askAnthropicHint: string;
+    askWhenStale: string;
+    askWhenStaleHint: string;
     proxy: string;
     proxyHint: string;
     proxyHintMac: string;
@@ -112,6 +115,7 @@ export const zhCN: ClaudeUsageText = {
   resettingSoon: "即将重置",
   ago: commonZhCN.ago,
   fromHud: "来自 claude-hud",
+  fromStatusline: "来自 Claude Code 状态栏",
   fromApi: "来自 Anthropic",
   fromMagpie: "来自 magpie",
   fromCodex: "来自 Codex 会话记录",
@@ -127,6 +131,7 @@ export const zhCN: ClaudeUsageText = {
   staleUpdated: (ago, source) => `可能已过时：${ago}更新 · ${source}`,
   staleReason: {
     hud: "claude-hud 只在终端里的 Claude Code 刷新状态栏时写这份快照，用一下 Claude Code 就会更新",
+    statusline: "终端里的 Claude Code 每回复一次就更新；隔得久了会向 Anthropic 补查一次",
     codex: "Codex 跑完一轮才会写入新的额度",
   },
   ringLabel: (details) => `用量：${details}。点击刷新`,
@@ -258,6 +263,8 @@ export const zhCN: ClaudeUsageText = {
     remaining: "剩余",
     askAnthropic: "Claude Code：直接向 Anthropic 查询",
     askAnthropicHint: "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。",
+    askWhenStale: "Claude Code：额度旧了时补查一次",
+    askWhenStaleHint: "状态栏和 claude-hud 的额度都超过 30 分钟没更新或已过重置时间时，用同一个只读令牌经代理向 Anthropic 查一次，至少隔 15 分钟，失败时退避到 2 小时。关掉后只显示「已过期」，不联网。",
     proxy: "代理地址",
     proxyHint: "http:// 或 https:// 代理，例如 http://127.0.0.1:7890。留空时依次用 HTTPS_PROXY 环境变量和 Windows 的系统代理；都没有就不请求，不会绕过代理直连。",
     proxyHintMac: "http:// 或 https:// 代理，例如 http://127.0.0.1:7890。留空时用 HTTPS_PROXY 环境变量；没有就不请求，不会绕过代理直连。",
@@ -301,6 +308,7 @@ export const en: ClaudeUsageText = {
   resettingSoon: "resetting soon",
   ago: commonEn.ago,
   fromHud: "via claude-hud",
+  fromStatusline: "from the Claude Code status line",
   fromApi: "from Anthropic",
   fromMagpie: "from magpie",
   fromCodex: "from Codex's session logs",
@@ -316,6 +324,7 @@ export const en: ClaudeUsageText = {
   staleUpdated: (ago, source) => `May be stale: updated ${ago} · ${source}`,
   staleReason: {
     hud: "claude-hud writes this snapshot only when Claude Code redraws its status line in a terminal; use Claude Code once to refresh it",
+    statusline: "Claude Code in a terminal updates this with every reply; after a long gap the island asks Anthropic once",
     codex: "Codex writes new limits only after it finishes a turn",
   },
   ringLabel: (details) => `Usage: ${details}. Click to refresh`,
@@ -447,6 +456,8 @@ export const en: ClaudeUsageText = {
     remaining: "Left",
     askAnthropic: "Claude Code: ask Anthropic directly",
     askAnthropicHint: "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too.",
+    askWhenStale: "Claude Code: check once when usage goes stale",
+    askWhenStaleHint: "When both the status line and claude-hud readings are over 30 minutes old or past their reset time, ask Anthropic once with the same read-only token through the proxy: at most every 15 minutes, backing off to 2 hours on failure. Off shows \"Expired\" instead and never goes online.",
     proxy: "Proxy",
     proxyHint: "An http:// or https:// proxy, such as http://127.0.0.1:7890. Empty uses the HTTPS_PROXY environment variable, then the Windows proxy; without either nothing is sent, never directly.",
     proxyHintMac: "An http:// or https:// proxy, such as http://127.0.0.1:7890. Empty uses the HTTPS_PROXY environment variable; without it nothing is sent, never directly.",

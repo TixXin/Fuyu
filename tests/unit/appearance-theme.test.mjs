@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS, THEME_SETTING_KEYS } from "../../src/lib/settings/settings.ts";
+import { DEFAULT_SETTINGS, THEME_SETTING_KEYS, withPresetFrom } from "../../src/lib/settings/settings.ts";
 import { buildTheme, parseTheme, themeFileName } from "../../src/lib/theme/theme.ts";
 
 const current = { ...DEFAULT_SETTINGS, opacity: 80, pulseColor: "#112233" };
@@ -16,6 +16,31 @@ test("a theme holds the preset's name and only its look", () => {
   assert.ok(!("collapsedScale" in theme.appearance) && !("showTitle" in theme.appearance), "sizes and display stay out (C26)");
   assert.equal(theme.appearance.opacity, 80);
   assert.ok(!("gameAutoTuck" in theme.appearance));
+});
+
+test("a theme file carries the jellyfish look only when asked to, and an import without one leaves the look alone", () => {
+  const plain = buildTheme("Night", { ...current, jellyfishStyle: "fine" }, new Date());
+  assert.ok(!("jellyfishStyle" in plain.appearance), "a market theme saved as a preset does not pick up the user's look");
+  const pixel = buildTheme("Night", current, new Date(), "neon");
+  assert.equal(pixel.appearance.jellyfishStyle, "neon");
+  const mine = { ...current, jellyfishStyle: "flat" };
+  const fromPlain = parseTheme(JSON.stringify(plain), mine);
+  assert.ok(!("jellyfishStyle" in fromPlain));
+  assert.equal(fromPlain.settings.jellyfishStyle, "flat");
+  assert.equal(parseTheme(JSON.stringify(pixel), mine).jellyfishStyle, "neon");
+  const unknown = { ...pixel, appearance: { ...pixel.appearance, jellyfishStyle: "blurry" } };
+  assert.ok(!("jellyfishStyle" in parseTheme(JSON.stringify(unknown), mine)), "a look this version does not know is dropped");
+});
+
+test("applying a preset changes the jellyfish look only when the preset carries one", () => {
+  const mine = { ...current, jellyfishStyle: "flat", collapsedScale: 1.1 };
+  const old = { id: "a", name: "Old", settings: { ...DEFAULT_SETTINGS, opacity: 55, jellyfishStyle: "vector" }, createdAt: 1 };
+  const next = withPresetFrom(mine, old);
+  assert.equal(next.opacity, 55);
+  assert.equal(next.collapsedScale, 1.1, "sizes are still not part of a preset's look");
+  assert.equal(next.jellyfishStyle, "flat", "a preset saved before looks existed keeps the user's look");
+  assert.equal(withPresetFrom(mine, { ...old, jellyfishStyle: "neon" }).jellyfishStyle, "neon");
+  assert.equal(withPresetFrom(mine, { ...old, jellyfishStyle: "blurry" }).jellyfishStyle, "flat");
 });
 
 test("theme files are named by local date and time", () => {

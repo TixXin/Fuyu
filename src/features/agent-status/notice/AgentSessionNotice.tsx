@@ -100,6 +100,7 @@ export function AgentSessionNotice({
       scrollbar={options.scrollbar}
       count={count}
       icon={icon}
+      compacting={session.compacting === true}
       meta={meta}
       body={body}
       hoverLines={hoverLines}

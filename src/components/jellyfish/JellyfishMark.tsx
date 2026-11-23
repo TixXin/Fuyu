@@ -1,9 +1,12 @@
 import { useId, type CSSProperties } from "react";
+import { useJellyfishStyle } from "./jellyfishStyleContext";
+import { PixelJellyfish } from "./PixelJellyfish";
+import { useLivelyJelly, type LivelyJelly } from "./useLivelyJelly";
 import "./JellyfishMark.css";
 
 export const JELLY_VIEW_WIDTH = 58;
 export const JELLY_VIEW_HEIGHT = 43;
-export type JellyMood = "idle" | "running" | "waiting" | "failed" | "done" | "sleep";
+export type JellyMood = "idle" | "running" | "waiting" | "failed" | "done" | "sleep" | "stale" | "compacting";
 
 const VIEW_BOX = `3 4 ${JELLY_VIEW_WIDTH} ${JELLY_VIEW_HEIGHT}`;
 const BELL = "M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z";
@@ -40,6 +43,23 @@ function Face({ mood }: { mood: JellyMood }) {
       <g className="center-jelly-lids">
         <path className="center-jelly-line" d="M20.6 26.4a3.4 3.4 0 0 1 6.8 0M36.6 26.4a3.4 3.4 0 0 1 6.8 0" />
       </g>
+    );
+  }
+  if (mood === "stale") {
+    return (
+      <>
+        <circle className="center-jelly-eye" cx={24} cy={26} r={2.3} />
+        <circle className="center-jelly-eye" cx={40} cy={26} r={2.3} />
+        <path className="center-jelly-line center-jelly-mouth" d="M28.6 32.2h6.8" />
+      </>
+    );
+  }
+  if (mood === "compacting") {
+    return (
+      <>
+        <path className="center-jelly-line" d="M21.6 21.8l4.8 3.4-4.8 3.4M42.4 21.8l-4.8 3.4 4.8 3.4" />
+        <path className="center-jelly-line center-jelly-mouth" d="M28.6 32.2h6.8" />
+      </>
     );
   }
   if (mood === "running") {
@@ -97,19 +117,33 @@ function Effect({ mood }: { mood: JellyMood }) {
       </>
     );
   }
+  if (mood === "stale") return <path className="center-jelly-fx center-jelly-ask" d="M56.3 3.6a3.4 3.4 0 1 1 5 3c-1.1.6-1.6 1.3-1.6 2.6M59.7 13v.1" />;
+  if (mood === "compacting") return <path className="center-jelly-fx center-jelly-press" d="M-2.4 22.2l3.6 4-3.6 4M66.4 22.2l-3.6 4 3.6 4" />;
   return null;
 }
 
-export function JellyfishMark({ mood, paused = false, height }: { mood: JellyMood; paused?: boolean; height?: number }) {
+type JellyfishMarkProps = { mood: JellyMood; paused?: boolean; height?: number; lively?: boolean };
+type DrawnJellyfishProps = LivelyJelly & { paused?: boolean; height?: number };
+
+export function JellyfishMark({ lively = false, mood, paused, height }: JellyfishMarkProps) {
+  const style = useJellyfishStyle();
+  const live = useLivelyJelly(lively && !paused, mood);
+  const drawn = { ...live, paused, height };
+  return style === "vector" ? <VectorJellyfish {...drawn} /> : <PixelJellyfish style={style} {...drawn} />;
+}
+
+function VectorJellyfish({ mood, paused = false, height, look, wrap, onPoke }: DrawnJellyfishProps) {
   const shade = `center-jelly-shade-${useId().replace(/:/g, "")}`;
   const shadeFill = `url(#${shade})`;
   return (
     <span
-      className="center-jelly"
+      ref={wrap}
+      className={onPoke ? "center-jelly center-jelly--lively" : "center-jelly"}
       data-mood={mood}
       data-paused={paused || undefined}
-      style={height === undefined ? undefined : ({ "--center-jelly-height": `${height}px` } as CSSProperties)}
+      style={{ ...(height === undefined ? null : { "--center-jelly-height": `${height}px` }), ...(look.x || look.y ? { "--center-jelly-look-x": look.x, "--center-jelly-look-y": look.y } : null) } as CSSProperties}
       aria-hidden="true"
+      onClick={onPoke}
     >
       <svg viewBox={VIEW_BOX}>
         <defs>

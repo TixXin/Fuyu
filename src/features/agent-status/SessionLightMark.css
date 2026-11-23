@@ -1,0 +1,21 @@
+.agent-session__jelly {
+  width: 16px;
+  height: 12px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  margin: 0 -4px 0 -5px;
+}
+
+.agent-session--full > .agent-session__jelly {
+  margin-top: 4px;
+}
+
+.agent-card__jelly {
+  width: 16px;
+  height: 12px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  margin-left: -2px;
+}

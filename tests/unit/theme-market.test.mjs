@@ -101,3 +101,20 @@ test("a dual-tone market theme carries both dark and light sets and keeps system
   assert.equal(imported.settings.darkBackgroundColor, "#141b26");
   assert.equal(imported.settings.lightBackgroundColor, "#eef3fa");
 });
+
+test("a market theme may name a jellyfish look; themes that do not leave the user's look alone", () => {
+  const [plain, pixel, unknown] = readMarketThemes([
+    midnight,
+    { ...midnight, id: "fuyu.pixel", appearance: { ...midnight.appearance, jellyfishStyle: "chunky" } },
+    { ...midnight, id: "fuyu.unknown-look", appearance: { ...midnight.appearance, jellyfishStyle: "blurry" } },
+  ]);
+  const mine = { ...DEFAULT_SETTINGS, jellyfishStyle: "flat" };
+  assert.ok(!("jellyfishStyle" in plain) && !("jellyfishStyle" in unknown));
+  assert.equal(withMarketTheme(mine, plain).jellyfishStyle, "flat");
+  assert.equal(isThemeInUse(withMarketTheme(mine, plain), plain), true);
+  assert.equal(pixel.jellyfishStyle, "chunky");
+  const next = withMarketTheme(mine, pixel);
+  assert.equal(next.jellyfishStyle, "chunky");
+  assert.equal(isThemeInUse(next, pixel), true);
+  assert.equal(isThemeInUse({ ...next, jellyfishStyle: "flat" }, pixel), false, "switching the look away means the theme is no longer in use as published");
+});

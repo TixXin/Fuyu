@@ -44,6 +44,7 @@ function Fixture({ features, side }: { features: IslandFeatures; side: boolean }
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}}
       pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}
       pageArrows={side ? null : <IslandPageArrows features={features} page={page} onPageChange={setPage} />}
+      pageSwitch={{ effect: "wipe", speed: "normal", directional: true }}
     >
       <div className="page-arrows-fixture">
         <input id="fixture-input" aria-label="input" />
@@ -85,6 +86,15 @@ async function runChecks() {
     const startDot = activeDot();
     await act(async () => { arrow("next")!.click(); await settle(); });
     check(shownPage() !== "todo", "点右箭头切到下一页");
+    const reveal = (element: Element | null) => (element?.getAnimations() ?? []).flatMap((animation) => (animation.effect as KeyframeEffect).getKeyframes())
+      .map((frame) => `${String(frame.maskSize ?? frame.webkitMaskSize ?? "")} @ ${String(frame.maskPosition ?? frame.webkitMaskPosition ?? "")}`)
+      .filter((frame) => frame !== " @ ");
+    const pageReveal = reveal(document.querySelector(".page-arrows-fixture"));
+    check(pageReveal[0] === "200% 100% @ 0% 0%" && pageReveal[1] === "200% 100% @ 100% 0%", `翻到下一页时新页从右边拉开（${pageReveal.join(" → ")}）`);
+    check(reveal(arrow("next")).length === 0 && reveal(arrow("previous")).length === 0, "翻页动效不遮两边的箭头");
+    check(document.querySelector("[data-page-switch-overlay='edge']"), "幕布边上有一道亮线");
+    await act(async () => { for (const animation of document.getAnimations()) animation.finish(); await settle(); });
+    check(!document.querySelector("[data-page-switch-overlay]"), "播完亮线删掉");
     check(startDot.includes(nameIn(arrow("previous")!.getAttribute("aria-label"))), "切过去后左箭头的名字是刚才那一页");
     await act(async () => { arrow("previous")!.click(); await settle(); });
     check(shownPage() === "todo", "点左箭头回到原来那页");

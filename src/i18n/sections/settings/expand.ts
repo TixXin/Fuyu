@@ -1,4 +1,4 @@
-import type { IslandHover, IslandMotion, TuckHintStyle, TuckStyle, WidgetEntrance } from "../../../lib/settings/types";
+import type { IslandHover, IslandMotion, PageSwitchEffect, PageSwitchIndicator, PageSwitchSpeed, TuckHintStyle, TuckStyle, WidgetEntrance } from "../../../lib/settings/types";
 
 export type TuckHold = "todo" | "agent" | "music" | "messages";
 
@@ -64,6 +64,20 @@ export type SettingsExpandText = {
   widgetEntrances: Record<WidgetEntrance, string>;
   widgetData: string;
   widgetDataHint: string;
+  switchTitle: string;
+  switchPanel: string;
+  switchPanelHint: string;
+  switchSettings: string;
+  switchSettingsHint: string;
+  switchEffects: Record<PageSwitchEffect, string>;
+  switchIndicator: string;
+  switchIndicatorHint: string;
+  switchIndicators: Record<PageSwitchIndicator, string>;
+  switchSpeed: string;
+  switchSpeeds: Record<PageSwitchSpeed, string>;
+  switchDirectional: string;
+  switchDirectionalHint: string;
+  switchTry: string;
   hoverEffect: string;
   hoverMotionHint: string;
   hoverBounce: string;
@@ -179,6 +193,36 @@ export const zhCN: SettingsExpandText = {
   },
   widgetData: "数据动效",
   widgetDataHint: "小组件出现时，圆环扫出来、数字跳到位、进度条灌满、格子一波波亮起",
+  switchTitle: "切换动效",
+  switchPanel: "面板换页",
+  switchPanelHint: "点页签、箭头，按 ← → 或左右滑动换页时；面板刚展开时由开合动画负责，不播",
+  switchSettings: "设置窗口换页",
+  switchSettingsHint: "点侧栏、点上面的标签换页时；从搜索结果跳过去不播",
+  switchEffects: {
+    carousel: "轮播",
+    fade: "淡入",
+    ripple: "涟漪",
+    wipe: "幕布",
+    sheen: "光扫",
+    pixel: "像素溶解",
+    none: "无",
+  },
+  switchIndicator: "标签和侧栏的高亮",
+  switchIndicatorHint: "换页时设置窗口里标签的下划线、侧栏的高亮块怎么挪过去",
+  switchIndicators: {
+    stretch: "伸缩",
+    slide: "滑动",
+    jump: "直接跳",
+  },
+  switchSpeed: "速度",
+  switchSpeeds: {
+    fast: "快",
+    normal: "标准",
+    slow: "慢",
+  },
+  switchDirectional: "跟着方向",
+  switchDirectionalHint: "往后翻从后面来、往前翻从前面来，涟漪从点的地方扩散；关掉时都从中间开始",
+  switchTry: "试一下",
   hoverEffect: "悬停效果",
   hoverMotionHint: "鼠标靠近收起的岛时它怎么变；移到格子上就演一次",
   hoverBounce: "碰到弹一下",
@@ -322,6 +366,36 @@ export const en: SettingsExpandText = {
   },
   widgetData: "Data motion",
   widgetDataHint: "As widgets appear, rings sweep in, numbers count up, bars fill and grids light up in a wave",
+  switchTitle: "Page transitions",
+  switchPanel: "Panel pages",
+  switchPanelHint: "When you click a tab or an arrow, press ← → or swipe; not when the panel first opens, the open animation covers that",
+  switchSettings: "Settings pages",
+  switchSettingsHint: "When you click the sidebar or a tab; jumping from a search result skips it",
+  switchEffects: {
+    carousel: "Shuffle",
+    fade: "Fade",
+    ripple: "Ripple",
+    wipe: "Curtain",
+    sheen: "Sheen",
+    pixel: "Pixel dissolve",
+    none: "None",
+  },
+  switchIndicator: "Tab and sidebar highlight",
+  switchIndicatorHint: "How the tab underline and the sidebar highlight move over in the settings window",
+  switchIndicators: {
+    stretch: "Stretch",
+    slide: "Slide",
+    jump: "Jump",
+  },
+  switchSpeed: "Speed",
+  switchSpeeds: {
+    fast: "Fast",
+    normal: "Normal",
+    slow: "Slow",
+  },
+  switchDirectional: "Follow direction",
+  switchDirectionalHint: "Later pages come in from the far side, earlier ones from the near side, and ripples start where you clicked; off, everything starts from the middle",
+  switchTry: "Try it",
   hoverEffect: "Hover effect",
   hoverMotionHint: "How the collapsed island reacts as the pointer comes near; point at a tile to play it",
   hoverBounce: "Bounce on touch",

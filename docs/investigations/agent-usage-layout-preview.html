@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent 页额度布局</title>
+<style>
+:root{
+  --pg:#f3f3f5;--pg2:#fff;--ink:#1c1c1f;--ink2:#5b5b63;--ink3:#8a8a93;--rule:#e2e2e7;--acc:#0a7cff;
+  --t1:rgba(248,246,240,.96);--t2:rgba(248,246,240,.68);--t3:rgba(248,246,240,.45);--line:rgba(255,255,255,.1);
+  --lo:#35e985;--mid:#ff9f43;--hi:#ff5d6c;--blue:#74d6ff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pg:#0c0d0f;--pg2:#1a1a1d;--ink:#ececf0;--ink2:#a9a9b2;--ink3:#7a7a83;--rule:#2c2c31}}
+:root[data-theme="dark"]{--pg:#0c0d0f;--pg2:#1a1a1d;--ink:#ececf0;--ink2:#a9a9b2;--ink3:#7a7a83;--rule:#2c2c31}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--ink)}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 80px}
+h1{font-size:24px;margin:0 0 6px}
+.sub{color:var(--ink2);margin:0 0 14px;line-height:1.6;font-size:14px}
+.fix{background:var(--pg2);border:1px solid var(--rule);border-radius:12px;padding:12px 16px;font-size:13.5px;line-height:1.7;color:var(--ink2)}
+.fix b{color:var(--ink)}
+.bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0;background:var(--pg)}
+.bar .lab{font-size:12.5px;color:var(--ink3)}
+.bar button{border:1px solid var(--rule);background:var(--pg2);color:var(--ink2);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
+.bar button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.opt{margin:26px 0 0}
+.opt h2{font-size:18px;margin:0 0 4px;display:flex;gap:10px;align-items:baseline}
+.opt h2 .tag{font-size:12px;font-weight:500;color:var(--acc);border:1px solid var(--acc);border-radius:99px;padding:1px 8px}
+.opt p{margin:0 0 10px;color:var(--ink2);font-size:13.5px;line-height:1.6;max-width:900px}
+.isl{width:100%;max-width:800px;background:#000;border-radius:26px;padding:10px 0 12px;color:var(--t1);overflow:hidden;font-size:14px}
+.head{display:flex;align-items:center;gap:14px;padding:4px 18px 10px;color:var(--t2);font-size:12.5px}
+.head .pill{background:#1c1c1f;color:var(--t1);border-radius:99px;padding:4px 12px;font-weight:600}
+.head .sp{flex:1}
+.sess{padding:4px 18px}
+.row{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:14px}
+.row .dot{width:7px;height:7px;border-radius:50%;background:var(--lo);flex:none}
+.row .dot.off{background:#8a8a93}
+.row .tt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.row .meta{color:var(--t2);font-size:12.5px;white-space:nowrap}
+.cc{width:16px;height:16px;border-radius:4px;flex:none}
+.ic{width:16px;height:16px;flex:none;display:block}
+.u{font-variant-numeric:tabular-nums}
+.lo{color:var(--lo)}.mid{color:var(--mid)}.hi{color:var(--hi)}
+.dim{color:var(--t3)}
+.reset{color:var(--t2);font-size:12px;white-space:nowrap}
+.stale{color:#ffd166;font-size:11px}
+/* A chips */
+.A{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 7px;border-radius:99px;background:rgba(255,255,255,.07);font-size:13px;position:relative;cursor:default}
+.chip .k{color:var(--t2);font-size:12px}
+.chip:hover{background:rgba(255,255,255,.12)}
+.chip .pop{display:none;position:absolute;top:32px;left:0;z-index:3;min-width:190px;background:#1c1c1f;border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;line-height:1.8;color:var(--t2);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.chip:hover .pop{display:block}
+.pop b{color:var(--t1);font-weight:600}
+/* B tiles */
+.B{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;padding:0 14px 10px}
+.tile{position:relative;border-radius:14px;background:rgba(255,255,255,.06);padding:8px 10px 10px;overflow:hidden;min-width:0}
+.tile .top{display:flex;align-items:center;gap:6px;color:var(--t2);font-size:11.5px;white-space:nowrap;overflow:hidden}
+.tile .big{font-size:20px;font-weight:700;margin-top:2px;letter-spacing:-.01em}
+.tile .big small{font-size:11.5px;font-weight:500;color:var(--t2);margin-left:4px}
+.tile .meter{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08)}
+.tile .meter i{display:block;height:100%}
+.tile .sub2{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* C primary */
+.C{padding:0 18px 8px}
+.C .main{display:flex;align-items:center;gap:10px;font-size:13.5px}
+.C .track{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;min-width:60px}
+.C .track i{display:block;height:100%;border-radius:inherit}
+.C .others{display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap;font-size:12.5px;color:var(--t2)}
+.C .others span{display:inline-flex;align-items:center;gap:5px}
+.C .more{margin-left:auto;color:var(--blue);cursor:pointer;font-size:12px}
+.C table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.C td{padding:4px 6px 4px 0;white-space:nowrap}
+/* D ruler */
+.D{padding:4px 18px 10px}
+.ruler{position:relative;height:40px;margin:0 8px}
+.ruler .base{position:absolute;left:0;right:0;top:26px;height:4px;border-radius:99px;background:linear-gradient(90deg,rgba(53,233,133,.35) 0 50%,rgba(255,159,67,.35) 50% 85%,rgba(255,93,108,.4) 85%)}
+.ruler .tick{position:absolute;top:33px;font-size:10px;color:var(--t3);transform:translateX(-50%)}
+.ruler .mk{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px}
+.ruler .mk .pin{width:2px;height:6px;background:var(--t2)}
+.D .cash{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;font-size:12.5px;color:var(--t2)}
+.D .cash span{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;border-radius:99px;background:rgba(255,255,255,.07)}
+/* E tidy table */
+.E{display:grid;column-gap:16px;row-gap:2px;padding:0 18px 8px;align-items:center;font-size:13px}
+.E .h{font-size:11px;color:var(--t3);padding-bottom:2px}
+.E .c{white-space:nowrap;display:flex;gap:6px;align-items:baseline}
+.E .money{grid-column:2 / span 3;color:var(--t2)}
+.E .fold{grid-column:1 / -1;color:var(--blue);font-size:12px;cursor:pointer;padding-top:4px}
+.mini{display:inline-block;vertical-align:middle}
+.sep{height:1px;background:var(--line);margin:4px 18px 6px}
+.verdict{margin-top:30px;background:var(--pg2);border:1px solid var(--rule);border-radius:12px;padding:14px 18px;font-size:14px;line-height:1.7}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<h1>Agent 页额度：换个摆法</h1>
+<p class="sub">现在的样子是一张对齐表格：每家一行、按列对齐。家数一多，四五行就把会话挤下去了，Cursor 的额度被推到最右边的列，积分和余额又是另一种写法，看着很乱。下面五种摆法用的都是你截图里的真实数据，岛的宽度也和截图一样。顶部可以切换数据，看看家数多或少时各是什么样子。</p>
+<div class="fix"><b>不管选哪种都会一起修的：</b>Cursor 的窗口名显示成了 <code>month</code>、<code>cursorAuto</code>，要改成「本月」「Auto」（用量环那边早就有这两个名字，Agent 页漏用了）；WorkBuddy 的积分是小数，要按用量环的写法保留一位、加单位；已过时的数据（截图里 Codex 行尾的黄色时钟）统一成一个小标记，不单独占一列。</div>
+<div class="bar"><span class="lab">数据：</span>
+  <button data-d="mine" class="on">你的截图（4 家）</button>
+  <button data-d="full">再加上 Claude Code 和 Antigravity（6 家）</button>
+  <button data-d="two">只有 Claude Code 和 Codex</button>
+</div>
+<div id="opts"></div>
+<div class="verdict"><b>我推荐 A「一行胶囊」</b>：家数再多也只占一两行，会话列表的位置基本不变；每个胶囊只放最要紧的数字（最紧的那个百分比，或者余额），细节鼠标移上去再看。想一眼看出谁快用完了，就选 D「水位刻度」，它最有意思，但要多占一行。选好告诉我字母，也可以组合，比如「A，但胶囊里放进度条」。</div>
+</main>
+<script>
+const ICON = {
+  claudeCode: `<svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#d97757"/><path d="M8 3.5v9M3.5 8h9M4.8 4.8l6.4 6.4M11.2 4.8l-6.4 6.4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  codex: `<svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#fff"/><circle cx="8" cy="8" r="3.6" fill="none" stroke="#000" stroke-width="1.6"/><circle cx="8" cy="8" r="1.2"/></svg>`,
+  cursor: `<svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#2a2a2e"/><path d="M8 3l4.3 2.5v5L8 13l-4.3-2.5v-5z" fill="none" stroke="#ddd" stroke-width="1.3"/><path d="M8 3v10M3.7 5.5 12.3 10.5" stroke="#ddd" stroke-width="1"/></svg>`,
+  workbuddy: `<svg class="ic" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#19b37b"/><path d="M4 9.5c2-4 6-4 8-1" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+  dsh: `<svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#fff"/><path d="M3.5 9c1.5 3 6.5 3 8.5-1.5 0 0-1 .5-2 .2C9 6 6 6 3.5 9z" fill="#4d6bfe"/></svg>`,
+  antigravity: `<svg class="ic" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#1b1b1f"/><path d="M4 12 8 3.5 12 12" stroke="#4c8bf5" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`,
+};
+const NAME = { claudeCode: "Claude Code", codex: "Codex", cursor: "Cursor", workbuddy: "WorkBuddy", dsh: "DeepSeek Harness", antigravity: "Antigravity" };
+const ALL = {
+  claudeCode: { w: [["5 小时", 42, "2小时13分"], ["7 天", 16, "5天"], ["Opus", 63, "5天"]] },
+  codex: { w: [["7 天", 16, "23天4小时"]], stale: true },
+  antigravity: { w: [["Gemini 3 Pro", 30, "4小时"], ["Claude", 12, "4小时"]] },
+  cursor: { w: [["本月", 4, "5天6小时"], ["Auto", 4, "5天6小时"]] },
+  workbuddy: { money: "1.3", unit: "积分 · 7 天", sub: "今日 0" },
+  dsh: { money: "¥59.56", unit: "余额" },
+};
+const SETS = { mine: ["codex", "cursor", "workbuddy", "dsh"], full: ["claudeCode", "codex", "antigravity", "cursor", "workbuddy", "dsh"], two: ["claudeCode", "codex"] };
+let set = "mine";
+const lv = (p) => (p >= 85 ? "hi" : p >= 50 ? "mid" : "lo");
+const COL = { lo: "var(--lo)", mid: "var(--mid)", hi: "var(--hi)" };
+const peak = (d) => d.w.reduce((a, b) => (b[1] > a[1] ? b : a));
+function ring(p, s = 16, sw = 3.2) {
+  const r = (s - sw) / 2, c = 2 * Math.PI * r;
+  return `<svg class="mini" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="${sw}"/><circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="${COL[lv(p)]}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${(Math.max(p, 3) / 100) * c} ${c}" transform="rotate(-90 ${s / 2} ${s / 2})"/></svg>`;
+}
+const SESS = `<div class="sess">
+  <div class="row"><span class="dot"></span><span class="tt">Fuyu · 面包页翻页交互预览</span><span class="meta">Opus 5.5 · H · 已运行 1 分 42 秒</span>${ICON.claudeCode}</div>
+  <div class="row"><span class="dot"></span><span class="tt">Fuyu · 翻译窗口交互与键盘问题原因</span><span class="meta">1 个后台任务 · 2m</span>${ICON.claudeCode}</div>
+  <div class="row"><span class="dot off"></span><span class="tt">Fuyu · Agent额度显示与空状态设计</span><span class="meta">5m</span>${ICON.claudeCode}</div>
+</div>`;
+const HEAD = `<div class="head"><span class="pill">Fuyu</span><span>🤖</span><span>☰</span><span>♪</span><span>▦</span><span class="sp"></span><span>⇅ 🔔 文 ✂ ⚙</span></div>`;
+const isl = (usage) => `<div class="isl">${HEAD}${usage}${SESS}</div>`;
+
+function A(ids) {
+  return `<div class="A">${ids.map((id) => {
+    const d = ALL[id];
+    if (d.money) return `<span class="chip">${ICON[id]}<b class="u">${d.money}</b><span class="k">${d.unit}</span><span class="pop"><b>${NAME[id]}</b><br>${d.sub ? d.sub + " · " : ""}${d.unit.replace(" · ", " ")} ${d.money}</span></span>`;
+    const t = peak(d);
+    return `<span class="chip">${ICON[id]}${ring(t[1])}<b class="u ${lv(t[1])}">${t[1]}%</b><span class="k">${t[0]}</span>${d.stale ? `<span class="stale">●</span>` : ""}<span class="pop"><b>${NAME[id]}</b>${d.w.map((w) => `<br>${w[0]} <b class="${lv(w[1])}">${w[1]}%</b> · ${w[2]}后重置`).join("")}${d.stale ? "<br>40 分钟前更新，可能已过时" : ""}</span></span>`;
+  }).join("")}</div>`;
+}
+function B(ids) {
+  return `<div class="B">${ids.map((id) => {
+    const d = ALL[id];
+    if (d.money) return `<div class="tile"><div class="top">${ICON[id]}${NAME[id]}</div><div class="big u">${d.money}<small>${d.unit.split(" · ")[0]}</small></div><div class="sub2">${d.sub ?? "钱包"}</div></div>`;
+    const t = peak(d);
+    return `<div class="tile"><div class="top">${ICON[id]}${NAME[id]}${d.stale ? ` <span class="stale">●</span>` : ""}</div><div class="big u ${lv(t[1])}">${t[1]}%<small>${t[0]}</small></div><div class="sub2">↻ ${t[2]}${d.w.length > 1 ? ` · 还有 ${d.w.length - 1} 项` : ""}</div><div class="meter"><i style="width:${t[1]}%;background:${COL[lv(t[1])]}"></i></div></div>`;
+  }).join("")}</div>`;
+}
+function C(ids, open) {
+  const pct = ids.filter((id) => !ALL[id].money);
+  const worst = pct.map((id) => [id, peak(ALL[id])]).sort((a, b) => b[1][1] - a[1][1])[0];
+  const rest = ids.filter((id) => !worst || id !== worst[0]);
+  const main = worst ? `<div class="main">${ICON[worst[0]]}<span>最紧：${NAME[worst[0]]} ${worst[1][0]}</span><span class="track"><i style="width:${worst[1][1]}%;background:${COL[lv(worst[1][1])]}"></i></span><b class="u ${lv(worst[1][1])}">${worst[1][1]}%</b><span class="reset">↻ ${worst[1][2]}</span></div>` : "";
+  const others = `<div class="others">${rest.map((id) => { const d = ALL[id]; return d.money ? `<span>${ICON[id]}${d.money}</span>` : `<span>${ICON[id]}${ring(peak(d)[1], 13, 2.6)}<span class="u">${peak(d)[1]}%</span></span>`; }).join("")}<span class="more" onclick="this.closest('.opt').dataset.open=this.closest('.opt').dataset.open?'':'1';render()">${open ? "收起 ▴" : "全部额度 ▾"}</span></div>`;
+  const table = open ? `<table>${ids.map((id) => { const d = ALL[id]; return `<tr><td>${ICON[id]}</td><td>${NAME[id]}</td>${d.money ? `<td colspan="3" class="dim">${d.sub ? d.sub + " · " : ""}${d.unit} ${d.money}</td>` : d.w.map((w) => `<td>${w[0]} <b class="u ${lv(w[1])}">${w[1]}%</b></td>`).join("") + "<td></td>".repeat(3 - d.w.length)}</tr>`; }).join("")}</table>` : "";
+  return `<div class="C">${main}${others}${table}</div>`;
+}
+function D(ids) {
+  const pct = ids.filter((id) => !ALL[id].money);
+  const cash = ids.filter((id) => ALL[id].money);
+  const placed = [];
+  const marks = pct.map((id) => {
+    const t = peak(ALL[id]);
+    let x = t[1];
+    while (placed.some((p) => Math.abs(p - x) < 4)) x += 4;
+    placed.push(x);
+    return `<div class="mk" style="left:${x}%">${ICON[id]}<span class="u ${lv(t[1])}">${t[1]}%</span></div>`;
+  }).join("");
+  return `<div class="D"><div class="ruler"><div class="base"></div>${marks}${[0, 50, 85, 100].map((v) => `<span class="tick" style="left:${v}%">${v}</span>`).join("")}</div>${cash.length ? `<div class="cash">${cash.map((id) => `<span>${ICON[id]}${ALL[id].unit.split(" · ")[0]} <b class="u">${ALL[id].money}</b></span>`).join("")}</div>` : ""}</div>`;
+}
+function E(ids, open) {
+  const shown = open ? ids : ids.slice(0, 2);
+  const cells = shown.map((id) => {
+    const d = ALL[id];
+    if (d.money) return `${ICON[id]}<span class="c money">${d.sub ? d.sub + " · " : ""}${d.unit} <b class="u">${d.money}</b></span><span></span>`;
+    const by = (k) => d.w.find((w) => w[0] === k);
+    const other = d.w.filter((w) => w[0] !== "5 小时" && w[0] !== "7 天");
+    const cell = (w) => (w ? `<span class="c">${w[1] !== undefined ? `<b class="u ${lv(w[1])}">${w[1]}%</b>` : ""}</span>` : `<span class="c dim">–</span>`);
+    const t = peak(d);
+    return `${ICON[id]}${cell(by("5 小时"))}${cell(by("7 天"))}<span class="c">${other.length ? other.map((w) => `<span class="dim">${w[0]}</span> <b class="u ${lv(w[1])}">${w[1]}%</b>`).join(" ") : `<span class="dim">–</span>`}</span><span class="reset">↻ ${t[2]}${d.stale ? ` <span class="stale">●</span>` : ""}</span>`;
+  }).join("");
+  const fold = ids.length > 2 ? `<span class="fold" onclick="this.closest('.opt').dataset.open=this.closest('.opt').dataset.open?'':'1';render()">${open ? "收起 ▴" : `还有 ${ids.length - 2} 家 ▾`}</span>` : "";
+  return `<div class="E" style="grid-template-columns:16px 64px 64px minmax(0,1fr) auto"><span></span><span class="h">5 小时</span><span class="h">7 天</span><span class="h">其他</span><span class="h" style="text-align:right">重置</span>${cells}${fold}</div>`;
+}
+const OPTS = [
+  ["A", "一行胶囊", "推荐", "每家一个胶囊：图标、小圆环、最紧那项的百分比和它的名字；积分和余额直接写数字。家数多了自动换到第二行，最多占两行。鼠标移到胶囊上弹出这家所有额度和重置时间，过时的数据在胶囊里点一个黄点。", A],
+  ["B", "小方块看板", "", "一排等宽的小卡片，像岛上的小组件：大号百分比、它是哪一项、多久后重置，卡片底边是一条细进度条。余额卡片写大号金额。一目了然，但要占 64px 高。", B],
+  ["C", "最紧的那个领头", "", "第一行只写全场最紧的那一项，配一条长进度条；第二行是其他几家的小圆环和余额。点「全部额度」才展开成完整表格。平时最省地方，信息分了主次。", C],
+  ["D", "水位刻度", "最有意思", "一把 0–100 的尺子，每家的图标按「最紧那项用了多少」立在对应位置，绿、橙、红三段一眼看出谁快见底；积分和余额放在尺子下面右侧。用的不是表格，是位置。", D],
+  ["E", "整理过的表格", "改动最小", "还是表格，但列固定成 5 小时、7 天、其他、重置四列，Cursor 的本月和 Auto 进「其他」列；积分余额那一行跨三列写。默认只显示前两家，剩下的「还有 n 家」点开。", E],
+];
+function render() {
+  const ids = SETS[set];
+  const prev = Object.fromEntries([...document.querySelectorAll(".opt")].map((o) => [o.dataset.k, o.dataset.open]));
+  document.getElementById("opts").innerHTML = OPTS.map(([k, name, tag, desc, fn]) => `<section class="opt" data-k="${k}" data-open="${prev[k] ?? ""}"><h2>${k}　${name}${tag ? `<span class="tag">${tag}</span>` : ""}</h2><p>${desc}</p>${isl(fn(ids, prev[k]))}</section>`).join("");
+}
+document.querySelectorAll(".bar button").forEach((b) => b.addEventListener("click", () => {
+  set = b.dataset.d;
+  document.querySelectorAll(".bar button").forEach((x) => x.classList.toggle("on", x === b));
+  render();
+}));
+const q = new URLSearchParams(location.search).get("d");
+if (q && SETS[q]) { set = q; document.querySelectorAll(".bar button").forEach((x) => x.classList.toggle("on", x.dataset.d === q)); }
+render();
+</script>
+</body>
+</html>

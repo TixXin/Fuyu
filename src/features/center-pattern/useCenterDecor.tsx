@@ -7,6 +7,7 @@ import { useSlotEntries } from "../plugin-kernel/useSlotEntries";
 import { CenterPattern } from "./CenterPattern";
 import { AGENT_ICON_PET_HEIGHT, CollapsedCenter, agentIconMarkExtraWidth, centerHeight } from "./CollapsedCenter";
 import { centerPatternChoice, centerPatternSize, type AgentActivity } from "./centerSettings";
+import { petMoodOf } from "./patterns";
 import { PetSprite } from "./PetSprite";
 import { usePetMood } from "./usePetMood";
 import { usePetSheet } from "./usePetSheet";
@@ -22,6 +23,7 @@ type CenterDecorOptions = {
   paused: boolean;
   agents: readonly AgentActivity[];
   markLight: boolean;
+  doze?: boolean;
   enabled?: boolean;
   settings?: Readonly<Record<string, unknown>>;
 };
@@ -30,9 +32,9 @@ function slotWidth<Context>(width: SlotWidth<Context> | undefined, context: Cont
   return typeof width === "function" ? width(context) : width ?? 0;
 }
 
-export function useCenterDecor({ paused, agents, markLight, enabled = false, settings = NO_SETTINGS }: CenterDecorOptions): IslandDecor {
+export function useCenterDecor({ paused, agents, markLight, doze = false, enabled = false, settings = NO_SETTINGS }: CenterDecorOptions): IslandDecor {
   const lightShown = useMarkLightShown(markLight);
-  const mood = usePetMood(agents, enabled);
+  const mood = usePetMood(agents, enabled, doze);
   const choice = useMemo(() => centerPatternChoice(settings), [settings]);
   const size = centerPatternSize(settings);
   const sheet = usePetSheet(enabled ? choice.petId : null, settings);
@@ -51,7 +53,7 @@ export function useCenterDecor({ paused, agents, markLight, enabled = false, set
     }
     if (enabled) {
       const pet = typeof sheet === "string" ? sheet : null;
-      if (pet) decor.agentIcon = <PetSprite src={pet} mood={mood} paused={still} height={AGENT_ICON_PET_HEIGHT} />;
+      if (pet) decor.agentIcon = <PetSprite src={pet} mood={petMoodOf(mood)} paused={still} height={AGENT_ICON_PET_HEIGHT} />;
       else if (choice.pattern === "mark" && !lightShown) {
         decor.agentIcon = <CenterPattern pattern="mark" mood={mood} paused={still} height={centerHeight("mark", size)} />;
         decor.agentIconWidth = agentIconMarkExtraWidth(size);

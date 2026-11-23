@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { petMoodChangesAt, petMoodFor, type AgentActivity } from "./centerSettings";
-import type { PetMood } from "./patterns";
+import { centerMoodChangesAt, centerMoodFor, type AgentActivity } from "./centerSettings";
+import type { CenterMood } from "./patterns";
 
-export function usePetMood(agents: readonly AgentActivity[], enabled: boolean): PetMood {
+export function usePetMood(agents: readonly AgentActivity[], enabled: boolean, doze = false): CenterMood {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -11,11 +11,11 @@ export function usePetMood(agents: readonly AgentActivity[], enabled: boolean): 
 
   useEffect(() => {
     if (!enabled) return;
-    const changesAt = petMoodChangesAt(agents, now);
+    const changesAt = centerMoodChangesAt(agents, now, doze);
     if (changesAt === null) return;
     const timer = window.setTimeout(() => setNow(Date.now()), Math.max(0, changesAt - Date.now()));
     return () => window.clearTimeout(timer);
-  }, [agents, enabled, now]);
+  }, [agents, enabled, now, doze]);
 
-  return useMemo(() => (enabled ? petMoodFor(agents, now) : "idle"), [agents, enabled, now]);
+  return useMemo(() => (enabled ? centerMoodFor(agents, now, doze) : "idle"), [agents, enabled, now, doze]);
 }

@@ -1,6 +1,6 @@
-import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "../../lib/settings/settings.ts";
+import { THEME_SETTING_KEYS, carriedJellyfishStyle, normalizeSettings, withThemeFrom } from "../../lib/settings/settings.ts";
 import { expandNestedThemeColors, hasDualThemeColors, themeAppearanceDefaults, themeColors } from "../../lib/theme/themeMode.ts";
-import type { IslandSettings } from "../../lib/settings/types";
+import type { IslandSettings, JellyfishStyle } from "../../lib/settings/types";
 
 type Text = { "zh-CN": string; en: string };
 
@@ -10,6 +10,7 @@ export type MarketTheme = {
   description: Text | null;
   author: string;
   appearance: Partial<Record<(typeof THEME_SETTING_KEYS)[number], unknown>>;
+  jellyfishStyle?: JellyfishStyle;
 };
 
 const MAX_TEXT = 160;
@@ -43,6 +44,7 @@ export function readMarketThemes(entries: readonly unknown[]): MarketTheme[] {
       description: readText(record.description, MAX_TEXT),
       author: typeof record.author === "string" ? record.author.slice(0, 39) : "",
       appearance,
+      ...carriedJellyfishStyle(expanded.jellyfishStyle),
     });
   }
   return themes;
@@ -55,12 +57,13 @@ export function isDualMarketTheme(theme: MarketTheme) {
 export function withMarketTheme(current: IslandSettings, theme: MarketTheme): IslandSettings {
   const defaults = themeAppearanceDefaults(current, theme.appearance);
   const merged = normalizeSettings({ ...current, ...defaults, ...theme.appearance } as IslandSettings);
-  return withThemeFrom(current, { ...merged, ...themeColors(merged, merged.themeMode === "light" ? "light" : "dark") });
+  const themed = withThemeFrom(current, { ...merged, ...themeColors(merged, merged.themeMode === "light" ? "light" : "dark") });
+  return { ...themed, ...carriedJellyfishStyle(theme.jellyfishStyle) };
 }
 
 const COPY_KEYS = new Set<string>(["islandBackgroundColor", "taskTextColor", "pulseColor", "inkColor"]);
 
 export function isThemeInUse(current: IslandSettings, theme: MarketTheme) {
   const applied = withMarketTheme(current, theme);
-  return THEME_SETTING_KEYS.every((key) => COPY_KEYS.has(key) || applied[key] === current[key]);
+  return applied.jellyfishStyle === current.jellyfishStyle && THEME_SETTING_KEYS.every((key) => COPY_KEYS.has(key) || applied[key] === current[key]);
 }

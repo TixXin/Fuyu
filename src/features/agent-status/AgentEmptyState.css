@@ -41,6 +41,12 @@
   animation: agent-empty-zz 3.3s var(--motion-ease-in-out) 3;
 }
 
+.agent-empty__zz[data-pixel] {
+  fill: var(--text-3);
+  stroke: none;
+  shape-rendering: crispEdges;
+}
+
 .agent-empty--minimal {
   gap: 10px;
 }

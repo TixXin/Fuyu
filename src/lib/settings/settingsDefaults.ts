@@ -111,6 +111,8 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   agentTitleEnabled: true,
   agentTitleMode: "changes",
   agentLightStyle: "mark",
+  jellyfishStyle: "vector",
+  jellyfishNightDoze: false,
   shelfEnabled: true,
   translationEnabled: true,
   translationTarget: "island",
@@ -142,6 +144,11 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   pageArrows: true,
   pageArrowKeys: true,
   pageSwipe: true,
+  pageSwitchPanel: "wipe",
+  pageSwitchSettings: "wipe",
+  pageSwitchIndicator: "stretch",
+  pageSwitchSpeed: "normal",
+  pageSwitchDirectional: true,
 };
 export const LEGACY_FALLBACKS = {
   collapsedDark: false,

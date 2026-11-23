@@ -36,6 +36,7 @@ pub struct AgentUsage {
 #[serde(rename_all = "camelCase")]
 pub enum UsageSource {
     Hud,
+    Statusline,
     Api,
     Magpie,
     Codex,
@@ -123,6 +124,51 @@ pub(super) fn read_usage(home_dir: &Path) -> Option<AgentUsage> {
     let mut text = String::new();
     fs::File::open(path).ok()?.take(MAX_SNAPSHOT_BYTES).read_to_string(&mut text).ok()?;
     parse_snapshot(&text)
+}
+
+pub(super) async fn claude_usage(home_dir: &Path, app_dir: Option<&Path>) -> Result<Option<AgentUsage>, String> {
+    let magpie = super::magpie::read_usage(&claude_dir(home_dir)).await;
+    let (home, app) = (home_dir.to_path_buf(), app_dir.map(Path::to_path_buf));
+    let local = match magpie {
+        Some(magpie) => Some(magpie),
+        None => tauri::async_runtime::spawn_blocking(move || read_local(&home, app.as_deref()))
+            .await
+            .map_err(|error| format!("Failed to join the usage task: {error}"))?,
+    };
+    let now_ms = unix_now_ms();
+    let api = crate::claude_usage::fallback_usage(needs_fallback(local.as_ref(), now_ms)).await;
+    Ok(merge(local, api))
+}
+
+fn unix_now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .and_then(|elapsed| i64::try_from(elapsed.as_millis()).ok())
+        .unwrap_or_default()
+}
+
+pub(super) fn read_local(home_dir: &Path, app_dir: Option<&Path>) -> Option<AgentUsage> {
+    newest(app_dir.and_then(super::claude_statusline::read_usage), read_usage(home_dir))
+}
+
+pub(super) fn newest(first: Option<AgentUsage>, second: Option<AgentUsage>) -> Option<AgentUsage> {
+    match (first, second) {
+        (Some(first), Some(second)) => Some(if second.updated_at > first.updated_at { second } else { first }),
+        (first, second) => first.or(second),
+    }
+}
+
+pub(super) fn needs_fallback(local: Option<&AgentUsage>, now_ms: i64) -> bool {
+    const FRESH_MS: i64 = 30 * 60 * 1000;
+    let Some(local) = local else { return true };
+    let recent = local.updated_at.is_some_and(|at| now_ms - at < FRESH_MS);
+    let live = [&local.five_hour, &local.seven_day]
+        .into_iter()
+        .flatten()
+        .chain(local.models.iter())
+        .any(|window| window.resets_at.is_none_or(|reset| reset > now_ms));
+    !(recent && live)
 }
 
 pub(super) fn merge(hud: Option<AgentUsage>, api: Option<ClaudeUsage>) -> Option<AgentUsage> {

@@ -61,8 +61,8 @@ const allPages = async () => {
   return pages;
 };
 
-function rowsOnPage(): SettingsRowText[] {
-  const rows = [...document.querySelectorAll<HTMLElement>(".editor-panel .settings-row")].filter((row) => !row.closest("[data-search='off']"));
+function rowsOnPage(within = ".editor-panel"): SettingsRowText[] {
+  const rows = [...document.querySelectorAll<HTMLElement>(`${within} .settings-row`)].filter((row) => !row.closest("[data-search='off']"));
   return rows.flatMap((row) => {
     const title = text(row.querySelector(".settings-row__title"));
     if (!title) return [];
@@ -101,6 +101,11 @@ try {
     for (const category of await allPages()) {
       await openPage(category);
       rows.push(...rowsOnPage().map((row) => ({ page: category, ...row })));
+      for (const tab of [...document.querySelectorAll<HTMLElement>(".editor-panel [data-search-tab][aria-selected='false']")]) {
+        await act(async () => { tab.click(); });
+        await wait(60);
+        rows.push(...rowsOnPage(".editor-panel [role='tabpanel']").map((row) => ({ page: category, ...row })));
+      }
     }
     document.documentElement.dataset.index = JSON.stringify(rows);
     results.textContent = `PASS collected ${rows.length} rows\nALL PASS`;
@@ -139,6 +144,15 @@ try {
     check(document.querySelector(".settings-sidebar__empty") && !document.querySelector("[data-market-hits]"), "With the plugin host not connected there is no market group, only the empty message");
     await type("hide sessions");
     check(hits("agentSessions").includes("隐藏已退出的会话"), "English words find a setting in the Chinese interface, shown in Chinese");
+    await type("水母画风");
+    check(hits("islandLayout").includes("水母画风"), "A row behind another item's style tab is found too");
+    await pressEnter();
+    let behindTab: Element | null = null;
+    for (let spent = 0; !behindTab && spent < 2500; spent += 50) {
+      await wait(50);
+      behindTab = document.querySelector(".editor-panel [role='tabpanel'] .settings-row--found");
+    }
+    check(text(behindTab?.querySelector(".settings-row__title")) === "水母画风" && behindTab?.checkVisibility(), "…and opening it switches to that item's tab and marks the row");
     await type("");
     await openPage("themeStyle");
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".editor-panel button")].find((button) => button.textContent === "液态玻璃")!.click(); });

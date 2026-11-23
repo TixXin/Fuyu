@@ -117,9 +117,10 @@ const fits = () => {
 
 try {
   await act(async () => { root.render(<StrictMode><Fixture /></StrictMode>); });
-  await until(() => Boolean(shell()) && (empty || Boolean(mail?.mailboxes.length)) && (empty || cardTitle().length > 0 || startLayout !== null));
+  await until(() => Boolean(shell()) && (empty || Boolean(mail?.mailboxes.length)) && (empty || cardTitle().length > 0 || Boolean($(".reader-item")) || startLayout !== null));
   if (test) {
-    check(shell()?.dataset.layout === "focus", "没设过布局时默认是「一次一条」");
+    check(shell()?.dataset.layout === "reader", "没设过布局时默认是「三栏」");
+    await switchTo("focus");
     await until(() => cardTitle().includes("小林"));
     check(cardTitle().includes("小林") && $(".focus-card")?.textContent?.includes("下午三点开会"), "卡片上是最新的一条未读：微信小林");
     await press(focusKey(3));

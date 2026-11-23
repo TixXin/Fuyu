@@ -14,6 +14,12 @@ export type SettingsAgentText = {
   lightStyleHint: string;
   lightStyleOptions: { mark: string; dot: string };
   lightStyleHints: { mark: string; dot: string };
+  jellyStyle: string;
+  jellyStyleHint: string;
+  jellyDoze: string;
+  jellyDozeHint: string;
+  jellyStyleOptions: { vector: string; flat: string; sticker: string; mono: string; neon: string; chunky: string; fine: string };
+  jellyStyleHints: { vector: string; flat: string; sticker: string; mono: string; neon: string; chunky: string; fine: string };
   agentPageSection: string;
   expandChildren: string;
   expandChildrenHint: string;
@@ -132,6 +138,8 @@ export type SettingsAgentText = {
   usageResetOptions: Record<"tightest" | "each" | "off", string>;
   usageStyle: string;
   usageStyleOptions: Record<"number" | "bar" | "ring", string>;
+  usageLayout: string;
+  usageLayoutHints: Record<"chips" | "tiles" | "lead" | "ruler" | "table", string>;
   emptyStyle: string;
   emptyStyleHint: string;
   emptyStyleOptions: Record<"sleep" | "standby" | "recent" | "quota" | "tide" | "minimal", string>;
@@ -276,9 +284,15 @@ export const zhCN: SettingsAgentText = {
   lightSectionTitle: "浮屿水母",
   lightSectionHint: "水母是浮屿的标志，一直待在收起条上。开着 Agent 时，它的颜色和动作会跟着 Agent 的状态变；样式在「岛屿布局」里水母那一项改。",
   lightStyle: "样式",
-  lightStyleHint: "收起条上浮屿标志的样子。水母：和条上的环一样高，平时米白、偶尔游一下眨眨眼；开着 Agent 时，运行变蓝划水，等你确认变黄跳动，失败或可能中断变红皱眉，跑完变绿笑一下。圆点：极简的小圆点，开着 Agent 时按状态变色。",
+  lightStyleHint: "收起条上浮屿标志的样子。水母：和条上的环一样高，平时米白、偶尔游一下眨眨眼；开着 Agent 时，运行变蓝划水，等你确认变黄跳动，失败或可能中断变红皱眉，跑完变绿笑一下。圆点：极简的小圆点，开着 Agent 时按状态变色。Agent 页会话列表每行的状态灯也用这个样子。",
   lightStyleOptions: { mark: "水母", dot: "圆点" },
   lightStyleHints: { mark: "浮屿的小水母，开着 Agent 时随状态变", dot: "简洁的小圆点呼吸灯" },
+  jellyStyle: "水母画风",
+  jellyStyleHint: "水母出现的地方一起换：收起条、中心图案、Fuyu 页签、Agent 空页面和今日小组件。像素画风一格一格地动，并按屏幕像素对齐，系统缩放是 125%、175% 时会比矢量的小一圈。鼠标停在卡片上可以看各个状态的样子。Mac 菜单栏上的图标也跟着换成像素的；应用图标和 Windows 托盘图标不变。",
+  jellyDoze: "深夜打瞌睡",
+  jellyDozeHint: "晚上 11 点到早上 6 点，没有 Agent 在运行、也没有刚结束的会话时，收起条上的水母闭眼睡觉；有会话开始运行或等你处理时马上醒。",
+  jellyStyleOptions: { vector: "矢量", flat: "扁平", sticker: "描边", mono: "单色", neon: "霓虹", chunky: "大颗粒", fine: "精细" },
+  jellyStyleHints: { vector: "原来的圆润水母", flat: "像素，最接近原样", sticker: "像素，带深色描边", mono: "像素，只用一个颜色", neon: "像素，发光的轮廓", chunky: "像素，格子最粗", fine: "像素，格子最细" },
   agentPageSection: "Agent 页",
   expandChildren: "子 Agent / 子会话默认展开",
   expandChildrenHint: "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。",
@@ -385,13 +399,13 @@ export const zhCN: SettingsAgentText = {
   showActivity: "显示最近提问和正在用的工具",
   showActivityHint: "进行中的会话在回复上方显示你最近一次的提问，运行时显示它正在调用的工具（如 Bash 命令、正在改的文件）。",
   usagePageTitle: "Agent 页顶部的额度",
-  usagePageHint: "跟着这台电脑上开着的 Agent 走，读得到额度的才列一行。新接入的默认显示，点图标或下面的胶囊隐藏那一家，点列隐藏整列；岛上右键额度行有同样的菜单。Claude Code 读 claude-hud 状态栏保存的用量文件，Codex 读会话记录，其余几家和用量环用同一套读取；WorkBuddy 和 DeepSeek Harness 没有百分比，写的是积分和余额，GLM、Kimi 套餐在用量环里填了 Key 才有。",
+  usagePageHint: "跟着这台电脑上开着的 Agent 走，读得到额度的才列一行。新接入的默认显示，点图标或下面的胶囊隐藏那一家，点列隐藏整列；岛上右键额度行有同样的菜单。Claude Code 读它每次回复时交给状态栏的额度（安装钩子时接上，原来的状态栏照常显示），隔得久了向 Anthropic 补查一次，装了 claude-hud 的也读它的快照，Codex 读会话记录，其余几家和用量环用同一套读取；WorkBuddy 和 DeepSeek Harness 没有百分比，写的是积分和余额，GLM、Kimi 套餐在用量环里填了 Key 才有。",
   usagePreview: "额度预览",
   usageShowTitle: "显示哪家、哪些额度",
-  usageShowHint: "额度样式、重置时间和只看最紧的也在这里调，改了马上在下面的岛上看到。",
+  usageShowHint: "布局、样式、重置时间也在这里调，改了马上在下面的岛上看到；某个布局用不上的选项会收起来。",
   usageReading: "正在读取额度…",
   usageNone: "这台电脑上开着的 Agent 都还读不到额度",
-  usageNoRead: (names) => `读不到额度、不占一行：${names.join("、")}`,
+  usageNoRead: (names) => `现在读不到额度（没登录、没数据或数据已过期），不占位置：${names.join("、")}`,
   usagePlanTag: "套餐",
   usageCreditTag: "积分/余额",
   usageProviders: "显示哪家",
@@ -402,6 +416,8 @@ export const zhCN: SettingsAgentText = {
   usageResetOptions: { tightest: "最紧的那项", each: "每项都写", off: "不显示" },
   usageStyle: "额度样式",
   usageStyleOptions: { number: "数字", bar: "进度条", ring: "圆环" },
+  usageLayout: "布局",
+  usageLayoutHints: { chips: "一家一颗，只写最紧的", tiles: "大数字，一眼看全", lead: "只突出最紧的一项", ruler: "都摆在一根刻度上", table: "每个窗口都列出来" },
   emptyStyle: "没有会话时显示",
   emptyStyleHint: "Agent 页上没有会话可列时的画面。",
   emptyStyleOptions: { sleep: "水母打盹", standby: "待命台", recent: "上一个会话", quota: "额度大圆环", tide: "今天的潮汐", minimal: "极简水平线" },
@@ -553,9 +569,15 @@ export const en: SettingsAgentText = {
   lightSectionTitle: "Fuyu jellyfish",
   lightSectionHint: "The jellyfish is the Fuyu mark and always sits on the collapsed bar. With Agent on, its colour and moves follow the agents' state; change its style under the jellyfish item in Island layout.",
   lightStyle: "Style",
-  lightStyleHint: "How the Fuyu mark looks on the collapsed bar. Jellyfish: as tall as the rings on the bar, cream with a swim and a blink now and then; with Agent on it turns blue and paddles while running, yellow and hops while waiting for you, red and frowns when failed or possibly stopped, and green with a smile when done. Dot: a minimal dot that takes the state colour with Agent on.",
+  lightStyleHint: "How the Fuyu mark looks on the collapsed bar. Jellyfish: as tall as the rings on the bar, cream with a swim and a blink now and then; with Agent on it turns blue and paddles while running, yellow and hops while waiting for you, red and frowns when failed or possibly stopped, and green with a smile when done. Dot: a minimal dot that takes the state colour with Agent on. The status light on each row of the Agent session list follows this too.",
   lightStyleOptions: { mark: "Jellyfish", dot: "Dot" },
   lightStyleHints: { mark: "The little Fuyu jellyfish; follows the agents' state with Agent on", dot: "Minimal breathing dot" },
+  jellyStyle: "Jellyfish look",
+  jellyStyleHint: "Changes the jellyfish everywhere it appears: the collapsed bar, the centre pattern, the Fuyu tab, the empty Agent page and the Today widget. The pixel looks move one square at a time and line up with screen pixels, so at 125% or 175% display scaling they come out a little smaller than the smooth one. Rest the pointer on a card to see each state. On a Mac the menu bar icon turns into pixels too; the app icon and the Windows tray icon stay the same.",
+  jellyDoze: "Doze at night",
+  jellyDozeHint: "Between 11 pm and 6 am, while no agent is running and none has just finished, the jellyfish on the collapsed bar closes its eyes and sleeps. It wakes as soon as a session starts running or needs you.",
+  jellyStyleOptions: { vector: "Smooth", flat: "Flat", sticker: "Outlined", mono: "One colour", neon: "Neon", chunky: "Chunky", fine: "Fine" },
+  jellyStyleHints: { vector: "The original rounded jellyfish", flat: "Pixels, closest to the original", sticker: "Pixels with a dark outline", mono: "Pixels in a single colour", neon: "Pixels, a glowing outline", chunky: "Pixels, the biggest squares", fine: "Pixels, the smallest squares" },
   agentPageSection: "Agent page",
   expandChildren: "Expand subagents and child sessions",
   expandChildrenHint: "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them.",
@@ -662,13 +684,13 @@ export const en: SettingsAgentText = {
   showActivity: "Show the latest prompt and the tool in use",
   showActivityHint: "Sessions in progress show your latest prompt above the reply and, while running, the tool they are calling (a Bash command, the file being edited).",
   usagePageTitle: "Usage on the agent page",
-  usagePageHint: "Follows the agents turned on for this computer: each one whose usage can be read gets a row. New agents show by default; click an icon or a chip below to hide that agent, or a window chip to hide that column; right-clicking the usage row on the island opens the same menu. Claude Code is read from the usage file the claude-hud status line keeps, Codex from its session logs, and the rest the same way as the usage rings; WorkBuddy and DeepSeek Harness have no percentages, so their credits and balance are shown, and the GLM and Kimi plans need a key set under the usage rings.",
+  usagePageHint: "Follows the agents turned on for this computer: each one whose usage can be read gets a row. New agents show by default; click an icon or a chip below to hide that agent, or a window chip to hide that column; right-clicking the usage row on the island opens the same menu. Claude Code is read from the limits it hands its status line with every reply (hooked up when you install the hooks; your own status line still shows), with an occasional check with Anthropic after a long gap and the claude-hud snapshot if you use it, Codex from its session logs, and the rest the same way as the usage rings; WorkBuddy and DeepSeek Harness have no percentages, so their credits and balance are shown, and the GLM and Kimi plans need a key set under the usage rings.",
   usagePreview: "Usage preview",
   usageShowTitle: "Which agents and windows",
-  usageShowHint: "Usage style, reset time and only the tightest are set here too; the island below shows each change at once.",
+  usageShowHint: "Layout, style and reset time are set here too; the island below shows each change at once, and options a layout does not use are hidden.",
   usageReading: "Reading usage…",
   usageNone: "None of the agents turned on for this computer has usage to read yet",
-  usageNoRead: (names) => `No usage to read, so no row: ${names.join(", ")}`,
+  usageNoRead: (names) => `No usage to read right now (signed out, no data or out of date), so not shown: ${names.join(", ")}`,
   usagePlanTag: "plan",
   usageCreditTag: "credits",
   usageProviders: "Show usage for",
@@ -679,6 +701,8 @@ export const en: SettingsAgentText = {
   usageResetOptions: { tightest: "Tightest only", each: "For each", off: "Hidden" },
   usageStyle: "Usage style",
   usageStyleOptions: { number: "Numbers", bar: "Bars", ring: "Rings" },
+  usageLayout: "Layout",
+  usageLayoutHints: { chips: "One per agent, tightest only", tiles: "Big numbers at a glance", lead: "Only the tightest stands out", ruler: "All on one scale", table: "Every window listed" },
   emptyStyle: "When there are no sessions",
   emptyStyleHint: "What the agent page shows when it has no sessions to list.",
   emptyStyleOptions: { sleep: "Sleeping jellyfish", standby: "Standby", recent: "Last session", quota: "Big usage rings", tide: "Today's tide", minimal: "Minimal waterline" },

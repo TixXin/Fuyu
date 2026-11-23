@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use super::claude_statusline;
 use super::claude_hooks::{has_exec_form_hooks, has_fixed_port_hooks, install_claude_code_status_hooks, uninstall_claude_code_status_hooks, ApprovalHook};
 use super::harness::{Harness, HookEnv, Hooks, RemoteFiles, StatusLight};
 use super::hooks_state::{claude_code_hooks_state, HookInstallState};
@@ -56,7 +57,11 @@ fn install(env: &HookEnv) -> Result<(), String> {
         env.status_script,
         approval_hook().as_ref(),
         crate::agent_approval::hook_endpoint_unknown(),
-    )
+    )?;
+    match env.running_script.parent() {
+        Some(app_dir) => claude_statusline::install(&settings_path(env.home_dir), app_dir),
+        None => Ok(()),
+    }
 }
 
 pub(super) fn upgrade_exec_form_hooks(app_dir: &Path, home_dir: &Path) -> Result<bool, String> {
@@ -77,16 +82,19 @@ pub(super) fn upgrade_exec_form_hooks(app_dir: &Path, home_dir: &Path) -> Result
 }
 
 fn uninstall(env: &HookEnv) -> Result<(), String> {
+    if let Some(app_dir) = env.running_script.parent() {
+        claude_statusline::uninstall(&settings_path(env.home_dir), app_dir)?;
+    }
     uninstall_claude_code_status_hooks(&settings_path(env.home_dir))
 }
 
 fn hooks_state(env: &HookEnv) -> HookInstallState {
-    claude_code_hooks_state(
-        fs::read_to_string(settings_path(env.home_dir)).ok().as_deref(),
-        env.running_script,
-        env.status_script,
-        approval_hook().as_ref(),
-    )
+    let text = fs::read_to_string(settings_path(env.home_dir)).ok();
+    let state = claude_code_hooks_state(text.as_deref(), env.running_script, env.status_script, approval_hook().as_ref());
+    match (state, env.running_script.parent()) {
+        (HookInstallState::Current, Some(app_dir)) if claude_statusline::never_installed(text.as_deref(), app_dir) => HookInstallState::Outdated,
+        _ => state,
+    }
 }
 
 fn approval_hook() -> Option<ApprovalHook> {

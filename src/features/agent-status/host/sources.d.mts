@@ -12,6 +12,7 @@ export type CustomAgentSessionInput = {
   remoteHost?: string | null;
   listed?: boolean;
   unseen?: boolean;
+  compacting?: boolean;
 };
 
 export type CustomAgentSourceSpec = {

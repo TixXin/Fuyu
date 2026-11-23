@@ -1,7 +1,7 @@
 import { CenterPattern } from "./CenterPattern";
 import type { CenterPatternChoice } from "./centerSettings";
 import { JELLY_VIEW_HEIGHT, JELLY_VIEW_WIDTH } from "../../components/jellyfish/JellyfishMark";
-import type { PetMood } from "./patterns";
+import { petMoodOf, type CenterMood } from "./patterns";
 import { PetSprite } from "./PetSprite";
 
 export const AGENT_ICON_PET_HEIGHT = 18;
@@ -31,7 +31,7 @@ export function CollapsedCenter({
 }: {
   choice: CenterPatternChoice;
   sheet: string | null | undefined;
-  mood: PetMood;
+  mood: CenterMood;
   paused: boolean;
   size: number;
 }) {
@@ -40,5 +40,5 @@ export function CollapsedCenter({
   }
   if (sheet === undefined) return null;
   if (sheet === null) return <CenterPattern pattern="eyes" paused={paused} height={size} />;
-  return <PetSprite src={sheet} mood={mood} paused={paused} height={centerHeight("pet", size)} />;
+  return <PetSprite src={sheet} mood={petMoodOf(mood)} paused={paused} height={centerHeight("pet", size)} />;
 }

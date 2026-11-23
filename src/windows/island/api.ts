@@ -273,6 +273,10 @@ export function setTrayLanguage(locale: string) {
   return invoke<void>("set_tray_language", { locale });
 }
 
+export function setTrayMark(alpha: number[] | null) {
+  return invoke<void>("set_tray_mark", { alpha });
+}
+
 export type IslandBannerRect = { x: number; y: number; width: number; height: number };
 
 let activeBannerRect: IslandBannerRect | null = null;

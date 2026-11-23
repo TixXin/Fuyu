@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS_CATEGORY, featureOf, isCategoryAvailable, settingsCate
 import { FeatureOffPage } from "./FeatureOffPage";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useMacWindowKeys } from "./useMacWindowKeys";
+import { useFileDropGuard } from "./useFileDropGuard";
 import { useFeatureSwitches } from "./useFeatureSwitches";
 import { LayoutEditor } from "./LayoutEditor";
 import "./slots/categories";
@@ -29,6 +30,7 @@ import { PluginMarketHeaderActions } from "./PluginMarketHeaderActions";
 import { PluginPageActions } from "./PluginPageActions";
 import { requestMarketView, requestPluginDetail } from "./pluginPageHandoff";
 import { onOpenIslandLayout } from "./island-layout/islandLayoutFocus";
+import { JellyfishStyleContext } from "../../components/jellyfish/jellyfishStyleContext";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -45,6 +47,7 @@ export function SettingsWindow() {
   const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const unsupported = useUnsupportedFeatures();
   useSlotEntries(categorySlot);
+  useFileDropGuard();
   const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const features = useFeatureSwitches(settings, setSettings);
   const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;
@@ -129,6 +132,7 @@ export function SettingsWindow() {
   };
   useMacWindowKeys();
 
+  const switchMotion = { effect: settings.pageSwitchSettings, indicator: settings.pageSwitchIndicator, speed: settings.pageSwitchSpeed, directional: settings.pageSwitchDirectional };
   const light = activeTone(settings.themeMode, systemDark) === "light";
   useEffect(() => {
     const window = getCurrentWindow();
@@ -138,49 +142,52 @@ export function SettingsWindow() {
   }, [light]);
 
   return (
-    <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
-      <IconButtonTooltip scope="body" />
-      <SlotView slot={settingsRunners} props={{ settings }} />
-      <LayoutEditor
-        category={category}
-        hidden={features.hiddenPages}
-        onCategoryChange={changeCategory}
-        titleAction={
-          category === "theme" || category === "themeStyle"
-            ? <ResetAppearanceButton onReset={resetAppearance} />
-            : category === "appearance"
-            ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
-            : category === "pluginsV3"
-            ? <PluginPageActions onOpenPage={setCategory} />
-            : category === "pluginMarket"
-            ? <PluginMarketHeaderActions />
-            : null
-        }
-      >
-        {offFeature && (
-          <FeatureOffPage
-            feature={offFeature}
-            onEnable={() => features.switches[offFeature].set(true)}
-            onOpenOverview={() => changeCategory("overview")}
+    <JellyfishStyleContext.Provider value={settings.jellyfishStyle}>
+      <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
+        <IconButtonTooltip scope="body" />
+        <SlotView slot={settingsRunners} props={{ settings }} />
+        <LayoutEditor
+          category={category}
+          hidden={features.hiddenPages}
+          motion={switchMotion}
+          onCategoryChange={changeCategory}
+          titleAction={
+            category === "theme" || category === "themeStyle"
+              ? <ResetAppearanceButton onReset={resetAppearance} />
+              : category === "appearance"
+              ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
+              : category === "pluginsV3"
+              ? <PluginPageActions onOpenPage={setCategory} />
+              : category === "pluginMarket"
+              ? <PluginMarketHeaderActions />
+              : null
+          }
+        >
+          {offFeature && (
+            <FeatureOffPage
+              feature={offFeature}
+              onEnable={() => features.switches[offFeature].set(true)}
+              onOpenOverview={() => changeCategory("overview")}
+            />
+          )}
+          <SlotView
+            slot={categorySlot}
+            props={{
+              settings,
+              locale,
+              unsupported,
+              features: features.switches,
+              presets,
+              onLocaleChange: setLocale,
+              onSettingsChange: setSettings,
+              onOpenPage: changeCategory,
+              onShowPage: setCategory,
+              onOpenShortcuts: openShortcuts,
+            }}
+            select={(items) => items.filter((item) => item.id === page)}
           />
-        )}
-        <SlotView
-          slot={categorySlot}
-          props={{
-            settings,
-            locale,
-            unsupported,
-            features: features.switches,
-            presets,
-            onLocaleChange: setLocale,
-            onSettingsChange: setSettings,
-            onOpenPage: changeCategory,
-            onShowPage: setCategory,
-            onOpenShortcuts: openShortcuts,
-          }}
-          select={(items) => items.filter((item) => item.id === page)}
-        />
-      </LayoutEditor>
-    </main>
+        </LayoutEditor>
+      </main>
+    </JellyfishStyleContext.Provider>
   );
 }

@@ -135,6 +135,17 @@ test("the least wing fits the first two items of each balanced wing, plus the ch
   assert.equal(leastWing(crowded, reserved, GAP, CHIP), Math.max(20 + 31 + GAP + 20, 28 + 66 + GAP + 34, 20 + 31 + GAP + 20 + CHIP + GAP));
 });
 
+test("a forced chip (notch text waiting behind +N) gets room of its own, so the status light is not shelved with it", () => {
+  const reserved = { left: 20, right: 20 };
+  const lanes = balancedLanes([46], [33, 20], 2);
+  const wing = leastWing(lanes, reserved, GAP, CHIP, 2, true);
+  assert.equal(wing, Math.max(20 + 46 + GAP + CHIP, 20 + 33 + GAP + 20));
+  const fit = fitCollapsedZones({ widths: [46], capacity: wing - reserved.left }, { widths: [33, 20], capacity: wing - reserved.right }, GAP, CHIP, { least: 2, forceChip: true });
+  assert.deepEqual(fit.left, [false], "the jellyfish stays beside +N");
+  assert.deepEqual(fit.right, [false, false]);
+  assert.equal(fit.chip, "left");
+});
+
 test("without a notch everything stays on the bar while it fits, with no chip", () => {
   assert.deepEqual(fitPill([24, 40, 30], 200, GAP, CHIP), { away: [false, false, false], chip: false, used: 24 + 40 + 30 + 3 * GAP });
 });

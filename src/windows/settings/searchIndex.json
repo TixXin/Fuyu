@@ -906,6 +906,190 @@
       }
     },
     {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "空闲时显示剩余待办数"
+      },
+      "en": {
+        "group": "",
+        "title": "Show todo count when idle"
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "样式",
+        "description": "收起条上浮屿标志的样子。水母：和条上的环一样高，平时米白、偶尔游一下眨眨眼；开着 Agent 时，运行变蓝划水，等你确认变黄跳动，失败或可能中断变红皱眉，跑完变绿笑一下。圆点：极简的小圆点，开着 Agent 时按状态变色。Agent 页会话列表每行的状态灯也用这个样子。"
+      },
+      "en": {
+        "group": "",
+        "title": "Style",
+        "description": "How the Fuyu mark looks on the collapsed bar. Jellyfish: as tall as the rings on the bar, cream with a swim and a blink now and then; with Agent on it turns blue and paddles while running, yellow and hops while waiting for you, red and frowns when failed or possibly stopped, and green with a smile when done. Dot: a minimal dot that takes the state colour with Agent on. The status light on each row of the Agent session list follows this too."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "水母画风",
+        "description": "水母出现的地方一起换：收起条、中心图案、Fuyu 页签、Agent 空页面和今日小组件。像素画风一格一格地动，并按屏幕像素对齐，系统缩放是 125%、175% 时会比矢量的小一圈。鼠标停在卡片上可以看各个状态的样子。Mac 菜单栏上的图标也跟着换成像素的；应用图标和 Windows 托盘图标不变。"
+      },
+      "en": {
+        "group": "",
+        "title": "Jellyfish look",
+        "description": "Changes the jellyfish everywhere it appears: the collapsed bar, the centre pattern, the Fuyu tab, the empty Agent page and the Today widget. The pixel looks move one square at a time and line up with screen pixels, so at 125% or 175% display scaling they come out a little smaller than the smooth one. Rest the pointer on a card to see each state. On a Mac the menu bar icon turns into pixels too; the app icon and the Windows tray icon stay the same."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "深夜打瞌睡",
+        "description": "晚上 11 点到早上 6 点，没有 Agent 在运行、也没有刚结束的会话时，收起条上的水母闭眼睡觉；有会话开始运行或等你处理时马上醒。"
+      },
+      "en": {
+        "group": "",
+        "title": "Doze at night",
+        "description": "Between 11 pm and 6 am, while no agent is running and none has just finished, the jellyfish on the collapsed bar closes its eyes and sleeps. It wakes as soon as a session starts running or needs you."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "Claude Code"
+      },
+      "en": {
+        "group": "",
+        "title": "Claude Code"
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "Codex",
+        "description": "读本机 Codex 会话记录里的额度（CODEX_HOME 或 ~/.codex 下的 sessions），不联网。Codex 跑过一轮后才有数据。"
+      },
+      "en": {
+        "group": "",
+        "title": "Codex",
+        "description": "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "Antigravity",
+        "description": "优先查询本机运行中的 Antigravity 本地服务，未运行时只读 ~/.gemini 下的登录令牌向 Cloud Code 查询 Gemini 与 Claude / GPT 的 5 小时和每周额度。这是未公开的内部接口，随版本可能失效（失效时提示「接口失效」）。"
+      },
+      "en": {
+        "group": "",
+        "title": "Antigravity",
+        "description": "Queries the running local Antigravity server first, or falls back to ~/.gemini login tokens (read-only) to ask Cloud Code for Gemini and Claude / GPT 5-hour and weekly limits. Uses undocumented internal endpoints that may break across updates (reported as \"Endpoint changed\")."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "GLM",
+        "description": "每分钟最多一次直连 open.bigmodel.cn（z.ai 的 Key 查 api.z.ai）查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Claude Code 已配好 GLM（settings.json 里的 ANTHROPIC_BASE_URL 指向 bigmodel 或 z.ai）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给智谱，不回到界面。"
+      },
+      "en": {
+        "group": "",
+        "title": "GLM",
+        "description": "Asks open.bigmodel.cn directly (api.z.ai for a z.ai key), at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits. If Claude Code already runs on GLM (ANTHROPIC_BASE_URL in its settings.json points to bigmodel or z.ai), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Zhipu only and never back to the window."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "Kimi",
+        "description": "每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Claude Code 已配好 Kimi（settings.json 里的 ANTHROPIC_BASE_URL 指向 kimi.com 或 moonshot.cn）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给 Kimi，不回到界面。"
+      },
+      "en": {
+        "group": "",
+        "title": "Kimi",
+        "description": "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits. If Claude Code already runs on Kimi (ANTHROPIC_BASE_URL in its settings.json points to kimi.com or moonshot.cn), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Kimi only and never back to the window."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "Cursor",
+        "description": "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写；macOS 上登录是加密的，第一次会弹窗请你允许读取钥匙串里的「Cursor Safe Storage」），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。"
+      },
+      "en": {
+        "group": "",
+        "title": "Cursor",
+        "description": "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten; on macOS the login is encrypted, so the first time macOS asks you to allow reading “Cursor Safe Storage” from the Keychain) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "WorkBuddy",
+        "description": "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。"
+      },
+      "en": {
+        "group": "",
+        "title": "WorkBuddy",
+        "description": "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "DeepSeek Harness",
+        "description": "只读本机 DeepSeek Harness 的 .credentials.yaml（仅在官方默认路由下生效，凭据只在内存中使用，不进圆环），每分钟最多一次查询官方账户或 API 余额并在悬停卡片中显示。"
+      },
+      "en": {
+        "group": "",
+        "title": "DeepSeek Harness",
+        "description": "Reads DeepSeek Harness's local .credentials.yaml (official default routes only; credentials stay in Rust memory, not shown as a ring) to query the official wallet balance at most once a minute for the hover card."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "环和悬停卡片显示",
+        "options": [
+          "已用",
+          "剩余"
+        ]
+      },
+      "en": {
+        "group": "",
+        "title": "Rings and card show",
+        "options": [
+          "Used",
+          "Left"
+        ]
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "显示会话数",
+        "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
+      },
+      "en": {
+        "group": "",
+        "title": "Show the count",
+        "description": "The number in the segmented ring and before the state bar. Off, only the colours' shares show; the pixel grid and signal bars have no number anyway."
+      }
+    },
+    {
       "page": "islandDisplay",
       "zh-CN": {
         "group": "显示内容",
@@ -1299,6 +1483,89 @@
         "group": "Open and close",
         "title": "Data motion",
         "description": "As widgets appear, rings sweep in, numbers count up, bars fill and grids light up in a wave"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "面板换页",
+        "description": "点页签、箭头，按 ← → 或左右滑动换页时；面板刚展开时由开合动画负责，不播"
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Panel pages",
+        "description": "When you click a tab or an arrow, press ← → or swipe; not when the panel first opens, the open animation covers that"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "设置窗口换页",
+        "description": "点侧栏、点上面的标签换页时；从搜索结果跳过去不播"
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Settings pages",
+        "description": "When you click the sidebar or a tab; jumping from a search result skips it"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "标签和侧栏的高亮",
+        "description": "换页时设置窗口里标签的下划线、侧栏的高亮块怎么挪过去",
+        "options": [
+          "伸缩",
+          "滑动",
+          "直接跳"
+        ]
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Tab and sidebar highlight",
+        "description": "How the tab underline and the sidebar highlight move over in the settings window",
+        "options": [
+          "Stretch",
+          "Slide",
+          "Jump"
+        ]
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "速度",
+        "options": [
+          "快",
+          "标准",
+          "慢"
+        ]
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Speed",
+        "options": [
+          "Fast",
+          "Normal",
+          "Slow"
+        ]
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "跟着方向",
+        "description": "往后翻从后面来、往前翻从前面来，涟漪从点的地方扩散；关掉时都从中间开始"
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Follow direction",
+        "description": "Later pages come in from the far side, earlier ones from the near side, and ripples start where you clicked; off, everything starts from the middle"
       }
     },
     {
@@ -4076,12 +4343,12 @@
       "zh-CN": {
         "group": "Agent 页顶部的额度",
         "title": "显示哪家、哪些额度",
-        "description": "额度样式、重置时间和只看最紧的也在这里调，改了马上在下面的岛上看到。"
+        "description": "布局、样式、重置时间也在这里调，改了马上在下面的岛上看到；某个布局用不上的选项会收起来。"
       },
       "en": {
         "group": "Usage on the agent page",
         "title": "Which agents and windows",
-        "description": "Usage style, reset time and only the tightest are set here too; the island below shows each change at once."
+        "description": "Layout, style and reset time are set here too; the island below shows each change at once, and options a layout does not use are hidden."
       }
     },
     {
@@ -4095,6 +4362,32 @@
         "group": "Display and direct query",
         "title": "Claude Code: ask Anthropic directly",
         "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "显示口径与直连查询",
+        "title": "Claude Code：额度旧了时补查一次",
+        "description": "状态栏和 claude-hud 的额度都超过 30 分钟没更新或已过重置时间时，用同一个只读令牌经代理向 Anthropic 查一次，至少隔 15 分钟，失败时退避到 2 小时。关掉后只显示「已过期」，不联网。"
+      },
+      "en": {
+        "group": "Display and direct query",
+        "title": "Claude Code: check once when usage goes stale",
+        "description": "When both the status line and claude-hud readings are over 30 minutes old or past their reset time, ask Anthropic once with the same read-only token through the proxy: at most every 15 minutes, backing off to 2 hours on failure. Off shows \"Expired\" instead and never goes online."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "显示口径与直连查询",
+        "title": "代理地址",
+        "description": "http:// 或 https:// 代理，例如 http://127.0.0.1:7890。留空时依次用 HTTPS_PROXY 环境变量和 Windows 的系统代理；都没有就不请求，不会绕过代理直连。"
+      },
+      "en": {
+        "group": "Display and direct query",
+        "title": "Proxy",
+        "description": "An http:// or https:// proxy, such as http://127.0.0.1:7890. Empty uses the HTTPS_PROXY environment variable, then the Windows proxy; without either nothing is sent, never directly."
       }
     },
     {

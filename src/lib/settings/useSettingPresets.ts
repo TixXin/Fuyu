@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
-import { createPresetId, LEGACY_DEFAULT_PRESET_NAMES, isDefaultSettingPreset, mergeWithDefaultSettingPresets, normalizeSettings, withThemeFrom } from "./settings";
+import { carriedJellyfishStyle, createPresetId, LEGACY_DEFAULT_PRESET_NAMES, isDefaultSettingPreset, mergeWithDefaultSettingPresets, withPresetFrom } from "./settings";
 import { loadSettingPresets, saveSettingPresets } from "./storage";
 import { saveThemeFile } from "./api";
 import { buildTheme, parseTheme, themeFileName, type ThemeProblem } from "../theme/theme.ts";
@@ -28,6 +28,7 @@ export function useSettingPresets(
         id: createPresetId(),
         name: t.settings.presets.defaultName(customPresetCount + 1),
         settings,
+        jellyfishStyle: settings.jellyfishStyle,
         createdAt: Date.now(),
         isDefault: false,
       };
@@ -41,7 +42,7 @@ export function useSettingPresets(
       const preset = presets.find((item) => item.id === presetId);
 
       if (preset) {
-        onSettingsChange(withThemeFrom(settings, normalizeSettings(preset.settings)));
+        onSettingsChange(withPresetFrom(settings, preset));
       }
     },
     [presets, settings, onSettingsChange],
@@ -80,7 +81,7 @@ export function useSettingPresets(
       const preset = presets.find((item) => item.id === presetId);
       if (!preset) return Promise.reject(new Error("No such preset."));
       const now = new Date();
-      return saveThemeFile(themeFileName(now), JSON.stringify(buildTheme(preset.name, preset.settings, now), null, 2));
+      return saveThemeFile(themeFileName(now), JSON.stringify(buildTheme(preset.name, preset.settings, now, preset.jellyfishStyle), null, 2));
     },
     [presets],
   );
@@ -90,7 +91,7 @@ export function useSettingPresets(
       const parsed = parseTheme(text, settings);
       if ("problem" in parsed) return parsed;
       const name = parsed.name && !LEGACY_DEFAULT_PRESET_NAMES.has(parsed.name) ? parsed.name : t.settings.presets.importedName;
-      const preset: IslandPreset = { id: createPresetId(), name, settings: parsed.settings, createdAt: Date.now(), isDefault: false };
+      const preset: IslandPreset = { id: createPresetId(), name, settings: parsed.settings, ...carriedJellyfishStyle(parsed.jellyfishStyle), createdAt: Date.now(), isDefault: false };
       setPresets((currentPresets) => mergeWithDefaultSettingPresets([preset, ...currentPresets]));
       return { name };
     },

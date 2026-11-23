@@ -1,4 +1,5 @@
 import { JellyfishMark } from "../../components/jellyfish/JellyfishMark";
+import { useJellyfishStyle } from "../../components/jellyfish/jellyfishStyleContext";
 import { useTranslation } from "../../i18n";
 import type { AgentEmptyStyle, AgentSettingValues, AgentUsageSource } from "./agentSettings";
 import type { AgentSessionSummary, AgentUsage } from "./api";
@@ -24,15 +25,19 @@ export type EmptyStateProps = {
 
 const ZZ = [0, 1, 2];
 
+const ZZ_SMOOTH = "M2.5 2.5h5l-5 5h5";
+const ZZ_PIXEL = "M1 1h8v2h-8zM5 3h2v2h-2zM3 5h2v2h-2zM1 7h8v2h-8z";
+
 function Sleep() {
   const text = useTranslation().agent.empty;
+  const pixel = useJellyfishStyle() !== "vector";
   return (
     <div className="agent-empty agent-empty--sleep">
       <span className="agent-empty__jelly">
-        <JellyfishMark mood="sleep" height={46} />
+        <JellyfishMark mood="sleep" height={46} lively />
         {ZZ.map((index) => (
-          <svg key={index} className="agent-empty__zz" style={{ animationDelay: `${index * 1.1}s` }} viewBox="0 0 10 10" aria-hidden="true">
-            <path d="M2.5 2.5h5l-5 5h5" />
+          <svg key={index} className="agent-empty__zz" data-pixel={pixel || undefined} style={{ animationDelay: `${index * 1.1}s` }} viewBox="0 0 10 10" aria-hidden="true">
+            <path d={pixel ? ZZ_PIXEL : ZZ_SMOOTH} />
           </svg>
         ))}
       </span>
@@ -47,7 +52,7 @@ function Minimal() {
   return (
     <div className="agent-empty agent-empty--minimal">
       <span className="agent-empty__waterline" aria-hidden="true">
-        <JellyfishMark mood="idle" height={26} />
+        <JellyfishMark mood="idle" height={26} lively />
       </span>
       <span>{text.minimal}</span>
     </div>
