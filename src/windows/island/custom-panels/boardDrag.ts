@@ -13,7 +13,7 @@ import {
 } from "../../../lib/settings/customPanels.ts";
 import { snapMove, snapStretch, type Snapped } from "./freeSnap.ts";
 
-export type Board = { width: number; height: number; page?: number };
+export type Board = { width: number; height: number; page?: number; rows?: number };
 export type IncomingWidget = { widget: string; name: string; size: PanelSize; x: number; y: number };
 type Moved = Pick<BoxDrag, "widget" | "kind" | "dx" | "dy">;
 

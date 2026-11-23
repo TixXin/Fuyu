@@ -8,7 +8,7 @@ export type DropSpot =
   | { kind: "new" }
   | { kind: "tray" };
 
-export const laidOut = (panel: CustomPanel, pageColumns: number) => layoutStrip(panel, FUYU_ROWS, pageColumns);
+export const laidOut = (panel: CustomPanel, pageColumns: number, rows = FUYU_ROWS) => layoutStrip(panel, rows, pageColumns);
 
 export const pageOfItem = (item: PanelItem, pageColumns: number) => Math.floor(cellBox(item).col / pageColumns);
 
@@ -40,44 +40,44 @@ function insert(rest: CustomPanel, item: PanelItem, index: number, pageBreak: bo
   return { ...rest, items: [...rest.items.slice(0, index), placed, ...rest.items.slice(index)] };
 }
 
-function settle(next: CustomPanel, widget: string, pageColumns: number, fresh: boolean): GridTarget {
-  const panel = laidOut(next, pageColumns);
+function settle(next: CustomPanel, widget: string, pageColumns: number, fresh: boolean, rows: number): GridTarget {
+  const panel = laidOut(next, pageColumns, rows);
   const mine = panel.items.find((item) => item.widget === widget);
   return { panel, page: mine ? pageOfItem(mine, pageColumns) : 0, fresh };
 }
 
-export function onNewPage(rest: CustomPanel, item: PanelItem, pageColumns: number): GridTarget {
-  return settle(insert(rest, item, rest.items.length, rest.items.length > 0), item.widget, pageColumns, true);
+export function onNewPage(rest: CustomPanel, item: PanelItem, pageColumns: number, rows = FUYU_ROWS): GridTarget {
+  return settle(insert(rest, item, rest.items.length, rest.items.length > 0), item.widget, pageColumns, true, rows);
 }
 
-export function boardTarget(rest: CustomPanel, item: PanelItem, x: number, y: number, pageColumns: number, pageStepPx: number): GridTarget {
-  const laid = laidOut(rest, pageColumns);
+export function boardTarget(rest: CustomPanel, item: PanelItem, x: number, y: number, pageColumns: number, pageStepPx: number, rows = FUYU_ROWS): GridTarget {
+  const laid = laidOut(rest, pageColumns, rows);
   const page = Math.max(0, Math.floor(x / pageStepPx));
   const last = rest.items.length > 0 ? pageCountOf(laid, pageColumns) - 1 : -1;
-  if (page > last) return onNewPage(rest, item, pageColumns);
-  const target = settle(insert(rest, item, stripInsertIndexAt(laid, x, y, null), false), item.widget, pageColumns, false);
-  return target.page === page ? target : pageTarget(rest, item, page, pageColumns);
+  if (page > last) return onNewPage(rest, item, pageColumns, rows);
+  const target = settle(insert(rest, item, stripInsertIndexAt(laid, x, y, null), false), item.widget, pageColumns, false, rows);
+  return target.page === page ? target : pageTarget(rest, item, page, pageColumns, rows);
 }
 
-export function pageTarget(rest: CustomPanel, item: PanelItem, page: number, pageColumns: number): GridTarget {
-  const laid = laidOut(rest, pageColumns);
+export function pageTarget(rest: CustomPanel, item: PanelItem, page: number, pageColumns: number, rows = FUYU_ROWS): GridTarget {
+  const laid = laidOut(rest, pageColumns, rows);
   let last = -1;
   laid.items.forEach((other, index) => {
     if (pageOfItem(other, pageColumns) === page) last = index;
   });
-  if (last < 0) return onNewPage(rest, item, pageColumns);
+  if (last < 0) return onNewPage(rest, item, pageColumns, rows);
   for (let at = last + 1; at >= 0; at -= 1) {
-    const target = settle(insert(rest, item, at, false), item.widget, pageColumns, false);
+    const target = settle(insert(rest, item, at, false), item.widget, pageColumns, false, rows);
     if (target.page === page) return target;
   }
-  return settle(insert(rest, item, last + 1, false), item.widget, pageColumns, false);
+  return settle(insert(rest, item, last + 1, false), item.widget, pageColumns, false, rows);
 }
 
-export function spotTarget(rest: CustomPanel, item: PanelItem, spot: DropSpot, pageColumns: number, pageStepPx: number): GridTarget | null {
+export function spotTarget(rest: CustomPanel, item: PanelItem, spot: DropSpot, pageColumns: number, pageStepPx: number, rows = FUYU_ROWS): GridTarget | null {
   if (spot.kind === "tray") return null;
-  if (spot.kind === "new") return onNewPage(rest, item, pageColumns);
-  if (spot.kind === "page") return pageTarget(rest, item, spot.page, pageColumns);
-  return boardTarget(rest, item, spot.x, spot.y, pageColumns, pageStepPx);
+  if (spot.kind === "new") return onNewPage(rest, item, pageColumns, rows);
+  if (spot.kind === "page") return pageTarget(rest, item, spot.page, pageColumns, rows);
+  return boardTarget(rest, item, spot.x, spot.y, pageColumns, pageStepPx, rows);
 }
 
 export function pushedWidgets(before: CustomPanel, after: CustomPanel, pageColumns: number, skip: string): string[] {

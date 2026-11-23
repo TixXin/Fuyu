@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import { skipAbsentWidgets, useAbsentWidgets } from "../../../features/plugin-kernel/absentWidgets";
 import { useTranslation } from "../../../i18n";
@@ -31,6 +31,12 @@ import "./CustomPanelEdit.css";
 
 const UNDO_MS = 4000;
 
+function pageInset(room: { width: number } | null, pageWidth: number, paged: boolean): CSSProperties | undefined {
+  const inset = paged && room ? Math.max(0, (room.width - pageWidth) / 2) : 0;
+  if (inset < 1) return undefined;
+  return { paddingInline: inset, scrollPaddingInline: inset, clipPath: `inset(0 ${inset}px 0 ${inset}px)` };
+}
+
 function useStrip(stored: CustomPanel, editing: boolean) {
   const ref = useRef<HTMLDivElement>(null);
   const [room, setRoom] = useState<{ width: number; height: number } | null>(null);
@@ -43,10 +49,10 @@ function useStrip(stored: CustomPanel, editing: boolean) {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const { scale: fit, width, height, panel, pages, pageColumns, pageStepPx } = stripGeometry(stored, room, editing);
+  const { scale: fit, width, height, rows, panel, pages, pageColumns, pageStepPx } = stripGeometry(stored, room, editing);
   const paged = pages > 0;
   useWheelScrollsSideways(ref, paged ? pageStepPx * fit : null);
-  const board: Board = { width, height, page: pageColumns };
+  const board: Board = { width, height, page: pageColumns, rows };
   return { ref, room, scale: fit, board, panel, pages, pageStepPx };
 }
 
@@ -126,6 +132,7 @@ export function CustomPanelPage({ panelId, entrance = "fade", dataMotion = false
     panel: drag.shown ?? panel,
     pageCount: drag.pageCount,
     pageColumns: board.page ?? 1,
+    rows: board.rows ?? 2,
     carried: carried?.item.widget ?? null,
     pushed: drag.pushed,
     nav: paging.nav,
@@ -164,7 +171,7 @@ export function CustomPanelPage({ panelId, entrance = "fade", dataMotion = false
       onPointerDown={editing ? undefined : onPointerDown}
     >
       <div className="custom-panel__stage">
-        <div className={pages > 0 ? "custom-panel__scroll custom-panel__scroll--paged" : "custom-panel__scroll"} ref={ref}>
+        <div className={pages > 0 ? "custom-panel__scroll custom-panel__scroll--paged" : "custom-panel__scroll"} ref={ref} style={pageInset(room, viewWidth * scale, pages > 0 && !editing)}>
           {empty ? (
             <div className="custom-panel__empty">
               <p>{t.empty}</p>

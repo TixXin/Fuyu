@@ -89,7 +89,7 @@ export function IslandHeader({
   const dotsRef = useRef<HTMLDivElement>(null);
   const notch = useIslandNotch();
   const notchHeader = Boolean(notch && !notch.simulated);
-  useRowOverflow(dotsRef, notchHeader, dots.length);
+  useRowOverflow(dotsRef, true, `${dots.length}|${notchHeader}`);
   const headerRef = useRef<HTMLElement>(null);
   const icons = features.pageLayout?.icons;
   const iconName = (id: string) => (id === FUYU_PAGE_ID ? fuyuPageIconName(icons, id, fuyuTabIcon) : icons?.[id]);

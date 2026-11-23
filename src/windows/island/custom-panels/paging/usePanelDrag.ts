@@ -4,6 +4,7 @@ import type { WidgetLibrary } from "../../../../features/plugin-kernel/widgetLib
 import { itemBoxPx, nextPanelSize, resizePanelItem, type CustomPanel, type PanelItem } from "../../../../lib/settings/customPanels";
 import { draggedTo, keptInside, type Board } from "../boardDrag";
 import { resolveSpot, withinArea } from "./dropSpot";
+import { FUYU_ROWS } from "../panelSize";
 import { clearStrayBreak, laidOut, liftWidget, pageCountOf, pageOfItem, pushedWidgets, spotTarget, type DropSpot } from "./gridTarget";
 import { usePagingInput, usePagingState } from "./usePagingControls";
 
@@ -37,6 +38,7 @@ export function usePanelDrag(options: PanelDragOptions) {
   const { panel, board, scale, pageStepPx, viewWidth, scroller, grid: gridRef, editing, library, reduced, held, onHeldTaken, onChange } = options;
   const grid = panel.mode === "grid";
   const pageColumns = board.page ?? 1;
+  const rows = board.rows ?? FUYU_ROWS;
   const [outside, setOutside] = useState<Outside | null>(null);
   const lastSpot = useRef<DropSpot | null>(null);
   const live = useRef<{ carried: Carried | null; spot: DropSpot | null; overview: boolean }>({ carried: null, spot: null, overview: false });
@@ -59,9 +61,9 @@ export function usePanelDrag(options: PanelDragOptions) {
     if (spot.kind === "tray") {
       if (carried.source === "tray") return;
       park(carried.item);
-      return save(laidOut(carried.rest, pageColumns));
+      return save(laidOut(carried.rest, pageColumns, rows));
     }
-    const target = spotTarget(carried.rest, carried.item, spot, pageColumns, pageStepPx);
+    const target = spotTarget(carried.rest, carried.item, spot, pageColumns, pageStepPx, rows);
     if (!target) return;
     if (carried.source === "tray") take(carried.item.widget);
     if (carried.source !== "tray" && !overview && target.page !== paging.nav.pageRef.current) onSentAway({ before, page: target.page });
@@ -99,12 +101,12 @@ export function usePanelDrag(options: PanelDragOptions) {
     const factor = rect.width > 0 ? element.offsetWidth / rect.width : 1;
     return { x: (pointer.x - rect.left) * factor, y: (pointer.y - rect.top) * factor };
   };
-  const restLaid = carried ? laidOut(carried.rest, pageColumns) : panel;
+  const restLaid = carried ? laidOut(carried.rest, pageColumns, rows) : panel;
   const basePages = Math.max(pageCountOf(restLaid, pageColumns), paging.floorPages);
   const context = { overview: paging.overview, boardPoint, viewWidth, boardHeight: board.height, pageStepPx, pageCount: basePages, page: paging.nav.page };
   const resolved = carried && pointer ? resolveSpot(pointer, context) : null;
   const spot = carried ? (resolved?.spot ?? lastSpot.current) : null;
-  const target = carried && spot ? spotTarget(carried.rest, carried.item, spot, pageColumns, pageStepPx) : null;
+  const target = carried && spot ? spotTarget(carried.rest, carried.item, spot, pageColumns, pageStepPx, rows) : null;
   const shown = carried ? (target?.panel ?? restLaid) : null;
   const pageCount = Math.max(pageCountOf(shown ?? panel, pageColumns), paging.floorPages);
   const pushed = target && carried ? pushedWidgets(restLaid, target.panel, pageColumns, carried.item.widget) : [];

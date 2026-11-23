@@ -18,7 +18,7 @@ export type PagerView = {
   onPick: (page: number) => void;
 };
 
-export function pagerBlocks(panel: CustomPanel, pageCount: number, pageColumns: number, target: string | null, pushed: ReadonlySet<string>): PagerBlock[][] {
+export function pagerBlocks(panel: CustomPanel, pageCount: number, pageColumns: number, target: string | null, pushed: ReadonlySet<string>, rows = FUYU_ROWS): PagerBlock[][] {
   const pages: PagerBlock[][] = Array.from({ length: pageCount }, () => []);
   for (const item of panel.items) {
     const box = cellBox(item);
@@ -27,9 +27,9 @@ export function pagerBlocks(panel: CustomPanel, pageCount: number, pageColumns: 
     pages[page]?.push({
       widget: item.widget,
       left: (box.col - page * pageColumns) / pageColumns,
-      top: box.row / FUYU_ROWS,
+      top: box.row / rows,
       width: box.cols / pageColumns,
-      height: box.rows / FUYU_ROWS,
+      height: box.rows / rows,
       ...(tone ? { tone } : {}),
     });
   }
