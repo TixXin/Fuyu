@@ -3,6 +3,7 @@ import { getCapsLockState, listenCapsLock } from "./api";
 import { shouldFlash, type CapsLockConfig } from "./capsLockConfig.ts";
 
 export const CAPS_LOCK_ALERT_MS = 1500;
+export const CAPS_LOCK_OFF_ALERT_MS = 900;
 
 export type CapsLockAlert = { on: boolean; at: number };
 
@@ -41,7 +42,7 @@ export function useCapsLock(config: CapsLockConfig, show: boolean): { on: boolea
 
   useEffect(() => {
     if (!alert) return;
-    const timer = window.setTimeout(() => setAlert(null), CAPS_LOCK_ALERT_MS);
+    const timer = window.setTimeout(() => setAlert(null), alert.on ? CAPS_LOCK_ALERT_MS : CAPS_LOCK_OFF_ALERT_MS);
     return () => window.clearTimeout(timer);
   }, [alert]);
 
