@@ -8,7 +8,7 @@ import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
   MAX_AUTO_TUCK_RETRACT_DELAY_MS, MAX_HOVER_COLLAPSE_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS, MAX_IDLE_DIM_OPACITY, MAX_SHELF_ITEMS, MAX_SIDE_HEIGHT,
   MIN_AUTO_TUCK_RETRACT_DELAY_MS, MIN_HOVER_COLLAPSE_DELAY_MS, MIN_HOVER_EXPAND_DELAY_MS, MIN_HOVER_SWITCH_DELAY_MS, MIN_IDLE_DIM_OPACITY, MIN_SHELF_ITEMS, MIN_SIDE_HEIGHT,
-  MESSAGE_NOTICES, MESSAGE_PANEL_SECONDS, SHELF_CLEANUP_DAYS, TUCK_HINT_COLORS, TUCK_HINT_STYLES, TUCK_STYLES, oneOf,
+  JELLYFISH_STYLES, MESSAGE_NOTICES, MESSAGE_PANEL_SECONDS, SHELF_CLEANUP_DAYS, TUCK_HINT_COLORS, TUCK_HINT_STYLES, TUCK_STYLES, oneOf,
 } from "./settingsLimits.ts";
 import { PAGE_SWITCH_EFFECTS, PAGE_SWITCH_INDICATORS, PAGE_SWITCH_SPEEDS } from "../theme/pageSwitch.ts";
 import { normalizeTuckedHoverDelay, normalizeTuckLip, TUCK_LIP_HEIGHT_RANGE, TUCK_LIP_WIDTH_RANGE } from "./tuckLip.ts";
@@ -94,6 +94,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     agentTitleEnabled: settings?.agentTitleEnabled !== false,
     agentTitleMode: settings?.agentTitleMode === "running" ? "running" : "changes",
     agentLightStyle: settings?.agentLightStyle === "dot" ? "dot" : "mark",
+    jellyfishStyle: oneOf(JELLYFISH_STYLES, settings?.jellyfishStyle, DEFAULT_SETTINGS.jellyfishStyle),
     shelfEnabled: settings?.shelfEnabled !== false,
     translationEnabled: settings?.translationEnabled !== false,
     translationTarget: settings?.translationTarget === "island" ? "island" : "window",

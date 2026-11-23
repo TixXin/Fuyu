@@ -156,6 +156,7 @@
         "agentTitleEnabled": "firstMergeOnly",
         "agentTitleMode": "sync",
         "agentLightStyle": "sync",
+        "jellyfishStyle": "sync",
         "shelfEnabled": "firstMergeOnly",
         "translationEnabled": "firstMergeOnly",
         "translationTarget": "sync",

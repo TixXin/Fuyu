@@ -10,6 +10,7 @@ export type TranslationTarget = "window" | "island";
 
 export type AgentTitleMode = "changes" | "running";
 export type AgentLightStyle = "mark" | "dot";
+export type JellyfishStyle = "vector" | "flat" | "sticker" | "mono" | "neon" | "chunky" | "fine";
 
 export type AppearanceMode = "classic" | "liquidGlass";
 export type IslandFont = "system" | "pixel";
@@ -177,6 +178,7 @@ export type IslandSettings = CalendarSettingValues &
   agentTitleEnabled: boolean;
   agentTitleMode: AgentTitleMode;
   agentLightStyle: AgentLightStyle;
+  jellyfishStyle: JellyfishStyle;
   gameDoNotDisturb: boolean;
   gameAutoTuck: boolean;
   hoverTakesKeyboard: boolean;

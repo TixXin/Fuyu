@@ -1,4 +1,6 @@
 import { useId, type CSSProperties } from "react";
+import { useJellyfishStyle } from "./jellyfishStyleContext";
+import { PixelJellyfish } from "./PixelJellyfish";
 import "./JellyfishMark.css";
 
 export const JELLY_VIEW_WIDTH = 58;
@@ -100,7 +102,14 @@ function Effect({ mood }: { mood: JellyMood }) {
   return null;
 }
 
-export function JellyfishMark({ mood, paused = false, height }: { mood: JellyMood; paused?: boolean; height?: number }) {
+type JellyfishMarkProps = { mood: JellyMood; paused?: boolean; height?: number };
+
+export function JellyfishMark(props: JellyfishMarkProps) {
+  const style = useJellyfishStyle();
+  return style === "vector" ? <VectorJellyfish {...props} /> : <PixelJellyfish style={style} {...props} />;
+}
+
+function VectorJellyfish({ mood, paused = false, height }: JellyfishMarkProps) {
   const shade = `center-jelly-shade-${useId().replace(/:/g, "")}`;
   const shadeFill = `url(#${shade})`;
   return (

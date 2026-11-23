@@ -1,0 +1,10 @@
+.center-jelly--pixel {
+  position: relative;
+  color: var(--center-jelly-fill);
+  will-change: auto;
+}
+.center-jelly--pixel canvas {
+  position: absolute;
+  image-rendering: pixelated;
+  pointer-events: none;
+}

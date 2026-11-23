@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="UTF-8" />
+  <title>水母画风检查</title>
+  <style>
+    * { box-sizing: border-box; }
+    html body { height: auto; min-height: 100%; margin: 0; padding: 24px; overflow: auto; background: #17181c; color: #f4f6fa; font: 13px "Segoe UI", "Microsoft YaHei", sans-serif; }
+    #fixture { display: grid; gap: 10px; }
+    .jelly-row { display: flex; align-items: center; gap: 14px; }
+    .jelly-row > b { width: 5em; font-weight: 400; color: #9a9ca4; }
+    .jelly-pill { display: inline-flex; align-items: center; gap: 22px; height: 38px; padding: 0 30px 0 14px; border-radius: 19px; background: #000; }
+    .jelly-pill.island-light { background: #f1ede5; }
+    #results { margin-top: 24px; line-height: 1.8; white-space: pre-wrap; }
+  </style>
+  <div id="fixture"></div>
+  <pre id="results" role="status">准备水母画风检查…</pre>
+  <script type="module" src="./jellyfish-styles.tsx"></script>
+</html>

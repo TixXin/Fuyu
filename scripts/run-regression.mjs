@@ -23,6 +23,7 @@ export const PAGES = [
   "agent-list-motion.html",
   "calendar.html",
   "center-pattern.html?test=1",
+  "jellyfish-styles.html",
   "claude-usage.html?test=1",
   "session-ring.html?test=1",
   "collapsed-message-animation.html?test=1",

@@ -14,6 +14,10 @@ export type SettingsAgentText = {
   lightStyleHint: string;
   lightStyleOptions: { mark: string; dot: string };
   lightStyleHints: { mark: string; dot: string };
+  jellyStyle: string;
+  jellyStyleHint: string;
+  jellyStyleOptions: { vector: string; flat: string; sticker: string; mono: string; neon: string; chunky: string; fine: string };
+  jellyStyleHints: { vector: string; flat: string; sticker: string; mono: string; neon: string; chunky: string; fine: string };
   agentPageSection: string;
   expandChildren: string;
   expandChildrenHint: string;
@@ -281,6 +285,10 @@ export const zhCN: SettingsAgentText = {
   lightStyleHint: "收起条上浮屿标志的样子。水母：和条上的环一样高，平时米白、偶尔游一下眨眨眼；开着 Agent 时，运行变蓝划水，等你确认变黄跳动，失败或可能中断变红皱眉，跑完变绿笑一下。圆点：极简的小圆点，开着 Agent 时按状态变色。",
   lightStyleOptions: { mark: "水母", dot: "圆点" },
   lightStyleHints: { mark: "浮屿的小水母，开着 Agent 时随状态变", dot: "简洁的小圆点呼吸灯" },
+  jellyStyle: "水母画风",
+  jellyStyleHint: "水母出现的地方一起换：收起条、中心图案、Fuyu 页签、Agent 空页面和今日小组件。像素画风一格一格地动，并按屏幕像素对齐，系统缩放是 125%、175% 时会比矢量的小一圈。应用图标和托盘图标不变。",
+  jellyStyleOptions: { vector: "矢量", flat: "扁平", sticker: "描边", mono: "单色", neon: "霓虹", chunky: "大颗粒", fine: "精细" },
+  jellyStyleHints: { vector: "原来的圆润水母", flat: "像素，最接近原样", sticker: "像素，带深色描边", mono: "像素，只用一个颜色", neon: "像素，发光的轮廓", chunky: "像素，格子最粗", fine: "像素，格子最细" },
   agentPageSection: "Agent 页",
   expandChildren: "子 Agent / 子会话默认展开",
   expandChildrenHint: "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。",
@@ -560,6 +568,10 @@ export const en: SettingsAgentText = {
   lightStyleHint: "How the Fuyu mark looks on the collapsed bar. Jellyfish: as tall as the rings on the bar, cream with a swim and a blink now and then; with Agent on it turns blue and paddles while running, yellow and hops while waiting for you, red and frowns when failed or possibly stopped, and green with a smile when done. Dot: a minimal dot that takes the state colour with Agent on.",
   lightStyleOptions: { mark: "Jellyfish", dot: "Dot" },
   lightStyleHints: { mark: "The little Fuyu jellyfish; follows the agents' state with Agent on", dot: "Minimal breathing dot" },
+  jellyStyle: "Jellyfish look",
+  jellyStyleHint: "Changes the jellyfish everywhere it appears: the collapsed bar, the centre pattern, the Fuyu tab, the empty Agent page and the Today widget. The pixel looks move one square at a time and line up with screen pixels, so at 125% or 175% display scaling they come out a little smaller than the smooth one. The app and tray icons stay the same.",
+  jellyStyleOptions: { vector: "Smooth", flat: "Flat", sticker: "Outlined", mono: "One colour", neon: "Neon", chunky: "Chunky", fine: "Fine" },
+  jellyStyleHints: { vector: "The original rounded jellyfish", flat: "Pixels, closest to the original", sticker: "Pixels with a dark outline", mono: "Pixels in a single colour", neon: "Pixels, a glowing outline", chunky: "Pixels, the biggest squares", fine: "Pixels, the smallest squares" },
   agentPageSection: "Agent page",
   expandChildren: "Expand subagents and child sessions",
   expandChildrenHint: "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them.",

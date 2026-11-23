@@ -111,6 +111,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   agentTitleEnabled: true,
   agentTitleMode: "changes",
   agentLightStyle: "mark",
+  jellyfishStyle: "vector",
   shelfEnabled: true,
   translationEnabled: true,
   translationTarget: "island",
