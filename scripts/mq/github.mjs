@@ -34,6 +34,8 @@ export const github = {
   ciRuns: (limit) => JSON.parse(gh(["run", "list", "--workflow", "ci.yml", "--limit", String(limit), "--json", "databaseId,headBranch,conclusion,attempt,url"])),
   attemptJobs: (runId, attempt) => JSON.parse(gh(["api", `repos/{owner}/{repo}/actions/runs/${runId}/attempts/${attempt}/jobs`, "-q", "[.jobs[] | {id, name, conclusion}]"])),
   jobLog: (jobId) => gh(["run", "view", "--job", String(jobId), "--log"]),
+  annotations: (jobId) => JSON.parse(gh(["api", `repos/{owner}/{repo}/check-runs/${jobId}/annotations`, "-q", "[.[].message]"]) || "[]"),
+  rerunFailed: (runId) => gh(["run", "rerun", String(runId), "--failed"]),
 };
 
 function slug(text) {
