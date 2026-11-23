@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { layoutZoom } from "../../../lib/layoutZoom";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
 
 const EDGE_PX = 2;
@@ -106,9 +107,10 @@ export function useNoticeScroll(contentKey: unknown) {
     const startY = event.clientY;
     const startTop = element.scrollTop;
     const ratio = (element.scrollHeight - element.clientHeight) / Math.max(1, element.clientHeight - state.thumb.height);
+    const zoom = layoutZoom(element);
     setState((current) => ({ ...current, dragging: true }));
     const move = (moved: PointerEvent) => {
-      element.scrollTop = startTop + (moved.clientY - startY) * ratio;
+      element.scrollTop = startTop + ((moved.clientY - startY) / zoom) * ratio;
     };
     const up = () => {
       setState((current) => ({ ...current, dragging: false }));

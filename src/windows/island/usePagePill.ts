@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
+import { layoutZoom } from "../../lib/layoutZoom";
 
 const ACTIVE = ".dot-button--active, .island__agent-button--active";
 
@@ -18,7 +19,7 @@ export function usePagePill(headerRef: RefObject<HTMLElement | null>, scrollRef:
     }
     const box = header.getBoundingClientRect();
     const rect = active.getBoundingClientRect();
-    const zoom = header.offsetWidth > 0 && box.width > 0 ? box.width / header.offsetWidth : 1;
+    const zoom = layoutZoom(header, box);
     const left = (rect.left - box.left) / zoom;
     const fresh = lastLeft.current === null || pill.dataset.shown !== "true";
     pill.dataset.instant = instant || fresh ? "true" : "false";

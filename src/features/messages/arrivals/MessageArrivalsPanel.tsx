@@ -2,6 +2,7 @@ import { CheckCheck, ChevronRight } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "../../../i18n";
 import { copyMessageText } from "../../../lib/api";
+import { layoutZoom } from "../../../lib/layoutZoom";
 import { notificationCopyableText } from "../messageCopy";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import { ArrivalMediaControls, type ArrivalMedia } from "./ArrivalMediaControls";
@@ -37,7 +38,10 @@ export function MessageArrivalsPanel({
   useLayoutEffect(() => {
     const element = ref.current;
     if (!element) return;
-    const measure = () => onMeasure(Math.ceil(element.getBoundingClientRect().height));
+    const measure = () => {
+      const rect = element.getBoundingClientRect();
+      onMeasure(Math.ceil(rect.height / layoutZoom(element, rect)));
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
