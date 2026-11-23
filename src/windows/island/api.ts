@@ -333,3 +333,13 @@ export const TRAY_MENU_OPEN_PAGE_EVENT = "tray-menu-open-page";
 export function listenTrayMenuOpenPage(handler: (page: string) => void) {
   return listen<string>(TRAY_MENU_OPEN_PAGE_EVENT, ({ payload }) => handler(payload));
 }
+
+export type IslandMenuAction = { action: "toggle" | "arrange" | "resize"; id: string | null };
+
+export function openIslandMenu(rows: { id: string; name: string; shown: boolean }[], bounds: { left: number; top: number; width: number; height: number }) {
+  return invoke("island_menu_open", { rows, bounds });
+}
+
+export function listenIslandMenuAction(handler: (payload: IslandMenuAction) => void) {
+  return listen<IslandMenuAction>("island-menu-action", ({ payload }) => handler(payload));
+}

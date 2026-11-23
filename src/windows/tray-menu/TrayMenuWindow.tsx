@@ -4,7 +4,9 @@ import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugin
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { shownStatus } from "./builtinEntries";
-import { getTrayMenuState, listenTrayMenuOpen, listenTrayMenuState, trayMenuAction, type TrayMenuAction, type TrayMenuState } from "./api";
+import { getIslandMenuRows, getTrayMenuState, listenTrayMenuOpen, listenTrayMenuState, trayMenuAction, type IslandMenuRow, type TrayMenuAction, type TrayMenuState } from "./api";
+import { IslandMenuCard } from "./IslandMenuCard";
+import { useIslandMenuHandlers } from "./useIslandMenuHandlers";
 import { TrayMenuCard } from "./TrayMenuCard";
 import { loadTrayMenuLayout } from "./storage";
 import type { TrayCardHandlers } from "./types";
@@ -23,6 +25,7 @@ export function TrayMenuWindow() {
   useWindowAccent();
   const cardRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<TrayMenuState | null>(null);
+  const [islandRows, setIslandRows] = useState<IslandMenuRow[] | null>(null);
   const [opened, setOpened] = useState(0);
   const [settled, setSettled] = useState(0);
   const ready = useRef(false);
@@ -41,7 +44,8 @@ export function TrayMenuWindow() {
     document.documentElement.classList.toggle("island-light", light);
   }, [light]);
 
-  const open = useCallback(async () => {
+  const open = useCallback(async (rows?: IslandMenuRow[] | null) => {
+    if (rows !== undefined) setIslandRows(rows);
     const pending = Promise.all([
       getTrayMenuState().catch((error: unknown) => {
         console.error("Failed to read the tray card state", error);
@@ -50,6 +54,7 @@ export function TrayMenuWindow() {
       reload(),
       refreshShortcuts(),
       loadTrayMenuLayout() === "status" ? refresh() : null,
+      rows === undefined ? getIslandMenuRows().then(setIslandRows, (error: unknown) => console.error("Failed to read the island menu", error)) : null,
     ]);
     const stale = ready.current;
     if (stale) setOpened((count) => count + 1);
@@ -66,7 +71,7 @@ export function TrayMenuWindow() {
     let cancelled = false;
     const stops: (() => void)[] = [];
     const keep = (stop: () => void) => (cancelled ? stop() : stops.push(stop));
-    void listenTrayMenuOpen(() => void open()).then(keep);
+    void listenTrayMenuOpen((rows) => void open(rows)).then(keep);
     void listenTrayMenuState(setState).then(keep);
     void open();
     return () => {
@@ -94,7 +99,16 @@ export function TrayMenuWindow() {
     },
   }), [join, media, toggleAutostart, toggleDnd]);
 
+  const islandHandlers = useIslandMenuHandlers(setIslandRows);
+
   if (!state) return null;
+  if (islandRows) {
+    return (
+      <div className="tray-menu-window">
+        <IslandMenuCard ref={cardRef} rows={islandRows} light={light} mac={state.platform === "macos"} handlers={islandHandlers} />
+      </div>
+    );
+  }
   const live = statusLayout ? shownStatus(status, off) : { media: null, meeting: null, agents: null, now: status.now };
   return (
     <div className="tray-menu-window">

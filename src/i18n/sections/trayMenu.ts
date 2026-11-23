@@ -45,6 +45,8 @@ export type TrayMenuText = {
   viewAgents: string;
   calm: string;
   calmSub: string;
+  islandMenu: string;
+  islandMenuItems: string;
 };
 
 export const zhCN: TrayMenuText = {
@@ -94,6 +96,8 @@ export const zhCN: TrayMenuText = {
   viewAgents: "看 Agent 页",
   calm: "现在没什么事",
   calmSub: "有歌在放、快开会或 Agent 在跑时会出现在这里",
+  islandMenu: "岛屿菜单",
+  islandMenuItems: "收起时显示",
 };
 
 export const en: TrayMenuText = {
@@ -143,4 +147,6 @@ export const en: TrayMenuText = {
   viewAgents: "Open the Agents page",
   calm: "Nothing going on",
   calmSub: "Music, upcoming meetings and running agents show up here",
+  islandMenu: "Island menu",
+  islandMenuItems: "Show when collapsed",
 };
