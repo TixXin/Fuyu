@@ -1,4 +1,5 @@
 import { en as dailyEn, zhCN as dailyZh, type DailyWidgetsText } from "./dailyWidgets.ts";
+import { en as systemEn, zhCN as systemZh, type SystemWidgetsText } from "./systemWidgets.ts";
 
 export type IslandWidgetsText = {
   sizes: { bar: string; s: string; m: string; l: string; w: string };
@@ -26,6 +27,7 @@ export type IslandWidgetsText = {
     levels: string;
   };
   daily: DailyWidgetsText;
+  system: SystemWidgetsText;
   panel: {
     empty: string;
     templateHint: string;
@@ -169,6 +171,7 @@ export const zhCN: IslandWidgetsText = {
     levels: "音量亮度",
   },
   daily: dailyZh,
+  system: systemZh,
   panel: {
     empty: "这个面板还没有组件",
     templateHint: "从模板开始，或者点右上角的布局按钮自己加",
@@ -312,6 +315,7 @@ export const en: IslandWidgetsText = {
     levels: "Volume & brightness",
   },
   daily: dailyEn,
+  system: systemEn,
   panel: {
     empty: "This panel has no widgets yet",
     templateHint: "Start from a template, or use the layout button to add your own",

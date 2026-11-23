@@ -16,7 +16,7 @@ use crate::plugin_kernel::{
 };
 use crate::user_error::UserError;
 use readers::{
-    brightness_percent, open_brightness, open_volume, read_now, set_volume_now,
+    brightness_percent, open_brightness, open_volume, read_now, set_brightness_now, set_volume_now,
     should_reopen_volume, start_thread, volume_reading, OutputVolume,
 };
 
@@ -138,15 +138,29 @@ pub struct SystemLevels {
     volume: Option<f32>,
     muted: bool,
     brightness: Option<f32>,
+    brightness_settable: bool,
 }
+
+static BRIGHTNESS_WRITES: Mutex<()> = Mutex::new(());
 
 #[tauri::command]
 pub async fn get_system_levels() -> SystemLevels {
-    let (volume, brightness) = read_now();
+    let (volume, brightness, brightness_settable) = read_now();
     SystemLevels {
         volume: volume.map(|(percent, _)| percent as f32 / 100.0),
         muted: volume.is_some_and(|(_, muted)| muted),
         brightness: brightness.map(|percent| percent as f32 / 100.0),
+        brightness_settable,
+    }
+}
+
+#[tauri::command]
+pub async fn set_system_brightness(level: f32) -> Result<(), UserError> {
+    let _writing = BRIGHTNESS_WRITES.lock().unwrap_or_else(PoisonError::into_inner);
+    if level.is_finite() && set_brightness_now(level.clamp(0.0, 1.0)) {
+        Ok(())
+    } else {
+        Err(UserError::new("systemLevels.brightness", "Could not change the screen brightness."))
     }
 }
 
@@ -172,6 +186,7 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::system_levels::get_system_levels,
             crate::system_levels::set_system_volume,
+            crate::system_levels::set_system_brightness,
         ] $($rest)*)
     };
 }

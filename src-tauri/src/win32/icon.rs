@@ -8,7 +8,7 @@ use windows::{
             BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HBITMAP, HGDIOBJ,
         },
         UI::{
-            Shell::ExtractIconExW,
+            Shell::{ExtractAssociatedIconW, ExtractIconExW},
             WindowsAndMessaging::{DestroyIcon, GetIconInfo, HICON, ICONINFO},
         },
     },
@@ -46,6 +46,21 @@ pub(crate) fn exe_icon(path: &str) -> Option<IconPixels> {
         return None;
     }
     icon_pixels(&IconHandle(large))
+}
+
+pub(crate) fn shell_icon(path: &str) -> Option<IconPixels> {
+    let mut buffer = [0u16; 128];
+    let wide: Vec<u16> = path.encode_utf16().collect();
+    if wide.len() >= buffer.len() {
+        return None;
+    }
+    buffer[..wide.len()].copy_from_slice(&wide);
+    let mut index = 0u16;
+    let icon = unsafe { ExtractAssociatedIconW(None, &mut buffer, &mut index) };
+    if icon.is_invalid() {
+        return None;
+    }
+    icon_pixels(&IconHandle(icon))
 }
 
 fn icon_pixels(icon: &IconHandle) -> Option<IconPixels> {

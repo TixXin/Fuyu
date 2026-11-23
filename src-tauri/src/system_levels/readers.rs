@@ -6,7 +6,9 @@ use crate::win32::{
     },
     brightness::DisplayBrightness,
     com::ComApartment,
+    monitor_ddc,
 };
+
 
 pub(super) struct AudioThread {
     seen_epoch: u64,
@@ -95,15 +97,34 @@ fn default_volume() -> Option<crate::win32::audio::OutputVolume> {
     AudioDevices::open().ok()?.default_render_output().ok()?.volume().ok()
 }
 
-pub(super) fn read_now() -> (Option<(u32, bool)>, Option<u32>) {
+pub(super) fn read_now() -> (Option<(u32, bool)>, Option<u32>, bool) {
     let Ok(_apartment) = ComApartment::multithreaded() else {
-        return (None, None);
+        return (None, None, false);
     };
     let volume = default_volume().and_then(|volume| {
         let level = volume.level().ok()?.clamp(0.0, 1.0);
         Some(((level * 100.0).round() as u32, volume.muted().ok()?))
     });
-    (volume, open_brightness().as_ref().and_then(brightness_percent))
+    let panel = DisplayBrightness::open().ok();
+    let (brightness, settable) = match panel.as_ref().and_then(|panel| Some((panel.percent()?, panel.can_set()))) {
+        Some((percent, settable)) => (Some(percent), settable),
+        None => {
+            let level = monitor_ddc::percent();
+            (level, level.is_some())
+        }
+    };
+    (volume, brightness, settable)
+}
+
+pub(super) fn set_brightness_now(level: f32) -> bool {
+    let Ok(_apartment) = ComApartment::multithreaded() else {
+        return false;
+    };
+    let percent = (level * 100.0).round() as u8;
+    if let Some(panel) = DisplayBrightness::open().ok().filter(|panel| panel.percent().is_some()) {
+        return panel.set_percent(percent).is_ok();
+    }
+    monitor_ddc::set_percent(u32::from(percent))
 }
 
 pub(super) fn set_volume_now(level: f32) -> bool {

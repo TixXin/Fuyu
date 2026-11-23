@@ -45,9 +45,15 @@ pub(super) fn brightness_percent(brightness: &BuiltinBrightness) -> Option<u32> 
     brightness.level().map(|level| (level * 100.0).round() as u32)
 }
 
-pub(super) fn read_now() -> (Option<(u32, bool)>, Option<u32>) {
+pub(super) fn read_now() -> (Option<(u32, bool)>, Option<u32>, bool) {
     let volume = audio::default_output().map(OutputVolume).as_ref().and_then(volume_reading);
-    (volume, open_brightness().as_ref().and_then(brightness_percent))
+    let brightness = open_brightness();
+    let percent = brightness.as_ref().and_then(brightness_percent);
+    (volume, percent, percent.is_some() && brightness.as_ref().is_some_and(BuiltinBrightness::can_set))
+}
+
+pub(super) fn set_brightness_now(level: f32) -> bool {
+    open_brightness().is_some_and(|brightness| brightness.set_level(level))
 }
 
 pub(super) fn set_volume_now(level: f32) -> bool {

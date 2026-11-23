@@ -1,7 +1,8 @@
 import type { ComponentType } from "react";
 import { defineSlot, type IslandWidgetMeta, type IslandWidgetProps } from "../../plugin-kernel/slots";
 import type { BuiltinWidget } from "../../plugin-kernel/widgetCatalog";
-import { BatteryWidget, LauncherWidget, NetworkWidget, SystemStatusWidget } from "../SystemWidgets";
+import { LauncherWidget } from "../LauncherWidget";
+import { BatteryWidget, NetworkWidget, SystemStatusWidget } from "../SystemWidgets";
 import { BATTERY_WIDGET, LAUNCHER_WIDGET, NETWORK_WIDGET, SYSTEM_STATUS_WIDGET } from "./widgets.ts";
 import "../systemWidgets.css";
 
