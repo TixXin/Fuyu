@@ -66,8 +66,8 @@ pub(crate) fn plan(state: &IslandWindowState) -> Plan {
     if !state.glass_enabled || !state.glass_native {
         return Plan::Off;
     }
-    let notch_collapsed = matches!(state.mode, IslandMode::Collapsed) && state.notch.is_some();
-    if state.is_tucked || state.is_dimmed || state.game_passthrough || notch_collapsed {
+    let unseen_collapsed = matches!(state.mode, IslandMode::Collapsed) && (state.notch.is_some() || state.glass_hidden);
+    if state.is_tucked || state.is_dimmed || state.game_passthrough || unseen_collapsed {
         return Plan::Paused;
     }
     Plan::Run { fast: matches!(state.mode, IslandMode::Expanded) || state.is_dragging }
@@ -441,6 +441,7 @@ mod tests {
             IslandWindowState { is_dimmed: true, ..live },
             IslandWindowState { game_passthrough: true, ..live },
             IslandWindowState { notch: Some(crate::island::notch::Notch { width: 200.0, height: 32.0, simulated: false }), ..live },
+            IslandWindowState { glass_hidden: true, ..live },
         ] {
             assert_eq!(plan(&paused), Plan::Paused);
         }
@@ -450,5 +451,6 @@ mod tests {
             ..live
         };
         assert_eq!(plan(&notch_open), Plan::Run { fast: true });
+        assert_eq!(plan(&IslandWindowState { mode: IslandMode::Expanded, glass_hidden: true, ..live }), Plan::Run { fast: true });
     }
 }

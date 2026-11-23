@@ -37,6 +37,7 @@ export const PAGES = [
   "side-island.html?test=1",
   "tuck-hint.html?test=1",
   "island-resize.html?test=1",
+  "page-arrows.html?test=1",
   "island-colors.html?test=1",
   "message-banner.html?test=1",
   "message-panel.html?test=1",
@@ -91,6 +92,8 @@ export const PAGES = [
   "screenshot-record.html",
   "recording-notice.html",
   "timer.html",
+  "pomodoro-start.html",
+  "island-blank-click.html",
   "todo-island.html",
   "todo-date-picker.html",
 ];

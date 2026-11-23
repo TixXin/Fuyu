@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>额度与空状态设置</title>
+<style>
+:root{
+  --motion-ease:cubic-bezier(0.2,0.8,0.2,1);--motion-ease-out:cubic-bezier(0.22,1,0.36,1);--motion-ease-in-out:cubic-bezier(0.45,0,0.55,1);
+  --motion-fast:120ms;--motion-base:160ms;--motion-medium:240ms;--motion-slow:420ms;
+  --pg:#f3f3f5;--pg2:#ffffff;--ink:#1c1c1f;--ink2:#5b5b63;--ink3:#8a8a93;--rule:#e2e2e7;--acc:#0a7cff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pg:#0c0d0f;--pg2:#1d1d20;--ink:#ececf0;--ink2:#a9a9b2;--ink3:#7a7a83;--rule:#2c2c31;--acc:#4ea1ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--ink);font-size:14px;line-height:1.55}
+main{max-width:1180px;margin:0 auto;padding:0 16px 120px}
+h1{font-size:24px;margin:26px 0 4px}
+h2{font-size:19px;margin:48px 0 4px;padding-top:14px;border-top:1px solid var(--rule);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h2 .grow{flex:1}
+p{color:var(--ink2);margin:6px 0}
+.sub{color:var(--ink3);margin:0 0 14px}
+ul.notes{color:var(--ink2);margin:6px 0 0;padding-left:20px;font-size:13.5px}
+.pick{border:1px solid var(--rule);background:var(--pg2);color:var(--ink);border-radius:8px;padding:5px 14px;font:inherit;font-size:13px;cursor:pointer}
+section.picked .pick{background:var(--acc);border-color:var(--acc);color:#fff}
+section.picked h2{color:var(--acc)}
+
+/* settings window */
+.win{--w-bg:#131416;--w-side:#1b1c20;--w-card:rgba(255,255,255,.045);--w-line:rgba(255,255,255,.075);--t1:rgba(248,246,240,.96);--t2:rgba(248,246,240,.68);--t3:rgba(248,246,240,.46);--a06:rgba(255,255,255,.06);--a10:rgba(255,255,255,.1);--wacc:#74d6ff;--on-acc:#06202c;--lo:#35e985;--mid:#ff9f43;--hi:#ff6b5f;
+  width:100%;max-width:1080px;height:820px;margin:16px auto 0;display:flex;background:var(--w-bg);color:var(--t1);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,.35);font-size:13px;line-height:1.45}
+.side{flex:none;width:184px;margin:8px;border-radius:12px;background:var(--w-side);padding:44px 8px 8px;position:relative}
+.side::before{content:"";position:absolute;left:14px;top:14px;width:11px;height:11px;border-radius:50%;background:#ff5f57;box-shadow:18px 0 0 #febc2e,36px 0 0 #28c840}
+.side .search{height:30px;border-radius:8px;background:var(--a06);color:var(--t3);display:flex;align-items:center;padding:0 10px;margin-bottom:8px}
+.side .g{color:var(--t1);padding:7px 8px;font-weight:600;margin-top:4px}
+.side .i{color:var(--t2);padding:6px 8px 6px 28px;border-radius:8px}
+.side .i.on{background:var(--wacc);color:var(--on-acc);font-weight:600}
+@media (max-width:820px){.side{display:none}}
+.content{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.chead{flex:none;padding:18px 24px 0;border-bottom:1px solid var(--w-line)}
+.chead h3{margin:0 0 12px;font-size:20px}
+.tabs{display:flex;gap:22px;overflow-x:auto}
+.tabs button{all:unset;cursor:pointer;padding:0 2px 9px;color:var(--t3);white-space:nowrap}
+.tabs button.on{color:var(--t1);font-weight:600;box-shadow:inset 0 -2px 0 var(--wacc)}
+.tabs button .new{display:inline-block;margin-left:5px;font-size:10px;padding:0 5px;border-radius:99px;background:rgba(116,214,255,.16);color:var(--wacc);font-weight:600;vertical-align:1px}
+.scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px 24px 40px;scrollbar-width:thin;scrollbar-color:var(--a10) transparent}
+.gh{display:flex;align-items:center;gap:10px;margin:16px 2px 8px;font-weight:600;font-size:13px}
+.gh:first-child{margin-top:2px}
+.gh .grow{flex:1}
+.gh small{font-weight:400;color:var(--t3);font-size:12px}
+.card{background:var(--w-card);border:1px solid var(--w-line);border-radius:12px;overflow:hidden}
+.row{display:flex;gap:14px;align-items:center;padding:11px 14px;border-top:1px solid var(--w-line)}
+.row:first-child{border-top:0}
+.row .txt{flex:1;min-width:0}
+.row .t{font-size:13px;color:var(--t1)}
+.row .d{font-size:11.5px;color:var(--t3);margin-top:1px}
+.row.col{flex-direction:column;align-items:stretch;gap:10px}
+.row.dim{opacity:.38;pointer-events:none}
+.foot{font-size:11.5px;color:var(--t3);margin:7px 4px 0}
+.foot a{color:var(--wacc);text-decoration:none}
+.sw{flex:none;width:36px;height:21px;border-radius:99px;background:rgba(255,255,255,.18);position:relative;cursor:pointer;border:0;padding:0;transition:background var(--motion-base) var(--motion-ease)}
+.sw::after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform var(--motion-base) var(--motion-ease)}
+.sw.on{background:var(--wacc)}.sw.on::after{transform:translateX(15px)}
+.seg{flex:none;display:inline-flex;background:var(--a06);border-radius:8px;padding:2px}
+.seg button{all:unset;cursor:pointer;padding:4px 10px;border-radius:6px;color:var(--t2);font-size:12px;white-space:nowrap}
+.seg button.on{background:rgba(255,255,255,.14);color:var(--t1);font-weight:600}
+.nest{margin:0 14px 12px 14px;padding:2px 0 2px 12px;border-left:2px solid rgba(116,214,255,.35);background:rgba(255,255,255,.025);border-radius:0 8px 8px 0}
+.nest .row{border-top-color:transparent;padding:8px 10px 8px 2px}
+
+/* mini island + usage */
+.isl{background:#000;border-radius:14px;color:rgba(241,240,246,.68);position:relative}
+.usage{display:grid;align-items:center;column-gap:13px;row-gap:5px;padding:10px 16px;font-size:12.5px}
+.u-ic{width:14px;height:14px;display:block;flex:none}
+.u-w{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;color:rgba(241,240,246,.68)}
+.u-w strong{font-weight:700;font-variant-numeric:tabular-nums}
+.lo{color:var(--lo)}.mid{color:var(--mid)}.hi{color:var(--hi)}
+.u-bar{width:38px;height:4px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden}
+.u-bar span{display:block;height:100%;border-radius:9px}
+.u-reset{justify-self:end;color:rgba(241,240,246,.6);white-space:nowrap;font-variant-numeric:tabular-nums;font-size:12px}
+.u-small{font-size:10.5px;color:rgba(241,240,246,.42)}
+.u-none{padding:12px 16px;color:rgba(241,240,246,.4);font-size:12px}
+
+/* A */
+.live{position:sticky;top:-14px;z-index:5;margin:-14px -24px 6px;padding:12px 24px 10px;background:linear-gradient(var(--w-bg) 82%,transparent)}
+.live .isl{box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.live .cap{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);margin-top:6px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.tile{all:unset;cursor:pointer;position:relative;border-radius:10px;border:1px solid var(--w-line);background:rgba(255,255,255,.03);padding:10px 12px;display:grid;gap:3px;transition:border-color var(--motion-fast) var(--motion-ease),background var(--motion-fast) var(--motion-ease)}
+.tile:hover{background:rgba(255,255,255,.06)}
+.tile.on{border-color:rgba(116,214,255,.6);background:rgba(116,214,255,.07)}
+.tile .tn{display:flex;align-items:center;gap:7px;font-weight:600;color:var(--t1)}
+.tile .ts{font-size:11.5px;color:var(--t3)}
+.tile .tv{font-size:12px;font-variant-numeric:tabular-nums}
+.tile .ck{position:absolute;right:9px;top:9px;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--t3);display:grid;place-items:center;font-size:10px;color:var(--on-acc)}
+.tile.on .ck{background:var(--wacc);border-color:var(--wacc)}
+.tile.lock{cursor:not-allowed}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.cc{all:unset;cursor:pointer;border-radius:10px;border:1px solid var(--w-line);background:rgba(255,255,255,.03);padding:8px;display:grid;gap:7px;position:relative;transition:border-color var(--motion-fast) var(--motion-ease)}
+.cc:hover{border-color:rgba(255,255,255,.18)}
+.cc.on{border-color:rgba(116,214,255,.75);background:rgba(116,214,255,.06)}
+.cc.on::after{content:"✓";position:absolute;right:10px;bottom:8px;color:var(--wacc);font-weight:700}
+.cc .art{border-radius:7px;background:#000;height:66px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+.cc .art .usage{padding:6px 10px;font-size:11px;column-gap:9px}
+.cc .nm{font-weight:600;color:var(--t1);padding:0 2px}
+.cc .hn{font-size:11.5px;color:var(--t3);padding:0 2px;margin-top:-5px}
+.cc.big .art{height:96px}
+.presets .art>.usage{zoom:.74}
+.cards .art>.usage{zoom:.9}
+.es-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+
+/* B */
+.stageB{border-radius:12px;background:radial-gradient(120% 90% at 50% 0,#2a3442,#16181c);padding:18px;display:grid;gap:10px;justify-items:center}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;background:rgba(20,22,26,.9);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:6px 8px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.toolbar .lbl{font-size:11px;color:var(--t3);align-self:center;margin:0 -2px 0 4px}
+.bigisl{width:100%;max-width:640px}
+.hot{cursor:pointer;border-radius:6px;outline:1px dashed transparent;outline-offset:3px;transition:outline-color var(--motion-fast) var(--motion-ease),opacity var(--motion-fast) var(--motion-ease)}
+.hot:hover{outline-color:rgba(116,214,255,.7)}
+.hot.off{opacity:.28;text-decoration:line-through}
+.ghostbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;font-size:11.5px;color:var(--t3);min-height:24px;align-items:center}
+.ghost{all:unset;cursor:pointer;border:1px dashed rgba(255,255,255,.25);border-radius:99px;padding:2px 10px;color:var(--t2)}
+.ghost:hover{border-color:var(--wacc);color:var(--wacc)}
+.carousel{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;width:100%}
+.arrow{all:unset;cursor:pointer;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--a06);color:var(--t1);font-size:16px}
+.arrow:hover{background:var(--a10)}
+.dots{display:flex;gap:6px;justify-content:center;align-items:center}
+.dots button{all:unset;cursor:pointer;width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22)}
+.dots button.on{width:20px;border-radius:99px;background:var(--wacc)}
+.scenename{font-weight:600;text-align:center}
+.scenehint{font-size:11.5px;color:var(--t3);text-align:center;margin-top:-4px}
+
+/* C */
+.presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.film{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.film .cc{flex:0 0 150px}
+.film .cc .art{height:62px}
+
+/* scenes */
+.scene{height:100%;display:flex;flex-direction:column}
+.es{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;padding:6px 14px;color:rgba(241,240,246,.5);font-size:12px;overflow:hidden;position:relative}
+.es b{color:rgba(241,240,246,.95);font-size:13px}
+.es .btns{display:flex;gap:6px;margin-top:4px}
+.es .btns span{border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:2px 10px;font-size:11px;color:rgba(241,240,246,.7)}
+.es .tl{display:flex;gap:6px;margin-top:6px}
+.es .tl span{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);border-radius:8px;padding:6px 8px;font-size:10.5px;text-align:left;color:rgba(241,240,246,.55)}
+.es .tl span em{display:block;font-style:normal;color:rgba(241,240,246,.92);font-weight:600}
+.es .tl span.add{border-style:dashed;background:transparent}
+.gauges{display:flex;gap:14px;align-items:center}
+.gauges div{display:grid;justify-items:center;gap:2px;font-size:10.5px}
+.jel{animation:bob 4.8s var(--motion-ease-in-out) infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.zz{position:absolute;opacity:0;animation:zz 3.3s var(--motion-ease-in-out) 3}
+@keyframes zz{0%{opacity:0;transform:translate(0,0) scale(.7)}30%{opacity:.9}100%{opacity:0;transform:translate(10px,-18px) scale(1.1)}}
+.mini .es{zoom:.56;padding:0}
+.es-grid .art{height:100px}
+.film .cc .art{height:72px}
+.mini .scene{height:auto}
+
+.summary{position:sticky;bottom:0;margin:34px -16px 0;padding:12px 16px;background:color-mix(in srgb,var(--pg) 90%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--rule);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.summary code{flex:1;min-width:240px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--pg2);border:1px solid var(--rule);border-radius:8px;padding:6px 10px}
+.summary button{border:0;background:var(--acc);color:#fff;border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.jel,.zz{animation:none}.zz{opacity:.6}}
+</style>
+<style>
+.machines{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 0}
+.machines .lab{font-size:12.5px;color:var(--ink3)}
+.machines button{border:1px solid var(--rule);background:var(--pg2);color:var(--ink2);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
+.machines button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.u-credit{color:rgba(241,240,246,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.u-credit em{font-style:normal;color:rgba(241,240,246,.95);font-weight:600;font-variant-numeric:tabular-nums}
+.u-tag{font-size:10px;color:rgba(241,240,246,.42);border:1px solid rgba(255,255,255,.14);border-radius:4px;padding:0 4px;margin-left:4px}
+.noread{font-size:11.5px;color:var(--t3);text-align:center;max-width:620px}
+.noread b{color:var(--t2);font-weight:500}
+.provline{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chipP{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:3px 10px 3px 6px;font-size:12px;border:1px solid var(--w-line);color:var(--t2)}
+.chipP .u-ic{width:13px;height:13px}
+.chipP.on{background:rgba(116,214,255,.1);border-color:rgba(116,214,255,.45);color:var(--t1)}
+.chipP.off{border-style:dashed;opacity:.65}
+.chipP small{color:var(--t3);font-size:10.5px}
+.secthead{font-size:11px;color:var(--t3);letter-spacing:.02em}
+</style>
+</head>
+<body>
+<main>
+<h1>方案 B 第二版：电脑上有哪些 Agent，就显示哪些额度</h1>
+<p class="sub">你选了 B（所见即所改）。这一版把「显示哪家」从固定的 Claude Code / Codex 换成跟着这台电脑走：接入了哪些 Agent、其中哪些读得到额度，就列哪些。下面可以切换几种电脑看看效果，窗口里的东西都能点。</p>
+<ul class="notes">
+  <li><b>列哪些</b>：设置 → Agent → 「接入哪些 Agent」里开着、钩子装好了的，再加上读得到额度的。现在读得到的有 Claude Code、Codex、Antigravity（按模型）、Cursor（本月和 Auto），WorkBuddy、DeepSeek Harness 读到的是积分和余额，没有百分比，就写数字；GLM、Kimi 是套餐，填了 Key 才出现。</li>
+  <li><b>读不到额度的</b>（Grok CLI、GitHub Copilot CLI、CodeBuddy 等）不占一行，只在下面用一行小字写出来，免得以为是漏了。</li>
+  <li>新接入一家时默认就显示；在这里点掉的才隐藏（记的是「隐藏了哪些」，所以以后新装的 Agent 不会被漏掉）。</li>
+  <li>额度一列一列对齐：5 小时、7 天，然后是「其他」（按模型、按月这类各家自己的）。点列名隐藏整列，点图标隐藏那一家。</li>
+</ul>
+<div class="machines"><span class="lab">这台电脑：</span>
+  <button data-m="mine" class="on">像你的截图（9 家）</button>
+  <button data-m="two">只有 Claude Code 和 Codex</button>
+  <button data-m="plans">Claude Code + GLM / Kimi 套餐</button>
+  <button data-m="none">都读不到额度</button>
+</div>
+<div class="win" id="winB" style="height:860px"></div>
+</main>
+
+<script>
+const AG = {
+  claudeCode: { label: "Claude Code", c: "#d97757", fiveHour: { used: 42, reset: "2小时13分" }, sevenDay: { used: 16, reset: "5天" }, models: [{ name: "Opus", used: 63, reset: "5天" }] },
+  codex: { label: "Codex", c: "#fff", fiveHour: { used: 8, reset: "3小时40分" }, sevenDay: { used: 16, reset: "23天5小时" }, models: [] },
+  antigravity: { label: "Antigravity", c: "#4c8bf5", models: [{ name: "Gemini 3 Pro", used: 30, reset: "4小时" }, { name: "Claude", used: 12, reset: "4小时" }] },
+  cursor: { label: "Cursor", c: "#9aa0a6", models: [{ name: "本月", used: 37, reset: "8天" }, { name: "Auto", used: 4, reset: "8天" }] },
+  glm: { label: "GLM 套餐", c: "#3b6cf6", plan: true, fiveHour: { used: 23, reset: "1小时50分" }, models: [] },
+  kimi: { label: "Kimi 套餐", c: "#111", plan: true, sevenDay: { used: 51, reset: "3天" }, models: [] },
+  workbuddy: { label: "WorkBuddy", c: "#19b37b", credit: "今日 <em>1,240</em> 积分 · 7 天 <em>8,930</em>" },
+  dsh: { label: "DeepSeek Harness", c: "#4d6bfe", credit: "余额 <em>¥32.10</em>" },
+};
+const NOREAD = { codebuddy: "CodeBuddy", grok: "Grok CLI", copilot: "GitHub Copilot CLI", qoder: "Qoder" };
+const MACHINES = {
+  mine: { agents: ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "cursor"], noread: ["codebuddy", "grok", "copilot"] },
+  two: { agents: ["claudeCode", "codex"], noread: [] },
+  plans: { agents: ["claudeCode", "glm", "kimi"], noread: ["qoder"] },
+  none: { agents: [], noread: ["codebuddy", "grok", "copilot"] },
+};
+const ORDER = ["claudeCode", "codex", "antigravity", "cursor", "glm", "kimi", "workbuddy", "dsh"];
+const COLS = [["fiveHour", "5 小时"], ["sevenDay", "7 天"], ["models", "其他"]];
+const lv = (u) => (u >= 85 ? "hi" : u >= 50 ? "mid" : "lo");
+const COL = { lo: "var(--lo)", mid: "var(--mid)", hi: "var(--hi)" };
+const icon = (id, size = 14) => {
+  if (id === "claudeCode") return `<svg class="u-ic" width="${size}" height="${size}" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#d97757"/><path d="M8 3.5v9M3.5 8h9M4.8 4.8l6.4 6.4M11.2 4.8l-6.4 6.4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  if (id === "codex") return `<svg class="u-ic" width="${size}" height="${size}" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#fff"/><circle cx="8" cy="8" r="3.6" fill="none" stroke="#000" stroke-width="1.6"/><circle cx="8" cy="8" r="1.2" fill="#000"/></svg>`;
+  const a = AG[id]; const letter = (a?.label ?? NOREAD[id] ?? "?")[0];
+  const fill = a?.c ?? "#555"; const ink = fill === "#fff" || fill === "#9aa0a6" ? "#000" : "#fff";
+  return `<svg class="u-ic" width="${size}" height="${size}" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="${fill}"/><text x="8" y="11.6" font-size="9.5" font-weight="700" text-anchor="middle" fill="${ink}" font-family="system-ui">${letter}</text></svg>`;
+};
+function ring(p, size, sw, color) {
+  const r = 18 - sw / 2, c = 2 * Math.PI * r;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 36 36" style="flex:none"><circle cx="18" cy="18" r="${r}" fill="none" stroke="rgba(255,255,255,.13)" stroke-width="${sw}"/><circle cx="18" cy="18" r="${r}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${(p / 100) * c} ${c}" transform="rotate(-90 18 18)"/></svg>`;
+}
+
+const S = { machine: "mine", on: true, hidden: [], tightest: false, reset: "tightest", style: "number", empty: "sleep", tab: "usage", scene: 0 };
+
+function available() { return ORDER.filter((id) => MACHINES[S.machine].agents.includes(id)); }
+function windowsOf(id) {
+  const d = AG[id];
+  let ws = [];
+  if (d.fiveHour && !S.hidden.includes("fiveHour")) ws.push({ col: "fiveHour", label: "5 小时", ...d.fiveHour });
+  if (d.sevenDay && !S.hidden.includes("sevenDay")) ws.push({ col: "sevenDay", label: "7 天", ...d.sevenDay });
+  if (!S.hidden.includes("models")) (d.models ?? []).forEach((m) => ws.push({ col: "models", label: m.name, ...m }));
+  if (S.tightest && ws.length) ws = [ws.reduce((a, b) => (b.used > a.used ? b : a))];
+  return ws;
+}
+function cell(w) {
+  const l = lv(w.used);
+  const lab = `<span>${w.label}</span>`;
+  const reset = S.reset === "each" ? `<span class="u-small">${w.reset}</span>` : "";
+  if (S.style === "bar") return `<span class="u-w">${lab}<span class="u-bar"><span style="width:${w.used}%;background:${COL[l]}"></span></span><strong class="${l}">${w.used}%</strong>${reset}</span>`;
+  if (S.style === "ring") return `<span class="u-w">${ring(w.used, 14, 5, COL[l])}${lab}<strong class="${l}">${w.used}%</strong>${reset}</span>`;
+  return `<span class="u-w">${lab}<strong class="${l}">${w.used}%</strong>${reset}</span>`;
+}
+function usageHTML(hot) {
+  if (!S.on) return `<div class="u-none">不显示额度</div>`;
+  const ids = available().filter((id) => !S.hidden.includes(id));
+  if (!ids.length) return `<div class="u-none">${available().length ? "额度都隐藏了" : "这台电脑上的 Agent 都读不到额度"}</div>`;
+  const pct = ids.filter((id) => !AG[id].credit).map((id) => ({ id, ws: windowsOf(id) }));
+  const cols = S.tightest ? ["one"] : COLS.map(([k]) => k).filter((k) => pct.some((x) => x.ws.some((w) => w.col === k)));
+  const modelSpan = Math.max(1, ...pct.map((x) => x.ws.filter((w) => w.col === "models").length));
+  const tracks = S.tightest ? ["auto"] : cols.flatMap((k) => (k === "models" ? Array(modelSpan).fill("auto") : ["auto"]));
+  const head = hot && !S.tightest && cols.length ? `<span></span>${cols.map((k) => `<span class="hot secthead" data-hot="${k}" title="点击隐藏这一列" style="grid-column:span ${k === "models" ? modelSpan : 1}">${COLS.find((c) => c[0] === k)[1]}</span>`).join("")}<span></span>` : "";
+  const rows = ids.map((id) => {
+    const ic = hot ? `<span class="hot" data-hot="${id}" title="点击隐藏 ${AG[id].label}">${icon(id)}</span>` : icon(id);
+    if (AG[id].credit) return `${ic}<span class="u-credit" style="grid-column:2 / span ${tracks.length}">${AG[id].credit}</span><span></span>`;
+    const ws = windowsOf(id);
+    if (!ws.length) return `${ic}<span class="u-small" style="grid-column:2 / span ${tracks.length}">${AG[id].label}：选中的列里没有它的额度</span><span></span>`;
+    let cells = "";
+    if (S.tightest) cells = cell(ws[0]);
+    else for (const k of cols) {
+      const mine = ws.filter((w) => w.col === k);
+      const span = k === "models" ? modelSpan : 1;
+      cells += mine.map(cell).join("") + "<span></span>".repeat(span - mine.length);
+    }
+    const t = ws.reduce((a, b) => (b.used > a.used ? b : a));
+    return `${ic}${cells}<span class="u-reset">${S.reset === "tightest" ? `↻ ${t.reset}` : ""}${AG[id].plan ? `<span class="u-tag">套餐</span>` : ""}</span>`;
+  }).join("");
+  return `<div class="usage" style="grid-template-columns:14px ${tracks.join(" ")} minmax(0,1fr)">${head}${rows}</div>`;
+}
+
+const BELL = "M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z";
+const LOBES = [18, 27.3, 36.7, 46].map((x) => `<circle cx="${x}" cy="39" r="6.6"/>`).join("");
+const jelly = (h, open) => `<svg height="${h}" viewBox="3 4 58 43" style="overflow:visible"><g fill="#f6e3d3">${LOBES}<path d="${BELL}"/></g><ellipse cx="17.6" cy="31.5" rx="3.6" ry="2.2" fill="#ff8fa0" opacity=".7"/><ellipse cx="46.4" cy="31.5" rx="3.6" ry="2.2" fill="#ff8fa0" opacity=".7"/>${open ? `<ellipse cx="24" cy="25" rx="2.9" ry="4.1" fill="#1d1b22"/><ellipse cx="40" cy="25" rx="2.9" ry="4.1" fill="#1d1b22"/>` : `<path d="M20.6 25.2a3.4 3.4 0 0 0 6.8 0M36.6 25.2a3.4 3.4 0 0 0 6.8 0" fill="none" stroke="#1d1b22" stroke-width="2.6" stroke-linecap="round"/>`}</svg>`;
+const Z = (l, t, d) => `<svg class="zz" style="left:${l}px;top:${t}px;animation-delay:${d}s" width="9" height="9" viewBox="0 0 10 10"><path d="M2.5 2.5h5l-5 5h5" fill="none" stroke="rgba(241,240,246,.55)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const EMPTY = [["sleep", "水母打盹", "默认，最安静的陪伴感"], ["standby", "待命台", "各家接好没有，一眼看出是不是没连上"], ["recent", "上一个会话", "被筛掉时给「显示已结束的」按钮"], ["quota", "额度大圆环", "空着时把额度放大当主角"], ["tide", "今天的潮汐", "今天几点 Agent 在跑"], ["minimal", "极简水平线", "只有一行字"]];
+function sceneHTML(id) {
+  if (id === "sleep") return `<div class="es"><div style="position:relative"><div class="jel">${jelly(40)}</div>${Z(50, -4, 0)}${Z(56, -12, 1.1)}</div><b>都歇着呢</b><span>在 Claude Code 或 Codex 里开个对话，它就会醒过来</span></div>`;
+  if (id === "standby") { const ag = MACHINES[S.machine].agents.concat(MACHINES[S.machine].noread); return `<div class="es"><b>没有正在跑的会话</b><span>已接入 ${ag.length} 家</span><div class="tl">${ag.slice(0, 3).map((a) => `<span><em>${AG[a]?.label ?? NOREAD[a]}</em>● 钩子已接好</span>`).join("")}<span class="add"><em>＋ 去接入</em>${ag.length > 3 ? `还有 ${ag.length - 3} 家` : ""}</span></div></div>`; }
+  if (id === "recent") return `<div class="es"><b>6 小时内没有进行中的会话</b><span>有 3 个已结束的会话被隐藏了</span><div class="tl"><span style="border-style:dashed;min-width:220px"><em>Fuyu · 修窗口裁切</em>已结束 · 2 小时前</span></div><div class="btns"><span>显示已结束的 3 个</span><span>看 24 小时内</span></div></div>`;
+  if (id === "quota") { const items = available().filter((a) => !AG[a].credit && !S.hidden.includes(a)).flatMap((a) => windowsOf(a).map((w) => [w.used, w.label, a])).slice(0, 6); return `<div class="es"><div class="gauges">${items.map(([p, l, a]) => `<div><span style="position:relative;display:grid;place-items:center">${ring(p, 42, 3.6, COL[lv(p)])}<strong class="${lv(p)}" style="position:absolute;font-size:11px">${p}%</strong></span><span style="display:inline-flex;gap:3px;align-items:center">${icon(a, 10)}${l}</span></div>`).join("") || "<span>没有额度可显示，退回水母</span>"}</div><span>没有进行中的会话</span></div>`; }
+  if (id === "tide") return `<div class="es"><b>今天的潮汐</b><span>最后一次活动 40 分钟前</span><svg width="300" height="46" viewBox="0 0 300 46"><path d="M0 38H300" stroke="rgba(255,255,255,.14)"/><path d="M114 38C120 38 124 14 129 14S138 38 144 38Z" fill="#d97757" opacity=".55"/><path d="M135 38C140 38 145 6 150 6S160 38 165 38Z" fill="#d97757" opacity=".55"/><path d="M168 38C173 38 177 18 182 18S191 38 196 38Z" fill="#fff" opacity=".45"/><circle cx="200" cy="38" r="2.6" fill="#74d6ff"/></svg></div>`;
+  return `<div class="es"><div style="width:150px;display:grid;place-items:center;padding-bottom:6px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent) bottom/100% 1px no-repeat"><div class="jel">${jelly(22, true)}</div></div><span>风平浪静，没有 Agent 在跑</span></div>`;
+}
+
+const SIDE = `<div class="side"><div class="search">⌕ 搜索设置</div><div class="g">基础</div><div class="i">通用</div><div class="i">外观</div><div class="g">功能</div><div class="i">待办</div><div class="i">消息</div><div class="g">AI Agent</div><div class="i">Agent</div><div class="i on">外观</div><div class="i">提醒</div><div class="i">SSH 远程</div><div class="g">扩展</div><div class="i">插件</div></div>`;
+const sw = (on, k) => `<button class="sw${on ? " on" : ""}" data-k="${k}" aria-pressed="${on}"></button>`;
+const seg = (k, val, opts) => `<div class="seg">${opts.map(([v, l]) => `<button data-k="${k}" data-v="${v}" class="${val === v ? "on" : ""}">${l}</button>`).join("")}</div>`;
+const RESETS = [["tightest", "最紧的那项"], ["each", "每项都写"], ["off", "不显示"]];
+const STYLES = [["number", "数字"], ["bar", "进度条"], ["ring", "圆环"]];
+const OLD_RING = `<div class="gh">用量环<span class="grow"></span>${sw(true, "x")}</div><div class="card"><div class="row"><div class="txt"><div class="t">在岛上</div></div><span style="color:var(--wacc);font-size:12px">右侧第 6 个 · 调整 ›</span></div></div><div class="foot">在收起条上给有额度窗口的 Agent 显示同心双环……（已有，不变）</div>`;
+
+function render() {
+  const av = available();
+  const providerChips = av.map((id) => { const on = !S.hidden.includes(id); return `<button class="chipP ${on ? "on" : "off"}" data-k="item" data-v="${id}">${icon(id, 13)}${AG[id].label}${AG[id].credit ? "<small>积分/余额</small>" : AG[id].plan ? "<small>套餐</small>" : ""}</button>`; }).join("");
+  const colPills = COLS.filter(([k]) => S.hidden.includes(k)).map(([k, l]) => `<button class="ghost" data-k="item" data-v="${k}">＋ ${l}</button>`).join("");
+  const noread = MACHINES[S.machine].noread.map((id) => NOREAD[id]);
+  const usage = `
+    <div class="gh">Agent 页顶部的额度<small>跟着「接入哪些 Agent」，读得到额度的才列</small><span class="grow"></span>${sw(S.on, "on")}</div>
+    <div class="stageB">
+      <div class="toolbar">
+        <span class="lbl">样式</span>${seg("style", S.style, STYLES)}
+        <span class="lbl">重置</span>${seg("reset", S.reset, RESETS)}
+        <span class="lbl">只看最紧的</span>${sw(S.tightest, "tightest")}
+      </div>
+      <div class="isl bigisl">${usageHTML(true)}</div>
+      ${av.length ? `<div class="provline">${providerChips}</div>` : ""}
+      <div class="ghostbar">${colPills ? `已隐藏的列：${colPills}` : av.length ? "点图标或下面的胶囊隐藏那一家，点列名隐藏整列" : ""}</div>
+      ${noread.length ? `<div class="noread">读不到额度、不占一行：<b>${noread.join("、")}</b></div>` : ""}
+    </div>
+    <div class="foot">新接入的 Agent 默认显示。岛上右键额度行出同样的菜单。<a href="#">了解更多</a></div>
+    ${OLD_RING}`;
+  const [id, nm, hn] = EMPTY[S.scene];
+  const sessions = `<div class="gh">会话卡片</div><div class="card"><div class="row"><div class="txt"><div class="t">显示方式</div><div class="d">列表 / 卡片 / 紧凑（已有，略）</div></div></div></div>
+    <div class="gh">没有会话时<span class="grow"></span><small>${S.empty === id ? "✓ 正在用这个" : ""}</small></div>
+    <div class="stageB">
+      <div class="carousel"><button class="arrow" data-k="scene" data-v="-1">‹</button><div class="isl" style="min-height:210px">${usageHTML(false)}<div class="scene" style="height:150px">${sceneHTML(id)}</div></div><button class="arrow" data-k="scene" data-v="1">›</button></div>
+      <div class="scenename">${S.scene + 1} / 6 · ${nm}</div><div class="scenehint">${hn}</div>
+      <div class="dots">${EMPTY.map((_, i) => `<button data-k="goto" data-v="${i}" class="${i === S.scene ? "on" : ""}"></button>`).join("")}</div>
+      ${S.empty === id ? `<span class="scenehint">已在使用</span>` : `<button style="all:unset;cursor:pointer;background:var(--wacc);color:var(--on-acc);font-weight:600;padding:5px 16px;border-radius:8px" data-k="empty" data-v="${id}">用这个</button>`}
+    </div>
+    <div class="gh">会话列表</div><div class="card"><div class="row"><div class="txt"><div class="t">列出多久内的会话</div></div><span style="color:var(--t2)">最近 24 小时 ⌄</span></div><div class="row"><div class="txt"><div class="t">隐藏已退出的会话</div></div>${sw(true, "x")}</div></div>`;
+  document.getElementById("winB").innerHTML = `${SIDE}<div class="content"><div class="chead"><h3>外观</h3><div class="tabs"><button data-tab="light">状态灯与标题</button><button data-tab="sessions" class="${S.tab === "sessions" ? "on" : ""}">会话列表</button><button data-tab="usage" class="${S.tab === "usage" ? "on" : ""}">用量与会话环<span class="new">额度在这</span></button></div></div><div class="scroll">${S.tab === "usage" ? usage : sessions}</div></div>`;
+}
+
+function toggle(item) {
+  const isCol = COLS.some(([k]) => k === item);
+  const group = isCol ? COLS.map(([k]) => k) : available();
+  const on = !S.hidden.includes(item);
+  if (on && group.filter((g) => !S.hidden.includes(g)).length <= 1) return;
+  S.hidden = on ? [...S.hidden, item] : S.hidden.filter((h) => h !== item);
+}
+document.getElementById("winB").addEventListener("click", (e) => {
+  const t = e.target.closest("[data-tab],[data-k],[data-hot]");
+  if (!t) return;
+  if (t.dataset.tab) { if (t.dataset.tab !== "light") S.tab = t.dataset.tab; render(); return; }
+  if (t.dataset.hot) { toggle(t.dataset.hot); render(); return; }
+  const k = t.dataset.k, v = t.dataset.v;
+  if (k === "on") S.on = !S.on;
+  else if (k === "tightest") S.tightest = !S.tightest;
+  else if (k === "item") toggle(v);
+  else if (k === "style" || k === "reset" || k === "empty") S[k] = v;
+  else if (k === "scene") S.scene = (S.scene + Number(v) + 6) % 6;
+  else if (k === "goto") S.scene = Number(v);
+  else return;
+  render();
+});
+document.querySelectorAll(".machines button").forEach((b) => b.addEventListener("click", () => {
+  S.machine = b.dataset.m;
+  document.querySelectorAll(".machines button").forEach((x) => x.classList.toggle("on", x === b));
+  render();
+}));
+const q = new URLSearchParams(location.search);
+if (q.get("tab") === "sessions") S.tab = "sessions";
+if (q.get("m") && MACHINES[q.get("m")]) S.machine = q.get("m");
+render();
+</script>
+</body>
+</html>

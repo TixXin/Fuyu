@@ -65,6 +65,7 @@ export type IslandText = {
     gotIt: string;
   };
   layerNotice: (shortcut: string | null) => string;
+  pageArrow: { previous: (page: string) => string; next: (page: string) => string };
 };
 
 export const zhCN: IslandText = {
@@ -140,6 +141,7 @@ export const zhCN: IslandText = {
     gotIt: "知道了",
   },
   layerNotice: (shortcut) => (shortcut ? `岛退到窗口下面，再按 ${shortcut} 回来` : "岛退到窗口下面，点托盘图标可以叫回来"),
+  pageArrow: { previous: (page) => `上一页：${page}`, next: (page) => `下一页：${page}` },
 };
 
 export const en: IslandText = {
@@ -215,4 +217,5 @@ export const en: IslandText = {
     gotIt: "Got it",
   },
   layerNotice: (shortcut) => (shortcut ? `Going behind windows; press ${shortcut} to bring it back` : "Going behind windows; the tray icon brings it back"),
+  pageArrow: { previous: (page) => `Previous: ${page}`, next: (page) => `Next: ${page}` },
 };

@@ -8,6 +8,7 @@ import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
 import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";
 import { checkUsage } from "./agent-sessions-usage";
+import { checkUsageViewAndEmpty } from "./agent-sessions-empty";
 import { checkSubagentCards, checkSubagents } from "./agent-sessions-subagents";
 import { checkChildSessions } from "./agent-sessions-children";
 import { checkExpandByDefault } from "./agent-sessions-expand";
@@ -29,6 +30,7 @@ mockIPC((command, payload) => {
     focusCalls.push(args);
     return args.cwd === "E:\\Projects\\fuyu";
   }
+  if (command === "get_agent_hooks_state") return { claudeCode: "current", codex: "outdated", cursor: "absent", scriptsOutdated: false };
   if (command === "list_agent_effort_labels") return { claudeCode: { medium: "xhigh", high: "max" } };
   if (command === "get_agent_host_icon") {
     return `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="3" fill="#2b2f3a"/><path d="M4 5l3 3-3 3M8.5 11H12" stroke="#7ee787" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>')}`;
@@ -272,6 +274,7 @@ async function runChecks() {
     check(!document.querySelector(".agent-session__prompt") && !document.querySelector(".agent-session__tool") && rows()[0].querySelector(".agent-session__message"), "关掉后只显示回复");
 
     await checkUsage({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
+    await checkUsageViewAndEmpty({ root, sessions, check });
     await checkSubagents({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
     await checkChildSessions({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
     await checkExpandByDefault({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });

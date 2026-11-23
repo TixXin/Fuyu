@@ -4,7 +4,7 @@ import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { AgentEffortLabels } from "./effortLabels";
 
 import type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
-import type { AgentUsage } from "../../lib/agent-usage/types";
+import type { AgentUsage, HoverProviderId, HoverUsage } from "../../lib/agent-usage/types";
 import { readTestNoticeRequest, readTestNoticeResult, type TestNoticeRequest, type TestNoticeResult } from "./testNotice.ts";
 
 export type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
@@ -256,7 +256,7 @@ export function agentSessionsInFront(sessions: Pick<AgentSessionSummary, "provid
   });
 }
 
-export type { AgentUsage, AgentUsageError, AgentUsageErrorKind, UsageWindow } from "../../lib/agent-usage/types";
+export type { AgentUsage, AgentUsageError, AgentUsageErrorKind, HoverProviderId, HoverUsage, UsageWindow } from "../../lib/agent-usage/types";
 
 export function getAgentUsage() {
   return invoke<AgentUsage | null>("get_agent_usage");
@@ -264,6 +264,22 @@ export function getAgentUsage() {
 
 export function getCodexUsage() {
   return invoke<AgentUsage | null>("get_codex_usage");
+}
+
+export function getPlanUsage(provider: "glm" | "kimi") {
+  return invoke<AgentUsage>("get_plan_usage", { provider, refresh: false });
+}
+
+export function getAntigravityUsage() {
+  return invoke<AgentUsage>("get_antigravity_usage", { refresh: false });
+}
+
+export function getCursorUsage() {
+  return invoke<AgentUsage>("get_cursor_usage", { refresh: false });
+}
+
+export function getHoverUsage(provider: HoverProviderId) {
+  return invoke<HoverUsage>("get_hover_usage", { provider, refresh: false });
 }
 
 export function getAgentHooksState() {

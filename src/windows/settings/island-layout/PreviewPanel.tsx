@@ -37,14 +37,14 @@ export function PreviewPanel({ panel: stored, room, zoom, library, selected, onW
     scale: zoom * scale,
     onTap: onWidget,
     onDrop: (drop) => {
-      const item = stored.items.find((candidate) => candidate.widget === drop.widget);
+      const item = panel.items.find((candidate) => candidate.widget === drop.widget);
       if (!item) return;
       const dx = Math.round(drop.dx / GRID_UNIT_PX);
       const dy = Math.round(drop.dy / GRID_UNIT_PX);
       onWidget(drop.widget);
       onChange(drop.kind === "move"
-        ? placeFreeItem(stored, drop.widget, item.x + dx, item.y + dy, units(width), units(height))
-        : stretchFreeItem(stored, drop.widget, item.w + dx, item.h + dy, units(width), units(height)));
+        ? placeFreeItem(panel, drop.widget, item.x + dx, item.y + dy, units(width), units(height))
+        : stretchFreeItem(panel, drop.widget, item.w + dx, item.h + dy, units(width), units(height)));
     },
   });
   if (panel.items.length === 0) {

@@ -189,6 +189,7 @@ pub fn set_island_interaction(
     game_passthrough: Option<bool>,
     collapsed_height: Option<f64>,
     notch_ring_extra: Option<f64>,
+    glass_hidden: Option<bool>,
 ) -> Result<String, String> {
     let window = main_window(&app)?;
     let mode = IslandMode::from_value(&mode)?;
@@ -237,6 +238,7 @@ pub fn set_island_interaction(
             state.custom_position = restored_custom_position;
         }
         state.glass_enabled = glass_enabled.unwrap_or(false);
+        state.glass_hidden = glass_hidden.unwrap_or(false);
         if let Some(backdrop) = glass_backdrop.as_deref() {
             state.glass_native = backdrop == "native";
         }

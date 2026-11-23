@@ -1,0 +1,114 @@
+.agent-empty {
+  position: relative;
+  flex: 1;
+  min-height: 118px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 var(--space-lg);
+  overflow: hidden;
+  color: var(--text-3);
+  text-align: center;
+  font-size: 12px;
+  animation: agent-empty-in var(--motion-medium) var(--motion-ease-out) backwards;
+}
+
+.agent-empty strong {
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.agent-empty__jelly {
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.agent-empty__zz {
+  position: absolute;
+  top: -2px;
+  left: calc(100% - 4px);
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  animation: agent-empty-zz 3.3s var(--motion-ease-in-out) 3;
+}
+
+.agent-empty--minimal {
+  gap: 10px;
+}
+
+.agent-empty__waterline {
+  position: relative;
+  width: 180px;
+  display: grid;
+  place-items: center;
+  padding-bottom: 8px;
+}
+
+.agent-empty__waterline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--overlay-rgb, 255, 255, 255), 0.2), transparent);
+}
+
+.agent-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.agent-empty__button {
+  max-width: 100%;
+  padding: 4px 12px;
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.14);
+  border-radius: 999px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.05);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.agent-empty__button:hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+  color: var(--text-1);
+}
+
+.agent-empty__button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+@keyframes agent-empty-in {
+  from { opacity: 0; }
+}
+
+@keyframes agent-empty-zz {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.7); }
+  30% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(12px, -22px) scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-empty,
+  .agent-empty__zz {
+    animation: none;
+  }
+}

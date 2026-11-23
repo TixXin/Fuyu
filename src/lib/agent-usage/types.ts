@@ -29,3 +29,30 @@ export type AgentUsageErrorKind =
   | "customEndpoint";
 
 export type AgentUsageError = { kind: AgentUsageErrorKind; message: string };
+
+export type HoverProviderId = "workbuddy" | "dsh";
+
+export type WorkbuddyCredits = {
+  today: number;
+  sevenDay: number;
+  total: number;
+  totalTokens: number;
+  sessions: number;
+};
+
+export type DshWallet = {
+  currency: string;
+  total: string;
+  toppedUp: string;
+  granted: string;
+};
+
+export type HoverUsage = {
+  provider: HoverProviderId;
+  updatedAt: number | null;
+  source: string | null;
+  available: boolean | null;
+  credits: WorkbuddyCredits | null;
+  wallets: DshWallet[];
+  error: AgentUsageError | null;
+};

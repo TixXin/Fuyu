@@ -12,7 +12,7 @@ export type HoverFocusState = {
 export type HoverFocusAction = "take" | "release" | "none";
 
 export function hoverFocusAction({ expanded, hovering, editing, selecting = false, blocked }: HoverFocusState): HoverFocusAction {
-  if (expanded && hovering) return blocked ? "none" : "take";
-  if (expanded && (editing || selecting)) return "none";
+  if (hovering && !blocked) return "take";
+  if (expanded && (hovering || editing || selecting)) return "none";
   return "release";
 }

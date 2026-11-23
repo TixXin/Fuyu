@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { PanelTemplateButtons } from "../../../components/island-widget/PanelTemplateButtons";
 import { skipAbsentWidgets, useAbsentWidgets } from "../../../features/plugin-kernel/absentWidgets";
 import { useTranslation } from "../../../i18n";
-import { cellsToPx, fuyuPanel, fuyuPanels, removePanelItem, setPanelMode, type CustomPanel, type PanelItem } from "../../../lib/settings/customPanels";
+import { cellsToPx, fuyuPanel, fuyuPanels, GRID_UNIT_PX, removePanelItem, setPanelMode, type CustomPanel, type PanelItem } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import type { WidgetEntrance } from "../../../lib/settings/types";
@@ -230,7 +230,7 @@ export function CustomPanelPage({ panelId, entrance = "fade", dataMotion = false
           removed={removed}
           hint={hint}
           tray={routed ? { parked, hot: drag.spot?.kind === "tray", dragging: Boolean(carried), onPress: carryTray } : null}
-          onMode={(mode) => change(setPanelMode(panel, mode, true))}
+          onMode={(mode) => change(setPanelMode(panel, mode, true, Math.floor(board.height / GRID_UNIT_PX)))}
           onReset={reset}
           onUndo={undo}
           onGo={(page) => {

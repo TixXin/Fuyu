@@ -87,6 +87,7 @@ export type IslandShellProps = {
   fuyuTabIcon?: boolean;
   overlay?: ReactNode;
   resize?: ReactNode;
+  pageArrows?: ReactNode;
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
 };
@@ -192,6 +193,7 @@ export function IslandShell({
   fuyuTabIcon = false,
   overlay,
   resize,
+  pageArrows,
   collapsedSlots,
   children,
 }: IslandShellProps) {
@@ -360,6 +362,7 @@ export function IslandShell({
             />
             <div ref={contentRef} className="island__content">
               <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>
+              {pageArrows}
             </div>
           </div>}
           {overlay}

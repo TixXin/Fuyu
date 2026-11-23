@@ -16,6 +16,7 @@ import { useAgentIndicator } from "../useAgentIndicator";
 import { useIslandAgentAlerts } from "../useIslandAgentAlerts";
 import { useIslandAgents } from "../useIslandAgents";
 import { useQuotaAlert } from "../useQuotaAlert";
+import { useTideRecorder } from "../useAgentTide";
 import { demoAgentSessions } from "./demo";
 import { agentFeed, agentFeedOf, announceAgentsChanged } from "./agentFeed";
 import { useAgentGlow } from "./agentGlow";
@@ -46,6 +47,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   const demoSessions = useMemo(() => (demo.active ? demoAgentSessions(t.onboarding.demo, demo.startedAt) : NO_SESSIONS), [demo.active, demo.startedAt, t]);
   const { agentStatus, agentSessions, listedAgentSessions, activeAgentSessionCount, unseenAgentSessions, agentRemoval, agentSession, agentInterjection, agentActivity, agentOthers, agentUsages } =
     useIslandAgents(settings, demoSessions);
+  useTideRecorder(agentSessions, features.agents && settings.agentStatusEnabled && !demo.active);
   const quotaAlert = useQuotaAlert(agentUsages, settings.agentStatusEnabled ? settings.agentQuotaAlertPercent : 0, {
     quiet,
     canPopUp: !quiet && mode === "collapsed" && !isTucked,

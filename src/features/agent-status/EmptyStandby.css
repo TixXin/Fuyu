@@ -1,0 +1,83 @@
+.agent-standby {
+  width: 100%;
+  max-width: 600px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.agent-standby__tile {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+  border-radius: 12px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.05);
+  color: var(--text-3);
+  font: inherit;
+  font-size: 11.5px;
+  text-align: left;
+}
+
+.agent-standby__tile--connect {
+  border-style: dashed;
+  background: transparent;
+  cursor: pointer;
+}
+
+.agent-standby__tile--connect:hover:not(:disabled) {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
+}
+
+.agent-standby__tile--connect:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.agent-standby__name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-1);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.agent-standby__name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-standby__state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-standby__state::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--mint-text, var(--color-agent-idle));
+}
+
+.agent-standby__state--outdated::before {
+  background: var(--color-agent-waiting);
+}
+
+.agent-standby__seen {
+  overflow: hidden;
+  color: var(--text-placeholder);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

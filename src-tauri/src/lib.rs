@@ -73,6 +73,8 @@ mod webview_visibility;
 mod webview_frame_rate;
 #[cfg_attr(not(windows), path = "webview_memory_unsupported.rs")]
 mod webview_memory;
+#[cfg_attr(not(windows), path = "webview_scale_unsupported.rs")]
+mod webview_scale;
 #[cfg_attr(target_os = "macos", path = "wechat_reminders/macos.rs")]
 mod wechat_reminders;
 #[cfg(target_os = "macos")]
@@ -144,11 +146,15 @@ pub fn run() {
             webview_recovery::attach(webview);
             webview_memory::page_loaded(webview);
             webview_visibility::attach(webview);
+            webview_scale::attach(webview);
             if let Some(window) = webview.app_handle().get_webview_window(webview.label()) {
                 recording::apply_to_window(&window);
             }
         })
         .on_window_event(|window, event| {
+            if let WindowEvent::ScaleFactorChanged { scale_factor, .. } = event {
+                webview_scale::follow(window, *scale_factor);
+            }
             if window.label() == translation::WINDOW_LABEL
                 || window.label() == clipboard_history::POPUP_WINDOW_LABEL
                 || window.label() == clipboard_history::preview_window::WINDOW_LABEL

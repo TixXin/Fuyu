@@ -58,6 +58,7 @@ export type IslandWidgetsText = {
       goTo: (page: number) => string;
       newPage: string;
       all: string;
+      stripHint: string;
       tray: string;
       trayEmpty: string;
       takeOut: (name: string) => string;
@@ -202,6 +203,7 @@ export const zhCN: IslandWidgetsText = {
       goTo: (page) => `第 ${page} 页`,
       newPage: "新的一页",
       all: "全部",
+      stripHint: "拖到页上换页",
       tray: "暂存",
       trayEmpty: "拖到这里暂存",
       takeOut: (name) => `把「${name}」拖回面板`,
@@ -346,6 +348,7 @@ export const en: IslandWidgetsText = {
       goTo: (page) => `Page ${page}`,
       newPage: "New page",
       all: "All",
+      stripHint: "Drop on a page",
       tray: "Hold",
       trayEmpty: "Drop here to hold",
       takeOut: (name) => `Drag ${name} back onto the panel`,

@@ -1,4 +1,6 @@
-import type { AgentUsage, UsageWindow } from "./api";
+import { liveUsage } from "../../lib/agent-usage/usage.ts";
+import type { AgentUsage, HoverUsage, UsageWindow } from "./api";
+import { AGENT_USAGE_SOURCES, type AgentUsageItem, type AgentUsageReset, type AgentUsageSource, type AgentUsageStyle } from "./agentSettings.ts";
 
 export { isStale, liveUsage, untilReset, USAGE_STALE_MS, usageSourceLines } from "../../lib/agent-usage/usage.ts";
 
@@ -13,16 +15,80 @@ export function tightestWindow(usage: AgentUsage): UsageWindow | null {
   return windows.reduce<UsageWindow | null>((tightest, window) => (tightest === null || window.used > tightest.used ? window : tightest), null);
 }
 
-export type AgentUsages = { claude: AgentUsage | null; codex: AgentUsage | null; readAt: number };
+export type CreditSource = "workbuddy" | "dsh";
+export type OtherSource = "antigravity" | "cursor" | "glm" | "kimi";
 
-export const EMPTY_USAGES: AgentUsages = { claude: null, codex: null, readAt: 0 };
+export type AgentUsages = {
+  claude: AgentUsage | null;
+  codex: AgentUsage | null;
+  others: Partial<Record<OtherSource, AgentUsage>>;
+  credits: Partial<Record<CreditSource, HoverUsage>>;
+  readAt: number;
+};
+
+export const EMPTY_USAGES: AgentUsages = { claude: null, codex: null, others: {}, credits: {}, readAt: 0 };
+
+export const USAGE_SOURCE_LABELS: Record<AgentUsageSource, string> = {
+  claudeCode: "Claude Code",
+  codex: "Codex",
+  antigravity: "Antigravity",
+  cursor: "Cursor",
+  glm: "GLM",
+  kimi: "Kimi",
+  workbuddy: "WorkBuddy",
+  dsh: "DeepSeek Harness",
+};
+
+export const USAGE_SOURCE_ICONS: Record<AgentUsageSource, string> = { ...Object.fromEntries(AGENT_USAGE_SOURCES.map((source) => [source, source])), glm: "zcode", kimi: "kimiCode" } as Record<AgentUsageSource, string>;
+
+export const PLAN_SOURCES: readonly AgentUsageSource[] = ["glm", "kimi"];
+
+export type CreditFigures = { kind: "credits"; today: number; sevenDay: number } | { kind: "balance"; currency: string; total: string };
+
+export type UsageLine = { source: AgentUsageSource; usage: AgentUsage; credit?: undefined } | { source: CreditSource; credit: CreditFigures; usage?: undefined };
+
+export function creditFigures(usage: HoverUsage | undefined): CreditFigures | null {
+  if (!usage) return null;
+  if (usage.credits) return { kind: "credits", today: usage.credits.today, sevenDay: usage.credits.sevenDay };
+  const wallet = usage.wallets[0];
+  return wallet ? { kind: "balance", currency: wallet.currency, total: wallet.total } : null;
+}
+
+function percentOf(usages: AgentUsages, source: AgentUsageSource): AgentUsage | null {
+  if (source === "claudeCode") return usages.claude;
+  if (source === "codex") return usages.codex;
+  if (source === "workbuddy" || source === "dsh") return null;
+  return usages.others[source] ?? null;
+}
+
+export function availableLines(usages: AgentUsages, agentsOff: readonly string[] = []): UsageLine[] {
+  const lines: UsageLine[] = [];
+  for (const source of AGENT_USAGE_SOURCES) {
+    if (agentsOff.includes(source)) continue;
+    if (source === "workbuddy" || source === "dsh") {
+      const credit = creditFigures(usages.credits[source]);
+      if (credit) lines.push({ source, credit });
+      continue;
+    }
+    const usage = percentOf(usages, source);
+    if (usage && hasUsageNumbers(liveUsage(usage, usages.readAt))) lines.push({ source, usage: liveUsage(usage, usages.readAt) });
+  }
+  return lines;
+}
+
+export function usageLines(usages: AgentUsages, view: UsageView): UsageLine[] {
+  return availableLines(usages, view.agentsOff)
+    .filter((line) => !view.hidden.includes(line.source))
+    .map((line) => (line.usage ? { source: line.source, usage: shownUsage(line.usage, view) } : line))
+    .filter((line) => !line.usage || hasUsageNumbers(line.usage));
+}
 
 export function hasUsageNumbers(usage: AgentUsage | null): boolean {
   return Boolean(usage && (usage.fiveHour || usage.sevenDay || usage.models.length > 0));
 }
 
 export function usageLineCount(usages: AgentUsages): number {
-  return Number(hasUsageNumbers(usages.claude)) + Number(hasUsageNumbers(usages.codex));
+  return availableLines(usages).length;
 }
 
 export type UsageWindowCell = { key: string; label: string; window: UsageWindow };
@@ -48,5 +114,26 @@ export function usageColumns(usages: readonly AgentUsage[]): UsageColumns {
     of: (key) => keys.indexOf(key) + 2,
     reset: keys.length + 2,
     stale: keys.length + 3,
+  };
+}
+
+export type UsageView = { hidden: readonly AgentUsageItem[]; tightest: boolean; reset: AgentUsageReset; style: AgentUsageStyle; agentsOff?: readonly string[] };
+
+export const DEFAULT_USAGE_VIEW: UsageView = { hidden: [], tightest: false, reset: "tightest", style: "number" };
+
+export function shownUsage(usage: AgentUsage, view: Pick<UsageView, "hidden" | "tightest">): AgentUsage {
+  const picked: AgentUsage = {
+    ...usage,
+    fiveHour: view.hidden.includes("fiveHour") ? null : usage.fiveHour,
+    sevenDay: view.hidden.includes("sevenDay") ? null : usage.sevenDay,
+    models: view.hidden.includes("models") ? [] : usage.models,
+  };
+  if (!view.tightest) return picked;
+  const top = tightestWindow(picked);
+  return {
+    ...picked,
+    fiveHour: picked.fiveHour === top ? top : null,
+    sevenDay: picked.sevenDay === top ? top : null,
+    models: picked.models.filter((model) => model === top),
   };
 }

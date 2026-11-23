@@ -1570,12 +1570,51 @@
       "zh-CN": {
         "group": "页面切换",
         "title": "悬停时接管键盘",
-        "description": "鼠标停在展开的岛上就能直接按翻页键。会从正在用的窗口拿走键盘焦点，移开后还回去"
+        "description": "鼠标停在岛上就能直接按翻页键，收起时按 ↓ 展开。会从正在用的窗口拿走键盘焦点，移开后还回去"
       },
       "en": {
         "group": "Page switching",
         "title": "Take the keyboard on hover",
-        "description": "Page keys work as soon as the cursor rests on the expanded island. This takes keyboard focus from the window you are using and hands it back when the cursor leaves"
+        "description": "Page keys work as soon as the cursor rests on the island, and ↓ opens it when collapsed. This takes keyboard focus from the window you are using and hands it back when the cursor leaves"
+      }
+    },
+    {
+      "page": "shortcutsIsland",
+      "zh-CN": {
+        "group": "页面切换",
+        "title": "面板两侧显示翻页箭头",
+        "description": "鼠标移进面板时左右两边淡淡出现，放上去点一下切到上一页或下一页"
+      },
+      "en": {
+        "group": "Page switching",
+        "title": "Page arrows beside the panel",
+        "description": "Faint arrows appear on both sides when the cursor enters the panel; click one for the previous or next page"
+      }
+    },
+    {
+      "page": "shortcutsIsland",
+      "zh-CN": {
+        "group": "页面切换",
+        "title": "方向键翻页和展开收起",
+        "description": "面板里 ← → 翻页，↑ 收起（内容滚动过时先回到顶部）；岛有焦点时 ↓ 或回车展开。输入框里有字时不生效"
+      },
+      "en": {
+        "group": "Page switching",
+        "title": "Arrow keys turn pages and open or close",
+        "description": "In the panel, ← → turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it"
+      }
+    },
+    {
+      "page": "shortcutsIsland",
+      "zh-CN": {
+        "group": "页面切换",
+        "title": "触控板左右滑动翻页",
+        "description": "在面板上两指往左滑是下一页、往右滑是上一页，一次滑动只翻一页；能左右滚动的地方（比如 Fuyu 页的多页组件）照常滚动"
+      },
+      "en": {
+        "group": "Page switching",
+        "title": "Swipe sideways to turn pages",
+        "description": "On the panel, swipe two fingers left for the next page and right for the previous one, one page per swipe. Areas that scroll sideways (such as a multi-page Fuyu panel) scroll as before"
       }
     },
     {
@@ -4003,14 +4042,14 @@
     {
       "page": "agentSessions",
       "zh-CN": {
-        "group": "会话列表",
-        "title": "在顶部显示 Claude 用量",
-        "description": "5 小时、7 天和各模型的用量，以及最紧的那个何时重置。读的是 claude-hud 状态栏保存的用量文件（它的 externalUsagePath 或 externalUsageWritePath 设置）；没有时不显示。"
+        "group": "没有会话时",
+        "title": "没有会话时显示",
+        "description": "Agent 页上没有会话可列时的画面。"
       },
       "en": {
-        "group": "Session list",
-        "title": "Show Claude usage at the top",
-        "description": "The 5-hour, 7-day and per-model usage, and when the fullest resets. Read from the usage file the claude-hud status line keeps (its externalUsagePath or externalUsageWritePath setting); hidden without one."
+        "group": "With no sessions",
+        "title": "When there are no sessions",
+        "description": "What the agent page shows when it has no sessions to list."
       }
     },
     {
@@ -4030,6 +4069,19 @@
           "In folder",
           "Title or prompt contains"
         ]
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "Agent 页顶部的额度",
+        "title": "显示哪家、哪些额度",
+        "description": "额度样式、重置时间和只看最紧的也在这里调，改了马上在下面的岛上看到。"
+      },
+      "en": {
+        "group": "Usage on the agent page",
+        "title": "Which agents and windows",
+        "description": "Usage style, reset time and only the tightest are set here too; the island below shows each change at once."
       }
     },
     {

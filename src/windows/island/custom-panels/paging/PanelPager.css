@@ -49,6 +49,35 @@
   border-radius: var(--radius-pill);
 }
 
+.panel-pager--thumbs[data-placement="header"]::after {
+  content: "";
+  flex: 1 1 0;
+}
+
+.panel-pager__caption {
+  display: flex;
+  flex: 1 1 0;
+  justify-content: flex-end;
+  min-width: 0;
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+.panel-pager__caption > span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@container (max-width: 64px) {
+  .panel-pager__caption > span {
+    display: none;
+  }
+}
+
 .panel-pager__thumb {
   position: relative;
   flex: none;

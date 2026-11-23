@@ -50,6 +50,7 @@ pub(crate) mod uia_tabs;
 pub(crate) mod video_writer;
 pub(crate) mod webview_crash;
 pub(crate) mod webview_memory;
+pub(crate) mod webview_scale;
 pub(crate) mod webview_visibility;
 pub(crate) mod win_key_hook;
 pub(crate) mod window;

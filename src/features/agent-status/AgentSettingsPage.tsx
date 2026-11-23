@@ -4,6 +4,7 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { AgentHooksOptions } from "./AgentHooksOptions";
 import { AgentProviderSwitches } from "./AgentProviderSwitches";
+import { AgentUsagePageSettings } from "./AgentUsagePageSettings";
 import { useAgentStatusSettings } from "./useAgentStatusSettings";
 import type { AgentTitleMode, IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
@@ -70,6 +71,7 @@ const sections = settingsSections<AgentSectionProps, AgentTab>();
 
 sections.add({ id: "agents.hooks", category: "agents", order: 10, component: HooksAndProvidersSection });
 sections.add({ id: "agentAppearance.session-title", category: "agentAppearance", order: 20, component: SessionTitleSection });
+sections.add({ id: "agentRings.page-usage", category: "agentRings", order: 30, component: AgentUsagePageSettings });
 
 export function AgentSettingsPage({ tab, ...props }: AgentSectionProps & { tab: AgentTab }) {
   return <SlotView slot={sections} group={tab} props={props} />;

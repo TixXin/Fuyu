@@ -40,6 +40,7 @@ export function PanelPager({ placement }: { placement: PagerPlacement }) {
   const progress = (kind: "page" | "all", index: number) => (hot && hot.kind === kind && hot.index === index ? hot.progress : 0);
   return (
     <div className="panel-pager panel-pager--thumbs" data-placement={placement} aria-hidden="true">
+      {placement === "header" ? <span className="panel-pager__caption"><span>{t.stripHint}</span></span> : null}
       {pages.map((blocks, index) => (
         <div key={index} className="panel-pager__thumb" data-panel-drop="page" data-index={index} data-current={index === page || undefined} data-hot={progress("page", index) > 0 || undefined}>
           <span className="panel-pager__sheet">

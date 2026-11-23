@@ -84,12 +84,46 @@ export type AgentText = {
     };
   };
   usage: {
-    label: string;
-    codexLabel: string;
+    of: (name: string) => string;
+    hide: (name: string) => string;
+    credits: (today: string, sevenDay: string) => string;
+    balance: (total: string) => string;
     fiveHour: string;
     sevenDay: string;
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
     resetShort: (parts: { days: number; hours: number; minutes: number }) => string;
+    menu: string;
+    models: string;
+    tightest: string;
+    reset: string;
+  };
+  empty: {
+    ago: (minutes: number) => string;
+    duration: (minutes: number) => string;
+    sleepTitle: string;
+    sleepHint: string;
+    standbyTitle: string;
+    standbyHint: (count: number) => string;
+    standbyNone: string;
+    hooksCurrent: string;
+    hooksOutdated: string;
+    lastSeen: (ago: string) => string;
+    neverSeen: string;
+    more: (count: number) => string;
+    connect: string;
+    recentTitle: (hours: number) => string;
+    recentHidden: (count: number) => string;
+    recentEnded: (ago: string) => string;
+    showHidden: (count: number) => string;
+    widen: (hours: number) => string;
+    quotaNone: string;
+    tideTitle: string;
+    tideLast: (ago: string) => string;
+    tideQuiet: string;
+    tideGroup: (count: number, duration: string) => string;
+    tideTotal: (count: number) => string;
+    tideLabel: string;
+    minimal: string;
   };
   approval: {
     label: (tool: string) => string;
@@ -209,13 +243,47 @@ export const zhCN: AgentText = {
     toolCall: (tool) => `正在调用 ${tool}`,
   },
   usage: {
-    label: "Claude 用量",
-    codexLabel: "Codex 用量",
+    of: (name) => `${name} 用量`,
+    hide: (name) => `隐藏 ${name} 的额度`,
+    credits: (today, sevenDay) => `今日 ${today} 积分 · 7 天 ${sevenDay}`,
+    balance: (total) => `余额 ${total}`,
     fiveHour: "5 小时",
     sevenDay: "7 天",
     resetsIn: ({ days, hours, minutes }) =>
       days > 0 ? `${days} 天 ${hours} 小时后重置` : hours > 0 ? `${hours} 小时 ${minutes} 分后重置` : `${minutes} 分后重置`,
     resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}天${hours}小时` : hours > 0 ? `${hours}小时${minutes}分` : `${minutes}分钟`),
+    menu: "调整额度显示",
+    models: "其他额度",
+    tightest: "只看最紧的一项",
+    reset: "重置时间",
+  },
+  empty: {
+    ago: (minutes) => (minutes < 1 ? "刚刚" : minutes < 60 ? `${minutes} 分钟前` : minutes < 1440 ? `${Math.floor(minutes / 60)} 小时前` : `${Math.floor(minutes / 1440)} 天前`),
+    duration: (minutes) => (minutes < 60 ? `${minutes} 分` : minutes % 60 === 0 ? `${minutes / 60} 小时` : `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`),
+    sleepTitle: "都歇着呢",
+    sleepHint: "在任意一个 Agent 里开个对话，它就会醒过来",
+    standbyTitle: "没有正在跑的会话",
+    standbyHint: (count) => `已接入 ${count} 家，开个对话就会出现在这里`,
+    standbyNone: "还没有接入任何 Agent",
+    hooksCurrent: "钩子已接好",
+    hooksOutdated: "钩子需要更新",
+    lastSeen: (ago) => `上次 ${ago}`,
+    neverSeen: "最近没用过",
+    more: (count) => `还有 ${count} 家`,
+    connect: "去接入",
+    recentTitle: (hours) => `${hours} 小时内没有进行中的会话`,
+    recentHidden: (count) => `有 ${count} 个已结束的会话被隐藏了`,
+    recentEnded: (ago) => `已结束 · ${ago}`,
+    showHidden: (count) => `显示已结束的 ${count} 个`,
+    widen: (hours) => `看 ${hours} 小时内`,
+    quotaNone: "没有进行中的会话",
+    tideTitle: "今天的潮汐",
+    tideLast: (ago) => `没有进行中的会话 · 最后一次活动 ${ago}`,
+    tideQuiet: "今天还没有 Agent 跑过",
+    tideGroup: (count, duration) => `${count} 个 · 约 ${duration}`,
+    tideTotal: (count) => `今天共 ${count} 个会话`,
+    tideLabel: "今天各时段 Agent 的活动",
+    minimal: "风平浪静，没有 Agent 在跑",
   },
   approval: {
     label: (tool) => `请求使用 ${tool}`,
@@ -340,12 +408,46 @@ export const en: AgentText = {
     toolCall: (tool) => `Calling ${tool}`,
   },
   usage: {
-    label: "Claude usage",
-    codexLabel: "Codex usage",
+    of: (name) => `${name} usage`,
+    hide: (name) => `Hide ${name} usage`,
+    credits: (today, sevenDay) => `${today} credits today · ${sevenDay} in 7d`,
+    balance: (total) => `Balance ${total}`,
     fiveHour: "5h",
     sevenDay: "7d",
     resetsIn: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d${hours}h` : hours > 0 ? `resets in ${hours}h${minutes}m` : `resets in ${minutes}m`),
     resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`),
+    menu: "Choose what usage to show",
+    models: "Other limits",
+    tightest: "Only the tightest",
+    reset: "Reset time",
+  },
+  empty: {
+    ago: (minutes) => (minutes < 1 ? "just now" : minutes < 60 ? `${minutes}m ago` : minutes < 1440 ? `${Math.floor(minutes / 60)}h ago` : `${Math.floor(minutes / 1440)}d ago`),
+    duration: (minutes) => (minutes < 60 ? `${minutes}m` : minutes % 60 === 0 ? `${minutes / 60}h` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`),
+    sleepTitle: "All quiet",
+    sleepHint: "Start a conversation in any agent to wake it up",
+    standbyTitle: "No sessions running",
+    standbyHint: (count) => `${count} connected. Start a conversation and it shows up here`,
+    standbyNone: "No agents connected yet",
+    hooksCurrent: "Hooks ready",
+    hooksOutdated: "Hooks need an update",
+    lastSeen: (ago) => `Last ${ago}`,
+    neverSeen: "Not used lately",
+    more: (count) => `${count} more`,
+    connect: "Connect",
+    recentTitle: (hours) => `No running sessions in the last ${hours}h`,
+    recentHidden: (count) => (count === 1 ? "1 finished session is hidden" : `${count} finished sessions are hidden`),
+    recentEnded: (ago) => `Ended ${ago}`,
+    showHidden: (count) => `Show ${count} finished`,
+    widen: (hours) => `Last ${hours}h`,
+    quotaNone: "No running sessions",
+    tideTitle: "Today's tide",
+    tideLast: (ago) => `No running sessions · last active ${ago}`,
+    tideQuiet: "No agent has run today",
+    tideGroup: (count, duration) => `${count} · about ${duration}`,
+    tideTotal: (count) => (count === 1 ? "1 session today" : `${count} sessions today`),
+    tideLabel: "Agent activity by time of day",
+    minimal: "Calm waters, no agent running",
   },
   approval: {
     label: (tool) => `Wants to use ${tool}`,

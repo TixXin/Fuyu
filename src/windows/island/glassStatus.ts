@@ -1,3 +1,6 @@
+import type { TaskbarLook } from "../../lib/settings/types";
+import type { IslandMode } from "./types";
+
 export const ISLAND_GLASS_STATUS_EVENT = "island-glass-status";
 export const ISLAND_GLASS_STATUS_REQUEST_EVENT = "island-glass-status-request";
 
@@ -61,4 +64,8 @@ export const INITIAL_GLASS_LAYER: GlassLayerState = { live: { state: "starting" 
 export function sameGlassLayer(a: GlassLayerState, b: GlassLayerState): boolean {
   if (a.wallpaper !== b.wallpaper || a.live.state !== b.live.state) return false;
   return a.live.state !== "failed" || b.live.state !== "failed" || a.live.reason === b.live.reason;
+}
+
+export function taskbarHidesGlass({ placed, look, mode }: { placed: boolean; look: TaskbarLook; mode: IslandMode }): boolean {
+  return placed && look === "transparent" && mode === "collapsed";
 }

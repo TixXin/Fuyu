@@ -1,3 +1,4 @@
+import { AgentEmptyStylePicker } from "./AgentEmptyStylePicker";
 import { AgentSessionFilterSettings } from "./AgentSessionFilterSettings";
 import { AgentSessionListSettings } from "./AgentSessionListSettings";
 import type { IslandSettings } from "../../lib/settings/types";
@@ -12,6 +13,7 @@ type AgentSessionsSectionProps = {
 const sections = settingsSections<AgentSessionsSectionProps, "agentSessions">();
 
 sections.add({ id: "agentSessions.list", category: "agentSessions", order: 10, component: AgentSessionListSettings });
+sections.add({ id: "agentSessions.empty", category: "agentSessions", order: 15, component: AgentEmptyStylePicker });
 sections.add({ id: "agentSessions.filter", category: "agentSessions", order: 20, component: AgentSessionFilterSettings });
 
 export function AgentSessionsSettingsPage(props: AgentSessionsSectionProps) {

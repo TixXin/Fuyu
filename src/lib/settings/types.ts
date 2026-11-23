@@ -177,6 +177,9 @@ export type IslandSettings = CalendarSettingValues &
   gameDoNotDisturb: boolean;
   gameAutoTuck: boolean;
   hoverTakesKeyboard: boolean;
+  pageArrows: boolean;
+  pageArrowKeys: boolean;
+  pageSwipe: boolean;
 };
 
 export type IslandPreset = {

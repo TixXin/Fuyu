@@ -139,6 +139,9 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   gameDoNotDisturb: !isMacOS,
   gameAutoTuck: isMacOS,
   hoverTakesKeyboard: false,
+  pageArrows: true,
+  pageArrowKeys: true,
+  pageSwipe: true,
 };
 export const LEGACY_FALLBACKS = {
   collapsedDark: false,
