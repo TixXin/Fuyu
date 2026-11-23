@@ -2,7 +2,7 @@ use tauri::utils::config::{LogicalPosition, WindowConfig};
 use tauri::window::{Effect, EffectState, EffectsBuilder};
 use tauri::TitleBarStyle;
 
-const TRAFFIC_LIGHTS: LogicalPosition = LogicalPosition { x: 18.0, y: 22.0 };
+const TRAFFIC_LIGHTS: LogicalPosition = LogicalPosition { x: 22.0, y: 42.0 };
 
 pub(super) fn apply(config: &mut WindowConfig) {
     config.decorations = true;
@@ -14,7 +14,7 @@ pub(super) fn apply(config: &mut WindowConfig) {
     config.window_effects = Some(
         EffectsBuilder::new()
             .effect(Effect::Sidebar)
-            .state(EffectState::FollowsWindowActiveState)
+            .state(EffectState::Active)
             .build(),
     );
 }

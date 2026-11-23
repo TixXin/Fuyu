@@ -11,6 +11,15 @@ export type SettingsDevBuildText = {
     releaseYields: string;
     both: string;
   };
+  materialLabel: string;
+  materials: {
+    liquidGlassRegular: string;
+    liquidGlassClear: string;
+    popover: string;
+    hudWindow: string;
+    sidebar: string;
+    underWindowBackground: string;
+  };
 };
 
 export const zhCN: SettingsDevBuildText = {
@@ -26,6 +35,15 @@ export const zhCN: SettingsDevBuildText = {
     releaseYields: "正式版已让出，审批也到这里",
     both: "正式版没让（版本太旧），可能互相抢",
   },
+  materialLabel: "侧栏材质",
+  materials: {
+    liquidGlassRegular: "液态玻璃",
+    liquidGlassClear: "液态玻璃（通透）",
+    popover: "Popover",
+    hudWindow: "HUD",
+    sidebar: "Sidebar",
+    underWindowBackground: "窗口背景",
+  },
 };
 
 export const en: SettingsDevBuildText = {
@@ -40,5 +58,14 @@ export const en: SettingsDevBuildText = {
     yielding: "This build gave up shortcuts and alerts",
     releaseYields: "The installed app stepped back; approvals come here",
     both: "The installed app is too old to step back",
+  },
+  materialLabel: "Sidebar material",
+  materials: {
+    liquidGlassRegular: "Liquid Glass",
+    liquidGlassClear: "Liquid Glass (clear)",
+    popover: "Popover",
+    hudWindow: "HUD",
+    sidebar: "Sidebar",
+    underWindowBackground: "Under window",
   },
 };

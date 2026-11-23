@@ -20,7 +20,7 @@
   user-select: none;
 }
 
-.dev-bar .settings-choice {
+.dev-bar :is(.settings-choice, .settings-select) {
   pointer-events: auto;
 }
 
