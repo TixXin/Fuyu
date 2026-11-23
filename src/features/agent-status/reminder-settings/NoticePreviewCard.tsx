@@ -8,6 +8,7 @@ import type { AgentApprovals } from "../approvals/useAgentApprovals";
 import { AgentNoticeStack, type AgentNoticeStackSlot } from "../notice/AgentNoticeStack";
 import { AgentNoticeWings } from "../notice/AgentNoticeWings";
 import { AgentSessionNotice } from "../notice/AgentSessionNotice";
+import { SessionLightStyleContext } from "../SessionLightMark";
 import { noticeOptionsOf } from "../notice/noticeOptions";
 import { stackItemOf, type AgentNoticeStackItem } from "../notice/noticeStack";
 import type { PreviewEvent } from "./previewEvents";
@@ -75,10 +76,12 @@ export function NoticePreviewCard({
       style={frameStyle(settings, tone)}
     >
       {notch && <span className="agent-reminder-frame__notch" aria-hidden="true" />}
-      <AgentNoticeWings mode={mode} notch={placement} items={items} activeKey={items[0].key} />
-      <AgentNoticeStack mode={mode} notch={placement} items={items} activeKey={items[0].key} onSelect={nothing}>
-        {card}
-      </AgentNoticeStack>
+      <SessionLightStyleContext.Provider value={settings.agentLightStyle}>
+        <AgentNoticeWings mode={mode} notch={placement} items={items} activeKey={items[0].key} />
+        <AgentNoticeStack mode={mode} notch={placement} items={items} activeKey={items[0].key} onSelect={nothing}>
+          {card}
+        </AgentNoticeStack>
+      </SessionLightStyleContext.Provider>
     </div>
   );
 }

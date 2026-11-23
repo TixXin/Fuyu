@@ -22,12 +22,13 @@ export function SessionLightMark({ light, quiet, fresh, compacting = false, labe
   return <SessionJelly mood={sessionLightMood(light, quiet, fresh, compacting)} label={label} />;
 }
 
-export function SessionJelly({ mood, label, className = "agent-session__jelly" }: { mood: JellyMood; label: string; className?: string }) {
+export function SessionJelly({ mood, label, className = "agent-session__jelly", height = 12 }: { mood: JellyMood; label?: string; className?: string; height?: number }) {
   const box = useRef<HTMLSpanElement>(null);
   const inView = useInView(box);
+  const named = label ? { role: "img", "aria-label": label, title: label } : { "aria-hidden": true };
   return (
-    <span ref={box} className={className} role="img" aria-label={label} title={label}>
-      <JellyfishMark mood={mood} paused={!inView} height={12} />
+    <span ref={box} className={className} {...named}>
+      <JellyfishMark mood={mood} paused={!inView} height={height} />
     </span>
   );
 }
