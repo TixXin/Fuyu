@@ -7,6 +7,7 @@ import { useSlotEntries } from "../plugin-kernel/useSlotEntries";
 import { CenterPattern } from "./CenterPattern";
 import { AGENT_ICON_PET_HEIGHT, CollapsedCenter, agentIconMarkExtraWidth, centerHeight } from "./CollapsedCenter";
 import { centerPatternChoice, centerPatternSize, type AgentActivity } from "./centerSettings";
+import { petMoodOf } from "./patterns";
 import { PetSprite } from "./PetSprite";
 import { usePetMood } from "./usePetMood";
 import { usePetSheet } from "./usePetSheet";
@@ -51,7 +52,7 @@ export function useCenterDecor({ paused, agents, markLight, enabled = false, set
     }
     if (enabled) {
       const pet = typeof sheet === "string" ? sheet : null;
-      if (pet) decor.agentIcon = <PetSprite src={pet} mood={mood} paused={still} height={AGENT_ICON_PET_HEIGHT} />;
+      if (pet) decor.agentIcon = <PetSprite src={pet} mood={petMoodOf(mood)} paused={still} height={AGENT_ICON_PET_HEIGHT} />;
       else if (choice.pattern === "mark" && !lightShown) {
         decor.agentIcon = <CenterPattern pattern="mark" mood={mood} paused={still} height={centerHeight("mark", size)} />;
         decor.agentIconWidth = agentIconMarkExtraWidth(size);

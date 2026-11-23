@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { gazeOffset, petRow, petSheetRows, petSpriteLayout } from "../../src/features/center-pattern/patterns.ts";
+import { gazeOffset, petMoodOf, petRow, petSheetRows, petSpriteLayout } from "../../src/features/center-pattern/patterns.ts";
 import {
   PET_DONE_HOLD_MS,
   centerConfig,
@@ -8,7 +8,7 @@ import {
   centerPatternSize,
   petChoices,
   petMoodChangesAt,
-  petMoodFor,
+  centerMoodFor,
   storedCenterValue,
 } from "../../src/features/center-pattern/centerSettings.ts";
 
@@ -85,15 +85,24 @@ test("v3 config normalizes malformed values and omits defaults when saving", () 
   assert.equal(storedCenterValue("size", 99), 30);
 });
 
-test("the pet acts out the agents: waiting > running > failed > just done > idle", () => {
+test("the centre acts out the agents: waiting > running > compacting > failed > stale > just done > idle, and pets reuse their rows", () => {
   const now = 100_000;
   const at = (phase, ago = 0) => ({ phase, updatedAt: now - ago });
-  assert.equal(petMoodFor([], now), "idle");
-  assert.equal(petMoodFor([at("running"), at("waiting")], now), "waiting");
-  assert.equal(petMoodFor([at("failed"), at("running")], now), "running");
-  assert.equal(petMoodFor([at("stale"), at("completed")], now), "failed");
-  assert.equal(petMoodFor([at("completed", 1000)], now), "done");
-  assert.equal(petMoodFor([at("completed", PET_DONE_HOLD_MS)], now), "idle");
+  assert.equal(centerMoodFor([], now), "idle");
+  assert.equal(centerMoodFor([at("running"), at("waiting")], now), "waiting");
+  assert.equal(centerMoodFor([at("failed"), at("running")], now), "running");
+  assert.equal(centerMoodFor([at("stale"), at("failed")], now), "failed");
+  assert.equal(centerMoodFor([at("stale"), at("completed", 1000)], now), "stale");
+  const squeezing = (phase) => ({ ...at(phase), compacting: true });
+  assert.equal(centerMoodFor([squeezing("running")], now), "compacting");
+  assert.equal(centerMoodFor([squeezing("completed"), at("failed")], now), "compacting");
+  assert.equal(centerMoodFor([squeezing("running"), at("running")], now), "running");
+  assert.equal(centerMoodFor([squeezing("running"), at("waiting")], now), "waiting");
+  assert.equal(petMoodOf("stale"), "failed");
+  assert.equal(petMoodOf("compacting"), "running");
+  assert.equal(petMoodOf("waiting"), "waiting");
+  assert.equal(centerMoodFor([at("completed", 1000)], now), "done");
+  assert.equal(centerMoodFor([at("completed", PET_DONE_HOLD_MS)], now), "idle");
   assert.equal(petMoodChangesAt([at("completed", 1000), at("completed", 2000)], now), now + 1000);
   assert.equal(petMoodChangesAt([at("completed", 5000), at("running")], now), null);
 });

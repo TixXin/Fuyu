@@ -1,7 +1,7 @@
 import type { PixelEffectSize } from "./pixelGrids.ts";
 import type { Rgb } from "./pixelTones.ts";
 
-export type PixelEffectName = "bang" | "anger" | "spark" | "sparkSmall";
+export type PixelEffectName = "bang" | "anger" | "spark" | "sparkSmall" | "question";
 export type PixelSprite = readonly string[];
 
 const DOT = ["#"];
@@ -11,6 +11,8 @@ const PLUS5 = ["..#..", "..#..", "#####", "..#..", "..#.."];
 const PLUS9 = ["....#....", "....#....", "....#....", "...###...", "#########", "...###...", "....#....", "....#....", "....#...."];
 const VEIN3 = ["#.#", "...", "#.#"];
 const VEIN5 = [".#.#.", "##.##", ".....", "##.##", ".#.#."];
+const ASK3 = ["##.", "..#", ".#.", "...", ".#."];
+const ASK5 = [".###.", "#...#", "....#", "...#.", "..#..", "..#..", ".....", "..#.."];
 const VEIN9 = ["..#...#..", "..#...#..", "###...###", ".........", ".........", ".........", "###...###", "..#...#..", "..#...#.."];
 
 export const PIXEL_EFFECTS: Record<PixelEffectName, { color: Rgb; sprites: Record<PixelEffectSize, readonly PixelSprite[]> }> = {
@@ -21,6 +23,7 @@ export const PIXEL_EFFECTS: Record<PixelEffectName, { color: Rgb; sprites: Recor
   anger: { color: [255, 74, 61], sprites: { s: [DOT, VEIN3], m: [DOT, VEIN3, VEIN5], l: [BLOCK, VEIN5, VEIN9] } },
   spark: { color: [255, 210, 63], sprites: { s: [DOT, PLUS3], m: [DOT, PLUS3, PLUS5], l: [BLOCK, PLUS5, PLUS9] } },
   sparkSmall: { color: [255, 210, 63], sprites: { s: [DOT], m: [DOT, PLUS3], l: [DOT, PLUS3, PLUS5] } },
+  question: { color: [154, 158, 171], sprites: { s: [DOT, ASK3], m: [DOT, ASK3], l: [BLOCK, ASK5] } },
 };
 
 export function effectSprite(name: PixelEffectName, size: PixelEffectSize, level: number): { sprite: PixelSprite; box: PixelSprite } {

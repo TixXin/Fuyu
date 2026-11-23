@@ -110,6 +110,10 @@ test("the island's sessions and usage turn into the shape Rust answers with", ()
   assert.deepEqual(feed.others, [{ id: "x", name: "X", phase: "running", updatedAt: 9 }]);
   assert.deepEqual(reportEntry(null), { id: "", name: "", phase: "idle", updatedAt: 0 });
   assert.deepEqual(activityOf(feed), [{ phase: "running", updatedAt: 5 }, { phase: "completed", updatedAt: 5 }, { phase: "running", updatedAt: 9 }]);
+  assert.equal("compacting" in sessionEntry(session, { listed: true, unseen: false }), false);
+  const squeezing = agentFeedOf([{ ...session, compacting: true }], [], new Set(), []);
+  assert.equal(squeezing.sessions[0].compacting, true);
+  assert.deepEqual(activityOf(squeezing), [{ phase: "running", updatedAt: 5, compacting: true }]);
   const usage = { updatedAt: 3, fiveHour: { name: "5h", used: 40, resetsAt: null }, sevenDay: null, models: [{ name: "opus", used: 10, resetsAt: 7 }], plan: "max", source: "api", error: { kind: "tokenExpired", message: "log in again" } };
   assert.deepEqual(usageReport(usage), { updatedAt: 3, fiveHour: { name: "5h", used: 40, resetsAt: null }, sevenDay: null, models: [{ name: "opus", used: 10, resetsAt: 7 }], plan: "max", source: "api", error: "tokenExpired" });
   assert.equal(usageReport(null), null);

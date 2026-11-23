@@ -9,6 +9,7 @@ const DARKER: Record<"hi" | "base" | "sh" | "sh2", "base" | "sh" | "sh2"> = { hi
 const NEON_FILL_ALPHA = 41;
 const NEON_HALO_ALPHA = 77;
 const SPEED_ALPHA = 140;
+const PRESS_ALPHA = 191;
 
 function moved(grid: PixelGrid, value: number): number {
   return grid.halfSteps ? Math.sign(value) * Math.ceil(Math.abs(value) / 2) : value * grid.step;
@@ -49,7 +50,7 @@ export function composePixelJellyfish(grid: PixelGrid, paint: PixelPaint, pose: 
       });
     });
   });
-  const rows = grid.head.map((_, index) => index).filter((index) => !pose.squash || !grid.cut.includes(index));
+  const rows = grid.head.flatMap((_, index) => (!grid.cut.includes(index) || pose.squash === 0 ? [index] : pose.squash > 0 ? [] : [index, index]));
   const headTop = bodyY + grid.head.length - rows.length;
   rows.forEach((row, n) => {
     const shift = pose.lean * grid.lean(row);
@@ -108,6 +109,16 @@ export function composePixelJellyfish(grid: PixelGrid, paint: PixelPaint, pose: 
     if (effect.name === "speed") {
       (grid.speed[effect.frame] ?? []).forEach(([x, y, length]) => {
         for (let i = 0; i < length; i += 1) for (let j = 0; j < grid.step; j += 1) set(originX + x + i, originY + y + j, tones.base, SPEED_ALPHA);
+      });
+      continue;
+    }
+    if (effect.name === "press") {
+      grid.press.sprite.forEach((row, r) => {
+        [...row].forEach((cell, x) => {
+          if (cell !== "#") return;
+          set(originX + grid.press.x + x, originY + grid.press.y + r, tones.base, PRESS_ALPHA);
+          set(originX + grid.width - 1 - grid.press.x - x, originY + grid.press.y + r, tones.base, PRESS_ALPHA);
+        });
       });
       continue;
     }

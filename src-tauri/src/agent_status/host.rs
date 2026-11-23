@@ -24,6 +24,9 @@ pub(crate) struct AgentSessionEntry {
     remote_host: Option<String>,
     listed: bool,
     unseen: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, ts(optional))]
+    compacting: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -146,6 +149,7 @@ fn entry(session: AgentSessionSummary) -> AgentSessionEntry {
         remote_host: session.remote_host,
         listed: !session.closed,
         unseen: false,
+        compacting: session.compacting.then_some(true),
     }
 }
 
@@ -251,6 +255,14 @@ mod tests {
         assert_eq!((entry.phase.as_str(), entry.light.as_str()), ("running", "working"));
         assert!(!entry.listed);
         assert!(!entry.unseen);
+    }
+
+    #[test]
+    fn only_a_compacting_session_carries_the_flag() {
+        let quiet = serde_json::to_value(entry(summary("running"))).unwrap_or_default();
+        assert!(quiet.get("compacting").is_none());
+        let busy = serde_json::to_value(entry(AgentSessionSummary { compacting: true, ..summary("running") })).unwrap_or_default();
+        assert_eq!(busy.get("compacting"), Some(&serde_json::Value::Bool(true)));
     }
 
     #[test]

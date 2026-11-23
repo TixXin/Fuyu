@@ -2,6 +2,11 @@ export const CENTER_PATTERNS = ["eyes", "bird", "orb", "cat", "mark"] as const;
 export type CenterPatternId = (typeof CENTER_PATTERNS)[number];
 
 export type PetMood = "idle" | "running" | "waiting" | "failed" | "done";
+export type CenterMood = PetMood | "stale" | "compacting";
+
+export function petMoodOf(mood: CenterMood): PetMood {
+  return mood === "stale" ? "failed" : mood === "compacting" ? "running" : mood;
+}
 
 export const PET_SHEET_COLUMNS = 8;
 export const PET_CELL_WIDTH = 192;

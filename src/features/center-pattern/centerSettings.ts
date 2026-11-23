@@ -1,6 +1,6 @@
 import type { AgentSessions } from "@fuyu/plugin-services";
 import type { PetInfo } from "./api";
-import { CENTER_PATTERNS, type CenterPatternId, type PetMood } from "./patterns.ts";
+import { CENTER_PATTERNS, type CenterMood, type CenterPatternId } from "./patterns.ts";
 
 export const CENTER_PATTERN_OPTIONS = [...CENTER_PATTERNS, "pet"] as const;
 export type CenterPatternSelection = (typeof CENTER_PATTERN_OPTIONS)[number];
@@ -54,17 +54,22 @@ export function centerPatternChoice(settings: Readonly<Record<string, unknown>>)
   return { pattern, petId: null };
 }
 
-export type AgentActivity = { phase: string; updatedAt: number };
+export type AgentActivity = { phase: string; updatedAt: number; compacting?: boolean };
 
 export function activityOf(answer: AgentSessions): AgentActivity[] {
-  return [...answer.sessions, ...answer.others].map(({ phase, updatedAt }) => ({ phase, updatedAt }));
+  return [
+    ...answer.sessions.map(({ phase, updatedAt, compacting }) => (compacting ? { phase, updatedAt, compacting } : { phase, updatedAt })),
+    ...answer.others.map(({ phase, updatedAt }) => ({ phase, updatedAt })),
+  ];
 }
 
-export function petMoodFor(agents: readonly AgentActivity[], now: number): PetMood {
+export function centerMoodFor(agents: readonly AgentActivity[], now: number): CenterMood {
   const phases = new Set(agents.map((agent) => agent.phase));
   if (phases.has("waiting")) return "waiting";
-  if (phases.has("running")) return "running";
-  if (phases.has("failed") || phases.has("stale")) return "failed";
+  if (agents.some((agent) => agent.phase === "running" && !agent.compacting)) return "running";
+  if (agents.some((agent) => agent.compacting)) return "compacting";
+  if (phases.has("failed")) return "failed";
+  if (phases.has("stale")) return "stale";
   return agents.some((agent) => agent.phase === "completed" && isFresh(agent, now)) ? "done" : "idle";
 }
 

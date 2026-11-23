@@ -9,7 +9,7 @@ import { parseRgb, pixelTones } from "../../src/components/jellyfish/pixel/pixel
 import { normalizeSettings } from "../../src/lib/settings/settings.ts";
 import { JELLYFISH_STYLES } from "../../src/lib/settings/settingsLimits.ts";
 
-const MOODS = ["idle", "running", "waiting", "failed", "done", "sleep"];
+const MOODS = ["idle", "running", "waiting", "failed", "done", "sleep", "stale", "compacting"];
 const FILL = [246, 227, 211];
 const rows = (style) => PIXEL_STYLES[style].grids.map((key) => PIXEL_GRIDS[key].height);
 const alphaAt = (buffer, x, y) => buffer.data[(y * buffer.width + x) * 4 + 3];
@@ -90,8 +90,8 @@ test("the one-colour style cuts the eyes out and the others paint them", () => {
   assert.deepEqual([...flat.data.slice((eyeY * flat.width + eyeX) * 4, (eyeY * flat.width + eyeX) * 4 + 3)], [29, 27, 34]);
 });
 
-test("failed and done play once and then stop asking for frames", () => {
-  for (const mood of ["failed", "done"]) {
+test("failed, done and stale play once and then stop asking for frames", () => {
+  for (const mood of ["failed", "done", "stale"]) {
     let tick = 0;
     let steps = 0;
     while (Number.isFinite(ticksUntilChange(mood, tick)) && steps < 50) {
@@ -104,11 +104,32 @@ test("failed and done play once and then stop asking for frames", () => {
   }
 });
 
-test("an idle jellyfish sleeps for seconds between frames while running and waiting keep moving", () => {
+test("an idle jellyfish sleeps for seconds between frames while running, waiting and compacting keep moving", () => {
   assert.ok(ticksUntilChange("idle", 0) >= 40, `idle woke after ${ticksUntilChange("idle", 0)} ticks`);
   assert.ok(ticksUntilChange("sleep", 0) >= 20);
-  for (const mood of ["running", "waiting"]) {
+  for (const mood of ["running", "waiting", "compacting"]) {
     for (let tick = 0; tick < 40; tick += 1) assert.ok(ticksUntilChange(mood, tick) <= 12, `${mood} tick ${tick}`);
+  }
+});
+
+test("squeezing makes the head taller, then flatter, and the arrows press in from both sides", () => {
+  const tones = pixelTones("flat", FILL, false, false);
+  const top = (buffer) => {
+    for (let y = 0; y < buffer.height; y += 1) for (let x = 0; x < buffer.width; x += 1) if (alphaAt(buffer, x, y) === 255) return y;
+    return -1;
+  };
+  for (const grid of Object.values(PIXEL_GRIDS)) {
+    const rest = top(composePixelJellyfish(grid, "flat", stillPose("idle"), tones));
+    const tall = composePixelJellyfish(grid, "flat", poseAt("compacting", 0), tones);
+    const flat = composePixelJellyfish(grid, "flat", poseAt("compacting", 6), tones);
+    assert.ok(top(tall) < rest, `${grid.key} stretches up`);
+    assert.ok(top(flat) > rest, `${grid.key} squashes down`);
+    assert.equal(top(composePixelJellyfish(grid, "flat", poseAt("compacting", 3), tones)), rest, `${grid.key} comes back`);
+    const row = grid.pad.top + grid.press.y;
+    const left = grid.pad.left + grid.press.x;
+    const right = grid.pad.left + grid.width - 1 - grid.press.x;
+    assert.ok(alphaAt(tall, left, row) > 0 && alphaAt(tall, right, row) > 0, `${grid.key} arrows on both sides`);
+    assert.equal(alphaAt(flat, left, row) + alphaAt(flat, right, row), 0, `${grid.key} arrows gone`);
   }
 });
 

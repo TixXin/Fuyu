@@ -8,7 +8,8 @@ import type { JellyfishStyle } from "../../src/lib/settings/types";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-const MOODS: JellyMood[] = ["idle", "running", "waiting", "failed", "done", "sleep"];
+const MOODS: JellyMood[] = ["idle", "running", "waiting", "failed", "done", "sleep", "stale", "compacting"];
+const live = new URLSearchParams(window.location.search).has("live");
 const ROWS: Record<JellyfishStyle, number> = { vector: 0, flat: 12, sticker: 12, mono: 12, neon: 12, chunky: 8, fine: 24 };
 const results = document.querySelector<HTMLElement>("#results")!;
 const root = createRoot(document.querySelector("#fixture")!);
@@ -28,11 +29,12 @@ function Sheet({ moods }: { moods: Record<JellyfishStyle, JellyMood[]> }) {
           <b>{style}</b>
           <JellyfishStyleContext.Provider value={style}>
             <span className="jelly-pill">
-              {moods[style].map((mood, index) => <JellyfishMark key={index} mood={mood} paused height={24} />)}
+              {moods[style].map((mood, index) => <JellyfishMark key={index} mood={mood} paused={!live} height={24} />)}
             </span>
             <span className="jelly-pill island-light">
               <JellyfishMark mood="idle" paused height={24} />
               <JellyfishMark mood="running" paused height={24} />
+              <JellyfishMark mood="stale" paused height={24} />
             </span>
           </JellyfishStyleContext.Provider>
         </div>
@@ -63,12 +65,12 @@ async function runChecks() {
   try {
     await show(everyMood());
     const vector = marks("vector");
-    check(vector.length === 6 && vector.every((mark) => mark.querySelector("svg") && !mark.querySelector("canvas")), "矢量画风还是原来的 SVG 水母");
+    check(vector.length === MOODS.length && vector.every((mark) => mark.querySelector("svg") && !mark.querySelector("canvas")), "矢量画风还是原来的 SVG 水母");
     const box = vector[0].getBoundingClientRect();
 
     for (const style of JELLYFISH_STYLES.filter((value) => value !== "vector")) {
       const list = marks(style);
-      check(list.length === 6 && list.every((mark) => mark.querySelector("canvas") && !mark.querySelector("svg")), `${style}：六个状态都画在画布上`);
+      check(list.length === MOODS.length && list.every((mark) => mark.querySelector("canvas") && !mark.querySelector("svg")), `${style}：八个状态都画在画布上`);
       const sameBox = list.every((mark) => Math.abs(mark.getBoundingClientRect().width - box.width) < 0.01 && mark.getBoundingClientRect().height === box.height);
       check(sameBox, `${style}：占位和矢量水母一样大，不挤动收起条`);
       for (const mark of list) {
@@ -84,6 +86,11 @@ async function runChecks() {
     const waiting = colours(marks("flat")[2].querySelector("canvas")!);
     check(running.has("109,182,244") && waiting.has("255,205,60"), "身体颜色跟着状态：运行蓝、等你黄");
     check(colours(marks("flat")[0].querySelector("canvas")!).has("246,227,211"), "深色岛上空闲是米白");
+    check(colours(marks("flat")[6].querySelector("canvas")!).has("169,173,184") && colours(marks("flat")[7].querySelector("canvas")!).has("109,182,244"), "可能中断是灰色，压缩上下文和运行一样是蓝色");
+    check(colours(marks("flat", ".island-light")[2].querySelector("canvas")!).has("143,147,160"), "浅色岛上可能中断的灰色深一档");
+    const fills = [6, 7].map((index) => window.getComputedStyle(vector[index].querySelector(".center-jelly-fill")!).fill);
+    check(fills[0] === "rgb(169, 173, 184)" && fills[1] === "rgb(109, 182, 244)", "矢量水母的这两个状态用同样的颜色");
+    check(vector[6].querySelector(".center-jelly-ask") && vector[7].querySelector(".center-jelly-press"), "矢量水母：可能中断带问号，压缩上下文带往里挤的箭头");
     const lightIdle = colours(marks("flat", ".island-light")[0].querySelector("canvas")!);
     check(lightIdle.has("236,220,200") && lightIdle.has("180,157,130"), "浅色岛上空闲换成暖米色并补一圈棕边");
     check(colours(marks("mono", ".island-light")[0].querySelector("canvas")!).has("184,159,130"), "单色在浅色岛上空闲用深一点的棕色");
@@ -91,7 +98,7 @@ async function runChecks() {
     check(colours(marks("sticker")[1].querySelector("canvas")!).size > running.size, "描边比扁平多一圈深色");
 
     const swapped = everyMood();
-    swapped.flat = ["done", "failed", "idle", "sleep", "running", "waiting"];
+    swapped.flat = ["done", "failed", "idle", "sleep", "running", "waiting", "compacting", "stale"];
     await show(swapped);
     const afterSwap = marks("flat").map((mark) => colours(mark.querySelector("canvas")!));
     check(afterSwap[0].has("94,214,158") && afterSwap[1].has("242,85,76") && afterSwap[4].has("109,182,244"), "状态变了立刻重画成新状态的颜色");
@@ -105,4 +112,5 @@ async function runChecks() {
   }
 }
 
-await runChecks();
+if (live) await show(everyMood());
+else await runChecks();

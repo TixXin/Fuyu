@@ -1,5 +1,5 @@
 import { useId, type CSSProperties } from "react";
-import type { CenterPatternId, PetMood } from "./patterns";
+import type { CenterMood, CenterPatternId } from "./patterns";
 import { JellyfishMark } from "../../components/jellyfish/JellyfishMark";
 import { PatternEyes } from "./PatternEyes";
 import "./CenterPattern.css";
@@ -8,7 +8,7 @@ type CenterPatternProps = {
   pattern: CenterPatternId;
   paused?: boolean;
   height?: number;
-  mood?: PetMood;
+  mood?: CenterMood;
 };
 
 export function CenterPattern({ pattern, paused = false, height = 22, mood = "idle" }: CenterPatternProps) {

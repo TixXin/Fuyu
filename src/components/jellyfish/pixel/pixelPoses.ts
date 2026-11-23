@@ -1,13 +1,13 @@
 import type { PixelEffectName } from "./pixelEffects.ts";
 import type { PixelEffectSlot, PixelEyes, PixelMouth } from "./pixelGrids.ts";
 
-export type PixelMood = "idle" | "running" | "waiting" | "failed" | "done" | "sleep";
-export type PixelPoseEffect = { name: PixelEffectName; level: number; slot: PixelEffectSlot } | { name: "speed"; frame: number };
+export type PixelMood = "idle" | "running" | "waiting" | "failed" | "done" | "sleep" | "stale" | "compacting";
+export type PixelPoseEffect = { name: PixelEffectName; level: number; slot: PixelEffectSlot } | { name: "speed"; frame: number } | { name: "press" };
 export type PixelPose = {
   dy: number;
   dx: number;
   lean: number;
-  squash: boolean;
+  squash: -1 | 0 | 1;
   lobes: readonly number[];
   eyes: PixelEyes;
   eyeDx: number;
@@ -18,14 +18,15 @@ export type PixelPose = {
 
 export const PIXEL_TICK_MS = 120;
 
-const REST: PixelPose = { dy: 0, dx: 0, lean: 0, squash: false, lobes: [0, 0, 0, 0], eyes: "open", eyeDx: 0, eyeDy: 0, mouth: "none", effects: [] };
+const REST: PixelPose = { dy: 0, dx: 0, lean: 0, squash: 0, lobes: [0, 0, 0, 0], eyes: "open", eyeDx: 0, eyeDy: 0, mouth: "none", effects: [] };
 const all = (value: number) => [value, value, value, value];
 const BLINK_EVERY = 48;
 const SWIM_EVERY = 84;
 const RUN_LOOP = 8;
 const WAIT_LOOP = 20;
 const SLEEP_LOOP = 40;
-const SETTLED: Partial<Record<PixelMood, number>> = { failed: 7, done: 4 };
+const SQUEEZE_LOOP = 12;
+const SETTLED: Partial<Record<PixelMood, number>> = { failed: 7, done: 4, stale: 3 };
 const SCAN_LIMIT = 96;
 
 function idle(t: number): PixelPose {
@@ -69,7 +70,7 @@ function failed(t: number): PixelPose {
   return {
     ...REST,
     eyes: "angry",
-    squash: t < 4,
+    squash: t < 4 ? 1 : 0,
     dx: t < 4 ? (t % 2 ? 1 : -1) : 0,
     effects: t < 1 ? [] : [{ name: "anger", level: (t >= 3 && t < 5) || t >= 7 ? 2 : 1, slot: "a" }],
   };
@@ -86,7 +87,16 @@ function sleep(t: number): PixelPose {
   return { ...REST, eyes: "closed", lobes: t % SLEEP_LOOP < SLEEP_LOOP / 2 ? all(0) : all(-1) };
 }
 
-const POSES: Record<PixelMood, (t: number) => PixelPose> = { idle, running, waiting, failed, done, sleep };
+function stale(t: number): PixelPose {
+  return { ...REST, lean: 1, eyes: "dot", mouth: "flat", effects: t < 2 ? [] : [{ name: "question", level: t < 3 ? 0 : 2, slot: "a" }] };
+}
+
+function compacting(t: number): PixelPose {
+  const phase = Math.floor((t % SQUEEZE_LOOP) / (SQUEEZE_LOOP / 4));
+  return { ...REST, eyes: "squeeze", mouth: "flat", squash: phase === 0 ? -1 : phase === 2 ? 1 : 0, effects: phase === 0 ? [{ name: "press" }] : [] };
+}
+
+const POSES: Record<PixelMood, (t: number) => PixelPose> = { idle, running, waiting, failed, done, sleep, stale, compacting };
 
 export function poseAt(mood: PixelMood, tick: number): PixelPose {
   const settled = SETTLED[mood];

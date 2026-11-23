@@ -1,7 +1,7 @@
 export type PixelPoint = readonly [number, number];
 export type PixelGridKey = "S" | "M" | "L";
-export type PixelEyes = "open" | "blink" | "closed" | "happy" | "angry";
-export type PixelMouth = "none" | "small" | "open";
+export type PixelEyes = "open" | "blink" | "closed" | "happy" | "angry" | "dot" | "squeeze";
+export type PixelMouth = "none" | "small" | "open" | "flat";
 export type PixelToneKey = "hi" | "base" | "sh" | "sh2" | "di" | "di2";
 export type PixelEffectSlot = "a" | "b";
 export type PixelEffectSize = "s" | "m" | "l";
@@ -28,6 +28,7 @@ export type PixelGrid = {
   slots: Record<PixelEffectSlot, PixelPoint>;
   speed: readonly (readonly (readonly [number, number, number])[])[];
   effects: PixelEffectSize;
+  press: { sprite: readonly string[]; x: number; y: number };
 };
 
 function points(rows: readonly string[]): PixelPoint[] {
@@ -53,6 +54,8 @@ const SMALL_EYES: Record<PixelEyes, readonly PixelPoint[]> = {
   closed: [[-1, 1], [0, 1], [1, 1]],
   happy: [[-1, 1], [0, 0], [1, 1]],
   angry: [[-1, -1], [0, 0], [0, 1]],
+  dot: [[0, 0]],
+  squeeze: [[-1, 0], [0, 1], [-1, 2]],
 };
 
 const FINE_OPEN = points([".#.", "###", "###", "###", ".#."]);
@@ -76,7 +79,7 @@ export const PIXEL_GRIDS: Record<PixelGridKey, PixelGrid> = {
     height: 8,
     step: 1,
     halfSteps: true,
-    pad: { left: 3, right: 8, top: 5, bottom: 2 },
+    pad: { left: 4, right: 8, top: 5, bottom: 2 },
     head: ["..#######..", ".#########.", "###########", "###########", "###########", ".#########."],
     cut: [1],
     lean: (row) => (row === 0 ? 1 : 0),
@@ -86,11 +89,12 @@ export const PIXEL_GRIDS: Record<PixelGridKey, PixelGrid> = {
     tone: (part) => (part === 2 ? "sh" : "base"),
     eye: [3, 2],
     eyes: SMALL_EYES,
-    mouth: { small: [[4, 4]], open: [[5, 4]] },
+    mouth: { small: [[4, 4]], open: [[5, 4]], flat: [[4, 4], [5, 4], [6, 4]] },
     cheeks: [[1, 4]],
     slots: { a: [11, 1], b: [14, 3] },
     speed: [[[12, 2, 2], [13, 5, 2]], [[13, 2, 2], [12, 5, 2]]],
     effects: "s",
+    press: { sprite: ["#.", ".#", "#."], x: -3, y: 2 },
   },
   M: {
     key: "M",
@@ -98,7 +102,7 @@ export const PIXEL_GRIDS: Record<PixelGridKey, PixelGrid> = {
     height: 12,
     step: 1,
     halfSteps: false,
-    pad: { left: 3, right: 9, top: 6, bottom: 2 },
+    pad: { left: 4, right: 9, top: 6, bottom: 2 },
     head: [".....#######.....", "...###########...", "..#############..", ".###############.", ".###############.", "#################", "#################", "#################", "#################", ".###############."],
     cut: [3],
     lean: (row) => (row <= 2 ? 1 : 0),
@@ -108,11 +112,12 @@ export const PIXEL_GRIDS: Record<PixelGridKey, PixelGrid> = {
     tone: (part, x, row) => (part === 2 ? "sh" : (row === 1 && (x === 4 || x === 5)) || (row === 2 && x === 3) ? "hi" : "base"),
     eye: [5, 5],
     eyes: SMALL_EYES,
-    mouth: { small: [[7, 7]], open: [[7, 7], [8, 7], [9, 7], [8, 8, true]] },
+    mouth: { small: [[7, 7]], open: [[7, 7], [8, 7], [9, 7], [8, 8, true]], flat: [[7, 7], [8, 7], [9, 7]] },
     cheeks: [[2, 7], [3, 7]],
     slots: { a: [15, 1], b: [19, 4] },
     speed: [[[19, 4, 3], [20, 7, 2], [19, 10, 3]], [[20, 4, 3], [19, 7, 3], [21, 10, 2]]],
     effects: "m",
+    press: { sprite: ["#.", ".#", "#."], x: -3, y: 4 },
   },
   L: {
     key: "L",
@@ -120,7 +125,7 @@ export const PIXEL_GRIDS: Record<PixelGridKey, PixelGrid> = {
     height: 24,
     step: 2,
     halfSteps: false,
-    pad: { left: 4, right: 18, top: 12, bottom: 4 },
+    pad: { left: 8, right: 18, top: 12, bottom: 4 },
     head: dome(33, 18, 13.5, 4),
     cut: [5, 7],
     lean: (row) => (row <= 3 ? 2 : row <= 8 ? 1 : 0),
@@ -135,14 +140,18 @@ export const PIXEL_GRIDS: Record<PixelGridKey, PixelGrid> = {
       closed: [[-1, 3], [0, 3], [1, 3], [2, 3], [3, 3]],
       happy: [[-1, 3], [-1, 2], [0, 1], [1, 1], [2, 1], [3, 2], [3, 3]],
       angry: [...FINE_OPEN, [-2, -3], [-1, -3], [0, -2], [1, -2], [2, -1], [3, -1]],
+      dot: [[0, 2], [1, 2], [0, 3], [1, 3]],
+      squeeze: [[0, 0], [1, 1], [2, 2], [1, 3], [0, 4]],
     },
     mouth: {
       small: [[13, 15], [14, 15], [15, 15]],
       open: [[14, 14], [15, 14], [16, 14], [17, 14], [18, 14], [15, 15], [16, 15, true], [17, 15]],
+      flat: [[15, 15], [16, 15], [17, 15]],
     },
     cheeks: [[5, 14], [6, 14], [7, 14], [5, 15], [6, 15], [7, 15]],
     slots: { a: [30, 3], b: [38, 9] },
     speed: [[[38, 8, 5], [40, 14, 4], [38, 20, 5]], [[40, 8, 5], [38, 14, 5], [41, 20, 4]]],
     effects: "l",
+    press: { sprite: ["#..", ".#.", "..#", ".#.", "#.."], x: -6, y: 8 },
   },
 };
