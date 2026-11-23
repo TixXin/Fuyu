@@ -1,5 +1,6 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { panelInterval } from "../../components/island-widget/panelAwake";
+import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
+import { isPanelOpen, panelInterval, subscribePanelAwake } from "../../components/island-widget/panelAwake";
+import { countdownTickDelay } from "./countdown.ts";
 import { dayKey, shiftDays } from "./days.ts";
 import type { DailyData } from "./dailyFormat.ts";
 import { DAILY_WIDGETS_KEY, KEEP_DAILY_DAYS, readDaily, writeDaily } from "./storage.ts";
@@ -39,6 +40,37 @@ export function useDaily(): DailyData {
 export function useNow(stepMs: number): Date {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => panelInterval(() => setNow(new Date()), stepMs), [stepMs]);
+  return now;
+}
+
+export function useCountdownNow(endsAt: number | null, version: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useLayoutEffect(() => {
+    setNow(Date.now());
+    if (endsAt === null) return;
+    let timer: number | undefined;
+    const schedule = () => {
+      window.clearTimeout(timer);
+      timer = undefined;
+      if (!isPanelOpen() || document.hidden) return;
+      timer = window.setTimeout(() => {
+        setNow(Date.now());
+        schedule();
+      }, countdownTickDelay(endsAt, Date.now()));
+    };
+    const wake = () => {
+      setNow(Date.now());
+      schedule();
+    };
+    schedule();
+    const stopAwake = subscribePanelAwake(wake);
+    document.addEventListener("visibilitychange", wake);
+    return () => {
+      window.clearTimeout(timer);
+      stopAwake();
+      document.removeEventListener("visibilitychange", wake);
+    };
+  }, [endsAt, version]);
   return now;
 }
 

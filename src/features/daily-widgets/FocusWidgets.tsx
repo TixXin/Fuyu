@@ -4,21 +4,18 @@ import { WidgetFrame } from "../../components/island-widget/WidgetFrame";
 import { useTranslation } from "../../i18n";
 import { dayKey, focusText, lastDays, streakLength } from "./days.ts";
 import { cyclePomodoroLength, pausePomodoro, pomodoroLeft, resetPomodoro, settlePomodoro, startPomodoro } from "./pomodoro.ts";
-import { toggleCheckin, useDaily, useNow } from "./store.ts";
+import { countdownClock as clock } from "./countdown.ts";
+import { toggleCheckin, useCountdownNow, useDaily, useNow } from "./store.ts";
 import { clickOnly } from "../../components/island-widget/clickOnly";
 
 const RING_R = 36;
 const RING_LENGTH = 2 * Math.PI * RING_R;
 
-function clock(ms: number) {
-  const seconds = Math.ceil(ms / 1000);
-  return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-}
 
 export function PomodoroWidget() {
   const t = useTranslation().islandWidgets.daily;
   const data = useDaily();
-  const now = useNow(1000).getTime();
+  const now = useCountdownNow(data.pomodoro.endsAt, data.pomodoro.leftMs);
   const running = data.pomodoro.endsAt !== null;
   useEffect(() => {
     settlePomodoro(now);
