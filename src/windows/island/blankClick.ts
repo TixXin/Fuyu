@@ -50,10 +50,24 @@ function activeCursorUpTo(element: Element, root: Element): boolean {
   return false;
 }
 
+function clear(color: string) {
+  if (color === "transparent" || color === "") return true;
+  const alpha = /^rgba\(.*,\s*([\d.]+%?)\s*\)$/.exec(color) ?? /\/\s*([\d.]+%?)\s*\)$/.exec(color);
+  return alpha !== null && Number.parseFloat(alpha[1]) === 0;
+}
+
+function onSurfaceUpTo(element: Element, root: Element): boolean {
+  for (let node: Element | null = element; node && node !== root; node = node.parentElement) {
+    const style = getComputedStyle(node);
+    if (style.backgroundImage !== "none" || !clear(style.backgroundColor)) return true;
+  }
+  return false;
+}
+
 export function isBlankClick(target: EventTarget | null, root: Element, x: number, y: number): boolean {
   if (!(target instanceof Element) || !root.contains(target)) return false;
   if (target.closest(INTERACTIVE)) return false;
   if (window.getSelection()?.toString()) return false;
   if (hasOwnText(target) || insideChild(target, x, y)) return false;
-  return !activeCursorUpTo(target, root);
+  return !activeCursorUpTo(target, root) && !onSurfaceUpTo(target, root);
 }

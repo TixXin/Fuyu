@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { Check, Clipboard, Copy, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
 import { readTranslationClipboard } from "./api";
@@ -78,6 +78,11 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
   const autoTranslateKey = `${settings.direction}\0${settings.provider}\0${settings.customBaseUrl}\0${settings.models[settings.provider] ?? ""}`;
   useAutoTranslate(isOpen && settings.autoTranslate && hasSecret && !isLoading, input, autoTranslateKey, skipAutoSource, submit);
 
+  const focusSource = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || (event.target instanceof Element && event.target.closest("button, textarea"))) return;
+    event.preventDefault();
+    inputRef.current?.focus({ preventScroll: true });
+  };
   const setDirection = (direction: Direction) => setSettings((current) => ({ ...current, direction }));
   const count = [...input].length;
 
@@ -99,7 +104,7 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
         </button>
       </div>
       <div className="translation-panel__panes">
-        <div className="translation-panel__pane translation-panel__pane--source">
+        <div className="translation-panel__pane translation-panel__pane--source" onMouseDown={focusSource}>
           <span className="translation-panel__label">{text.source}</span>
           <textarea ref={inputRef} aria-label={text.source} value={input} placeholder={text.panelPlaceholder} onKeyDown={handleInputKeyDown} onChange={(event) => { setInput(event.target.value); setError(""); setDidCopy(false); }} />
           <div className="translation-panel__foot">
