@@ -1304,6 +1304,89 @@
     {
       "page": "behavior",
       "zh-CN": {
+        "group": "切换动效",
+        "title": "面板换页",
+        "description": "点页签、箭头，按 ← → 或左右滑动换页时；面板刚展开时由开合动画负责，不播"
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Panel pages",
+        "description": "When you click a tab or an arrow, press ← → or swipe; not when the panel first opens, the open animation covers that"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "设置窗口换页",
+        "description": "点侧栏、点上面的标签换页时；从搜索结果跳过去不播"
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Settings pages",
+        "description": "When you click the sidebar or a tab; jumping from a search result skips it"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "标签和侧栏的高亮",
+        "description": "换页时设置窗口里标签的下划线、侧栏的高亮块怎么挪过去",
+        "options": [
+          "伸缩",
+          "滑动",
+          "直接跳"
+        ]
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Tab and sidebar highlight",
+        "description": "How the tab underline and the sidebar highlight move over in the settings window",
+        "options": [
+          "Stretch",
+          "Slide",
+          "Jump"
+        ]
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "速度",
+        "options": [
+          "快",
+          "标准",
+          "慢"
+        ]
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Speed",
+        "options": [
+          "Fast",
+          "Normal",
+          "Slow"
+        ]
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "切换动效",
+        "title": "跟着方向",
+        "description": "往后翻从后面来、往前翻从前面来，涟漪从点的地方扩散；关掉时都从中间开始"
+      },
+      "en": {
+        "group": "Page transitions",
+        "title": "Follow direction",
+        "description": "Later pages come in from the far side, earlier ones from the near side, and ripples start where you clicked; off, everything starts from the middle"
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
         "group": "全屏和游戏",
         "title": "游戏勿扰",
         "description": "不悬停展开，不抢键盘焦点，不弹消息预览，已展开的面板会收起。消息照常接收。"

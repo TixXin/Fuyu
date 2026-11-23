@@ -20,6 +20,7 @@ import { IslandGlyph } from "../../../components/settings/IslandGlyph";
 import { IslandMotionRow } from "./IslandMotionRow";
 import { IslandHoverRow } from "./IslandHoverRow";
 import { WidgetEntranceRow } from "./WidgetEntranceRow";
+import { PageSwitchGroup } from "./PageSwitchGroup";
 import type { ExpandTrigger, IslandSettings } from "../../../lib/settings/types";
 
 export function ExpandSettingsSection({
@@ -135,6 +136,7 @@ export function ExpandSettingsSection({
           onChange={(widgetDataMotion) => update({ widgetDataMotion })}
         />
       </SettingsGroup>
+      <PageSwitchGroup settings={settings} update={update} />
     </>
   );
 }

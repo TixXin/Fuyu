@@ -142,6 +142,11 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   pageArrows: true,
   pageArrowKeys: true,
   pageSwipe: true,
+  pageSwitchPanel: "wipe",
+  pageSwitchSettings: "wipe",
+  pageSwitchIndicator: "stretch",
+  pageSwitchSpeed: "normal",
+  pageSwitchDirectional: true,
 };
 export const LEGACY_FALLBACKS = {
   collapsedDark: false,

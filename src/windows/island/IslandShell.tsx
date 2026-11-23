@@ -15,7 +15,8 @@ import type { CollapsedSlots, IslandMode, IslandPage, NativeGlassState } from ".
 import { useGlassPointer } from "./useGlassPointer";
 import { PREWARM_HOLD_MS, PREWARM_LEAVE_MS } from "./panelAwake";
 import { useIslandPreparing } from "./useIslandPreparing";
-import { usePageFadeIn } from "./usePageFadeIn";
+import { usePageSwitchMotion } from "./usePageSwitchMotion";
+import { FADE_PAGE_SWITCH, type PageSwitchMotion } from "../../lib/theme/pageSwitch";
 import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandShell.css";
 import "./islandMotionVars.css";
@@ -88,6 +89,7 @@ export type IslandShellProps = {
   overlay?: ReactNode;
   resize?: ReactNode;
   pageArrows?: ReactNode;
+  pageSwitch?: PageSwitchMotion;
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
 };
@@ -194,6 +196,7 @@ export function IslandShell({
   overlay,
   resize,
   pageArrows,
+  pageSwitch = FADE_PAGE_SWITCH,
   collapsedSlots,
   children,
 }: IslandShellProps) {
@@ -208,7 +211,7 @@ export function IslandShell({
     () => ({ isPreparing: isPreparing && !isExpanded, isPrewarmed: prewarm.isPrewarmed }),
     [isExpanded, isPreparing, prewarm.isPrewarmed],
   );
-  const contentRef = usePageFadeIn<HTMLDivElement>(page, mode);
+  const contentRef = usePageSwitchMotion<HTMLDivElement>(page, mode, pageSwitch, features);
   const shellRef = useRef<HTMLElement | null>(null);
   const contributed = useIslandContributed();
   const { status } = contributed;

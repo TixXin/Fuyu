@@ -66,6 +66,7 @@ export const PAGES = [
   "settings.html?test=1",
   "settings-sidebar.html",
   "settings-search.html",
+  "page-switch.html",
   "settings-feature-off.html",
   "sync-settings.html",
   "plugin-settings-open.html",

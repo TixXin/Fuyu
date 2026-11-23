@@ -180,32 +180,3 @@
   font-size: 12px;
   line-height: 1.5;
 }
-
-.editor-panel > * {
-  animation: settings-page-enter var(--motion-medium) var(--motion-ease) backwards;
-}
-
-.editor-panel > :nth-child(2) {
-  animation-delay: 30ms;
-}
-
-.editor-panel > :nth-child(3) {
-  animation-delay: 60ms;
-}
-
-.editor-panel > :nth-child(n + 4) {
-  animation-delay: 90ms;
-}
-
-@keyframes settings-page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .editor-panel > * {
-    animation: none;
-  }
-}

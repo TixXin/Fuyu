@@ -271,6 +271,10 @@ export function IslandApp() {
 
   useSettleIslandContributions();
 
+  const pageSwitch = useMemo(
+    () => ({ effect: settings.pageSwitchPanel, speed: settings.pageSwitchSpeed, directional: settings.pageSwitchDirectional }),
+    [settings.pageSwitchPanel, settings.pageSwitchSpeed, settings.pageSwitchDirectional],
+  );
   const shell: IslandShellBase = {
     page,
     homePage,
@@ -314,6 +318,7 @@ export function IslandApp() {
     fuyuTabIcon: settings.fuyuTabIcon,
     notice: islandNotice,
     collapsedSlots,
+    pageSwitch,
     pageArrows: settings.pageArrows && !hasOpenPopup && !panelEditing && side === null ? <IslandPageArrows features={features} page={page} onPageChange={setPage} /> : null,
     resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled} size={pageSize} extra={settings[resizeModel.barKey]} barWidth={notch ? (wing) => notchBarWidth(notch, settings.collapsedScale, wing) : undefined} />,
   };

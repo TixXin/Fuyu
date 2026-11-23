@@ -266,6 +266,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 - 插件页焦点（2026-11-09 起，E8 / issue #12）：Tauri 命令 `island_is_foreground`（无参数，返回岛屿窗口是否为前台窗口）。岛屿失去键盘焦点时先问它，焦点只是进了插件网页（webview 模板）时不收起。
 - 岛屿焦点（2026-11-14 起）：设置项 `hoverTakesKeyboard`（布尔，默认 `false`，旧数据没有时按 `false`；打开后光标停在岛上会拿键盘焦点，2026-11-23 起收起的岛也算）；Tauri 命令 `take_island_click_focus`（无参数，点击展开面板后调用，把岛设为前台窗口并记住原来的前台窗口，鼠标还按着时返回 `false` 让前端稍后重试；macOS 上不做事，返回 `true`）。
 - 翻页箭头和方向键（2026-11-23 起）：设置项 `pageArrows`、`pageArrowKeys`、`pageSwipe`（布尔，默认 `true`，旧数据没有或不是 `false` 时按 `true`）。
+- 换页动效（2026-11-23 起）：`fuyu-settings` 新增 `pageSwitchPanel`、`pageSwitchSettings`（`carousel` / `fade` / `ripple` / `wipe` / `sheen` / `pixel` / `none`，缺省和未知值按 `wipe`）、`pageSwitchIndicator`（`stretch` / `slide` / `jump`，缺省 `stretch`）、`pageSwitchSpeed`（`fast` / `normal` / `slow`，缺省 `normal`）、`pageSwitchDirectional`（布尔，不是 `false` 时按 `true`）。随设置同步（`settings_whitelist.json` 里是 `sync`），不属于主题。
 - VS Code 扩展（2026-11-06 起）：扩展 ID `tixxin.fuyu`（D17 起；岛屿先找它，再找改名前的旧扩展，链接的 authority 用找到的那个，见 [改名兼容](#改名兼容d17)；源码 `packages/vscode-extension/`），岛屿打开 `<编辑器 scheme>://tixxin.fuyu/focus?pids=<进程号,…>&title=<会话标题>`；发布后再改格式时，岛屿和扩展都要兼容旧格式，见 [docs/features/agent-status-hooks.md](../features/agent-status-hooks.md)。
 - 待办只剩岛屿画法（C28，2026-11-10 起）：`fuyu-settings` 去掉 `todoStyle`（"paper" | "island"）和 `todoBackgroundColor`，旧数据里的这两个字段读取时忽略，不迁移；归档的「卡片 / 时间线」布局本来就没存，一并去掉。
 

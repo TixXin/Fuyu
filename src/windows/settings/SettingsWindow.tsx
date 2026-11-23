@@ -129,6 +129,7 @@ export function SettingsWindow() {
   };
   useMacWindowKeys();
 
+  const switchMotion = { effect: settings.pageSwitchSettings, indicator: settings.pageSwitchIndicator, speed: settings.pageSwitchSpeed, directional: settings.pageSwitchDirectional };
   const light = activeTone(settings.themeMode, systemDark) === "light";
   useEffect(() => {
     const window = getCurrentWindow();
@@ -144,6 +145,7 @@ export function SettingsWindow() {
       <LayoutEditor
         category={category}
         hidden={features.hiddenPages}
+        motion={switchMotion}
         onCategoryChange={changeCategory}
         titleAction={
           category === "theme" || category === "themeStyle"
