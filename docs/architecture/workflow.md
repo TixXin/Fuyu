@@ -208,6 +208,42 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 
 回复和任务的顺序见 [docs/tasks/README.md](../tasks/README.md)「GitHub PR」。
 
+### 上游的 PR：先看，再申请借鉴
+
+用户发来 `flyl1u/fly-island` 的 PR 链接时，那个 PR 不归我们合，要做的是这几步：
+
+1. **看**：`gh pr view` 和 `gh pr diff` 读说明和关键代码，对照本仓库有没有同类功能（`grep` `src/features/`、`plugins/v3/`），给用户讲：做了什么、哪些值得借鉴、代码质量和问题、能不能照搬（通常不能：上游还是第 2 版结构和 `fly-island-*` 的 key）。
+2. **起草回复**：按下面的模板写，只填具体内容，先给用户看，不直接发。
+3. **用户说发**：正文写进 scratchpad 的文件，`gh pr comment <编号> --repo flyl1u/fly-island --body-file <文件>`，把评论链接给用户。
+4. **之后真做**：按 `fuyu-task` 开任务（新的 v3 插件），任务和提交说明里写「思路参考自 @作者 在 flyl1u/fly-island#<编号>」并附链接；实现基本相同的代码段，在提交里写明出处。
+
+许可证：上游 GPL-3.0，本仓库 AGPL-3.0，GPLv3 第 13 条允许两者组合，所以回复是礼貌告知加征求意见，不写成请求授权。
+
+回复模板（中文；作者是外国人时译成英文）：
+
+```markdown
+你好 @<作者> 👋 我是 [Fuyu（浮屿）](https://github.com/TixXin/fuyu) 的维护者。Fuyu 最早是从 fly-island fork 出来的，现在已经独立开发。
+
+这个<功能>插件做得很用心，读下来很有收获。尤其是这几处：
+
+- <具体的亮点 1>；
+- <具体的亮点 2>；
+- <具体的亮点 3>。
+
+想问一下，你介不介意我们参考这些思路，在 Fuyu 里做一个<功能>插件？
+
+Fuyu 的插件系统已经重写成「万物皆插件」的架构，思路和 DeepSeek Harness 一样：基于 [Cordis](https://github.com/cordiverse/cordis)，内置功能本身也都是插件，跑在一个独立的插件宿主进程里，宿主只提供插槽和服务（设计文档见[这里](https://github.com/TixXin/fuyu/blob/main/docs/architecture/plugins/v3-everything-plugin.md)）。所以<功能>会做成一个独立的插件，通过插槽接入<接入的位置>，不需要改动岛本身的代码。也正因为结构不同，我们会按这套架构重新实现，不会直接合入这个分支，你在这边的 PR 不受影响。
+
+我们会这样处理：
+
+- 在插件说明和相关提交里注明「思路参考自 @<作者> 在 flyl1u/fly-island#<编号> 的<功能>插件」，并附上这个 PR 的链接；
+- 如果某段实现和你的代码基本相同（比如<最可能相同的那段>），会在提交里写明出处。两个项目的许可证（GPL-3.0 / AGPL-3.0）可以兼容。
+
+也非常欢迎你来 Fuyu 参与：直接写这个插件、提 PR、帮忙 review 或者提 issue 都可以，到时候作者就署你的名字。如果你不希望我们参考，回复一声就好，我们就不做了。谢谢！
+```
+
+亮点要具体到读过代码才写得出的程度，不写空泛的夸奖。最后一句「不希望就不做」是承诺：对方拒绝就真的不做。第一次用这个模板是 [flyl1u/fly-island#126](https://github.com/flyl1u/fly-island/pull/126)（笔记本电池，2026-11-23）。
+
 ## Rust 构建
 
 都在主工作区的 `src-tauri/target` 下（`scripts/build-dirs.mjs`）：
