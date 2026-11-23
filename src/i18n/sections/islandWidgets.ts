@@ -104,6 +104,25 @@ export type IslandWidgetsText = {
     translatePlaceholder: string;
     translating: string;
     copyResult: string;
+    done: string;
+    copied: string;
+    actionFailed: string;
+    shelfOff: string;
+    openShelf: string;
+    shelfItemHint: string;
+    shelfStackHint: string;
+    revealFile: string;
+    shelfMore: (count: number) => string;
+    openClipboard: string;
+    clipboardCopyHint: string;
+    openScreenshots: string;
+    pinScreenshot: string;
+    screenshotHint: string;
+    translateNow: string;
+    openTranslator: string;
+    unreadSummary: (count: number) => string;
+    newMessages: string;
+    wechatPending: string;
     cpu: string;
     memory: string;
     charging: string;
@@ -228,6 +247,25 @@ export const zhCN: IslandWidgetsText = {
     translatePlaceholder: "输入文字，回车翻译",
     translating: "翻译中…",
     copyResult: "复制译文",
+    done: "完成",
+    copied: "已复制",
+    actionFailed: "没有成功",
+    shelfOff: "文件中转已关闭",
+    openShelf: "打开文件中转",
+    shelfItemHint: "拖出到别的应用，双击打开",
+    shelfStackHint: "拖出全部文件，单击打开文件中转",
+    revealFile: "在文件夹中显示",
+    shelfMore: (count) => `还有 ${count} 个`,
+    openClipboard: "打开剪贴板历史",
+    clipboardCopyHint: "点击复制",
+    openScreenshots: "打开截图历史",
+    pinScreenshot: "贴到屏幕上",
+    screenshotHint: "单击复制，拖出到别的应用",
+    translateNow: "翻译",
+    openTranslator: "打开翻译",
+    unreadSummary: (count) => `${count} 条未读`,
+    newMessages: "有新消息",
+    wechatPending: "微信有新消息",
     cpu: "CPU",
     memory: "内存",
     charging: "充电中",
@@ -352,6 +390,25 @@ export const en: IslandWidgetsText = {
     translatePlaceholder: "Type and press Enter",
     translating: "Translating…",
     copyResult: "Copy the translation",
+    done: "Done",
+    copied: "Copied",
+    actionFailed: "That didn't work",
+    shelfOff: "File shelf is off",
+    openShelf: "Open the file shelf",
+    shelfItemHint: "Drag into another app, double-click to open",
+    shelfStackHint: "Drag out all files, click to open the shelf",
+    revealFile: "Show in folder",
+    shelfMore: (count) => `+${count} more`,
+    openClipboard: "Open clipboard history",
+    clipboardCopyHint: "Click to copy",
+    openScreenshots: "Open screenshot history",
+    pinScreenshot: "Pin to screen",
+    screenshotHint: "Click to copy, drag into another app",
+    translateNow: "Translate",
+    openTranslator: "Open the translator",
+    unreadSummary: (count) => `${count} unread`,
+    newMessages: "New",
+    wechatPending: "New WeChat messages",
     cpu: "CPU",
     memory: "Memory",
     charging: "Charging",

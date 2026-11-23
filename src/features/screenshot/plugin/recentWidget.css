@@ -6,6 +6,7 @@
 }
 
 .shot-widget__picture {
+  position: relative;
   display: grid;
   flex: 1;
   place-items: center;
@@ -16,7 +17,7 @@
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
   border: 0;
   border-radius: 8px;
-  cursor: pointer;
+  cursor: grab;
 }
 
 .shot-widget__picture img {
@@ -41,7 +42,49 @@
   cursor: pointer;
 }
 
+.shot-widget__ago {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  max-width: calc(100% - 36px);
+  padding: 1px 6px;
+  overflow: hidden;
+  color: var(--shot-ago-text, #fff);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--shot-ago-bg, rgba(0, 0, 0, 0.55));
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.shot-widget__pin {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--shot-ago-text, #fff);
+  background: var(--shot-ago-bg, rgba(0, 0, 0, 0.55));
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.shot-widget__body:hover .shot-widget__pin,
+.shot-widget__pin:focus-visible {
+  opacity: 1;
+}
+
 .shot-widget__picture:focus-visible,
+.shot-widget__pin:focus-visible,
 .shot-widget__take:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;

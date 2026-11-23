@@ -1,0 +1,24 @@
+.island-widget-open {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin: -3px -4px -3px 2px;
+  padding: 0;
+  color: var(--widget-text-3, rgba(241, 240, 246, 0.48));
+  vertical-align: middle;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.island-widget-open:hover {
+  color: var(--widget-text-1, rgba(241, 240, 246, 0.95));
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+}
+
+.island-widget-open:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}

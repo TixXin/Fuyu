@@ -1,4 +1,42 @@
+.translate-widget__field {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 2px 2px 8px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.06);
+  border-radius: 8px;
+}
+
+.translate-widget__go {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--color-on-accent, #06202c);
+  background: var(--color-accent);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.translate-widget__go:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.translate-widget__go:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .translate-widget__input {
+  flex: 1;
+  min-width: 0;
   width: 100%;
   padding: 0;
   color: var(--widget-text-1);

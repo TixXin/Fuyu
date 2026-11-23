@@ -1,0 +1,58 @@
+.island-widget__flash {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  pointer-events: none;
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
+  animation: island-widget-flash-in var(--motion-base) var(--motion-ease-out) backwards;
+}
+
+.island-widget__flash-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 4px 10px;
+  color: var(--widget-text-1);
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.14);
+  border-radius: var(--radius-pill, 999px);
+}
+
+.island-widget__flash-pill > span {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.island-widget__flash-pill svg {
+  flex: none;
+}
+
+.island-widget__flash[data-kind="done"] svg {
+  color: var(--mint-text, #7ee2b8);
+}
+
+.island-widget__flash[data-kind="failed"] svg {
+  color: var(--error-text, #ff8a8a);
+}
+
+@keyframes island-widget-flash-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-widget__flash {
+    animation: none;
+  }
+}

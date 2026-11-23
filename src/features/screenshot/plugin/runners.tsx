@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "../../../i18n";
 import { LINE_PRIORITY, type IslandContribution } from "../../plugin-kernel/islandContributions";
 import { defineSlot } from "../../plugin-kernel/slots";
@@ -14,6 +14,8 @@ import { OWNER } from "./owner.ts";
 
 type RunnerProps = {
   settings: { screenshotEnabled: boolean };
+  features: { screenshots: boolean; clipboardScreenshots?: boolean };
+  openIslandPage: (page: "screenshots") => void;
   collapseIsland: () => void;
 };
 
@@ -34,7 +36,7 @@ function usePinsKey() {
   }, []);
 }
 
-function ScreenshotRunner({ settings, collapseIsland }: RunnerProps) {
+function ScreenshotRunner({ settings, features, openIslandPage, collapseIsland }: RunnerProps) {
   const t = useTranslation();
   const peek = useScreenshotText();
   const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
@@ -43,7 +45,9 @@ function ScreenshotRunner({ settings, collapseIsland }: RunnerProps) {
   const recording = useRecording();
   usePinsKey();
   useIslandAction("screenshot.start", screenshot.start);
-  screenshotIsland.useProvide(useMemo(() => ({ recording, notice, peek }), [recording, notice, peek]));
+  const openScreenshots = useCallback(() => openIslandPage("screenshots"), [openIslandPage]);
+  const openHistory = features.screenshots || features.clipboardScreenshots === true ? openScreenshots : null;
+  screenshotIsland.useProvide(useMemo(() => ({ recording, notice, peek, openHistory }), [recording, notice, peek, openHistory]));
   const list: IslandContribution[] = [];
   if (screenshot.start) list.push({ kind: "hint", key: "screenshot.start" });
   if (peek !== null) {
