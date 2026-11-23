@@ -27,12 +27,12 @@ export function useWidgetFlash() {
     async (work: () => Promise<unknown>, labels: WidgetFlashLabels = {}) => {
       try {
         const result = await work();
-        if (result === false || result === null) throw result;
+        if (result === false) throw result;
         if (labels.done !== undefined) show("done", labels.done);
         return true;
       } catch (failure) {
-        if (failure !== false && failure !== null) console.error("Widget action failed", failure);
-        show("failed", failure !== false && failure !== null && labels.failed ? labels.failed(failure) : null);
+        if (failure !== false) console.error("Widget action failed", failure);
+        show("failed", failure !== false && labels.failed ? labels.failed(failure) : null);
         return false;
       }
     },

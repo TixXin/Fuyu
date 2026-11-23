@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { defineSlot, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { CalendarPanel } from "../CalendarPanel";
 import { MeetingBannerActions, MeetingBannerNotice } from "../MeetingBannerNotice";
@@ -10,12 +11,16 @@ type CalendarPageProps = {
   onOpenSettings: (section: "calendar") => void;
 };
 
+const REQUEST_FRESH_MS = 3_000;
+
 const pageSlot = defineSlot<CalendarPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
 function CalendarPage({ onOpenSettings }: CalendarPageProps) {
   const calendar = calendarState.use();
   const link = todoLinkState.use() ?? undefined;
-  const request = useCalendarDayRequest();
+  const asked = useCalendarDayRequest();
+  const [openedAt] = useState(Date.now);
+  const request = asked && asked.at >= openedAt - REQUEST_FRESH_MS ? asked : null;
   if (!calendar) return null;
   return (
     <CalendarPanel

@@ -9,7 +9,7 @@ export function YearWidget() {
   const now = useNow(60_000);
   const progress = yearProgress(now);
   const end = new Date(now.getFullYear() + 1, 0, 1);
-  const left = Math.ceil((end.getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / 86_400_000);
+  const left = Math.round((end.getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / 86_400_000);
   return (
     <WidgetFrame icon={Hourglass} title={String(now.getFullYear())} className="daily-year">
       <div className="daily-fill" />
