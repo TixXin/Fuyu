@@ -54,7 +54,7 @@ try {
   const others = items().filter((item) => !item.classList.contains("settings-sidebar__item--active"));
   await click(others[0]);
   await finishAll();
-  const first = document.querySelector<HTMLElement>(".settings-sidebar__item--active")!;
+  const first = document.querySelector<HTMLButtonElement>(".settings-sidebar__item--active")!;
   const later = items().find((item) => item.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_PRECEDING && item !== first);
   check(later, "侧栏下面还有别的页");
   await click(later!);
