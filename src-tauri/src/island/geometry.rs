@@ -491,25 +491,30 @@ fn resize_stage(window: &WebviewWindow, stage_size: LogicalSize<f64>, immediate:
     let window = window.clone();
     thread::spawn(move || {
         thread::sleep(STAGE_SHRINK_DELAY);
-        if STAGE_SHRINK_GENERATION.load(Ordering::SeqCst) != generation {
-            return;
-        }
-        if let Err(error) = window.set_size(Size::Logical(stage_size)) {
+        let stage = window.clone();
+        if let Err(error) = window.run_on_main_thread(move || shrink_stage(&stage, stage_size, generation)) {
             eprintln!("Failed to shrink island stage: {error}");
-            return;
-        }
-        if commit_stage_width(&window, stage_size.width) == 0 {
-            return;
-        }
-        let state = read_window_state();
-        if state.is_dragging {
-            return;
-        }
-        if let Err(error) = apply_stage_position(&window, state, stage_size.height, false) {
-            eprintln!("Failed to recentre the island stage: {error}");
         }
     });
     Ok(shift)
+}
+
+fn shrink_stage(window: &WebviewWindow, stage_size: LogicalSize<f64>, generation: u64) {
+    if STAGE_SHRINK_GENERATION.load(Ordering::SeqCst) != generation {
+        return;
+    }
+    if let Err(error) = window.set_size(Size::Logical(stage_size)) {
+        eprintln!("Failed to shrink island stage: {error}");
+        return;
+    }
+    let shifted = commit_stage_width(window, stage_size.width) != 0;
+    let state = read_window_state();
+    if !shifted || state.is_dragging {
+        return;
+    }
+    if let Err(error) = apply_stage_position(window, state, stage_size.height, false) {
+        eprintln!("Failed to recentre the island stage: {error}");
+    }
 }
 
 pub(super) fn interpolate_stage_position(
