@@ -5,12 +5,14 @@ import type { IslandSettings } from "../../lib/settings/types";
 import { isMacOS } from "../../lib/platform";
 import { useIslandLayerShortcut } from "../../lib/island-layer/useIslandLayerShortcut";
 import * as islandApi from "./api";
+import { taskbarHidesGlass } from "./glassStatus";
 import { islandMarginY } from "./islandForm";
 import { COLLAPSED_ISLAND_HEIGHT } from "./layout";
 import { clearIslandPosition } from "./storage";
 import type { IslandMode, NativeGlassState } from "./types";
 import { useClickFocus } from "./useClickFocus";
 import { useCollapseOnBlur } from "./useCollapseOnBlur";
+import { useIslandOnTaskbar } from "./useIslandOnTaskbar";
 import { useIslandPosition } from "./useIslandPosition";
 import { readIslandGlassFrame } from "./useNativeGlassSync";
 import { useNativeLayout } from "./useNativeLayout";
@@ -36,6 +38,7 @@ type InteractionSnapshot = {
   isTucked: boolean;
   isDimmed: boolean;
   gamePassthrough: boolean;
+  glassHidden: boolean;
   backgroundColor?: string;
 };
 
@@ -93,6 +96,7 @@ export function useIslandWindow({
       isTucked: nextIsTucked,
       isDimmed: nextIsDimmed,
       gamePassthrough: nextGamePassthrough,
+      glassHidden,
       backgroundColor: nextBackgroundColor,
     }: InteractionSnapshot) => {
       const glassEnabled = nextSettings.appearanceMode === "liquidGlass";
@@ -127,6 +131,7 @@ export function useIslandWindow({
           gamePassthrough: nextGamePassthrough,
           collapsedHeight,
           notchRingExtra: nextNotchRingExtra,
+          glassHidden,
         });
         setNativeGlassState(glassState);
       } catch (error) {
@@ -227,6 +232,8 @@ export function useIslandWindow({
 
   useEffect(() => () => queueRef.current?.dispose(), []);
 
+  const onTaskbar = useIslandOnTaskbar();
+  const glassHidden = taskbarHidesGlass({ placed: onTaskbar.placed, look: settings.taskbarLook, mode });
   const marginY = islandMarginY(settings);
   const glassEnabled = settings.appearanceMode === "liquidGlass";
   const nativeGlassBackdrop = isMacOS && glassEnabled ? settings.glassBackdrop : undefined;
@@ -248,6 +255,7 @@ export function useIslandWindow({
       isTucked,
       isDimmed,
       gamePassthrough,
+      glassHidden,
       backgroundColor,
     });
     if (!didShowInitialWindow.current) {
@@ -266,6 +274,7 @@ export function useIslandWindow({
     isTucked,
     isDimmed,
     gamePassthrough,
+    glassHidden,
     mode,
     marginY,
     glassEnabled,

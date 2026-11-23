@@ -149,6 +149,7 @@ export type IslandInteraction = {
   gamePassthrough?: boolean;
   collapsedHeight?: number;
   notchRingExtra?: number;
+  glassHidden?: boolean;
 };
 
 export function setIslandLayout(layout: IslandLayout) {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { frameLuminance, glassFramePlacement, parseGlassMessage } from "../../src/windows/island/glassFrame.ts";
-import { resolveGlassStatus } from "../../src/windows/island/glassStatus.ts";
+import { resolveGlassStatus, taskbarHidesGlass } from "../../src/windows/island/glassStatus.ts";
 
 function frameBytes(rect, width, height, pixel) {
   const bytes = new Uint8Array(24 + width * height * 4);
@@ -72,4 +72,11 @@ test("the wallpaper and none choices carry no reason unless the wallpaper fails,
   assert.deepEqual(resolveGlassStatus({ ...base, choice: "wallpaper", wallpaper: "unavailable" }), { backdrop: "css", reason: "no-wallpaper" });
   assert.deepEqual(resolveGlassStatus({ ...base, choice: "none", live: { state: "failed", reason: "failed" } }), { backdrop: "css" });
   assert.deepEqual(resolveGlassStatus({ ...base, enabled: false, transparencyOff: true }), { backdrop: "off" });
+});
+
+test("capture pauses only while the see-through taskbar look hides the collapsed island's glass", () => {
+  assert.equal(taskbarHidesGlass({ placed: true, look: "transparent", mode: "collapsed" }), true);
+  assert.equal(taskbarHidesGlass({ placed: true, look: "transparent", mode: "expanded" }), false, "the opened panel shows its glass");
+  assert.equal(taskbarHidesGlass({ placed: true, look: "theme", mode: "collapsed" }), false, "follow-theme keeps the glass");
+  assert.equal(taskbarHidesGlass({ placed: false, look: "transparent", mode: "collapsed" }), false, "off the taskbar keeps the glass");
 });

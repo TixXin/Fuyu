@@ -411,6 +411,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 - 刘海屏上的文字（C139.3，2026-11-22）：新 key `fuyu-collapsed-text`（格式见上面 localStorage 表），进设置备份和同步的 `collapsedItems` 组。没有刘海时不读它，收起条照旧。
 - 文字的先后（C139.4，2026-11-22）：`fuyu-collapsed-text` 多可选字段 `order`、`hidden`（格式见上面 localStorage 表）。`fuyu-settings` 的 `lyricsIslandPriority` 照旧存、照旧同步，只在没有 `order` 时用来推默认顺序，设置界面不再显示它。旧版本读到新字段会忽略，按自己的老设置排。
 - 刘海设置并组（C168，2026-11-22）：不改存储格式，`notchRim*` / `notchRing*` 的键和取值照旧。新界面把颜色、自定义颜色、粗细、亮度、动效写进外框和内圈、岛屿和面板四份，间距写进内圈两份，读的时候以内圈岛屿那份为准；「两边一样」同时写 `notchRimPanelSame` 和 `notchRingPanelSame`。外框的 `…Status` 只在外框样式不是 `off` 时起作用（原来 `off` 也会临时亮）。
+- 任务栏透明样子下暂停玻璃采集（2026-11-23）：`set_island_interaction` 新增可选参数 `glassHidden`（布尔，缺省 `false`，老前端不传照旧）。为 `true` 且岛收起时，Windows 的实时透出（DXGI 桌面复制）和刘海模式收起时一样暂停：释放复制会话、不再发帧，页面上的画布留着最后一帧；岛展开时马上恢复。前端在岛吸附在任务栏、「任务栏上的样子」是「透明」且收起时传 `true`（`windows/island/glassStatus.ts` 的 `taskbarHidesGlass`）。Mac 和其他平台只存不用。
 
 ## 改名兼容（D17）
 
