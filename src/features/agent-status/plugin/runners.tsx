@@ -13,6 +13,7 @@ import { sessionName } from "../session";
 import { listAgentStatuses } from "../status";
 import { useAgentHooksAutoSetup } from "../useAgentHooksAutoSetup";
 import { useAgentHostEvent } from "../useAgentHostEvent";
+import { useFullscreenAgentAlerts } from "../useFullscreenAgentAlerts";
 import { useAgentIndicator } from "../useAgentIndicator";
 import { useIslandAgentAlerts } from "../useIslandAgentAlerts";
 import { useIslandAgents } from "../useIslandAgents";
@@ -71,6 +72,8 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
     update: settings.agentHooksAutoUpdate,
     t,
   });
+  const openAgents = useCallback(() => openIslandPage("agents"), [openIslandPage]);
+  useFullscreenAgentAlerts(features.agents && settings.agentStatusEnabled && !demo.active, agentSessions, settings, openAgents);
   useAgentHostEvent([agentStatus], () => ({
     agents: listAgentStatuses(agentStatus).map(({ key, label, status }) => ({
       id: key,

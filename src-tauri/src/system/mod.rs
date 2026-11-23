@@ -1,4 +1,5 @@
 pub(crate) mod accent_color;
+pub(crate) mod agent_notifications;
 mod command_flags;
 pub(crate) mod download_mirrors;
 pub(crate) mod fullscreen;
@@ -97,6 +98,7 @@ macro_rules! tauri_commands {
             crate::system::permissions::request_system_permission,
             crate::system::update_runtime::updater_state,
             crate::system::update_notifications::updater_notify,
+            crate::system::agent_notifications::agent_notify,
             crate::system::update_notifications::updater_diagnostics,
             crate::system::settings_backup::save_settings_backup,
             crate::system::settings_backup::restart_island,
