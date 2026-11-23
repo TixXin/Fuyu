@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS_CATEGORY, featureOf, isCategoryAvailable, settingsCate
 import { FeatureOffPage } from "./FeatureOffPage";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useMacWindowKeys } from "./useMacWindowKeys";
+import { useFileDropGuard } from "./useFileDropGuard";
 import { useFeatureSwitches } from "./useFeatureSwitches";
 import { LayoutEditor } from "./LayoutEditor";
 import "./slots/categories";
@@ -46,6 +47,7 @@ export function SettingsWindow() {
   const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const unsupported = useUnsupportedFeatures();
   useSlotEntries(categorySlot);
+  useFileDropGuard();
   const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const features = useFeatureSwitches(settings, setSettings);
   const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;

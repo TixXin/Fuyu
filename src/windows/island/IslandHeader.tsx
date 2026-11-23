@@ -92,7 +92,7 @@ export function IslandHeader({
   const icons = features.pageLayout?.icons;
   const iconName = (id: string) => (id === FUYU_PAGE_ID ? fuyuPageIconName(icons, id, fuyuTabIcon) : icons?.[id]);
   const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${dots.map((item) => `${item.id}:${iconName(item.id) ?? ""}`).join(",")}`);
-  const AgentsIcon = pageIconComponent(iconName("agents")) ?? Bot;
+  const AgentsIcon = pageIconComponent(iconName("agents"), Bot) ?? Bot;
   useEffect(() => {
     const row = dotsRef.current;
     const active = row?.querySelector<HTMLElement>(".dot-button--active");
@@ -121,7 +121,7 @@ export function IslandHeader({
     const Icon = item.icon;
     const label = pageLabel(item);
     const chosen = iconName(target);
-    const Custom = chosen === FUYU_TEXT_ICON || chosen === JELLYFISH_ICON ? null : pageIconComponent(chosen);
+    const Custom = chosen === FUYU_TEXT_ICON || chosen === JELLYFISH_ICON ? null : pageIconComponent(chosen, item.external ? undefined : Icon ?? undefined);
     const named = item.external || !(target in builtinLabels);
     const kind = item.external ? "dot-button--plugin" : named ? "dot-button--custom" : `dot-button--${target}`;
     return (

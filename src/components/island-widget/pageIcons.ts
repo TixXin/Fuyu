@@ -2,6 +2,10 @@ import {
   Bell, BookOpen, Bot, Briefcase, CalendarDays, Camera, Cat, Clipboard, Clock, Cloud, Coffee, Flame, Folder, Gamepad2, Globe, Headphones,
   Heart, House, Image, LayoutGrid, Leaf, ListTodo, MessageCircle, Moon, Music, Rocket, Smile, Sparkles, Star, Sun, Timer, Zap,
 } from "lucide-react";
+import { createElement } from "react";
+import { CustomPageIcon, type PageIconProps } from "../page-icons/CustomPageIcon";
+import { lucideCatalogNow } from "../page-icons/lucideCatalog";
+import { parsePageIcon } from "../../lib/settings/pageIconValue";
 import { FuyuTextIcon } from "./FuyuTextIcon";
 import { JellyfishIcon } from "./JellyfishIcon";
 import type { PanelIconComponent } from "./panelIcons";
@@ -49,9 +53,29 @@ const SPECIAL: Readonly<Record<string, PanelIconComponent>> = {
   [JELLYFISH_ICON]: JellyfishIcon,
 };
 
-export function pageIconComponent(name: string | undefined): PanelIconComponent | null {
+const custom = new Map<string, Map<PanelIconComponent | undefined, PanelIconComponent>>();
+
+function customComponent(name: string, fallback: PanelIconComponent | undefined): PanelIconComponent {
+  const byFallback = custom.get(name) ?? new Map<PanelIconComponent | undefined, PanelIconComponent>();
+  custom.set(name, byFallback);
+  const known = byFallback.get(fallback);
+  if (known) return known;
+  const Component = (props: PageIconProps) => createElement(CustomPageIcon, { ...props, value: name, fallback });
+  byFallback.set(fallback, Component);
+  return Component;
+}
+
+export function pageIconComponent(name: string | undefined, fallback?: PanelIconComponent): PanelIconComponent | null {
   if (!name) return null;
-  return SPECIAL[name] ?? (Object.prototype.hasOwnProperty.call(PAGE_ICON_CHOICES, name) ? PAGE_ICON_CHOICES[name] : null);
+  if (Object.prototype.hasOwnProperty.call(SPECIAL, name)) return SPECIAL[name];
+  if (Object.prototype.hasOwnProperty.call(PAGE_ICON_CHOICES, name)) return PAGE_ICON_CHOICES[name];
+  const parsed = parsePageIcon(name);
+  if (!parsed) return null;
+  if (parsed.kind === "name") {
+    const catalog = lucideCatalogNow();
+    if (catalog) return catalog.icon(parsed.name);
+  }
+  return customComponent(name, fallback);
 }
 
 export function fuyuPageIconName(icons: Readonly<Record<string, string>> | undefined, pageId: string, legacyJellyfish: boolean): string {

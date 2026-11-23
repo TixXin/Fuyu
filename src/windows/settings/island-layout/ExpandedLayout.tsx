@@ -45,7 +45,7 @@ export function ExpandedLayout({ settings, pluginPages, pluginWidgets, stage }: 
     <>
       {stage(<ExpandedPreview settings={settings} rows={rows} current={current} screenshotOn={screenshotOn} panel={panel} library={library} selected={selected} onPage={setPageId} onWidget={setWidgetId} onPanel={change} />)}
       <PageStrip rows={rows} layout={layout} save={save} current={current?.id} onPick={setPageId} pluginsListed={pluginsListed} />
-      {current ? <PageIconPicker key={current.id} row={current} layout={layout} save={save} legacyJellyfish={settings.fuyuTabIcon} /> : null}
+      {current ? <PageIconPicker key={current.id} row={current} layout={layout} save={save} legacyJellyfish={settings.fuyuTabIcon} nameOf={(id) => rows.find((row) => row.id === id)?.name ?? id} /> : null}
       {panel ? (
         <div className="panel-editing" key={panel.id}>
           <PanelEditor panel={panel} library={library} selected={selected} onSelect={setWidgetId} onChange={change} strip={strip} />

@@ -111,6 +111,14 @@ const results = document.getElementById("results")!;
 const expandedRoot = document.getElementById("expanded")!;
 const collapsedRoot = document.getElementById("collapsed")!;
 
+async function settle(condition: () => unknown, timeout = 3000) {
+  const start = performance.now();
+  while (!condition() && performance.now() - start < timeout) {
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+  }
+  return condition();
+}
+
 async function frame() {
   await act(async () => { await new Promise(requestAnimationFrame); });
 }
@@ -205,7 +213,7 @@ async function checkPageIcons() {
     && agents()?.classList.contains("island__agent-status-icon") && dot("world-clock")?.querySelector("svg.lucide-globe") && !dot("world-clock")?.querySelector(".test-globe"),
     "fuyu-island-pages 的 icons 换掉页头对应页面的图标：Fuyu、内置页、Agent 按钮（保留状态颜色）和插件页");
   await act(async () => setHeaderIcons({ layout: { ...plain, icons: { todo: "no-such-icon" } }, legacy: false }));
-  check(dot("todo")?.querySelector("svg.lucide-list-todo") && !dot("todo")?.querySelector("svg.lucide-star") && dot("panel:fuyu")?.querySelector(".panel-text-icon"), "不认识的图标名按默认图标画");
+  check(await settle(() => dot("todo")?.querySelector("svg.lucide-list-todo") && !dot("todo")?.querySelector("svg.lucide-star") && dot("panel:fuyu")?.querySelector(".panel-text-icon")), "不认识的图标名等图标目录加载完后按默认图标画");
   await act(async () => setHeaderIcons({ layout: null, legacy: false }));
 }
 
