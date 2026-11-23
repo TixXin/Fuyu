@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "../../i18n";
-import type { AgentSessionSummary } from "./api";
+import { getForegroundFullscreen, listenAgentNotificationOpened, listenForegroundFullscreen, notifyAgent, type AgentSessionSummary } from "./api";
 import { freshAlerts, islandHiddenByFullscreen, phasesOf, type FullscreenAlertSettings, type FullscreenView } from "./fullscreenAlerts";
 import { sessionName } from "./session";
 
-const FULLSCREEN_EVENT = "foreground-fullscreen-changed";
-const OPENED_EVENT = "agent-notification-opened";
 const NOT_FULLSCREEN: FullscreenView = { active: false, onIslandMonitor: false };
 
 function useFullscreen(watching: boolean) {
@@ -18,8 +14,8 @@ function useFullscreen(watching: boolean) {
       return;
     }
     let cancelled = false;
-    const stop = listen<FullscreenView>(FULLSCREEN_EVENT, ({ payload }) => setView(payload));
-    void invoke<FullscreenView>("get_foreground_fullscreen").then((next) => { if (!cancelled) setView(next); }).catch(() => undefined);
+    const stop = listenForegroundFullscreen(setView);
+    void getForegroundFullscreen().then((next) => { if (!cancelled) setView(next); }).catch(() => undefined);
     return () => {
       cancelled = true;
       void stop.then((unlisten) => unlisten()).catch(() => undefined);
@@ -45,7 +41,7 @@ export function useFullscreenAgentAlerts(enabled: boolean, sessions: readonly Ag
     for (const { tag, phase, session } of freshAlerts(before, sessions)) {
       const { label, title } = sessionName(session);
       const heading = phase === "waiting" ? t.island.agentNeedsYou(label) : t.island.agentFailed(label);
-      void invoke<boolean>("agent_notify", { tag, title: heading, body: title }).catch(() => undefined);
+      void notifyAgent(tag, heading, title).catch(() => undefined);
     }
   }, [hidden, sessions, t]);
 
@@ -55,7 +51,7 @@ export function useFullscreenAgentAlerts(enabled: boolean, sessions: readonly Ag
   });
   useEffect(() => {
     if (!enabled) return;
-    const stop = listen(OPENED_EVENT, () => openRef.current());
+    const stop = listenAgentNotificationOpened(() => openRef.current());
     return () => void stop.then((unlisten) => unlisten()).catch(() => undefined);
   }, [enabled]);
 }
