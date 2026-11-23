@@ -1,5 +1,6 @@
 .translation-panel {
   --tp-ink: var(--island-ink-rgb, 241, 240, 246);
+  --tp-faint: 0.4;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -9,6 +10,10 @@
   color: rgba(var(--tp-ink), 0.96);
   font-size: 13px;
   container-type: inline-size;
+}
+
+.island-light .translation-panel {
+  --tp-faint: 0.56;
 }
 
 .translation-panel__bar {
@@ -174,7 +179,7 @@
 }
 
 .translation-panel__pane textarea::placeholder {
-  color: rgba(var(--tp-ink), 0.4);
+  color: rgba(var(--tp-ink), var(--tp-faint));
 }
 
 .translation-panel__output {
@@ -191,7 +196,7 @@
 }
 
 .translation-panel__empty {
-  color: rgba(var(--tp-ink), 0.4);
+  color: rgba(var(--tp-ink), var(--tp-faint));
 }
 
 .translation-panel__foot {

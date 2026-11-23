@@ -1,7 +1,8 @@
 import { Channel, isTauri } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { contrastBoost } from "../../lib/theme/wallpaperSlice";
-import { setGlassCaptureOptions, startGlassCapture, stopGlassCapture } from "./api";
+import { setGlassCaptureOptions, startGlassCapture, stopGlassCapture, type GlassCaptureStart } from "./api";
+import { createGlassCaptureHub, type GlassCaptureData } from "./glassCaptureHub";
 import { useDevicePixelRatio } from "./useDevicePixelRatio";
 import { frameLuminance, glassFramePlacement, parseGlassMessage, type GlassFrame, type ViewBox } from "./glassFrame";
 import type { LiveBackdropState } from "./glassStatus";
@@ -9,6 +10,8 @@ import type { LiveBackdropState } from "./glassStatus";
 const STARTING: LiveBackdropState = { state: "starting" };
 const LIVE: LiveBackdropState = { state: "live" };
 const MAX_TRACK_MS = 1200;
+
+const sharedCapture = createGlassCaptureHub<GlassCaptureStart>(() => void stopGlassCapture().catch(() => {}));
 
 function viewBox(element: Element): ViewBox {
   const rect = element.getBoundingClientRect();
@@ -72,8 +75,7 @@ export function useGlassCapture({
       island.style.setProperty("--glass-live-boost", String(boost));
     };
 
-    const channel = new Channel<ArrayBuffer | number[]>();
-    channel.onmessage = (data) => {
+    const onMessage = (data: GlassCaptureData) => {
       if (!alive) return;
       const message = parseGlassMessage(data);
       if (message.kind === "failed") {
@@ -114,7 +116,12 @@ export function useGlassCapture({
     island.addEventListener("transitionend", stopTracking);
     island.addEventListener("transitioncancel", stopTracking);
 
-    void startGlassCapture(channel, options.current.blur, options.current.saturation).then(
+    const capture = sharedCapture.join(onMessage, (deliver) => {
+      const channel = new Channel<GlassCaptureData>();
+      channel.onmessage = deliver;
+      return startGlassCapture(channel, options.current.blur, options.current.saturation);
+    });
+    void capture.started.then(
       (result) => {
         if (alive && !result.started) report({ state: "failed", reason: result.reason ?? "unsupported" });
       },
@@ -132,7 +139,7 @@ export function useGlassCapture({
       delete island.dataset.glassLive;
       island.style.removeProperty("--glass-live-boost");
       setLive(STARTING);
-      void stopGlassCapture().catch(() => {});
+      capture.leave();
     };
   }, [enabled, target]);
 
