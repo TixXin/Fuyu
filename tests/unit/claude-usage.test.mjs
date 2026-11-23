@@ -308,14 +308,16 @@ test("the usage rings' config falls back to its defaults and keeps the interval 
     providers: { claudeCode: true, codex: false, antigravity: false, glm: false, kimi: false, cursor: false, workbuddy: false, dsh: false },
     show: "used",
     askAnthropic: false,
+    askWhenStale: true,
     proxy: "",
     intervalMinutes: 5,
   });
-  const set = usageConfig({ claudeCode: false, antigravity: true, dsh: true, kimi: true, show: "remaining", askAnthropic: true, proxy: "http://127.0.0.1:7890", intervalMinutes: 500 });
+  const set = usageConfig({ claudeCode: false, antigravity: true, dsh: true, kimi: true, show: "remaining", askAnthropic: true, askWhenStale: false, proxy: "http://127.0.0.1:7890", intervalMinutes: 500 });
   assert.deepEqual(set, {
     providers: { claudeCode: false, codex: false, antigravity: true, glm: false, kimi: true, cursor: false, workbuddy: false, dsh: true },
     show: "remaining",
     askAnthropic: true,
+    askWhenStale: false,
     proxy: "http://127.0.0.1:7890",
     intervalMinutes: 120,
   });
@@ -325,6 +327,7 @@ test("the usage rings' config falls back to its defaults and keeps the interval 
   assert.equal(storedValue("antigravity", false), null);
   assert.equal(storedValue("dsh", false), null);
   assert.equal(storedValue("intervalMinutes", 30), 30);
+  assert.equal(storedValue("askWhenStale", true), null, "the stale check is on unless turned off");
 });
 
 test("agents/v1 usage reports turn back into the ring's usage", async () => {

@@ -4181,6 +4181,32 @@
       }
     },
     {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "显示口径与直连查询",
+        "title": "Claude Code：额度旧了时补查一次",
+        "description": "状态栏和 claude-hud 的额度都超过 30 分钟没更新或已过重置时间时，用同一个只读令牌经代理向 Anthropic 查一次，至少隔 15 分钟，失败时退避到 2 小时。关掉后只显示「已过期」，不联网。"
+      },
+      "en": {
+        "group": "Display and direct query",
+        "title": "Claude Code: check once when usage goes stale",
+        "description": "When both the status line and claude-hud readings are over 30 minutes old or past their reset time, ask Anthropic once with the same read-only token through the proxy: at most every 15 minutes, backing off to 2 hours on failure. Off shows \"Expired\" instead and never goes online."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "显示口径与直连查询",
+        "title": "代理地址",
+        "description": "http:// 或 https:// 代理，例如 http://127.0.0.1:7890。留空时依次用 HTTPS_PROXY 环境变量和 Windows 的系统代理；都没有就不请求，不会绕过代理直连。"
+      },
+      "en": {
+        "group": "Display and direct query",
+        "title": "Proxy",
+        "description": "An http:// or https:// proxy, such as http://127.0.0.1:7890. Empty uses the HTTPS_PROXY environment variable, then the Windows proxy; without either nothing is sent, never directly."
+      }
+    },
+    {
       "page": "agentNoticeLook",
       "zh-CN": {
         "group": "停留多久",

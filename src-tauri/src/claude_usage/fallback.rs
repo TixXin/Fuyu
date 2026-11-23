@@ -28,6 +28,10 @@ pub(super) fn wait_after(failures: u32, retry_after: Option<Duration>) -> Durati
     retry_after.map_or(backoff, |after| after.max(GAP).min(MAX_GAP))
 }
 
+pub(super) fn allowed(config: &serde_json::Map<String, Value>) -> bool {
+    config.get("askWhenStale").and_then(Value::as_bool).unwrap_or(true)
+}
+
 fn may_try(state: &Fallback, now: Instant) -> bool {
     !state.in_flight && state.next_try.is_none_or(|next| next <= now)
 }
@@ -35,6 +39,10 @@ fn may_try(state: &Fallback, now: Instant) -> bool {
 pub(crate) async fn usage(stale: bool) -> Option<ClaudeUsage> {
     if let Some(current) = super::current() {
         return Some(current);
+    }
+    let config = crate::plugin_kernel::builtins::config(PLUGIN_ID);
+    if !allowed(&config) {
+        return None;
     }
     let now = Instant::now();
     let go = {
@@ -46,7 +54,7 @@ pub(crate) async fn usage(stale: bool) -> Option<ClaudeUsage> {
         go
     };
     if go {
-        let configured = crate::plugin_kernel::builtins::config(PLUGIN_ID)
+        let configured = config
             .get("proxy")
             .and_then(Value::as_str)
             .map(str::trim)

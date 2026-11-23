@@ -402,3 +402,11 @@ fn live_antigravity_workbuddy_and_dsh_usage() {
     assert!(dsh.error.is_none(), "dsh error: {:?}", dsh.error);
     assert!(!dsh.wallets.is_empty());
 }
+
+#[test]
+fn the_stale_check_is_on_unless_turned_off() {
+    let config = |value: serde_json::Value| value.as_object().cloned().unwrap();
+    assert!(super::fallback::allowed(&config(serde_json::json!({}))));
+    assert!(super::fallback::allowed(&config(serde_json::json!({ "askWhenStale": true }))));
+    assert!(!super::fallback::allowed(&config(serde_json::json!({ "askWhenStale": false }))));
+}

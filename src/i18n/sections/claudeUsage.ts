@@ -63,6 +63,8 @@ export type ClaudeUsageText = {
     remaining: string;
     askAnthropic: string;
     askAnthropicHint: string;
+    askWhenStale: string;
+    askWhenStaleHint: string;
     proxy: string;
     proxyHint: string;
     proxyHintMac: string;
@@ -261,6 +263,8 @@ export const zhCN: ClaudeUsageText = {
     remaining: "剩余",
     askAnthropic: "Claude Code：直接向 Anthropic 查询",
     askAnthropicHint: "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。",
+    askWhenStale: "Claude Code：额度旧了时补查一次",
+    askWhenStaleHint: "状态栏和 claude-hud 的额度都超过 30 分钟没更新或已过重置时间时，用同一个只读令牌经代理向 Anthropic 查一次，至少隔 15 分钟，失败时退避到 2 小时。关掉后只显示「已过期」，不联网。",
     proxy: "代理地址",
     proxyHint: "http:// 或 https:// 代理，例如 http://127.0.0.1:7890。留空时依次用 HTTPS_PROXY 环境变量和 Windows 的系统代理；都没有就不请求，不会绕过代理直连。",
     proxyHintMac: "http:// 或 https:// 代理，例如 http://127.0.0.1:7890。留空时用 HTTPS_PROXY 环境变量；没有就不请求，不会绕过代理直连。",
@@ -452,6 +456,8 @@ export const en: ClaudeUsageText = {
     remaining: "Left",
     askAnthropic: "Claude Code: ask Anthropic directly",
     askAnthropicHint: "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too.",
+    askWhenStale: "Claude Code: check once when usage goes stale",
+    askWhenStaleHint: "When both the status line and claude-hud readings are over 30 minutes old or past their reset time, ask Anthropic once with the same read-only token through the proxy: at most every 15 minutes, backing off to 2 hours on failure. Off shows \"Expired\" instead and never goes online.",
     proxy: "Proxy",
     proxyHint: "An http:// or https:// proxy, such as http://127.0.0.1:7890. Empty uses the HTTPS_PROXY environment variable, then the Windows proxy; without either nothing is sent, never directly.",
     proxyHintMac: "An http:// or https:// proxy, such as http://127.0.0.1:7890. Empty uses the HTTPS_PROXY environment variable; without it nothing is sent, never directly.",
