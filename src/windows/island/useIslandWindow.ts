@@ -32,6 +32,7 @@ type InteractionSnapshot = {
   settings: IslandSettings;
   expandedHeight: number;
   expandedWidth: number;
+  widestWidth: number;
   collapsedWidth: number;
   collapsedHeight: number;
   notchRingExtra: number;
@@ -52,6 +53,7 @@ type IslandWindowOptions = {
   backgroundColor?: string;
   expandedIslandHeight: number;
   expandedIslandWidth: number;
+  widestIslandWidth?: number;
   collapsedIslandWidth: number;
   collapsedIslandHeight?: number;
   notchRingExtra?: number;
@@ -69,6 +71,7 @@ export function useIslandWindow({
   backgroundColor,
   expandedIslandHeight,
   expandedIslandWidth,
+  widestIslandWidth = 0,
   collapsedIslandWidth,
   collapsedIslandHeight = COLLAPSED_ISLAND_HEIGHT,
   notchRingExtra = 0,
@@ -90,6 +93,7 @@ export function useIslandWindow({
       settings: nextSettings,
       expandedHeight,
       expandedWidth,
+      widestWidth,
       collapsedWidth,
       collapsedHeight,
       notchRingExtra: nextNotchRingExtra,
@@ -111,6 +115,7 @@ export function useIslandWindow({
           marginY: islandMarginY(nextSettings),
           expandedHeight,
           expandedWidth,
+          widestWidth,
           collapsedWidth,
           customPosition: islandPositionRef.current,
           isTucked: nextIsTucked,
@@ -249,6 +254,7 @@ export function useIslandWindow({
       settings,
       expandedHeight: expandedIslandHeight,
       expandedWidth: expandedIslandWidth,
+      widestWidth: widestIslandWidth,
       collapsedWidth: collapsedIslandWidth,
       collapsedHeight: collapsedIslandHeight,
       notchRingExtra,
@@ -268,6 +274,7 @@ export function useIslandWindow({
     ready,
     expandedIslandHeight,
     expandedIslandWidth,
+    widestIslandWidth,
     collapsedIslandWidth,
     collapsedIslandHeight,
     notchRingExtra,

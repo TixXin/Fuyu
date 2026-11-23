@@ -36,6 +36,10 @@ export function pagePanelSize(sizes: Record<string, PanelPageSize>, page: string
   return Object.prototype.hasOwnProperty.call(sizes, page) ? sizes[page] : fallback;
 }
 
+export function widestPanelWidth(sizes: Record<string, PanelPageSize>, fallbackWidth: number): number {
+  return Object.values(sizes).reduce((widest, size) => Math.max(widest, size.width), fallbackWidth);
+}
+
 export function withPageSize(sizes: Record<string, PanelPageSize>, page: string, size: PanelPageSize): Record<string, PanelPageSize> {
   const rest = Object.entries(sizes).filter(([key]) => key !== page).slice(-(MAX_PAGES - 1));
   return Object.fromEntries([...rest, [page, size]]);

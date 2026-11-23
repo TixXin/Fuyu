@@ -80,7 +80,7 @@ pub(super) fn stage_width_for(state: IslandWindowState) -> f64 {
     let need = |width: f64, scale: f64| ((width + 2.0 * MAX_TOP_FILLET_RADIUS) * scale + 4.0).ceil();
     let mut needed = need(width, state.active_scale());
     if state.side().is_none() {
-        needed = needed.max(need(state.expanded_width.max(state.resize_reach.0), state.expanded_scale));
+        needed = needed.max(need(state.expanded_width.max(state.resize_reach.0).max(state.widest_width), state.expanded_scale));
     }
     if needed.is_finite() {
         STAGE_WINDOW_WIDTH.max(needed)

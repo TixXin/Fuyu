@@ -1,4 +1,4 @@
-import { pagePanelSize } from "../../lib/settings/pageSizes.ts";
+import { pagePanelSize, widestPanelWidth } from "../../lib/settings/pageSizes.ts";
 import type { IslandSettings, PanelPageSize } from "../../lib/settings/types";
 
 type SizeDefaults = Pick<IslandSettings, "panelWidth" | "maxPanelHeight">;
@@ -9,4 +9,8 @@ export function defaultPageSize(defaults: SizeDefaults): PanelPageSize {
 
 export function islandPageSize(settings: SizeDefaults & Pick<IslandSettings, "pageSizes">, page: string): PanelPageSize {
   return pagePanelSize(settings.pageSizes, page, defaultPageSize(settings));
+}
+
+export function widestPageWidth(settings: SizeDefaults & Pick<IslandSettings, "pageSizes">): number {
+  return widestPanelWidth(settings.pageSizes, settings.panelWidth);
 }
