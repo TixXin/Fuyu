@@ -92,6 +92,8 @@ export const PAGES = [
   "screenshot-record.html",
   "recording-notice.html",
   "timer.html",
+  "pomodoro-start.html",
+  "island-blank-click.html",
   "todo-island.html",
   "todo-date-picker.html",
 ];
