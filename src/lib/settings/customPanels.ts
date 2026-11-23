@@ -263,8 +263,19 @@ export function boardHeightPx(panel: CustomPanel): number {
   return panel.mode === "free" ? Math.max(freeHeightPx(panel.items), GRID_CELL_PX) : cellsToPx(Math.max(1, gridRows(panel.items)));
 }
 
+const STRIP_ROWS = 2;
+
+function compactRows(items: readonly Flowing[], rows: number, page: number) {
+  if (!Number.isFinite(page)) return rows;
+  const tallest = items.reduce((most, item) => Math.max(most, CELLS[item.size].rows), 1);
+  for (let tried = Math.min(rows, Math.max(STRIP_ROWS, tallest)); tried < rows; tried += 1) {
+    if (flowStrip(items, tried, page).every((item) => cellBox(item).col + cellBox(item).cols <= page)) return tried;
+  }
+  return rows;
+}
+
 export function layoutStrip(panel: CustomPanel, rows: number, page = Infinity): CustomPanel {
-  return panel.mode === "grid" ? { ...panel, items: flowStrip(panel.items, rows, page) } : panel;
+  return panel.mode === "grid" ? { ...panel, items: flowStrip(panel.items, compactRows(panel.items, rows, page), page) } : panel;
 }
 
 export function stripRightPx(panel: CustomPanel): number {

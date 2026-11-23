@@ -83,7 +83,7 @@ const overlapping = (items) =>
   items.some((a, i) => items.slice(i + 1).some((b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h));
 
 test("a tall panel gets as many rows as fit, leaving less than one row empty at the bottom", () => {
-  const tall = stripGeometry(panel(Array(14).fill("s")), { width: 460, height: 1530 }, false);
+  const tall = stripGeometry(panel(Array(40).fill("s")), { width: 460, height: 1530 }, false);
   assert.ok(tall.rows > 6, `rows ${tall.rows}`);
   assert.ok(tall.scale >= MIN_CELL_SCALE && tall.scale <= MAX_CELL_SCALE, `scale ${tall.scale}`);
   assert.ok(1530 - (tall.height + 2) * tall.scale < STRIP_STEP_PX * tall.scale, "the bottom gap is under one row");
@@ -98,6 +98,32 @@ test("a tall panel gets as many rows as fit, leaving less than one row empty at 
       assert.ok(strip.scale >= MIN_CELL_SCALE && strip.scale <= MAX_CELL_SCALE, `${width}x${height} scale ${strip.scale}`);
     }
   }
+});
+
+test("a few widgets on a tall panel stay together in the top rows instead of stacking down the left column", () => {
+  const tall = stripGeometry(panel(Array(6).fill("s")), { width: 460, height: 1530 }, false);
+  const boxes = tall.panel.items.map((item) => itemBoxPx(tall.panel, item));
+  const columns = new Set(boxes.map((box) => box.left));
+  const bottom = Math.max(...boxes.map((box) => box.top + box.height));
+  assert.equal(columns.size, 3, "six one-cell widgets on a four-column page use three columns of two");
+  assert.ok(bottom <= cellsToPx(2), "and stay in the top two rows");
+  const pages = new Set(boxes.map((box) => Math.floor(box.left / (tall.pageStepPx))));
+  assert.equal(pages.size, 1, "and on the first page");
+});
+
+test("widgets that need more than two rows fill the page row band by band without spilling onto a second page", () => {
+  const tall = stripGeometry(panel(Array(14).fill("s")), { width: 460, height: 1530 }, false);
+  const boxes = tall.panel.items.map((item) => itemBoxPx(tall.panel, item));
+  const right = Math.max(...boxes.map((box) => box.left + box.width));
+  const bottom = Math.max(...boxes.map((box) => box.top + box.height));
+  assert.ok(right <= cellsToPx(tall.pageColumns), "fourteen one-cell widgets fit on one four-column page");
+  assert.ok(bottom <= cellsToPx(4), "using four rows, not thirteen");
+});
+
+test("the default two-row strip keeps its layout", () => {
+  const strip = stripGeometry(panel(["s", "s", "s"]), stripRoom(FUYU_ISLAND_SIZE), false);
+  const boxes = strip.panel.items.map((item) => itemBoxPx(strip.panel, item));
+  assert.deepEqual(boxes.map((box) => [box.left, box.top]), [[0, 0], [0, cellsToPx(1) + 8], [cellsToPx(1) + 8, 0]]);
 });
 
 test("a free panel uses the same rows and cell size as the grid would, and can grow past full size", () => {
