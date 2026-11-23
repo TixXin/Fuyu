@@ -3,21 +3,22 @@ import { RotateCcw } from "lucide-react";
 import { MiniRing } from "../../components/MiniRing";
 import { useTranslation } from "../../i18n";
 import { AgentProviderIcon } from "./AgentProviderIcon";
-import type { AgentProvider, AgentUsage } from "./api";
-import { untilReset, usageLevel, usageWindows } from "./usage";
+import type { AgentUsageSource } from "./agentSettings";
+import type { AgentUsage } from "./api";
+import { untilReset, usageLevel, usageWindows, USAGE_SOURCE_ICONS } from "./usage";
 import "./EmptyQuota.css";
 
 const LEVEL_COLOR = { low: "var(--mint-text, var(--color-agent-idle))", medium: "var(--color-agent-waiting)", high: "var(--color-warning)" } as const;
 
-export function EmptyQuota({ lines, now }: { lines: readonly [AgentProvider, AgentUsage][]; now: number }) {
+export function EmptyQuota({ lines, now }: { lines: readonly { source: AgentUsageSource; usage: AgentUsage }[]; now: number }) {
   const t = useTranslation();
   const labels = { fiveHour: t.agent.usage.fiveHour, sevenDay: t.agent.usage.sevenDay };
 
   return (
     <div className="agent-empty agent-empty--quota">
       <div className="agent-quota-hero">
-        {lines.map(([provider, usage], index) => (
-          <Fragment key={provider}>
+        {lines.map(({ source, usage }, index) => (
+          <Fragment key={source}>
             {index > 0 && <span className="agent-quota-hero__divider" aria-hidden="true" />}
             {usageWindows(usage, labels).map(({ key, label, window }) => {
               const used = Math.round(window.used);
@@ -30,7 +31,7 @@ export function EmptyQuota({ lines, now }: { lines: readonly [AgentProvider, Age
                     <span className={`agent-quota-gauge__value agent-usage__value--${level}`} aria-hidden="true">{used}%</span>
                   </span>
                   <span className="agent-quota-gauge__label">
-                    <AgentProviderIcon provider={provider} size={12} />
+                    <AgentProviderIcon provider={USAGE_SOURCE_ICONS[source]} size={12} />
                     {label}
                   </span>
                   {reset && (

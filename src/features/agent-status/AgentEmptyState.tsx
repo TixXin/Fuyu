@@ -1,14 +1,14 @@
 import { JellyfishMark } from "../../components/jellyfish/JellyfishMark";
 import { useTranslation } from "../../i18n";
-import type { AgentEmptyStyle, AgentSettingValues } from "./agentSettings";
-import type { AgentSessionSummary } from "./api";
-import { AgentUsageBar, usageLines } from "./AgentUsageBar";
+import type { AgentEmptyStyle, AgentSettingValues, AgentUsageSource } from "./agentSettings";
+import type { AgentSessionSummary, AgentUsage } from "./api";
+import { AgentUsageBar } from "./AgentUsageBar";
 import type { UsageViewChange } from "./AgentUsageMenu";
 import { EmptyQuota } from "./EmptyQuota";
 import { EmptyRecent } from "./EmptyRecent";
 import { EmptyStandby } from "./EmptyStandby";
 import { EmptyTide } from "./EmptyTide";
-import { EMPTY_USAGES, type AgentUsages, type UsageView } from "./usage";
+import { EMPTY_USAGES, shownUsage, usageLines, type AgentUsages, type UsageView } from "./usage";
 import "./AgentEmptyState.css";
 
 export type EmptyStateProps = {
@@ -55,7 +55,8 @@ function Minimal() {
 }
 
 export function AgentEmptyState({ style, sessions, sessionHours, showUsage, usages, usageView, onSettingsChange, onOpenConnect }: EmptyStateProps) {
-  const quotaLines = showUsage && style === "quota" ? usageLines(usages ?? EMPTY_USAGES, usageView) : [];
+  const percentLines = showUsage && style === "quota" ? usageLines(usages ?? EMPTY_USAGES, usageView).flatMap((line) => (line.usage ? [{ source: line.source, usage: line.usage }] : [])) : [];
+  const quotaLines: { source: AgentUsageSource; usage: AgentUsage }[] = percentLines.length > 2 ? percentLines.map((line) => ({ ...line, usage: shownUsage(line.usage, { hidden: [], tightest: true }) })) : percentLines;
   const onViewChange: UsageViewChange | undefined = onSettingsChange;
   if (quotaLines.length > 0) return <EmptyQuota lines={quotaLines} now={usages?.readAt ?? 0} />;
 

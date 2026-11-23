@@ -7,8 +7,10 @@ import { useAgentInterjection } from "./useAgentInterjection";
 import { useIslandAgentSessions } from "./useIslandAgentSessions";
 import { isRemoteSessionReport } from "./remoteSessions";
 import { useAgentUsages } from "./useAgentUsages";
+import { AGENT_USAGE_SOURCES, type AgentUsageSource } from "./agentSettings";
 import type { AgentSessionSummary } from "./api";
 
+const QUOTA_SOURCES: readonly AgentUsageSource[] = ["claudeCode", "codex"];
 const NO_SESSIONS: AgentSessionSummary[] = [];
 
 export function useIslandAgents(settings: IslandSettings, demoSessions: AgentSessionSummary[] = NO_SESSIONS) {
@@ -30,7 +32,10 @@ export function useIslandAgents(settings: IslandSettings, demoSessions: AgentSes
     [sessions.agentSessions, others],
   );
 
-  const agentUsages = useAgentUsages(settings.agentStatusEnabled && (settings.agentShowUsage || settings.agentQuotaAlertPercent > 0));
+  const usageSources = settings.agentShowUsage
+    ? AGENT_USAGE_SOURCES.filter((source) => QUOTA_SOURCES.includes(source) || !settings.agentHiddenProviders.includes(source))
+    : QUOTA_SOURCES;
+  const agentUsages = useAgentUsages(settings.agentStatusEnabled && (settings.agentShowUsage || settings.agentQuotaAlertPercent > 0), usageSources);
 
   return { agentStatus, ...sessions, agentSession, agentInterjection, agentActivity, agentOthers: others, agentUsages };
 }

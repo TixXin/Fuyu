@@ -84,8 +84,10 @@ export type AgentText = {
     };
   };
   usage: {
-    label: string;
-    codexLabel: string;
+    of: (name: string) => string;
+    hide: (name: string) => string;
+    credits: (today: string, sevenDay: string) => string;
+    balance: (total: string) => string;
     fiveHour: string;
     sevenDay: string;
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
@@ -241,15 +243,17 @@ export const zhCN: AgentText = {
     toolCall: (tool) => `正在调用 ${tool}`,
   },
   usage: {
-    label: "Claude 用量",
-    codexLabel: "Codex 用量",
+    of: (name) => `${name} 用量`,
+    hide: (name) => `隐藏 ${name} 的额度`,
+    credits: (today, sevenDay) => `今日 ${today} 积分 · 7 天 ${sevenDay}`,
+    balance: (total) => `余额 ${total}`,
     fiveHour: "5 小时",
     sevenDay: "7 天",
     resetsIn: ({ days, hours, minutes }) =>
       days > 0 ? `${days} 天 ${hours} 小时后重置` : hours > 0 ? `${hours} 小时 ${minutes} 分后重置` : `${minutes} 分后重置`,
     resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}天${hours}小时` : hours > 0 ? `${hours}小时${minutes}分` : `${minutes}分钟`),
     menu: "调整额度显示",
-    models: "按模型",
+    models: "其他额度",
     tightest: "只看最紧的一项",
     reset: "重置时间",
   },
@@ -257,7 +261,7 @@ export const zhCN: AgentText = {
     ago: (minutes) => (minutes < 1 ? "刚刚" : minutes < 60 ? `${minutes} 分钟前` : minutes < 1440 ? `${Math.floor(minutes / 60)} 小时前` : `${Math.floor(minutes / 1440)} 天前`),
     duration: (minutes) => (minutes < 60 ? `${minutes} 分` : minutes % 60 === 0 ? `${minutes / 60} 小时` : `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`),
     sleepTitle: "都歇着呢",
-    sleepHint: "在 Claude Code 或 Codex 里开个对话，它就会醒过来",
+    sleepHint: "在任意一个 Agent 里开个对话，它就会醒过来",
     standbyTitle: "没有正在跑的会话",
     standbyHint: (count) => `已接入 ${count} 家，开个对话就会出现在这里`,
     standbyNone: "还没有接入任何 Agent",
@@ -404,14 +408,16 @@ export const en: AgentText = {
     toolCall: (tool) => `Calling ${tool}`,
   },
   usage: {
-    label: "Claude usage",
-    codexLabel: "Codex usage",
+    of: (name) => `${name} usage`,
+    hide: (name) => `Hide ${name} usage`,
+    credits: (today, sevenDay) => `${today} credits today · ${sevenDay} in 7d`,
+    balance: (total) => `Balance ${total}`,
     fiveHour: "5h",
     sevenDay: "7d",
     resetsIn: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d${hours}h` : hours > 0 ? `resets in ${hours}h${minutes}m` : `resets in ${minutes}m`),
     resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`),
     menu: "Choose what usage to show",
-    models: "Per model",
+    models: "Other limits",
     tightest: "Only the tightest",
     reset: "Reset time",
   },
@@ -419,7 +425,7 @@ export const en: AgentText = {
     ago: (minutes) => (minutes < 1 ? "just now" : minutes < 60 ? `${minutes}m ago` : minutes < 1440 ? `${Math.floor(minutes / 60)}h ago` : `${Math.floor(minutes / 1440)}d ago`),
     duration: (minutes) => (minutes < 60 ? `${minutes}m` : minutes % 60 === 0 ? `${minutes / 60}h` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`),
     sleepTitle: "All quiet",
-    sleepHint: "Start a conversation in Claude Code or Codex to wake it up",
+    sleepHint: "Start a conversation in any agent to wake it up",
     standbyTitle: "No sessions running",
     standbyHint: (count) => `${count} connected. Start a conversation and it shows up here`,
     standbyNone: "No agents connected yet",

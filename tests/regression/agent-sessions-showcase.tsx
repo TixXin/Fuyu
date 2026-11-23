@@ -21,6 +21,8 @@ function usages(now: number) {
   return {
     claude: { updatedAt: now, plan: null, fiveHour: { name: "", used: 27, resetsAt: now + 3 * 3_600_000 }, sevenDay: { name: "", used: 62, resetsAt: now + 5 * 86_400_000 }, models: [{ name: "Fable", used: 91, resetsAt: now + 34 * 60_000 }] },
     codex: { updatedAt: now - 40 * 60_000, plan: "Plus", source: "codex" as const, fiveHour: { name: "", used: 9, resetsAt: null }, sevenDay: { name: "", used: 54, resetsAt: now + 2 * 86_400_000 }, models: [] },
+    others: {},
+    credits: {},
     readAt: now,
   };
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { shownUsage } from "../../src/features/agent-status/usage.ts";
+import { availableLines, EMPTY_USAGES, shownUsage, usageLines } from "../../src/features/agent-status/usage.ts";
 import { emptyTide, normalizeTide, recordTide, tideArea, tideDayKey, tideMinutes, tideSlot } from "../../src/features/agent-status/tide.ts";
 
 const window = (name, used, resetsAt = null) => ({ name, used, resetsAt });
@@ -17,6 +17,7 @@ test("settings saved before the usage options keep showing every window and the 
   assert.equal(DEFAULT_SETTINGS.agentEmptyStyle, "sleep");
   assert.deepEqual(normalizeSettings({ agentUsageHidden: ["codex", "bogus", 3, "codex", "models"] }).agentUsageHidden, ["codex", "models"]);
   assert.deepEqual(normalizeSettings({ agentUsageHidden: "codex" }).agentUsageHidden, []);
+  assert.deepEqual(normalizeSettings({ agentUsageHidden: ["cursor", "dsh", "grok"] }).agentUsageHidden, ["cursor", "dsh"], "only sources that have usage can be hidden");
   assert.equal(normalizeSettings({ agentEmptyStyle: "rainbow" }).agentEmptyStyle, "sleep");
   assert.equal(normalizeSettings({ agentUsageStyle: "ring" }).agentUsageStyle, "ring");
 });
@@ -32,6 +33,30 @@ test("hidden windows drop out and 'tightest' keeps only the fullest of what is l
   assert.deepEqual([tightNoModels.fiveHour?.name, tightNoModels.sevenDay], ["5h", null]);
   const nothing = view(["fiveHour", "sevenDay", "models"], true);
   assert.deepEqual([nothing.fiveHour, nothing.sevenDay, nothing.models], [null, null, []]);
+});
+
+test("every source this computer can read gets a line, in a fixed order, and credits read as figures", () => {
+  const credit = (fields) => ({ provider: "workbuddy", updatedAt: 0, source: null, available: true, credits: null, wallets: [], error: null, ...fields });
+  const usages = {
+    ...EMPTY_USAGES,
+    codex: usage,
+    others: { cursor: { ...usage, fiveHour: null, sevenDay: null }, glm: { ...usage, fiveHour: null, sevenDay: null, models: [] }, antigravity: usage },
+    credits: {
+      dsh: credit({ provider: "dsh", wallets: [{ currency: "CNY", total: "32.10", toppedUp: "30", granted: "2.10" }] }),
+      workbuddy: credit({ credits: { today: 5, sevenDay: 40, total: 90, totalTokens: 0, sessions: 1 } }),
+    },
+  };
+  const lines = availableLines(usages);
+  assert.deepEqual(lines.map((line) => line.source), ["codex", "antigravity", "cursor", "workbuddy", "dsh"], "a plan with no numbers has no line");
+  assert.deepEqual(lines[3].credit, { kind: "credits", today: 5, sevenDay: 40 });
+  assert.deepEqual(lines[4].credit, { kind: "balance", currency: "CNY", total: "32.10" });
+  assert.equal(availableLines({ ...usages, credits: { workbuddy: credit({}) } }).some((line) => line.source === "workbuddy"), false, "no credits and no wallet means no line");
+  const view = { hidden: ["cursor", "fiveHour"], tightest: false, reset: "tightest", style: "number", agentsOff: ["antigravity", "dsh"] };
+  const shown = usageLines(usages, view);
+  assert.deepEqual(shown.map((line) => line.source), ["codex", "workbuddy"], "agents turned off and sources hidden here both drop out");
+  assert.equal(shown[0].usage.fiveHour, null);
+  assert.deepEqual(usageLines(usages, { ...view, hidden: ["fiveHour", "sevenDay"], agentsOff: [] }).map((line) => line.source), ["codex", "antigravity", "cursor", "workbuddy", "dsh"], "lines with only per-model windows stay");
+  assert.deepEqual(usageLines(usages, { ...view, hidden: ["models"], agentsOff: [] }).map((line) => line.source), ["codex", "antigravity", "workbuddy", "dsh"], "a line left with no window drops out");
 });
 
 const at = (hours, minutes) => new Date(2026, 10, 23, hours, minutes).getTime();

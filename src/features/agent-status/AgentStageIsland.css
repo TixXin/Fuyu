@@ -1,0 +1,117 @@
+.agent-stage-island {
+  width: min(100%, 560px);
+  min-height: 64px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 12px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 22px;
+  box-shadow: 0 10px 28px var(--agent-stage-shadow, rgba(0, 0, 0, 0.28));
+  color: var(--text-1);
+}
+
+.agent-stage-island--dark {
+  --mint-text: var(--agent-stage-low, #35e985);
+  --color-agent-idle: var(--agent-stage-low, #35e985);
+  --color-agent-waiting: var(--agent-stage-medium, #ff9f43);
+  --color-warning: var(--agent-stage-high, #ffd166);
+}
+
+.agent-stage-island.agent-stage-island--dark .agent-usage__value--medium {
+  color: var(--color-agent-waiting);
+}
+
+.agent-stage-island.agent-stage-island--dark .agent-usage__value--high {
+  color: var(--color-warning);
+}
+
+.agent-stage-island .agent-usage-table {
+  margin-bottom: 0;
+}
+
+.agent-stage-island__note {
+  margin: 0;
+  padding: 10px 0;
+  color: var(--text-3);
+  font-size: 12px;
+  text-align: center;
+}
+
+.agent-stage {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-white-a04);
+}
+
+.agent-stage__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+}
+
+.agent-stage__tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.agent-stage__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.agent-stage__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 10px 0 7px;
+  border: 1px solid var(--color-white-a16);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.agent-stage__chip[aria-pressed="true"] {
+  border-color: var(--color-white-a18);
+  background: var(--color-white-a12);
+  color: var(--color-text);
+}
+
+.agent-stage__chip[aria-pressed="false"] {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.agent-stage__chip:disabled {
+  cursor: default;
+}
+
+.agent-stage__chip small {
+  color: var(--color-text-subtle);
+  font-size: 10.5px;
+}
+
+.agent-stage__note {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: 12px;
+  text-align: center;
+}
+
+.settings-row .agent-stage {
+  margin-top: 12px;
+  border-radius: 12px;
+}

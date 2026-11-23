@@ -158,3 +158,32 @@
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
+
+.agent-usage__source {
+  grid-column: 1;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.agent-usage__source:hover {
+  opacity: 0.6;
+}
+
+.agent-usage__source:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.agent-usage__credit {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-2);
+  text-overflow: ellipsis;
+}

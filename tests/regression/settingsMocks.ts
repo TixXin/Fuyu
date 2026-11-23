@@ -239,6 +239,10 @@ mockIPC((command, payload) => {
     ];
     case "list_ssh_hosts": return ["devbox", "nas"]; case "get_agent_remote_hosts": return [{ host: "devbox", fetchedAt: 0, error: null, fetching: false }];
     case "get_agent_hooks_state": return { codex: "notInstalled", claudeCode: "notInstalled", scriptsOutdated: false };
+    case "get_agent_usage": return { updatedAt: Date.now(), plan: null, fiveHour: { name: "", used: 42, resetsAt: Date.now() + 2 * 3_600_000 + 1_800_000 }, sevenDay: { name: "", used: 16, resetsAt: Date.now() + 5 * 86_400_000 + 1_800_000 }, models: [{ name: "Opus", used: 63, resetsAt: Date.now() + 5 * 86_400_000 + 1_800_000 }] };
+    case "get_codex_usage": return { updatedAt: Date.now(), plan: "Plus", source: "codex", fiveHour: { name: "", used: 8, resetsAt: null }, sevenDay: { name: "", used: 16, resetsAt: Date.now() + 23 * 86_400_000 + 1_800_000 }, models: [] };
+    case "get_antigravity_usage": return { updatedAt: Date.now(), plan: null, source: "antigravity", fiveHour: null, sevenDay: null, models: [{ name: "Gemini 3 Pro", used: 30, resetsAt: Date.now() + 4 * 3_600_000 + 1_800_000 }] };
+    case "get_hover_usage": return args.provider === "workbuddy" ? { provider: "workbuddy", updatedAt: Date.now(), source: null, available: true, credits: { today: 1240, sevenDay: 8930, total: 20000, totalTokens: 0, sessions: 3 }, wallets: [], error: null } : null;
     case "uninstall_agent_status_hooks": return { removedAt: 1700000000000, remotes: [] };
     case "install_agent_status_hooks": return { scriptsDir: "C:\\Users\\demo\\.fuyu", statusPath: "", installedAt: 1700000000000, remotes: [], dshBridge: null };
     case "install_agent_hooks": return { results: (args.providers as string[]).map((provider) => ({ provider, error: null })), dshBridge: null };

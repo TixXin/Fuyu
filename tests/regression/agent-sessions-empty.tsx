@@ -16,6 +16,8 @@ export async function checkUsageViewAndEmpty({ root, sessions, check }: Context)
   const usages = {
     claude: { updatedAt: readAt, plan: null, fiveHour: { name: "", used: 27, resetsAt: readAt + 3 * 3_600_000 }, sevenDay: { name: "", used: 62, resetsAt: readAt + 5 * 86_400_000 }, models: [{ name: "Fable", used: 100, resetsAt: readAt + 86_400_000 }] },
     codex: { updatedAt: readAt, plan: "Plus", source: "codex" as const, fiveHour: { name: "", used: 9, resetsAt: null }, sevenDay: { name: "", used: 16, resetsAt: readAt + 2 * 86_400_000 }, models: [] },
+    others: {},
+    credits: {},
     readAt,
   };
   const show = async (node: ReactNode) => {
@@ -30,7 +32,7 @@ export async function checkUsageViewAndEmpty({ root, sessions, check }: Context)
   const windows = (index: number) => [...document.querySelectorAll<HTMLElement>(".agent-usage")[index]?.querySelectorAll(".agent-usage__label") ?? []].map((label) => label.textContent);
 
   await show(panel({ hidden: ["codex", "models"] }));
-  check(document.querySelectorAll(".agent-usage").length === 1 && windows(0).join() === "5 小时,7 天", `隐藏 Codex 和按模型后只剩 Claude 的 5 小时、7 天：${windows(0)}`);
+  check(document.querySelectorAll(".agent-usage").length === 1 && windows(0).join() === "5 小时,7 天", `隐藏 Codex 和其他额度后只剩 Claude 的 5 小时、7 天：${windows(0)}`);
   await show(panel({ tightest: true }));
   check(windows(0).join() === "Fable" && windows(1).join() === "7 天", `只看最紧的：每家只留用得最多的一项：${windows(0)} / ${windows(1)}`);
   const cellLefts = [0, 1].map((index) => document.querySelectorAll<HTMLElement>(".agent-usage")[index].querySelector<HTMLElement>(".agent-usage__window")!.getBoundingClientRect().left);
@@ -49,7 +51,7 @@ export async function checkUsageViewAndEmpty({ root, sessions, check }: Context)
     await wait(20);
   });
   const items = [...document.querySelectorAll<HTMLButtonElement>(".row-menu [role=menuitem]")];
-  check(items.map((item) => item.textContent).join() === "Claude Code,Codex,5 小时,7 天,按模型,只看最紧的一项,重置时间", `右键额度行弹出菜单：${items.map((item) => item.textContent)}`);
+  check(items.map((item) => item.textContent).join() === "Claude Code,Codex,5 小时,7 天,其他额度,只看最紧的一项,重置时间", `右键额度行弹出菜单：${items.map((item) => item.textContent)}`);
   await act(async () => { items[1].click(); });
   check(JSON.stringify(patches[patches.length - 1]) === JSON.stringify({ agentUsageHidden: ["codex"] }) && document.querySelector(".row-menu"), "勾掉 Codex 改设置，菜单不关");
   await act(async () => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });

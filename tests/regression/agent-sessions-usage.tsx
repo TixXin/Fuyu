@@ -4,6 +4,7 @@ import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
+import { DEFAULT_USAGE_VIEW } from "../../src/features/agent-status/usage";
 
 type Context = { root: Root; fixture: HTMLElement; sessions: AgentSessionSummary[]; check: (condition: unknown, label: string) => void; chromeHeight: number };
 
@@ -46,6 +47,8 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   const usages = {
     claude: { updatedAt: readAt, plan: null, fiveHour: { name: "", used: 27, resetsAt: null }, sevenDay: null, models: [] },
     codex: { updatedAt: readAt, plan: "Plus", source: "codex" as const, fiveHour: { name: "", used: 9, resetsAt: null }, sevenDay: { name: "", used: 91, resetsAt: readAt + 2 * 86_400_000 }, models: [] },
+    others: {},
+    credits: {},
     readAt,
   };
   fixture.style.height = `${getAgentPageExpandedHeight(3, 2) - ISLAND_CHROME_HEIGHT}px`;
@@ -71,4 +74,20 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   check(clock?.querySelector("svg") && clock.getAttribute("aria-label") === "可能已过时：40 分钟前更新 · 来自 claude-hud" && !staleLines[0].textContent?.includes("可能已过时")
     && !staleLines[1].querySelector(".agent-usage__stale") && Math.abs(cellLeft(staleLines[0], 0) - cellLeft(staleLines[1], 0)) < 0.5,
     "过时的那一行行尾只放一个时钟图标，说明写在读屏文字和悬停卡片里，列照样对齐");
+
+  const wide = {
+    ...usages,
+    others: { antigravity: { updatedAt: readAt, plan: null, fiveHour: null, sevenDay: null, models: [{ name: "Gemini 3 Pro", used: 30, resetsAt: null }] } },
+    credits: { workbuddy: { provider: "workbuddy" as const, updatedAt: readAt, source: null, available: true, credits: { today: 1240, sevenDay: 8930, total: 20000, totalTokens: 0, sessions: 3 }, wallets: [], error: null } },
+  };
+  await act(async () => {
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} /></I18nProvider></StrictMode>);
+  });
+  const wideLines = [...document.querySelectorAll<HTMLElement>(".agent-usage")];
+  check(wideLines.map((line) => line.getAttribute("aria-label")).join() === "Claude Code 用量,Codex 用量,Antigravity 用量,WorkBuddy 用量", `这台电脑上读得到额度的每家各占一行：${wideLines.map((line) => line.getAttribute("aria-label")).join()}`);
+  check(wideLines[3].querySelector(".agent-usage__credit")?.textContent === "今日 1,240 积分 · 7 天 8,930" && !wideLines[3].querySelector(".agent-usage__value"), "WorkBuddy 没有百分比，写今日和 7 天的积分");
+  await act(async () => {
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} hostDisplay="both" showUsage usages={wide} usageView={{ ...DEFAULT_USAGE_VIEW, agentsOff: ["antigravity"], hidden: ["workbuddy"] }} /></I18nProvider></StrictMode>);
+  });
+  check([...document.querySelectorAll(".agent-usage")].map((line) => line.getAttribute("aria-label")).join() === "Claude Code 用量,Codex 用量", "在「接入哪些 Agent」里关掉的和在额度里隐藏的都不占行");
 }

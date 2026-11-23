@@ -28,8 +28,8 @@ test("one usage line per agent that reports numbers, and the card names the sour
   const { zhCN } = await import("../../src/i18n/sections/claudeUsage.ts");
   const usage = (overrides = {}) => ({ updatedAt: 0, fiveHour: window("", 10), sevenDay: null, models: [], plan: null, ...overrides });
   assert.equal(usageLineCount(EMPTY_USAGES), 0);
-  assert.equal(usageLineCount({ claude: usage(), codex: null, readAt: 0 }), 1);
-  assert.equal(usageLineCount({ claude: usage(), codex: usage({ source: "codex" }), readAt: 0 }), 2);
+  assert.equal(usageLineCount({ ...EMPTY_USAGES, claude: usage() }), 1);
+  assert.equal(usageLineCount({ ...EMPTY_USAGES, claude: usage(), codex: usage({ source: "codex" }) }), 2);
   assert.equal(hasUsageNumbers(usage({ fiveHour: null })), false, "an answer with only an error has no line");
   assert.equal(hasUsageNumbers(usage({ fiveHour: null, models: [window("Fable", 1)] })), true);
   assert.deepEqual(usageSourceLines(usage({ source: "codex" }), 60_000, zhCN).map((line) => line.text), ["1 分钟前更新 · 来自 Codex 会话记录"]);

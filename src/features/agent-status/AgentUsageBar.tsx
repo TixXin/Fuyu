@@ -2,10 +2,11 @@ import { useRef, type CSSProperties } from "react";
 import { Clock, RotateCcw } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { AgentProviderIcon } from "./AgentProviderIcon";
-import type { AgentProvider, AgentUsage } from "./api";
+import type { AgentUsageItem, AgentUsageSource } from "./agentSettings";
+import type { AgentUsage } from "./api";
 import { IslandHoverCard } from "../../components/IslandHoverCard";
 import { MiniRing } from "../../components/MiniRing";
-import { hasUsageNumbers, isStale, liveUsage, shownUsage, tightestWindow, untilReset, usageColumns, usageLevel, usageSourceLines, usageWindows, DEFAULT_USAGE_VIEW, type AgentUsages, type UsageColumns, type UsageView, type UsageWindowCell } from "./usage";
+import { availableLines, isStale, tightestWindow, untilReset, usageColumns, usageLevel, usageLines, usageSourceLines, usageWindows, DEFAULT_USAGE_VIEW, USAGE_SOURCE_ICONS, USAGE_SOURCE_LABELS, type AgentUsages, type CreditFigures, type UsageColumns, type UsageView, type UsageWindowCell } from "./usage";
 import { useAgentUsages } from "./useAgentUsages";
 import { AgentUsageMenu, type UsageViewChange } from "./AgentUsageMenu";
 import "./AgentUsageBar.css";
@@ -14,22 +15,19 @@ const SINGLE_COLUMN: UsageColumns = { template: "14px auto minmax(0, 1fr) auto",
 
 const LEVEL_COLOR = { low: "var(--mint-text, var(--color-agent-idle))", medium: "var(--color-agent-waiting)", high: "var(--color-warning)" } as const;
 
-export function usageLines(usages: AgentUsages, view: UsageView): [AgentProvider, AgentUsage][] {
-  const lines: [AgentProvider, AgentUsage][] = [];
-  const claude = usages.claude && liveUsage(usages.claude, usages.readAt);
-  const codex = usages.codex && liveUsage(usages.codex, usages.readAt);
-  if (claude && !view.hidden.includes("claudeCode")) lines.push(["claudeCode", shownUsage(claude, view)]);
-  if (codex && !view.hidden.includes("codex")) lines.push(["codex", shownUsage(codex, view)]);
-  return lines.filter(([, usage]) => hasUsageNumbers(usage));
-}
+const CURRENCY: Record<string, string> = { CNY: "¥", RMB: "¥", USD: "$" };
 
-export function AgentUsageBar({ usages: given, view = DEFAULT_USAGE_VIEW, onViewChange }: { usages?: AgentUsages; view?: UsageView; onViewChange?: UsageViewChange }) {
+type Toggle = (item: AgentUsageItem) => void;
+
+export function AgentUsageBar({ usages: given, view = DEFAULT_USAGE_VIEW, onViewChange, onToggle }: { usages?: AgentUsages; view?: UsageView; onViewChange?: UsageViewChange; onToggle?: Toggle }) {
   const own = useAgentUsages(given === undefined);
   const box = useRef<HTMLDivElement>(null);
   const usages = given ?? own;
   const lines = usageLines(usages, view);
   if (lines.length === 0) return null;
-  const columns: UsageColumns = view.tightest ? SINGLE_COLUMN : usageColumns(lines.map(([, usage]) => usage));
+  const percent = lines.flatMap((line) => (line.usage ? [line.usage] : []));
+  const columns: UsageColumns = view.tightest ? SINGLE_COLUMN : usageColumns(percent);
+  const sources = availableLines(usages, view.agentsOff).map((line) => line.source);
 
   return (
     <div
@@ -41,11 +39,44 @@ export function AgentUsageBar({ usages: given, view = DEFAULT_USAGE_VIEW, onView
       })}
     >
       <div className={`agent-usage-table agent-usage-table--${view.style}`} style={{ "--agent-usage-columns": columns.template } as CSSProperties}>
-        {lines.map(([provider, usage]) => (
-          <UsageLine key={provider} provider={provider} usage={usage} now={usages.readAt} columns={columns} view={view} />
-        ))}
+        {lines.map((line) =>
+          line.usage ? (
+            <UsageLine key={line.source} source={line.source} usage={line.usage} now={usages.readAt} columns={columns} view={view} onToggle={onToggle} />
+          ) : (
+            <CreditLine key={line.source} source={line.source} credit={line.credit} columns={columns} onToggle={onToggle} />
+          ),
+        )}
       </div>
-      {onViewChange && <AgentUsageMenu view={view} onChange={onViewChange} />}
+      {onViewChange && <AgentUsageMenu view={view} sources={sources} onChange={onViewChange} />}
+    </div>
+  );
+}
+
+function SourceIcon({ source, onToggle }: { source: AgentUsageSource; onToggle?: Toggle }) {
+  const t = useTranslation();
+  const icon = <AgentProviderIcon provider={USAGE_SOURCE_ICONS[source]} size={14} />;
+  if (!onToggle) return icon;
+  const label = t.agent.usage.hide(USAGE_SOURCE_LABELS[source]);
+  return (
+    <button type="button" className="agent-usage__source" title={label} aria-label={label} onClick={() => onToggle(source)}>
+      {icon}
+    </button>
+  );
+}
+
+function money(currency: string, total: string): string {
+  const symbol = CURRENCY[currency.toUpperCase()];
+  return symbol ? `${symbol}${total}` : `${total} ${currency}`;
+}
+
+function CreditLine({ source, credit, columns, onToggle }: { source: AgentUsageSource; credit: CreditFigures; columns: UsageColumns; onToggle?: Toggle }) {
+  const text = useTranslation().agent.usage;
+  const count = (value: number) => value.toLocaleString();
+  const figures = credit.kind === "credits" ? text.credits(count(credit.today), count(credit.sevenDay)) : text.balance(money(credit.currency, credit.total));
+  return (
+    <div className="agent-usage agent-usage--credit" role="status" aria-label={text.of(USAGE_SOURCE_LABELS[source])}>
+      <SourceIcon source={source} onToggle={onToggle} />
+      <span className="agent-usage__credit" style={{ gridColumn: `2 / ${columns.reset}` }}>{figures}</span>
     </div>
   );
 }
@@ -70,7 +101,7 @@ function UsageCell({ cell, view, now }: { cell: UsageWindowCell; view: UsageView
   );
 }
 
-function UsageLine({ provider, usage, now, columns, view }: { provider: AgentProvider; usage: AgentUsage; now: number; columns: UsageColumns; view: UsageView }) {
+function UsageLine({ source, usage, now, columns, view, onToggle }: { source: AgentUsageSource; usage: AgentUsage; now: number; columns: UsageColumns; view: UsageView; onToggle?: Toggle }) {
   const t = useTranslation();
   const windows = usageWindows(usage, { fiveHour: t.agent.usage.fiveHour, sevenDay: t.agent.usage.sevenDay });
   const tightest = tightestWindow(usage);
@@ -81,8 +112,8 @@ function UsageLine({ provider, usage, now, columns, view }: { provider: AgentPro
 
   return (
     <IslandHoverCard lines={hoverLines} alignTo=":scope" anchorClassName="agent-usage__hover">
-      <div className={`agent-usage${stale ? " agent-usage--stale" : ""}`} role="status" aria-label={provider === "codex" ? t.agent.usage.codexLabel : t.agent.usage.label}>
-        <AgentProviderIcon provider={provider} size={14} />
+      <div className={`agent-usage${stale ? " agent-usage--stale" : ""}`} role="status" aria-label={t.agent.usage.of(USAGE_SOURCE_LABELS[source])}>
+        <SourceIcon source={source} onToggle={onToggle} />
         {windows.map((cell) => (
           <span key={cell.key} className="agent-usage__window" style={{ gridColumn: columns.of(cell.key) }}>
             <UsageCell cell={cell} view={view} now={now} />

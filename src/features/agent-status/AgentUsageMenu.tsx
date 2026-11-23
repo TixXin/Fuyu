@@ -1,27 +1,23 @@
 import { Check, SlidersHorizontal } from "lucide-react";
 import { RowMenu, type RowMenuItem } from "../../components/list/RowMenu";
 import { useTranslation } from "../../i18n";
-import { AGENTS } from "./agents";
-import type { AgentUsageItem, AgentUsageReset } from "./agentSettings";
-import type { UsageView } from "./usage";
+import { AGENT_USAGE_COLUMNS, type AgentUsageItem, type AgentUsageReset, type AgentUsageSource } from "./agentSettings";
+import { USAGE_SOURCE_LABELS, type UsageView } from "./usage";
 
 export type UsageViewChange = (patch: { agentUsageHidden?: AgentUsageItem[]; agentUsageTightest?: boolean; agentUsageReset?: AgentUsageReset }) => void;
-
-const PROVIDERS: readonly AgentUsageItem[] = ["claudeCode", "codex"];
-const WINDOWS: readonly AgentUsageItem[] = ["fiveHour", "sevenDay", "models"];
 
 function mark(on: boolean) {
   return <Check size={14} strokeWidth={2.4} style={{ opacity: on ? 1 : 0 }} aria-hidden="true" />;
 }
 
-export function AgentUsageMenu({ view, onChange }: { view: UsageView; onChange: UsageViewChange }) {
+export function AgentUsageMenu({ view, sources, onChange }: { view: UsageView; sources: readonly AgentUsageSource[]; onChange: UsageViewChange }) {
   const t = useTranslation();
   const text = t.agent.usage;
   const shown = (item: AgentUsageItem) => !view.hidden.includes(item);
   const toggle = (item: AgentUsageItem, group: readonly AgentUsageItem[]): RowMenuItem => {
     const on = shown(item);
     const last = on && group.filter(shown).length === 1;
-    const label = item === "claudeCode" || item === "codex" ? AGENTS[item].label : item === "models" ? text.models : text[item];
+    const label = item === "models" ? text.models : item === "fiveHour" || item === "sevenDay" ? text[item] : USAGE_SOURCE_LABELS[item];
     return {
       key: item,
       label,
@@ -32,8 +28,8 @@ export function AgentUsageMenu({ view, onChange }: { view: UsageView; onChange: 
     };
   };
   const items: RowMenuItem[] = [
-    ...PROVIDERS.map((item) => toggle(item, PROVIDERS)),
-    ...WINDOWS.map((item) => toggle(item, WINDOWS)),
+    ...(sources.length > 1 ? sources.map((item) => toggle(item, sources)) : []),
+    ...AGENT_USAGE_COLUMNS.map((item) => toggle(item, AGENT_USAGE_COLUMNS)),
     { key: "tightest", label: text.tightest, icon: mark(view.tightest), keepOpen: true, onSelect: () => onChange({ agentUsageTightest: !view.tightest }) },
     { key: "reset", label: text.reset, icon: mark(view.reset !== "off"), keepOpen: true, onSelect: () => onChange({ agentUsageReset: view.reset === "off" ? "tightest" : "off" }) },
   ];
