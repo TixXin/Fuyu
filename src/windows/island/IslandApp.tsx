@@ -17,6 +17,7 @@ import { useDevicePixelRatio } from "./useDevicePixelRatio";
 import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
 import { usePageArrowKeys } from "./usePageArrowKeys";
+import { usePageSwipe } from "./usePageSwipe";
 import { IslandPageArrows } from "./IslandPageArrows";
 import { useIslandFeatures } from "./useIslandFeatures";
 import { useIslandNavigation } from "./useIslandNavigation";
@@ -265,6 +266,7 @@ export function IslandApp() {
     onOpenPage: openEnabledPage,
     onCollapse: collapseIsland,
   });
+  usePageSwipe({ enabled: settings.pageSwipe && mode === "expanded" && !hasOpenPopup && !panelEditing, features, page, onPageChange: setPage });
 
 
   useSettleIslandContributions();

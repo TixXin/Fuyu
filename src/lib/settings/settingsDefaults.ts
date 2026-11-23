@@ -141,6 +141,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   hoverTakesKeyboard: false,
   pageArrows: true,
   pageArrowKeys: true,
+  pageSwipe: true,
 };
 export const LEGACY_FALLBACKS = {
   collapsedDark: false,

@@ -13,6 +13,8 @@ export type SettingsPageShortcutsText = {
   arrowsHint: string;
   arrowKeys: string;
   arrowKeysHint: string;
+  swipe: string;
+  swipeHint: string;
 };
 
 export const zhCN: SettingsPageShortcutsText = {
@@ -30,6 +32,8 @@ export const zhCN: SettingsPageShortcutsText = {
   arrowsHint: "鼠标移进面板时左右两边淡淡出现，放上去点一下切到上一页或下一页",
   arrowKeys: "方向键翻页和展开收起",
   arrowKeysHint: "面板里 ← → 翻页，↑ 收起（内容滚动过时先回到顶部）；岛有焦点时 ↓ 或回车展开。输入框里有字时不生效",
+  swipe: "触控板左右滑动翻页",
+  swipeHint: "在面板上两指往左滑是下一页、往右滑是上一页，一次滑动只翻一页；能左右滚动的地方（比如 Fuyu 页的多页组件）照常滚动",
 };
 
 export const en: SettingsPageShortcutsText = {
@@ -47,4 +51,6 @@ export const en: SettingsPageShortcutsText = {
   arrowsHint: "Faint arrows appear on both sides when the cursor enters the panel; click one for the previous or next page",
   arrowKeys: "Arrow keys turn pages and open or close",
   arrowKeysHint: "In the panel, ← → turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it",
+  swipe: "Swipe sideways to turn pages",
+  swipeHint: "On the panel, swipe two fingers left for the next page and right for the previous one, one page per swipe. Areas that scroll sideways (such as a multi-page Fuyu panel) scroll as before",
 };

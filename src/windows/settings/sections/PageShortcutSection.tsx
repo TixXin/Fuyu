@@ -136,6 +136,12 @@ export function PageShortcutSection({
         checked={settings.pageArrowKeys}
         onChange={(pageArrowKeys) => onSettingsChange({ ...settings, pageArrowKeys })}
       />
+      <SettingsToggleRow
+        title={t.settings.pageShortcuts.swipe}
+        description={t.settings.pageShortcuts.swipeHint}
+        checked={settings.pageSwipe}
+        onChange={(pageSwipe) => onSettingsChange({ ...settings, pageSwipe })}
+      />
     </SettingsGroup>
   );
 }

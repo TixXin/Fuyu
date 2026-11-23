@@ -69,3 +69,34 @@ test("fields whose arrows change a value keep them even when empty", () => {
   assert.equal(pageArrowTargetAllows("next", "ArrowRight", focusedIn({ tagName: "INPUT", type: "number", value: "", textContent: "" })), false);
   assert.equal(pageArrowTargetAllows("next", "ArrowRight", focusedIn({ tagName: "SELECT", value: "", textContent: "" })), false);
 });
+
+test("a sideways swipe turns one page and the rest of the gesture does nothing", async () => {
+  const { IDLE_SWIPE, swipeStep, SWIPE_QUIET_MS } = await import("../../src/windows/island/pageSwipe.ts");
+  let state = IDLE_SWIPE;
+  const turns = [];
+  for (let at = 0; at < 400; at += 16) {
+    const step = swipeStep(state, 12, 1, at);
+    state = step.state;
+    if (step.turn !== null) turns.push(step.turn);
+  }
+  assert.deepEqual(turns, [1]);
+  const again = swipeStep(state, -120, 0, 400 + SWIPE_QUIET_MS + 1);
+  assert.equal(again.turn, -1);
+});
+
+test("a mostly vertical scroll never turns the page", async () => {
+  const { IDLE_SWIPE, swipeStep } = await import("../../src/windows/island/pageSwipe.ts");
+  let state = IDLE_SWIPE;
+  let turned = false;
+  for (let at = 0; at < 400; at += 16) {
+    const step = swipeStep(state, 10, 40, at);
+    state = step.state;
+    turned ||= step.turn !== null;
+  }
+  assert.equal(turned, false);
+});
+
+test("pageSwipe is on unless switched off", () => {
+  assert.equal(normalizeSettings({}).pageSwipe, true);
+  assert.equal(normalizeSettings({ pageSwipe: false }).pageSwipe, false);
+});

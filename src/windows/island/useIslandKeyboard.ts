@@ -5,6 +5,7 @@ import { isMacOS } from "../../lib/platform";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 import { isPanelEditing, stopPanelEditing } from "./custom-panels/panelEditing";
+import { escapeClosesPanel, OPEN_OVERLAY_TARGET } from "./pageArrows";
 
 export const OPEN_SETTINGS_SHORTCUT = isMacOS ? `${PRIMARY_KEY},` : `${PRIMARY_KEY}+,`;
 
@@ -24,6 +25,10 @@ export function useIslandKeyboard(
   pagePreviousShortcut: string,
 ) {
   useEffect(() => {
+    let overlayOpenAtEscape = false;
+    const noteOverlay = (event: KeyboardEvent) => {
+      if (event.key === "Escape") overlayOpenAtEscape = document.querySelector(OPEN_OVERLAY_TARGET) !== null;
+    };
     const handleKeyDown = (event: KeyboardEvent) => {
       const digit = pageDigitFromEvent(event, pageDigitModifiers);
       if (digit !== null && mode === "expanded") {
@@ -51,12 +56,16 @@ export function useIslandKeyboard(
 
       if (event.key === "Escape") {
         if (isPanelEditing()) stopPanelEditing();
-        else onCollapse();
+        else if (escapeClosesPanel(event, overlayOpenAtEscape)) onCollapse();
       }
     };
 
+    window.addEventListener("keydown", noteOverlay, true);
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", noteOverlay, true);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [
     features,
     mode,

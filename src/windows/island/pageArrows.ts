@@ -22,6 +22,7 @@ export const ARROW_OWNER_TARGET = [
   "combobox",
   "tablist",
 ].map((role) => `[role='${role}']`).join(", ");
+export const OPEN_OVERLAY_TARGET = "[role='menu'], [role='dialog'], [aria-haspopup][aria-expanded='true']";
 export const PRESSABLE_TARGET = "button, a[href], summary, [role='button'], [role='menuitem'], [role='option'], [role='switch'], [role='checkbox'], [role='link']";
 
 export function pageArrowAction(event: PageArrowKeyEvent, expanded: boolean): PageArrowAction | null {
@@ -52,4 +53,8 @@ export function pageArrowTargetAllows(action: PageArrowAction, key: string, targ
   if (field && (action === "open" || !emptyTextField(field))) return false;
   if (action === "open") return key !== "Enter" || !target.closest(PRESSABLE_TARGET);
   return !target.closest(ARROW_OWNER_TARGET);
+}
+
+export function escapeClosesPanel(event: Pick<KeyboardEvent, "defaultPrevented" | "isComposing">, overlayOpen: boolean): boolean {
+  return !event.defaultPrevented && !event.isComposing && !overlayOpen;
 }

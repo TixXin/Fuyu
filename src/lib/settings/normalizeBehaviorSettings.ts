@@ -124,5 +124,6 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     hoverTakesKeyboard: settings?.hoverTakesKeyboard === true,
     pageArrows: settings?.pageArrows !== false,
     pageArrowKeys: settings?.pageArrowKeys !== false,
+    pageSwipe: settings?.pageSwipe !== false,
   } satisfies Partial<IslandSettings>;
 }

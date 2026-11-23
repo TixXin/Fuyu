@@ -1605,6 +1605,19 @@
       }
     },
     {
+      "page": "shortcutsIsland",
+      "zh-CN": {
+        "group": "页面切换",
+        "title": "触控板左右滑动翻页",
+        "description": "在面板上两指往左滑是下一页、往右滑是上一页，一次滑动只翻一页；能左右滚动的地方（比如 Fuyu 页的多页组件）照常滚动"
+      },
+      "en": {
+        "group": "Page switching",
+        "title": "Swipe sideways to turn pages",
+        "description": "On the panel, swipe two fingers left for the next page and right for the previous one, one page per swipe. Areas that scroll sideways (such as a multi-page Fuyu panel) scroll as before"
+      }
+    },
+    {
       "page": "shortcutsReference",
       "zh-CN": {
         "group": "岛上操作",

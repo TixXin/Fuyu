@@ -179,6 +179,7 @@ export type IslandSettings = CalendarSettingValues &
   hoverTakesKeyboard: boolean;
   pageArrows: boolean;
   pageArrowKeys: boolean;
+  pageSwipe: boolean;
 };
 
 export type IslandPreset = {
