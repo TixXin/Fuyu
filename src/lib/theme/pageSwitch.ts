@@ -140,9 +140,10 @@ export function overlayLayers(request: SwitchRequest): SwitchOverlay[] {
       const start = direction === 0 ? "50%" : edge > 0 ? far : near;
       const end = direction === 0 ? (edge > 0 ? far : near) : edge > 0 ? near : far;
       const along = horizontal ? "left" : "top";
+      const style: Record<string, string> = horizontal ? { top: "6%", height: "88%", width: "2px" } : { left: "4%", width: "92%", height: "2px" };
       return {
         kind: "edge",
-        style: horizontal ? { top: "6%", height: "88%", width: "2px" } : { left: "4%", width: "92%", height: "2px" },
+        style,
         layer: { frames: [{ [along]: start, opacity: 0.95 }, { [along]: end, opacity: 0 }], duration: ms(WIPE_MS), delay: 0, easing: MOTION_EASE_OUT },
       };
     });
