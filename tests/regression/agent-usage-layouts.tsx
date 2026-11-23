@@ -57,6 +57,8 @@ export async function checkUsageLayouts({ root, sessions, usages, check }: Conte
   const expired = document.querySelector<HTMLElement>(".agent-usage-chip--expired");
   check(expired?.getAttribute("aria-label") === "Claude Code 用量 已过期 · 10 天前" && !labels(".agent-usage-chips .agent-usage-chip").some((label) => label?.startsWith("Claude Code")),
     `Claude 的额度全都过了重置时间时不消失，变成一颗灰的「已过期」：${expired?.getAttribute("aria-label")}`);
+  const fix = document.querySelector<HTMLButtonElement>(".agent-usage-expired .agent-usage-fix");
+  check(fix?.textContent === "修复" && expired?.closest(".island-hover-card__anchor")?.nextElementSibling === fix, `Claude 过期的胶囊旁边有「修复」，点了直接重装钩子：${fix?.textContent}`);
 
   const patches: Partial<AgentSettingValues>[] = [];
   await show(panel({ layout: "tiles" }, (patch) => patches.push(patch)));

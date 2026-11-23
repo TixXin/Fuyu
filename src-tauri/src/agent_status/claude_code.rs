@@ -89,12 +89,12 @@ fn uninstall(env: &HookEnv) -> Result<(), String> {
 }
 
 fn hooks_state(env: &HookEnv) -> HookInstallState {
-    claude_code_hooks_state(
-        fs::read_to_string(settings_path(env.home_dir)).ok().as_deref(),
-        env.running_script,
-        env.status_script,
-        approval_hook().as_ref(),
-    )
+    let text = fs::read_to_string(settings_path(env.home_dir)).ok();
+    let state = claude_code_hooks_state(text.as_deref(), env.running_script, env.status_script, approval_hook().as_ref());
+    match (state, env.running_script.parent()) {
+        (HookInstallState::Current, Some(app_dir)) if claude_statusline::never_installed(text.as_deref(), app_dir) => HookInstallState::Outdated,
+        _ => state,
+    }
 }
 
 fn approval_hook() -> Option<ApprovalHook> {

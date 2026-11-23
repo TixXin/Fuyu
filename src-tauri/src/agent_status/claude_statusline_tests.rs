@@ -2,7 +2,7 @@ use std::fs;
 
 use serde_json::{json, Value};
 
-use super::{install, is_ours, parse_snapshot, read_usage, uninstall, NEXT_FILE_NAME, SCRIPT_FILE_NAME, SNAPSHOT_FILE_NAME};
+use super::{install, is_ours, never_installed, parse_snapshot, read_usage, uninstall, NEXT_FILE_NAME, SCRIPT_FILE_NAME, SNAPSHOT_FILE_NAME};
 use crate::agent_status::usage::{needs_fallback, newest, UsageSource};
 
 fn temp_dir(name: &str) -> std::path::PathBuf {
@@ -95,4 +95,19 @@ fn the_newer_reading_wins_and_old_or_expired_readings_ask_the_api() {
     let expired = parse_snapshot(&input(10.0, now / 1000 - 1), Some(now - 60_000)).unwrap();
     assert!(needs_fallback(Some(&expired), now));
     assert!(needs_fallback(None, now));
+}
+
+#[test]
+fn a_status_line_never_wrapped_counts_as_out_of_date_once() {
+    let dir = temp_dir("once");
+    let settings_path = dir.join("settings.json");
+    fs::write(&settings_path, json!({ "statusLine": { "type": "command", "command": "old" } }).to_string()).unwrap();
+    let text = || fs::read_to_string(&settings_path).ok();
+    assert!(never_installed(text().as_deref(), &dir), "existing users who never got the relay are asked to repair");
+    install(&settings_path, &dir).unwrap();
+    assert!(!never_installed(text().as_deref(), &dir));
+    fs::write(&settings_path, json!({ "statusLine": { "type": "command", "command": "another-tool" } }).to_string()).unwrap();
+    assert!(!never_installed(text().as_deref(), &dir), "a tool that took the status line over later is left alone");
+    uninstall(&settings_path, &dir).unwrap();
+    assert!(never_installed(text().as_deref(), &dir));
 }

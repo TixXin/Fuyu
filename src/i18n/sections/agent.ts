@@ -102,6 +102,10 @@ export type AgentText = {
     expired: (ago: string) => string;
     expiredDetail: (ago: string, source: string) => string;
     expiredFix: string;
+    fix: string;
+    fixing: string;
+    fixed: string;
+    fixFailed: string;
     fiveHour: string;
     sevenDay: string;
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
@@ -274,7 +278,11 @@ export const zhCN: AgentText = {
     stale: "可能已过时",
     expired: (ago) => `已过期 · ${ago}`,
     expiredDetail: (ago, source) => `额度已过重置时间，${ago}更新 · ${source}`,
-    expiredFix: "在设置 → Agent 里给 Claude Code「重新安装钩子」，再用一下 Claude Code 就会更新",
+    expiredFix: "点「修复」重新安装 Claude Code 的钩子，再用一下 Claude Code 就会更新",
+    fix: "修复",
+    fixing: "修复中…",
+    fixed: "已修复，用一下 Claude Code 就会更新",
+    fixFailed: "没修好，到设置 → Agent 里重新安装钩子",
     fiveHour: "5 小时",
     sevenDay: "7 天",
     resetsIn: ({ days, hours, minutes }) =>
@@ -453,7 +461,11 @@ export const en: AgentText = {
     stale: "May be out of date",
     expired: (ago) => `Expired · ${ago}`,
     expiredDetail: (ago, source) => `Past its reset time; updated ${ago} · ${source}`,
-    expiredFix: "Reinstall the hooks for Claude Code under Settings → Agent, then use Claude Code once",
+    expiredFix: "Click Fix to reinstall the Claude Code hooks, then use Claude Code once",
+    fix: "Fix",
+    fixing: "Fixing…",
+    fixed: "Fixed; use Claude Code once to update",
+    fixFailed: "Could not fix; reinstall the hooks under Settings → Agent",
     fiveHour: "5h",
     sevenDay: "7d",
     resetsIn: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d${hours}h` : hours > 0 ? `resets in ${hours}h${minutes}m` : `resets in ${minutes}m`),

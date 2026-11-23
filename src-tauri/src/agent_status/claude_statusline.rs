@@ -21,6 +21,7 @@ const SCRIPT: &str = include_str!("hooks/fuyu-claude-statusline.sh");
 
 pub(super) const NEXT_FILE_NAME: &str = "claude-statusline-next.txt";
 pub(super) const SNAPSHOT_FILE_NAME: &str = "claude-statusline.json";
+pub(super) const INSTALLED_FILE_NAME: &str = "claude-statusline-installed";
 const MAX_SNAPSHOT_BYTES: u64 = 256 * 1024;
 
 pub(super) fn install(settings_path: &Path, app_dir: &Path) -> Result<(), String> {
@@ -29,6 +30,7 @@ pub(super) fn install(settings_path: &Path, app_dir: &Path) -> Result<(), String
     let Some(root) = config.as_object_mut() else {
         return Err("Claude Code settings.json must contain a JSON object.".to_string());
     };
+    write_text_file(&app_dir.join(INSTALLED_FILE_NAME), "1")?;
     let ours = command(&app_dir.join(SCRIPT_FILE_NAME));
     let current = root.get("statusLine").cloned();
     let previous = current.as_ref().and_then(|line| line["command"].as_str()).map(str::to_string);
@@ -76,10 +78,23 @@ pub(super) fn uninstall(settings_path: &Path, app_dir: &Path) -> Result<(), Stri
             write_settings(settings_path, &config)?;
         }
     }
-    if next_path.exists() {
-        fs::remove_file(&next_path).map_err(|error| format!("Failed to remove {}: {error}", next_path.display()))?;
+    for path in [next_path, app_dir.join(INSTALLED_FILE_NAME)] {
+        if path.exists() {
+            fs::remove_file(&path).map_err(|error| format!("Failed to remove {}: {error}", path.display()))?;
+        }
     }
     Ok(())
+}
+
+pub(super) fn never_installed(settings_text: Option<&str>, app_dir: &Path) -> bool {
+    if app_dir.join(INSTALLED_FILE_NAME).exists() {
+        return false;
+    }
+    let ours = settings_text
+        .and_then(|text| parse(text).ok())
+        .and_then(|config| config["statusLine"]["command"].as_str().map(is_ours))
+        .unwrap_or(false);
+    !ours
 }
 
 pub(super) fn is_ours(command: &str) -> bool {

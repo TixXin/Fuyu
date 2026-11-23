@@ -163,7 +163,7 @@ Install/Repair also takes over Claude Code's `statusLine.command` in `~/.claude/
 
 Reading Claude's usage picks the newer of this file and the claude-hud snapshot. When both are missing, more than 30 minutes old or past their reset time, the island asks Anthropic's OAuth usage endpoint once, at most every 15 minutes, read-only with the Claude Code token and never refreshing it. Usage that is past its reset time shows as a grey "Expired · n days ago" chip instead of vanishing.
 
-The status line is not part of the "hooks out of date" check: other tools that rewrite `statusLine` themselves would otherwise make the two fight. It is only hooked up again when the user clicks Install/Repair. Claude Code only runs the status line in a terminal, and some versions and plans leave `rate_limits` out ([research](/docs/research/claude-code-usage-sources.md)), which is why the API fallback stays.
+The status line counts towards the "hooks out of date" check only until it has been installed once: installing writes `claude-statusline-installed` to the app data folder, and without that file (and with a `statusLine.command` that is not ours) the Claude Code hooks report out of date, so automatic hook updates install it for existing users. After that, another tool taking `statusLine` over is left alone so the two do not fight; it is only hooked up again on Install/Repair. When Claude's usage has expired, a Fix button next to the grey chip on the agent page reinstalls the Claude Code hooks directly. Claude Code only runs the status line in a terminal, and some versions and plans leave `rate_limits` out ([research](/docs/research/claude-code-usage-sources.md)), which is why the API fallback stays.
 
 ## Reply Status Marker
 
