@@ -4,8 +4,8 @@ import { normalizeBehaviorSettings } from "./normalizeBehaviorSettings.ts";
 import { normalizeLayoutSettings } from "./normalizeLayoutSettings.ts";
 import { GLASS_SETTING_KEYS } from "./glassSettings.ts";
 import { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
-import { MAX_CUSTOM_SETTING_PRESETS } from "./settingsLimits.ts";
-import type { IslandPreset, IslandSettings, LegacyIslandSettings } from "./types";
+import { JELLYFISH_STYLES, MAX_CUSTOM_SETTING_PRESETS } from "./settingsLimits.ts";
+import type { IslandPreset, IslandSettings, JellyfishStyle, LegacyIslandSettings } from "./types";
 
 export * from "./settingsLimits.ts";
 export { DEFAULT_SETTINGS } from "./settingsDefaults.ts";
@@ -58,6 +58,14 @@ function withKeysFrom(keys: readonly (keyof IslandSettings)[], settings: IslandS
 
 export function withThemeFrom(settings: IslandSettings, source: IslandSettings): IslandSettings {
   return withKeysFrom(THEME_SETTING_KEYS, settings, source);
+}
+
+export function carriedJellyfishStyle(value: unknown): { jellyfishStyle?: JellyfishStyle } {
+  return JELLYFISH_STYLES.includes(value as JellyfishStyle) ? { jellyfishStyle: value as JellyfishStyle } : {};
+}
+
+export function withPresetFrom(settings: IslandSettings, preset: IslandPreset): IslandSettings {
+  return { ...withThemeFrom(settings, normalizeSettings(preset.settings)), ...carriedJellyfishStyle(preset.jellyfishStyle) };
 }
 
 export function withLayoutFrom(settings: IslandSettings, source: IslandSettings): IslandSettings {

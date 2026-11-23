@@ -197,6 +197,7 @@ export type IslandPreset = {
   id: string;
   name: string;
   settings: IslandSettings;
+  jellyfishStyle?: JellyfishStyle;
   createdAt: number;
   isDefault?: boolean;
 };

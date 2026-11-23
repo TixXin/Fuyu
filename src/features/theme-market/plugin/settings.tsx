@@ -17,7 +17,7 @@ function ThemeMarketSection({ settings, presets, onSettingsChange }: SectionProp
     <ThemeMarketPage
       settings={settings}
       onSettingsChange={onSettingsChange}
-      onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
+      onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date(), theme.jellyfishStyle)))}
     />
   );
 }
