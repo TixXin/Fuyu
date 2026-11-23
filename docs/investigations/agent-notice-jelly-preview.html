@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent 通知里的水母</title>
+<style>
+  :root {
+    --bg: #f3f3f5; --card: #ffffff; --text: #1c1c1f; --sub: #6b6b73; --line: #e2e2e7; --accent: #2f8f6a; --stage: #e9e9ee;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #141416; --card: #1d1d20; --text: #ececf0; --sub: #a0a0a8; --line: #2c2c31; --accent: #4fc08d; --stage: #232327; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.55; }
+  main { max-width: 1240px; margin: 0 auto; padding: 0 16px 80px; }
+  h1 { font-size: 24px; margin: 28px 0 4px; }
+  h2 { font-size: 18px; margin: 40px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+  p, li { color: var(--sub); }
+  .lead { max-width: 820px; }
+  .controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; padding: 10px 14px; margin: 14px 0 0; border-radius: 10px; background: color-mix(in srgb, var(--card) 92%, transparent); border: 1px solid var(--line); backdrop-filter: blur(8px); }
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .group > span { color: var(--sub); }
+  button.seg { font: inherit; font-size: 13px; cursor: pointer; padding: 2px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+  button.seg.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .px { position: relative; display: inline-block; flex: none; vertical-align: middle; }
+  .px canvas { position: absolute; image-rendering: pixelated; pointer-events: none; }
+  .px .cells { display: none; }
+
+  .variants { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; margin-top: 12px; }
+  .variant { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; }
+  .variant.pick { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .variant b { font-size: 14px; }
+  .variant .tag { font-size: 11.5px; color: var(--accent); margin-left: 6px; }
+  .variant .tag.now { color: var(--sub); }
+  .variant ul { margin: 8px 0 0; padding-left: 16px; font-size: 12.5px; }
+  .stage { display: flex; flex-direction: column; gap: 8px; padding: 14px 12px; margin-top: 8px; border-radius: 12px; background: var(--stage); }
+
+  .island { --agent-ink: 255, 255, 255; color: #fff; background: #000; border-radius: 22px; padding: 10px; }
+  body[data-island="light"] .island { --agent-ink: 0, 0, 0; color: #1c1c1f; background: #f6f6f8; box-shadow: 0 0 0 1px #0001; }
+  .notice { --notice-tone: #8e8e93; position: relative; border-radius: 14px; padding: 10px 12px; background: rgba(var(--agent-ink), 0.06); font-size: 13px; }
+  .notice.wings { padding: 0; }
+  .tone-needs { --notice-tone: #ff9f0a; }
+  .tone-yourTurn { --notice-tone: #9cc3dc; }
+  .tone-working { --notice-tone: #34c759; }
+  .tone-done { --notice-tone: #8e8e93; }
+  .tone-failed { --notice-tone: #ff453a; }
+  .row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .main { display: flex; align-items: flex-start; gap: 11px; }
+  .content { flex: 1; min-width: 0; }
+  .headline { flex: 1; min-width: 0; color: var(--notice-tone); font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tone-done .headline, .tone-done .state { color: rgba(var(--agent-ink), 0.66); }
+  .title { flex: 1 1 auto; min-width: 2.5em; overflow: hidden; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+  .main .title { display: block; }
+  .prefix { color: rgba(var(--agent-ink), 0.55); font-weight: 500; }
+  .state { flex: none; color: var(--notice-tone); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .body { margin-top: 3px; color: rgba(var(--agent-ink), 0.62); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .band { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; font-size: 12.5px; }
+  .band .spacer { flex: 1; }
+  .drop { padding: 2px 14px 10px; border-top: 1px solid rgba(var(--agent-ink), 0.09); }
+  .drop .title { display: block; padding-top: 6px; }
+  .camera { width: 64px; height: 20px; border-radius: 10px; background: #111; box-shadow: inset 0 0 0 1px #fff1; flex: none; }
+  body[data-island="light"] .camera { background: #222; }
+
+  .icon { position: relative; flex: none; display: inline-grid; place-items: center; }
+  .icon img { display: block; border-radius: 26%; }
+  .ring { position: relative; flex: none; display: inline-grid; place-items: center; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--notice-tone); padding: 2px; }
+  .ring img { display: block; border-radius: 50%; }
+  .jelly { position: relative; flex: none; display: inline-grid; place-items: center; margin-right: 3px; }
+  .badge { position: absolute; right: -4px; bottom: -3px; border-radius: 28%; box-shadow: 0 0 0 1.5px #000; display: block; }
+  body[data-island="light"] .badge { box-shadow: 0 0 0 1.5px #f6f6f8; }
+  .brand-inline { width: 14px; height: 14px; border-radius: 26%; flex: none; }
+  .pile { display: inline-flex; flex: none; }
+  .pile img { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 0 0 1.5px #000; margin-left: -5px; }
+  .pile img:first-child { margin-left: 0; }
+
+  .conclusion { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 18px 10px; margin-top: 12px; }
+  .conclusion li { margin: 4px 0; }
+  @media (max-width: 480px) { .variants { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-island="dark">
+<main>
+  <h1>Agent 通知里的水母</h1>
+  <p class="lead">现在三种通知开头都是 Agent 的品牌图标加状态色。选了「状态灯样式 → 水母」以后，收起条和会话列表已经是水母，通知还不是。这页把卡片、紧凑、两翼三种通知各摆几个方案，水母都是真实的像素画法，按状态播放；选「圆点」时通知保持现状，不在这页里。</p>
+
+  <div class="controls">
+    <div class="group" id="g-style"><span>像素画风</span></div>
+    <div class="group" id="g-island"><span>岛</span></div>
+    <div class="group" id="g-motion"><span>动画</span></div>
+  </div>
+
+  <h2>1 · 卡片（默认样式，图标 26px）</h2>
+  <p>卡片地方最大，水母可以当主角，品牌缩成右下角的角标。</p>
+  <div class="variants" id="cards"></div>
+
+  <h2>2 · 紧凑（图标 16px）</h2>
+  <p>16px 时水母只剩 11×8 格，再加角标会糊成一团，所以给两种：角标版和把品牌图标挪到状态后面的版。</p>
+  <div class="variants" id="compact"></div>
+
+  <h2>3 · 刘海两翼（顶条 16px，Mac 刘海旁边）</h2>
+  <p>两翼的顶条贴着刘海，左边一个图标、右边状态。多个会话同时来时左边是一叠图标。</p>
+  <div class="variants" id="wings"></div>
+
+  <h2>推荐</h2>
+  <div class="conclusion"><ul id="verdict"></ul></div>
+</main>
+<script>
+const INK = "#1d1b22";
+const CHEEK = "#ff8fa0";
+const TONGUE = "#ff6b7a";
+const COLORS = { idle: "#f6e3d3", running: "#6db6f4", waiting: "#ffcd3c", failed: "#f2554c", done: "#5ed69e", stale: "#a9adb8" };
+
+const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const mix = (a, b, t) => "#" + rgb(a).map((v, i) => Math.round(v + (rgb(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
+const alpha = (hex, a) => `rgba(${rgb(hex).join(",")},${a})`;
+const pts = (rows) => rows.flatMap((row, y) => [...row].flatMap((c, x) => (c === "#" ? [[x, y]] : [])));
+const rep = (row, n) => Array.from({ length: n }, () => row);
+
+function dome(w, rows, wide, corner) {
+  const half = w / 2;
+  return Array.from({ length: rows }, (_, r) => {
+    const y = r + 0.5;
+    let hw = half;
+    if (y <= wide) hw = half * Math.pow(1 - Math.pow((wide - y) / wide, 2.2), 1 / 2.2);
+    else if (y > rows - corner) hw = half - (corner - Math.sqrt(corner * corner - Math.pow(y - (rows - corner), 2)));
+    const n = Math.min(w, Math.floor(hw) * 2 + 1);
+    const side = (w - n) / 2;
+    return ".".repeat(side) + "#".repeat(n) + ".".repeat(side);
+  });
+}
+
+const SMALL_EYES = {
+  open: [[0, 0], [0, 1]],
+  blink: [[0, 1]],
+  closed: [[-1, 1], [0, 1], [1, 1]],
+  happy: [[-1, 1], [0, 0], [1, 1]],
+  angry: [[-1, -1], [0, 0], [0, 1]],
+  dot: [[0, 1]],
+  squeeze: [[-1, 0], [0, 1], [-1, 2]],
+};
+const BIG_OPEN = pts([".#.", "###", "###", "###", ".#."]);
+
+const GRIDS = {
+  S: {
+    key: "S", w: 11, h: 8, unit: 3, k: 1, fx: "s", icon: 16,
+    pad: { l: 4, r: 8, t: 5, b: 2 },
+    head: ["..#######..", ".#########.", "###########", "###########", "###########", ".#########."],
+    cut: [1], lean: (r) => (r === 0 ? 1 : 0),
+    lobeX: [2, 4, 6, 8], lobe: ["#", "#", "#"], lobeTop: 5,
+    tone: (part) => (part === 2 ? "sh" : "base"),
+    eye: [3, 2], eyes: SMALL_EYES,
+    mouth: { small: [[4, 4]], open: [[5, 4]], flat: [[4, 4], [5, 4], [6, 4]] },
+    cheeks: [[1, 4]],
+    slots: { a: [11, 1], b: [14, 3], c: [15, -1], d: [12, 2] },
+    speed: [[[12, 2, 2], [13, 5, 2]], [[13, 2, 2], [12, 5, 2]]],
+    press: { spr: ["#.", ".#", "#."], x: -3, y: 2 },
+  },
+  M: {
+    key: "M", w: 17, h: 12, unit: 2, k: 1, fx: "m", icon: 24,
+    pad: { l: 4, r: 9, t: 6, b: 2 },
+    head: [".....#######.....", "...###########...", "..#############..", ".###############.", ".###############.", "#################", "#################", "#################", "#################", ".###############."],
+    cut: [3], lean: (r) => (r <= 2 ? 1 : 0),
+    lobeX: [1, 5, 9, 13], lobe: ["###", "###", "###", ".#."], lobeTop: 8,
+    tone: (part, x, r) => (part === 2 ? "sh" : (r === 1 && (x === 4 || x === 5)) || (r === 2 && x === 3) ? "hi" : "base"),
+    eye: [5, 5], eyes: SMALL_EYES,
+    mouth: { small: [[7, 7]], open: [[7, 7], [8, 7], [9, 7], [8, 8, 1]], flat: [[7, 7], [8, 7], [9, 7]] },
+    cheeks: [[2, 7], [3, 7]],
+    slots: { a: [15, 1], b: [19, 4], c: [19, 0], d: [15, 2] },
+    speed: [[[19, 4, 3], [20, 7, 2], [19, 10, 3]], [[20, 4, 3], [19, 7, 3], [21, 10, 2]]],
+    press: { spr: ["#.", ".#", "#."], x: -3, y: 4 },
+  },
+  L: {
+    key: "L", w: 33, h: 24, unit: 1, k: 2, fx: "l", icon: 48,
+    pad: { l: 8, r: 18, t: 12, b: 4 },
+    head: dome(33, 18, 13.5, 4),
+    cut: [5, 7], lean: (r) => (r <= 3 ? 2 : r <= 8 ? 1 : 0),
+    lobeX: [4, 10, 16, 22], lobe: [...rep("#######", 7), ".#####.", ".#####.", "..###.."], lobeTop: 14,
+    tone: (part, x, r) => {
+      if (part === 2) return r >= 9 ? "sh2" : "sh";
+      const dx = x + 0.5 - 9.5, dy = r + 0.5 - 4.6;
+      const u = dx * 0.9 - dy * 0.44, v = dx * 0.44 + dy * 0.9;
+      if ((u / 3.6) ** 2 + (v / 1.3) ** 2 <= 1) return "hi";
+      if (r >= 17) return "sh";
+      if (r >= 15) return "di";
+      return "base";
+    },
+    eye: [10, 9],
+    eyes: {
+      open: BIG_OPEN,
+      blink: [[0, 3], [1, 3], [2, 3]],
+      closed: [[-1, 3], [0, 3], [1, 3], [2, 3], [3, 3]],
+      happy: [[-1, 3], [-1, 2], [0, 1], [1, 1], [2, 1], [3, 2], [3, 3]],
+      angry: [...BIG_OPEN, [-2, -3], [-1, -3], [0, -2], [1, -2], [2, -1], [3, -1]],
+      dot: [[0, 2], [1, 2], [0, 3], [1, 3]],
+      squeeze: [[0, 0], [1, 1], [2, 2], [1, 3], [0, 4]],
+    },
+    mouth: { small: [[13, 15], [14, 15], [15, 15]], open: [[14, 14], [15, 14], [16, 14], [17, 14], [18, 14], [15, 15], [16, 15, 1], [17, 15]], flat: [[15, 15], [16, 15], [17, 15]] },
+    cheeks: [[5, 14], [6, 14], [7, 14], [5, 15], [6, 15], [7, 15]],
+    slots: { a: [30, 3], b: [38, 9], c: [38, 1], d: [31, 6] },
+    speed: [[[38, 8, 5], [40, 14, 4], [38, 20, 5]], [[40, 8, 5], [38, 14, 5], [41, 20, 4]]],
+    press: { spr: ["#..", ".#.", "..#", ".#.", "#.."], x: -6, y: 8 },
+  },
+};
+
+const PLUS3 = [".#.", "###", ".#."];
+const PLUS5 = ["..#..", "..#..", "#####", "..#..", "..#.."];
+const PLUS9 = ["....#....", "....#....", "....#....", "...###...", "#########", "...###...", "....#....", "....#....", "....#...."];
+const VEIN3 = ["#.#", "...", "#.#"];
+const VEIN5 = [".#.#.", "##.##", ".....", "##.##", ".#.#."];
+const VEIN9 = ["..#...#..", "..#...#..", "###...###", ".........", ".........", ".........", "###...###", "..#...#..", "..#...#.."];
+const Z3 = ["##.", ".#.", ".##"];
+const Z4 = ["####", "..#.", ".#..", "####"];
+const Z5 = ["#####", "...#.", "..#..", ".#...", "#####"];
+const Z7 = ["#######", ".....#.", "....#..", "...#...", "..#....", ".#.....", "#######"];
+const Q3 = ["##.", "..#", ".#.", "...", ".#."];
+const Q5 = [".###.", "#...#", "....#", "...#.", "..#..", "..#..", ".....", "..#.."];
+const FX = {
+  bang: { c: "#ffc81f", s: [["#", "#", ".", "#"]], m: [["#", "#", "#", ".", "#"]], l: [["##", "##", "##", "##", "##", "..", "##", "##"]] },
+  anger: { c: "#ff4a3d", s: [["#"], VEIN3], m: [["#"], VEIN3, VEIN5], l: [["##", "##"], VEIN5, VEIN9] },
+  spark: { c: "#ffd23f", s: [["#"], PLUS3], m: [["#"], PLUS3, PLUS5], l: [["##", "##"], PLUS5, PLUS9] },
+  sparkB: { c: "#ffd23f", s: [["#"]], m: [["#"], PLUS3], l: [["#"], PLUS3, PLUS5] },
+  z: { c: "#9d8cf0", s: [Z3], m: [Z3], l: [Z5] },
+  zB: { c: "#9d8cf0", s: [Z3], m: [Z4], l: [Z7] },
+  q: { c: "#9a9eab", s: [["#"], Q3], m: [["#"], Q3], l: [["##", "##"], Q5] },
+};
+
+const P0 = { dy: 0, dx: 0, lean: 0, squash: 0, lobes: [0, 0, 0, 0], eyes: "open", eyeDx: 0, eyeDy: 0, mouth: "", fx: [] };
+const ALL = (v) => [v, v, v, v];
+const ANIM = {
+  idle: { loop: 60, f: (t) => {
+    const p = {};
+    if (t === 24 || t === 25) p.eyes = "blink";
+    if (t >= 46 && t < 48) p.lobes = ALL(-1);
+    else if (t >= 48 && t < 51) { p.dy = -1; p.lobes = ALL(1); }
+    else if (t >= 51 && t < 53) p.dy = -1;
+    return p;
+  } },
+  running: { loop: 12, f: (t) => ({ lean: -1, eyeDx: -1, mouth: "small", dy: t >= 6 ? -1 : 0, lobes: [0, 1, 2, 3].map((i) => (t >= i * 3 && t < i * 3 + 3 ? -1 : 0)), fx: [{ n: "speed", f: t % 6 < 3 ? 0 : 1 }] }) },
+  waiting: { loop: 24, still: 8, f: (t) => {
+    const up = t < 2 || (t >= 4 && t < 6);
+    return { lean: 1, eyes: t === 17 ? "blink" : "open", eyeDy: -1, mouth: "open", dy: up ? -2 : 0, lobes: up ? ALL(1) : t === 2 || t === 6 ? ALL(-1) : ALL(0), fx: t < 10 && t % 5 !== 4 ? [{ n: "bang" }] : [] };
+  } },
+  failed: { hold: 34, still: 12, f: (t) => ({ eyes: "angry", squash: t < 5 ? 1 : 0, dx: t < 4 ? (t % 2 ? 1 : -1) : 0, fx: t < 1 ? [] : [{ n: "anger", lv: (t >= 3 && t < 5) || t >= 7 ? 2 : 1 }] }) },
+  done: { hold: 30, still: 12, f: (t) => ({ eyes: "happy", dy: t < 2 ? -1 : t < 4 ? -2 : t < 5 ? -1 : 0, lobes: t < 4 ? ALL(1) : ALL(0), fx: [t >= 1 ? { n: "spark", lv: t < 2 ? 0 : t < 3 ? 1 : 2 } : null, t >= 3 ? { n: "sparkB", at: "b", lv: t < 4 ? 0 : 2 } : null].filter(Boolean) }) },
+  stale: { hold: 34, still: 12, f: (t) => ({ lean: 1, eyes: "dot", mouth: "flat", fx: t >= 2 ? [{ n: "q", lv: t < 3 ? 0 : 2 }] : [] }) },
+  compact: { loop: 12, f: (t) => {
+    const ph = Math.floor(t / 3);
+    return { eyes: "squeeze", mouth: "flat", squash: ph === 0 ? -1 : ph === 2 ? 1 : 0, fx: ph === 0 ? [{ n: "press" }] : [] };
+  } },
+  sleep: { loop: 80, still: 12, f: (t) => ({ eyes: "closed", lobes: t % 40 < 20 ? ALL(0) : ALL(-1), fx: [t >= 3 ? { n: "z", at: "d" } : null, t >= 7 ? { n: "zB", at: "c" } : null].filter(Boolean) }) },
+};
+
+const STYLES = [
+  { id: "flat", name: "扁平", grid: "M", mode: "flat", sub: "17×12 格 · 岛上 1 格 = 2 像素", desc: "最接近现在的矢量水母：没有描边，头顶一点高光，触手压一层暗部。", notes: [["好处", "深色岛上最饱满，颜色面积最大，状态一眼能分"], ["要注意", "浅色岛上空闲的米白太淡，补了一圈棕色边（和矢量版一样）"]] },
+  { id: "sticker", name: "描边贴纸", grid: "M", mode: "sticker", sub: "17×12 格 · 岛上 1 格 = 2 像素", desc: "16 位机游戏的画法：一圈同色系的深色描边，里面和扁平一样。", notes: [["好处", "浅色岛、壁纸、文档里都立得住，最像一张贴纸"], ["要注意", "纯黑的岛上描边看不见，身体显得小一圈"]] },
+  { id: "mono", name: "单色", grid: "M", mode: "mono", sub: "17×12 格 · 岛上 1 格 = 2 像素", desc: "只用一个颜色，眼睛和嘴是镂空的。老掌机、电子宠物的感觉。", notes: [["好处", "最干净，和 Mac 菜单栏的单色模板图是一路的"], ["要注意", "没有腮红和高光，状态全靠颜色和姿势"]] },
+  { id: "neon", name: "霓虹线框", grid: "M", mode: "neon", sub: "17×12 格 · 岛上 1 格 = 2 像素", desc: "只画一圈轮廓，里面透一点底色，外面带发光。", notes: [["好处", "深色岛上最亮眼，像招牌灯"], ["要注意", "浅色岛上发光没了、线条偏细；发光是模糊的，不算纯像素"]] },
+  { id: "chunky", name: "大颗粒", grid: "S", mode: "flat", sub: "11×8 格 · 岛上 1 格 = 3 像素", desc: "格子最粗，最复古，像街机里的小怪。触手变成四条小腿。", notes: [["好处", "像素感最强，再小也认得出"], ["要注意", "表情只有几个点，和矢量水母的宽头圆触手差得最远"]] },
+  { id: "hd", name: "精细", grid: "L", mode: "hd", sub: "33×24 格 · 岛上 1 格 = 1 像素", desc: "格子最细：圆眼睛带高光，暗部用抖动过渡，边缘压深一档。", notes: [["好处", "放大最好看，适合关于页、README、图标"], ["要注意", "24 像素高时每格只有 1 像素，看起来像普通小图标"]] },
+];
+const STYLE = Object.fromEntries(STYLES.map((s) => [s.id, s]));
+const STATES = [
+  { a: "idle", name: "空闲", color: "idle", notes: [["眼睛", "5.8 秒眨一次，闭一帧"], ["身体", "每 10 秒游一下：触手收一格，上浮一格再落回"]] },
+  { a: "running", name: "运行中", tag: "一直循环", color: "running", notes: [["姿势", "头顶往前错一格，眼睛看前面"], ["触手", "四瓣依次收起，1.2 秒一轮"], ["速度线", "两帧来回换"]] },
+  { a: "waiting", name: "等你", tag: "一直循环", color: "waiting", notes: [["身体", "歪头，跳两下停一下（2.4 秒一轮）"], ["感叹号", "跟着跳的节奏闪"], ["表情", "眼睛抬高一格，张嘴"]] },
+  { a: "failed", name: "失败", tag: "播一次", color: "failed", notes: [["身体", "压扁一格，左右晃两下（400ms）"], ["怒气符号", "鼓两下就停"], ["表情", "斜眼，只有失败这样"]] },
+  { a: "done", name: "完成", tag: "播一次", color: "done", notes: [["身体", "上浮两格再落回（500ms）"], ["星星", "一大一小先后弹出，停住不闪"], ["表情", "笑眼"]] },
+  { a: "stale", name: "可能中断", tag: "播一次", color: "stale", notes: [["样子", "灰色，小点眼，歪着"], ["问号", "弹出来一次就停"]] },
+  { a: "compact", name: "压缩上下文", tag: "一直循环", color: "running", notes: [["身体", "拉长、还原、压扁、还原，1.2 秒一轮"], ["表情", "使劲闭眼，两边有往里挤的箭头"]] },
+  { a: "sleep", name: "睡着", tag: "播一次", color: "idle", notes: [["Z", "一小一大先后冒出来，停住"], ["触手", "4 秒一轮，收一下放一下"]] },
+];
+const STATE = Object.fromEntries(STATES.map((s) => [s.a, s]));
+const TITLES = { idle: "Claude Code · 空闲", running: "Claude Code · 正在改 3 个文件", waiting: "Claude Code · 等你确认", failed: "Claude Code · 出错了", done: "Claude Code · 已完成", stale: "Claude Code · 可能中断了", compact: "Claude Code · 正在压缩上下文", sleep: "没有会话" };
+const AUTO_STEPS = [["idle", 22], ["running", 36], ["compact", 26], ["running", 20], ["waiting", 44], ["running", 24], ["done", 30], ["idle", 16], ["stale", 30], ["failed", 32], ["sleep", 40]];
+
+function tones(sty, state, light) {
+  let base = COLORS[STATE[state].color];
+  const thin = sty.mode === "mono" || sty.mode === "neon";
+  const pale = light && STATE[state].color === "idle";
+  if (pale) base = thin ? "#b89f82" : "#ead7bf";
+  else if (light && thin) base = mix(base, INK, 0.18);
+  if (sty.mode === "neon" && !light) base = mix(base, "#ffffff", 0.12);
+  return { base, hi: mix(base, "#ffffff", 0.62), sh: mix(base, "#43307a", 0.22), sh2: mix(base, "#2c1d5c", 0.42), ol: mix(base, "#150f22", 0.68), ink: INK, cheek: CHEEK, rim: pale && !thin ? "#b49d82" : null, glow: !light };
+}
+const ICON_TONES = { base: "#a9dcff", hi: "#e9f8ff", sh: "#6cc4ff", sh2: "#4a9fe6", ol: "#0e2340", ink: "#0e2340", cheek: "#ff7fa5", rim: null, glow: true };
+
+function compose(g, sty, pose, tone) {
+  const p = { ...P0, ...pose };
+  const W = g.w + g.pad.l + g.pad.r, H = g.h + g.pad.t + g.pad.b, ox = g.pad.l, oy = g.pad.t;
+  const mv = (v) => (g.key === "S" ? Math.sign(v) * Math.ceil(Math.abs(v) / 2) : v * g.k);
+  const part = new Int8Array(W * H), shade = new Array(W * H), px = new Array(W * H).fill(null);
+  const put = (x, y, kind, key) => { if (x >= 0 && y >= 0 && x < W && y < H) { part[y * W + x] = kind; shade[y * W + x] = key; } };
+  const bx = ox + mv(p.dx), by = oy + mv(p.dy);
+  g.lobeX.forEach((lx, i) => {
+    g.lobe.forEach((row, r) => [...row].forEach((c, x) => { if (c === "#") put(bx + lx + x, by + g.lobeTop + mv(p.lobes[i]) + r, 2, g.tone(2, lx + x, r)); }));
+  });
+  let rows = g.head.map((_, i) => i);
+  if (p.squash > 0) rows = rows.filter((i) => !g.cut.includes(i));
+  if (p.squash < 0) rows = rows.flatMap((i) => (g.cut.includes(i) ? [i, i] : [i]));
+  const top = g.head.length - rows.length;
+  rows.forEach((ri, n) => {
+    const shift = p.lean * g.lean(ri);
+    [...g.head[ri]].forEach((c, x) => { if (c === "#") put(bx + x + shift, by + top + n, 1, g.tone(1, x, ri)); });
+  });
+  const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? 0 : part[y * W + x]);
+  const down = { hi: "base", base: "sh", sh: "sh2", sh2: "sh2" };
+  for (let y = 0; y < H; y += 1) {
+    for (let x = 0; x < W; x += 1) {
+      const i = y * W + x;
+      if (!part[i]) continue;
+      const edge = !at(x - 1, y) || !at(x + 1, y) || !at(x, y - 1) || !at(x, y + 1);
+      let key = shade[i];
+      if (key === "di") key = (x + y) % 2 ? "sh" : "base";
+      if (key === "di2") key = (x + y) % 2 ? "sh2" : "sh";
+      if (sty.mode === "mono") px[i] = tone.base;
+      else if (sty.mode === "neon") px[i] = edge ? tone.base : alpha(tone.base, 0.16);
+      else if (sty.mode === "sticker") px[i] = edge ? tone.ol : tone[key];
+      else if (sty.mode === "hd") px[i] = edge ? tone.rim || tone[down[key]] : tone[key];
+      else px[i] = edge && tone.rim ? tone.rim : tone[key];
+    }
+  }
+  const ink = sty.mode === "mono" ? null : sty.mode === "neon" ? tone.base : tone.ink;
+  const face = (x, y, color) => { const fx = bx + x, fy = by + y; if (at(fx, fy)) px[fy * W + fx] = color; };
+  if (sty.mode !== "mono" && p.eyes !== "angry") g.cheeks.forEach(([x, y]) => { face(x, y, tone.cheek); face(g.w - 1 - x, y, tone.cheek); });
+  const step = g.key === "S" ? 1 : g.k;
+  [0, 1].forEach((side) => {
+    const ax = side ? g.w - 1 - g.eye[0] : g.eye[0];
+    g.eyes[p.eyes].forEach(([dx, dy]) => face(ax + (side ? -dx : dx) + p.eyeDx * step, g.eye[1] + dy + p.eyeDy * step, ink));
+  });
+  (g.mouth[p.mouth] || []).forEach(([x, y, tongue]) => face(x + (p.mouth === "small" ? 0 : p.eyeDx * step), y, tongue && sty.mode !== "mono" && sty.mode !== "neon" ? TONGUE : ink));
+  const dot = (x, y, color) => { if (x >= 0 && y >= 0 && x < W && y < H) px[y * W + x] = color; };
+  const plain = sty.mode === "mono";
+  for (const f of p.fx) {
+    if (f.n === "speed") {
+      g.speed[f.f].forEach(([x, y, len]) => { for (let i = 0; i < len; i += 1) for (let j = 0; j < g.k; j += 1) dot(ox + x + i, oy + y + j, alpha(tone.base, 0.55)); });
+      continue;
+    }
+    if (f.n === "press") {
+      const { spr, x, y } = g.press;
+      spr.forEach((row, r) => [...row].forEach((c, i) => { if (c === "#") { dot(ox + x + i, oy + y + r, alpha(tone.base, 0.75)); dot(ox + g.w - 1 - x - i, oy + y + r, alpha(tone.base, 0.75)); } }));
+      continue;
+    }
+    const set = FX[f.n][g.fx];
+    const spr = set[Math.floor(((f.lv ?? 2) * (set.length - 1)) / 2)], box = set[set.length - 1];
+    const [sx, sb] = g.slots[f.at || "a"];
+    const x0 = ox + sx + Math.floor((box[0].length - spr[0].length) / 2), y0 = oy + sb - box.length + 1 + Math.floor((box.length - spr.length) / 2);
+    spr.forEach((row, r) => [...row].forEach((c, i) => { if (c === "#") dot(x0 + i, y0 + r, plain ? tone.base : FX[f.n].c); }));
+  }
+  return { W, H, px, ox, oy };
+}
+
+function paint(ctx, buf, x0 = 0, y0 = 0, scale = 1, crop = null) {
+  const c = crop || { x: 0, y: 0, w: buf.W, h: buf.H };
+  for (let y = 0; y < c.h; y += 1) {
+    for (let x = 0; x < c.w; x += 1) {
+      const color = buf.px[(c.y + y) * buf.W + c.x + x];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(x0 + x * scale, y0 + y * scale, scale, scale);
+    }
+  }
+}
+
+const view = { bg: "dark", speed: 1, motion: true, replay: true, grid: false, style: "flat", state: "idle", ov: "auto", auto: false };
+const insts = new Set();
+let tick = 0;
+
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") el.className = v;
+    else if (k === "style") el.style.cssText = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid !== null && kid !== undefined) el.append(kid);
+  return el;
+}
+
+function jelly(opts) {
+  const sty = STYLE[opts.style], g = GRIDS[sty.grid], z = opts.zoom || 1, u = g.unit * z;
+  const cv = h("canvas", { width: g.w + g.pad.l + g.pad.r, height: g.h + g.pad.t + g.pad.b });
+  cv.style.cssText = `width:${cv.width * u}px;height:${cv.height * u}px;left:${-g.pad.l * u}px;top:${-g.pad.t * u}px`;
+  const cells = h("i", { class: "cells", style: `background-size:${u}px ${u}px` });
+  const wrap = h("span", { class: `px${z >= 4 ? " big" : ""}`, style: `width:${g.w * u}px;height:${g.h * u}px${z >= 2 ? `;margin-right:${Math.round(g.pad.r * u * 0.7)}px` : ""}` }, cv, cells);
+  const it = { cv, ctx: cv.getContext("2d"), sty, g, z, state: opts.state || "idle", light: opts.light ?? "auto", t0: tick, mod: opts.mod, pose: opts.pose, group: opts.group, key: "" };
+  insts.add(it);
+  wrap.inst = it;
+  draw(it);
+  return wrap;
+}
+
+function poseOf(it) {
+  if (it.pose) return it.pose;
+  const a = ANIM[it.state];
+  let t = tick - it.t0;
+  if (!view.motion) t = a.still ?? 0;
+  else if (a.loop) t %= a.loop;
+  else if (t > a.hold) {
+    if (view.replay && !it.mod) { it.t0 = tick; t = 0; } else t = a.hold;
+  }
+  const p = a.f(t);
+  return it.mod ? it.mod(p, it) : p;
+}
+
+function draw(it) {
+  const light = it.light === "auto" ? view.bg === "light" : it.light;
+  const p = poseOf(it);
+  const key = JSON.stringify(p) + it.state + light;
+  if (key === it.key) return;
+  it.key = key;
+  const tone = tones(it.sty, it.state, light);
+  it.ctx.clearRect(0, 0, it.cv.width, it.cv.height);
+  paint(it.ctx, compose(it.g, it.sty, p, tone));
+  if (it.sty.mode === "neon") it.cv.style.filter = tone.glow ? `drop-shadow(0 0 ${1.2 * it.z}px ${tone.base}) drop-shadow(0 0 ${3.5 * it.z}px ${alpha(tone.base, 0.6)})` : "none";
+}
+
+function setState(it, state) { it.state = state; it.t0 = tick; it.key = ""; }
+
+function loop() {
+  tick += 1;
+  if (view.ov === "auto" && view.motion && tick % 34 === 0) {
+    const next = STATES[Math.floor(tick / 34) % STATES.length].a;
+    for (const it of insts) if (it.group === "ov") setState(it, next);
+  }
+  stageTick();
+  for (const it of insts) {
+    if (!it.cv.isConnected) { insts.delete(it); continue; }
+    draw(it);
+  }
+  window.setTimeout(loop, 100 / view.speed);
+}
+
+function redrawAll() { for (const it of insts) { it.key = ""; draw(it); } }
+
+
+function stageTick() {}
+const ICONS = { claude: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAARGVYSWZNTQAqAAAACAABh2kABAAAAAEAAAAaAAAAAAADoAEAAwAAAAEAAQAAoAIABAAAAAEAAABAoAMABAAAAAEAAABAAAAAAEZRQrAAAB++SURBVHgBTZtpsGVXeZ7XPufcofv2ePv2oKFbMhqYxCAjS0JCchAgoQGDLBtbTLGDTcUuTFJFyvkTO3ZVqJSTKv+hnNjBAYQnAiUMCCxkQFFJGGQQgyKD0ARCUqvp+d4e7nzOzvO8a59G+/Y5e++11vd97zeutdc+3Tz2h785KsuLpWlKaZteKb1e0w7X26Y0pS3c2sExHI7ob5t+09hML+O7T9Ny1eulrXDtbfqgbUIP56bXjuDfDNdqZ0/+9NPKRdv2+6U3GoauiENu7ZBzleXZ8aU/CI9Rr98wHjEVSZUHf4WLFJ6Kjha9AU022NOUHn/D4TrfLZ+VJXmXUb4Rsb7WKr4NI84jerjuA7jf68k9R7r5UlKUjPH6VQFGKFwBjfSMghFWXIdXBSVdT9penxaB1EPzKrt1fJRrioajKeCrAeWr8hy9sUwV855vGGiWKklanOcfFL3hsIwwtLLhUgYRBNooEbDQ0dnoLZgRDbkPPxjIuJoWQRhFxWSMSSOkG6HKEWAXF+mrQrlWnpygVQ+BRw7ntNufaODMMGNLuHKJwsGpQtwLKBEjOzGEA+M0P12OGeulIdWLdr+85q7PFYPCTChnQhNQwwyW0SjtDJM4hy0cY1pjCLTJHVH7CRwgGcov4B9y7gM2NIyNJ6uiKh+EtEk3HA1jibEyY7k1peRNf/iPZUKt0nxIsQ5LOHYRqWSiemQaIEzvx5oyqaI7cOO7qo7sxx8Bl+QzNIadPVyOv0cv5CX/9BjWDBqhfBhVb2WoOMJHmfKBAoAO6xtP5H64d4aVD1VFboyp8RYqvUybLvMw2owxdYwx7MUwqXdQJgZsM+Rl2kIYpl14BzCFL3KFo6ccYGpIIWMpAr4KNbQFHsB8G/rCCt/wqL3hnbH0KIBx6XFgRnv2oAF5NZLweGTWHh2ovPr5mVHkpMwaNTWNo7Q4owySsFvSkppZGSjIlHBQl/vxlJYWXEAaMZ3wYBtJDb3fmEIwXuExVRaIPWdSSN5daMuzq1ahcVwbgDg/Ld53eBzb8WqNoAz2i4NTA25xBWNtjdzOc3WI3xDGZRhO+QP97iHMdJGv1lCuKdADAqJW7jORESbC0woZhc6j0ldhvYHhBJdrwcdYiqw4UbBlSizt+lrtUgeVllc8GZLApDHt1agO9KgGbJiWR2g8LqzSK9fAjdcz1gamTfjTnAFJdejE4zh7BUtTYNvMJwoit4aOcy7gsIG5A3E+0ImJ+bFh3TBEIWeCybmdpbdpWxmeOFLWjx/Dg+auwKBD+mi02nlZehmoOGcNB38sab8JSTeYLcTQKkxze8HEmMioxRLajDbGoNIJXI1zthkOudShEa/A8EK6bWWQQoN6sNUGLe6hmY9MO2YWLVv1lCDDRW+JBwEZv75aps79ubLn7e9vehtmSru2Vk58575y/N7PkGhd3QhneBl+tEmegojxJuZ2l40Xv7o5/f1vtesnT1SBGqYbo3hWUzRUets7yPBA+S6KNJSMa8FjfITQ5HyrTvLh4zAxEEHhFPNkcCdTr3CpOGlC3F1zK40cMIZe47q/cWOZu+H2pr9xUwzXDAZl6+VvKoPde11ZZrhs5OH0ZYNh3K6vl6nd55Sz3/P7zc6b3lV2/+rvYsANGel40hDcGFA3avzkP3wCDh6eOfQ/XeEvvvqn4uCTTkOYChLCT2M4i4gEzxs2HHbqnQiqc6uWjAloH+n17mgI1bFwFZzYsbtM7tkHK9ImVgfcBEa49JqEsUxUXhnmbfWlModl82te30xs3VFGS4tleu9FZebiS8tobZVOxpMCoWQprQI95NaaYTOGUJb/wFy9TjuSRD2O1tgoEa2FoDGyoalY+KatMpGR1oGBzckcr1MTkM/VOKTCXEVkBM36/LEyPHVCBo7KoXdnXvoajLNrnOP40UzDI+PF0eTGMn3+S2M4+yy6w5PHgi9j4STAKKdjNIgRxTlrjXAUeAct+LmWv9ikh69p52OMzxyRA0/dScbzB5FpPjYEl52e1TK1Q0419GJ1b/v9SJbh+oljZfm5J/H6BD3Sy5kis2Vb2fTKq9FrFQNG9SCVxwiQ/cnJkpohP9tWVzDmITDV0TR3no1TYqDB5k1lsG1bxhCx2Mc09ANyw1wiMdRT6JsBuMQ/4uHLKHcszjUFuMnDAcsBLExnDyYdF3sz2HHJIfvwhP0oKceqLPPw8a/f3RrGFKsAUL6e2vzK1zaDjZurUEGkI6SlNz1V+hOTYS/44eKpsn7qdApUsMlDw3Qyt7/xV5tz/u2Hmr2/86Fm22vf1LSry5WfPD2yOtW38DcakOfRmlJg1az+i66xl0UmtpCo6p08Dh2KVPraY37LROVlwr2q8nTVIKxZ2f90Wfjml9tmgEI56AX41NxZZeZlr2natRWtRg8SpTf+Jjc0Ro2tNCSSRosnVLpxAtMhGtHzjhvf2cxee0vpTU4Xi+z2a24pk+e/2GkYXB1Qz10UJOxhqyjlcmoowBHlvcbouSBRy7oUrqNTJeETurEFABdagIy0Oh85V7GoA38r9vw3/rGsHn4+AI0vNTPbtlz2epQlDM1jDaYoFOtt3MJahXYAmYprRw+l3dgKQMZZF+au/7Wy7Yo3IBcjmr3w6U3PlJkLLoEfPBOO8ASn9/Kr+FA0ugMGnkz7gTxOayFyVKN4Zbh5N55XZSgvrTpaH5apc84rs9fdVjZfdl1ppqZKwYAuclLZOZsCx+//PLYzF/1DBNPdBqr7xpdc2mQFaOp4oFh/Zgu8WSwpBBkrB59JV12DMGRtuWy9+sZm++tuDq2d4et4wn3p6Uehs3DD0zYcpOJ+Mk5jdPemdtPH2JxzQMeVZtFEHvFoioRTnnpjTpuzdJ3cdXbZ+dbfarZdc0uz8+Z3N3ve9cFmEoMMl087EjkInZwqJx95sCw+9X0KIqmQfKETGduvfSuRAVhAdRFX1w0CEgOhvHZ4P5WJMd4zi2x+9evw/q+jVw1zsQrMorZy4Cdlbf+PXDiiiFFRtQgY6fvyBVcqMvcaxw/8Nc94Y4QRABpbzZWGeL2HSYygYbD25K5zysS2nQn/Efk8vXtvOeudH2y2XP56mLnYgQ8CnJOP3nsnDia9ApiwRIENey8um15xBe2rYDUVRu1g8xaGIAcjjJaXyuqh/TX64D917vnNzlv+Nd30i0dc+WLapVge/vxH2+GqMvSoPeMxmeKoH+BRVXTKst5+2kaknmNBVdND8gDFklWADRwok5jg0va1owfwCtU0SsECpXpT02XXLb/RzFGgehSmEUvgQhFc/slj7Ynv3E9ETGe8SsCQwvVLTX+aNoDIZ7B1Z5i7sFpbOFLWSCHV6M1sKrtvfR8pUmePKjPqhO7wFz5eVvb/2D1CbCNKqfzUb5e+jtbTHpkeE/oaRAN4kOB2yyB5AqagIQjq3FrbI4A8XT7wTLPw7ftqaDPthbljsei2K64vZ7GcnZjbRWquEKKT5fgDn2uHp+arR/USSk+fe0HZ9OrXMSMsk4oYYMv2IMZ6KZ5u0Gr4ubf9duPYzEiCrHowA8D3n75YTj389bZMzQhYkHUl6DDGoY4hZR+HRjGCuOqMbl+mwaaf/c9QmAY5DE0ueuZhcpPBEsC5B8Gxez7ZHr7rY+2IzVSnIsd6GBkbzntxOee9f9BsueRyVrCjsnrkMLPCPRisRkG0gP/2q29OBffJb7Bpq9R09crqT58jDU6V2de/rdlK7jt3m901LvmemCqLjz9cjn/1zrZhBekyOWt9lbO4GQk4BKxU+3FNIA5od9U4nulM04ikzeJdCV94pjdRgWiZ4gavUjysoie+/UDZf8eflKVnWflR9OCcj3VisHl72fOOf9fsvuXdpT+9ocx/7Qvt2hGmxSxB4YHw6bPPL1t+/lrI+jxE4UXF8Lf07ONl08svK3Nv/LW6oFFoBHNiil2bP1IOff4jpHOtN1LVj3yrAw17MbtX0M0OUVyDJJI7EvIjND5dcMURQVrJS77Mfz908TYgZ6PEe+fttUPPtwf+6r+38w/cBQEUREOYaCy8sOPatzTnvvc/Nf1NM+XIl/8uCiQsDU36t772hmawdSte3RB5rgAtVnve/oGmzhSwE0cUgQalDt/1v9vVw4fDK94MWKp5Rln4cg0fcwCkejrFWdQctktDX52IeYr9vSsv/s82Cc5hdf7nwvCnQZZYjmcxibju0qGmRa8sPfpQWd7/ZJnYc14zOctDD2M0oMabmNtTtlz6i83ikw+3g627m4ntO8LTrz5Fbnn/E2XTy65A4Rq+My95DTyYZQSu7nETZ6bTY/d+hmi6O2kQJZBzxuteq1TsVadQGoJXPapmasfnjMM7Qzz+wbdhOjKE0K5WQwHGuTFyJg3CvN5HuOEkO8IyU80q9YBNkNnrbm22XXVT6ZGrTjuOzd4gHs/DEO1RLOgw3nM/LlN7ziWixrUEUAllAdQ0NOUWn/qX8txH/sgXU51jUBYeeRp0vLLk6bKeVEvtcDmO8uqiXv55JaYUeKMaw0lBH0xi0Voc5MV7IL47IB2LmDjeqTYVLExYy0+17gAd/uJft6d/+K2y85b3NhZEV33xJj7QKDFemAdu2bjvwq6/hmRA6sZg1aPEH8X1yD1/C3/3GZDL1Ktx5TegfvS37ywTs7ubyTnWKDvPLpOzc2X52R+VhQfvaddPLETJVH9iNy6UN3hS1zDCwAcJu5I3dhoi5LFhzwcUDPbAQIkMxuQhBq+2LUtZeuIPePQJ5cWnHivP/cUftLNvuI0Hl1uzYtMIdNfDi+46ewLe61mYiyH47KfN1Ji//zNl8Yn/x3phrkzu2Fkmd5/XTO29oEzt2kvbjhTRpJB8Eg0U2X0Yf7TeHP3CHW1vckOVl63vGpEaVQzKG4ywAmYODBHW/GMgl0RHtfiQjUwGawyxMZwUMbfEybf1IpHBpDWYYjFkwbqjXXziEZbOv91scD5XqIcM6pcX9bAtRqigYlDEG0ETePic9/1R46pzsJmiSWjHcEyz443U+kAHbbCAGbqlJx8mJSbASZAzO1X0aAGO1DmNpdEf//e/xGMVocVGgSEiOM7Zt3PqmLroFc3GF724DE8vsubnRery6Xa4NM8T4RKCeG21inF8Qls5yT1tcBgNEYxOI8b5sLPjxvc0s9cw9/tsEOXR+IwhGCmRh2c+ucs1UWd9sI0HMXM9jmCE64OElahRcLh0mnXHAcL/qbL67OPt4qPfw6boAk10cpwy0Cl1Qv5cD7zxQQM8cNWTXYEz5HlO90HE/b6Ag0m4+S2o1A3Gm+tGCQsXc3S4tML22LGyfvIQ2+On25Wnf9Au7jq72czO0LjCn8kJPZ8DQF5W7bs2buVNR5ayg2mwDuHPpsn8YZ4bnmc5jMIHn2tXDz5b1hfYhmeNkOLrzCJDFTddvRM/n+iLrhpowKLC5ohNJDibpnry0MBT3sKDd5cdN7yTNosih4tniCMkbR04aRKCnE0J+7xPQME+RrKQQe+hB8bXtaX7tr/CGXtqeGqhKvvso2XpmSfb1eef5rnheJQt7vQgy0hRlAuz4Egds7gr5gUy4Z47HQwdqxf3MjqRFithGCZSkkMnH3qgXT3wI54Cd5dmerMCmh4bG+4F9NzJmdrE+nxDdmmszAUgPacgAWkUxlgX3C7vsTLMoX4RWhU905jb2maknPrhI+Xkd76adcb6wnzbnibNzOmsKk1b1wvEx4goWaNwU7OCnwc0BeTayj02gG0Yxr6xqOaJ/3AbL2vI4e5tDFuMqY5uP0eAc323+yPQ5CBMsC1sYNabjCV1aOZh8lFQoOJDP/e9DVvLntt/v9n8qquq114AqDO9jOVe/5laHMOVuvNkGviUmf0/x/GxEI7I+5Z0GPIANeQpcrh4kv2BJ9qlp34AFnAhR/fWHWKiscqggS12IwAZAwtY8JgoHHnH59TYgfBJL8xis6iNer7fC72LqAjSpuZUXWlxB2iPmUsuI4XezUxwEV6izRQSSNzjiKp0zt56Dx8VUsEJVoYuplKbLILi6YxQFfoZpUyp8s3CQ/eW+Xv+Dl8pa6QrEuXEjLxRDR5ipU4MonwVSzeNFJHK8gxCLEih49aHFxn4Wx4aEABDqFKkrAteA9CCOH3+i8rsG3+92XTJ1RicHuxrSljA+uzlVfDSd0d3GZaKRubhz/55u3pioZm5+NVlw76LywRT4QSPz877ebgx9H271DlLnv5tu/IGZq2FZv7ez5IVk1HeOT/9gvGlrzrh6IGBkIImDhv5s4jEm9HPNvtwgrnntGKDYc5Fng2kQ0F3gCZ5CbLtX/E4+wtvyNNgIqHH2oDH3GNf/j9l5hVXlY0XvCzk1X413HMt47D1VdtmXpN9oNn/sf/SHr3r43l30KNtcueeMrX3IlaaL2FRdG52qLL1JgMUqkdD+xwyuO9Td1wH0K1dMZwKxqFxyhMfuJnJkHlbrxrOVMaa5wCziqucFZ2zRyzJWZz5wqDWkMHmbWXmiuub2ddeXya3z8UYKYIUxFOPfbsc/txH2q2X03/dryBnSBU/BjOA8vgcD44Zeta4IjZiTp8qBz75p+3iIw/lQSgRhhN8Iu2xs9TfNsvGyUW8UruQDdsXiYqZ60tl8QffadsVF19hmJrlA13WBrQmWo3aJ34PAwBE9VI0OBmxWQVmyciNBsA4MovjGRAWMdo6OzxX4/Vbm6k9+2JIjeR0NKRqH/vKJ9tj//dONjluK7tuez9OYa1A/6FP/1k7e/3tjTnuIidTZ2dk5QS2+YnDhtAcuvN/MiPdT0h3O8ip+DXqdI4ye1POPBMpij3WDJmJaNeVcEq9ikGcSaDR6U6D/AMwKhkXRAAOoY0KLii6km8WNx9CklCiW1sqAx5vZ9/8DvL8KhpYN1C1sy8AyJPff6gcufsT7fJPnvTNUJm75TfzYsRwPfqlvykrzz+aZa5bYfPfuKud3kdY73sJwcEPJ0i15R//kCK45AsVwA7L7l95f+lvnm0W7vss+cE0KzBk1idJ1oXc+5NDjdFjBwoj8xbEV+Kkrb97xATxPrrFvHEoQVbZqL4f7rCKAvVSNQtt8QQp4gGhhph55RXlrN/6w2bTy6+kuq+koDjnr59cKAc//T/K/o/917J64PkyvXNn2f3L76N+YmsUW3z8u+XoP3y8ndh9ocaGYVuWn3miHPtHqrby+biam+RhZ/7+v2/nCWeN5LQ39+Z3sqy+HYcwc4lRpQBHosYx3lXDqA2xKlan5RjLQfBWTXSUlqMZ5CShDw4UEZkIw3fnuXCYwjyRHLwEaWff9PZmy5XXh6EvLqIcIE9+74FyjOln/cih0p9iz260XHb+8u82EzvOggVLWFZ0Bz/9YeZzfxCxK6INQ3mcfOSfy6kffJMNksvzbGF+77jpPc1zf/Yf2/X5g83269gmo8huu/ZtTcPG6NHP34GCLLrAI8Q4UI4NO9Oq17or7EE3ymZPkNT1GSJ1hFH0t/xQUhtWtU1+VI+FMp8b8rRIloNQGmybLZt//hfrdEmzG5VrrMuPf/mT5eTDD/KQiFf9hQiLkx033U4I/0KKpBsbhz/3l+0yUWGITu44Gznwx9vDkwdh3y9HSZkNP/dydoiIFtYMFrXt17+jOfL3f9EOF+bLjpt/w/mpbL3iRvJ9U3P4M/+LYCRiXZGOMZoW+lCvq48KcNQXJ92tuGnzE5XzSGtRkAhQNZR+FgF5TpSAEDbPVw88k7G+Bjv53QfaA3/5x+3ph7/RuvubsEb5za+6omy75q2N7xGdtxe+/g8UsfsItGnATxDi+6K8M8hwGW9goOVnni7H72PH12gEj7Rbr7qxbLzkStLhi+XQ3/63dv00v0EgtDe/6uqyi5/j+I5BIyZ1nQYN7y7Ea2xgGuRH3RgD7TjXdQF1kp56wFTrJjCIiFRJesIkFFzjXZU++KkPtxNbNhHSp5PzuDSRYAQNV9aaibP2lh1veS/mVrEB7+9+iHf/mrfGgCXcBlt3ZTPDt0mjFVZ8THVGYUPazN9/V9l40aVsarByJOSNqLk3v6t5noegk9//HtPnh9q5t/ybrAM2vewypsKNzaFPfbiU06d41Vtrip5V1zg0hbyrZlx7JEp1eHR2aJaXNOB7q2ktdJop5QXQRouWo02G7OCu/PQga29/ZY5QGXN2OhvMbGopemxX1d8KDfHYkc8SqszJKsmc1k7N7W57qRFMcUs84Cy7JpAHoJdXy7G7/6rN8wniNMLUWfvKVt4VSL564Lly4I4/aRe+/qXUrI0XvsKZCMhMr6YvYNUjU3EwozE84kNnBJTOjeshjaGaufLLsHOkh0pxbXr4U3cjoq6oIKQvH9v0HCFXZ49l8v5dzfTZF1DYfEwdlGNf+pt2halw/JuBhmXyxO7zo6z8Xe8XiiLS4gjHLf34sbLAa/a6GWIqrPDm6Yay4cKXUtyQT304etdH20N3/jkROJ9FkQ7IakatQC1uNUkxF6N3qWnoJN5gNwWY9/ktHSRS1oHJD0I3KzQs1rLmDmKYWnQTCYxXgK9mMQ6z1Br5ehMvP69K7vpOcP6f7ioL3/oq0zbL0QiHP2E6uWcfueK0igEI/7YlE5NrYkBeb9DMf/VT7fR5FzXT51yQKDCVZm94dzn40T/mHhw8Yp/67tfalWeeDG+nSp0gTjIRiCoJVu5tA2vWBWqojEQcWPyfAzTQjUX0clWL2yEbfzCM58OCNmgZUbkxVgNkbU0Rmt53PlPUrSx2CHWKzolvfqUcv+fTPHdszDiGcoYDewkTc2fDvz4trvPukJ+/iErODkIBJrHl5XIEL1sjxGwqTO48x98G4V0gAN6f1gxZUg9PzEchp7gwgoeKVqZeawZXd2GvJC5AA27jPPYwwTIbOEoCvGokhMoW+s2f+j9GbOWe/jDiPPOq65pmw8aE7elHHmyPfvET9sO8M7BsCZQBvyKd2DqbuVjmwxMHWamtyAiWwLGQIcfNlVW2t4/zmr2uM1AOhfszO1p3gXRM8JqqflRTvfJR5Yo9GOkFSS7tqeOVx5aYhFqBgyWV8Q0Hcxwv5jc9KumgPEUxMOlCP8TySifAl3/0SJazK88/TX5+TK6anUGMcmgQUCT3nNc07thgfVNseMpCCj8HuhBTmfAmTHltdvKfv9IOtu9uNlz4Sgrg0/yC5Pn4KvwUDg/hQRzacfv4HIM6AnfyVXFYCDG0tWsQgTQEI8/WUYyO0SoMK+uQGwH4K+BeuEq03cXEImv/pSceaetveGggZxMBUCEVcEyhLJk3sLjRLgLU06PFRYq3u8VVbz3rVr21hn8OKce+8Im2nZpqmpUlGslb1iPyzKeLGpXJWyo9r1FoTwzQ3i2W05YIALPhb2T1kuuxOLx1qdd6xFCsLZzps5k/hfpKzChhdNIiP321CLFFnnhysIAAEjAqhXe5JrlZrMjR5TXtw1NHY6y0pUeeLmj0bCY2gKK0gJHRub+O1AaCCjixQRMVwKbRvY6hu8hiqO8zEuFZApJqkiVMZKLIEBABQ37JBcMobXvXJ4A6tdQXIxpNUyio/jJcQ1bBEc61Bk3IsQo8/b2vtau8LncdsPrTZ8rawefC27ECVpkx/bh+CImDlDcy6NcBREKg225BJTX1dCJVB4aAb/VibJ3eYeTYzvsoy37A77wJM7CIcTrzV5d5FFZeR+yg7jZe0fMsVWWUGaIDbUFKYaqUUqiYvx/kxwqCq6aSbsCu0eTeC5qVJ/+lHZ4+ncKZkJQmwqStF/6KpIY2bUYlfHpGk0ZVQgwnCC5tU2EjoeuPQ+GldPu495KhjAUXMcWFBM5qtRZkeH5gwL1b3GceKcMANhgq1SKFBb6yh5kCVDT8lOd/s5OnMjSCkimu/hZw7fCBbG4IhPRgQdlne49k0gOwCE3F5W2OhDXKj8xd+Bqhqi6BvD2icC5R1P+S167RpdqMibG4k6HXyGa1Y64pUfJ60FcZus9vPqaPLzv8AoRmU2yih/sorvIoG3riOWBkacgKkI6A0CD+X5UAhUSAGIj/Ckk+ObYeVRxK6vkYx/+bwHhnIonhG2gaX0S0VQdUaSrYtGzwpN5IGaqYwr0J8bArrIFgqkUTDTWn07jORkdQSFyPCBQGF0EDnTfxgc5jJyndGoN7r8fhPZ67a7r5i02oTDmO7Oi4ejM0lcknXtOg9tsQfIZ3UGRKtleMRAWROeKnr+pR64PRN34yDP+KsqokUx+2UhzCD8YRDBF94xTQwx5aM4K1XCyrcgrXAAqVCcEhMYLMW+8TmlzHM3aZCjwQRZmqB2Mc6Ydv+seYqEoK5v/36WH6opwGqlhd+ytFXFmROkYjQaYqqVOyiBHHeLxnvMbmbInplOCexmyKREEIwoh+BtYCQ0h14Sd/aUNvPyBt0wOJqnhLQAjjF5tuownOMfwfpIqw836MdwYo1DE6DRqRoimNh7LGM1BSSYDjg5TzTvd65QZIXA0xToK0jo2RuYyvGc8bAu+qB4FKEx+AuhCphcsKjlXdzaVPPrEoIKsVa/UPSqPEC2uCnIgWEwpGHQ3XSK4vViIpZAl12p0twkAh3uvp8EQu9/yruMxpKfkXiRqs0oZcOg3koY0xKVnBGHDlwIkhBuVAizIcgg6QnuyExziqoocdE7HcG9IRIFHtMcCsI6ZKNTZ9elAFyLXwgHcMU2EwDo70S1dl1A4NIdcUP5uMHORlW0sO4svQeNtLRHKq//BnTePaoW5gCV54OibXMiCuvdaKCTtuNETCzLaM8XmmWsyxMYMrMiOAc15NGeZ6S5foCX8OP2TVxxh3fQJOfirCJ79KYajDXeHJNfnOvf3Smd9ZP8g3PHEU8HwkkS4fRrH3z0KIdYF/Ki7ITg9GdSnDONsZU41hD1Ih+f/4iDHRNfMdlgAAAABJRU5ErkJggg==", codex: "data:image/png;base64,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" };
+const SAMPLES = [
+  { tone: "needs", mood: "waiting", head: "等你确认", prefix: "Fuyu", title: "水母 Logo 像素风格与状态预览", body: "Bash · pnpm test:regression agent-sessions", provider: "claude" },
+  { tone: "working", mood: "running", head: "开始干活", prefix: "Fuyu", title: "Agent 额度显示与空状态设计", body: "正在改 3 个文件", provider: "codex" },
+  { tone: "done", mood: "done", head: "跑完了", prefix: "MioPicFlow", title: "恢复 Windows 发布机环境", body: "已完成，改了 12 个文件", provider: "claude" },
+  { tone: "failed", mood: "failed", head: "出错了", prefix: "TixXinBlog", title: "Nexus 紧凑视口密度变量", body: "API Error: 529 overloaded", provider: "codex" },
+];
+const STATE_TEXT = { needs: "等你确认", working: "运行中", done: "已完成", failed: "出错了" };
+const ui = { style: "neon" };
+
+for (const key of Object.keys(STYLE)) STYLE[`${key}@S`] = { ...STYLE[key], grid: "S" };
+
+function pixel(mood, size) {
+  const id = size <= 16 ? `${ui.style}@S` : ui.style;
+  const zoom = size <= 16 ? 2 / 3 : 1;
+  return jelly({ style: id, state: mood, zoom });
+}
+const img = (provider, size, cls) => h("img", { src: ICONS[provider], width: size, height: size, class: cls || "", alt: "" });
+const brandIcon = (s, size) => h("span", { class: "icon" }, img(s.provider, size));
+const ringIcon = (s, size) => h("span", { class: "ring" }, img(s.provider, size));
+function jellyBadge(s, size, badge) {
+  const box = h("span", { class: "jelly", style: `width:${size + 4}px;height:${size}px` }, pixel(s.mood, size));
+  if (badge) box.append(img(s.provider, badge, "badge"));
+  return box;
+}
+const jellyOnly = (s, size) => jellyBadge(s, size, 0);
+const title = (s) => h("span", { class: "title" }, h("span", { class: "prefix" }, `${s.prefix} · `), s.title);
+
+function card(s, lead) {
+  return h("section", { class: `notice tone-${s.tone}` },
+    h("div", { class: "main" }, lead(s), h("div", { class: "content" }, h("div", { class: "row" }, h("span", { class: "headline" }, s.head)), title(s), h("div", { class: "body" }, s.body))));
+}
+function compactRow(s, lead, tail) {
+  return h("section", { class: `notice tone-${s.tone}` },
+    h("div", { class: "row" }, lead(s), title(s), h("span", { class: "state" }, STATE_TEXT[s.tone]), tail ? tail(s) : null),
+    h("div", { class: "body" }, s.body));
+}
+function wingsBand(s, lead, tail) {
+  return h("section", { class: `notice wings tone-${s.tone}` },
+    h("div", { class: "band" }, lead(s), h("span", { class: "spacer" }), h("span", { class: "camera" }), h("span", { class: "spacer" }), tail ? tail(s) : null, h("span", { class: "state" }, STATE_TEXT[s.tone])),
+    h("div", { class: "drop" }, title(s), h("div", { class: "body" }, s.body)));
+}
+function wingsPile(lead) {
+  const s = { ...SAMPLES[0] };
+  return h("section", { class: `notice wings tone-${s.tone}` },
+    h("div", { class: "band" }, lead(), h("span", { class: "spacer" }), h("span", { class: "camera" }), h("span", { class: "spacer" }), h("span", { class: "state" }, "3 个会话")),
+    h("div", { class: "drop" }, title(s), h("div", { class: "body" }, s.body)));
+}
+const pileIcons = () => h("span", { class: "pile" }, ["claude", "codex", "claude"].map((p) => img(p, 16)));
+const pileJellies = () => h("span", { class: "pile", style: "gap:2px" }, ["waiting", "running", "failed"].map((m) => h("span", { class: "jelly", style: "width:18px;height:16px" }, pixel(m, 16))));
+
+const VARIANTS = {
+  cards: [
+    { name: "现状", now: true, notes: ["品牌图标 26px，状态只靠标题颜色"], render: (s) => card(s, (x) => brandIcon(x, 26)) },
+    { name: "A · 水母加品牌角标", pick: true, notes: ["水母 24px 按状态动：确认黄跳、运行蓝划水、完成绿笑、失败红皱眉", "右下角 12px 品牌角标，哪家一眼还看得出", "笑和皱眉播一次就停，只有等你确认一直跳到你处理"], render: (s) => card(s, (x) => jellyBadge(x, 24, 12)) },
+    { name: "B · 只放水母", notes: ["最干净，但看不出是 Claude 还是 Codex", "要靠标题前缀补，前缀现在是项目名，不是 Agent 名"], render: (s) => card(s, (x) => jellyOnly(x, 24)) },
+  ],
+  compact: [
+    { name: "现状", now: true, notes: ["16px 品牌图标"], render: (s) => compactRow(s, (x) => brandIcon(x, 16)) },
+    { name: "A · 水母加 8px 角标", notes: ["角标只有 8px，Claude 和 Codex 勉强分得出", "两样挤在 16px 里，浅色岛上更糊"], render: (s) => compactRow(s, (x) => jellyBadge(x, 16, 8)) },
+    { name: "B · 水母在前，品牌在状态后", pick: true, notes: ["水母和品牌各占一个清楚的位置", "品牌 14px 放在状态文字后面，行尾和会话列表一样（列表也是右边放图标）", "多占约 20px 宽，标题早一点截断"], render: (s) => compactRow(s, (x) => jellyOnly(x, 16), (x) => img(x.provider, 14, "brand-inline")) },
+  ],
+  wings: [
+    { name: "现状 · 色环图标", now: true, pick: true, notes: ["顶条只有 32px 高，16px 色环图标在刘海旁边最清楚", "多个会话时左边是一叠图标，水母叠起来认不出"], render: (s) => wingsBand(s, (x) => ringIcon(x, 14)), pile: () => wingsPile(pileIcons) },
+    { name: "A · 水母代替图标", notes: ["和收起条上的水母连成一体", "但品牌没了；一叠水母只能看出颜色"], render: (s) => wingsBand(s, (x) => jellyOnly(x, 16)), pile: () => wingsPile(pileJellies) },
+    { name: "B · 水母在左，品牌在状态前", notes: ["左水母、右品牌，两边各一个", "右翼本来就窄，加图标后状态文字更挤"], render: (s) => wingsBand(s, (x) => jellyOnly(x, 16), (x) => img(x.provider, 14, "brand-inline")), pile: () => wingsPile(pileJellies) },
+  ],
+};
+
+const VERDICT = [
+  "卡片用 A：水母当主角，品牌缩成 12px 角标。",
+  "紧凑用 B：水母在前，品牌 14px 挪到状态后面，不硬塞角标。",
+  "两翼保留现在的色环图标：顶条太小、多个会话时要一叠图标，水母在这里不划算。要和收起条连贯可以以后再试 A。",
+  "状态灯选「圆点」时三种通知都不变；系统要求减少动画时水母停在各状态的静止样子。",
+  "通知只在岛展开时出现，这时收起条上的水母已经停下、不显示，不会两只同框。",
+];
+
+function build() {
+  for (const [id, list] of Object.entries(VARIANTS)) {
+    const box = document.getElementById(id);
+    box.replaceChildren();
+    for (const v of list) {
+      const stage = h("div", { class: "stage" }, h("div", { class: "island" }, h("div", { style: "display:flex;flex-direction:column;gap:8px" }, SAMPLES.map((s) => v.render(s)))));
+      if (v.pile) stage.append(h("div", { class: "island" }, v.pile()));
+      box.append(h("div", { class: `variant${v.pick ? " pick" : ""}` },
+        h("b", null, v.name), v.now ? h("span", { class: "tag now" }, v.pick ? "保留" : "现在") : v.pick ? h("span", { class: "tag" }, "推荐") : null,
+        stage, h("ul", null, v.notes.map((n) => h("li", null, n)))));
+    }
+  }
+  document.getElementById("verdict").replaceChildren(...VERDICT.map((t) => h("li", null, t)));
+}
+
+function segGroup(id, items, get, set) {
+  const box = document.getElementById(id);
+  box.querySelectorAll("button").forEach((b) => b.remove());
+  for (const [value, label] of items) box.append(h("button", { class: `seg${get() === value ? " on" : ""}`, onclick: () => { set(value); segGroup(id, items, get, set); } }, label));
+}
+segGroup("g-style", STYLES.map((s) => [s.id, s.name]), () => ui.style, (v) => { ui.style = v; insts.clear(); build(); });
+segGroup("g-island", [["dark", "深色"], ["light", "浅色"]], () => view.bg, (v) => { view.bg = v; document.body.dataset.island = v; redrawAll(); });
+segGroup("g-motion", [[true, "播放"], [false, "静止"]], () => view.motion, (v) => { view.motion = v; redrawAll(); });
+if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) view.motion = false;
+build();
+loop();
+</script>
+</body>
+</html>
