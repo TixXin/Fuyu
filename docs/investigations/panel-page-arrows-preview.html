@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>面板翻页箭头预览</title>
+<style>
+  :root { color-scheme: dark; --ease: cubic-bezier(0.2, 0.8, 0.2, 1); --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --fast: 120ms; --base: 160ms; --medium: 240ms; --slow: 420ms; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 64px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 32px 0 6px; }
+  h3 { font-size: 14px; margin: 18px 0 4px; color: #e8e8ea; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1180px; }
+  ul.points { color: #c8c8cc; max-width: 1180px; padding-left: 20px; margin: 4px 0; }
+  ul.points li { margin: 4px 0; }
+  code, kbd { background: #232428; padding: 1px 6px; border-radius: 4px; font-family: Consolas, "SF Mono", monospace; font-size: 12.5px; }
+  kbd { border: 1px solid #3a3b40; border-bottom-width: 2px; }
+  table { border-collapse: collapse; max-width: 1180px; margin: 6px 0 12px; width: 100%; }
+  th, td { border: 1px solid #2c2d32; padding: 6px 10px; text-align: left; vertical-align: top; color: #c8c8cc; }
+  th { background: #1b1c1f; color: #e8e8ea; font-weight: 600; white-space: nowrap; }
+  .rec { color: #8fd18f; font-weight: 600; }
+  .warn { color: #ffd166; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px 22px; background: #1b1c1f; padding: 14px 16px; border-radius: 10px; margin: 10px 0; max-width: 1180px; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group > span { color: #9a9aa0; margin-right: 2px; min-width: 84px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  .wrap { overflow-x: auto; max-width: 100%; }
+
+  .desk { position: relative; width: 1180px; height: 560px; border-radius: 12px; overflow: hidden; user-select: none; outline: none; }
+  .desk.dark { background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .desk.light { background: radial-gradient(120% 140% at 20% 0%, #f4f1ea 0%, #dfe6f0 55%, #c9d3e2 100%); }
+  .win { position: absolute; left: 90px; top: 210px; width: 460px; height: 270px; border-radius: 10px; background: #1e1f24ee; box-shadow: 0 20px 60px #0007; }
+  .desk.light .win { background: #ffffffee; box-shadow: 0 20px 60px #0002; }
+  .win i { position: absolute; left: 24px; height: 9px; border-radius: 5px; background: #ffffff18; }
+  .desk.light .win i { background: #0000000f; }
+  .win .wt { position: absolute; left: 24px; top: 14px; font-size: 12px; color: #9a9aa0; }
+
+  .hud { position: absolute; right: 16px; bottom: 14px; width: 330px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+  .focus-badge { align-self: flex-end; font-size: 12px; padding: 3px 10px; border-radius: 99px; background: #000a; color: #9a9aa0; }
+  .focus-badge.on { color: #8fd18f; }
+  .desk.light .focus-badge { background: #fffc; color: #666; }
+  .log { font-size: 12.5px; background: #000b; color: #d8d8dc; border-radius: 8px; padding: 8px 12px; min-height: 92px; }
+  .desk.light .log { background: #fffd; color: #333; }
+  .log div { opacity: .55; } .log div:first-child { opacity: 1; }
+  .log b { font-family: Consolas, monospace; color: #74d6ff; margin-right: 6px; }
+  .desk.light .log b { color: #0a7fd1; }
+
+  .stage { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 600px; height: 330px; }
+  .isl { --fill: #050505; --ink: 248, 246, 240; --accent: #74d6ff; --r: 19px;
+    position: absolute; left: 50%; top: 0; translate: -50% 0; background: var(--fill); color: rgba(var(--ink), .95);
+    overflow: hidden; width: 300px; height: 38px; border-radius: 0 0 var(--r) var(--r);
+    transition: width 460ms cubic-bezier(0.34, 1.2, 0.5, 1), height 420ms var(--ease-out), border-radius 360ms var(--ease-out), box-shadow 360ms; }
+  .desk.light .isl { --fill: #f3f3f6; --ink: 28, 28, 30; --accent: #0a7fd1; box-shadow: 0 6px 22px #0000001f; }
+  .isl.open { width: 560px; height: 318px; --r: 30px; box-shadow: 0 14px 40px #0005; }
+  .desk.light .isl.open { box-shadow: 0 14px 40px #00000026; }
+  .isl.closing { transition-duration: 320ms, 300ms, 280ms, 280ms; transition-timing-function: var(--ease-out); }
+
+  .bar { position: absolute; inset: 0 0 auto 0; height: 38px; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 12.5px; cursor: pointer; transition: opacity var(--base) var(--ease); }
+  .isl.open .bar { opacity: 0; pointer-events: none; }
+  .bar .dot { width: 8px; height: 8px; border-radius: 50%; background: #35e985; box-shadow: 0 0 8px #35e985; }
+  .bar .sum { flex: 1; color: rgba(var(--ink), .82); white-space: nowrap; }
+  .bar .hint { font-size: 11px; color: rgba(var(--ink), .4); opacity: 0; transition: opacity var(--base) var(--ease); }
+  .desk.hasfocus .isl:not(.open) .bar .hint.show { opacity: 1; }
+
+  .panel { position: absolute; inset: 0; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity var(--base) var(--ease); }
+  .isl.open .panel { opacity: 1; pointer-events: auto; transition: opacity var(--medium) var(--ease-out) 120ms; }
+  .head { flex: 0 0 46px; display: flex; align-items: center; padding: 8px 14px 0; gap: 8px; }
+  .tabs { position: relative; display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: rgba(var(--ink), .06); }
+  .tab-ind { position: absolute; top: 3px; bottom: 3px; border-radius: 9px; background: rgba(var(--ink), .14); transition: left var(--medium) var(--ease), width var(--medium) var(--ease); }
+  .tab-ind.jump { transition: none; }
+  .tab { position: relative; z-index: 1; border: 0; background: none; color: rgba(var(--ink), .6); font: inherit; font-size: 12.5px; padding: 3px 11px; border-radius: 9px; cursor: pointer; transition: color var(--base) var(--ease); }
+  .tab.on { color: rgba(var(--ink), .96); }
+  .head .sp { flex: 1; }
+  .head .gear { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: rgba(var(--ink), .5); }
+
+  .content { position: relative; flex: 1; min-height: 0; padding: 8px 18px 16px; overflow-y: auto; scrollbar-width: none; }
+  .content::-webkit-scrollbar { display: none; }
+  .content.pad-arrows { padding-left: 40px; padding-right: 40px; }
+  .pg { display: none; }
+  .pg.on { display: block; }
+  .row { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 10px; font-size: 13px; color: rgba(var(--ink), .9); }
+  .row:hover { background: rgba(var(--ink), .06); }
+  .row .ck { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(var(--ink), .4); flex: none; cursor: pointer; }
+  .row .ck.done { background: var(--accent); border-color: var(--accent); }
+  .row .sub { margin-left: auto; font-size: 11.5px; color: rgba(var(--ink), .45); }
+  .row:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .inp { width: 100%; height: 34px; border-radius: 10px; border: 1px solid rgba(var(--ink), .14); background: rgba(var(--ink), .04); color: rgba(var(--ink), .95); padding: 0 12px; font: inherit; font-size: 13px; margin-bottom: 6px; outline: none; }
+  .inp:focus { border-color: var(--accent); }
+  .music { display: flex; gap: 16px; align-items: center; padding: 18px 10px; }
+  .cover { width: 104px; height: 104px; border-radius: 16px; background: linear-gradient(135deg, #e0a96d, #7b4fa1); flex: none; }
+  .music .t1 { font-size: 16px; font-weight: 600; } .music .t2 { font-size: 12.5px; color: rgba(var(--ink), .55); }
+  .prog { margin-top: 14px; height: 4px; border-radius: 2px; background: rgba(var(--ink), .16); width: 300px; position: relative; }
+  .prog::after { content: ""; position: absolute; inset: 0 62% 0 0; border-radius: 2px; background: rgba(var(--ink), .85); }
+  .cal { display: grid; grid-template-columns: 64px 1fr; gap: 6px 12px; padding: 6px 10px; font-size: 13px; }
+  .cal .tm { color: rgba(var(--ink), .5); font-variant-numeric: tabular-nums; }
+  .cal .ev { padding: 6px 10px; border-radius: 10px; background: rgba(var(--ink), .06); border-left: 3px solid var(--accent); }
+
+  .arw { position: absolute; z-index: 5; display: grid; place-items: center; border: 0; padding: 0; margin: 0; background: none; cursor: pointer; color: rgb(var(--ink)); opacity: 0; pointer-events: none;
+    transition: opacity var(--base) var(--ease), background-color var(--fast) var(--ease), visibility 0s linear var(--base); visibility: hidden; }
+  .desk.dark .arw { --ink: 248, 246, 240; } .desk.light .arw { --ink: 28, 28, 30; }
+  .arw svg { width: 18px; height: 18px; display: block; }
+  .arw .ic { display: grid; place-items: center; }
+  .stage.open .arw { visibility: visible; pointer-events: auto; transition: opacity var(--base) var(--ease), background-color var(--fast) var(--ease), visibility 0s; }
+  .stage.open[data-vis=always] .arw { opacity: var(--idle); }
+  .stage.open[data-vis=panel]:hover .arw { opacity: var(--idle); }
+  .stage.open[data-vis=near] .arw.near { opacity: var(--idle); }
+  .stage.open .arw:hover, .stage.open .arw.flash { opacity: 1; transition-duration: var(--fast); }
+  .stage.open .arw.edge { opacity: 0 !important; pointer-events: none; }
+  .stage.open[data-end=stop] .arw.edge { opacity: .1 !important; }
+  .stage.open .arw.edge.bump { opacity: .45 !important; transition-duration: 0ms; }
+
+  .stage[data-style=chev] .arw { width: 28px; height: 64px; border-radius: 10px; }
+  .stage[data-style=chev] .arw:hover { background: rgba(var(--ink), .08); }
+  .stage[data-style=round] .arw { width: 30px; height: 30px; border-radius: 50%; background: rgba(var(--ink), .1); box-shadow: inset 0 0 0 1px rgba(var(--ink), .12); backdrop-filter: blur(10px); }
+  .stage[data-style=round] .arw svg { width: 16px; height: 16px; }
+  .stage[data-style=round] .arw:hover { background: rgba(var(--ink), .18); }
+  .stage[data-style=strip] .arw { width: 30px; }
+  .stage[data-style=strip] .arw::before { content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity var(--base) var(--ease); }
+  .stage[data-style=strip] .arw.l::before { background: linear-gradient(90deg, rgba(var(--ink), .12), transparent); border-radius: 0 0 0 26px; }
+  .stage[data-style=strip] .arw.r::before { background: linear-gradient(270deg, rgba(var(--ink), .12), transparent); border-radius: 0 0 26px 0; }
+  .stage[data-style=strip] .arw:hover::before { opacity: 1; }
+
+  .stage[data-style=chev][data-pos=in] .arw.l, .stage[data-style=round][data-pos=in] .arw.l { left: 26px; }
+  .stage[data-style=chev][data-pos=in] .arw.r, .stage[data-style=round][data-pos=in] .arw.r { right: 26px; }
+  .stage[data-pos=out] .arw.l { left: -24px; } .stage[data-pos=out] .arw.r { right: -24px; }
+  .stage[data-style=chev] .arw, .stage[data-style=round] .arw { top: calc(46px + (318px - 46px) / 2); translate: 0 -50%; }
+  .stage[data-style=strip] .arw { top: 46px; height: 272px; }
+  .stage[data-style=strip][data-pos=in] .arw.l { left: 20px; } .stage[data-style=strip][data-pos=in] .arw.r { right: 20px; }
+  .stage[data-style=strip][data-pos=out] .arw.l { left: -28px; } .stage[data-style=strip][data-pos=out] .arw.r { right: -28px; }
+  .stage[data-pos=out] .arw::before { display: none; }
+
+  .arw .ic.nudge-l { animation: nudgeL var(--medium) var(--ease-out) backwards; }
+  .arw .ic.nudge-r { animation: nudgeR var(--medium) var(--ease-out) backwards; }
+  @keyframes nudgeL { 0% { transform: translateX(-4px); } 100% { transform: none; } }
+  @keyframes nudgeR { 0% { transform: translateX(4px); } 100% { transform: none; } }
+
+  .tip { position: absolute; top: 50%; translate: 0 -50%; white-space: nowrap; font-size: 11.5px; padding: 2px 8px; border-radius: 6px; background: rgba(var(--ink), .9); color: #111; opacity: 0; pointer-events: none; transition: opacity var(--fast) var(--ease); }
+  .desk.light .tip { color: #fff; }
+  .arw.l .tip { left: calc(100% + 4px); } .arw.r .tip { right: calc(100% + 4px); }
+  .stage[data-pos=out] .arw.l .tip { left: auto; right: calc(100% + 4px); } .stage[data-pos=out] .arw.r .tip { right: auto; left: calc(100% + 4px); }
+  .stage[data-tip=on] .arw:hover .tip { opacity: 1; transition-delay: 300ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .arw .ic.nudge-l, .arw .ic.nudge-r { animation: none; }
+  }
+
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; max-width: 1180px; margin: 10px 0; }
+  .opt { background: #1b1c1f; border: 1px solid #2c2d32; border-radius: 10px; padding: 12px 14px; }
+  .opt h4 { margin: 0 0 4px; font-size: 14px; }
+  .opt p { margin: 0; color: #9a9aa0; font-size: 13px; }
+  .opt .tag { font-size: 11.5px; padding: 1px 7px; border-radius: 99px; background: #24304a; color: #cfe2ff; margin-left: 6px; }
+  .opt .tag.ok { background: #1f3a26; color: #8fd18f; }
+  .opt .tag.no { background: #3d2f17; color: #ffd166; }
+</style>
+</head>
+<body>
+<h1>面板左右翻页箭头 + 方向键展开 / 收起</h1>
+<p class="note">展开面板的左右两边各放一个半透明箭头，鼠标放上去才完全显示，点了切到上一页 / 下一页；← → 也能切页。收起的岛上按 ↓ 或 回车展开，面板里按 ↑ 或 Esc 收起。下面的演示能真的用鼠标和键盘操作：<b>先点一下桌面或岛</b>，当成岛拿到了键盘焦点（右下角会显示），再按方向键。右下角的记录会写出每次按键做了什么、为什么。</p>
+
+<div class="controls" id="controls"></div>
+
+<div class="wrap">
+  <div class="desk dark" id="desk" tabindex="0">
+    <div class="win"><span class="wt">别的窗口（点这里 = 焦点回到别的程序）</span><i style="top:48px;width:300px"></i><i style="top:72px;width:380px"></i><i style="top:96px;width:240px"></i><i style="top:132px;width:340px"></i><i style="top:156px;width:200px"></i></div>
+    <div class="stage" id="stage">
+      <div class="isl" id="isl">
+        <div class="bar" id="bar"><span class="dot"></span><span class="sum">3 项待办 · 14:30 周会</span><span class="hint" id="barHint">↓ 展开</span></div>
+        <div class="panel">
+          <div class="head"><div class="tabs" id="tabs"><span class="tab-ind" id="ind"></span></div><span class="sp"></span><span class="gear">⚙</span></div>
+          <div class="content" id="content"></div>
+        </div>
+      </div>
+      <button class="arw l" id="arwL" aria-label="上一页" tabindex="-1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></span><span class="tip"></span></button>
+      <button class="arw r" id="arwR" aria-label="下一页" tabindex="-1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span><span class="tip"></span></button>
+    </div>
+    <div class="hud"><span class="focus-badge" id="badge">岛没有键盘焦点：点一下桌面或岛</span><div class="log" id="log"></div></div>
+  </div>
+</div>
+
+<h2>方案对比（上面的开关就是这些）</h2>
+<h3>箭头长什么样</h3>
+<div class="cards">
+  <div class="opt"><h4>A 只有箭头<span class="tag ok">推荐</span></h4><p>只画一个 ‹ ›，没有底；鼠标放上去才出现浅色圆角底。最轻，不跟内容抢眼，深浅色都干净。点击区 28×64，比看上去大。</p></div>
+  <div class="opt"><h4>B 圆形玻璃按钮</h4><p>30px 的半透明圆，带细边和模糊。最像「可以点的按钮」，一眼就懂；但常驻在面板上比较显眼，内容贴边时会压住一点。</p></div>
+  <div class="opt"><h4>C 贴边竖条</h4><p>整条左 / 右边都是点击区，悬停时从边缘亮起一道渐变。最好点（像翻书摸页边），但内容区左右各让出 30px 的空间里的点击会被它接走。</p></div>
+</div>
+<h3>平时看得见多少</h3>
+<div class="cards">
+  <div class="opt"><h4>① 一直半透明</h4><p>面板打开就看得见（约 25%），你说的就是这个。好找；代价是常驻两个淡淡的符号。</p></div>
+  <div class="opt"><h4>② 鼠标进面板才淡淡出现<span class="tag ok">推荐</span></h4><p>只用键盘或鼠标在别处时完全干净，鼠标一进面板就淡出两个箭头，放到箭头上全亮。比 ① 安静，又不难发现。</p></div>
+  <div class="opt"><h4>③ 靠近那一边才出现</h4><p>鼠标离左边或右边 80px 以内，那一边的箭头才淡淡出现。最干净，但第一次用的人不知道有箭头。</p></div>
+</div>
+<h3>切页时怎么动</h3>
+<div class="cards">
+  <div class="opt"><h4>只淡入 + 箭头推一下<span class="tag ok">推荐</span></h4><p>新页面照现在的 240ms 淡入，不位移；被点 / 按的那个箭头往那边推 4px 再回来（箭头没有文字，可以动），页签底下的高亮滑到新页签。方向感来自箭头和页签，文字不动。</p></div>
+  <div class="opt"><h4>只淡入</h4><p>和现在点页签一模一样，没有任何方向提示。</p></div>
+  <div class="opt"><h4>内容轻推 8px<span class="tag no">违反规矩</span></h4><p>新页面从切换方向那边挪进来 8px 同时淡入，方向感最强。但会让文字位移、最后一帧可能落到不同像素行发虚，违反 motion.md「文字不动位置」和「不从旁边滑入」，选它要你明确点头。</p></div>
+</div>
+
+<h2>键盘规则（按我推荐的写）</h2>
+<table>
+  <tr><th>按键</th><th>在哪</th><th>做什么</th><th>不做的情况</th></tr>
+  <tr><td><kbd>↓</kbd> <kbd>回车</kbd></td><td>收起的岛</td><td>展开，打开上次的页面</td><td>岛没有键盘焦点时按不到（见下面「焦点」）；收起态里有按钮拿着焦点时回车先给那个按钮</td></tr>
+  <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>展开的面板</td><td>上一页 / 下一页，顺序和页签、<kbd>Ctrl+Tab</kbd> 一致</td><td>光标在输入框、文本框里；焦点在自己处理方向键的控件上（日历月视图、下拉、滑块、Agent 会话列表）；输入法正在组词；按着 Ctrl / Alt / Shift / Win；弹出页（详情、设置小页）开着；正在调整布局</td></tr>
+  <tr><td><kbd>↑</kbd></td><td>展开的面板</td><td>收起</td><td>同上；内容往下滚过时先回到顶部，在顶部再按才收起（可选）</td></tr>
+  <tr><td><kbd>Esc</kbd></td><td>展开的面板</td><td>收起（现在就有）</td><td>由里往外一层层退：先关下拉 / 弹出页 / 退出编辑，最后才收起</td></tr>
+  <tr><td>按住 <kbd>←</kbd> <kbd>→</kbd></td><td>展开的面板</td><td>只翻一页，松开再按才翻下一页（可选连翻）</td><td>防止手一抖滑过好几页、每页都触发加载</td></tr>
+</table>
+
+<h2>需要你拍板的细节</h2>
+<ul class="points">
+  <li><b>焦点（最关键）</b>：现在点收起的岛不抢键盘焦点，面板收起时还会把焦点还给原来的窗口（这是之前你定的，免得打断正在打字的程序）。所以「在岛上按 ↓ / 回车」只有岛手上有焦点时才按得到：拖过岛、托盘点开、或开了「悬停时接管键盘」、光标停在岛上的时候。<span class="rec">推荐保持现状</span>，不为了 ↓ 键去抢焦点；顺带让「悬停时接管键盘」在收起的岛上也生效，开了它的人光标停在岛上按 ↓ 就能展开。另一种做法是「用 ↑ / Esc 收起后焦点在岛上留着，点别处才还」，代价是收起后打字会打进岛里。演示里点「别的窗口」就是焦点被还走的样子。</li>
+  <li><b>箭头放在面板里面还是外面</b>：<span class="rec">推荐里面</span>（压在内容区两侧的留白上）。放外面不挡内容，但岛的原生窗口要左右各加宽 40px，而且鼠标移到箭头上时已经离开了岛的形状，悬停展开模式下会被当成「移开了」开始倒数收起，要另外处理。</li>
+  <li><b>到头时</b>：<span class="rec">推荐循环</span>（最后一页往右回到第一页），和现在的 <kbd>Ctrl+Tab</kbd> 一样，箭头永远两个都在。也可以选「到头停住」：那一边的箭头变得很淡、点不了，按方向键时它闪一下表示到头了。</li>
+  <li><b>Fuyu 页面自己也分页时</b>（网格模式的组件超过一页）：<span class="rec">推荐箭头和 ← → 只换岛的页面</span>，组件的内页继续用滚轮和页码点翻。另一种是先翻完内页再跳到下一个页面，更连贯，但同一个按键有时翻内页、有时换页面，不好预测。</li>
+  <li><b>只有一个页面时</b>两个箭头都不显示；页签放不下、收进「更多」里的页面也按顺序翻到。</li>
+  <li><b>竖着的侧边岛</b>：面板窄，箭头会压到内容，<span class="rec">推荐侧边形态不显示箭头</span>，← → 照常能用。</li>
+  <li><b>收起的岛有焦点时，右边淡淡显示「↓ 展开」</b>（演示里有）：只在岛真的拿着焦点时出现，告诉人现在按 ↓ 有用；没有焦点时不显示，免得按了没反应。要不要？</li>
+  <li><b>箭头在面板里面时，内容区左右各多留 22px</b>，箭头不压内容（演示里就是这样）；代价是每页横向少 44px。</li>
+  <li><b>键盘翻页时屏幕上的箭头闪一下</b>（默认开）：顺便告诉只用键盘的人「这里还有箭头可以点」。</li>
+  <li><b>悬停箭头时显示要去的页面名</b>（停 300ms 才出，默认开）：知道点了会到哪，不用盯着页签。</li>
+  <li><b>设置</b>：在 设置 → 页面切换 里加两个开关「面板两侧显示翻页箭头」「方向键翻页和展开收起」，默认都开？还是箭头默认关、先给想要的人打开？</li>
+  <li><b>其他照规矩办的</b>：箭头只做透明度和底色的过渡（120 / 160ms），不缩放；减少动画时不推箭头；箭头是按钮、带「上一页：日历」这样的无障碍名称，但不进 Tab 顺序（键盘本来就有 ← →）；中英文文案都有；浅色主题下箭头用深色。</li>
+</ul>
+
+<script>
+const PAGES = [
+  { id: "todo", name: "待办" },
+  { id: "cal", name: "日历" },
+  { id: "clip", name: "剪贴板" },
+  { id: "music", name: "音乐" },
+  { id: "agent", name: "Agent" },
+];
+const S = { style: "chev", vis: "panel", pos: "in", end: "loop", anim: "nudge", hold: "single", up: "top", flash: "on", tip: "on", theme: "dark" };
+const OPTS = [
+  ["style", "箭头样式", [["chev", "A 只有箭头"], ["round", "B 圆形按钮"], ["strip", "C 贴边竖条"]]],
+  ["vis", "平时可见度", [["always", "① 一直半透明"], ["panel", "② 进面板才出现"], ["near", "③ 靠近边才出现"]]],
+  ["anim", "切页动效", [["nudge", "淡入 + 箭头推一下"], ["fade", "只淡入"], ["push", "内容轻推 8px"]]],
+  ["pos", "位置", [["in", "面板里面"], ["out", "面板外面"]]],
+  ["end", "到头时", [["loop", "循环"], ["stop", "停住"]]],
+  ["hold", "按住方向键", [["single", "只翻一页"], ["repeat", "连翻"]]],
+  ["up", "↑ 在滚动过时", [["top", "先回顶部"], ["close", "直接收起"]]],
+  ["flash", "键盘翻页闪箭头", [["on", "开"], ["off", "关"]]],
+  ["tip", "悬停显示页名", [["on", "开"], ["off", "关"]]],
+  ["theme", "主题", [["dark", "深色"], ["light", "浅色"]]],
+];
+const $ = (id) => document.getElementById(id);
+const desk = $("desk"), stage = $("stage"), isl = $("isl"), content = $("content"), tabs = $("tabs"), ind = $("ind");
+let open = false, page = 0, focused = false, lastRepeatAt = 0;
+
+const controls = $("controls");
+for (const [key, label, items] of OPTS) {
+  const g = document.createElement("div");
+  g.className = "group";
+  g.innerHTML = `<span>${label}</span>`;
+  for (const [value, text] of items) {
+    const b = document.createElement("button");
+    b.className = "seg" + (S[key] === value ? " on" : "");
+    b.textContent = text;
+    b.onclick = () => { S[key] = value; for (const x of g.querySelectorAll("button")) x.classList.toggle("on", x === b); apply(); };
+    g.appendChild(b);
+  }
+  controls.appendChild(g);
+}
+
+const rows = (items) => items.map(([t, s, done]) => `<div class="row"><span class="ck${done ? " done" : ""}"></span>${t}<span class="sub">${s}</span></div>`).join("");
+const PAGE_HTML = {
+  todo: `<input class="inp" placeholder="添加待办…（在这里按 ← → ↑ 不会翻页或收起）">` + rows([["回复设计稿的评论", "今天"], ["整理周会纪要", "14:30 前"], ["给浮屿写发布说明", "明天"], ["订下周的会议室", "周五", true]]),
+  cal: `<div class="cal"><span class="tm">09:30</span><span class="ev">站会</span><span class="tm">14:30</span><span class="ev">周会 · 3 楼大会议室</span><span class="tm">16:00</span><span class="ev">和设计过一遍面板翻页</span><span class="tm">19:00</span><span class="ev">健身</span></div>`,
+  clip: Array.from({ length: 14 }, (_, i) => `<div class="row">${["https://github.com/TixXin/fuyu/pull/" + (812 - i), "面板翻页箭头的预览页", "pnpm test:changed", "#74d6ff", "会议纪要：确定箭头样式"][i % 5]}<span class="sub">${i + 1} 分钟前</span></div>`).join("") ,
+  music: `<div class="music"><span class="cover"></span><div><div class="t1">夜航星</div><div class="t2">不才 · 正在播放</div><div class="prog"></div></div></div>`,
+  agent: [["fuyu · 面板翻页箭头", "运行中"], ["blog · 修复 RSS", "等你审批"], ["video · 渲染竖版", "完成"], ["bot · 群消息摘要", "空闲"]].map(([t, s]) => `<div class="row" tabindex="0">${t}<span class="sub">${s}</span></div>`).join("") + `<p style="font-size:12px;color:rgba(var(--ink),.45);padding:4px 10px">点一行后 ↑ ↓ 在列表里移动，不会收起；← → 也不翻页（焦点在自己处理方向键的控件上）。</p>`,
+};
+content.innerHTML = PAGES.map((p, i) => `<div class="pg" data-i="${i}">${PAGE_HTML[p.id]}</div>`).join("");
+tabs.insertAdjacentHTML("beforeend", PAGES.map((p, i) => `<button class="tab" data-i="${i}">${p.name}</button>`).join(""));
+for (const t of tabs.querySelectorAll(".tab")) t.onclick = () => go(Number(t.dataset.i), 0, "点页签");
+
+function log(key, text) {
+  const l = $("log");
+  l.insertAdjacentHTML("afterbegin", `<div><b>${key}</b>${text}</div>`);
+  while (l.children.length > 4) l.lastChild.remove();
+}
+
+function placeIndicator(jump) {
+  const t = tabs.querySelector(`.tab[data-i="${page}"]`);
+  ind.classList.toggle("jump", !!jump);
+  ind.style.left = t.offsetLeft + "px";
+  ind.style.width = t.offsetWidth + "px";
+  if (jump) requestAnimationFrame(() => ind.classList.remove("jump"));
+}
+
+function neighbor(dir) {
+  const n = page + dir;
+  if (n < 0 || n >= PAGES.length) return S.end === "loop" ? (n + PAGES.length) % PAGES.length : -1;
+  return n;
+}
+
+function render(jump) {
+  for (const p of content.querySelectorAll(".pg")) p.classList.toggle("on", Number(p.dataset.i) === page);
+  for (const t of tabs.querySelectorAll(".tab")) t.classList.toggle("on", Number(t.dataset.i) === page);
+  placeIndicator(jump);
+  const l = neighbor(-1), r = neighbor(1);
+  $("arwL").classList.toggle("edge", l < 0);
+  $("arwR").classList.toggle("edge", r < 0);
+  $("arwL").querySelector(".tip").textContent = l < 0 ? "" : "上一页：" + PAGES[l].name;
+  $("arwR").querySelector(".tip").textContent = r < 0 ? "" : "下一页：" + PAGES[r].name;
+  $("arwL").setAttribute("aria-label", l < 0 ? "已经是第一页" : "上一页：" + PAGES[l].name);
+  $("arwR").setAttribute("aria-label", r < 0 ? "已经是最后一页" : "下一页：" + PAGES[r].name);
+}
+
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function go(next, dir, why, fromKey) {
+  const arrow = dir < 0 ? $("arwL") : $("arwR");
+  if (next < 0) {
+    arrow.classList.add("bump");
+    setTimeout(() => arrow.classList.remove("bump"), 160);
+    log(why, "已经到头了，那一边的箭头闪一下");
+    return;
+  }
+  if (next === page) return;
+  page = next;
+  content.scrollTop = 0;
+  render();
+  const shown = content.querySelector(".pg.on");
+  if (!reduced()) {
+    if (S.anim === "push" && dir) shown.animate([{ opacity: 0, transform: `translateX(${dir * 8}px)` }, { opacity: 1, transform: "none" }], { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+    else shown.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+    if (S.anim === "nudge" && dir) {
+      const ic = arrow.querySelector(".ic");
+      ic.classList.remove("nudge-l", "nudge-r");
+      void ic.offsetWidth;
+      ic.classList.add(dir < 0 ? "nudge-l" : "nudge-r");
+    }
+  }
+  if (fromKey && S.flash === "on" && dir) {
+    arrow.classList.add("flash");
+    clearTimeout(arrow._t);
+    arrow._t = setTimeout(() => arrow.classList.remove("flash"), 420);
+  }
+  log(why, `切到「${PAGES[page].name}」`);
+}
+
+function setOpen(v, why) {
+  if (v === open) return;
+  open = v;
+  isl.classList.toggle("open", v);
+  isl.classList.toggle("closing", !v);
+  stage.classList.toggle("open", v);
+  if (v) render(true);
+  else { if (desk.contains(document.activeElement) && document.activeElement !== desk) desk.focus(); $("arwL").classList.remove("near"); $("arwR").classList.remove("near"); }
+  log(why, v ? `展开，打开「${PAGES[page].name}」` : "收起");
+}
+
+function setFocus(v) {
+  focused = v;
+  desk.classList.toggle("hasfocus", v);
+  const b = $("badge");
+  b.classList.toggle("on", v);
+  b.textContent = v ? "岛有键盘焦点：可以按方向键" : "焦点在别的窗口：按键到不了岛";
+}
+
+function apply() {
+  stage.dataset.style = S.style;
+  stage.dataset.vis = S.vis;
+  stage.dataset.pos = S.pos;
+  stage.dataset.end = S.end;
+  stage.dataset.tip = S.tip;
+  stage.style.setProperty("--idle", S.style === "round" ? ".32" : ".28");
+  desk.classList.toggle("dark", S.theme === "dark");
+  desk.classList.toggle("light", S.theme === "light");
+  document.querySelector(".content").classList.toggle("pad-arrows", S.pos === "in");
+  render(true);
+}
+
+function editable(el) {
+  return el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+}
+function ownsArrows(el) {
+  return el && el.closest && el.closest('#content .pg[data-i="4"] .row');
+}
+
+$("arwL").onclick = () => go(neighbor(-1), -1, "点 ‹");
+$("arwR").onclick = () => go(neighbor(1), 1, "点 ›");
+$("bar").onclick = () => setOpen(true, "点岛");
+
+desk.addEventListener("pointerdown", (e) => {
+  if (e.target.closest(".win")) { setFocus(false); setOpen(false, "点别的窗口"); if (document.activeElement) document.activeElement.blur(); return; }
+  setFocus(true);
+});
+document.addEventListener("pointerdown", (e) => { if (!desk.contains(e.target)) setFocus(false); });
+
+stage.addEventListener("pointermove", (e) => {
+  if (S.vis !== "near" || !open) return;
+  const r = isl.getBoundingClientRect();
+  $("arwL").classList.toggle("near", e.clientX - r.left < 80);
+  $("arwR").classList.toggle("near", r.right - e.clientX < 80);
+});
+stage.addEventListener("pointerleave", () => { $("arwL").classList.remove("near"); $("arwR").classList.remove("near"); });
+
+document.addEventListener("keydown", (e) => {
+  if (!focused) return;
+  const k = e.key;
+  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Enter", "Escape"].includes(k)) return;
+  const name = { ArrowLeft: "←", ArrowRight: "→", ArrowUp: "↑", ArrowDown: "↓", Enter: "回车", Escape: "Esc" }[k];
+  if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) { log(name, "带修饰键，不处理（Ctrl+Tab 这类留给原来的快捷键）"); return; }
+  if (e.isComposing) return;
+  const target = document.activeElement;
+
+  if (!open) {
+    if (k === "ArrowDown" || k === "Enter") { e.preventDefault(); setOpen(true, name); }
+    return;
+  }
+
+  if (k === "Escape") {
+    e.preventDefault();
+    if (editable(target) || ownsArrows(target)) { target.blur(); desk.focus(); log(name, "先离开输入框 / 列表，再按一次收起"); return; }
+    setOpen(false, name);
+    return;
+  }
+  if (editable(target)) { if (k !== "Enter") log(name, "光标在输入框里，交给输入框"); return; }
+  if (ownsArrows(target)) {
+    if (k === "ArrowUp" || k === "ArrowDown") {
+      e.preventDefault();
+      const list = [...target.parentElement.querySelectorAll(".row")];
+      const at = list.indexOf(target) + (k === "ArrowDown" ? 1 : -1);
+      if (list[at]) list[at].focus();
+      log(name, "在 Agent 列表里移动，不收起");
+    } else if (k !== "Enter") log(name, "焦点在列表上，不翻页（Esc 离开列表）");
+    return;
+  }
+
+  if (k === "ArrowLeft" || k === "ArrowRight") {
+    e.preventDefault();
+    const dir = k === "ArrowLeft" ? -1 : 1;
+    if (e.repeat) {
+      if (S.hold === "single") return;
+      const now = performance.now();
+      if (now - lastRepeatAt < 240) return;
+      lastRepeatAt = now;
+    }
+    go(neighbor(dir), dir, name, true);
+    return;
+  }
+  if (k === "ArrowUp") {
+    e.preventDefault();
+    if (e.repeat) return;
+    if (S.up === "top" && content.scrollTop > 2) {
+      content.scrollTo({ top: 0, behavior: reduced() ? "auto" : "smooth" });
+      log(name, "内容滚动过，先回到顶部；在顶部再按 ↑ 收起");
+      return;
+    }
+    setOpen(false, name);
+    return;
+  }
+  if (k === "ArrowDown") { e.preventDefault(); content.scrollBy({ top: 72, behavior: reduced() ? "auto" : "smooth" }); log(name, "面板里 ↓ 照常往下滚"); }
+});
+
+setInterval(() => { $("barHint").classList.toggle("show", focused && !open); }, 200);
+apply();
+setFocus(false);
+log("提示", "点一下桌面或岛，然后按 ↓ 展开、← → 翻页、↑ 收起；剪贴板页往下滚后再按 ↑ 试试");
+</script>
+</body>
+</html>

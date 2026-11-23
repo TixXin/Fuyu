@@ -9,6 +9,10 @@ export type SettingsPageShortcutsText = {
   pressKeys: string;
   hoverKeyboard: string;
   hoverKeyboardHint: string;
+  arrows: string;
+  arrowsHint: string;
+  arrowKeys: string;
+  arrowKeysHint: string;
 };
 
 export const zhCN: SettingsPageShortcutsText = {
@@ -21,7 +25,11 @@ export const zhCN: SettingsPageShortcutsText = {
   pressDigit: "按下修饰键和数字",
   pressKeys: "按下快捷键",
   hoverKeyboard: "悬停时接管键盘",
-  hoverKeyboardHint: "鼠标停在展开的岛上就能直接按翻页键。会从正在用的窗口拿走键盘焦点，移开后还回去",
+  hoverKeyboardHint: "鼠标停在岛上就能直接按翻页键，收起时按 ↓ 展开。会从正在用的窗口拿走键盘焦点，移开后还回去",
+  arrows: "面板两侧显示翻页箭头",
+  arrowsHint: "鼠标移进面板时左右两边淡淡出现，放上去点一下切到上一页或下一页",
+  arrowKeys: "方向键翻页和展开收起",
+  arrowKeysHint: "面板里 ← → 翻页，↑ 收起（内容滚动过时先回到顶部）；岛有焦点时 ↓ 或回车展开。输入框里有字时不生效",
 };
 
 export const en: SettingsPageShortcutsText = {
@@ -34,5 +42,9 @@ export const en: SettingsPageShortcutsText = {
   pressDigit: "Press the modifier and a number",
   pressKeys: "Press the shortcut",
   hoverKeyboard: "Take the keyboard on hover",
-  hoverKeyboardHint: "Page keys work as soon as the cursor rests on the expanded island. This takes keyboard focus from the window you are using and hands it back when the cursor leaves",
+  hoverKeyboardHint: "Page keys work as soon as the cursor rests on the island, and ↓ opens it when collapsed. This takes keyboard focus from the window you are using and hands it back when the cursor leaves",
+  arrows: "Page arrows beside the panel",
+  arrowsHint: "Faint arrows appear on both sides when the cursor enters the panel; click one for the previous or next page",
+  arrowKeys: "Arrow keys turn pages and open or close",
+  arrowKeysHint: "In the panel, ← → turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it",
 };

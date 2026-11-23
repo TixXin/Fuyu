@@ -1,0 +1,79 @@
+.island-page-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: rgba(var(--overlay-rgb, 255, 255, 255), 0.92);
+  opacity: 0;
+  translate: 0 -50%;
+  cursor: pointer;
+  transition:
+    opacity var(--motion-base) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+
+.island-page-arrow--previous {
+  left: -20px;
+}
+
+.island-page-arrow--next {
+  right: -20px;
+}
+
+.island__expanded:hover .island-page-arrow {
+  opacity: 0.28;
+}
+
+.island__expanded .island-page-arrow:hover,
+.island__expanded .island-page-arrow:focus-visible,
+.island__expanded .island-page-arrow.island-page-arrow--flash {
+  opacity: 1;
+  transition-duration: var(--motion-fast);
+}
+
+.island__expanded .island-page-arrow:hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+}
+
+.island-page-arrow:focus-visible {
+  outline: 2px solid var(--color-focus-ring-soft);
+  outline-offset: -2px;
+}
+
+.island-page-arrow__icon {
+  display: grid;
+  place-items: center;
+}
+
+.island-page-arrow--previous .island-page-arrow__icon--nudge {
+  animation: island-page-arrow-nudge-previous var(--motion-medium) var(--motion-ease-out) backwards;
+}
+
+.island-page-arrow--next .island-page-arrow__icon--nudge {
+  animation: island-page-arrow-nudge-next var(--motion-medium) var(--motion-ease-out) backwards;
+}
+
+@keyframes island-page-arrow-nudge-previous {
+  from {
+    translate: -4px 0;
+  }
+}
+
+@keyframes island-page-arrow-nudge-next {
+  from {
+    translate: 4px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-page-arrow__icon--nudge {
+    animation: none;
+  }
+}

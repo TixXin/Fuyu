@@ -126,6 +126,8 @@
         "hoverCollapseDelayMs": "sync",
         "hoverSwitchPage": "sync",
         "hoverSwitchDelayMs": "sync",
+        "pageArrows": "sync",
+        "pageArrowKeys": "sync",
         "minimizeAction": "sync",
         "tuckedHoverAction": "sync",
         "tuckStyle": "sync",

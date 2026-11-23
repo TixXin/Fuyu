@@ -16,6 +16,8 @@ import { getIslandStageStyle } from "./stageStyle";
 import { useDevicePixelRatio } from "./useDevicePixelRatio";
 import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
+import { usePageArrowKeys } from "./usePageArrowKeys";
+import { IslandPageArrows } from "./IslandPageArrows";
 import { useIslandFeatures } from "./useIslandFeatures";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTucking } from "./useIslandTucking";
@@ -252,6 +254,17 @@ export function IslandApp() {
     settings.pageNextShortcut,
     settings.pagePreviousShortcut,
   );
+  usePageArrowKeys({
+    enabled: settings.pageArrowKeys,
+    mode,
+    blocked: hasOpenPopup || panelEditing,
+    features,
+    page,
+    homePage,
+    onPageChange: setPage,
+    onOpenPage: openEnabledPage,
+    onCollapse: collapseIsland,
+  });
 
 
   useSettleIslandContributions();
@@ -299,6 +312,7 @@ export function IslandApp() {
     fuyuTabIcon: settings.fuyuTabIcon,
     notice: islandNotice,
     collapsedSlots,
+    pageArrows: settings.pageArrows && !hasOpenPopup && !panelEditing && side === null ? <IslandPageArrows features={features} page={page} onPageChange={setPage} /> : null,
     resize: <IslandResize model={resizeModel} expanded={mode === "expanded"} enabled={!popup && !isTucked && side === null && !taskbarParts.panelled} size={pageSize} extra={settings[resizeModel.barKey]} barWidth={notch ? (wing) => notchBarWidth(notch, settings.collapsedScale, wing) : undefined} />,
   };
   const pages = (

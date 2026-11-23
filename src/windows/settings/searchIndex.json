@@ -1570,12 +1570,38 @@
       "zh-CN": {
         "group": "页面切换",
         "title": "悬停时接管键盘",
-        "description": "鼠标停在展开的岛上就能直接按翻页键。会从正在用的窗口拿走键盘焦点，移开后还回去"
+        "description": "鼠标停在岛上就能直接按翻页键，收起时按 ↓ 展开。会从正在用的窗口拿走键盘焦点，移开后还回去"
       },
       "en": {
         "group": "Page switching",
         "title": "Take the keyboard on hover",
-        "description": "Page keys work as soon as the cursor rests on the expanded island. This takes keyboard focus from the window you are using and hands it back when the cursor leaves"
+        "description": "Page keys work as soon as the cursor rests on the island, and ↓ opens it when collapsed. This takes keyboard focus from the window you are using and hands it back when the cursor leaves"
+      }
+    },
+    {
+      "page": "shortcutsIsland",
+      "zh-CN": {
+        "group": "页面切换",
+        "title": "面板两侧显示翻页箭头",
+        "description": "鼠标移进面板时左右两边淡淡出现，放上去点一下切到上一页或下一页"
+      },
+      "en": {
+        "group": "Page switching",
+        "title": "Page arrows beside the panel",
+        "description": "Faint arrows appear on both sides when the cursor enters the panel; click one for the previous or next page"
+      }
+    },
+    {
+      "page": "shortcutsIsland",
+      "zh-CN": {
+        "group": "页面切换",
+        "title": "方向键翻页和展开收起",
+        "description": "面板里 ← → 翻页，↑ 收起（内容滚动过时先回到顶部）；岛有焦点时 ↓ 或回车展开。输入框里有字时不生效"
+      },
+      "en": {
+        "group": "Page switching",
+        "title": "Arrow keys turn pages and open or close",
+        "description": "In the panel, ← → turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it"
       }
     },
     {

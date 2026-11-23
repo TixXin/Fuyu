@@ -11,9 +11,14 @@ test("the expanded panel under the cursor takes the focus", () => {
   assert.equal(hoverFocusAction(state()), "take");
 });
 
-test("the collapsed island never takes the focus and hands back any it holds", () => {
-  assert.equal(hoverFocusAction(state({ expanded: false })), "release");
-  assert.equal(hoverFocusAction(state({ expanded: false, editing: true })), "release");
+test("the collapsed island under the cursor takes the focus so the down arrow can open it", () => {
+  assert.equal(hoverFocusAction(state({ expanded: false })), "take");
+  assert.equal(hoverFocusAction(state({ expanded: false, hovering: false })), "release");
+  assert.equal(hoverFocusAction(state({ expanded: false, hovering: false, editing: true })), "release");
+});
+
+test("with the setting off or in game mode the collapsed island hands the focus back", () => {
+  assert.equal(hoverFocusAction(state({ expanded: false, blocked: true })), "release");
 });
 
 test("leaving the expanded panel hands the focus back", () => {

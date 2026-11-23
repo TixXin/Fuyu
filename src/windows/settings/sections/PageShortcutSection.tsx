@@ -124,6 +124,18 @@ export function PageShortcutSection({
         checked={settings.hoverTakesKeyboard}
         onChange={(hoverTakesKeyboard) => onSettingsChange({ ...settings, hoverTakesKeyboard })}
       />
+      <SettingsToggleRow
+        title={t.settings.pageShortcuts.arrows}
+        description={t.settings.pageShortcuts.arrowsHint}
+        checked={settings.pageArrows}
+        onChange={(pageArrows) => onSettingsChange({ ...settings, pageArrows })}
+      />
+      <SettingsToggleRow
+        title={t.settings.pageShortcuts.arrowKeys}
+        description={t.settings.pageShortcuts.arrowKeysHint}
+        checked={settings.pageArrowKeys}
+        onChange={(pageArrowKeys) => onSettingsChange({ ...settings, pageArrowKeys })}
+      />
     </SettingsGroup>
   );
 }
