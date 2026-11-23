@@ -10,7 +10,7 @@ type RunnerProps = {
   mode: string;
   isTucked: boolean;
   quiet: boolean;
-  settings: { agentLightStyle: string };
+  settings: { agentLightStyle: string; jellyfishNightDoze: boolean };
 };
 
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
@@ -23,6 +23,7 @@ function CenterPatternRunner({ mode, isTucked, quiet, settings }: RunnerProps) {
     paused: mode !== "collapsed" || isTucked || quiet,
     agents,
     markLight: settings.agentLightStyle === "mark",
+    doze: settings.jellyfishNightDoze,
     enabled,
     settings: config,
   });
@@ -32,7 +33,7 @@ function CenterPatternRunner({ mode, isTucked, quiet, settings }: RunnerProps) {
 
 function StatusLightRunner({ mode, isTucked, quiet, settings }: RunnerProps) {
   const agents = useAgentActivity();
-  const decor = useStatusLightDecor({ paused: mode !== "collapsed" || isTucked || quiet, agents, markLight: settings.agentLightStyle === "mark" });
+  const decor = useStatusLightDecor({ paused: mode !== "collapsed" || isTucked || quiet, agents, markLight: settings.agentLightStyle === "mark", doze: settings.jellyfishNightDoze });
   useProvideIslandDecor("status-light", decor);
   return null;
 }

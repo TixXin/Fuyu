@@ -31,6 +31,13 @@
 .center-jelly[data-paused] * {
   animation-play-state: paused !important;
 }
+.center-jelly--lively {
+  pointer-events: auto;
+}
+.center-jelly[data-mood="idle"] .center-jelly-eye {
+  translate: calc(var(--center-jelly-look-x, 0) * 1.8px) calc(var(--center-jelly-look-y, 0) * 1.4px);
+  transition: translate var(--motion-fast) var(--motion-ease);
+}
 
 .center-jelly-fill {
   fill: var(--center-jelly-fill);

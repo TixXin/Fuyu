@@ -26,7 +26,7 @@ export function TodayWidget() {
       <div className="daily-today__date">{date}</div>
       <div className="daily-today__clock daily-big">{time}</div>
       <div className="daily-today__foot">
-        <JellyfishMark mood={greeting === "night" ? "done" : "idle"} height={40} />
+        <JellyfishMark mood={greeting === "night" ? "done" : "idle"} height={40} lively />
         <div className="daily-today__words">
           <div className="daily-today__greeting">{t.greetings[greeting]}</div>
           <div className="daily-muted daily-small">{t.todaySummary(focusText(data.focus[today] ?? 0), data.water[today] ?? 0)}</div>

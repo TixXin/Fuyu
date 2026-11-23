@@ -1,5 +1,6 @@
 import { SettingsChoiceCards } from "../../../components/settings/SettingsChoiceCards";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
+import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { islandItemStyleId, islandItemStyles, type IslandItemStyleProps } from "../../../features/plugin-kernel/settingsSlots";
 import { useTranslation } from "../../../i18n";
 import { JELLYFISH_STYLES } from "../../../lib/settings/settingsLimits";
@@ -30,6 +31,12 @@ function StatusLightStyleRows({ settings, onSettingsChange }: IslandItemStylePro
           onChange={(jellyfishStyle) => onSettingsChange({ ...settings, jellyfishStyle })}
         />
       </SettingsRow>
+      <SettingsToggleRow
+        title={text.jellyDoze}
+        description={text.jellyDozeHint}
+        checked={settings.jellyfishNightDoze}
+        onChange={(jellyfishNightDoze) => onSettingsChange({ ...settings, jellyfishNightDoze })}
+      />
     </>
   );
 }

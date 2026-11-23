@@ -34,7 +34,7 @@ function Sleep() {
   return (
     <div className="agent-empty agent-empty--sleep">
       <span className="agent-empty__jelly">
-        <JellyfishMark mood="sleep" height={46} />
+        <JellyfishMark mood="sleep" height={46} lively />
         {ZZ.map((index) => (
           <svg key={index} className="agent-empty__zz" data-pixel={pixel || undefined} style={{ animationDelay: `${index * 1.1}s` }} viewBox="0 0 10 10" aria-hidden="true">
             <path d={pixel ? ZZ_PIXEL : ZZ_SMOOTH} />
@@ -52,7 +52,7 @@ function Minimal() {
   return (
     <div className="agent-empty agent-empty--minimal">
       <span className="agent-empty__waterline" aria-hidden="true">
-        <JellyfishMark mood="idle" height={26} />
+        <JellyfishMark mood="idle" height={26} lively />
       </span>
       <span>{text.minimal}</span>
     </div>

@@ -946,6 +946,19 @@
       "page": "islandLayout",
       "zh-CN": {
         "group": "",
+        "title": "深夜打瞌睡",
+        "description": "晚上 11 点到早上 6 点，没有 Agent 在运行、也没有刚结束的会话时，收起条上的水母闭眼睡觉；有会话开始运行或等你处理时马上醒。"
+      },
+      "en": {
+        "group": "",
+        "title": "Doze at night",
+        "description": "Between 11 pm and 6 am, while no agent is running and none has just finished, the jellyfish on the collapsed bar closes its eyes and sleeps. It wakes as soon as a session starts running or needs you."
+      }
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
         "title": "Claude Code"
       },
       "en": {

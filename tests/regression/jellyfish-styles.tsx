@@ -48,6 +48,11 @@ function Sheet({ moods }: { moods: Record<JellyfishStyle, JellyMood[]> }) {
             <span className="jelly-pill jelly-themed" style={THEMED}>
               <JellyfishMark mood="running" paused height={24} />
             </span>
+            <span className="jelly-pill jelly-lively">
+              <JellyfishMark mood="idle" lively height={24} />
+              <JellyfishMark mood="sleep" lively height={24} />
+              <JellyfishMark mood="running" lively height={24} />
+            </span>
           </JellyfishStyleContext.Provider>
         </div>
       ))}
@@ -72,7 +77,7 @@ function colours(canvas: HTMLCanvasElement) {
   return seen;
 }
 
-const marks = (style: JellyfishStyle, pill = ".jelly-pill:not(.island-light):not(.jelly-small):not(.jelly-themed)") => [...document.querySelectorAll<HTMLElement>(`[data-style="${style}"] ${pill} .center-jelly`)];
+const marks = (style: JellyfishStyle, pill = ".jelly-pill:not(.island-light):not(.jelly-small):not(.jelly-themed):not(.jelly-lively)") => [...document.querySelectorAll<HTMLElement>(`[data-style="${style}"] ${pill} .center-jelly`)];
 
 async function runChecks() {
   try {
@@ -143,6 +148,46 @@ async function runChecks() {
     check(toured, "过一会儿换到下一个状态（等你）");
     await act(async () => { card.dispatchEvent(new PointerEvent("pointerleave")); });
     check(shown() === "idle", "鼠标移开回到空闲");
+
+    const settle = async (done: () => boolean) => {
+      for (let spent = 0; spent < 4000 && !done(); spent += 50) await act(async () => { await wait(50); });
+      return done();
+    };
+    const inkLeft = (canvas: HTMLCanvasElement) => {
+      const data = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height).data;
+      let left = canvas.width;
+      for (let i = 0; i < data.length; i += 4) if (data[i] === 29 && data[i + 1] === 27 && data[i + 2] === 34 && data[i + 3] === 255) left = Math.min(left, (i / 4) % canvas.width);
+      return left;
+    };
+    const moveTo = (x: number, y: number) => act(async () => { window.dispatchEvent(new PointerEvent("pointermove", { clientX: x, clientY: y })); });
+    for (const style of ["vector", "flat"] as const) {
+      const lively = () => marks(style, ".jelly-lively");
+      const moods = () => lively().map((mark) => mark.dataset.mood).join(" ");
+      const pokable = lively().map((mark) => mark.classList.contains("center-jelly--lively"));
+      check(pokable[0] && pokable[1] && !pokable[2] && marks(style).every((mark) => !mark.classList.contains("center-jelly--lively")), `${style}：面板里空闲和睡着的水母能点，正在演 Agent 状态的和收起条上的不能`);
+      await act(async () => { lively().forEach((mark) => mark.click()); });
+      check(moods() === "done waiting running", `${style}：点一下，空闲的开心一下，睡着的惊醒，运行中的不理`);
+      check(await settle(() => moods() === "idle sleep running"), `${style}：过一会儿回到原来的样子`);
+
+      const box = lively()[0].getBoundingClientRect();
+      const middle = box.top + box.height / 2;
+      await moveTo(box.right + 200, middle);
+      if (style === "vector") {
+        check(lively()[0].style.getPropertyValue("--center-jelly-look-x") === "1" && window.getComputedStyle(lively()[0].querySelector(".center-jelly-eye")!).translate !== "none", "vector：鼠标在右边，空闲的眼睛往右挪");
+        check(!lively()[1].style.getPropertyValue("--center-jelly-look-x"), "vector：睡着的不看鼠标");
+      } else {
+        const rows = PIXEL_STYLES[style].grids.map((key) => PIXEL_GRIDS[key].height);
+        const step = PIXEL_GRIDS[PIXEL_STYLES[style].grids[fitPixelGrid(24, window.devicePixelRatio, rows).index]].step;
+        const rest = inkLeft(marks(style)[0].querySelector("canvas")!);
+        check(await settle(() => inkLeft(lively()[0].querySelector("canvas")!) === rest + step), `${style}：鼠标在右边，空闲的眼睛往右挪一格`);
+      }
+      await moveTo(box.left + box.width / 2, middle);
+      if (style === "vector") check(!lively()[0].style.getPropertyValue("--center-jelly-look-x"), "vector：鼠标回到水母身上，眼睛回正");
+      await moveTo(box.left - 200, middle - 200);
+      await act(async () => { document.documentElement.dispatchEvent(new PointerEvent("pointerleave")); });
+      if (style === "vector") check(!lively()[0].style.getPropertyValue("--center-jelly-look-x"), "vector：鼠标离开窗口，眼睛回正");
+      else check(await settle(() => inkLeft(lively()[0].querySelector("canvas")!) === inkLeft(marks(style)[0].querySelector("canvas")!)), `${style}：鼠标离开窗口，眼睛回正`);
+    }
 
     const swapped = everyMood();
     swapped.flat = ["done", "failed", "idle", "sleep", "running", "waiting", "compacting", "stale"];

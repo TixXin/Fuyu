@@ -179,6 +179,7 @@ export type IslandSettings = CalendarSettingValues &
   agentTitleMode: AgentTitleMode;
   agentLightStyle: AgentLightStyle;
   jellyfishStyle: JellyfishStyle;
+  jellyfishNightDoze: boolean;
   gameDoNotDisturb: boolean;
   gameAutoTuck: boolean;
   hoverTakesKeyboard: boolean;

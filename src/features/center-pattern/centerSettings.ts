@@ -1,5 +1,6 @@
 import type { AgentSessions } from "@fuyu/plugin-services";
 import type { PetInfo } from "./api";
+import { dozeHour, nextDozeChange } from "../../components/jellyfish/jellyLively.ts";
 import { CENTER_PATTERNS, type CenterMood, type CenterPatternId } from "./patterns.ts";
 
 export const CENTER_PATTERN_OPTIONS = [...CENTER_PATTERNS, "pet"] as const;
@@ -63,14 +64,15 @@ export function activityOf(answer: AgentSessions): AgentActivity[] {
   ];
 }
 
-export function centerMoodFor(agents: readonly AgentActivity[], now: number): CenterMood {
+export function centerMoodFor(agents: readonly AgentActivity[], now: number, doze = false): CenterMood {
   const phases = new Set(agents.map((agent) => agent.phase));
   if (phases.has("waiting")) return "waiting";
   if (agents.some((agent) => agent.phase === "running" && !agent.compacting)) return "running";
   if (agents.some((agent) => agent.compacting)) return "compacting";
   if (phases.has("failed")) return "failed";
   if (phases.has("stale")) return "stale";
-  return agents.some((agent) => agent.phase === "completed" && isFresh(agent, now)) ? "done" : "idle";
+  if (agents.some((agent) => agent.phase === "completed" && isFresh(agent, now))) return "done";
+  return doze && dozeHour(new Date(now).getHours()) ? "sleep" : "idle";
 }
 
 export function petMoodChangesAt(agents: readonly AgentActivity[], now: number): number | null {
@@ -78,6 +80,12 @@ export function petMoodChangesAt(agents: readonly AgentActivity[], now: number):
     .filter((agent) => agent.phase === "completed" && isFresh(agent, now))
     .map((agent) => agent.updatedAt + PET_DONE_HOLD_MS);
   return ends.length > 0 ? Math.min(...ends) : null;
+}
+
+export function centerMoodChangesAt(agents: readonly AgentActivity[], now: number, doze: boolean): number | null {
+  const done = petMoodChangesAt(agents, now);
+  if (!doze) return done;
+  return Math.min(done ?? Number.POSITIVE_INFINITY, nextDozeChange(now));
 }
 
 function isFresh(agent: AgentActivity, now: number) {

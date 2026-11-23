@@ -1,6 +1,7 @@
 import { useId, type CSSProperties } from "react";
 import { useJellyfishStyle } from "./jellyfishStyleContext";
 import { PixelJellyfish } from "./PixelJellyfish";
+import { useLivelyJelly, type LivelyJelly } from "./useLivelyJelly";
 import "./JellyfishMark.css";
 
 export const JELLY_VIEW_WIDTH = 58;
@@ -121,23 +122,28 @@ function Effect({ mood }: { mood: JellyMood }) {
   return null;
 }
 
-type JellyfishMarkProps = { mood: JellyMood; paused?: boolean; height?: number };
+type JellyfishMarkProps = { mood: JellyMood; paused?: boolean; height?: number; lively?: boolean };
+type DrawnJellyfishProps = LivelyJelly & { paused?: boolean; height?: number };
 
-export function JellyfishMark(props: JellyfishMarkProps) {
+export function JellyfishMark({ lively = false, mood, paused, height }: JellyfishMarkProps) {
   const style = useJellyfishStyle();
-  return style === "vector" ? <VectorJellyfish {...props} /> : <PixelJellyfish style={style} {...props} />;
+  const live = useLivelyJelly(lively && !paused, mood);
+  const drawn = { ...live, paused, height };
+  return style === "vector" ? <VectorJellyfish {...drawn} /> : <PixelJellyfish style={style} {...drawn} />;
 }
 
-function VectorJellyfish({ mood, paused = false, height }: JellyfishMarkProps) {
+function VectorJellyfish({ mood, paused = false, height, look, wrap, onPoke }: DrawnJellyfishProps) {
   const shade = `center-jelly-shade-${useId().replace(/:/g, "")}`;
   const shadeFill = `url(#${shade})`;
   return (
     <span
-      className="center-jelly"
+      ref={wrap}
+      className={onPoke ? "center-jelly center-jelly--lively" : "center-jelly"}
       data-mood={mood}
       data-paused={paused || undefined}
-      style={height === undefined ? undefined : ({ "--center-jelly-height": `${height}px` } as CSSProperties)}
+      style={{ ...(height === undefined ? null : { "--center-jelly-height": `${height}px` }), ...(look.x || look.y ? { "--center-jelly-look-x": look.x, "--center-jelly-look-y": look.y } : null) } as CSSProperties}
       aria-hidden="true"
+      onClick={onPoke}
     >
       <svg viewBox={VIEW_BOX}>
         <defs>

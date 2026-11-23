@@ -95,6 +95,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     agentTitleMode: settings?.agentTitleMode === "running" ? "running" : "changes",
     agentLightStyle: settings?.agentLightStyle === "dot" ? "dot" : "mark",
     jellyfishStyle: oneOf(JELLYFISH_STYLES, settings?.jellyfishStyle, DEFAULT_SETTINGS.jellyfishStyle),
+    jellyfishNightDoze: settings?.jellyfishNightDoze === true,
     shelfEnabled: settings?.shelfEnabled !== false,
     translationEnabled: settings?.translationEnabled !== false,
     translationTarget: settings?.translationTarget === "island" ? "island" : "window",

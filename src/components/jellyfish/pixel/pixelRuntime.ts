@@ -2,11 +2,11 @@ import { cancelWake, pixelTick, wakeAt } from "./pixelClock.ts";
 import { composePixelJellyfish } from "./pixelCompose.ts";
 import { fitPixelGrid } from "./pixelFit.ts";
 import { PIXEL_GRIDS } from "./pixelGrids.ts";
-import { poseAt, stillPose, ticksUntilChange, type PixelMood } from "./pixelPoses.ts";
+import { lookingPose, poseAt, stillPose, ticksUntilChange, type PixelMood } from "./pixelPoses.ts";
 import { PIXEL_STYLES, type PixelJellyfishStyle } from "./pixelStyles.ts";
 import { mixRgb, parseRgb, pixelTones, type Rgb } from "./pixelTones.ts";
 
-export type PixelRenderOptions = { style: PixelJellyfishStyle; mood: PixelMood; paused: boolean; still: boolean };
+export type PixelRenderOptions = { style: PixelJellyfishStyle; mood: PixelMood; paused: boolean; still: boolean; lookX: number; lookY: number };
 
 const FALLBACK_FILL: Rgb = [246, 227, 211];
 const BLEND_STEPS = 3;
@@ -57,7 +57,8 @@ export function createPixelRenderer(wrap: HTMLElement, canvas: HTMLCanvasElement
     const now = pixelTick();
     const moving = !options.still && !options.paused;
     const tick = (frozenAt ?? now) - started;
-    const pose = options.still ? stillPose(options.mood) : poseAt(options.mood, tick);
+    const posed = options.still ? stillPose(options.mood) : poseAt(options.mood, tick);
+    const pose = lookingPose(posed, options.mood, options.lookX, options.lookY);
     const target = fillOf(window.getComputedStyle(wrap).color) ?? FALLBACK_FILL;
     const blendStep = blend && moving ? now - blend.at + 1 : BLEND_STEPS;
     const blending = blend !== null && blendStep < BLEND_STEPS;

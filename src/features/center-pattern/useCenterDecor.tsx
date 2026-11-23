@@ -23,6 +23,7 @@ type CenterDecorOptions = {
   paused: boolean;
   agents: readonly AgentActivity[];
   markLight: boolean;
+  doze?: boolean;
   enabled?: boolean;
   settings?: Readonly<Record<string, unknown>>;
 };
@@ -31,9 +32,9 @@ function slotWidth<Context>(width: SlotWidth<Context> | undefined, context: Cont
   return typeof width === "function" ? width(context) : width ?? 0;
 }
 
-export function useCenterDecor({ paused, agents, markLight, enabled = false, settings = NO_SETTINGS }: CenterDecorOptions): IslandDecor {
+export function useCenterDecor({ paused, agents, markLight, doze = false, enabled = false, settings = NO_SETTINGS }: CenterDecorOptions): IslandDecor {
   const lightShown = useMarkLightShown(markLight);
-  const mood = usePetMood(agents, enabled);
+  const mood = usePetMood(agents, enabled, doze);
   const choice = useMemo(() => centerPatternChoice(settings), [settings]);
   const size = centerPatternSize(settings);
   const sheet = usePetSheet(enabled ? choice.petId : null, settings);

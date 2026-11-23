@@ -16,6 +16,8 @@ export type SettingsAgentText = {
   lightStyleHints: { mark: string; dot: string };
   jellyStyle: string;
   jellyStyleHint: string;
+  jellyDoze: string;
+  jellyDozeHint: string;
   jellyStyleOptions: { vector: string; flat: string; sticker: string; mono: string; neon: string; chunky: string; fine: string };
   jellyStyleHints: { vector: string; flat: string; sticker: string; mono: string; neon: string; chunky: string; fine: string };
   agentPageSection: string;
@@ -287,6 +289,8 @@ export const zhCN: SettingsAgentText = {
   lightStyleHints: { mark: "浮屿的小水母，开着 Agent 时随状态变", dot: "简洁的小圆点呼吸灯" },
   jellyStyle: "水母画风",
   jellyStyleHint: "水母出现的地方一起换：收起条、中心图案、Fuyu 页签、Agent 空页面和今日小组件。像素画风一格一格地动，并按屏幕像素对齐，系统缩放是 125%、175% 时会比矢量的小一圈。鼠标停在卡片上可以看各个状态的样子。应用图标和托盘图标不变。",
+  jellyDoze: "深夜打瞌睡",
+  jellyDozeHint: "晚上 11 点到早上 6 点，没有 Agent 在运行、也没有刚结束的会话时，收起条上的水母闭眼睡觉；有会话开始运行或等你处理时马上醒。",
   jellyStyleOptions: { vector: "矢量", flat: "扁平", sticker: "描边", mono: "单色", neon: "霓虹", chunky: "大颗粒", fine: "精细" },
   jellyStyleHints: { vector: "原来的圆润水母", flat: "像素，最接近原样", sticker: "像素，带深色描边", mono: "像素，只用一个颜色", neon: "像素，发光的轮廓", chunky: "像素，格子最粗", fine: "像素，格子最细" },
   agentPageSection: "Agent 页",
@@ -570,6 +574,8 @@ export const en: SettingsAgentText = {
   lightStyleHints: { mark: "The little Fuyu jellyfish; follows the agents' state with Agent on", dot: "Minimal breathing dot" },
   jellyStyle: "Jellyfish look",
   jellyStyleHint: "Changes the jellyfish everywhere it appears: the collapsed bar, the centre pattern, the Fuyu tab, the empty Agent page and the Today widget. The pixel looks move one square at a time and line up with screen pixels, so at 125% or 175% display scaling they come out a little smaller than the smooth one. Rest the pointer on a card to see each state. The app and tray icons stay the same.",
+  jellyDoze: "Doze at night",
+  jellyDozeHint: "Between 11 pm and 6 am, while no agent is running and none has just finished, the jellyfish on the collapsed bar closes its eyes and sleeps. It wakes as soon as a session starts running or needs you.",
   jellyStyleOptions: { vector: "Smooth", flat: "Flat", sticker: "Outlined", mono: "One colour", neon: "Neon", chunky: "Chunky", fine: "Fine" },
   jellyStyleHints: { vector: "The original rounded jellyfish", flat: "Pixels, closest to the original", sticker: "Pixels with a dark outline", mono: "Pixels in a single colour", neon: "Pixels, a glowing outline", chunky: "Pixels, the biggest squares", fine: "Pixels, the smallest squares" },
   agentPageSection: "Agent page",

@@ -109,6 +109,11 @@ export function stillPose(mood: PixelMood): PixelPose {
   return poseAt(mood, SETTLED[mood] ?? 0);
 }
 
+export function lookingPose(pose: PixelPose, mood: PixelMood, lookX: number, lookY: number): PixelPose {
+  if (mood !== "idle" || (!lookX && !lookY)) return pose;
+  return { ...pose, eyeDx: lookX, eyeDy: lookY };
+}
+
 export function ticksUntilChange(mood: PixelMood, tick: number): number {
   const settled = SETTLED[mood];
   if (settled !== undefined && tick >= settled) return Number.POSITIVE_INFINITY;
