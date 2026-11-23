@@ -769,6 +769,16 @@ fn the_collapsed_height_stays_between_the_bar_and_its_ceiling() {
 }
 
 #[test]
+fn the_stage_keeps_one_width_across_pages_of_different_widths() {
+    let page = |expanded_width: f64, widest_width: f64| IslandWindowState { mode: IslandMode::Expanded, expanded_width, widest_width, expanded_scale: 1.0, ..IslandWindowState::default() };
+    assert_ne!(stage_width_for(page(820.0, 0.0)), stage_width_for(page(800.0, 0.0)), "without the widest page the stage follows each page");
+    assert_eq!(stage_width_for(page(820.0, 820.0)), stage_width_for(page(800.0, 820.0)), "leaving the widest page keeps the window width");
+    assert_eq!(stage_width_for(page(400.0, 820.0)), stage_width_for(page(820.0, 820.0)), "a narrow popup keeps it too");
+    let collapsed = IslandWindowState { mode: IslandMode::Collapsed, ..page(800.0, 820.0) };
+    assert_eq!(stage_width_for(collapsed), stage_width_for(page(820.0, 820.0)), "and so does closing the panel");
+}
+
+#[test]
 fn resize_reach_grows_the_stage_until_it_is_cleared() {
     let mut panel = IslandWindowState { mode: IslandMode::Expanded, expanded_width: 480.0, expanded_height: 240.0, expanded_scale: 1.0, ..IslandWindowState::default() };
     let normal = (stage_width_for(panel), stage_height_for(panel));

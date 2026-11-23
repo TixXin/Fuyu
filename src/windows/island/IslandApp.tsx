@@ -66,7 +66,7 @@ import { isPageShown } from "./features";
 import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
 import { IslandResize } from "./resize/IslandResize";
 import { useIslandResize } from "./resize/useIslandResize";
-import { islandPageSize } from "./pageSize";
+import { islandPageSize, widestPageWidth } from "./pageSize";
 import { useNotchRimView } from "./notch-rim/useNotchRimView";
 import { useNotchRingView } from "./notch-ring/useNotchRingView";
 import { ringLit } from "./notch-ring/ringPlan";
@@ -155,6 +155,7 @@ export function IslandApp() {
   );
   const resizeModel = useIslandResize(settings, setSettings, page, pageSize, notch !== null);
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
+  const widestIslandWidth = notchPanelWidth(panelIslandWidth(widestPageWidth(settings), settings.expandedScale), notch, settings.expandedScale, false);
   const pageIslandHeight = fuyuPage && !popup ? pageSize.height : getExpandedIslandHeight({ maxPanelHeight: pageSize.height, panel: popups.get(page), popup });
   const editGrowHeight = panelEditing && !popup ? PANEL_EDIT_GROW.height : 0;
   const expandedIslandHeight = Math.min(
@@ -221,6 +222,7 @@ export function IslandApp() {
     backgroundColor: look.islandBackgroundColor,
     expandedIslandHeight,
     expandedIslandWidth,
+    widestIslandWidth,
     collapsedIslandWidth,
     collapsedIslandHeight,
     notchRingExtra: ringExtra,

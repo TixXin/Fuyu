@@ -64,3 +64,38 @@ export function changedTexts(before: ReadonlyMap<string, string>, lines: readonl
   }
   return { now, changed };
 }
+
+export type FlashEntry = { item: string; held: boolean };
+export type FlashLive = "gone" | "sticky" | "plain";
+
+export function flashLive(lines: readonly IslandLineContribution[], modes: NotchTextModes) {
+  return (item: string): FlashLive => {
+    const line = lines.find((candidate) => candidate.item === item && candidate.reserve !== true && candidate.drop !== true && candidate.always !== true);
+    const kind = line ? notchTextKind(line.item) : null;
+    if (!line || !kind || modes[kind] !== "flash") return "gone";
+    return line.sticky === true ? "sticky" : "plain";
+  };
+}
+
+export function queueFlash(queue: readonly FlashEntry[], items: readonly string[]): readonly FlashEntry[] {
+  if (items.length === 0) return queue;
+  const kept = queue.map((entry) => (entry.held && items.includes(entry.item) ? { item: entry.item, held: false } : entry));
+  const fresh = items.filter((item) => !queue.some((entry) => entry.item === item)).map((item) => ({ item, held: false }));
+  return [...kept, ...fresh];
+}
+
+export function advanceFlash(queue: readonly FlashEntry[], live: (item: string) => FlashLive): readonly FlashEntry[] {
+  const [head, ...rest] = queue;
+  if (!head) return queue;
+  if (live(head.item) !== "sticky") return rest;
+  if (rest.length === 0) return head.held ? queue : [{ item: head.item, held: true }];
+  return [...rest, { item: head.item, held: true }];
+}
+
+export function pruneFlash(queue: readonly FlashEntry[], live: (item: string) => FlashLive): readonly FlashEntry[] {
+  const kept = queue.filter((entry) => {
+    const state = live(entry.item);
+    return state !== "gone" && !(entry.held && state === "plain");
+  });
+  return kept.length === queue.length ? queue : kept;
+}

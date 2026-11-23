@@ -35,7 +35,7 @@ struct Notifications {
 static NOTIFICATIONS: OnceLock<Mutex<Notifications>> = OnceLock::new();
 
 #[cfg(any(windows, test))]
-fn escape_xml(value: &str) -> String {
+pub(crate) fn escape_xml(value: &str) -> String {
     value.chars().filter(|c| !c.is_control() || matches!(c, '\n' | '\r' | '\t'))
         .collect::<String>()
         .replace('&', "&amp;")

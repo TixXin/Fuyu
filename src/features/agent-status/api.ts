@@ -352,3 +352,21 @@ export function listenAgentTestNoticeResult(onResult: (result: TestNoticeResult)
     if (result) onResult(result);
   });
 }
+
+export type ForegroundFullscreen = { active: boolean; onIslandMonitor: boolean };
+
+export function getForegroundFullscreen() {
+  return invoke<ForegroundFullscreen>("get_foreground_fullscreen");
+}
+
+export function listenForegroundFullscreen(handler: (view: ForegroundFullscreen) => void) {
+  return listen<ForegroundFullscreen>("foreground-fullscreen-changed", ({ payload }) => handler(payload));
+}
+
+export function notifyAgent(tag: string, title: string, body: string) {
+  return invoke<boolean>("agent_notify", { tag, title, body });
+}
+
+export function listenAgentNotificationOpened(handler: () => void) {
+  return listen("agent-notification-opened", () => handler());
+}

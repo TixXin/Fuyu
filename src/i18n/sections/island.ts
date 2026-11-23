@@ -3,6 +3,8 @@ export type IslandText = {
   focusing: (taskTitle: string) => string;
   pendingTodos: (count: number) => string;
   agentSession: (provider: string, title: string) => string;
+  agentNeedsYou: (provider: string) => string;
+  agentFailed: (provider: string) => string;
   lyricLine: (text: string) => string;
   nowPlaying: (text: string) => string;
   openMusic: string;
@@ -73,6 +75,8 @@ export const zhCN: IslandText = {
   focusing: (taskTitle) => `正在专注：${taskTitle}`,
   pendingTodos: (count) => `剩余${count}个待办`,
   agentSession: (provider, title) => `${provider} 正在处理：${title}`,
+  agentNeedsYou: (provider) => `${provider} 等你确认`,
+  agentFailed: (provider) => `${provider} 出错了`,
   lyricLine: (text) => `正在唱：${text}`,
   nowPlaying: (text) => `正在播放：${text}`,
   openMusic: "打开音乐控制",
@@ -149,6 +153,8 @@ export const en: IslandText = {
   focusing: (taskTitle) => `Focusing: ${taskTitle}`,
   pendingTodos: (count) => (count === 1 ? "1 todo left" : `${count} todos left`),
   agentSession: (provider, title) => `${provider} is working on: ${title}`,
+  agentNeedsYou: (provider) => `${provider} needs you`,
+  agentFailed: (provider) => `${provider} hit an error`,
   lyricLine: (text) => `Now singing: ${text}`,
   nowPlaying: (text) => `Now playing: ${text}`,
   openMusic: "Open music controls",

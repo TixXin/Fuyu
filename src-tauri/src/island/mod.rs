@@ -170,6 +170,7 @@ pub fn set_island_interaction(
     expanded_height: Option<f64>,
     collapsed_width: Option<f64>,
     expanded_width: Option<f64>,
+    widest_width: Option<f64>,
     custom_position: Option<IslandPosition>,
     is_tucked: Option<bool>,
     is_dimmed: Option<bool>,
@@ -224,10 +225,11 @@ pub fn set_island_interaction(
                 max_expanded_height(state.expanded_scale, room_height),
             );
         }
+        let widest_room = max_expanded_width(state.expanded_scale, room_width);
         if let Some(expanded_width) = expanded_width {
-            state.expanded_width =
-                expanded_width.clamp(MIN_COLLAPSED_ISLAND_WIDTH, max_expanded_width(state.expanded_scale, room_width));
+            state.expanded_width = expanded_width.clamp(MIN_COLLAPSED_ISLAND_WIDTH, widest_room);
         }
+        state.widest_width = widest_width.filter(|width| width.is_finite()).map_or(0.0, |width| width.clamp(0.0, widest_room));
         if let Some(collapsed_width) = collapsed_width {
             state.collapsed_width =
                 collapsed_width.clamp(MIN_ADJUSTED_COLLAPSED_WIDTH, MAX_ADJUSTED_COLLAPSED_WIDTH);

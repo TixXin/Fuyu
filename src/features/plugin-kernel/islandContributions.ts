@@ -16,6 +16,7 @@ export type IslandLineContribution = {
   reserve?: boolean;
   action?: string;
   interjection?: boolean;
+  sticky?: boolean;
 };
 
 export type IslandTrailContribution = { kind: "trail"; item: string };

@@ -295,7 +295,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 
 | `kind` | 字段 | 外壳拿它做什么 |
 |---|---|---|
-| `line` | `item`（`island.line/v1` 项的 id）、`priority`（`LINE_PRIORITY`，大的先）、`measure`（量宽用的文字）、`extra`（额外宽度）、`page`、`lead`（悬停时领头切到 `page`）、`handle`（侧边把手点了去 `page`）、`action`（点它调的 action）、`label`（读屏文字）、`center`（中心图案嵌在这一行）、`shareable`（上面的行可以和它轮流）、`drop`（速览，盖住别的行，点了调 `action`）、`always`（收起条不显示文字时也显示）、`bare`（不套外壳的文字容器）、`reserve`（占着宽度先不显示）、`interjection`（Agent 插话：一轮跑完、出错或等你回答时临时提前的那条，熄屏变暗和刘海屏「有变化时出现」认它；先后由「文字的先后」换算成 `priority`，见 `textRanks.ts`） | 收起条主行取 `priority` 最高的一条；收起宽度、点击和悬停的去向跟着它 |
+| `line` | `item`（`island.line/v1` 项的 id）、`priority`（`LINE_PRIORITY`，大的先）、`measure`（量宽用的文字）、`extra`（额外宽度）、`page`、`lead`（悬停时领头切到 `page`）、`handle`（侧边把手点了去 `page`）、`action`（点它调的 action）、`label`（读屏文字）、`center`（中心图案嵌在这一行）、`shareable`（上面的行可以和它轮流）、`drop`（速览，盖住别的行，点了调 `action`）、`always`（收起条不显示文字时也显示）、`bare`（不套外壳的文字容器）、`reserve`（占着宽度先不显示）、`interjection`（Agent 插话：一轮跑完、出错或等你回答时临时提前的那条，熄屏变暗和刘海屏「有变化时出现」认它；先后由「文字的先后」换算成 `priority`，见 `textRanks.ts`）、`sticky`（刘海屏「有变化时出现」落下后一直停着，直到这条不再 `sticky`、被点开或换掉；几条一起落下时排队，停着的那条让后来的先弹完再回来，见 `notchText.ts`） | 收起条主行取 `priority` 最高的一条；收起宽度、点击和悬停的去向跟着它 |
 | `trail` | `item` | 主行右边的尾巴（会议的加入按钮），没有提示和预览时显示 |
 | `summary` | `item`、`grow`（可选，`{ width, height }`：要多加的宽度和要长到的收起高度，未缩放的 px） | 消息预览那一行由哪个 `island.line/v1` 项来画，外壳只管过渡的外层；`grow` 只在普通收起条上生效（刘海、侧边岛、贴边、展开时不管），宽度加在收起宽度上、不超过上限，高度随 `set_island_interaction` 的 `collapsedHeight` 交给原生算点击区域 |
 | `preview` | `item`、`key`、`label`、`hot`（侧边岛标热哪一行）、`action`（点它）、`open`（点侧边气泡） | 收起条上的消息预览，盖在主行上 |
