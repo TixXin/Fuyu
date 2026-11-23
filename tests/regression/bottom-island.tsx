@@ -5,6 +5,9 @@ import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import "../../src/windows/island/topEdge";
 import { IslandShell } from "../../src/windows/island/IslandShell";
+import { useIslandGlass } from "../../src/windows/island/useIslandGlass";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
+import type { IslandSettings } from "../../src/lib/settings/types";
 import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
@@ -20,20 +23,24 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { expanded: boolean };
+type State = { expanded: boolean; glass: boolean; taskbarClear: boolean };
+const GLASS_SETTINGS: IslandSettings = { ...DEFAULT_SETTINGS, appearanceMode: "liquidGlass", glassRim: true, glassSheen: true, glassBackdrop: "none" };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ expanded: false });
+  const [state, setState] = useState<State>({ expanded: false, glass: false, taskbarClear: false });
   change = (next) => setState((current) => ({ ...current, ...next }));
+  const mode = state.expanded ? "expanded" : "collapsed";
+  const { glass, glassStyle } = useIslandGlass({ settings: GLASS_SETTINGS, background: "#101418", accent: "#ffb020", cover: null, mode, isTucked: false, quiet: false, reducedMotion: false });
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: null }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "写周报和整理会议记录" });
-  return <div className="stage" style={{ "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8 } as CSSProperties}>
+  const glassVariables = state.glass ? { "--island-background-color": "#101418", "--glass-tint-color": "#101418", "--glass-collapsed-tint-color": "#101418", "--glass-shadow-alpha": 0.2, ...glassStyle } : {};
+  return <div className={`stage${state.taskbarClear ? " stage--taskbar-clear" : ""}`} style={{ "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8, ...glassVariables } as CSSProperties}>
     <IslandShell
-      mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={false} isDetached showTitle={false}
-      showCollapsedText appearanceMode="classic" nativeGlassState="disabled"
+      mode={mode} page="todo" isTucked={false} isDetached showTitle={false}
+      showCollapsedText appearanceMode={state.glass ? "liquidGlass" : "classic"} nativeGlassState={state.glass ? "css-fallback" : "disabled"} glass={state.glass ? glass : undefined}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
@@ -57,6 +64,8 @@ const dockTo = (edge: "top" | "bottom") => {
   document.documentElement.dataset.islandTopEdge = edge === "top" ? "attached" : "detached";
 };
 const set = (next: Partial<State>) => act(async () => { change(next); });
+const outerShadows = (value: string) => value === "none" ? [] : value.split(/,(?![^(]*\))/).filter((shadow) => !shadow.includes("inset") && !/rgba\(0, 0, 0, 0\)/.test(shadow) && /[1-9][\d.]*px/.test(shadow));
+const glassShown = () => getComputedStyle(document.querySelector(".island__glass")!).display !== "none";
 const settled = (ready: () => boolean) => until(() => animationsDone(stage()) && ready());
 const results = document.getElementById("results")!;
 
@@ -87,6 +96,37 @@ async function runChecks() {
     await set({ expanded: false });
     await settled(() => near(island().getBoundingClientRect().height, 38));
     check(parseFloat(getComputedStyle(island()).borderTopLeftRadius) === 0 && parseFloat(getComputedStyle(island()).borderBottomLeftRadius) > 0, "顶边的造型不变：上直下圆");
+
+    dockTo("bottom");
+    await set({ glass: true });
+    await settled(() => island().classList.contains("island--glass-rim"));
+    check(outerShadows(getComputedStyle(island()).boxShadow).length > 0 && glassShown(), "不在任务栏上时，收起的玻璃岛照旧有外阴影和玻璃层");
+
+    document.documentElement.dataset.islandTaskbar = "placed";
+    await set({ taskbarClear: true });
+    await settled(() => stage().classList.contains("stage--taskbar-clear"));
+    const clear = getComputedStyle(island());
+    check(clear.boxShadow === "none", "任务栏上透明的岛没有阴影");
+    check(clear.backgroundImage === "none" && clear.backgroundColor === "rgba(0, 0, 0, 0)", "任务栏上透明的岛没有底色和玻璃渐变");
+    check(!glassShown(), "任务栏上透明的岛不画液态玻璃层");
+    check(getComputedStyle(island(), "::after").display === "none" && getComputedStyle(island(), "::before").display === "none", "任务栏上透明的岛不画流光边和描边");
+
+    await set({ taskbarClear: false });
+    await settled(() => !stage().classList.contains("stage--taskbar-clear"));
+    const restingLift = island().style.getPropertyValue("--island-hover-lift");
+    island().style.setProperty("--island-hover-lift", "1");
+    check(outerShadows(getComputedStyle(island()).boxShadow).length === 0, "任务栏上跟随主题的岛没有外阴影，悬停抬起也没有");
+    check(glassShown(), "任务栏上跟随主题的岛保留玻璃层");
+    island().style.setProperty("--island-hover-lift", restingLift || "0");
+
+    await set({ expanded: true });
+    await settled(() => near(island().getBoundingClientRect().height, 306));
+    check(outerShadows(getComputedStyle(island()).boxShadow).length > 0, "任务栏上点开的面板照旧有外阴影");
+
+    delete document.documentElement.dataset.islandTaskbar;
+    await set({ expanded: false, glass: false });
+    dockTo("top");
+    await settled(() => near(island().getBoundingClientRect().height, 38) && island().classList.contains("island--appearance-classic"));
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
