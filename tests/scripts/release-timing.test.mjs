@@ -51,9 +51,9 @@ test("waiting for the CI run and downloading it are separate stages, and a faile
       }
       return { status: 0, stdout: "", stderr: "" };
     };
-    const problem = downloadCiBuild(run, { workflow: "release-windows.yml", label: "Windows", repo: "o/r", artifact: "a", runId: 7, dir, clock, wait: () => {}, now: fakeTime(100_000, 140_000) });
+    const problem = downloadCiBuild(run, { workflow: "release-windows.yml", label: "Windows", repo: "o/r", artifact: "a", runId: 7, dir, clock, wait: () => {}, now: fakeTime(100_000, 140_000), onBuilt: (found) => calls.push(`built ${found.databaseId}`) });
     assert.equal(problem, null);
-    assert.deepEqual(calls, ["run watch", "run download"]);
+    assert.deepEqual(calls, ["run watch", "built 7", "run download"]);
     assert.deepEqual(clock.stages().map(({ stage, ms }) => [stage, ms]), [["Windows build", 300_000], ["Windows download", 40_000]]);
     assert.match(said.join("\n"), /The Windows build finished/);
 

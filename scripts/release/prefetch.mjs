@@ -7,7 +7,7 @@ import { mainCheckout, PUBLISH_DIR, targetDir } from "../build-dirs.mjs";
 import { commandLine } from "./command-line.mjs";
 import { finishMacBuild } from "./mac-build.mjs";
 import { loadSigningEnvironment } from "./release-signing.mjs";
-import { sleep } from "./smoke-test.mjs";
+import { sleep, startSmoke } from "./smoke-test.mjs";
 import { clockText, releaseClock } from "./timing.mjs";
 import { finishWindowsBuild } from "./windows-build.mjs";
 
@@ -26,6 +26,7 @@ export function prefetchDir(record, root = PREFETCH_ROOT) {
 export const logFile = (base) => join(base, "download.log");
 const lockFile = (base) => join(base, "fetch.lock");
 const manifestFile = (base, platform) => join(base, `${platform}.json`);
+const smokeFile = (base) => join(base, "smoke.json");
 
 function sha256(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
@@ -81,6 +82,21 @@ export function takePrefetched(platform, { record, version, dest, root = PREFETC
   return copied ? { problem: copied } : { manifest };
 }
 
+export function smokeAhead(record, root = PREFETCH_ROOT) {
+  const started = readJson(smokeFile(prefetchDir(record, root)));
+  return started && started.buildRun === record.windows && Number.isInteger(started.databaseId) ? started : null;
+}
+
+function startSmokeAhead(base, buildRun) {
+  const found = startSmoke(childRun, `build_run=${buildRun}`, REPO);
+  if (typeof found === "string") {
+    console.error(`  Could not start the smoke test ahead (${found}); pnpm release will test the draft.`);
+    return;
+  }
+  writeFileSync(smokeFile(base), `${JSON.stringify({ buildRun, databaseId: found.databaseId, url: found.url }, null, 2)}\n`);
+  console.log(`${releaseClock.stamp()} Smoke test of the Windows installer started: ${found.url}`);
+}
+
 export function prefetchSummary(manifest) {
   return (manifest.stages ?? []).map(({ ms, message }) => `    ${message ?? ""} (${clockText(ms)})`);
 }
@@ -133,7 +149,8 @@ function fetchOne(platform, runId, version, base) {
   try {
     Object.assign(process.env, loadSigningEnvironment());
     const finish = platform === "windows" ? finishWindowsBuild : finishMacBuild;
-    problem = finish(childRun, { repo: REPO, version, runId, releaseDir: dir, dir });
+    const onBuilt = platform === "windows" ? () => startSmokeAhead(base, runId) : null;
+    problem = finish(childRun, { repo: REPO, version, runId, releaseDir: dir, dir, onBuilt });
   } catch (error) {
     problem = error.message;
   }

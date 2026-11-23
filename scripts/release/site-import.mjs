@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { channelProblems } from "./after-release.mjs";
@@ -13,20 +13,16 @@ export function siteCheckout(main, env = process.env) {
 
 export const siteImportCommand = (dir, tag) => `cd ${dir} && pnpm releases:import ${tag}`;
 
-function pause(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-}
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function importOnce(dir, tag) {
   const windows = process.platform === "win32";
   const args = ["releases:import", tag];
-  const result = spawnSync(windows ? commandLine("pnpm", args) : "pnpm", windows ? [] : args, {
-    cwd: dir,
-    stdio: "inherit",
-    shell: windows,
-    windowsHide: true,
+  return new Promise((resolve) => {
+    const child = spawn(windows ? commandLine("pnpm", args) : "pnpm", windows ? [] : args, { cwd: dir, stdio: "inherit", shell: windows, windowsHide: true });
+    child.on("error", () => resolve(false));
+    child.on("exit", (code) => resolve(code === 0));
   });
-  return result.status === 0;
 }
 
 async function readSiteVersion(channel, fetchImpl) {
@@ -67,14 +63,14 @@ export async function publishToSite({ main, tag, version }) {
   for (let attempt = 1; attempt <= ATTEMPTS && !imported; attempt += 1) {
     if (attempt > 1) {
       console.log(`  Retrying the site import (${attempt}/${ATTEMPTS})…`);
-      pause(10_000);
+      await pause(10_000);
     }
-    imported = importOnce(dir, tag);
+    imported = await importOnce(dir, tag);
   }
   if (!imported) return [`Could not import ${tag} to ${SITE_ORIGIN}; clients that read it first stay on the old version. Import by hand: ${manual}`];
   let problems = [];
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    if (attempt > 0) pause(5_000);
+    if (attempt > 0) await pause(5_000);
     problems = await siteChannelProblems(version);
     if (problems.length === 0) break;
   }

@@ -110,3 +110,17 @@ test("the workflow the release starts exists and runs the PowerShell check", () 
   assert.match(readFileSync(workflow, "utf8"), /scripts\/release\/smoke-test\.ps1/);
   assert.ok(existsSync(new URL("../../scripts/release/smoke-test.ps1", import.meta.url)));
 });
+
+test("a smoke test started when the prebuild finished is watched instead of starting another", () => {
+  const { run, calls } = fakeRepo([[1]]);
+  assert.equal(smokeTest(run, "v1", "r", { ...quick, ahead: { databaseId: 100, url: "u/100" } }), null);
+  assert.deepEqual(calls, ["jobs 100", "run watch"]);
+});
+
+test("a smoke test ahead that never gets a job is cancelled and the draft is tested instead", () => {
+  const counts = [[1]];
+  counts[7] = [0];
+  const { run, calls } = fakeRepo(counts);
+  assert.equal(smokeTest(run, "v1", "r", { ...quick, ahead: { databaseId: 107, url: "u/107" } }), null);
+  assert.deepEqual(calls, ["jobs 107", "jobs 107", "jobs 107", "run cancel 107", "workflow run", "run list", "jobs 100", "run watch"]);
+});
