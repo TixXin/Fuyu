@@ -9,6 +9,8 @@ export type TodoIslandText = {
   archive: string;
   openCount: (count: number) => string;
   addPlaceholder: string;
+  widgetAdd: string;
+  widgetOpen: string;
   addPlaceholderFor: (date: string) => string;
   emptyTitle: string;
   emptyHint: string;
@@ -76,6 +78,8 @@ export const zhCN: TodoIslandText = {
   archive: "归档",
   openCount: (count) => `${count} 个未完成`,
   addPlaceholder: "添加待办，回车保存",
+  widgetAdd: "添加待办",
+  widgetOpen: "打开待办",
   addPlaceholderFor: (date) => `添加 ${date} 的待办`,
   emptyTitle: "今天还很轻",
   emptyHint: "在上面输入一件事，回车添加",
@@ -147,6 +151,8 @@ export const en: TodoIslandText = {
   archive: "Archive",
   openCount: (count) => `${count} open`,
   addPlaceholder: "Add a task, press Enter",
+  widgetAdd: "Add a task",
+  widgetOpen: "Open tasks",
   addPlaceholderFor: (date) => `Add a task for ${date}`,
   emptyTitle: "A light day so far",
   emptyHint: "Type a task above and press Enter",

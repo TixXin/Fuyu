@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, type Dispatch, type SetStateAction } f
 import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { defineSlot } from "../../plugin-kernel/slots";
-import { useIslandContributed, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { useIslandAction, useIslandContributed, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useTextRanks } from "../../plugin-kernel/useTextRanks";
 import { todoFileData } from "../todoStore";
 import type { TodoItem } from "../types";
@@ -11,6 +11,7 @@ import { useTodoHostEvent } from "../useTodoHostEvent";
 import { useTodos } from "../useTodos";
 import { todoLine, todosIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
+import { OPEN_TODOS_ACTION } from "./widgets.ts";
 import { announceTodosChanged, todoApi } from "./todoApi";
 import { todoLineContributions } from "./todoLines";
 import { useTodoQuickAddRunner } from "./useTodoQuickAddRunner";
@@ -56,6 +57,10 @@ function TodosRunner({ mode, page, isTucked, barText, settings, setSettings, ope
     collapseIsland,
   });
   todoApi.useProvide(apiHandlers);
+  useIslandAction(OPEN_TODOS_ACTION, on ? () => {
+    if (notebookProps.pageMode !== "today") notebookProps.onShowToday();
+    openEnabledPage("todo");
+  } : null);
   const date = notebookProps.currentDate;
   const fromRust = todoFileData() !== null;
   useTodoHostEvent("todos.changed", [date, todos, notebookProps.scheduledTodos, activeTodoId], date, fromRust);

@@ -3,12 +3,14 @@ import { Pause, Play, RotateCcw, Watch } from "lucide-react";
 import { WidgetFrame } from "../../../components/island-widget/WidgetFrame";
 import { useTranslation } from "../../../i18n";
 import { panelInterval } from "../../../components/island-widget/panelAwake";
-import { cancelTimer, pauseTimer, resumeTimer, startStopwatch, useTimers } from "../store";
+import { WidgetOpenButton } from "../../../components/island-widget/WidgetOpenButton";
+import { cancelTimer, pauseTimer, requestTimerPage, resumeTimer, startStopwatch, useTimers } from "../store";
 import { clockText, elapsedOf, isShown } from "../timers";
 import { clickOnly } from "../../../components/island-widget/clickOnly";
 
 export function StopwatchWidget() {
-  const t = useTranslation().islandWidgets;
+  const text = useTranslation();
+  const t = text.islandWidgets;
   const { timers } = useTimers();
   const watch = [...timers].reverse().find((timer) => timer.kind === "stopwatch" && isShown(timer)) ?? null;
   const running = watch?.runningSince != null;
@@ -21,7 +23,7 @@ export function StopwatchWidget() {
     else resumeTimer(watch.id);
   };
   return (
-    <WidgetFrame icon={Watch} title={t.widgets.stopwatch} className="stopwatch-widget">
+    <WidgetFrame icon={Watch} title={t.widgets.stopwatch} className="stopwatch-widget" aside={<WidgetOpenButton label={text.timer.chip} onOpen={() => requestTimerPage(false)} />}>
       <div className="stopwatch-widget__fill" />
       <span className="island-widget__big stopwatch-widget__time">
         {clockText(shown, false)}
