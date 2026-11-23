@@ -196,7 +196,7 @@ Mac 上的 `~/.tauri/fuyu/release.json` 不写 `passwordFile`，改写 `keychain
    gh release download beta-channel --repo TixXin/fuyu --pattern latest.json --dir $env:TEMP\beta --clobber
    ```
 
-版本号和发布说明在发版目录 `../Fuyu-release`（主仓库的 detached worktree）里改和提交，别的会话没提交的文件不会混进这一版。版本号提交接在要带上的那批提交后面（主工作区 `pnpm mq:verify` 验过的提交；不带就是 `origin/main`），`pnpm release:open --body <文件>` 查这批验过没有、合上最新的 `origin/main`、推到 `land/TixXin/release-<版本号>`、开 PR 并开启自动合并，接着就开始预构建（D121.6）：这批代码和版本号只走一轮 CI，CI 构建和 PR 的检查同时跑（只改了四处版本号和 Markdown 时，CI 只核对版本号一致并跑任务检查，D25）；合入后在发版目录 checkout 合并提交、运行 `pnpm release`，它看到代码树和预构建一样就直接用（F37，见 [release-ci.md](/docs/architecture/release-ci.md)「提速」），装到本机的程序仍放在主工作区。具体步骤见 `.claude/skills/fuyu-release/SKILL.md`。
+版本号和发布说明在发版目录 `../Fuyu-release`（主仓库的 detached worktree）里改和提交，别的会话没提交的文件不会混进这一版。版本号提交接在要带上的那批提交后面（主工作区 `pnpm mq:verify` 验过的提交；不带就是 `origin/main`），`pnpm release:open --body <文件>` 合上最新的 `origin/main`、推到 `land/TixXin/release-<版本号>`、开 PR、开始预构建（D121.6），再在验证目录用 `pnpm mq:verify --no-ci` 验这个提交，过了才开自动合并（2026-11-23 起：以前先 `mq:verify` 连 try 分支的 CI 一起验完才开 PR，CI 要跑两轮，预构建也要等开 PR 才开始）；在 Mac 上开的 PR 带 `mac-verified` 标签，CI 不跑 `rust-macos`。这批代码和版本号只走一轮 CI，CI 构建和 PR 的检查同时跑（只改了四处版本号和 Markdown 时，CI 只核对版本号一致并跑任务检查，D25）；合入后在发版目录 checkout 合并提交、运行 `pnpm release`，它看到代码树和预构建一样就直接用（F37，见 [release-ci.md](/docs/architecture/release-ci.md)「提速」），装到本机的程序仍放在主工作区。具体步骤见 `.claude/skills/fuyu-release/SKILL.md`。
 
 ### Mac 版（G1.13）
 

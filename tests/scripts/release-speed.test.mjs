@@ -8,7 +8,7 @@ import { betaTags, mergeBetaNotes, sectionItems } from "../../scripts/release/be
 import { draftNotes } from "../../scripts/release/notes-draft.mjs";
 import { matchingPrebuild, readPrebuild } from "../../scripts/release/prebuild.mjs";
 import { prefetchDir, smokeAhead } from "../../scripts/release/prefetch.mjs";
-import { openRequest, versionCommitProblem } from "../../scripts/release/open-pr.mjs";
+import { locallyVerified, openRequest, versionCommitProblem } from "../../scripts/release/open-pr.mjs";
 
 const notes = (zh, en) => `## 关于这个版本\n\nx\n\n## 更新内容\n\n${zh}\n\n---\n\n## About this release\n\ny\n\n## What's New\n\n${en}\n\n## Downloads\n\n- a\n`;
 
@@ -117,4 +117,12 @@ test("the release PR starts only from a version commit that changes nothing but 
   assert.match(versionCommitProblem({ subject: "chore(release): 1.2.0-beta.1", files: [...files, "src/main.tsx"], version: "1.2.0-beta.1" }), /also changes src\/main\.tsx/);
   assert.match(openRequest([]).error, /--body/);
   assert.deepEqual(openRequest(["--body", "package.json", "--unverified"]), { body: "package.json", unverified: true });
+});
+
+test("release:open turns auto-merge on only once this machine passed check, regression and build:exe on that very commit", () => {
+  const passed = { verify: { sha: "a" }, regression: { sha: "a" }, exe: { sha: "a" } };
+  assert.equal(locallyVerified({ sha: "a", passed }, "a"), true, "the try-branch CI is not needed: the PR's CI checks the same commit");
+  assert.equal(locallyVerified({ sha: "b", passed }, "a"), false);
+  assert.equal(locallyVerified({ sha: "a", passed: { verify: passed.verify, exe: passed.exe } }, "a"), false);
+  assert.equal(locallyVerified(null, "a"), false);
 });

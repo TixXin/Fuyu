@@ -1,14 +1,18 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
-import { readRecord, verificationRefusal } from "../mq/verify.mjs";
+import { readRecord, verifiedAt } from "../mq/verify.mjs";
 import { mergedWith } from "../mq/upto.mjs";
-import { git, tryGit } from "../mq/settings.mjs";
+import { git, mainCheckoutOf, tryGit } from "../mq/settings.mjs";
 import { createNotifier } from "./notify.mjs";
 import { readVersion, VERSION_FILES } from "./versions.mjs";
 
 const REPO = "TixXin/fuyu";
 const SNAPSHOT = "tests/regression/snapshots/version-history.html";
+export const MAC_VERIFIED = "mac-verified";
+export const LOCAL_STEPS = ["verify", "regression", "exe"];
+
+export const locallyVerified = (record, sha) => record?.sha === sha && LOCAL_STEPS.every((step) => record.passed?.[step]);
 
 export function releaseFiles(version) {
   return [...Object.values(VERSION_FILES), `docs/releases/v${version}.md`, SNAPSHOT];
@@ -42,27 +46,41 @@ function open({ body, unverified }) {
   const problem = versionCommitProblem({ subject, files: git(["diff", "--name-only", "HEAD^", "HEAD"]).split("\n").filter(Boolean), version });
   if (problem) throw new Error(problem);
   git(["fetch", "origin", "main", "--quiet"]);
-  const batch = git(["rev-parse", "HEAD^"]);
-  const files = git(["diff", "--name-only", `origin/main...${batch}`]).split("\n").filter(Boolean);
-  const refusal = files.length ? verificationRefusal({ record: readRecord(), target: batch, files, unverified }) : null;
-  if (refusal) throw new Error(`${refusal}\n  (pnpm release:open takes --unverified the same way.)`);
   const { rev, conflicts } = mergedWith(git(["rev-parse", "HEAD"]), "origin/main");
   if (!rev) throw new Error(`The batch conflicts with origin/main${conflicts.length ? ` in ${conflicts.join(", ")}` : ""}; land it with pnpm mq:land first.`);
   if (rev !== git(["rev-parse", "HEAD"])) git(["checkout", "--quiet", "--detach", rev]);
+  const main = mainCheckoutOf();
+  const touched = git(["diff", "--name-only", `origin/main...${rev}`]).split("\n").filter(Boolean);
+  const onlyRelease = touched.every((file) => releaseFiles(version).includes(file) || /(^docs\/|\.md$)/.test(file));
+  const already = unverified || onlyRelease || verifiedAt(readRecord(main), rev) || locallyVerified(readRecord(main), rev);
+  const macLabel = process.platform === "darwin" && !unverified && !onlyRelease;
   const branch = `land/TixXin/release-${version}`;
   if (!run("git", ["push", "--force-with-lease", "origin", `${rev}:refs/heads/${branch}`])) throw new Error(`Could not push ${branch}.`);
+  if (macLabel) spawnSync("gh", ["label", "create", MAC_VERIFIED, "--repo", REPO, "--force", "--color", "0e8a16", "--description", "Release PR verified on a Mac: CI skips rust-macos"], { encoding: "utf8" });
   const listed = spawnSync("gh", ["pr", "list", "--repo", REPO, "--head", branch, "--state", "open", "--json", "number,url", "--jq", ".[0].url // \"\""], { encoding: "utf8" });
   let url = listed.stdout?.trim();
   if (!url) {
-    const made = spawnSync("gh", ["pr", "create", "--repo", REPO, "--base", "main", "--head", branch, "--title", `Release ${version}`, "--body-file", body], { encoding: "utf8" });
+    const made = spawnSync("gh", ["pr", "create", "--repo", REPO, "--base", "main", "--head", branch, "--title", `Release ${version}`, "--body-file", body, ...(macLabel ? ["--label", MAC_VERIFIED] : [])], { encoding: "utf8" });
     if (made.status !== 0) throw new Error(`Could not open the PR: ${made.stderr.trim()}`);
     url = made.stdout.trim().split("\n").pop();
+  } else if (macLabel) {
+    spawnSync("gh", ["pr", "edit", url, "--repo", REPO, "--add-label", MAC_VERIFIED], { encoding: "utf8" });
+  }
+  const carried = Number(tryGit(["rev-list", "--count", "--no-merges", `origin/main..${rev}`]).out || 0);
+  const notify = createNotifier({ prefix: `Fuyu v${version} · ` });
+  console.log(`✓ ${url}: ${carried} commit(s) with the version bump; its CI runs now.`);
+  notify.send("发版 PR 开了", `${url}，带 ${carried} 个提交，CI、预构建${already ? "" : "和本机验证"}同时跑。`);
+  if (!run(process.execPath, ["scripts/release/prebuild.mjs"])) throw new Error("The PR is open, but the prebuild did not start; run pnpm release:prebuild.");
+  if (!already) {
+    console.log(`\nVerifying ${rev.slice(0, 9)} here (check, regression pages, build:exe) while the PR's CI and the prebuild run; auto-merge waits for it.`);
+    run("pnpm", ["mq:verify", rev, "--no-ci"]);
+    if (!locallyVerified(readRecord(main), rev)) {
+      notify.send("本机验证没过", `${url} 开着但没开自动合并，修好后重新 release:open。`);
+      throw new Error(`The local verification of ${rev.slice(0, 9)} failed, so auto-merge stays off on ${url}. Fix it in the main checkout, move the version commit onto the fix (see the fuyu-release skill), and run pnpm release:open again.`);
+    }
   }
   if (!run("gh", ["pr", "merge", url, "--repo", REPO, "--auto", "--merge"])) throw new Error(`Could not turn on auto-merge for ${url}.`);
-  const carried = Number(tryGit(["rev-list", "--count", "--no-merges", `origin/main..${rev}`]).out || 0);
-  console.log(`✓ ${url}: ${carried} commit(s) with the version bump, auto-merge on.`);
-  createNotifier({ prefix: `Fuyu v${version} · ` }).send("发版 PR 开了", `${url}，带 ${carried} 个提交，同时开始预构建。`);
-  if (!run(process.execPath, ["scripts/release/prebuild.mjs"])) throw new Error("The PR is open, but the prebuild did not start; run pnpm release:prebuild.");
+  console.log(`✓ Auto-merge on for ${url}.`);
   const number = url.split("/").pop();
   console.log(`\nNext: in the main checkout, pnpm mq:wait ${number} in the background; once merged, check out the merge commit here and pnpm release.`);
 }
