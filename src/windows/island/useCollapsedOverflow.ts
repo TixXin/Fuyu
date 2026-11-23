@@ -128,7 +128,7 @@ export function useCollapsedOverflow(
       }
       const sized = { left: units.left.map((unit) => widths.get(unit.key) ?? 0), right: units.right.map((unit) => widths.get(unit.key) ?? 0) };
       const reserved = { left: measured.left.reserved, right: measured.right.reserved };
-      const least = leastWing(balancedLanes(sized.left, sized.right, NOTCH_SIDE_LEAST), reserved, measured.left.gap, MORE_CHIP_WIDTH);
+      const least = leastWing(balancedLanes(sized.left, sized.right, NOTCH_SIDE_LEAST), reserved, measured.left.gap, MORE_CHIP_WIDTH, NOTCH_SIDE_LEAST, forceChip);
       const wing = Math.min(Math.max(maxWing, MAX_NOTCH_WING_MAX), Math.max(maxWing, Math.ceil(least)));
       const zone = (side: OverflowSide) => ({
         widths: sized[side],

@@ -44,10 +44,10 @@ export function isUnbalanced(left: number, right: number, least = NOTCH_SIDE_LEA
 const span = (entries: readonly Entry[], gap: number) =>
   entries.reduce((total, entry) => total + entry.width, 0) + gap * Math.max(0, entries.length - 1);
 
-export function leastWing(lanes: Lanes, reserved: Record<OverflowSide, number>, gap: number, chipWidth: number, least = NOTCH_SIDE_LEAST) {
+export function leastWing(lanes: Lanes, reserved: Record<OverflowSide, number>, gap: number, chipWidth: number, least = NOTCH_SIDE_LEAST, chip = false) {
   const need = (side: OverflowSide) => reserved[side] + span(lanes[side].filter((entry) => entry.width > 0).slice(0, least), gap);
   const sides = SIDES.map(need);
-  const more = SIDES.some((side) => visibleCount(lanes[side]) > least);
+  const more = chip || SIDES.some((side) => visibleCount(lanes[side]) > least);
   return Math.max(...sides, more ? Math.min(...sides) + chipWidth + gap : 0);
 }
 
