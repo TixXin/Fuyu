@@ -9,6 +9,7 @@ import { useIslandAction, useIslandContributed, useIslandContributions } from ".
 import { useTextRanks } from "../../plugin-kernel/useTextRanks";
 import type { AgentSessionSummary } from "../api";
 import { AGENT_POPUP_LIST_SAVING, getAgentAlertExpandedHeight } from "../islandLayout";
+import { sessionName } from "../session";
 import { listAgentStatuses } from "../status";
 import { useAgentHooksAutoSetup } from "../useAgentHooksAutoSetup";
 import { useAgentHostEvent } from "../useAgentHostEvent";
@@ -98,7 +99,11 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   const ranks = useTextRanks(settings.lyricsIslandPriority);
   const lineSession = pickAgentSession(lines, settings.agentTitleMode, agentSession, agentInterjection, ranks);
   agentLine.useProvide(lineSession);
-  const line = agentLineContribution(lineSession, lineSession !== null && lineSession === agentInterjection, iconWidth, lineSession ? t.island.agentSession(lineSession.label, lineSession.title) : "", ranks);
+  const lineWaiting = lineSession !== null && (
+    agentSessions.some((session) => session.phase === "waiting" && session.provider === lineSession.provider && sessionName(session).title === lineSession.title) ||
+    (agentOthers ?? []).some((other) => other.phase === "waiting" && other.name === lineSession.label && (other.title ?? "").trim() === lineSession.title)
+  );
+  const line = agentLineContribution(lineSession, lineSession !== null && lineSession === agentInterjection, iconWidth, lineSession ? t.island.agentSession(lineSession.label, lineSession.title) : "", ranks, lineWaiting);
   const waiting = agentSessions.some((session) => session.phase === "waiting");
   const busy = agentSessions.some((session) => session.phase === "running" || session.phase === "waiting");
   const glow = useAgentGlow(agentSessions, features.agents && settings.agentStatusEnabled && !demo.active);

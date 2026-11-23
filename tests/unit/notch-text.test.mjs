@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { anyNotchText, changedTexts, routeNotchText } from "../../src/windows/island/notchText.ts";
+import { advanceFlash, anyNotchText, changedTexts, flashLive, pruneFlash, queueFlash, routeNotchText } from "../../src/windows/island/notchText.ts";
 import { DEFAULT_NOTCH_TEXT, flashEventTexts, readNotchText } from "../../src/lib/settings/collapsedText.ts";
 
 const line = (item, extra = {}) => ({ kind: "line", item, priority: 0, ...extra });
@@ -69,4 +69,34 @@ test("stored modes are read per kind, falling back to the panel for anything unk
   assert.deepEqual(readNotchText(JSON.stringify({ version: 1, notch: { todos: "off", lyrics: "loud", agent: "flash" } })), modes({ todos: "off", agent: "flash" }));
   assert.equal(anyNotchText(modes({ todos: "off", lyrics: "off", agent: "off", meeting: "off" })), false);
   assert.equal(anyNotchText(DEFAULT_NOTCH_TEXT), true);
+});
+
+test("changes that land together drop below the notch one after another instead of the later one hiding the earlier", () => {
+  const live = flashLive([AGENT, MEETING], DEFAULT_NOTCH_TEXT);
+  const both = queueFlash([], ["agent-status.session", "calendar.meeting"]);
+  assert.deepEqual(both.map((entry) => entry.item), ["agent-status.session", "calendar.meeting"]);
+  const again = queueFlash(both, ["agent-status.session"]);
+  assert.deepEqual(again.map((entry) => entry.item), ["agent-status.session", "calendar.meeting"], "a second change to a queued line keeps its place");
+  const next = advanceFlash(both, live);
+  assert.deepEqual(next.map((entry) => entry.item), ["calendar.meeting"]);
+  assert.deepEqual(advanceFlash(next, live), []);
+});
+
+test("an agent waiting for you stays below the notch until it is answered, letting other changes through in between", () => {
+  const waiting = line("agent-status.session", { ...AGENT, sticky: true });
+  const live = flashLive([waiting, MEETING], DEFAULT_NOTCH_TEXT);
+  const alone = advanceFlash(queueFlash([], ["agent-status.session"]), live);
+  assert.deepEqual(alone, [{ item: "agent-status.session", held: true }], "its four seconds are up but it keeps showing");
+  assert.equal(advanceFlash(alone, live), alone);
+  const rotated = advanceFlash(queueFlash(alone, ["calendar.meeting"]), live);
+  assert.deepEqual(rotated.map((entry) => entry.item), ["calendar.meeting", "agent-status.session"], "the meeting gets its turn, then the waiting agent comes back");
+  const answered = flashLive([AGENT, MEETING], DEFAULT_NOTCH_TEXT);
+  assert.deepEqual(pruneFlash(alone, answered), [], "once it is answered it leaves at once");
+  assert.deepEqual(pruneFlash(queueFlash([], ["agent-status.session"]), answered).length, 1, "a fresh change still gets its four seconds");
+});
+
+test("lines that are gone or not set to drop below the notch leave the queue", () => {
+  const queue = queueFlash([], ["agent-status.session", "todos.title"]);
+  assert.deepEqual(pruneFlash(queue, flashLive([TODO], DEFAULT_NOTCH_TEXT)), []);
+  assert.deepEqual(pruneFlash(queue, flashLive([AGENT, TODO], modes({ todos: "flash" }))), queue);
 });

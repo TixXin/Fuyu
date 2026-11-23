@@ -14,7 +14,7 @@ export function pickAgentSession(lines: readonly IslandLineContribution[], title
   return titleMode === "changes" || lyricsAhead ? interjection : named;
 }
 
-export function agentLineContribution(session: AgentSession | null, interjecting: boolean, iconWidth: number, label: string, ranks: AgentRanks = DEFAULT_RANKS): IslandLineContribution | null {
+export function agentLineContribution(session: AgentSession | null, interjecting: boolean, iconWidth: number, label: string, ranks: AgentRanks = DEFAULT_RANKS, sticky = false): IslandLineContribution | null {
   const priority = interjecting ? ranks.agentInterjection : ranks.agent;
   if (!session || priority === null) return null;
   return {
@@ -28,5 +28,6 @@ export function agentLineContribution(session: AgentSession | null, interjecting
     handle: true,
     label,
     ...(interjecting && { interjection: true }),
+    ...(sticky && { sticky: true }),
   };
 }
