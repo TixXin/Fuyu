@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { after, test } from "node:test";
 import { detectDevPluginsDir, resolvePluginDir, restoreMarketEntry } from "../../scripts/plugins-v3/dev-official.mjs";
 
@@ -40,7 +40,7 @@ test("detectDevPluginsDir picks the most recently updated lane and honors explic
 
   assert.equal(detectDevPluginsDir({ platform: "darwin", env: {}, home }), lane2);
   assert.equal(detectDevPluginsDir({ platform: "darwin", env: { FUYU_DEV_LANE: "1" }, home }), lane1);
-  assert.equal(detectDevPluginsDir({ platform: "darwin", env: { FUYU_PLUGINS_V3_DIR: "/tmp/custom" }, home }), "/tmp/custom");
+  assert.equal(detectDevPluginsDir({ platform: "darwin", env: { FUYU_PLUGINS_V3_DIR: "/tmp/custom" }, home }), resolve("/tmp/custom"));
   assert.equal(detectDevPluginsDir({ platform: "darwin", env: {}, home, lane: "3" }), join(home, "Library", "Application Support", "com.tixxin.fuyu.lane-3", "plugins-v3"));
 });
 
