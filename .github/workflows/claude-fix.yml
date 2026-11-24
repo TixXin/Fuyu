@@ -2,6 +2,7 @@ name: Claude fix
 
 # 给 issue 打上 claude-fix 标签（维护者本人，或浮汐的 /修 用维护者的 token）→ Claude Code 在云端修，
 # 推一个分支，再开 draft PR 等维护者审。只有维护者打的标签才触发，别人打了不算。
+# 修不了（或者运行出错）就不开 PR：把查到的写成 issue 评论，打上 claude-stuck，浮汐会私聊维护者。
 #
 # 需要的仓库 secrets：
 #   CLAUDE_CODE_OAUTH_TOKEN  `claude setup-token` 生成（或改用 ANTHROPIC_API_KEY，见下面 anthropic_api_key 那行）
@@ -26,15 +27,15 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 26
           cache: pnpm
@@ -60,14 +61,15 @@ jobs:
             - 只改修这个问题需要的文件。不碰 .github/、scripts/mq/、发布相关的配置和任何密钥。
             - 改完跑 `pnpm check`。Rust 部分这台 Linux 机器上编不了，留给 PR 的 Windows CI；
               其它检查要全过。改了 Rust 就在说明里写清楚没在本地编译。
-            - 找不到原因、需要真机复现、或者改动会很大，就别硬改：不提交代码，把你查到的写进
-              `CLAUDE_FIX_NOTES.md`（只放这一个文件）说明卡在哪。
+            - 找不到原因、需要真机复现、或者改动会很大，就别硬改：什么都不提交，把查到的情况和卡在哪写进
+              仓库根目录的 `CLAUDE_FIX_NOTES.md`（不要提交它，工作流会把它贴到 issue 评论里）。
             - 提交信息用英文，按仓库现有风格（如 `fix(reminder): ...`），正文最后一行写 `Fixes #${{ github.event.issue.number }}`。
           claude_args: |
             --max-turns 80
             --allowedTools "Edit,Write,Read,Glob,Grep,Bash(pnpm:*),Bash(node:*),Bash(git:*),Bash(gh issue view:*),Bash(ls:*),Bash(cat:*)"
 
       - name: Open a draft PR
+        id: pr
         if: steps.claude.outputs.branch_name != ''
         env:
           GH_TOKEN: ${{ secrets.PR_UPDATER_TOKEN }}
@@ -79,6 +81,7 @@ jobs:
           if [ -z "$(git log --oneline "origin/main..origin/$BRANCH")" ]; then
             echo "分支 $BRANCH 没有新提交，不开 PR"; exit 0
           fi
+          echo "opened=true" >> "$GITHUB_OUTPUT"
           if gh pr list --head "$BRANCH" --state open --json number -q '.[0].number' | grep -q .; then
             echo "已经有 PR 了"; exit 0
           fi
@@ -88,3 +91,26 @@ jobs:
             echo "由 claude-fix 工作流自动生成（issue 打上 claude-fix 标签触发）。请审过再转正式、合并。"
           } > "$RUNNER_TEMP/body.md"
           gh pr create --draft --base main --head "$BRANCH" --title "${TITLE#\[群反馈\] }" --body-file "$RUNNER_TEMP/body.md"
+
+      # 没开出 PR（修不了、没改动、或者上面哪一步出错）：说明贴到 issue 评论，换成 claude-stuck 标签
+      - name: Report when there is no PR
+        if: always() && steps.pr.outputs.opened != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          OUTCOME: ${{ steps.claude.outcome }}
+        run: |
+          {
+            echo "> 云端代理这次没有开出 PR（[运行记录]($RUN)）。"
+            echo
+            if [ -s CLAUDE_FIX_NOTES.md ]; then
+              head -c 60000 CLAUDE_FIX_NOTES.md
+            elif [ "$OUTCOME" != success ]; then
+              echo "代理运行出错或被中断（$OUTCOME），没留下说明，看运行记录。"
+            else
+              echo "代理跑完了，但没有提交改动，也没留下说明。"
+            fi
+          } > "$RUNNER_TEMP/notes.md"
+          gh issue comment "$ISSUE" --body-file "$RUNNER_TEMP/notes.md"
+          gh issue edit "$ISSUE" --add-label claude-stuck --remove-label claude-fix
