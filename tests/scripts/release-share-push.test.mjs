@@ -29,16 +29,17 @@ test("pushToWechat runs the remote script with the token in a curl config file",
   writeFileSync(join(root, "card.png"), "png-bytes");
   writeFileSync(join(bin, "curl"), [
     "#!/bin/sh",
-    `printf '%s\\n' "$@" > "${root}/args"`,
-    `while [ "$1" != "-K" ]; do shift; done; cat "$2" > "${root}/config"`,
-    `cat > "${root}/body"`,
+    'out=$(cd "$(dirname "$0")/.." && pwd)',
+    'printf \'%s\\n\' "$@" > "$out/args"',
+    'while [ "$1" != "-K" ]; do shift; done; cat "$2" > "$out/config"',
+    'cat > "$out/body"',
     `printf '{"ok":true,"created":true,"item":{"key":"fuyu-v0.4.0","code":"123","to":"用户群","status_zh":"等确认","created":1795519549.9}}'`,
   ].join("\n"));
   chmodSync(join(bin, "curl"), 0o755);
   let sshArgs;
   const run = (command, args, options) => {
     sshArgs = [command, ...args];
-    return spawnSync("sh", ["-c", args[1]], { ...options, env: { ...process.env, PATH: `${bin}:${process.env.PATH}` } });
+    return spawnSync("sh", ["-c", 'PATH="$(cd "$1" && pwd):$PATH"; export PATH; exec sh -c "$2"', "_", bin, args[1]], options);
   };
   const item = pushToWechat(join(root, "card.png"), "0.4.0", `box:${deploy}`, run);
   assert.equal(sshArgs[0], "ssh");
