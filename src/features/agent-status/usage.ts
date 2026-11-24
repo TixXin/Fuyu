@@ -83,14 +83,20 @@ export function usageLines(usages: AgentUsages, view: UsageView): UsageLine[] {
     .filter((line) => !line.usage || hasUsageNumbers(line.usage));
 }
 
-export type ExpiredLine = { source: AgentUsageSource; usage: AgentUsage; updatedAt: number };
+export type ExpiredLine = { source: AgentUsageSource; usage: AgentUsage; updatedAt: number | null };
 
 export function expiredLines(usages: AgentUsages, view: Pick<UsageView, "hidden" | "agentsOff">): ExpiredLine[] {
-  return AGENT_USAGE_SOURCES.flatMap((source) => {
+  return AGENT_USAGE_SOURCES.flatMap((source): ExpiredLine[] => {
     if (view.agentsOff?.includes(source) || view.hidden.includes(source)) return [];
     const usage = percentOf(usages, source);
-    if (!usage || usage.updatedAt === null || !hasUsageNumbers(usage) || hasUsageNumbers(liveUsage(usage, usages.readAt))) return [];
-    return [{ source, usage, updatedAt: usage.updatedAt }];
+    if (!usage || hasUsageNumbers(liveUsage(usage, usages.readAt))) return [];
+    if (usage.updatedAt !== null && hasUsageNumbers(usage)) {
+      return [{ source, usage, updatedAt: usage.updatedAt }];
+    }
+    if (source === "antigravity" && usage.error && usage.error.kind !== "noCredentials") {
+      return [{ source, usage, updatedAt: null }];
+    }
+    return [];
   });
 }
 
@@ -133,6 +139,7 @@ export type UsageView = { hidden: readonly AgentUsageItem[]; tightest: boolean; 
 export const DEFAULT_USAGE_VIEW: UsageView = { hidden: [], tightest: false, reset: "tightest", style: "number", layout: "chips" };
 
 export const LAYOUT_CONTROLS: Record<AgentUsageLayout, { style: boolean; reset: boolean; tightest: boolean }> = {
+  strip: { style: false, reset: false, tightest: false },
   chips: { style: true, reset: false, tightest: false },
   tiles: { style: false, reset: true, tightest: false },
   lead: { style: false, reset: true, tightest: false },

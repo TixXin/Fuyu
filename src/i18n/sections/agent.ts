@@ -100,6 +100,8 @@ export type AgentText = {
     moreWindows: (count: number) => string;
     stale: string;
     expired: (ago: string) => string;
+    expiredShort: string;
+    unavailable: string;
     expiredDetail: (ago: string, source: string) => string;
     expiredFix: string;
     fix: string;
@@ -277,6 +279,8 @@ export const zhCN: AgentText = {
     moreWindows: (count) => `还有 ${count} 项`,
     stale: "可能已过时",
     expired: (ago) => `已过期 · ${ago}`,
+    expiredShort: "已过期",
+    unavailable: "暂不可用",
     expiredDetail: (ago, source) => `额度已过重置时间，${ago}更新 · ${source}`,
     expiredFix: "点「修复」重装钩子；终端里的 Claude Code 回复一次就更新，桌面端不跑状态栏，靠联网补查",
     fix: "修复",
@@ -460,6 +464,8 @@ export const en: AgentText = {
     moreWindows: (count) => `${count} more`,
     stale: "May be out of date",
     expired: (ago) => `Expired · ${ago}`,
+    expiredShort: "Expired",
+    unavailable: "Unavailable",
     expiredDetail: (ago, source) => `Past its reset time; updated ${ago} · ${source}`,
     expiredFix: "Click Fix to reinstall the hooks; Claude Code in a terminal updates it on its next reply, the desktop app has no status line and relies on the online check",
     fix: "Fix",
