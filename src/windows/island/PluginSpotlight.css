@@ -12,7 +12,7 @@
 }
 
 .island--collapsed:not(.island--tucked) :is(.island__collapsed-fit, .island__more-chip)[data-spotlight],
-.island--expanded .dot-button[data-spotlight] {
+.island--expanded :is(.dot-button, .island__header-more)[data-spotlight] {
   animation: plugin-spotlight var(--motion-slow) var(--motion-ease-in-out) 2 backwards;
 }
 
@@ -22,7 +22,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .island--collapsed:not(.island--tucked) :is(.island__collapsed-fit, .island__more-chip)[data-spotlight],
-  .island--expanded .dot-button[data-spotlight] {
+  .island--expanded :is(.dot-button, .island__header-more)[data-spotlight] {
     animation: none;
   }
 }

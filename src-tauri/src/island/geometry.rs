@@ -130,9 +130,9 @@ fn commit_stage_width(window: &WebviewWindow, width: f64) -> i32 {
     }
     shift
 }
-pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 360.0;
+pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 320.0;
 pub(super) const MIN_EXPANDED_ISLAND_HEIGHT: f64 = 72.0;
-pub(super) const EXPANDED_ISLAND_HEIGHT_RANGE: f64 = 350.0;
+pub(super) const EXPANDED_ISLAND_HEIGHT_RANGE: f64 = 390.0;
 pub(super) const EXPANDED_RADIUS: f64 = 30.0;
 pub(super) const MIN_CORNER_RADIUS: f64 = 16.0;
 pub(super) const MAX_CORNER_RADIUS: f64 = 40.0;

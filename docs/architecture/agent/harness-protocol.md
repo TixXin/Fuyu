@@ -90,8 +90,8 @@ Schema 和示例在 [protocol/](protocol/)：
 
 | 字段 | 说明 |
 |---|---|
-| `reply` | 岛上点了允许 / 拒绝后怎么答复：`permissionRequest`、`preToolUse`（附带工具名匹配）、`behavior`、`none`（只能交回终端），这四种对应 `Compat.reply`；钩子是适配器的（DSH、Antigravity）写 `adapter`，答复格式由钩子适配器决定 |
-| `tools` | 只拦哪些工具；不写表示全部（Antigravity 只拦 `run_command`） |
+| `reply` | 岛上点了允许 / 拒绝后怎么答复：`permissionRequest`、`preToolUse`（附带工具名匹配）、`behavior`、`none`（不装审批钩子或只能交回终端），这四种对应 `Compat.reply`；钩子是适配器的（DSH）写 `adapter`，答复格式由钩子适配器决定 |
+| `tools` | 只拦哪些工具；不写表示全部 |
 | `questions` | 能不能在岛上回答提问（现在只有 Claude Code） |
 
 ### 信号 `signals`
@@ -102,7 +102,7 @@ Schema 和示例在 [protocol/](protocol/)：
 |---|---|---|
 | `running` | `hook`、`session`、`adapter`、`null` | 一轮开始、进行中。`hook` 指钩子写的运行标记，`session` 指从会话文件末尾推断 |
 | `done` | 同上 | 一轮结束 |
-| `waiting` | `hook`、`approval`、`adapter`、`null` | 等授权。`approval` 指只有岛上审批挂起时才知道（Antigravity） |
+| `waiting` | `hook`、`approval`、`adapter`、`null` | 等授权。`approval` 指只有岛上审批挂起时才知道（如 Cursor） |
 | `replyMarker` | `true` / `false` | 能不能从最后一条回复里认出 `↩ ⋯ ✓`，要求 `replyMarker.promptFiles` 有值 |
 | `exited` | `hook`、`process`、`adapter`、`timeout` | 怎么判断会话已经退出。`hook` 指钩子记下的结束时间或进程号（`session_records.rs`）；`process` 指按 `forms.*.process` 看程序还在不在；`timeout` 指只靠 10 分钟没动静 |
 

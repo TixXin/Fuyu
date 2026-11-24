@@ -100,3 +100,52 @@ fn validates_saved_oauth_tokens_and_expiry() {
     let oauth_creds = format!(r#"{{"access_token":"ya29.ms","expiry_date":{}}}"#, now + 60_000);
     assert_eq!(parse_token_json(&oauth_creds, now).expect("ok").as_deref(), Some("ya29.ms"));
 }
+
+#[test]
+fn discovers_live_servers_from_daemon_hub_files_and_skips_stale_ones() {
+    let parsed = parse_daemon_entry(
+        r#"{"pid":36397,"httpsPort":50191,"httpPort":50192,"lsVersion":"2.35.0","csrfToken":"csrf-abc-123"}"#,
+    )
+    .expect("daemon entry");
+    assert_eq!(
+        parsed,
+        LanguageServer { pid: 36397, ports: vec![50192], csrf: "csrf-abc-123".into() }
+    );
+    assert!(parse_daemon_entry(r#"{"pid":36397,"httpsPort":50191,"csrfToken":"x"}"#).is_none());
+    assert!(parse_daemon_entry(r#"{"pid":36397,"httpPort":50192,"csrfToken":"bad\ntoken"}"#).is_none());
+
+    let root = std::env::temp_dir().join(format!("fuyu-ag-daemon-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&root);
+    let app_daemon = root.join("antigravity").join("daemon");
+    let ide_daemon = root.join("antigravity-ide").join("daemon");
+    fs::create_dir_all(&app_daemon).unwrap();
+    fs::create_dir_all(&ide_daemon).unwrap();
+
+    fs::write(
+        app_daemon.join("hub_49801.json"),
+        r#"{"pid":11111,"httpsPort":49800,"httpPort":49801,"csrfToken":"stale"}"#,
+    )
+    .unwrap();
+    fs::write(
+        app_daemon.join("hub_50192.json"),
+        r#"{"pid":36397,"httpsPort":50191,"httpPort":50192,"csrfToken":"live-app"}"#,
+    )
+    .unwrap();
+    fs::write(
+        ide_daemon.join("hub_51000.json"),
+        r#"{"pid":42000,"httpsPort":50999,"httpPort":51000,"csrfToken":"live-ide"}"#,
+    )
+    .unwrap();
+
+    let mut servers = discover_daemon_servers(&root, &[36397, 42000]);
+    servers.sort_by_key(|server| server.pid);
+    assert_eq!(
+        servers,
+        vec![
+            LanguageServer { pid: 36397, ports: vec![50192], csrf: "live-app".into() },
+            LanguageServer { pid: 42000, ports: vec![51000], csrf: "live-ide".into() },
+        ]
+    );
+    assert!(discover_daemon_servers(&root, &[]).is_empty());
+    let _ = fs::remove_dir_all(&root);
+}

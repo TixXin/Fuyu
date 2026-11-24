@@ -13,13 +13,19 @@ import { ringPlan } from "../../src/windows/island/notch-ring/ringPlan.ts";
 
 const camera = { color: "#30d158", reason: "device-use.camera" };
 const message = { color: "#12b7f5", reason: "messages.qq" };
-const plan = (look, extra = {}) => ringPlan({ ...notchRingLook(DEFAULT_NOTCH_RING_SETTINGS, "Island"), ...look }, { accent: "#0a84ff", glow: null, playback: null, motion: true, now: 0, ...extra });
+const plan = (look, extra = {}) => ringPlan({ ...notchRingLook(DEFAULT_NOTCH_RING_SETTINGS, "Panel"), style: "off", ...look }, { accent: "#0a84ff", glow: null, playback: null, motion: true, now: 0, ...extra });
 
-test("an upgraded user sees no ring until the camera or mic is on", () => {
+test("camera and mic light the open panel ring by default, never the collapsed island ring", () => {
   const settings = normalizeNotchRingSettings({}, false);
   assert.equal(settings.notchRingIslandStyle, "off");
   assert.equal(settings.notchRingPanelStyle, "off");
+  assert.equal(settings.notchRingIslandDevice, false);
+  assert.equal(settings.notchRingPanelDevice, true);
   assert.equal(settings.notchRingIslandBottom, "sides");
+  assert.equal(ringPlan(notchRingLook(settings, "Island"), { accent: "#0a84ff", glow: camera, playback: null, motion: true, now: 0 }), null);
+  assert.equal(ringPlan(notchRingLook({ ...settings, notchRingIslandDevice: true }, "Island"), { accent: "#0a84ff", glow: camera, playback: null, motion: true, now: 0 }), null);
+  assert.equal(ringPlan(notchRingLook(settings, "Panel"), { accent: "#0a84ff", glow: camera, playback: null, motion: true, now: 0 }).color, "#30d158");
+  assert.equal(ringPlan(notchRingLook({ ...settings, notchRingPanelSame: true }, "Panel"), { accent: "#0a84ff", glow: camera, playback: null, motion: true, now: 0 }).color, "#30d158");
   assert.equal(plan({}), null);
   assert.equal(plan({}, { glow: message }), null, "messages only light the ring when that switch is on");
   assert.equal(plan({}, { glow: camera }).color, "#30d158");

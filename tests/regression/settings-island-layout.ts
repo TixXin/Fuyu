@@ -55,7 +55,7 @@ export async function checkIslandPages(check: (condition: unknown, message: stri
   check(before[0] === "panel:fuyu" && before[1] === "agents" && before[2] === "todo" && before.includes("timer") && before.includes("qq") && previewTabs()[0] === "panel:fuyu"
     && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] .panel-text-icon")?.textContent === "Fuyu" && !document.querySelector(".layout-chip--create") && !document.querySelector(".collapsed-lanes"),
     "The expanded panel tab draws its preview and lists the Fuyu page first, then the built-in pages in today's order, with no way to make more panels");
-  check(headButtons() === "qq" && !document.querySelector(".expanded-preview__tab--page[data-page='qq']") && headActions() === "layout,settings" && islandBox()?.width === "800px" && islandBox()?.height === "360px",
+  check(headButtons() === "qq" && !document.querySelector(".expanded-preview__tab--page[data-page='qq']") && headActions() === "layout,settings" && islandBox()?.width === "800px" && islandBox()?.height === "320px",
     "The preview header is the island's: page tabs, then messages as a bell button, layout and settings on the right, at the page's real size");
   await act(async () => { altArrow(pageRow("todo")!, "ArrowLeft"); });
   check(pageIds()[1] === "todo" && savedPages()?.order[1] === "todo" && previewTabs()[1] === "todo", "Alt+Left moves a page forward, saves the order and the preview follows");

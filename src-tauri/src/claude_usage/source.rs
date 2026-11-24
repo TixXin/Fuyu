@@ -105,7 +105,7 @@ pub(super) fn resolve_proxy(configured: Option<&str>) -> Option<String> {
     let env = ["HTTPS_PROXY", "https_proxy"]
         .iter()
         .find_map(|key| std::env::var(key).ok());
-    pick_proxy(configured, env.as_deref(), windows_proxy().as_deref())
+    pick_proxy(configured, env.as_deref(), system_proxy().as_deref())
 }
 
 pub(super) fn pick_proxy(configured: Option<&str>, env: Option<&str>, system: Option<&str>) -> Option<String> {
@@ -120,13 +120,40 @@ pub(super) fn pick_proxy(configured: Option<&str>, env: Option<&str>, system: Op
 #[cfg(windows)]
 const INTERNET_SETTINGS: &str = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
 
-#[cfg(not(windows))]
-fn windows_proxy() -> Option<String> {
+#[cfg(not(any(windows, target_os = "macos")))]
+fn system_proxy() -> Option<String> {
     None
 }
 
+#[cfg(target_os = "macos")]
+fn system_proxy() -> Option<String> {
+    let output = std::process::Command::new("/usr/sbin/scutil")
+        .arg("--proxy")
+        .stdin(std::process::Stdio::null())
+        .output()
+        .ok()?;
+    scutil_https_proxy(&String::from_utf8_lossy(&output.stdout))
+}
+
+#[cfg(any(target_os = "macos", test))]
+pub(super) fn scutil_https_proxy(text: &str) -> Option<String> {
+    let field = |key: String| {
+        text.lines().find_map(|line| {
+            let (name, value) = line.split_once(':')?;
+            (name.trim() == key).then(|| value.trim().to_string()).filter(|value| !value.is_empty())
+        })
+    };
+    let entry = |scheme: &str| {
+        if field(format!("{scheme}Enable"))? != "1" {
+            return None;
+        }
+        Some(format!("http://{}:{}", field(format!("{scheme}Proxy"))?, field(format!("{scheme}Port"))?))
+    };
+    entry("HTTPS").or_else(|| entry("HTTP"))
+}
+
 #[cfg(windows)]
-fn windows_proxy() -> Option<String> {
+fn system_proxy() -> Option<String> {
     use windows::Win32::System::Registry::HKEY_CURRENT_USER;
     let enabled = crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS, "ProxyEnable")?;
     let server = crate::win32::registry::read_string(HKEY_CURRENT_USER, INTERNET_SETTINGS, "ProxyServer")?;

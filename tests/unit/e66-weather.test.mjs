@@ -8,7 +8,12 @@ import { startHost } from "../../packages/plugin-base/src/host/kernel.mjs";
 import { commandsV1 } from "../../packages/plugin-base/src/services.mjs";
 import { installPackage, pack } from "../../packages/plugin-cli/src/index.mjs";
 import { messagesV1 } from "../../packages/plugin-services/src/index.mjs";
-import { DEFAULT_CONFIG, configFromStored, normalizeConfig } from "../../plugins/v3/official/weather/src/config.ts";
+import {
+  CONFIG_VERSION,
+  DEFAULT_CONFIG,
+  configFromStored,
+  normalizeConfig,
+} from "../../plugins/v3/official/weather/src/config.ts";
 import { beaufort, formatClock, formatWind, inQuietHours, minutesBetween, weekdayOf } from "../../plugins/v3/official/weather/src/format.ts";
 import { apply } from "../../plugins/v3/official/weather/src/host.ts";
 import { geocodeLanguage } from "../../plugins/v3/official/weather/src/openMeteo.ts";
@@ -44,34 +49,48 @@ function forecast(over = {}) {
   return {
     now: "2026-11-19T14:00",
     current: { temp: 18, feels: 17, humidity: 62, wind: 11, code: 2, day: 1, mm: 0 },
-    hourly: Array.from({ length: 24 }, (_, i) => ({ time: `2026-11-19T${String((14 + i) % 24).padStart(2, "0")}:00`, temp: 18, pop: 10, code: 2, day: 1 })),
+    hourly: Array.from({ length: 24 }, (_, i) => ({
+      time: `2026-11-19T${String((14 + i) % 24).padStart(2, "0")}:00`,
+      temp: 18,
+      pop: 10,
+      code: 2,
+      day: 1,
+    })),
     daily: [{ date: "2026-11-19", code: 2, max: 19, min: 12, pop: 10 }],
     soon: [],
     ...over,
   };
 }
 
-test("E66.9 weather config: new installs start quiet, 1.0.0 data kept", () => {
+test("E66.9 weather config: new installs start quiet, v1 and v2 data migrate cleanly", () => {
   assert.deepEqual(configFromStored(null), DEFAULT_CONFIG);
   assert.equal(DEFAULT_CONFIG.showOnBar, false);
   assert.equal(DEFAULT_CONFIG.rainAlert, false);
+  assert.equal(DEFAULT_CONFIG.extremeAlert, false);
+  assert.equal(DEFAULT_CONFIG.showSunUv, false);
+  assert.equal(DEFAULT_CONFIG.showAqi, false);
   assert.equal(DEFAULT_CONFIG.barStyle, "icon");
   assert.deepEqual(
     [DEFAULT_CONFIG.showFeels, DEFAULT_CONFIG.showPop, DEFAULT_CONFIG.showHumidity, DEFAULT_CONFIG.showWind],
     [true, true, false, false],
   );
-  assert.deepEqual([DEFAULT_CONFIG.hours, DEFAULT_CONFIG.windUnit, DEFAULT_CONFIG.timeFormat, DEFAULT_CONFIG.rainLeadMinutes], [6, "kmh", "system", 60]);
+  assert.deepEqual(
+    [DEFAULT_CONFIG.hours, DEFAULT_CONFIG.windUnit, DEFAULT_CONFIG.timeFormat, DEFAULT_CONFIG.rainLeadMinutes],
+    [6, "kmh", "system", 60],
+  );
 
   const saved = configFromStored({ city: "Hangzhou", units: "fahrenheit", showOnBar: true, rainAlert: false, refreshMinutes: 60, locale: "en" });
   assert.deepEqual([saved.city, saved.units, saved.showOnBar, saved.rainAlert, saved.refreshMinutes], ["Hangzhou", "fahrenheit", true, false, 60]);
+  assert.equal(saved.cities.length, 1);
+  assert.equal(saved.cities[0].name, "Hangzhou");
   assert.equal(saved.hours, 6);
-  assert.equal(saved.version, 2);
+  assert.equal(saved.version, CONFIG_VERSION);
 
   const legacyNoCity = configFromStored({ city: "", units: "celsius", showOnBar: true, rainAlert: true, refreshMinutes: 30, locale: "en" });
-  assert.deepEqual([legacyNoCity.showOnBar, legacyNoCity.rainAlert], [false, false]);
+  assert.deepEqual([legacyNoCity.showOnBar, legacyNoCity.rainAlert, legacyNoCity.cities.length], [false, false, 0]);
 
-  const current = configFromStored({ version: 2, city: "", showOnBar: true, rainAlert: true });
-  assert.deepEqual([current.showOnBar, current.rainAlert], [true, true]);
+  const v2 = configFromStored({ version: 2, city: "", showOnBar: true, rainAlert: true });
+  assert.deepEqual([v2.showOnBar, v2.rainAlert, v2.extremeAlert, v2.showAqi], [true, true, false, false]);
 
   const clamped = normalizeConfig({ hours: 9, windUnit: "knots", refreshMinutes: 5, quietStart: "25:00", quietEnd: "6:30", barStyle: "text" });
   assert.deepEqual([clamped.hours, clamped.windUnit, clamped.refreshMinutes, clamped.quietStart, clamped.quietEnd, clamped.barStyle], [6, "kmh", 30, "22:00", "06:30", "text"]);
@@ -116,11 +135,12 @@ test("E66.9 rain alert: lead time, quiet hours, cool-down", () => {
   assert.deepEqual(rainDecision(raining, config, at(14)), { kind: "raining" });
 });
 
-test("E66.9 weather host: 1.0.0 config kept, settings apply, refresh command registered", async () => {
+test("E66.9 weather host: packed 1.3.0 runs in startHost with v1 config migration and refresh command", async () => {
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });
-  assert.equal(packed.manifest.version, "1.2.0");
+  assert.equal(packed.manifest.version, "1.3.0");
   assert.deepEqual(packed.manifest.fuyu.commands.map((item) => item.id), ["refresh"]);
   assert.ok(packed.manifest.fuyu.slots.includes("island.widget/v1"));
+  assert.ok(packed.manifest.fuyu.network.includes("air-quality-api.open-meteo.com"));
   assert.equal(packed.manifest.description, packed.manifest.fuyu.description.en);
   const hostDir = join(scratch, "host");
   mkdirSync(hostDir, { recursive: true });
@@ -149,13 +169,14 @@ test("E66.9 weather host: 1.0.0 config kept, settings apply, refresh command reg
     const first = await call("getState");
     assert.deepEqual([first.config.showOnBar, first.config.rainAlert, first.config.refreshMinutes], [true, false, 60]);
     assert.equal(first.place.name, "Hangzhou");
+    assert.equal(first.primaryPlace.name, "Hangzhou");
     assert.equal(first.forecast.hourly.length, 24);
 
     const next = await call("setConfig", { windUnit: "bft", hours: 12, showHumidity: true });
     assert.deepEqual([next.config.windUnit, next.config.hours, next.config.showHumidity, next.config.showOnBar], ["bft", 12, true, true]);
     assert.ok(next.forecast);
     const saved = JSON.parse(readFileSync(join(dataDir, "config.json"), "utf8"));
-    assert.deepEqual([saved.version, saved.windUnit, saved.showOnBar, saved.city], [2, "bft", true, "Hangzhou"]);
+    assert.deepEqual([saved.version, saved.windUnit, saved.showOnBar, saved.city], [CONFIG_VERSION, "bft", true, "Hangzhou"]);
     assert.equal("locale" in saved, false);
 
     let commands;
@@ -178,7 +199,7 @@ test("E66.9 weather host: 1.0.0 config kept, settings apply, refresh command reg
   }
 });
 
-test("weather host: reports that a city is still needed, and stops once one is set", async () => {
+test("weather host: tolerates older Fuyu without ctx.settings or ctx.http", async () => {
   globalThis.fetch = async () => {
     throw new Error("offline");
   };

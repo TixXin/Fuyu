@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 import { layoutZoom } from "../../lib/layoutZoom";
 
-const ACTIVE = ".dot-button--active, .island__agent-button--active";
+const ACTIVE = ".dot-button--active, .island__agent-button--active, .island__header-more--active";
 
 export function usePagePill(headerRef: RefObject<HTMLElement | null>, scrollRef: RefObject<HTMLElement | null>, key: string) {
   const pillRef = useRef<HTMLSpanElement>(null);

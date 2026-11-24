@@ -1,0 +1,168 @@
+.fuyu-weather-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 12px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-weather-widget.is-clickable {
+  cursor: pointer;
+}
+
+.fuyu-weather-widget.is-empty {
+  align-items: center;
+  justify-content: center;
+  color: var(--fuyu-plugin-text-muted);
+  text-align: center;
+}
+
+.fuyu-weather-widget.is-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fuyu-weather-widget__main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.fuyu-weather-widget__head,
+.fuyu-weather-widget__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fuyu-weather-widget__place {
+  overflow: hidden;
+  color: var(--fuyu-plugin-text-muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fuyu-weather-widget__hilo {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather-widget__now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fuyu-weather-widget__temp {
+  font-size: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.fuyu-weather-widget.is-wide .fuyu-weather-widget__temp {
+  font-size: 30px;
+}
+
+.fuyu-weather-widget__cond {
+  overflow: hidden;
+  color: var(--fuyu-plugin-text-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fuyu-weather-widget__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--fuyu-plugin-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather-widget__stat {
+  white-space: nowrap;
+}
+
+.fuyu-weather-widget__hours {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fuyu-weather-widget__hour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 38px;
+  padding: 4px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather-widget__hour-time {
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-weather-widget__hour-temp {
+  font-weight: 600;
+}
+
+.fuyu-weather-widget__days {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fuyu-weather-widget__days li {
+  display: grid;
+  grid-template-columns: 32px auto auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--fuyu-plugin-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather-widget__day-lo {
+  min-width: 24px;
+  text-align: right;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-weather-widget__day-hi {
+  min-width: 24px;
+  text-align: left;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-weather-widget__days .fuyu-weather__bar-track {
+  width: 100%;
+  min-width: 24px;
+}
+
+.fuyu-weather-widget__day-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

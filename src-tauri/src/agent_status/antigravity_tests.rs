@@ -201,14 +201,18 @@ fn installs_its_own_hook_group_only_where_antigravity_lives() {
     assert!(command(&group["PreInvocation"][0]).contains("antigravity running"));
     assert!(command(&group["Stop"][0]).contains("antigravity stop"));
     assert!(command(&group["Stop"][1]).contains("fuyu-agent-status"));
-    assert_eq!(group["PreToolUse"][0]["matcher"], APPROVED_TOOLS);
-    let approval = &group["PreToolUse"][0]["hooks"][0];
-    assert!(command(approval).contains("fuyu-agent-approval") && command(approval).contains("antigravity permission"));
-    assert_eq!(approval["timeout"], APPROVAL_HOOK_TIMEOUT_SECONDS);
+    assert!(group.get("PreToolUse").is_none());
 
-    let mut stale = config.clone();
-    stale[HOOK_NAME]["PreToolUse"] = json!([]);
-    fs::write(hooks_path(&home), stale.to_string()).unwrap();
+    let mut legacy = config.clone();
+    legacy[HOOK_NAME]["PreToolUse"] = json!([{
+        "matcher": "run_command",
+        "hooks": [{ "type": "command", "command": "fuyu-agent-approval antigravity permission", "timeout": 150 }],
+    }]);
+    fs::write(hooks_path(&home), legacy.to_string()).unwrap();
     assert_eq!(hooks_state(&env), HookInstallState::Outdated);
+    install_hooks(&env).unwrap();
+    let repaired: Value = serde_json::from_str(&fs::read_to_string(hooks_path(&home)).unwrap()).unwrap();
+    assert!(repaired[HOOK_NAME].get("PreToolUse").is_none());
+    assert_eq!(hooks_state(&env), HookInstallState::Current);
     fs::remove_dir_all(&home).unwrap();
 }

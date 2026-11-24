@@ -39,6 +39,7 @@ const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: n
 const NOTCH: IslandNotch = { width: 200, height: 32 };
 const overflowRects: unknown[] = [];
 const openedPages: IslandPage[] = [];
+const changedPages: IslandPage[] = [];
 const last = <T,>(list: readonly T[]) => list[list.length - 1];
 mockIPC((command, payload) => {
   if (command === "list_plugin_views") return { views: [], status: [] };
@@ -86,7 +87,7 @@ function Fixture() {
       showCollapsedText={!state.notch} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       onOpenPage={(page) => openedPages.push(page)} overflowMore={state.more} notchWingMax={state.wing} notchText={state.text}
-      onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
+      onPageChange={(page) => changedPages.push(page)} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       {state.stack ? <NoticeStack notch={state.stack} card={state.card} /> : <span>待办清单</span>}
     </IslandShell>
@@ -151,6 +152,21 @@ async function runChecks() {
     check(header.scrollWidth <= header.clientWidth + 1 && start.left >= box(island()).left && actions.right <= box(island()).right, "所有页面都开着时也放得下");
     const tabs = [...document.querySelectorAll<HTMLElement>(".island__header-start button")].map(box);
     check(tabs.length > 3 && tabs.every((tab, i) => i === 0 || tab.left >= tabs[i - 1].right - 0.5), "刘海左边的页面图标一个挨一个，不叠在一起");
+    let removeExpandedClocks = () => {};
+    await act(async () => { removeExpandedClocks = addClocks(); });
+    await settleTransitions();
+    const headerMore = document.querySelector<HTMLButtonElement>(".island__header-more");
+    check(headerMore && box(headerMore).right <= notchLeft + 0.5, "页面多到刘海左翼放不下时收进「··· +N」按钮，不压刘海、不横向滚动");
+    await act(async () => { headerMore!.click(); });
+    const moreMenu = document.querySelector<HTMLElement>(".island-header-more-menu");
+    const moreItems = [...(moreMenu?.querySelectorAll<HTMLButtonElement>(".island-header-more-menu__item") ?? [])];
+    check(moreMenu && moreItems.length >= 2 && box(moreMenu).top >= box(header).bottom, "点「··· +N」弹出隐藏页面菜单，列出放不下的页面");
+    const pickedPage = moreItems[0]!.dataset.page;
+    await act(async () => { moreItems[0]!.click(); });
+    check(!document.querySelector(".island-header-more-menu") && last(changedPages) === pickedPage, "在菜单里点一项后切换到对应页面并收起菜单");
+    await act(async () => { removeExpandedClocks(); });
+    await settleTransitions();
+    check(!document.querySelector(".island__header-more"), "页面少了以后「··· +N」消失");
     const rightButtons = [...document.querySelectorAll<HTMLElement>(".window-actions:not(.window-actions--lead) button")].map(box);
     check(!document.querySelector(".window-actions--lead") && rightButtons.length > 2 && rightButtons.every((button) => button.left >= notchLeft + NOTCH.width - 0.5 && button.right <= box(island()).right + 0.5), "提醒、翻译、截图这些按钮挪到刘海右边，左边只放页面图标");
     await set({ popup: true });

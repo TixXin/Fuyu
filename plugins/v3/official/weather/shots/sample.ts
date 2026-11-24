@@ -1,5 +1,5 @@
-import { DEFAULT_CONFIG } from "../src/config.ts";
-import type { WeatherDay, WeatherHour, WeatherState } from "../src/types.ts";
+import { DEFAULT_CONFIG, coordsId } from "../src/config.ts";
+import type { WeatherDay, WeatherHour, WeatherPlace, WeatherState } from "../src/types.ts";
 
 const NOW = Date.parse("2026-11-19T10:24:00");
 
@@ -40,11 +40,13 @@ const hourly: WeatherHour[] = HOURS.map(([temp, pop, code], index) => {
     pop,
     code,
     day: clock >= 7 && clock < 17 ? 1 : 0,
+    wind: 12,
+    uv: clock >= 10 && clock <= 15 ? 4 : 0,
   };
 });
 
 const daily: WeatherDay[] = [
-  { date: "2026-11-19", code: 2, max: 21, min: 11, pop: 45 },
+  { date: "2026-11-19", code: 2, max: 21, min: 11, pop: 45, sunrise: "2026-11-19T06:28", sunset: "2026-11-19T17:04", uvMax: 4 },
   { date: "2026-11-20", code: 61, max: 17, min: 12, pop: 70 },
   { date: "2026-11-21", code: 63, max: 14, min: 10, pop: 90 },
   { date: "2026-11-22", code: 3, max: 15, min: 9, pop: 35 },
@@ -53,17 +55,50 @@ const daily: WeatherDay[] = [
   { date: "2026-11-25", code: 1, max: 19, min: 8, pop: 5 },
 ];
 
+const placeId = coordsId(30.2937, 120.1614);
+const place: WeatherPlace = {
+  id: placeId,
+  name: "杭州",
+  region: "浙江",
+  country: "中国",
+  latitude: 30.2937,
+  longitude: 120.1614,
+};
+
+const forecast = {
+  now: "2026-11-19T10:15",
+  current: { temp: 18, feels: 17, humidity: 68, wind: 12, code: 2, day: 1, mm: 0, uv: 4 },
+  hourly,
+  daily,
+  soon: [],
+};
+
 const state: WeatherState = {
-  config: { ...DEFAULT_CONFIG, city: "杭州", showOnBar: true },
-  place: { name: "杭州", region: "浙江", country: "中国", latitude: 30.2937, longitude: 120.1614 },
-  forecast: {
-    now: "2026-11-19T10:15",
-    current: { temp: 18, feels: 17, humidity: 68, wind: 12, code: 2, day: 1, mm: 0 },
-    hourly,
-    daily,
-    soon: [],
+  config: {
+    ...DEFAULT_CONFIG,
+    city: "杭州",
+    cities: [
+      {
+        id: placeId,
+        query: "杭州",
+        name: "杭州",
+        region: "浙江",
+        country: "中国",
+        latitude: 30.2937,
+        longitude: 120.1614,
+      },
+    ],
+    activeCityId: placeId,
+    showOnBar: true,
   },
+  activeCityId: placeId,
+  place,
+  forecast,
+  aqi: { usAqi: 42, pm25: 10.4, pm10: 21.8, time: "2026-11-19T10:00" },
   fetchedAt: NOW - 6 * 60 * 1000,
+  primaryPlace: place,
+  primaryForecast: forecast,
+  primaryAqi: { usAqi: 42, pm25: 10.4, pm10: 21.8, time: "2026-11-19T10:00" },
   loading: false,
   problem: null,
   updatedAt: NOW,

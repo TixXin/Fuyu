@@ -48,7 +48,7 @@ export const NOTCH_RING_SETTING_KEYS = [
 
 function defaultLooks(mac: boolean): Record<NotchRingTarget, NotchRingLook> {
   return {
-    Island: { style: "off", color: "white", customColor: "#ffd60a", width: 1, gap: 2, intensity: 60, motion: true, device: true, status: false },
+    Island: { style: "off", color: "white", customColor: "#ffd60a", width: 1, gap: 2, intensity: 60, motion: true, device: false, status: false },
     Panel: { style: mac ? "hairline" : "off", color: "white", customColor: "#ffd60a", width: 1, gap: 3, intensity: 45, motion: true, device: true, status: false },
   };
 }
@@ -71,7 +71,11 @@ export const DEFAULT_NOTCH_RING_SETTINGS = defaultNotchRingSettings(isMacOS);
 
 export function notchRingLook(settings: NotchRingSettingValues, target: NotchRingTarget): NotchRingLook {
   const from = target === "Panel" && settings.notchRingPanelSame ? "Island" : target;
-  return Object.fromEntries(FIELDS.map((field) => [field, settings[notchRingKey(from, field)]])) as NotchRingLook;
+  const look = Object.fromEntries(FIELDS.map((field) => [field, settings[notchRingKey(from, field)]])) as NotchRingLook;
+  return {
+    ...look,
+    device: target === "Panel" ? settings.notchRingPanelDevice : false,
+  };
 }
 
 export function withNotchRingLook(settings: NotchRingSettingValues, target: NotchRingTarget, patch: Partial<NotchRingLook>): NotchRingSettingValues {

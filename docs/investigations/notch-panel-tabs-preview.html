@@ -1,0 +1,1315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mac 刘海模式：展开面板 Tab 与设备高亮预览</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0e1014;
+    --card: #17191f;
+    --line: #272a33;
+    --text: #eceef2;
+    --muted: #9398a6;
+    --accent: #74d6ff;
+    --gold: #ffd166;
+    --orange: #ff9f0a;
+    --green: #30d158;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 28px 64px;
+    background: var(--bg);
+    color: var(--text);
+    font: 13.5px/1.55 -apple-system, BlinkMacSystemFont, "PingFang SC", "SF Pro Text", "Segoe UI", sans-serif;
+  }
+  .page { max-width: 1180px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.02em; }
+  p.lead { margin: 0 0 18px; color: var(--muted); max-width: 920px; }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    margin-bottom: 18px;
+  }
+  .ctrl-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 22px;
+  }
+  .ctrl-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .ctrl-group > span {
+    color: var(--muted);
+    font-size: 12.5px;
+    margin-right: 2px;
+  }
+  .ctrl-group.dim { opacity: 0.36; pointer-events: none; }
+  .seg {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 3px;
+    border-radius: 9px;
+    background: #101217;
+    border: 1px solid #22252e;
+  }
+  .seg button {
+    border: 1px solid transparent;
+    background: transparent;
+    color: #b7bcc8;
+    font: inherit;
+    font-size: 12.5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+  }
+  .seg button:hover { color: #fff; background: #1e212b; }
+  .seg button.on {
+    background: #2b3448;
+    border-color: #4b618d;
+    color: #fff;
+    font-weight: 500;
+  }
+  .seg button.rec::after {
+    content: " ★";
+    color: var(--gold);
+    font-size: 11px;
+  }
+
+  .summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #13161d;
+    border: 1px solid #232834;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    color: #c7ccd8;
+  }
+  .summary-bar b { color: #fff; }
+  .badge-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+  .badge-tag.good { background: rgba(48, 209, 88, 0.14); color: #69e88c; }
+  .badge-tag.warn { background: rgba(255, 159, 10, 0.16); color: #ffbe55; }
+
+  .stages { display: flex; flex-direction: column; gap: 16px; }
+  .stage-card {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #2a2e39;
+    background: #101218;
+  }
+  .stage-cap {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: rgba(10, 12, 16, 0.72);
+    backdrop-filter: blur(8px);
+    color: #d6dae4;
+    font-size: 12px;
+  }
+  .stage-cap small { color: #8c93a3; }
+
+  .desktop {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    user-select: none;
+  }
+  .desktop--collapsed { height: 112px; }
+  .desktop--expanded { height: 470px; }
+
+  .wallpaper {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(50% 90% at 18% 20%, rgba(108, 122, 156, 0.34), transparent 65%),
+      radial-gradient(45% 80% at 84% 25%, rgba(72, 114, 154, 0.28), transparent 65%),
+      linear-gradient(180deg, #323846 0%, #242834 36%, #1f222d 100%);
+  }
+  .desktop.light .wallpaper {
+    background:
+      radial-gradient(55% 90% at 22% 18%, rgba(255, 210, 178, 0.8), transparent 65%),
+      radial-gradient(50% 80% at 80% 25%, rgba(188, 224, 255, 0.85), transparent 65%),
+      linear-gradient(180deg, #e8edf5 0%, #d4dce8 100%);
+  }
+
+  .menubar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 34px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.88);
+    background: rgba(16, 18, 24, 0.28);
+    backdrop-filter: blur(18px);
+    z-index: 1;
+  }
+  .desktop.light .menubar {
+    color: rgba(18, 20, 26, 0.86);
+    background: rgba(255, 255, 255, 0.42);
+  }
+  .menubar .ml, .menubar .mr { display: flex; align-items: center; gap: 16px; }
+  .menubar b { font-weight: 600; }
+
+  .app-backdrop {
+    position: absolute;
+    left: 48px;
+    right: 48px;
+    top: 44px;
+    bottom: -24px;
+    border-radius: 12px 12px 0 0;
+    background: rgba(34, 37, 48, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .desktop.light .app-backdrop {
+    background: rgba(255, 255, 255, 0.62);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .notch-hardware {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 34px;
+    background: #000;
+    border-radius: 0 0 10px 10px;
+    z-index: 15;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .notch-hardware.tinted {
+    background: #1d2029;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  }
+  .notch-camera {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #233354, #070a10 72%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  .notch-camera.cam-on {
+    box-shadow: 0 0 0 2px rgba(48, 209, 88, 0.25), 0 0 8px rgba(48, 209, 88, 0.65);
+  }
+
+  .ring-wrap {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 12;
+  }
+  .ring-svg {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    overflow: visible;
+  }
+  @keyframes ringBreathe {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+  .ring-breathe { animation: ringBreathe 2.8s ease-in-out infinite; }
+
+  .collapsed-island {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 34px;
+    background: #000;
+    border-radius: 0 0 14px 14px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+  }
+  .c-wing {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+    min-width: 0;
+  }
+  .c-wing--l { justify-content: flex-start; padding-right: 10px; }
+  .c-wing--r { justify-content: flex-end; padding-left: 10px; }
+  .c-gap { flex: 0 0 auto; height: 100%; }
+  .mic-pill {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+  }
+  .mic-pill.mic { background: rgba(255, 159, 10, 0.22); color: #ff9f0a; }
+  .mic-pill.cam { background: rgba(48, 209, 88, 0.22); color: #30d158; }
+  .c-time {
+    font-size: 13px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .expanded-island {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 0 0 26px 26px;
+    background: linear-gradient(#000 34px, #0b0c0f 56px);
+    color: #f4f5f8;
+    z-index: 10;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.56), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: width 260ms cubic-bezier(0.22, 1, 0.36, 1), height 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .desktop.light .expanded-island {
+    background: linear-gradient(rgba(246, 247, 250, 0.96) 34px, rgba(242, 244, 248, 0.96) 56px);
+    color: #16181f;
+    box-shadow: 0 20px 56px rgba(15, 20, 32, 0.22), inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
+  .panel-inner {
+    position: relative;
+    z-index: 14;
+    padding: 0 18px 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .top-notch-row {
+    position: relative;
+    display: grid;
+    align-items: center;
+    height: 36px;
+    flex: none;
+  }
+  .top-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    height: 100%;
+  }
+  .top-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    min-width: 0;
+    height: 100%;
+  }
+
+  .brand-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 0;
+    cursor: pointer;
+    flex: none;
+    transition: background 140ms ease;
+  }
+  .brand-chip:hover { background: rgba(255, 255, 255, 0.13); }
+  .desktop.light .brand-chip {
+    background: rgba(0, 0, 0, 0.06);
+    color: #181b22;
+  }
+  .agent-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #30d158;
+    box-shadow: 0 0 6px rgba(48, 209, 88, 0.7);
+  }
+  .page-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    padding-left: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .desktop.light .page-heading { color: #191c24; }
+  .page-heading small {
+    font-weight: 400;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .desktop.light .page-heading small { color: rgba(0, 0, 0, 0.45); }
+
+  .util-btn {
+    width: 28px;
+    height: 26px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.68);
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    transition: color 140ms ease, background 140ms ease;
+  }
+  .util-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+  .desktop.light .util-btn { color: rgba(20, 24, 34, 0.66); }
+  .desktop.light .util-btn:hover { color: #111; background: rgba(0, 0, 0, 0.07); }
+
+  .tab-bar-sub {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    margin-bottom: 10px;
+    min-height: 32px;
+  }
+  .tab-bar-sub.centered { justify-content: center; }
+  .tab-bar-sub.left { justify-content: flex-start; }
+
+  .tab-track {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.045);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.055);
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab-track::-webkit-scrollbar { display: none; }
+  .desktop.light .tab-track {
+    background: rgba(0, 0, 0, 0.045);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  }
+  .tab-track.plain {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    gap: 3px;
+  }
+
+  .tab-pill {
+    position: absolute;
+    top: 3px;
+    height: 26px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.16);
+    pointer-events: none;
+    transition: left 240ms cubic-bezier(0.22, 1, 0.36, 1), width 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .tab-track.plain .tab-pill { top: 0; }
+  .desktop.light .tab-pill {
+    background: rgba(0, 0, 0, 0.09);
+    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  .tab-btn {
+    position: relative;
+    z-index: 1;
+    height: 26px;
+    min-width: 30px;
+    padding: 0 7px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.62);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    flex: none;
+    white-space: nowrap;
+    transition: color 140ms ease, background 140ms ease, padding 180ms ease;
+  }
+  .tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.07); }
+  .tab-btn.active { color: #fff; background: transparent; }
+  .tab-btn.active.with-label { padding: 0 11px 0 9px; }
+  .tab-btn.fuyu-word {
+    padding: 0 11px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .desktop.light .tab-btn { color: rgba(20, 24, 34, 0.58); }
+  .desktop.light .tab-btn:hover { color: #111; background: rgba(0, 0, 0, 0.05); }
+  .desktop.light .tab-btn.active { color: #111; }
+
+  .legacy-strip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .legacy-fixed {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex: none;
+  }
+  .legacy-scroll {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .legacy-scroll::-webkit-scrollbar { display: none; }
+  .legacy-scroll.fade-end {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+  }
+  .legacy-btn {
+    width: 28px;
+    height: 26px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.64);
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    flex: none;
+  }
+  .legacy-btn.fuyu-word {
+    width: auto;
+    padding: 0 11px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .legacy-btn.active {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+  }
+  .legacy-btn:hover:not(.active) { background: rgba(255, 255, 255, 0.08); color: #fff; }
+  .desktop.light .legacy-btn { color: rgba(20, 24, 34, 0.64); }
+  .desktop.light .legacy-btn.active { background: rgba(0, 0, 0, 0.1); color: #111; }
+
+  .more-wrap { position: relative; flex: none; }
+  .more-btn {
+    height: 26px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+  }
+  .more-btn.active-inside {
+    background: rgba(116, 214, 255, 0.22);
+    color: #9be4ff;
+  }
+  .desktop.light .more-btn {
+    background: rgba(0, 0, 0, 0.07);
+    color: #202430;
+  }
+  .more-pop {
+    position: absolute;
+    left: 0;
+    top: 32px;
+    min-width: 168px;
+    padding: 6px;
+    border-radius: 12px;
+    background: rgba(24, 26, 33, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(18px);
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 40;
+  }
+  .more-pop.open { display: flex; }
+  .desktop.light .more-pop {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+  .more-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 12.5px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .more-item:hover { background: rgba(255, 255, 255, 0.08); }
+  .more-item.active { background: rgba(255, 255, 255, 0.14); font-weight: 600; }
+  .desktop.light .more-item:hover { background: rgba(0, 0, 0, 0.06); }
+  .desktop.light .more-item.active { background: rgba(0, 0, 0, 0.1); }
+
+  .content-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+  }
+  .content-area.with-subbar { margin-top: 0; }
+
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    height: 100%;
+  }
+  .wcard {
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .desktop.light .wcard {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .wcard.span2 { grid-row: span 2; }
+  .wcard-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.52);
+  }
+  .desktop.light .wcard-title { color: rgba(20, 24, 34, 0.55); }
+  .clock-big { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-top: 4px; }
+  .clock-sub { font-size: 12px; color: rgba(255, 255, 255, 0.55); }
+  .desktop.light .clock-sub { color: rgba(20, 24, 34, 0.55); }
+  .greet-row { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+  .greet-txt b { display: block; font-size: 12.5px; }
+  .greet-txt small { font-size: 11px; color: rgba(255, 255, 255, 0.45); }
+  .desktop.light .greet-txt small { color: rgba(20, 24, 34, 0.5); }
+
+  .rings-row { display: flex; gap: 12px; align-items: center; justify-content: center; margin: auto 0; }
+  .mini-ring {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700;
+    position: relative;
+  }
+  .mini-ring::before {
+    content: ""; position: absolute; inset: 4px; border-radius: 50%; background: #14151a;
+  }
+  .desktop.light .mini-ring::before { background: #f7f8fb; }
+  .mini-ring span { position: relative; z-index: 1; }
+  .big-stat { font-size: 26px; font-weight: 700; line-height: 1.1; }
+  .big-stat small { font-size: 12px; font-weight: 500; opacity: 0.65; margin-left: 2px; }
+  .pomo-circle {
+    width: 68px; height: 68px; margin: auto; border-radius: 50%;
+    border: 3px solid rgba(255, 168, 76, 0.55);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #ffb86c;
+  }
+  .bar-track {
+    height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; margin-top: 6px;
+  }
+  .desktop.light .bar-track { background: rgba(0, 0, 0, 0.08); }
+  .bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5ac8fa, #9b8cff); }
+  .sub-page-mock {
+    height: 100%;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .desktop.light .sub-page-mock {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .mock-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border-radius: 11px;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+  }
+  .desktop.light .mock-row { background: rgba(0, 0, 0, 0.04); }
+
+  .notes {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+  }
+  .note-box {
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+  }
+  .note-box h3 { margin: 0 0 6px; font-size: 14px; }
+  .note-box ul { margin: 0; padding-left: 18px; color: #bfc4d0; font-size: 12.5px; }
+  .note-box li { margin-bottom: 5px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Mac 刘海模式：展开面板 Tab 栏 &amp; 录音/录屏高亮预览</h1>
+  <p class="lead">直接模拟真实 Mac 刘海环境，上方看收起态岛屿，下方看展开面板。你可以切换 Tab 方案、增减页面数量、改变面板宽度，并开关录音/摄像头状态，直观对比改造前后的效果。</p>
+
+  <div class="controls">
+    <div class="ctrl-row">
+      <div class="ctrl-group">
+        <span>Tab 方案</span>
+        <div class="seg" id="ctrlMode">
+          <button data-v="legacy">现状（左翼横滚）</button>
+          <button data-v="sub-center" class="rec on">方案 1A：刘海下方通栏（居中）</button>
+          <button data-v="sub-left">方案 1B：刘海下方通栏（左对齐）</button>
+          <button data-v="more">方案 2：单行 + 更多菜单</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span>页面数量</span>
+        <div class="seg" id="ctrlCount">
+          <button data-v="6">6 个</button>
+          <button data-v="9" class="on">9 个（你的现状）</button>
+          <button data-v="13">13 个（含自定义/插件）</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <div class="ctrl-group" id="grpSubOpts">
+        <span>选中 Tab 样式</span>
+        <div class="seg" id="ctrlActiveLabel">
+          <button data-v="expand" class="rec on">选中展开中文名</button>
+          <button data-v="icon">纯图标</button>
+        </div>
+      </div>
+      <div class="ctrl-group" id="grpLeftWing">
+        <span>刘海左翼</span>
+        <div class="seg" id="ctrlLeftWing">
+          <button data-v="brand" class="rec on">Fuyu + Agent 状态</button>
+          <button data-v="title">当前页名称</button>
+          <button data-v="empty">极简留白</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span>面板宽度</span>
+        <div class="seg" id="ctrlWidth">
+          <button data-v="560">560px（标准）</button>
+          <button data-v="666" class="on">666px（当前刘海最小宽）</button>
+          <button data-v="740">740px（宽）</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <div class="ctrl-group">
+        <span>隐私占用状态</span>
+        <div class="seg" id="ctrlDevice">
+          <button data-v="off">空闲</button>
+          <button data-v="mic" class="on">录音 / 录屏（橙）</button>
+          <button data-v="cam">摄像头（绿）</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span>收起态刘海高亮</span>
+        <div class="seg" id="ctrlCollapsedRing">
+          <button data-v="old">现状（收起也亮，底边截断）</button>
+          <button data-v="new" class="rec on">改后（关闭收起态，仅面板保留）</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span>外观</span>
+        <div class="seg" id="ctrlTheme">
+          <button data-v="dark" class="on">深色</button>
+          <button data-v="light">浅色</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="seg" id="ctrlNotchTint">
+          <button data-v="off" class="on">真实纯黑刘海</button>
+          <button data-v="on">刘海标灰（看位置）</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-bar" id="summaryBar"></div>
+
+  <div class="stages">
+    <div class="stage-card">
+      <div class="desktop desktop--collapsed" id="deskCollapsed">
+        <div class="wallpaper"></div>
+        <div class="menubar">
+          <div class="ml"><b></b><b>Fuyu</b><span>文件</span><span>编辑</span><span>视图</span><span>窗口</span></div>
+          <div class="mr"><span>Wi-Fi</span><span>76%</span><span>10:17</span></div>
+        </div>
+        <div class="collapsed-island" id="collapsedIsland"></div>
+        <div class="notch-hardware" id="notchCollapsed"><div class="notch-camera" id="camCollapsed"></div></div>
+      </div>
+      <div class="stage-cap" id="capCollapsed"></div>
+    </div>
+
+    <div class="stage-card">
+      <div class="desktop desktop--expanded" id="deskExpanded">
+        <div class="wallpaper"></div>
+        <div class="menubar">
+          <div class="ml"><b></b><b>Fuyu</b><span>文件</span><span>编辑</span><span>视图</span><span>窗口</span></div>
+          <div class="mr"><span>Wi-Fi</span><span>76%</span><span>10:17</span></div>
+        </div>
+        <div class="app-backdrop"></div>
+        <div class="expanded-island" id="expandedIsland"></div>
+        <div class="notch-hardware" id="notchExpanded"><div class="notch-camera" id="camExpanded"></div></div>
+      </div>
+      <div class="stage-cap" id="capExpanded"></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note-box">
+      <h3>为什么推荐 方案 1A（刘海下方通栏）</h3>
+      <ul>
+        <li>页面再多（装插件、建自定义面板）都一次排开，彻底告别 210px 窄缝里的盲滚和硬切。</li>
+        <li>刘海同行只留左翼轻状态 + 右翼 5 个工具按钮，左右视觉终于平衡；刘海 U 形高亮周围有干净呼吸感，不再顶着卡片。</li>
+        <li>面板宽度不再被 Tab 数量绑架：切换到「560px」看看，现状下左翼几乎只剩 2 个图标，而方案 1A/1B 依然完整清爽。</li>
+      </ul>
+    </div>
+    <div class="note-box">
+      <h3>收起态关闭设备亮灯的效果</h3>
+      <ul>
+        <li>在上方切换「现状 vs 改后」对比：现状里那两条被截断的橙色竖线完全消失，右侧原本的橙色麦克风圆标本身已经足够明确。</li>
+        <li>下方展开面板仍保留完整的 U 形橙/绿呼吸光圈，既好看又有隐私提醒，互不冲突。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const NOTCH_W = 186;
+const NOTCH_H = 34;
+
+const ICONS = {
+  bot: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`,
+  todo: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>`,
+  music: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+  calendar: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>`,
+  clipboard: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`,
+  inbox: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
+  timer: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>`,
+  notes: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>`,
+  activity: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>`,
+  sun: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+  folder: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`,
+  puzzle: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/></svg>`,
+  bell: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`,
+  translate: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`,
+  scissors: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></svg>`,
+  grid: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>`,
+  settings: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`,
+  mic: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>`,
+  cam: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>`,
+  jelly: `<svg width="24" height="20" viewBox="0 0 36 30" fill="none"><path d="M5 17C5 8.5 10.5 3.5 18 3.5C25.5 3.5 31 8.5 31 17C31 20.5 29 22 26.8 22C25.2 22 24.4 20.8 23.2 20.8C22 20.8 21.3 22.3 19.8 22.3C18.5 22.3 18 21.2 18 21.2C18 21.2 17.5 22.3 16.2 22.3C14.7 22.3 14 20.8 12.8 20.8C11.6 20.8 10.8 22 9.2 22C7 22 5 20.5 5 17Z" fill="#fff3e8"/><ellipse cx="14.2" cy="14.2" rx="1.6" ry="2.2" fill="#18191e"/><ellipse cx="21.8" cy="14.2" rx="1.6" ry="2.2" fill="#18191e"/><ellipse cx="10.8" cy="16.8" rx="2.1" ry="1.2" fill="#ff9e9e" opacity=".75"/><ellipse cx="25.2" cy="16.8" rx="2.1" ry="1.2" fill="#ff9e9e" opacity=".75"/></svg>`,
+};
+
+const ALL_PAGES = [
+  { id: "fuyu", label: "Fuyu", word: true },
+  { id: "agents", label: "AI Agent", icon: "bot" },
+  { id: "todo", label: "待办", icon: "todo" },
+  { id: "music", label: "音乐", icon: "music" },
+  { id: "calendar", label: "日历", icon: "calendar" },
+  { id: "clipboard", label: "剪贴板", icon: "clipboard" },
+  { id: "inbox", label: "文件中转", icon: "inbox" },
+  { id: "timer", label: "番茄钟", icon: "timer" },
+  { id: "notes", label: "每日笔记", icon: "notes" },
+  { id: "activity", label: "系统监控", icon: "activity" },
+  { id: "weather", label: "天气", icon: "sun" },
+  { id: "workspace", label: "工作台", icon: "folder" },
+  { id: "plugin1", label: "扩展插件", icon: "puzzle" },
+];
+
+const state = {
+  mode: "sub-center",
+  count: 9,
+  activeLabel: "expand",
+  leftWing: "brand",
+  panelWidth: 666,
+  device: "mic",
+  collapsedRing: "new",
+  theme: "dark",
+  notchTint: "off",
+  activePage: "fuyu",
+  moreOpen: false,
+};
+
+function ringSvgHtml(color, isPanel, idPrefix) {
+  const gap = isPanel ? 3 : 2;
+  const pad = 24;
+  const w = NOTCH_W + pad * 2;
+  const h = NOTCH_H + pad;
+  const x = pad;
+  const n = NOTCH_W;
+  const nh = NOTCH_H;
+  const r = 8;
+  const e = 4;
+  const l = x - gap;
+  const rx = x + n + gap;
+  const b = nh + gap;
+  const rr = r + gap;
+  const ringPath = `M${l - e} 0 A${e} ${e} 0 0 1 ${l} ${e} L${l} ${nh - r} A${rr} ${rr} 0 0 0 ${x + r} ${b} L${x + n - r} ${b} A${rr} ${rr} 0 0 0 ${rx} ${nh - r} L${rx} ${e} A${e} ${e} 0 0 1 ${rx + e} 0`;
+  const bodyPath = `M${x - e} 0 A${e} ${e} 0 0 1 ${x} ${e} L${x} ${nh - r} A${r} ${r} 0 0 0 ${x + r} ${nh} L${x + n - r} ${nh} A${r} ${r} 0 0 0 ${x + n} ${nh - r} L${x + n} ${e} A${e} ${e} 0 0 1 ${x + n + e} 0 Z`;
+  const strokeOpacity = color ? 0.92 : 0.22;
+  const strokeColor = color || "#ffffff";
+  return `
+    <div class="ring-wrap">
+      <svg class="ring-svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+        <defs>
+          <linearGradient id="${idPrefix}fade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="5">
+            <stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/>
+          </linearGradient>
+          <mask id="${idPrefix}mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${w}" height="${h}">
+            <rect width="${w}" height="${h}" fill="url(#${idPrefix}fade)"/>
+            <path d="${bodyPath}" fill="#000"/>
+          </mask>
+          <filter id="${idPrefix}blur" x="-30%" y="-80%" width="160%" height="260%">
+            <feGaussianBlur stdDeviation="4.5"/>
+          </filter>
+        </defs>
+        <g mask="url(#${idPrefix}mask)">
+          ${color ? `<path class="ring-breathe" d="${ringPath}" fill="none" stroke="${strokeColor}" stroke-width="5" stroke-linecap="round" opacity="0.72" filter="url(#${idPrefix}blur)"/>` : ""}
+          <path d="${ringPath}" fill="none" stroke="${strokeColor}" stroke-width="1.35" stroke-linecap="round" opacity="${strokeOpacity}"/>
+        </g>
+      </svg>
+    </div>
+  `;
+}
+
+function utilsHtml() {
+  return [
+    ["bell", "通知"],
+    ["translate", "翻译"],
+    ["scissors", "截图"],
+    ["grid", "编辑布局"],
+    ["settings", "设置"],
+  ].map(([ic, label]) => `<button class="util-btn" type="button" title="${label}">${ICONS[ic]}</button>`).join("");
+}
+
+function contentHtml() {
+  if (state.activePage === "fuyu") {
+    return `
+      <div class="dash-grid">
+        <div class="wcard span2">
+          <div>
+            <div class="clock-sub">11月24日 周二</div>
+            <div class="clock-big">10:17</div>
+          </div>
+          <div class="greet-row">
+            ${ICONS.jelly}
+            <div class="greet-txt">
+              <b>早上好，今天也顺利</b>
+              <small>已专注 0m · 喝了 0 杯水</small>
+            </div>
+          </div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-title">系统状态</div>
+          <div class="rings-row">
+            <div class="mini-ring" style="background:conic-gradient(#42c6ff 0 28%, rgba(255,255,255,.1) 0)"><span>28</span></div>
+            <div class="mini-ring" style="background:conic-gradient(#a78bfa 0 76%, rgba(255,255,255,.1) 0)"><span>76</span></div>
+          </div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-title">距离春节</div>
+          <div>
+            <div class="big-stat" style="color:#ff867c">74<small>天</small></div>
+            <div class="clock-sub" style="margin-top:2px">2027年2月6日</div>
+          </div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-title">2026</div>
+          <div>
+            <div class="big-stat">89<small>%</small></div>
+            <div class="bar-track"><div class="bar-fill" style="width:89%"></div></div>
+          </div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-title">电池</div>
+          <div>
+            <div class="big-stat">76<small>%</small></div>
+            <div class="bar-track"><div class="bar-fill" style="width:76%;background:#30d158"></div></div>
+          </div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-title">专注</div>
+          <div class="pomo-circle">25:00</div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-title">喝水</div>
+          <div>
+            <div class="big-stat" style="color:#5ac8fa">0<small>/8 杯</small></div>
+            <div class="clock-sub" style="margin-top:2px">点击记录一杯</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  const page = ALL_PAGES.find((p) => p.id === state.activePage) || ALL_PAGES[0];
+  return `
+    <div class="sub-page-mock">
+      <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600">
+        ${page.icon ? ICONS[page.icon] : ""}
+        <span>${page.label}</span>
+        <span style="margin-left:auto;font-size:12px;opacity:.5">点击上方 Tab 任意切换体验</span>
+      </div>
+      <div class="mock-row"><span>示例条目 1 · ${page.label}内容区</span><span style="opacity:.5">刚刚</span></div>
+      <div class="mock-row"><span>示例条目 2 · 切换不同 Tab 感受流畅度</span><span style="opacity:.5">2 分钟前</span></div>
+      <div class="mock-row"><span>示例条目 3 · 面板高度与顶部留白</span><span style="opacity:.5">10:15</span></div>
+    </div>
+  `;
+}
+
+function renderCollapsed() {
+  const desk = document.getElementById("deskCollapsed");
+  const isl = document.getElementById("collapsedIsland");
+  const notch = document.getElementById("notchCollapsed");
+  const cam = document.getElementById("camCollapsed");
+  const cap = document.getElementById("capCollapsed");
+
+  desk.classList.toggle("light", state.theme === "light");
+  notch.style.width = `${NOTCH_W}px`;
+  notch.classList.toggle("tinted", state.notchTint === "on");
+  cam.classList.toggle("cam-on", state.device === "cam");
+
+  const wingW = state.device === "off" ? 80 : 96;
+  isl.style.width = `${NOTCH_W + wingW * 2}px`;
+
+  const devColor = state.device === "mic" ? "#ff9f0a" : state.device === "cam" ? "#30d158" : null;
+  const showRing = state.collapsedRing === "old" && devColor !== null;
+
+  const badge = state.device === "mic"
+    ? `<span class="mic-pill mic">${ICONS.mic}</span>`
+    : state.device === "cam"
+      ? `<span class="mic-pill cam">${ICONS.cam}</span>`
+      : "";
+
+  isl.innerHTML = `
+    ${showRing ? ringSvgHtml(devColor, false, "cr") : ""}
+    <div class="c-wing c-wing--l" style="position:relative;z-index:14">${ICONS.jelly}</div>
+    <div class="c-gap" style="width:${NOTCH_W}px"></div>
+    <div class="c-wing c-wing--r" style="position:relative;z-index:14">${badge}<span class="c-time">02:18</span></div>
+  `;
+
+  cap.innerHTML = showRing
+    ? `<b>收起态岛屿（现状）</b><small>橙/绿内圈被岛底边硬截成两条竖线，且和右侧图标重复</small>`
+    : `<b>收起态岛屿（改后）</b><small>${devColor ? "关闭收起态刘海边框高亮，仅保留右侧隐私图标，干净利落" : "空闲态与物理刘海融为一体"}</small>`;
+}
+
+function renderExpanded() {
+  const desk = document.getElementById("deskExpanded");
+  const isl = document.getElementById("expandedIsland");
+  const notch = document.getElementById("notchExpanded");
+  const cam = document.getElementById("camExpanded");
+  const cap = document.getElementById("capExpanded");
+
+  desk.classList.toggle("light", state.theme === "light");
+  notch.style.width = `${NOTCH_W}px`;
+  notch.classList.toggle("tinted", state.notchTint === "on");
+  cam.classList.toggle("cam-on", state.device === "cam");
+
+  const pages = ALL_PAGES.slice(0, state.count);
+  if (!pages.some((p) => p.id === state.activePage)) state.activePage = pages[0].id;
+
+  const isSub = state.mode === "sub-center" || state.mode === "sub-left";
+  const panelH = isSub ? 378 : 344;
+  isl.style.width = `${state.panelWidth}px`;
+  isl.style.height = `${panelH}px`;
+
+  const devColor = state.device === "mic" ? "#ff9f0a" : state.device === "cam" ? "#30d158" : null;
+  const ringHtml = ringSvgHtml(devColor, true, "pr");
+
+  const colSpec = `minmax(0,1fr) ${NOTCH_W + 16}px minmax(0,1fr)`;
+  let topLeftHtml = "";
+  let subBarHtml = "";
+
+  if (state.mode === "legacy") {
+    const fixed = pages.slice(0, 2);
+    const rest = pages.slice(2);
+    topLeftHtml = `
+      <div class="legacy-strip">
+        <div class="legacy-fixed">
+          ${fixed.map((p) => `<button class="legacy-btn${p.word ? " fuyu-word" : ""}${state.activePage === p.id ? " active" : ""}" data-page="${p.id}" title="${p.label}">${p.word ? "Fuyu" : ICONS[p.icon]}</button>`).join("")}
+        </div>
+        <div class="legacy-scroll" id="legacyScroll">
+          ${rest.map((p) => `<button class="legacy-btn${state.activePage === p.id ? " active" : ""}" data-page="${p.id}" title="${p.label}">${ICONS[p.icon]}</button>`).join("")}
+        </div>
+      </div>
+    `;
+  } else if (state.mode === "more") {
+    const sideAvail = (state.panelWidth - 36 - (NOTCH_W + 16)) / 2;
+    const moreReserve = 42;
+    let used = 0;
+    const visible = [];
+    const hidden = [];
+    pages.forEach((p, idx) => {
+      const w = p.word ? 54 : 30;
+      const needMore = idx < pages.length - 1 ? moreReserve : 0;
+      if (used + w + needMore <= sideAvail) {
+        visible.push(p);
+        used += w;
+      } else {
+        hidden.push(p);
+      }
+    });
+    const activeInHidden = hidden.some((p) => p.id === state.activePage);
+    topLeftHtml = `
+      <div class="legacy-strip">
+        ${visible.map((p) => `<button class="legacy-btn${p.word ? " fuyu-word" : ""}${state.activePage === p.id ? " active" : ""}" data-page="${p.id}" title="${p.label}">${p.word ? "Fuyu" : ICONS[p.icon]}</button>`).join("")}
+        ${hidden.length ? `
+          <div class="more-wrap">
+            <button class="more-btn${activeInHidden ? " active-inside" : ""}" id="moreTrigger" type="button">··· +${hidden.length}</button>
+            <div class="more-pop${state.moreOpen ? " open" : ""}" id="morePop">
+              ${hidden.map((p) => `<button class="more-item${state.activePage === p.id ? " active" : ""}" data-page="${p.id}">${ICONS[p.icon]}<span>${p.label}</span></button>`).join("")}
+            </div>
+          </div>
+        ` : ""}
+      </div>
+    `;
+  } else {
+    const activeObj = pages.find((p) => p.id === state.activePage) || pages[0];
+    if (state.leftWing === "brand") {
+      topLeftHtml = `
+        <button class="brand-chip" data-page="fuyu" type="button" title="回到首页">
+          <span>Fuyu</span>
+          <span class="agent-dot" title="AI Agent 就绪"></span>
+        </button>
+      `;
+    } else if (state.leftWing === "title") {
+      topLeftHtml = `
+        <div class="page-heading">
+          ${activeObj.icon ? ICONS[activeObj.icon] : ""}
+          <span>${activeObj.label}</span>
+          <small>Fuyu</small>
+        </div>
+      `;
+    }
+    const isCenter = state.mode === "sub-center";
+    subBarHtml = `
+      <div class="tab-bar-sub ${isCenter ? "centered" : "left"}">
+        <div class="tab-track${isCenter ? "" : " plain"}" id="tabTrack">
+          <span class="tab-pill" id="tabPill"></span>
+          ${pages.map((p) => {
+            const act = state.activePage === p.id;
+            const showLbl = act && state.activeLabel === "expand" && !p.word;
+            return `<button class="tab-btn${p.word ? " fuyu-word" : ""}${act ? " active" : ""}${showLbl ? " with-label" : ""}" data-page="${p.id}" title="${p.label}">${p.word ? "Fuyu" : ICONS[p.icon]}${showLbl ? `<span>${p.label}</span>` : ""}</button>`;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  isl.innerHTML = `
+    ${ringHtml}
+    <div class="panel-inner">
+      <div class="top-notch-row" style="grid-template-columns:${colSpec}">
+        <div class="top-left">${topLeftHtml}</div>
+        <div></div>
+        <div class="top-right">${utilsHtml()}</div>
+      </div>
+      ${subBarHtml}
+      <div class="content-area${isSub ? " with-subbar" : ""}">${contentHtml()}</div>
+    </div>
+  `;
+
+  isl.querySelectorAll("[data-page]").forEach((btn) => {
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      state.activePage = btn.dataset.page;
+      state.moreOpen = false;
+      renderExpanded();
+      renderSummary();
+    });
+  });
+
+  const moreBtn = document.getElementById("moreTrigger");
+  if (moreBtn) {
+    moreBtn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      state.moreOpen = !state.moreOpen;
+      document.getElementById("morePop")?.classList.toggle("open", state.moreOpen);
+    });
+  }
+
+  const legScroll = document.getElementById("legacyScroll");
+  if (legScroll) {
+    const syncFade = () => {
+      legScroll.classList.toggle("fade-end", legScroll.scrollWidth - legScroll.clientWidth - legScroll.scrollLeft > 1);
+    };
+    syncFade();
+    legScroll.addEventListener("scroll", syncFade, { passive: true });
+  }
+
+  const track = document.getElementById("tabTrack");
+  const pill = document.getElementById("tabPill");
+  if (track && pill) {
+    const activeEl = track.querySelector(".tab-btn.active");
+    if (activeEl) {
+      pill.style.left = `${activeEl.offsetLeft}px`;
+      pill.style.width = `${activeEl.offsetWidth}px`;
+    }
+  }
+
+  const labelMap = {
+    legacy: "展开面板（现状）",
+    "sub-center": "展开面板（方案 1A · 刘海下方居中通栏）",
+    "sub-left": "展开面板（方案 1B · 刘海下方左对齐）",
+    more: "展开面板（方案 2 · 单行 + 更多菜单）",
+  };
+  cap.innerHTML = `<b>${labelMap[state.mode]}</b><small>宽 ${state.panelWidth}px × 高 ${panelH}px · 刘海 U 形${devColor ? "设备高亮保留" : "发丝细线"}</small>`;
+}
+
+function renderSummary() {
+  const isSub = state.mode === "sub-center" || state.mode === "sub-left";
+  document.getElementById("grpSubOpts").classList.toggle("dim", !isSub);
+  document.getElementById("grpLeftWing").classList.toggle("dim", !isSub);
+
+  const sideAvail = Math.round((state.panelWidth - 36 - (NOTCH_W + 16)) / 2);
+  const fullAvail = state.panelWidth - 36;
+  const bar = document.getElementById("summaryBar");
+  if (state.mode === "legacy") {
+    bar.innerHTML = `
+      <div>当前左翼 Tab 可用宽仅 <b>${sideAvail}px</b>，塞不下 <b>${state.count}</b> 个页面，只能裁切 + 盲滚（左侧甚至无渐隐硬切）。</div>
+      <span class="badge-tag warn">已溢出裁切</span>
+    `;
+  } else if (isSub) {
+    bar.innerHTML = `
+      <div>Tab 栏独享完整 <b>${fullAvail}px</b> 宽度，<b>${state.count}</b> 个页面全部一眼直达；面板仅增高 <b>+34px</b>，刘海发光内圈周围干净不压卡片。</div>
+      <span class="badge-tag good">零滚动 · 全展示</span>
+    `;
+  } else {
+    bar.innerHTML = `
+      <div>保持原高度 <b>344px</b>，取消了横滚裁切；但左翼仅 <b>${sideAvail}px</b>，超出部分仍需点开「···」菜单二次切换。</div>
+      <span class="badge-tag warn">不增高 · 需二级菜单</span>
+    `;
+  }
+}
+
+function bindSeg(id, key, parse = (v) => v) {
+  const root = document.getElementById(id);
+  root.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      root.querySelectorAll("button").forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+      state[key] = parse(btn.dataset.v);
+      state.moreOpen = false;
+      renderAll();
+    });
+  });
+}
+
+function renderAll() {
+  renderCollapsed();
+  renderExpanded();
+  renderSummary();
+}
+
+bindSeg("ctrlMode", "mode");
+bindSeg("ctrlCount", "count", Number);
+bindSeg("ctrlActiveLabel", "activeLabel");
+bindSeg("ctrlLeftWing", "leftWing");
+bindSeg("ctrlWidth", "panelWidth", Number);
+bindSeg("ctrlDevice", "device");
+bindSeg("ctrlCollapsedRing", "collapsedRing");
+bindSeg("ctrlTheme", "theme");
+bindSeg("ctrlNotchTint", "notchTint");
+
+document.addEventListener("click", () => {
+  if (state.moreOpen) {
+    state.moreOpen = false;
+    document.getElementById("morePop")?.classList.remove("open");
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>
