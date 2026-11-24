@@ -9,7 +9,6 @@ $routes = @{
     copilot = 'copilot/permission-request'
     trae = 'trae/pre-tool-use'
     traeCn = 'traeCn/pre-tool-use'
-    antigravity = 'antigravity/pre-tool-use'
     droid = 'droid/pre-tool-use'
     dsh = 'dsh/pre-tool-use'
     cursor = 'cursor/permission'

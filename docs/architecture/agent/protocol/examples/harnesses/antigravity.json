@@ -49,15 +49,12 @@
     "file": "config/hooks.json"
   },
   "approval": {
-    "reply": "adapter",
-    "tools": [
-      "run_command"
-    ]
+    "reply": "none"
   },
   "signals": {
     "running": "hook",
     "done": "hook",
-    "waiting": "approval",
+    "waiting": null,
     "replyMarker": true,
     "exited": "timeout"
   },
@@ -82,7 +79,7 @@
     },
     "extract": null,
     "hooks": true,
-    "approval": "reverseForward",
+    "approval": null,
     "replyMarker": true
   },
   "focus": {

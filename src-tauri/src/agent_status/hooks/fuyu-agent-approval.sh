@@ -17,7 +17,6 @@ case "$agent" in
   copilot) route=copilot/permission-request ;;
   trae) route=trae/pre-tool-use ;;
   traeCn) route=traeCn/pre-tool-use ;;
-  antigravity) route=antigravity/pre-tool-use ;;
   droid) route=droid/pre-tool-use ;;
   dsh) route=dsh/pre-tool-use ;;
   cursor) route=cursor/permission ;;

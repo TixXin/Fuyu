@@ -351,7 +351,6 @@ fn remote_uninstall_strips_claude_and_antigravity_hooks_without_touching_user_en
         path: "claude/permission-request".into(),
         question_path: "claude/ask-user-question".into(),
         activity_path: "claude/activity".into(),
-        antigravity_path: "antigravity/pre-tool-use".into(),
     };
     let installed_only = with_remote_hooks(r#"{"model":"opus"}"#, Some(&approval)).unwrap();
     let cleaned_only: Value = serde_json::from_str(&without_remote_hooks(&installed_only).unwrap()).unwrap();
@@ -368,11 +367,7 @@ fn remote_uninstall_strips_claude_and_antigravity_hooks_without_touching_user_en
         json!({"model": "opus", "hooks": {"Notification": [{"hooks": [{"type": "command", "command": "notify-send hi"}]}]}})
     );
 
-    let ag_installed = antigravity_remote::with_remote_hooks(
-        r#"{"mine":{"enabled":true}}"#,
-        Some(&approval),
-    )
-    .unwrap();
+    let ag_installed = antigravity_remote::with_remote_hooks(r#"{"mine":{"enabled":true}}"#).unwrap();
     let ag_cleaned: Value =
         serde_json::from_str(&antigravity_remote::without_remote_hooks(&ag_installed).unwrap()).unwrap();
     assert_eq!(ag_cleaned, json!({"mine": {"enabled": true}}));
