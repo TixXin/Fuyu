@@ -11,6 +11,7 @@ import {
   measuredLine,
   selectContributed,
   shownLine,
+  urgentPopupPage,
   visibleLines,
 } from "../../src/features/plugin-kernel/islandContributions.ts";
 
@@ -159,4 +160,14 @@ test("an unchanged glow and playback keep their identity so the notch ring does 
   const moved = aggregateContributions([[{ kind: "playback", startedAt: 1500, durationMs: 200000 }]], true, second);
   assert.equal(moved.playback.startedAt, 1500);
   assert.equal(moved.glow, null);
+});
+
+test("an urgent popup claims default expansion until it clears", () => {
+  const idle = aggregateContributions([[{ kind: "popup", page: "agents", open: false, urgent: false }]], true);
+  assert.equal(urgentPopupPage(idle.popups), null);
+  const waiting = aggregateContributions([[{ kind: "popup", page: "agents", open: false, urgent: true }]], true, idle);
+  assert.equal(urgentPopupPage(waiting.popups), "agents");
+  assert.notEqual(waiting.popups, idle.popups);
+  const done = aggregateContributions([[{ kind: "popup", page: "agents", open: false, urgent: false }]], true, waiting);
+  assert.equal(urgentPopupPage(done.popups), null);
 });
