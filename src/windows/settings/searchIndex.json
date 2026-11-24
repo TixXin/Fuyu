@@ -1212,7 +1212,7 @@
       "zh-CN": {
         "group": "刘海",
         "title": "什么时候亮",
-        "description": "亮在内圈，样式是「关」也会亮：摄像头绿、麦克风橙，新消息用来源软件的颜色，Agent 等你时橙色闪。外框开着时跟着变色。",
+        "description": "亮在内圈，样式是「关」也会亮：摄像头绿、麦克风橙（仅展开时），新消息用来源软件的颜色，Agent 等你时橙色闪。外框开着时跟着变色。",
         "options": [
           "摄像头和麦克风",
           "新消息和 Agent"
@@ -1221,7 +1221,7 @@
       "en": {
         "group": "Notch",
         "title": "Light up for",
-        "description": "The ring lights up even when its style is Off: green for the camera, orange for the mic, the app's colour for a message, pulsing orange while an agent waits. The border changes colour when it is on.",
+        "description": "The ring lights up even when its style is Off: green for the camera, orange for the mic (when expanded), the app's colour for a message, pulsing orange while an agent waits. The border changes colour when it is on.",
         "options": [
           "Camera and mic",
           "Messages and agents"

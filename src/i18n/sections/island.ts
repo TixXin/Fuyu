@@ -40,6 +40,8 @@ export type IslandText = {
   sideMore: (count: number) => string;
   overflowMore: (count: number) => string;
   overflowPanel: string;
+  headerMore: (count: number) => string;
+  headerMoreMenu: string;
   deviceInUse: Record<"camera" | "microphone", (apps: string) => string>;
   deviceAppSeparator: string;
   levelPopup: { volume: (percent: number) => string; brightness: (percent: number) => string; muted: string; mutedShort: string };
@@ -112,6 +114,8 @@ export const zhCN: IslandText = {
   sideMore: (count) => `还有 ${count} 项，展开查看`,
   overflowMore: (count) => `还有 ${count} 项放不下，点开查看`,
   overflowPanel: "放不下的项目",
+  headerMore: (count) => `更多页面（还有 ${count} 个）`,
+  headerMoreMenu: "更多页面",
   deviceInUse: {
     camera: (apps) => (apps ? `${apps} 正在使用摄像头，点击打开隐私设置` : "摄像头正在使用，点击打开隐私设置"),
     microphone: (apps) => (apps ? `${apps} 正在使用麦克风，点击打开隐私设置` : "麦克风正在使用，点击打开隐私设置"),
@@ -190,6 +194,8 @@ export const en: IslandText = {
   sideMore: (count) => `${count} more, open the island to see them`,
   overflowMore: (count) => (count === 1 ? "1 more item that did not fit" : `${count} more items that did not fit`),
   overflowPanel: "Items that did not fit",
+  headerMore: (count) => (count === 1 ? "More pages (1 more)" : `More pages (${count} more)`),
+  headerMoreMenu: "More pages",
   deviceInUse: {
     camera: (apps) => (apps ? `${apps} using the camera; click for privacy settings` : "Camera in use; click for privacy settings"),
     microphone: (apps) => (apps ? `${apps} using the microphone; click for privacy settings` : "Microphone in use; click for privacy settings"),

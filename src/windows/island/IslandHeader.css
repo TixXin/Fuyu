@@ -251,13 +251,13 @@
   transition: background var(--motion-base) var(--motion-ease);
 }
 
-.island__title .island__agent-button .island__agent-status-icon {
+.island__header .island__agent-button .island__agent-status-icon {
   color: var(--text-2);
   filter: none;
 }
 
-.island__title .island__agent-button:hover .island__agent-status-icon,
-.island__title .island__agent-button--active .island__agent-status-icon {
+.island__header .island__agent-button:hover .island__agent-status-icon,
+.island__header .island__agent-button--active .island__agent-status-icon {
   color: var(--text-1);
 }
 
