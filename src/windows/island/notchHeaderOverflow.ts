@@ -2,6 +2,14 @@ export const NOTCH_TAB_WIDTH = 28;
 export const NOTCH_TEXT_TAB_ESTIMATE = 54;
 export const NOTCH_MORE_WIDTH = 42;
 export const NOTCH_TAB_GAP = 2;
+export const NOTCH_MENU_MAX_HEIGHT = 240;
+export const NOTCH_MENU_MIN_HEIGHT = 44;
+export const NOTCH_MENU_INSET = 8;
+
+export function notchHeaderMenuMaxHeight(islandBottom: number, menuTop: number, inset = NOTCH_MENU_INSET) {
+  if (!(islandBottom > menuTop + inset)) return NOTCH_MENU_MAX_HEIGHT;
+  return Math.min(NOTCH_MENU_MAX_HEIGHT, Math.max(NOTCH_MENU_MIN_HEIGHT, Math.floor(islandBottom - menuTop - inset)));
+}
 
 export function splitNotchHeaderTabs(
   availableWidth: number,

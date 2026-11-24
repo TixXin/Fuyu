@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { fitPill } from "./collapsedOverflow";
 import { MAX_FITTED_COLLAPSED_WIDTH } from "./layout";
-import { BAR_UNIT, boxWidth, flexBoxes, isMoreChip, isOpenButton, MORE_CHIP_WIDTH, px, spanOf, useOverflowHold, type CollapsedOverflowState, type OverflowUnit } from "./useCollapsedOverflow";
+import { BAR_UNIT, boxWidth, createUnitWidthTracker, flexBoxes, isMoreChip, isOpenButton, measureBarUnits, MORE_CHIP_WIDTH, px, seedUnitWidths, useOverflowHold, type CollapsedOverflowState, type OverflowUnit, type UnitWidthTracker } from "./useCollapsedOverflow";
 
 export const PILL_TEXT_FLOOR = 160;
 
@@ -45,6 +45,8 @@ const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b
 export function usePillOverflow(enabled: boolean, active: boolean, units: readonly OverflowUnit[], barRef: RefObject<HTMLElement | null>, { auto, keepChip }: { auto: boolean; keepChip: boolean }): CollapsedOverflowState {
   const [state, setState] = useState(NONE);
   const widthsRef = useRef(new Map<string, number>());
+  const trackerRef = useRef<UnitWidthTracker | null>(null);
+  if (trackerRef.current === null) trackerRef.current = createUnitWidthTracker();
   const unitsRef = useRef(units);
   const stateRef = useRef(state);
   useLayoutEffect(() => {
@@ -66,8 +68,12 @@ export function usePillOverflow(enabled: boolean, active: boolean, units: readon
     }
     const bar = barRef.current;
     if (!active || !bar) return;
+    const tracker = trackerRef.current!;
+    let retryTimer: number | undefined;
 
     const evaluate = () => {
+      window.clearTimeout(retryTimer);
+      retryTimer = undefined;
       if (bar.clientWidth === 0) return;
       const current = stateRef.current;
       const measured = measureBar(bar);
@@ -75,13 +81,16 @@ export function usePillOverflow(enabled: boolean, active: boolean, units: readon
       const widths = widthsRef.current;
       const known = new Set(list.map((unit) => unit.key));
       for (const key of [...widths.keys()]) if (!known.has(key)) widths.delete(key);
-      for (const node of bar.querySelectorAll(`[${BAR_UNIT}]`)) widths.set(node.getAttribute(BAR_UNIT) ?? "", spanOf(flexBoxes(node.children), measured.gap));
-      const pack = (room: number) => fitPill(list.map((unit) => widths.get(unit.key) ?? 0), room - measured.reserved, measured.gap, MORE_CHIP_WIDTH, { auto, forceChip: keepChip });
       if (!current.fitting) {
-        if (auto && measured.need > measured.widest + 1) setState({ ...NONE, fitting: true, chip: "right" });
+        if (auto && measured.need > measured.widest + 1) {
+          seedUnitWidths(bar, list, widths, measured.gap);
+          setState({ ...NONE, fitting: true, chip: "right" });
+        }
         return;
       }
-      const fit = pack(measured.width);
+      const { retryIn } = measureBarUnits([{ root: bar, gap: measured.gap }], widths, tracker);
+      if (retryIn !== null) retryTimer = window.setTimeout(evaluate, Math.ceil(retryIn) + 1);
+      const fit = fitPill(list.map((unit) => widths.get(unit.key) ?? 0), measured.width - measured.reserved, measured.gap, MORE_CHIP_WIDTH, { auto, forceChip: keepChip });
       const shelved = new Set<string>();
       fit.away.forEach((away, index) => {
         if (away) for (const id of list[index].ids) shelved.add(id);
@@ -91,11 +100,14 @@ export function usePillOverflow(enabled: boolean, active: boolean, units: readon
     };
 
     evaluate();
-    if (typeof ResizeObserver === "undefined") return;
+    if (typeof ResizeObserver === "undefined") return () => window.clearTimeout(retryTimer);
     const observer = new ResizeObserver(evaluate);
     observer.observe(bar);
     for (const node of bar.querySelectorAll(`:scope > *, [${BAR_UNIT}] > *, .island__collapsed-fit-inner`)) observer.observe(node);
-    return () => observer.disconnect();
+    return () => {
+      window.clearTimeout(retryTimer);
+      observer.disconnect();
+    };
   }, [enabled, active, signature, state, barRef, auto, keepChip]);
 
   useOverflowHold(state.fitting);

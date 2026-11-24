@@ -1,4 +1,4 @@
-import { act, StrictMode, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { act, StrictMode, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
@@ -53,17 +53,24 @@ let clockWidth = 44;
 const clockWidthListeners = new Set<() => void>();
 const subscribeClockWidth = (listener: () => void) => (clockWidthListeners.add(listener), () => { clockWidthListeners.delete(listener); });
 const setClockWidth = (next: number) => { clockWidth = next; clockWidthListeners.forEach((listener) => listener()); };
-const clockChip = (city: string) => function ClockChip() {
+const clockChip = (city: string, asyncMount = false) => function ClockChip() {
   const width = useSyncExternalStore(subscribeClockWidth, () => clockWidth);
+  const [ready, setReady] = useState(!asyncMount);
+  useEffect(() => {
+    if (!asyncMount) return;
+    const timer = setTimeout(() => setReady(true), 15);
+    return () => clearTimeout(timer);
+  }, []);
+  if (!ready) return null;
   return <span className="test-clock-chip" style={{ display: "inline-block", width, whiteSpace: "nowrap", fontSize: 12 }}>{city}</span>;
 };
-function addClocks() {
+function addClocks(asyncMount = false) {
   const removers: (() => void)[] = [];
   for (const [index, city] of ["TYO", "LON", "NYC", "SYD", "PAR"].entries()) {
     const owner = `@test/clock-${city.toLowerCase()}`;
     const page = index === 4 ? undefined : `clock-page-${city}`;
     if (page) removers.push(registry.add("island.page/v1", { id: page, component: ClocksPage, title: city }, owner, { external: true }));
-    removers.push(registry.add("island.collapsed/v1", { id: `clock-${index + 1}`, opens: page, label: { "zh-CN": `时钟 ${city}`, en: `Clock ${city}` }, component: clockChip(city) }, owner, { external: true }));
+    removers.push(registry.add("island.collapsed/v1", { id: `clock-${index + 1}`, opens: page, label: { "zh-CN": `时钟 ${city}`, en: `Clock ${city}` }, component: clockChip(city, asyncMount) }, owner, { external: true }));
   }
   return () => removers.forEach((remove) => remove());
 }
@@ -160,10 +167,15 @@ async function runChecks() {
     await act(async () => { headerMore!.click(); });
     const moreMenu = document.querySelector<HTMLElement>(".island-header-more-menu");
     const moreItems = [...(moreMenu?.querySelectorAll<HTMLButtonElement>(".island-header-more-menu__item") ?? [])];
-    check(moreMenu && moreItems.length >= 2 && box(moreMenu).top >= box(header).bottom, "点「··· +N」弹出隐藏页面菜单，列出放不下的页面");
+    check(moreMenu && moreItems.length >= 2 && box(moreMenu).top >= box(header).bottom && box(moreMenu).bottom <= box(island()).bottom - 4, "点「··· +N」弹出隐藏页面菜单，列出放不下的页面且不探出展开面板底部");
     const pickedPage = moreItems[0]!.dataset.page;
     await act(async () => { moreItems[0]!.click(); });
     check(!document.querySelector(".island-header-more-menu") && last(changedPages) === pickedPage, "在菜单里点一项后切换到对应页面并收起菜单");
+    await act(async () => { headerMore!.click(); });
+    await set({ expanded: false });
+    check(!document.querySelector(".island-header-more-menu"), "岛屿收起时隐藏页面菜单随之关闭，不悬空留着");
+    await set({ expanded: true });
+    await settleTransitions();
     await act(async () => { removeExpandedClocks(); });
     await settleTransitions();
     check(!document.querySelector(".island__header-more"), "页面少了以后「··· +N」消失");
@@ -312,6 +324,11 @@ async function runChecks() {
     } });
     await set({ notch: NOTCH });
     await settleTransitions();
+    await act(async () => { removeClocks(); });
+    await settleTransitions();
+    await act(async () => { removeClocks = addClocks(true); });
+    await settleTransitions();
+    check(clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]") && Boolean(chip()), "异步挂起加载的插件在刘海两翼迁移时稳定收进「+N」，不闪不挤扁");
     await act(async () => { removeClocks(); });
     await settleTransitions();
     check(!document.querySelector(".island__more-chip, .island__bar-unit") && Math.abs(box(island()).height - NOTCH.height) < 1, "项目少了以后「+N」消失，收起条回到原来的结构");
