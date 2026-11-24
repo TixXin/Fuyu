@@ -139,7 +139,7 @@ test("expand trigger, hover delays and max panel height default for older settin
   assert.equal(normalizeSettings({ autoTuckRetractDelayMs: -1 }).autoTuckRetractDelayMs, 0);
   assert.equal(normalizeSettings({ hoverCollapseDelayMs: 9_000 }).hoverCollapseDelayMs, 2_000);
   assert.equal(normalizeSettings({ hoverCollapseDelayMs: 0 }).hoverCollapseDelayMs, 0);
-  assert.equal(normalizeSettings({ maxPanelHeight: 100 }).maxPanelHeight, 360);
+  assert.equal(normalizeSettings({ maxPanelHeight: 100 }).maxPanelHeight, 320);
   assert.equal(normalizeSettings({ maxPanelHeight: 999 }).maxPanelHeight, 999, "a tall screen keeps a panel taller than the old 640 cap");
   assert.equal(normalizeSettings({ maxPanelHeight: 1e9 }).maxPanelHeight, 4320);
   assert.equal(normalizeSettings({ maxPanelHeight: 400.6 }).maxPanelHeight, 401);
@@ -217,7 +217,7 @@ test("first launch uses the maintainer's layout, while saved settings missing a 
 
 test("first launch takes the maintainer's settings of 0.3.5-beta.5; saved settings without a field keep the earlier default", () => {
   const changed = {
-    topFilletRadius: [8, 8], islandCornerRadius: [24, 30], maxPanelHeight: [360, 490], panelWidth: [800, 560],
+    topFilletRadius: [8, 8], islandCornerRadius: [24, 30], maxPanelHeight: [320, 490], panelWidth: [800, 560],
     pulseBrightness: [160, 100], islandBackgroundColor: ["#030303", "#000000"], collapsedDark: [false, false],
     agentAlertSeconds: [3, 5], agentRemindSeconds: [0, 60], carryOverIncompleteTodos: [false, true],
     autoTuck: [false, false], autoTuckSeconds: [120, 30], messageNotice: ["panel", "line"],
