@@ -1,13 +1,18 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_CONFIG, type WeatherConfig } from "./config.ts";
-import { METHODS, TOPICS, type WeatherState } from "./types.ts";
+import { METHODS, TOPICS, type WeatherPlace, type WeatherState } from "./types.ts";
 
 const INITIAL: WeatherState = {
-  config: { ...DEFAULT_CONFIG },
+  config: { ...DEFAULT_CONFIG, cities: [] },
+  activeCityId: "",
   place: null,
   forecast: null,
+  aqi: null,
   fetchedAt: null,
+  primaryPlace: null,
+  primaryForecast: null,
+  primaryAqi: null,
   loading: false,
   problem: null,
   updatedAt: 0,
@@ -51,6 +56,14 @@ export function useWeather(ctx: Context) {
     };
   }, [ctx, take]);
 
+  const callState = useCallback(
+    (method: string, params?: unknown) => {
+      setError(null);
+      ctx.host.call<WeatherState>(method, params).then(take, (reason: unknown) => setError(errorText(reason)));
+    },
+    [ctx, take],
+  );
+
   const saveConfig = useCallback(
     (patch: Partial<WeatherConfig>) => {
       setError(null);
@@ -60,10 +73,27 @@ export function useWeather(ctx: Context) {
     [ctx, take],
   );
 
-  const refresh = useCallback(() => {
-    setError(null);
-    ctx.host.call<WeatherState>(METHODS.refresh).then(take, (reason: unknown) => setError(errorText(reason)));
-  }, [ctx, take]);
+  const refresh = useCallback(() => callState(METHODS.refresh), [callState]);
 
-  return { state, error, saveConfig, refresh };
+  const searchCities = useCallback(async (query: string): Promise<WeatherPlace[]> => {
+    const res = await ctx.host.call<{ results?: WeatherPlace[] }>(METHODS.searchCities, { query });
+    return Array.isArray(res?.results) ? res.results : [];
+  }, [ctx]);
+
+  const addCity = useCallback((place: WeatherPlace) => callState(METHODS.addCity, { place }), [callState]);
+  const removeCity = useCallback((id: string) => callState(METHODS.removeCity, { id }), [callState]);
+  const setPrimaryCity = useCallback((id: string) => callState(METHODS.setPrimaryCity, { id }), [callState]);
+  const selectCity = useCallback((id: string) => callState(METHODS.selectCity, { id }), [callState]);
+
+  return {
+    state,
+    error,
+    saveConfig,
+    refresh,
+    searchCities,
+    addCity,
+    removeCity,
+    setPrimaryCity,
+    selectCity,
+  };
 }
