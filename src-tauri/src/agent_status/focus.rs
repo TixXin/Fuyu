@@ -152,6 +152,7 @@ pub(super) struct FocusSteps {
     pub(super) tmux_selected: bool,
     pub(super) mac_tab: Option<bool>,
     pub(super) wt_selected: bool,
+    pub(super) antigravity_selected: bool,
     pub(super) editor_sent: bool,
     pub(super) app_link_sent: bool,
 }
@@ -159,6 +160,7 @@ pub(super) struct FocusSteps {
 pub(super) fn is_exact_focus(app: &str, steps: &FocusSteps) -> bool {
     steps.orca_switched
         || steps.app_link_sent
+        || steps.antigravity_selected
         || steps.wezterm_selected
         || steps.wt_selected
         || steps.editor_sent
@@ -331,9 +333,17 @@ pub(super) fn focus_session(
         steps.wt_selected = window_focus::select_terminal_tab(&focused, title);
         log.note(if steps.wt_selected { "wt-tab=selected" } else { "wt-tab=none" });
     }
+    if let Some(id) = session_id.filter(|_| provider == antigravity::PROVIDER && antigravity_focus::is_desktop_app(&focused.app)) {
+        steps.antigravity_selected = antigravity_focus::select_session(&focused, id, folder.as_deref());
+        log.note(if steps.antigravity_selected {
+            "antigravity-session=selected"
+        } else {
+            "antigravity-session=none"
+        });
+    }
     let mut missing_extension = None;
     let is_native_trae = matches!(provider, trae::PROVIDER | trae::CN_PROVIDER);
-    if !is_native_trae {
+    if !is_native_trae && !steps.antigravity_selected {
         if let (true, Ok(home_dir)) = (focused.in_front, windows_home_dir()) {
             let shown = editor_terminal::show_session_terminal(&home_dir, &focused.app, &chain, title);
             match shown {
@@ -405,6 +415,7 @@ mod tests {
     #[test]
     fn distinguishes_exact_tab_focus_from_window_only_focus() {
         assert!(!is_exact_focus("antigravity", &FocusSteps { has_chain: true, ..FocusSteps::default() }));
+        assert!(is_exact_focus("antigravity", &FocusSteps { antigravity_selected: true, ..FocusSteps::default() }));
         assert!(!is_exact_focus("claude", &FocusSteps { has_chain: true, ..FocusSteps::default() }));
         assert!(!is_exact_focus("codex", &FocusSteps { has_chain: true, ..FocusSteps::default() }));
         assert!(!is_exact_focus("ghostty", &FocusSteps { has_chain: true, mac_tab: Some(false), ..FocusSteps::default() }));

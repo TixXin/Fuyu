@@ -20,7 +20,8 @@ const baseSession = {
 test("window-only hint applies to desktop app hosts and hook-only desktop providers", () => {
   assert.equal(focusesWindowOnly({ provider: "claudeCode", host: { name: "Claude", exe: null, kind: "app" } }), true);
   assert.equal(focusesWindowOnly({ provider: "codex", host: { name: "Codex", exe: null, kind: "app" } }), true);
-  assert.equal(focusesWindowOnly({ provider: "antigravity", host: null }), true);
+  assert.equal(focusesWindowOnly({ provider: "antigravity", host: null }), false);
+  assert.equal(focusesWindowOnly({ provider: "antigravity", host: { name: "Antigravity", exe: null, kind: "app" } }), false);
   assert.equal(focusesWindowOnly({ provider: "antigravity", host: { name: "Ghostty", exe: "/Applications/Ghostty.app", kind: "terminal" } }), false);
   assert.equal(focusesWindowOnly({ provider: "trae", host: { name: "Trae", exe: null, kind: "editor" } }), true);
   assert.equal(focusesWindowOnly({ provider: "workbuddy", host: null }), false);

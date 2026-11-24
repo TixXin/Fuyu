@@ -17,6 +17,8 @@ extern "C" {
     fn AXUIElementSetAttributeValue(element: *const CFType, attribute: *const CFString, value: *const CFType) -> i32;
     fn AXUIElementPerformAction(element: *const CFType, action: *const CFString) -> i32;
     fn AXValueGetValue(value: *const CFType, kind: u32, out: *mut core::ffi::c_void) -> u8;
+    fn CFGetTypeID(cf: *const CFType) -> usize;
+    fn CFURLGetTypeID() -> usize;
 }
 
 const AX_VALUE_POINT: u32 = 1;
@@ -127,6 +129,9 @@ impl Element {
 
     pub(crate) fn url_path(&self, name: &str) -> Option<String> {
         let value = attribute(&self.0, name)?;
+        if unsafe { CFGetTypeID(&*value) != CFURLGetTypeID() } {
+            return None;
+        }
         let url: &NSURL = unsafe { &*(CFRetained::as_ptr(&value).as_ptr() as *const NSURL) };
         Some(url.path()?.to_string())
     }

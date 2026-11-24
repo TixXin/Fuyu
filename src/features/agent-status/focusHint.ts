@@ -16,10 +16,10 @@ function clip(value: string) {
 }
 
 export function focusesWindowOnly(session: Pick<AgentSessionSummary, "provider" | "host" | "remoteHost">): boolean {
-  if (session.remoteHost || session.provider === "workbuddy") return false;
+  if (session.remoteHost || session.provider === "workbuddy" || session.provider === "antigravity") return false;
   if (WINDOW_ONLY_PROVIDERS.has(session.provider)) return true;
   if (session.host) return session.host.kind === "app";
-  return session.provider === "antigravity";
+  return false;
 }
 
 export function sessionHoverLines(
