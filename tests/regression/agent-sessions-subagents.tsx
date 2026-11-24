@@ -10,10 +10,10 @@ type Context = { root: Root; fixture: HTMLElement; sessions: AgentSessionSummary
 
 const settle = (ms = 30) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
 
-const renderer = (root: Root) => async (list: AgentSessionSummary[], view: AgentSessionView = "list") => {
+const renderer = (root: Root) => async (list: AgentSessionSummary[], view: AgentSessionView = "focused") => {
   await act(async () => {
     root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={list} hostDisplay="both" view={view}
-      removal={view === "list" ? undefined : { remove: () => undefined, removed: null, undo: () => undefined }} /></I18nProvider></StrictMode>);
+      removal={view === "focused" ? undefined : { remove: () => undefined, removed: null, undo: () => undefined }} /></I18nProvider></StrictMode>);
     await new Promise((resolve) => setTimeout(resolve, 30));
   });
 };
@@ -59,9 +59,9 @@ export async function checkSubagents({ root, fixture, sessions, check, chromeHei
     && rows[0].querySelector(".agent-subagent__tag")?.textContent === "后台"
     && rows[0].querySelector(".agent-subagent__time")?.textContent?.startsWith("2 分"), `每个子 Agent 一行：描述、后台标记、当前工具、用时：${rows[0].textContent}`);
   check(rows[1].querySelector(".agent-subagent__thinking")?.textContent === "思考中" && !rows[1].querySelector(".agent-subagent__tag"), "没在调用工具的子 Agent 写思考中");
-  const firstBox = first.querySelector(".agent-session__title")!.getBoundingClientRect();
+  const firstBox = first.querySelector(".agent-v__title")!.getBoundingClientRect();
   const rowBox = rows[0].getBoundingClientRect();
-  check(rowBox.left > firstBox.left - 1 && rowBox.top > first.querySelector(".agent-session")!.getBoundingClientRect().bottom - 8, "子 Agent 缩进在父行标题下面");
+  check(rowBox.top > first.querySelector(".agent-session")!.getBoundingClientRect().bottom - 8 && firstBox.width > 0, "子 Agent 列在父行下面");
   check(below.getAnimations().some((animation) => animation.playState === "running") && Math.abs(below.getBoundingClientRect().top - belowTop) < 4,
     `展开的一刻下面的会话留在原处，带着动画往下平移，而不是跳过去：${belowTop} → ${below.getBoundingClientRect().top}`);
   await settle(300);
@@ -73,7 +73,7 @@ export async function checkSubagents({ root, fixture, sessions, check, chromeHei
   await render(withAgents(sampleSubagents(now).slice(0, 1)));
   check(document.querySelectorAll(".agent-subagent").length === 1 && toggle()?.textContent === "1 个子 Agent", "跑完的子 Agent 自动从列表里消失");
   await render(withAgents([]));
-  check(!toggle() && first.isConnected && items()[0].querySelector(".agent-session__meta")?.textContent?.includes("2 个子 Agent"), "子 Agent 都跑完后按钮消失，只剩原来的数量");
+  check(!toggle() && first.isConnected && items()[0].textContent?.includes("2 个子 Agent"), "子 Agent 都跑完后按钮消失，只剩原来的数量");
   await render(withAgents(sampleSubagents(now)));
   check(toggle()?.getAttribute("aria-expanded") === "false", "之后再有子 Agent 时仍默认收起");
   await act(async () => { toggle()!.click(); });
@@ -89,24 +89,18 @@ export async function checkSubagentCards({ root, sessions, check }: Pick<Context
   const render = renderer(root);
   const withAgents = (agents: AgentSubagent[]) => [{ ...sessions[0], subagentList: agents }, ...sessions.slice(1)];
   const panel = () => document.querySelector<HTMLElement>(".agent-sessions")!;
-  await render(withAgents(sampleSubagents(now)), "cards");
-  const card = () => items()[0].querySelector<HTMLElement>(".agent-card")!;
+  await render(withAgents(sampleSubagents(now)), "bento");
+  const card = () => document.querySelector<HTMLElement>('[data-session-key="claudeCode:a"] .agent-card')!;
   check(toggle()?.textContent === "2 个子 Agent" && !toggle()!.closest(".agent-card") && !card().textContent?.includes("子 Agent"),
-    "卡片视图在卡片下面放同一个按钮，不嵌在卡片里，卡片状态行不再重复写数量");
-  const cardBelow = items()[1];
-  const cardBelowTop = cardBelow.getBoundingClientRect().top;
+    "双列卡片视图在卡片下面放同一个按钮，不嵌在卡片里，不再重复写数量");
   await act(async () => { toggle()!.click(); });
   const cardRows = [...document.querySelectorAll<HTMLLIElement>(".agent-subagent")];
-  check(cardRows.length === 2 && cardRows[0].getBoundingClientRect().top >= card().getBoundingClientRect().bottom, "卡片视图点开后在卡片下面列出子 Agent");
-  const cardBox = card().getBoundingClientRect();
-  const archiveBox = items()[0].querySelector(".agent-session__archive")!.getBoundingClientRect();
-  check(Math.abs((archiveBox.top + archiveBox.bottom) / 2 - (cardBox.top + cardBox.bottom) / 2) < 2, "展开后归档按钮仍在卡片正中，不跟着整块往下掉");
-  await settle(300);
-  check(cardBelow.getBoundingClientRect().top > cardBelowTop + 30 && panel().scrollWidth <= panel().clientWidth, `下面的卡片让出位置，不撑出横向滚动：${cardBelowTop} → ${cardBelow.getBoundingClientRect().top}`);
-  await render(withAgents(sampleSubagents(now)), "compact");
-  check(toggle() && !toggle()!.closest(".agent-card"), "紧凑视图也在卡片下面放按钮");
-  await render(withAgents([]), "cards");
-  check(!toggle() && card().textContent?.includes("2 个子 Agent"), "卡片视图里子 Agent 都跑完后按钮消失，只剩原来的数量");
+  check(cardRows.length === 2 && cardRows[0].getBoundingClientRect().top >= card().getBoundingClientRect().bottom, "双列卡片视图点开后在卡片下面列出子 Agent");
+  check(panel().scrollWidth <= panel().clientWidth, "展开后不撑出横向滚动");
+  await render(withAgents(sampleSubagents(now)), "minimal");
+  check(toggle() && !toggle()!.closest(".agent-session"), "极简视图也在行下面放按钮");
+  await render(withAgents([]), "bento");
+  check(!toggle() && card().textContent?.includes("2 个子 Agent"), "双列卡片视图里子 Agent 都跑完后按钮消失，只剩原来的数量");
 
   await settle(250);
 }

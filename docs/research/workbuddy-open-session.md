@@ -59,6 +59,10 @@ A18 的做法：Cursor 的会话找不到终端进程（编辑器、Agents 窗�
 - 主进程（`app.asar` 的 `dist/main.js`）的 `handleDeepLink` 把窗口拿到前台，把链接经 `deep-link` 消息交给界面；窗口还在加载时先存着，界面用 `deep-link:get-stored` 取。
 - 界面不在安装包里，是本机 language server（`Resources/bin/language_server`，资源是压缩的）在 `127.0.0.1` 上提供的页面。开着应用把 `main.js` 取下来读了：用到 `window.deepLink.onDeepLink` 的只有四处，认的链接是 `antigravity://open?prompt=&project=`（或空主机名，打开首页并预填一个新草稿）、`antigravity://teleport/ai_studio?blob_id=&signature=`（导入 AI Studio 项目）、`antigravity://oauth-success`（登录后刷新插件）和 `antigravity://customizations/marketplaces/<市场>/plugins|skills/<id>`（插件、技能页）。
 - 对话页是应用内路由 `/c/$cascadeId`，没有链接通到它。试发 `antigravity://c/<对话 id>`：窗口拿到前台，停在首页，没打开那条对话。
+- **2026-11-24 补充（Antigravity 2.35.0）：可经无障碍树按 `/c/<对话 id>` 精准切到指定对话。**
+  - Electron 主进程在 2.35.0 仍未提供对话级 `antigravity://` 深链，但在窗口 DOM 中，每个侧边栏对话都是标准链接 `<a href="/c/<conversationId>">`，当前页面 URL 也带有 `/c/<conversationId>`。
+  - macOS：给 Antigravity 进程的 `AXApplication` 设 `AXManualAccessibility = true` 后，Chromium 会暴露 `AXWebArea`（`AXURL` 路径即当前对话 `/c/<id>`）和侧边栏 `AXLandmarkNavigation` 下的各条 `AXLink`（`AXURL` 路径即 `/c/<id>`，支持 `AXPress`），实测 20ms 内定位并瞬间切换对话；若侧边栏收起（`Toggle Sidebar`）或项目分组折叠（`Projects` / `<folder>` 的 `AXExpanded == false`），可先 `AXPress` 展开再点链接。
+  - Windows：同源 Electron 窗口通过 UI Automation 暴露 `Document`（`ValuePattern` 为当前 URL）和 `Navigation` landmark 下的 `Hyperlink`（`ValuePattern` 为链接 URL，`InvokePattern` 触发切换）。
 - 本机没装 Antigravity IDE（VS Code 那一支），没查；它的会话也是只到窗口。
 
 ## 来源

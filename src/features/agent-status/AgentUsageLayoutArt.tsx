@@ -4,6 +4,13 @@ import "./AgentUsageLayoutArt.css";
 const LEVELS = ["low", "medium", "high"] as const;
 
 export function AgentUsageLayoutArt({ layout }: { layout: AgentUsageLayout }) {
+  if (layout === "strip") {
+    return (
+      <span className="usage-art usage-art--strip">
+        {LEVELS.map((level) => <i key={level} className={`usage-art__strip usage-art--${level}`} />)}
+      </span>
+    );
+  }
   if (layout === "chips") {
     return (
       <span className="usage-art usage-art--chips">

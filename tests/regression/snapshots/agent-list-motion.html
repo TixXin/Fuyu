@@ -1,104 +1,134 @@
 <body>
   <div id="fixture">
-    <section aria-label="Agent 会话" class="agent-sessions">
-      <ul class="agent-sessions__list agent-sessions__list--menu">
-        <li data-session-key="claudeCode:e">
-          <span class="island-hover-card__anchor agent-session__hover">
-            <button class="agent-session agent-session--completed agent-session--light-done agent-session--compact" type="button">
-              <span aria-label="已完成" class="agent-session__dot" role="img" title="已完成"></span>
-              <span class="agent-session__main">
-                <span class="agent-session__heading">
-                  <span class="agent-session__title">
-                    <span class="agent-session__project">
-                      e
-                      ·
+    <section aria-label="Agent 会话" class="agent-sessions" data-view="minimal">
+      <div class="agent-sessions__stage">
+        <div class="agent-view agent-view--minimal">
+          <ul class="agent-sessions__list agent-sessions__list--minimal agent-sessions__list--menu">
+            <li data-session-key="claudeCode:e">
+              <span class="island-hover-card__anchor agent-session__hover">
+                <button class="agent-session agent-minimal__row agent-minimal__row--selected agent-session--completed agent-v--light-done agent-session--light-done" type="button">
+                  <span class="agent-v__mark">
+                    <span aria-label="已完成" class="agent-session__dot" role="img" title="已完成"></span>
+                  </span>
+                  <span class="agent-minimal__body">
+                    <span class="agent-minimal__line1">
+                      <span class="agent-minimal__proj">
+                        e
+                      </span>
+                      <span class="agent-v__title">
+                        会话 e
+                      </span>
+                      <span class="agent-v__trailing">
+                        <span class="agent-session__agent">
+                          <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="13" src="/src/assets/brands/claude-code.png" width="13">
+                        </span>
+                        <span class="agent-session__time">
+                          <span class="agent-session__age">
+                            1m
+                          </span>
+                        </span>
+                      </span>
                     </span>
-                    会话 e
                   </span>
-                  <span class="agent-session__agent">
-                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
-                  </span>
-                  <span class="agent-session__time">
-                    <span class="agent-session__age">
-                      1m
-                    </span>
-                  </span>
-                </span>
+                </button>
               </span>
-            </button>
-          </span>
-          <span class="agent-session__more">
-            <button aria-expanded="false" aria-haspopup="menu" aria-label="「会话 e」的更多操作" class="island-list-icon-button" title="「会话 e」的更多操作" type="button">
-              <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-            </button>
-          </span>
-        </li>
-        <li data-session-key="claudeCode:c">
-          <span class="island-hover-card__anchor agent-session__hover">
-            <button class="agent-session agent-session--completed agent-session--light-done agent-session--compact" type="button">
-              <span aria-label="已完成" class="agent-session__dot" role="img" title="已完成"></span>
-              <span class="agent-session__main">
-                <span class="agent-session__heading">
-                  <span class="agent-session__title">
-                    <span class="agent-session__project">
-                      c
-                      ·
-                    </span>
-                    会话 c
-                  </span>
-                  <span class="agent-session__agent">
-                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
-                  </span>
-                  <span class="agent-session__time">
-                    <span class="agent-session__age">
-                      1m
-                    </span>
-                  </span>
-                </span>
+              <span class="agent-session__more">
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="「会话 e」的更多操作" class="island-list-icon-button" title="「会话 e」的更多操作" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
               </span>
-            </button>
-          </span>
-          <span class="agent-session__more">
-            <button aria-expanded="false" aria-haspopup="menu" aria-label="「会话 c」的更多操作" class="island-list-icon-button" title="「会话 c」的更多操作" type="button">
-              <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-            </button>
-          </span>
-        </li>
-        <li data-session-key="claudeCode:a">
-          <span class="island-hover-card__anchor agent-session__hover">
-            <button class="agent-session agent-session--waiting agent-session--light-needs agent-session--compact" type="button">
-              <span aria-label="等你确认" class="agent-session__dot" role="img" title="等你确认"></span>
-              <span class="agent-session__main">
-                <span class="agent-session__heading">
-                  <span class="agent-session__title">
-                    <span class="agent-session__project">
-                      a
-                      ·
-                    </span>
-                    会话 a
+            </li>
+            <li data-session-key="claudeCode:c">
+              <span class="island-hover-card__anchor agent-session__hover">
+                <button class="agent-session agent-minimal__row agent-session--completed agent-v--light-done agent-session--light-done" type="button">
+                  <span class="agent-v__mark">
+                    <span aria-label="已完成" class="agent-session__dot" role="img" title="已完成"></span>
                   </span>
-                  <span class="agent-session__meta">
-                    等待确认
-                  </span>
-                  <span class="agent-session__agent">
-                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
-                  </span>
-                  <span class="agent-session__time">
-                    <span class="agent-session__age">
-                      4m
+                  <span class="agent-minimal__body">
+                    <span class="agent-minimal__line1">
+                      <span class="agent-minimal__proj">
+                        c
+                      </span>
+                      <span class="agent-v__title">
+                        会话 c
+                      </span>
+                      <span class="agent-v__trailing">
+                        <span class="agent-session__agent">
+                          <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="13" src="/src/assets/brands/claude-code.png" width="13">
+                        </span>
+                        <span class="agent-session__time">
+                          <span class="agent-session__age">
+                            1m
+                          </span>
+                        </span>
+                      </span>
                     </span>
                   </span>
-                </span>
+                </button>
               </span>
-            </button>
-          </span>
-          <span class="agent-session__more">
-            <button aria-expanded="false" aria-haspopup="menu" aria-label="「会话 a」的更多操作" class="island-list-icon-button" title="「会话 a」的更多操作" type="button">
-              <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-            </button>
-          </span>
-        </li>
-      </ul>
+              <span class="agent-session__more">
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="「会话 c」的更多操作" class="island-list-icon-button" title="「会话 c」的更多操作" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+              </span>
+            </li>
+            <li data-session-key="claudeCode:a">
+              <span class="island-hover-card__anchor agent-session__hover">
+                <button class="agent-session agent-minimal__row agent-session--waiting agent-v--light-needs agent-session--light-needs agent-card--lively" type="button">
+                  <span class="agent-v__mark">
+                    <span aria-label="等你确认" class="agent-session__dot" role="img" title="等你确认"></span>
+                  </span>
+                  <span class="agent-minimal__body">
+                    <span class="agent-minimal__line1">
+                      <span class="agent-minimal__proj">
+                        a
+                      </span>
+                      <span class="agent-v__title">
+                        会话 a
+                      </span>
+                      <span class="agent-v__trailing">
+                        <span class="agent-session__agent">
+                          <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="13" src="/src/assets/brands/claude-code.png" width="13">
+                        </span>
+                        <span class="agent-session__time">
+                          <span class="agent-session__age">
+                            4m
+                          </span>
+                        </span>
+                      </span>
+                    </span>
+                    <span class="agent-minimal__line2">
+                      <span class="agent-v__activity agent-v__activity--minimal">
+                        <span class="agent-v__verb agent-v__verb--needs">
+                          等待确认
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </button>
+              </span>
+              <span class="agent-session__more">
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="「会话 a」的更多操作" class="island-list-icon-button" title="「会话 a」的更多操作" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+              </span>
+            </li>
+          </ul>
+          <div aria-hidden="true" class="agent-minimal__footer">
+            <span class="agent-minimal__cwd">
+              E:\Projects\e
+            </span>
+            <span class="agent-minimal__keys">
+              <span>
+                <kbd>
+                  ↵
+                </kbd>
+                跳转
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 </body>

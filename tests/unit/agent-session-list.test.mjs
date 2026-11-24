@@ -76,14 +76,17 @@ test("the Agent page follows the AI Agent switch", () => {
 test("Agent page rows and the Agent settings", async () => {
   const { getAgentPageExpandedHeight } = await import("../../src/features/agent-status/islandLayout.ts");
   const { normalizeSettings, DEFAULT_SETTINGS } = await import("../../src/lib/settings/settings.ts");
-  assert.equal(getAgentPageExpandedHeight(3), 316);
+  assert.equal(getAgentPageExpandedHeight(3), 312);
   assert.equal(getAgentPageExpandedHeight(4) - getAgentPageExpandedHeight(3), 80);
-  assert.equal(getAgentPageExpandedHeight(4, 0, "cards") - getAgentPageExpandedHeight(3, 0, "cards"), 68);
-  assert.equal(getAgentPageExpandedHeight(4, 0, "compact") - getAgentPageExpandedHeight(3, 0, "compact"), 38);
-  assert.equal(getAgentPageExpandedHeight(1, 0, "cards"), getAgentPageExpandedHeight(0, 0, "cards") + 62 + 6 - 6 + 6);
-  assert.equal(DEFAULT_SETTINGS.agentSessionView, "cards");
-  assert.equal(normalizeSettings({ agentSessionView: "list" }).agentSessionView, "list");
-  assert.equal(normalizeSettings({ agentSessionView: "tiles" }).agentSessionView, "cards");
+  assert.equal(getAgentPageExpandedHeight(4, 0, "bento") - getAgentPageExpandedHeight(3, 0, "bento"), 80);
+  assert.equal(getAgentPageExpandedHeight(4, 0, "minimal") - getAgentPageExpandedHeight(3, 0, "minimal"), 46);
+  assert.equal(DEFAULT_SETTINGS.agentSessionView, "focused");
+  assert.equal(normalizeSettings({ agentSessionView: "split" }).agentSessionView, "split");
+  assert.equal(normalizeSettings({ agentSessionView: "projects" }).agentSessionView, "projects");
+  assert.equal(normalizeSettings({ agentSessionView: "list" }).agentSessionView, "focused");
+  assert.equal(normalizeSettings({ agentSessionView: "cards" }).agentSessionView, "bento");
+  assert.equal(normalizeSettings({ agentSessionView: "compact" }).agentSessionView, "minimal");
+  assert.equal(normalizeSettings({ agentSessionView: "tiles" }).agentSessionView, "focused");
   assert.equal(DEFAULT_SETTINGS.agentSessionSort, "status");
   assert.equal(normalizeSettings({ agentSessionSort: "firstSeen" }).agentSessionSort, "firstSeen");
   assert.equal(normalizeSettings({ agentSessionGroup: "project" }).agentSessionGroup, "project");

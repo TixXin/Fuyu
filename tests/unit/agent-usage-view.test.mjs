@@ -21,6 +21,7 @@ test("settings saved before the usage options keep showing every window and the 
   assert.equal(normalizeSettings({ agentEmptyStyle: "rainbow" }).agentEmptyStyle, "sleep");
   assert.equal(normalizeSettings({ agentUsageStyle: "ring" }).agentUsageStyle, "ring");
   assert.equal(old.agentUsageLayout, "chips", "settings saved before the layouts open on the one-row chips");
+  assert.equal(normalizeSettings({ agentUsageLayout: "strip" }).agentUsageLayout, "strip");
   assert.equal(normalizeSettings({ agentUsageLayout: "ruler" }).agentUsageLayout, "ruler");
   assert.equal(normalizeSettings({ agentUsageLayout: "grid" }).agentUsageLayout, "chips");
 });

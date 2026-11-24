@@ -88,6 +88,45 @@ fn top_docked_mask_keeps_flush_top_concave_fillets_and_squircle_bottom() {
 
     let png = rasterize_mask_png(&plan).expect("mask PNG encodes");
     assert!(png.starts_with(b"\x89PNG"));
+
+    let decoded = image::load_from_memory(&png).expect("mask PNG decodes").to_rgba8();
+    assert_eq!(decoded.dimensions(), (plan.pixel_width, plan.pixel_height));
+    let fillet_tip_px = 2;
+    assert!(
+        decoded.get_pixel(fillet_tip_px, 0)[3] > 0,
+        "top-left concave fillet wing must be at the top row of the PNG (y=0)"
+    );
+    assert_eq!(
+        decoded.get_pixel(fillet_tip_px, plan.pixel_height - 1)[3],
+        0,
+        "bottom-left outer corner below the fillet must be transparent at the bottom row of the PNG"
+    );
+    let corner_outer_px = ((plan.fillet + 1.0) * 2.0).round() as u32;
+    assert_eq!(
+        decoded.get_pixel(corner_outer_px, plan.pixel_height - 1)[3],
+        0,
+        "outside the bottom-left squircle corner must be transparent at the bottom row of the PNG"
+    );
+    assert_eq!(
+        decoded.get_pixel(corner_outer_px, 1)[3],
+        255,
+        "top body inside the fillet must be opaque at the top row of the PNG"
+    );
+}
+
+#[test]
+fn default_collapsed_scale_top_docked_mask_stays_stretchable_and_aligned() {
+    let spec = NativeGlassSpec {
+        width: 340.0 * 0.89,
+        height: 38.0 * 0.89,
+        bottom_radius: 22.0 * 0.89,
+        fillet_radius: 7.0,
+        ..sample_spec()
+    };
+    let box_width = spec.width + 2.0 * spec.fillet_radius;
+    let plan = build_mask_plan(&spec, box_width, spec.height, 2.0);
+    assert!(plan.key.stretchable, "default 0.89 collapsed island should use cached 9-slice stretching");
+    assert!(plan.top_cap + plan.bottom_cap < plan.logical_height);
 }
 
 #[test]
@@ -100,6 +139,17 @@ fn bottom_and_side_docked_masks_mirror_and_rotate_cleanly() {
         "bottom docked reverse fillet sits at bottom edge"
     );
     assert!(!point_inside_contour(&bottom_plan, 1.0, bottom_plan.logical_height - 7.0));
+    let bottom_png = rasterize_mask_png(&bottom_plan).expect("bottom mask PNG encodes");
+    let bottom_img = image::load_from_memory(&bottom_png).expect("bottom mask PNG decodes").to_rgba8();
+    assert!(
+        bottom_img.get_pixel(2, bottom_plan.pixel_height - 1)[3] > 0,
+        "bottom-docked reverse fillet wing must be at the bottom row of the PNG"
+    );
+    assert_eq!(
+        bottom_img.get_pixel(2, 0)[3],
+        0,
+        "top-left outer corner above a bottom-docked fillet must be transparent at the top row of the PNG"
+    );
 
     let right = NativeGlassSpec {
         left: 776.0,

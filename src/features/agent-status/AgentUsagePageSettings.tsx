@@ -72,7 +72,7 @@ export function AgentUsagePageSettings({ settings, onSettingsChange }: Props) {
             <SettingsChoiceCards<AgentUsageLayout>
               value={settings.agentUsageLayout}
               ariaLabel={text.usageLayout}
-              columns={5}
+              columns={3}
               options={AGENT_USAGE_LAYOUTS.map((value) => ({ value, label: t.agent.usage.layouts[value], hint: text.usageLayoutHints[value], art: <AgentUsageLayoutArt layout={value} /> }))}
               onChange={(agentUsageLayout) => update({ agentUsageLayout })}
             />

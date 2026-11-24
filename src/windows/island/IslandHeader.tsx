@@ -32,6 +32,7 @@ const INTERACTIVE = "button, a, input, textarea, select, label, [role='button'],
 
 type IslandHeaderProps = {
   page: IslandPage;
+  isExpanded?: boolean;
   features: IslandFeatures;
   showTitle: boolean;
   isDetached: boolean;
@@ -53,6 +54,7 @@ type IslandHeaderProps = {
 
 export function IslandHeader({
   page,
+  isExpanded = true,
   features,
   showTitle,
   isDetached,
@@ -267,7 +269,7 @@ export function IslandHeader({
             {visibleNotchTabs.map((entry) => (entry.kind === "agents" ? renderAgentsButton() : renderDot(entry.item)))}
           </div>
           {hiddenMoreItems.length > 0 && (
-            <NotchHeaderMore items={hiddenMoreItems} page={page} buttonRef={setMoreEl} onSelect={onPageChange} />
+            <NotchHeaderMore items={hiddenMoreItems} page={page} isExpanded={isExpanded} buttonRef={setMoreEl} onSelect={onPageChange} />
           )}
         </>
       ) : (

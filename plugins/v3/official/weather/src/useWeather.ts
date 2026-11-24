@@ -13,6 +13,8 @@ const INITIAL: WeatherState = {
   primaryPlace: null,
   primaryForecast: null,
   primaryAqi: null,
+  sourceUsed: null,
+  fallbackFrom: null,
   loading: false,
   problem: null,
   updatedAt: 0,

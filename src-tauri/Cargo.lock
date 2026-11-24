@@ -1739,7 +1739,7 @@ dependencies = [
 
 [[package]]
 name = "fuyu"
-version = "0.3.13"
+version = "0.3.14-beta.1"
 dependencies = [
  "aes",
  "arboard",

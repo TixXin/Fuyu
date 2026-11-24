@@ -2,10 +2,19 @@ export type TemperatureUnit = "celsius" | "fahrenheit";
 export type WindUnit = "kmh" | "ms" | "mph" | "bft";
 export type TimeFormat = "system" | "24" | "12";
 export type BarStyle = "icon" | "text" | "temp";
+export type WeatherSourceId = "auto" | "nmc" | "open-meteo" | "open-meteo-cma" | "metno" | "wttr";
 
 export const HOUR_CHOICES = [6, 12, 24] as const;
 export const REFRESH_CHOICES = [30, 60, 90, 120, 180] as const;
 export const LEAD_CHOICES = [30, 60, 120] as const;
+export const WEATHER_SOURCES: readonly WeatherSourceId[] = [
+  "auto",
+  "nmc",
+  "open-meteo",
+  "open-meteo-cma",
+  "metno",
+  "wttr",
+];
 export const MAX_CITIES = 8;
 export const CONFIG_VERSION = 3;
 
@@ -15,6 +24,9 @@ export interface SavedCity {
   name: string;
   region: string;
   country: string;
+  countryCode?: string;
+  timezone?: string;
+  nmcStationId?: string;
   latitude: number | null;
   longitude: number | null;
 }
@@ -24,6 +36,8 @@ export interface WeatherConfig {
   city: string;
   cities: SavedCity[];
   activeCityId: string;
+  weatherSource: WeatherSourceId;
+  autoFallback: boolean;
   units: TemperatureUnit;
   windUnit: WindUnit;
   timeFormat: TimeFormat;
@@ -50,6 +64,8 @@ export const DEFAULT_CONFIG: WeatherConfig = {
   city: "",
   cities: [],
   activeCityId: "",
+  weatherSource: "auto",
+  autoFallback: true,
   units: "celsius",
   windUnit: "kmh",
   timeFormat: "system",
@@ -123,6 +139,10 @@ function finiteNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function optStr(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
 function normalizeCityItem(item: unknown): SavedCity | null {
   if (!item || typeof item !== "object" || Array.isArray(item)) return null;
   const raw = item as Raw;
@@ -131,19 +151,26 @@ function normalizeCityItem(item: unknown): SavedCity | null {
   if (!name && !query) return null;
   const latitude = finiteNumber(raw.latitude);
   const longitude = finiteNumber(raw.longitude);
-  const hasCoords = latitude !== null && longitude !== null && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+  const hasCoords =
+    latitude !== null && longitude !== null && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
   const id =
     typeof raw.id === "string" && raw.id.trim()
       ? raw.id.trim()
       : hasCoords
         ? coordsId(latitude, longitude)
         : `query:${(query || name).toLowerCase()}`;
+  const countryCode = optStr(raw.countryCode);
+  const timezone = optStr(raw.timezone);
+  const nmcStationId = optStr(raw.nmcStationId);
   return {
     id,
     query: query || name,
     name: name || query,
     region: typeof raw.region === "string" ? raw.region.trim() : "",
     country: typeof raw.country === "string" ? raw.country.trim() : "",
+    ...(countryCode ? { countryCode } : {}),
+    ...(timezone ? { timezone } : {}),
+    ...(nmcStationId ? { nmcStationId } : {}),
     latitude: hasCoords ? latitude : null,
     longitude: hasCoords ? longitude : null,
   };
@@ -189,6 +216,8 @@ export function normalizeConfig(raw: Raw, base: WeatherConfig = DEFAULT_CONFIG):
     city,
     cities,
     activeCityId,
+    weatherSource: pick(raw.weatherSource, WEATHER_SOURCES, base.weatherSource),
+    autoFallback: flag(raw.autoFallback, base.autoFallback),
     units: pick(raw.units, ["celsius", "fahrenheit"], base.units),
     windUnit: pick(raw.windUnit, ["kmh", "ms", "mph", "bft"], base.windUnit),
     timeFormat: pick(raw.timeFormat, ["system", "24", "12"], base.timeFormat),

@@ -1,4 +1,5 @@
 import type { ExtremeKind } from "./alerts.ts";
+import type { WeatherSourceId } from "./config.ts";
 import { currentLocale, type Locale } from "./locale.ts";
 import type { WeatherProblem } from "./types.ts";
 
@@ -45,6 +46,26 @@ const zhCN = {
       ? `${place} 预计 ${time} 前后有${label}（${detail}），提前做好防护`
       : `${place} 预计 ${time} 前后有${label}，提前做好防护`,
   sourceNote: "数据来源：Open-Meteo",
+  sourceLabel: "天气数据源",
+  sourceNames: {
+    auto: "自动选择（国内优先中央气象台）",
+    nmc: "中央气象台（中国官方实况）",
+    "open-meteo": "Open-Meteo（全球）",
+    "open-meteo-cma": "Open-Meteo（中国气象局模式）",
+    metno: "MET Norway（挪威气象局）",
+    wttr: "wttr.in（全球备用）",
+  } as Record<WeatherSourceId, string>,
+  sourceShort: {
+    auto: "自动",
+    nmc: "中央气象台",
+    "open-meteo": "Open-Meteo",
+    "open-meteo-cma": "Open-Meteo (CMA)",
+    metno: "MET Norway",
+    wttr: "wttr.in",
+  } as Record<WeatherSourceId, string>,
+  autoFallback: "当前数据源失败或不可用时自动切换备用源",
+  sourceFooter: (name: string, fallback: boolean) =>
+    fallback ? `数据来源：${name}（已自动切换）` : `数据来源：${name}`,
   placeTitle: "城市和单位",
   placeHint: "没有城市时不联网。搜索后从候选列表里点选，避免同名城市选错；第一个主城市用于收起条、面板组件和提醒。",
   cityLabel: "添加城市",
@@ -140,6 +161,25 @@ const en: typeof zhCN = {
       ? `${place}: ${label} expected around ${time} (${detail})`
       : `${place}: ${label} expected around ${time}`,
   sourceNote: "Data: Open-Meteo",
+  sourceLabel: "Weather source",
+  sourceNames: {
+    auto: "Auto (NMC in China, Open-Meteo global)",
+    nmc: "NMC China (official stations)",
+    "open-meteo": "Open-Meteo (global)",
+    "open-meteo-cma": "Open-Meteo (CMA model)",
+    metno: "MET Norway (Locationforecast)",
+    wttr: "wttr.in (global backup)",
+  } as Record<WeatherSourceId, string>,
+  sourceShort: {
+    auto: "Auto",
+    nmc: "NMC China",
+    "open-meteo": "Open-Meteo",
+    "open-meteo-cma": "Open-Meteo (CMA)",
+    metno: "MET Norway",
+    wttr: "wttr.in",
+  } as Record<WeatherSourceId, string>,
+  autoFallback: "Switch to a backup source automatically on failure",
+  sourceFooter: (name: string, fallback: boolean) => (fallback ? `Data: ${name} (auto-switched)` : `Data: ${name}`),
   placeTitle: "Cities and units",
   placeHint: "Stays offline with no city. Search and pick from the list to avoid same-name mix-ups; the primary city drives the bar, widget and alerts.",
   cityLabel: "Add city",

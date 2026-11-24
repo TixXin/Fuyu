@@ -115,7 +115,7 @@ pub struct MaskPlan {
     pub edge: Option<GlassEdge>,
 }
 
-const STRETCH_CENTER_PT: f64 = 6.0;
+const STRETCH_CENTER_PT: f64 = 2.0;
 const SUPERSAMPLES: u32 = 4;
 
 define_class!(
@@ -140,6 +140,8 @@ struct MountedGlass {
     visual: Retained<NSVisualEffectView>,
     glass: Option<Retained<NSView>>,
     cached_mask: Option<(MaskKey, Retained<NSImage>)>,
+    visual_light: Option<bool>,
+    visual_visible: bool,
 }
 
 thread_local! {
@@ -232,8 +234,8 @@ pub fn build_mask_plan(spec: &NativeGlassSpec, box_width: f64, box_height: f64, 
     let min_stretch_w = left_cap + right_cap + STRETCH_CENTER_PT;
     let min_stretch_h = top_cap + bottom_cap + STRETCH_CENTER_PT;
     let stretchable = box_width >= min_stretch_w && box_height >= min_stretch_h;
-    let logical_width = if stretchable { min_stretch_w } else { box_width.max(2.0).ceil() };
-    let logical_height = if stretchable { min_stretch_h } else { box_height.max(2.0).ceil() };
+    let logical_width = if stretchable { min_stretch_w } else { box_width.max(2.0) };
+    let logical_height = if stretchable { min_stretch_h } else { box_height.max(2.0) };
     let pixel_width = ((logical_width * scale).round() as u32).max(2);
     let pixel_height = ((logical_height * scale).round() as u32).max(2);
 
@@ -333,10 +335,9 @@ pub fn pixel_alpha(plan: &MaskPlan, px: u32, py: u32) -> u8 {
 pub fn rasterize_mask_png(plan: &MaskPlan) -> Result<Vec<u8>, String> {
     let mut buffer = ImageBuffer::<Rgba<u8>, Vec<u8>>::new(plan.pixel_width, plan.pixel_height);
     for py in 0..plan.pixel_height {
-        let flipped_py = plan.pixel_height - 1 - py;
         for px in 0..plan.pixel_width {
             let a = pixel_alpha(plan, px, py);
-            buffer.put_pixel(px, flipped_py, Rgba([0, 0, 0, a]));
+            buffer.put_pixel(px, py, Rgba([0, 0, 0, a]));
         }
     }
     let mut encoded = Vec::new();
@@ -351,14 +352,15 @@ fn build_mask_nsimage(plan: &MaskPlan) -> Option<Retained<NSImage>> {
     let data = NSData::from_vec(png);
     let image = NSImage::initWithData(NSImage::alloc(), &data)?;
     image.setSize(NSSize::new(plan.logical_width, plan.logical_height));
-    image.setCapInsets(NSEdgeInsets {
-        top: plan.top_cap,
-        left: plan.left_cap,
-        bottom: plan.bottom_cap,
-        right: plan.right_cap,
-    });
-    image.setResizingMode(NSImageResizingMode::Stretch);
-    image.setTemplate(true);
+    if plan.key.stretchable {
+        image.setCapInsets(NSEdgeInsets {
+            top: plan.top_cap,
+            left: plan.left_cap,
+            bottom: plan.bottom_cap,
+            right: plan.right_cap,
+        });
+        image.setResizingMode(NSImageResizingMode::Stretch);
+    }
     Some(image)
 }
 
@@ -460,6 +462,8 @@ fn ensure_mounted(window: &NSWindow, mtm: MainThreadMarker) -> Option<()> {
             visual,
             glass,
             cached_mask: None,
+            visual_light: None,
+            visual_visible: false,
         });
         Some(())
     })
@@ -481,9 +485,10 @@ pub fn sync_window_glass(window: &NSWindow, spec: &NativeGlassSpec, mtm: MainThr
     let decision = choose_backend(spec, should_reduce_transparency(), has_glass_effect_view());
     if matches!(decision, NativeGlassDecision::Disabled | NativeGlassDecision::CssFallback) {
         MOUNTED.with(|slot| {
-            if let Some(mounted) = slot.borrow().as_ref() {
+            if let Some(mounted) = slot.borrow_mut().as_mut() {
                 mounted.host.setHidden(true);
                 mounted.visual.setHidden(true);
+                mounted.visual_visible = false;
                 if let Some(ref glass) = mounted.glass {
                     glass.setHidden(true);
                 }
@@ -524,6 +529,7 @@ pub fn sync_window_glass(window: &NSWindow, spec: &NativeGlassSpec, mtm: MainThr
             NativeGlassDecision::GlassEffectView => {
                 if let Some(ref glass) = mounted.glass {
                     mounted.visual.setHidden(true);
+                    mounted.visual_visible = false;
                     glass.setFrame(inner_frame);
                     let radius = spec.bottom_radius.min(effect_box.width / 2.0).min(effect_box.height / 2.0);
                     configure_glass_effect_view(glass, radius, spec.light, spec.tint_rgba);
@@ -550,25 +556,38 @@ fn apply_visual_effect(
     effect_box: EffectBox,
     backing_scale: f64,
 ) -> NativeGlassDecision {
+    let appearance_changed = mounted.visual_light != Some(spec.light);
+    if appearance_changed {
+        mounted.visual.setMaterial(if spec.light {
+            NSVisualEffectMaterial::Popover
+        } else {
+            NSVisualEffectMaterial::HUDWindow
+        });
+        apply_view_appearance(&mounted.visual, spec.light);
+        mounted.visual_light = Some(spec.light);
+    }
     mounted.visual.setFrame(inner_frame);
-    mounted.visual.setMaterial(if spec.light {
-        NSVisualEffectMaterial::Popover
-    } else {
-        NSVisualEffectMaterial::HUDWindow
-    });
-    apply_view_appearance(&mounted.visual, spec.light);
     let plan = build_mask_plan(spec, effect_box.width, effect_box.height, backing_scale);
     let needs_rebuild = mounted
         .cached_mask
         .as_ref()
         .is_none_or(|(cached_key, _)| *cached_key != plan.key);
+    let needs_reassert = !mounted.visual_visible || appearance_changed;
     if needs_rebuild {
         if let Some(image) = build_mask_nsimage(&plan) {
             mounted.visual.setMaskImage(Some(&image));
             mounted.cached_mask = Some((plan.key, image));
         }
+    } else if needs_reassert {
+        if let Some((_, image)) = mounted.cached_mask.as_ref() {
+            mounted.visual.setMaskImage(Some(image));
+        }
     }
-    mounted.visual.setHidden(false);
+    if !mounted.visual_visible {
+        mounted.visual.setHidden(false);
+        mounted.visual.setNeedsDisplay(true);
+        mounted.visual_visible = true;
+    }
     NativeGlassDecision::VisualEffectView
 }
 

@@ -62,7 +62,8 @@ import { useIdleDim } from "./useIdleDim";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
-import { isPageShown } from "./features";
+import { isPageEnabled, isPageShown } from "./features";
+import { urgentPopupPage } from "../../features/plugin-kernel/islandContributions";
 import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
 import { IslandResize } from "./resize/IslandResize";
 import { useIslandResize } from "./resize/useIslandResize";
@@ -138,7 +139,10 @@ export function IslandApp() {
     setPage,
     openIslandPage,
   });
-  const homePage: IslandPage = isPageShown(FUYU_PAGE_ID, features) ? FUYU_PAGE_ID : page;
+  const urgentPage = urgentPopupPage(popups) as IslandPage | null;
+  const homePage: IslandPage = urgentPage && isPageEnabled(urgentPage, features)
+    ? urgentPage
+    : isPageShown(FUYU_PAGE_ID, features) ? FUYU_PAGE_ID : page;
   const openPopup = [...popups.values()].find((entry) => entry.open === true);
   const hasOpenPopup = openPopup !== undefined;
   const panelEditing = usePanelEditing() !== null && !hasOpenPopup;

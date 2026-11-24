@@ -42,7 +42,7 @@ export function AgentCardsAct({ settings, onSettingsChange }: { settings: Island
             />
           }
         />
-        {settings.agentSessionView !== "list" && (
+        {settings.agentSessionView !== "minimal" && (
           <SettingsRow
             indent
             title={text.cardEffects}

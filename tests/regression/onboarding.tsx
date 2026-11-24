@@ -204,13 +204,13 @@ if (!automated) {
     await press("下一步");
     const choice = (label: string) => document.querySelector<HTMLButtonElement>(`.onboarding__body button[aria-label='${label}']`)?.textContent;
     check(title() === "AI 代理的会话卡片", "With AI Agent on, the session cards act comes after the practice");
-    check(choice("显示方式") === "卡片（推荐）" && choice("归档动画") === "粒子消散（推荐）" && choice("卡片光效") === "粒子流苏（推荐）",
+    check(choice("显示方式") === "分层聚焦（推荐）" && choice("归档动画") === "粒子消散（推荐）" && choice("卡片光效") === "粒子流苏（推荐）",
       "The session cards start on the recommended choices, marked as such");
     await act(async () => { document.querySelector<HTMLButtonElement>(".onboarding__body button[aria-label='显示方式']")!.click(); });
-    await act(async () => { document.querySelector<HTMLElement>(".select-control__option[data-value='list']")!.click(); });
+    await act(async () => { document.querySelector<HTMLElement>(".select-control__option[data-value='minimal']")!.click(); });
     await wait(10);
-    check(stored().agentSessionView === "list" && !choice("卡片光效") && choice("归档动画"),
-      "Card glow only shows for the card and compact layouts; the archive motion stays for every layout");
+    check(stored().agentSessionView === "minimal" && !choice("卡片光效") && choice("归档动画"),
+      "Card glow hides for the minimal layout; the archive motion stays for every layout");
 
     await press("下一步");
     check(title() === "连上你的 AI 代理" && [...document.querySelectorAll(".onboarding__step")].map((step) => step.textContent?.slice(0, 2)).join("") === "1.2.3.",

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtremeQuietMap } from "./alerts.ts";
-import { coordsId, type SavedCity, type TemperatureUnit } from "./config.ts";
+import { coordsId, type SavedCity, type TemperatureUnit, type WeatherSourceId } from "./config.ts";
 import type { WeatherAirQuality, WeatherForecast, WeatherPlace } from "./types.ts";
 
 export interface CityCache {
@@ -9,6 +9,8 @@ export interface CityCache {
   units: TemperatureUnit;
   place: WeatherPlace;
   forecast: WeatherForecast;
+  sourceUsed?: WeatherSourceId;
+  fallbackFrom?: WeatherSourceId | null;
   aqi?: WeatherAirQuality | null;
   aqiFetchedAt?: number;
   fetchedAt: number;
@@ -64,6 +66,9 @@ export function placeToSaved(place: WeatherPlace, query?: string): SavedCity {
     name: place.name,
     region: place.region,
     country: place.country,
+    ...(place.countryCode ? { countryCode: place.countryCode } : {}),
+    ...(place.timezone ? { timezone: place.timezone } : {}),
+    ...(place.nmcStationId ? { nmcStationId: place.nmcStationId } : {}),
     latitude: place.latitude,
     longitude: place.longitude,
   };
@@ -76,6 +81,9 @@ export function savedToPlace(city: SavedCity): WeatherPlace | null {
     name: city.name,
     region: city.region,
     country: city.country,
+    ...(city.countryCode ? { countryCode: city.countryCode } : {}),
+    ...(city.timezone ? { timezone: city.timezone } : {}),
+    ...(city.nmcStationId ? { nmcStationId: city.nmcStationId } : {}),
     latitude: city.latitude,
     longitude: city.longitude,
   };

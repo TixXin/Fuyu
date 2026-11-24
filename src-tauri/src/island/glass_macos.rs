@@ -135,10 +135,16 @@ pub(super) fn apply_glass_material(
     state: IslandWindowState,
     frame: Option<IslandGlassFrame>,
 ) -> Result<String, String> {
-    if frame.is_some() {
-        store_last_frame(frame);
-    }
-    let spec = spec_from_state(state, frame.or_else(read_last_frame));
+    let effective_frame = if !state.glass_enabled || !state.glass_native {
+        store_last_frame(None);
+        None
+    } else {
+        if frame.is_some() {
+            store_last_frame(frame);
+        }
+        frame.or_else(read_last_frame)
+    };
+    let spec = spec_from_state(state, effective_frame);
     let ptr = window.ns_window().map_err(|error| error.to_string())? as usize;
     let decision = match MainThreadMarker::new() {
         Some(mtm) => sync_window_ptr(ptr, &spec, mtm),
@@ -160,6 +166,7 @@ pub(super) fn apply_glass_material(
 }
 
 pub(super) fn refresh_glass(window: &WebviewWindow) {
+    store_last_frame(None);
     let state = read_window_state();
     if !state.glass_enabled || !state.glass_native {
         return;

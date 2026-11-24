@@ -2,19 +2,23 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowDownUp } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import "./AgentArrangeButton.css";
-import { AGENT_SESSION_GROUPS, AGENT_SESSION_SORTS } from "./agentSettings";
-import type { AgentSessionGroup, AgentSessionSort } from "./agentSettings";
+import { AGENT_SESSION_GROUPS, AGENT_SESSION_SORTS, AGENT_SESSION_VIEWS } from "./agentSettings";
+import type { AgentSessionGroup, AgentSessionSort, AgentSessionView } from "./agentSettings";
 
 export function AgentArrangeButton({
+  view,
   sort,
   group,
   onChange,
 }: {
+  view?: AgentSessionView;
   sort: AgentSessionSort;
   group: AgentSessionGroup;
-  onChange: (patch: { agentSessionSort?: AgentSessionSort; agentSessionGroup?: AgentSessionGroup }) => void;
+  onChange: (patch: { agentSessionView?: AgentSessionView; agentSessionSort?: AgentSessionSort; agentSessionGroup?: AgentSessionGroup }) => void;
 }) {
-  const text = useTranslation().agent.sessions.arrange;
+  const t = useTranslation();
+  const text = t.agent.sessions.arrange;
+  const viewLabels = t.settings.agent.sessionViewOptions;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -70,6 +74,7 @@ export function AgentArrangeButton({
       </button>
       {open && (
         <div className="agent-arrange__menu">
+          {view && row(text.view, AGENT_SESSION_VIEWS, viewLabels, view, (agentSessionView) => onChange({ agentSessionView }))}
           {row(text.sort, AGENT_SESSION_SORTS, text.sortOptions, sort, (agentSessionSort) => onChange({ agentSessionSort }))}
           {row(text.group, AGENT_SESSION_GROUPS, text.groupOptions, group, (agentSessionGroup) => onChange({ agentSessionGroup }))}
         </div>

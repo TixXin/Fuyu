@@ -135,9 +135,9 @@ test("E66.9 rain alert: lead time, quiet hours, cool-down", () => {
   assert.deepEqual(rainDecision(raining, config, at(14)), { kind: "raining" });
 });
 
-test("E66.9 weather host: packed 1.3.0 runs in startHost with v1 config migration and refresh command", async () => {
+test("E66.9 weather host: packed 1.4.0 runs in startHost with v1 config migration and refresh command", async () => {
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });
-  assert.equal(packed.manifest.version, "1.3.0");
+  assert.equal(packed.manifest.version, "1.4.0");
   assert.deepEqual(packed.manifest.fuyu.commands.map((item) => item.id), ["refresh"]);
   assert.ok(packed.manifest.fuyu.slots.includes("island.widget/v1"));
   assert.ok(packed.manifest.fuyu.network.includes("air-quality-api.open-meteo.com"));

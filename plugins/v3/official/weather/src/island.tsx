@@ -58,7 +58,7 @@ export default function apply(ctx: Context) {
     const { state, error, refresh, selectCity } = useWeather(ctx);
     const locale = currentLocale();
     const copy = textFor(locale);
-    const { config, activeCityId, place, forecast, aqi, loading, problem, fetchedAt } = state;
+    const { config, activeCityId, place, forecast, aqi, sourceUsed, fallbackFrom, loading, problem, fetchedAt } = state;
     const twelve = uses12Hour(config.timeFormat, SYSTEM_12);
     const hasCity = config.cities.length > 0 || config.city !== "";
 
@@ -244,7 +244,9 @@ export default function apply(ctx: Context) {
         )}
 
         {(problem || error) && <p className="fuyu-weather__note">{problemText(problem, copy) ?? error}</p>}
-        <span className="fuyu-weather__source">{copy.sourceNote}</span>
+        <span className="fuyu-weather__source">
+          {sourceUsed ? copy.sourceFooter(copy.sourceShort[sourceUsed], Boolean(fallbackFrom)) : copy.sourceNote}
+        </span>
       </div>
     );
   }

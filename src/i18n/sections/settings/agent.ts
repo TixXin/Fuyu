@@ -28,8 +28,10 @@ export type SettingsAgentText = {
   hostDisplayOptions: { both: string; icon: string; name: string; off: string };
   sessionView: string;
   sessionViewHint: string;
-  sessionViewOptions: { list: string; cards: string; compact: string };
-  sessionViewHints: { list: string; cards: string; compact: string };
+  sessionViewPreview: string;
+  sessionViewOptions: { focused: string; split: string; bento: string; projects: string; minimal: string };
+  sessionViewHints: { focused: string; split: string; bento: string; projects: string; minimal: string };
+  sessionPreviewSample: { waitTitle: string; runTitle: string; replyTitle: string; doneTitle: string; waitPrompt: string; replyText: string };
   archiveMotion: string;
   archiveMotionHint: string;
   archiveMotionOptions: { slide: string; dissolve: string };
@@ -139,7 +141,7 @@ export type SettingsAgentText = {
   usageStyle: string;
   usageStyleOptions: Record<"number" | "bar" | "ring", string>;
   usageLayout: string;
-  usageLayoutHints: Record<"chips" | "tiles" | "lead" | "ruler" | "table", string>;
+  usageLayoutHints: Record<"strip" | "chips" | "tiles" | "lead" | "ruler" | "table", string>;
   emptyStyle: string;
   emptyStyleHint: string;
   emptyStyleOptions: Record<"sleep" | "standby" | "recent" | "quota" | "tide" | "minimal", string>;
@@ -300,9 +302,24 @@ export const zhCN: SettingsAgentText = {
   hostDisplay: "会话来源",
   hostDisplayOptions: { both: "图标和名称", icon: "只显示图标", name: "只显示名称", off: "不显示" },
   sessionView: "显示方式",
-  sessionViewHint: "卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。",
-  sessionViewOptions: { list: "列表", cards: "卡片", compact: "紧凑" },
-  sessionViewHints: { list: "状态点、标题与最多两行回复", cards: "状态描边卡片，附工具与上下文", compact: "单行状态色条，同屏容纳更多" },
+  sessionViewHint: "在下面挑一种列表布局，改了马上在岛屿预览里看到；在 Agent 页右上角的「排列与布局」里也能随时切换。",
+  sessionViewPreview: "会话列表预览",
+  sessionViewOptions: { focused: "分层聚焦", split: "双栏工作台", bento: "双列卡片", projects: "项目指挥台", minimal: "极简清单" },
+  sessionViewHints: {
+    focused: "活跃轻卡 + 已完成静默单行",
+    split: "左栏极简索引，右栏实时详情",
+    bento: "紧急项置顶，双列同屏看全",
+    projects: "按项目收纳，去掉重复前缀",
+    minimal: "去边框胶囊，纯排版键盘流",
+  },
+  sessionPreviewSample: {
+    waitTitle: "运行审批排查",
+    runTitle: "Mac 刘海面板优化",
+    replyTitle: "多窗口状态同步评审",
+    doneTitle: "全面分析与后续规划",
+    waitPrompt: "瘦身按推荐的来",
+    replyText: "已整理三种同步方案，推荐事件广播方案，是否按方案 B 开始实现？",
+  },
   archiveMotion: "归档动画",
   archiveMotionHint: "滑出：会话向右滑出再收起。粒子消散：会话从左到右化成状态颜色的粒子散开再收起。系统要求减少动画时直接移除。",
   archiveMotionOptions: { slide: "滑出", dissolve: "粒子消散" },
@@ -417,7 +434,7 @@ export const zhCN: SettingsAgentText = {
   usageStyle: "额度样式",
   usageStyleOptions: { number: "数字", bar: "进度条", ring: "圆环" },
   usageLayout: "布局",
-  usageLayoutHints: { chips: "一家一颗，只写最紧的", tiles: "大数字，一眼看全", lead: "只突出最紧的一项", ruler: "都摆在一根刻度上", table: "每个窗口都列出来" },
+  usageLayoutHints: { strip: "无胶囊细条，最安静省空间", chips: "一家一颗，只写最紧的", tiles: "大数字，一眼看全", lead: "只突出最紧的一项", ruler: "都摆在一根刻度上", table: "每个窗口都列出来" },
   emptyStyle: "没有会话时显示",
   emptyStyleHint: "Agent 页上没有会话可列时的画面。",
   emptyStyleOptions: { sleep: "水母打盹", standby: "待命台", recent: "上一个会话", quota: "额度大圆环", tide: "今天的潮汐", minimal: "极简水平线" },
@@ -585,9 +602,24 @@ export const en: SettingsAgentText = {
   hostDisplay: "Session source",
   hostDisplayOptions: { both: "Icon and name", icon: "Icon only", name: "Name only", off: "Hidden" },
   sessionView: "Layout",
-  sessionViewHint: "Cards: one card per session, framed in its state's colour, with what it is doing and its context size on the second line. Compact: one line per session with only the state bar, title, state and time.",
-  sessionViewOptions: { list: "List", cards: "Cards", compact: "Compact" },
-  sessionViewHints: { list: "Status dot, title and two-line reply", cards: "State-framed card with tool and context", compact: "Single-line bar for denser lists" },
+  sessionViewHint: "Pick a session layout below and see it live on the island preview; you can also switch anytime from the top-right button on the Agent page.",
+  sessionViewPreview: "Session list preview",
+  sessionViewOptions: { focused: "Focused", split: "Split", bento: "Bento", projects: "Projects", minimal: "Minimal" },
+  sessionViewHints: {
+    focused: "Active cards above compact finished rows",
+    split: "Fast index on the left, live console on the right",
+    bento: "Urgent spotlight with two-column cards",
+    projects: "Grouped by folder with aligned columns",
+    minimal: "Borderless launcher rows with keyboard hints",
+  },
+  sessionPreviewSample: {
+    waitTitle: "Approval flow check",
+    runTitle: "Mac notch tab polish",
+    replyTitle: "Multi-window sync review",
+    doneTitle: "Architecture roadmap",
+    waitPrompt: "Trim it down as suggested",
+    replyText: "Prepared 3 sync options and recommend event broadcast — ready to implement option B?",
+  },
   archiveMotion: "Archive animation",
   archiveMotionHint: "Slide: the session slides out to the right, then folds away. Dissolve: it turns into dust in its state's colour from left to right, then folds away. When Windows asks for less motion it goes at once.",
   archiveMotionOptions: { slide: "Slide", dissolve: "Dissolve" },
@@ -702,7 +734,7 @@ export const en: SettingsAgentText = {
   usageStyle: "Usage style",
   usageStyleOptions: { number: "Numbers", bar: "Bars", ring: "Rings" },
   usageLayout: "Layout",
-  usageLayoutHints: { chips: "One per agent, tightest only", tiles: "Big numbers at a glance", lead: "Only the tightest stands out", ruler: "All on one scale", table: "Every window listed" },
+  usageLayoutHints: { strip: "Frameless hairline strip, ultra-clean", chips: "One per agent, tightest only", tiles: "Big numbers at a glance", lead: "Only the tightest stands out", ruler: "All on one scale", table: "Every window listed" },
   emptyStyle: "When there are no sessions",
   emptyStyleHint: "What the agent page shows when it has no sessions to list.",
   emptyStyleOptions: { sleep: "Sleeping jellyfish", standby: "Standby", recent: "Last session", quota: "Big usage rings", tide: "Today's tide", minimal: "Minimal waterline" },

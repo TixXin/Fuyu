@@ -4,9 +4,11 @@ import { messagesV1 } from "@fuyu/plugin-services";
 import { EXTREME_QUIET_MS, extremeDecision } from "./alerts.ts";
 import { MAX_CITIES, configFromStored, normalizeConfig, type SavedCity, type WeatherConfig } from "./config.ts";
 import { clockOfIso, convertForecastUnits, formatClock, formatWind, systemUses12Hour, uses12Hour } from "./format.ts";
+import { searchPlacesMulti } from "./geocoding.ts";
 import { currentLocale } from "./locale.ts";
-import { fetchAirQuality, fetchForecast, findPlace, searchPlaces } from "./openMeteo.ts";
+import { fetchAirQuality } from "./openMeteo.ts";
 import { RAIN_QUIET_MS, RAINING_QUIET_MS, rainDecision } from "./rain.ts";
+import { fetchWeatherWithFallback } from "./sources.ts";
 import {
   loadCacheStore,
   lookupCityCache,
@@ -31,7 +33,6 @@ export const inject = {
 
 const CONFIG_FILE = "config.json";
 const CACHE_FILE = "cache.json";
-const FULL_HOURS = 24;
 
 type SetupApi = { settings?: { setup?: (state: PluginSetupState) => Promise<void> | void } };
 type HttpApi = { http?: { fetch?: HttpFetch } };
@@ -83,6 +84,8 @@ export function apply(ctx: Context) {
       primaryPlace: primaryHit?.place ?? (primary ? savedToPlace(primary) : null),
       primaryForecast: viewForecast(primaryHit),
       primaryAqi: config.showAqi ? primaryHit?.aqi ?? null : null,
+      sourceUsed: activeHit?.sourceUsed ?? null,
+      fallbackFrom: activeHit?.fallbackFrom ?? null,
       loading,
       problem: config.cities.length === 0 ? null : problem,
       updatedAt: Date.now(),
@@ -98,7 +101,7 @@ export function apply(ctx: Context) {
 
   const isFresh = (city: SavedCity): boolean => {
     const hit = lookupCityCache(store, city);
-    if (!hit || hit.forecast.hourly.length < FULL_HOURS) return false;
+    if (!hit) return false;
     if (config.showAqi && !hit.aqi && (!hit.aqiFetchedAt || Date.now() - hit.aqiFetchedAt > 10 * 60_000)) {
       return false;
     }
@@ -152,14 +155,17 @@ export function apply(ctx: Context) {
     }
   }
 
-  function hydrateLegacyCity(city: SavedCity, place: WeatherPlace): SavedCity {
-    if (city.latitude !== null && city.longitude !== null) return city;
-    const upgraded = placeToSaved(place, city.query);
+  function hydrateCityMeta(city: SavedCity, place: WeatherPlace, nmcStationId?: string): SavedCity {
+    const merged: WeatherPlace = nmcStationId ? { ...place, nmcStationId } : place;
+    const needsUpgrade = city.latitude === null || city.longitude === null;
+    const needsStation = Boolean(nmcStationId && city.nmcStationId !== nmcStationId);
+    if (!needsUpgrade && !needsStation) return city;
+    const upgraded = placeToSaved(merged, city.query);
     const oldId = city.id;
     const nextCities = config.cities.map((item) => (item.id === oldId ? upgraded : item));
     const nextActive = config.activeCityId === oldId ? upgraded.id : config.activeCityId;
     config = normalizeConfig({ cities: nextCities, activeCityId: nextActive }, config);
-    if (store.entries[oldId] && !store.entries[upgraded.id]) {
+    if (oldId !== upgraded.id && store.entries[oldId] && !store.entries[upgraded.id]) {
       store.entries[upgraded.id] = store.entries[oldId];
       delete store.entries[oldId];
     }
@@ -183,19 +189,27 @@ export function apply(ctx: Context) {
     try {
       const existing = lookupCityCache(store, target);
       const knownPlace = savedToPlace(target) ?? existing?.place ?? null;
-      const place = knownPlace ?? (await findPlace(target.query, fetcher));
-      if (!place) {
+      const found = knownPlace ?? (await searchPlacesMulti(target.query, fetcher))[0] ?? null;
+      if (!found) {
         problem = { kind: "noPlace", city: target.query };
         loading = false;
         return snapshot();
       }
-      const resolved = hydrateLegacyCity(target, place);
-      const forecast = await fetchForecast(place, config.units, fetcher);
-      let aqi = existing?.aqi ?? null;
+      const result = await fetchWeatherWithFallback(
+        found,
+        config.units,
+        config.weatherSource,
+        config.autoFallback,
+        fetcher,
+      );
+      const resolved = hydrateCityMeta(target, found, result.nmcStationId);
+      const place = result.nmcStationId ? { ...found, nmcStationId: result.nmcStationId } : found;
+      let aqi = result.nmcAqi ?? existing?.aqi ?? null;
       let aqiFetchedAt = existing?.aqiFetchedAt;
       if (config.showAqi) {
         try {
-          aqi = await fetchAirQuality(place, fetcher);
+          const fetchedAqi = await fetchAirQuality(place, fetcher);
+          if (fetchedAqi) aqi = fetchedAqi;
           aqiFetchedAt = Date.now();
         } catch {
           aqiFetchedAt = Date.now();
@@ -205,7 +219,9 @@ export function apply(ctx: Context) {
         city: resolved.query,
         units: config.units,
         place,
-        forecast,
+        forecast: result.forecast,
+        sourceUsed: result.sourceUsed,
+        fallbackFrom: result.fallbackFrom,
         aqi,
         aqiFetchedAt,
         fetchedAt: Date.now(),
@@ -214,7 +230,7 @@ export function apply(ctx: Context) {
       };
       problem = null;
       saveCacheFile();
-      await maybeNotify(resolved.id, place, forecast);
+      await maybeNotify(resolved.id, place, result.forecast);
     } catch (error) {
       problem = { kind: "offline", reason: error instanceof Error ? error.message : String(error) };
     } finally {
@@ -265,7 +281,9 @@ export function apply(ctx: Context) {
     }
     const target = activeCity();
     const hit = lookupCityCache(store, target);
-    if (config.units !== prev.units && hit) {
+    const sourceChanged =
+      config.weatherSource !== prev.weatherSource || config.autoFallback !== prev.autoFallback;
+    if (config.units !== prev.units && hit && !sourceChanged) {
       hit.forecast = convertForecastUnits(hit.forecast, hit.units, config.units);
       hit.units = config.units;
       saveCacheFile();
@@ -273,6 +291,7 @@ export function apply(ctx: Context) {
       return snapshot();
     }
     const needFetch =
+      sourceChanged ||
       nextPrimary !== prevPrimary ||
       config.activeCityId !== prev.activeCityId ||
       (config.showAqi && !prev.showAqi) ||
@@ -351,7 +370,7 @@ export function apply(ctx: Context) {
   ctx.clients.handle(METHODS.setConfig, async (params?: Partial<WeatherConfig>) => setConfig(params));
   ctx.clients.handle(METHODS.refresh, async () => refreshAll());
   ctx.clients.handle(METHODS.searchCities, async (params?: { query?: string }) => ({
-    results: await searchPlaces(String(params?.query ?? ""), fetcher),
+    results: await searchPlacesMulti(String(params?.query ?? ""), fetcher),
   }));
   ctx.clients.handle(METHODS.addCity, async (params?: { place?: WeatherPlace }) => addCity(params?.place));
   ctx.clients.handle(METHODS.removeCity, async (params?: { id?: string }) => removeCity(params?.id));

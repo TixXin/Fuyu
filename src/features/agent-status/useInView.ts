@@ -1,8 +1,12 @@
 import { useEffect, useState, type RefObject } from "react";
 
-export function useInView(ref: RefObject<Element | null>): boolean {
+export function useInView(ref: RefObject<Element | null>, enabled = true): boolean {
   const [inView, setInView] = useState(true);
   useEffect(() => {
+    if (!enabled) {
+      setInView(true);
+      return undefined;
+    }
     const node = ref.current;
     if (!node || typeof IntersectionObserver === "undefined") return undefined;
     let intersecting = true;
@@ -17,6 +21,6 @@ export function useInView(ref: RefObject<Element | null>): boolean {
       observer.disconnect();
       document.removeEventListener("visibilitychange", sync);
     };
-  }, [ref]);
+  }, [ref, enabled]);
   return inView;
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { balancedLanes, fitCollapsedZones, fitPill, isUnbalanced, leastWing, overflowCount } from "../../src/windows/island/collapsedOverflow.ts";
+import { balancedLanes, fitCollapsedZones, fitPill, HYDRATE_GRACE_MS, isUnbalanced, leastWing, overflowCount, resolveUnitWidth } from "../../src/windows/island/collapsedOverflow.ts";
 
 const GAP = 8;
 const CHIP = 26;
@@ -168,4 +168,23 @@ test("without a notch an item that draws nothing is never put away", () => {
 test("without a notch a kept chip reserves its room, and switching put-away off keeps every item", () => {
   assert.deepEqual(fitPill([40, 40], 96, GAP, CHIP, { forceChip: true }).away, [false, true]);
   assert.deepEqual(fitPill([40, 40, 40], 60, GAP, CHIP, { auto: false }).away, [false, false, false]);
+});
+
+test("a freshly remounted async item keeps its previous width during hydration instead of bouncing back to 0", () => {
+  const held = resolveUnitWidth(0, 48, false, 1000, 1020);
+  assert.equal(held.width, 48);
+  assert.equal(held.hydrating, true);
+  assert.equal(held.retryIn, HYDRATE_GRACE_MS - 20);
+
+  const hydrated = resolveUnitWidth(52, 48, false, 1000, 1030);
+  assert.deepEqual(hydrated, { width: 52, hydrating: false, retryIn: null });
+
+  const emptiedInPlace = resolveUnitWidth(0, 52, true, 1000, 1040);
+  assert.deepEqual(emptiedInPlace, { width: 0, hydrating: false, retryIn: null });
+
+  const timedOut = resolveUnitWidth(0, 48, false, 1000, 1000 + HYDRATE_GRACE_MS);
+  assert.deepEqual(timedOut, { width: 0, hydrating: false, retryIn: null });
+
+  const neverShown = resolveUnitWidth(0, 0, false, 1000, 1010);
+  assert.deepEqual(neverShown, { width: 0, hydrating: false, retryIn: null });
 });

@@ -1,0 +1,2349 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent 页面重新设计 · 五套方案交互预览</title>
+<style>
+:root {
+  --font-ui: "SF Pro Text", "Segoe UI Variable Text", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --doc-bg: #0b0c10;
+  --doc-surface: #14161c;
+  --doc-surface-2: #1a1d25;
+  --doc-line: rgba(255, 255, 255, 0.08);
+  --doc-line-strong: rgba(255, 255, 255, 0.14);
+  --doc-t1: rgba(246, 247, 251, 0.96);
+  --doc-t2: rgba(246, 247, 251, 0.68);
+  --doc-t3: rgba(246, 247, 251, 0.44);
+  --accent: #74d6ff;
+  --ok: #34c759;
+  --run: #4da3ff;
+  --warn: #ff9f43;
+  --gold: #ffd166;
+  --err: #ff5c5c;
+  --purple: #a78bfa;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--doc-t1);
+  background: var(--doc-bg);
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+svg.ic { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 11px 24px;
+  background: rgba(11, 12, 16, 0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--doc-line);
+}
+.topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-right: 4px;
+}
+.topbar-title h1 { font-size: 14.5px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+.topbar-title .tag {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: rgba(116, 214, 255, 0.14);
+  color: var(--accent);
+  font-weight: 600;
+}
+.topbar nav { display: flex; flex-wrap: wrap; gap: 3px; }
+.topbar nav a {
+  text-decoration: none;
+  color: var(--doc-t2);
+  font-size: 12.5px;
+  padding: 4px 9px;
+  border-radius: 99px;
+  transition: background 140ms, color 140ms;
+}
+.topbar nav a:hover { background: rgba(255, 255, 255, 0.08); color: var(--doc-t1); }
+.topbar nav a.rec { color: var(--accent); }
+.topbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-left: auto;
+}
+.ctl { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--doc-t3); }
+.seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--doc-line);
+  gap: 2px;
+}
+.seg button {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: var(--doc-t2);
+  transition: background 120ms, color 120ms;
+}
+.seg button:hover { color: var(--doc-t1); }
+.seg button[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--doc-t1);
+  font-weight: 550;
+}
+
+main { max-width: 1320px; margin: 0 auto; padding: 26px 24px 96px; }
+
+.hero { margin-bottom: 30px; }
+.hero h2 { margin: 0 0 6px; font-size: 21px; font-weight: 680; letter-spacing: -0.02em; }
+.hero p { margin: 0 0 16px; color: var(--doc-t2); max-width: 920px; }
+.diag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.diag-card {
+  background: var(--doc-surface);
+  border: 1px solid var(--doc-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.diag-card .num {
+  display: inline-block;
+  font: 700 10.5px var(--font-mono);
+  color: var(--warn);
+  background: rgba(255, 159, 67, 0.12);
+  padding: 1px 6px;
+  border-radius: 5px;
+  margin-bottom: 6px;
+}
+.diag-card b { display: block; font-size: 13px; color: var(--doc-t1); margin-bottom: 3px; }
+.diag-card span { display: block; font-size: 12px; color: var(--doc-t2); line-height: 1.5; }
+
+section.opt {
+  margin: 0 0 54px;
+  scroll-margin-top: 74px;
+}
+.opt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-bottom: 14px;
+}
+.opt-letter {
+  font: 700 12.5px var(--font-mono);
+  color: #06202c;
+  background: var(--accent);
+  border-radius: 7px;
+  padding: 2px 8px;
+}
+.opt-head h2 { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.015em; }
+.opt-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(255, 209, 102, 0.14);
+  color: var(--gold);
+  border: 1px solid rgba(255, 209, 102, 0.28);
+}
+.opt-desc { width: 100%; margin: -4px 0 0; color: var(--doc-t2); font-size: 13px; }
+
+.opt-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.stage-wrap {
+  flex: none;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 20px;
+  border-radius: 22px;
+  background:
+    radial-gradient(90% 80% at 50% 0%, rgba(90, 126, 178, 0.24) 0%, rgba(28, 34, 46, 0.22) 55%, rgba(16, 18, 22, 0.85) 100%),
+    linear-gradient(180deg, #1d222d 0%, #111318 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.stage-wrap.notch-mode { padding-top: 0; }
+
+.notes {
+  flex: 1 1 280px;
+  min-width: 265px;
+  background: var(--doc-surface);
+  border: 1px solid var(--doc-line);
+  border-radius: 16px;
+  padding: 15px 17px;
+  font-size: 12.5px;
+  color: var(--doc-t2);
+}
+.notes h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--doc-t3);
+  margin: 13px 0 5px;
+  font-weight: 650;
+}
+.notes h3:first-child { margin-top: 0; }
+.notes ul { margin: 0; padding-left: 16px; }
+.notes li { margin: 3px 0; }
+.notes li strong { color: var(--doc-t1); font-weight: 550; }
+.notes .tradeoff { color: rgba(255, 198, 122, 0.88); }
+.notes .try-tip {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: rgba(116, 214, 255, 0.07);
+  border: 1px solid rgba(116, 214, 255, 0.16);
+  color: rgba(190, 232, 252, 0.88);
+  font-size: 12px;
+}
+
+/* ==================== MOCK FUYU ISLAND ==================== */
+.island {
+  --i-bg: #050507;
+  --i-bg-2: rgba(255, 255, 255, 0.042);
+  --i-bg-3: rgba(255, 255, 255, 0.072);
+  --i-bg-hover: rgba(255, 255, 255, 0.085);
+  --i-pop: #181a20;
+  --i-line: rgba(255, 255, 255, 0.085);
+  --i-line-soft: rgba(255, 255, 255, 0.055);
+  --i-t1: rgba(247, 246, 250, 0.96);
+  --i-t2: rgba(247, 246, 250, 0.68);
+  --i-t3: rgba(247, 246, 250, 0.45);
+  --i-t4: rgba(247, 246, 250, 0.3);
+  --i-code-bg: rgba(255, 255, 255, 0.055);
+  --i-needs: #ff9f43;
+  --i-needs-bg: rgba(255, 159, 67, 0.11);
+  --i-needs-line: rgba(255, 159, 67, 0.34);
+  --i-run: #52a9ff;
+  --i-run-bg: rgba(82, 169, 255, 0.1);
+  --i-turn: #ffd166;
+  --i-turn-bg: rgba(255, 209, 102, 0.1);
+  --i-ok: #34d399;
+  --i-err: #ff6b6b;
+  --i-accent: #74d6ff;
+  --i-on-accent: #06202c;
+
+  width: var(--island-w, 800px);
+  height: var(--island-h, 430px);
+  border-radius: 26px;
+  background: var(--i-bg);
+  color: var(--i-t1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.11), 0 24px 64px rgba(0, 0, 0, 0.62);
+  font-size: 13px;
+  transition: width 220ms var(--ease);
+}
+.island.is-notch {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 26px;
+  border-bottom-right-radius: 26px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 28px 66px rgba(0, 0, 0, 0.68);
+}
+body.light .island {
+  --i-bg: #f5f6f9;
+  --i-bg-2: rgba(18, 22, 34, 0.038);
+  --i-bg-3: rgba(18, 22, 34, 0.068);
+  --i-bg-hover: rgba(18, 22, 34, 0.08);
+  --i-pop: #ffffff;
+  --i-line: rgba(18, 22, 34, 0.09);
+  --i-line-soft: rgba(18, 22, 34, 0.055);
+  --i-t1: rgba(18, 20, 28, 0.94);
+  --i-t2: rgba(18, 20, 28, 0.66);
+  --i-t3: rgba(18, 20, 28, 0.46);
+  --i-t4: rgba(18, 20, 28, 0.3);
+  --i-code-bg: rgba(18, 22, 34, 0.052);
+  --i-needs: #c96408;
+  --i-needs-bg: rgba(235, 128, 26, 0.11);
+  --i-needs-line: rgba(235, 128, 26, 0.34);
+  --i-run: #0a6fd1;
+  --i-run-bg: rgba(10, 111, 209, 0.1);
+  --i-turn: #9a6c00;
+  --i-turn-bg: rgba(212, 152, 0, 0.11);
+  --i-ok: #128759;
+  --i-err: #c92a3d;
+  --i-accent: #0a7fd1;
+  --i-on-accent: #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 24px 60px rgba(0, 0, 0, 0.34);
+}
+
+.i-header {
+  flex: none;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 4px;
+  position: relative;
+}
+.i-header-left, .i-header-right {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.i-header-right { margin-left: auto; }
+.i-tab {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--i-t2);
+  font-size: 14.5px;
+}
+.i-tab.active {
+  background: var(--i-bg-3);
+  color: var(--i-t1);
+  box-shadow: inset 0 0 0 1px var(--i-line);
+}
+.i-tab-more {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 99px;
+  background: var(--i-bg-2);
+  color: var(--i-t2);
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.i-notch {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 194px;
+  height: 36px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-top: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+}
+.island:not(.is-notch) .i-notch { display: none; }
+.island[data-w="narrow"] .i-tab.hide-narrow,
+.island[data-w="narrow"] .i-tab-more { display: none; }
+.island[data-w="medium"] .i-tab.hide-medium { display: none; }
+
+.i-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2px 16px 12px;
+  position: relative;
+  overflow: hidden;
+}
+.i-grab {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--i-t4);
+  pointer-events: none;
+}
+
+.i-toast {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: var(--i-pop);
+  border: 1px solid var(--i-line);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+  font-size: 12px;
+  color: var(--i-t1);
+  animation: fadeUp 160ms var(--ease);
+}
+.i-toast button {
+  color: var(--i-accent);
+  font-weight: 600;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+.scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--i-line) transparent;
+}
+.scroll::-webkit-scrollbar { width: 4px; }
+.scroll::-webkit-scrollbar-thumb { background: var(--i-line); border-radius: 99px; }
+
+.ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Brand Icons & Status Marks */
+.prov-ic {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  object-fit: contain;
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+.prov-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.prov-host {
+  position: absolute;
+  right: -3px;
+  bottom: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 2.5px;
+  background: var(--i-bg);
+  border: 1px solid var(--i-line);
+  display: grid;
+  place-items: center;
+  font-size: 6px;
+  color: var(--i-t2);
+  font-weight: 700;
+}
+
+.status-slot {
+  width: 22px;
+  height: 20px;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-dot.needs { background: var(--i-needs); box-shadow: 0 0 9px rgba(255, 159, 67, 0.75); }
+.status-dot.working { background: var(--i-run); box-shadow: 0 0 9px rgba(82, 169, 255, 0.72); animation: pulseDot 2s ease-in-out infinite; }
+.status-dot.yourTurn { background: var(--i-turn); box-shadow: 0 0 8px rgba(255, 209, 102, 0.65); }
+.status-dot.done { background: var(--i-t4); }
+.status-dot.done.unseen { background: var(--i-ok); box-shadow: 0 0 7px rgba(52, 211, 153, 0.6); }
+.status-dot.failed { background: var(--i-err); box-shadow: 0 0 8px rgba(255, 107, 107, 0.7); }
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.22); opacity: 0.72; }
+}
+
+.jelly {
+  width: 20px;
+  height: 18px;
+  flex: none;
+  image-rendering: pixelated;
+  display: block;
+}
+.jelly.working { animation: jellyBob 1.7s ease-in-out infinite; }
+.jelly.needs { animation: jellyHop 1.2s ease-in-out infinite; }
+@keyframes jellyBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+@keyframes jellyHop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-2.5px); }
+}
+
+.u-high { color: var(--i-needs); }
+.u-danger { color: var(--i-err); }
+.u-ok { color: var(--i-ok); }
+.u-info { color: var(--i-accent); }
+.u-muted { color: var(--i-t2); }
+
+/* Usage Popover */
+.usage-pop {
+  position: absolute;
+  top: 34px;
+  right: 16px;
+  z-index: 30;
+  width: 288px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: var(--i-pop);
+  border: 1px solid var(--i-line);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.48);
+  animation: fadeUp 140ms var(--ease);
+}
+.usage-pop h4 { margin: 0 0 8px; font-size: 11.5px; color: var(--i-t3); font-weight: 600; display: flex; justify-content: space-between; }
+.usage-pop-row {
+  display: grid;
+  grid-template-columns: 18px 82px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.usage-pop-bar {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--i-bg-3);
+  overflow: hidden;
+}
+.usage-pop-bar > i { display: block; height: 100%; border-radius: inherit; }
+
+/* Action Icon Buttons */
+.act-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: var(--i-t2);
+  transition: background 120ms, color 120ms;
+}
+.act-btn:hover { background: var(--i-bg-3); color: var(--i-t1); }
+
+/* ==================== SCHEME A: FOCUSED SPLIT FEED ==================== */
+.a-toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 2px 10px;
+  border-bottom: 1px solid var(--i-line-soft);
+  margin-bottom: 10px;
+}
+.a-filters { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.a-filter {
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--i-t2);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 130ms, color 130ms;
+}
+.a-filter:hover { background: var(--i-bg-2); color: var(--i-t1); }
+.a-filter.on { background: var(--i-bg-3); color: var(--i-t1); font-weight: 550; }
+.a-filter .cnt {
+  font-size: 10.5px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: var(--i-bg-2);
+  color: var(--i-t3);
+}
+.a-filter.on .cnt { background: var(--i-bg-3); color: var(--i-t2); }
+.a-filter .cnt.alert { background: var(--i-needs-bg); color: var(--i-needs); font-weight: 650; }
+
+.a-usage-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line-soft);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: background 130ms;
+}
+.a-usage-strip:hover { background: var(--i-bg-3); }
+.a-u-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  padding-bottom: 2px;
+}
+.a-u-item .u-line {
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  border-radius: 99px;
+  opacity: 0.72;
+}
+.island[data-w="narrow"] .a-u-item.hide-narrow { display: none; }
+
+.a-list { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+.a-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--i-t3);
+  letter-spacing: 0.03em;
+}
+.a-sec-head button { font-size: 11px; color: var(--i-t3); padding: 2px 6px; border-radius: 6px; }
+.a-sec-head button:hover { background: var(--i-bg-2); color: var(--i-t2); }
+
+.a-row-active {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 11px 9px 12px;
+  border-radius: 12px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line-soft);
+  transition: background 140ms, border-color 140ms;
+  cursor: pointer;
+}
+.a-row-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2.5px;
+  border-radius: 0 3px 3px 0;
+  background: var(--i-run);
+}
+.a-row-active.needs {
+  background: var(--i-needs-bg);
+  border-color: var(--i-needs-line);
+}
+.a-row-active.needs::before { background: var(--i-needs); }
+.a-row-active.yourTurn::before { background: var(--i-turn); }
+.a-row-active:hover { background: var(--i-bg-hover); border-color: var(--i-line); }
+.a-row-active.needs:hover { background: color-mix(in srgb, var(--i-needs) 15%, transparent); }
+
+.a-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.a-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.a-proj {
+  flex: none;
+  font-size: 11px;
+  font-weight: 550;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--i-bg-3);
+  color: var(--i-t2);
+}
+.a-title { font-size: 13.5px; font-weight: 600; color: var(--i-t1); flex: 1; min-width: 0; }
+.a-meta {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--i-t3);
+}
+.a-model { font-size: 11px; color: var(--i-t3); }
+.island[data-w="narrow"] .a-model { display: none; }
+
+.a-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+}
+.a-row-active:hover .a-meta-rest,
+.a-row-done:hover .a-meta-rest { display: none; }
+.a-row-active:hover .a-actions,
+.a-row-done:hover .a-actions { display: inline-flex; }
+
+.a-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+}
+.a-cmd {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  background: var(--i-code-bg);
+  font-size: 11.5px;
+  color: var(--i-t2);
+}
+.a-cmd .verb { color: var(--i-run); font-weight: 600; flex: none; }
+.a-cmd.needs-cmd { background: rgba(255, 159, 67, 0.12); color: var(--i-t1); }
+.a-cmd.needs-cmd .verb { color: var(--i-needs); }
+.a-sub-pill {
+  flex: none;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--i-bg-3);
+  color: var(--i-t2);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.a-sub-pill:hover { color: var(--i-t1); background: var(--i-bg-hover); }
+.a-cta {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: var(--i-needs);
+  color: #1c0f02;
+}
+.a-subagents {
+  margin-top: 4px;
+  padding-left: 10px;
+  border-left: 1.5px solid var(--i-line);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11.5px;
+  color: var(--i-t2);
+}
+.a-subagent-row { display: flex; align-items: center; gap: 8px; }
+.a-subagent-row .st { color: var(--i-run); font-size: 11px; }
+
+.a-row-done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  padding: 0 11px 0 12px;
+  border-radius: 9px;
+  transition: background 120ms;
+  cursor: pointer;
+}
+.a-row-done:hover { background: var(--i-bg-2); }
+.a-row-done .a-title { font-size: 13px; font-weight: 450; color: var(--i-t2); }
+.a-row-done.unseen .a-title { color: var(--i-t1); font-weight: 550; }
+.a-row-done .a-proj { background: transparent; padding: 0; color: var(--i-t3); font-weight: 500; }
+
+/* ==================== SCHEME B: MASTER-DETAIL WORKBENCH ==================== */
+.b-usage-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 2px 2px 8px;
+  border-bottom: 1px solid var(--i-line-soft);
+  font-size: 11.5px;
+  color: var(--i-t2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.b-usage-bar::-webkit-scrollbar { display: none; }
+.b-u { display: inline-flex; align-items: center; gap: 5px; flex: none; }
+.b-u-track { width: 32px; height: 3.5px; border-radius: 99px; background: var(--i-bg-3); overflow: hidden; }
+.b-u-track > i { display: block; height: 100%; border-radius: inherit; }
+
+.b-split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 45% 1fr;
+  gap: 0;
+  padding-top: 8px;
+}
+.island[data-w="narrow"] .b-split,
+.island[data-w="medium"] .b-split { grid-template-columns: 1fr; }
+.island[data-w="narrow"] .b-detail,
+.island[data-w="medium"] .b-detail { display: none; }
+.island[data-w="narrow"].b-show-detail .b-master,
+.island[data-w="medium"].b-show-detail .b-master { display: none; }
+.island[data-w="narrow"].b-show-detail .b-detail,
+.island[data-w="medium"].b-show-detail .b-detail { display: flex; padding-left: 0; border-left: 0; }
+
+.b-master {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 12px;
+}
+.b-sec { font-size: 10.5px; font-weight: 600; color: var(--i-t3); padding: 5px 8px 2px; letter-spacing: 0.04em; }
+.b-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  text-align: left;
+  position: relative;
+  transition: background 120ms;
+}
+.b-item:hover { background: var(--i-bg-2); }
+.b-item.sel { background: var(--i-bg-3); box-shadow: inset 0 0 0 1px var(--i-line); }
+.b-item.sel::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 8px; bottom: 8px;
+  width: 2.5px;
+  border-radius: 0 3px 3px 0;
+  background: var(--i-accent);
+}
+.b-item.needs.sel::before { background: var(--i-needs); }
+.b-item-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.b-item-title { font-size: 12.5px; font-weight: 560; color: var(--i-t1); }
+.b-item.done .b-item-title { font-weight: 450; color: var(--i-t2); }
+.b-item-sub { font-size: 11px; color: var(--i-t3); display: flex; align-items: center; gap: 5px; }
+.b-item-right { flex: none; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--i-t3); }
+
+.b-detail {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 16px;
+  border-left: 1px solid var(--i-line-soft);
+}
+.b-back { display: none; font-size: 12px; color: var(--i-accent); align-items: center; gap: 4px; width: fit-content; }
+.island[data-w="narrow"].b-show-detail .b-back,
+.island[data-w="medium"].b-show-detail .b-back { display: inline-flex; }
+
+.b-d-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.b-d-crumb { font-size: 11.5px; color: var(--i-t3); display: flex; align-items: center; gap: 6px; }
+.b-d-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--i-run-bg);
+  color: var(--i-run);
+}
+.b-d-status.needs { background: var(--i-needs-bg); color: var(--i-needs); }
+.b-d-status.yourTurn { background: var(--i-turn-bg); color: var(--i-turn); }
+.b-d-status.done { background: var(--i-bg-2); color: var(--i-t2); }
+.b-d-title { font-size: 15px; font-weight: 650; margin: 0; line-height: 1.35; }
+.b-d-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11.5px; color: var(--i-t2); }
+.b-d-chip {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.b-d-prompt {
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: var(--i-bg-2);
+  font-size: 12px;
+  color: var(--i-t2);
+  border-left: 2px solid var(--i-line);
+}
+.b-d-prompt b { color: var(--i-t3); font-weight: 500; margin-right: 4px; }
+.b-d-console {
+  flex: 1;
+  min-height: 68px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--i-code-bg);
+  border: 1px solid var(--i-line-soft);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.b-d-console .head { font-size: 11px; color: var(--i-t3); display: flex; justify-content: space-between; }
+.b-d-console code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--i-t1);
+  word-break: break-all;
+  line-height: 1.5;
+}
+.b-d-console p { margin: 0; color: var(--i-t1); font-size: 12.5px; line-height: 1.55; }
+.b-d-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 2px;
+}
+.b-btn-primary {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 9px;
+  background: var(--i-accent);
+  color: var(--i-on-accent);
+  font-size: 12px;
+  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.b-btn-primary.needs { background: var(--i-needs); color: #1b0d00; }
+.b-btn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line-soft);
+  color: var(--i-t2);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.b-btn:hover { background: var(--i-bg-3); color: var(--i-t1); }
+.b-btn.right { margin-left: auto; }
+
+/* ==================== SCHEME C: BENTO GRID ==================== */
+.c-top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 2px 9px;
+}
+.c-summary { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--i-t2); }
+.c-summary b { color: var(--i-t1); font-weight: 650; }
+.c-dot-inline { display: inline-flex; align-items: center; gap: 5px; }
+.c-dot-inline i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+.c-usage-mini { display: flex; align-items: center; gap: 6px; font-size: 11.5px; }
+.c-u-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 7px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line-soft);
+  cursor: pointer;
+}
+.c-u-pill:hover { background: var(--i-bg-3); }
+.island[data-w="narrow"] .c-u-pill.hide-narrow { display: none; }
+
+.c-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding-right: 2px; }
+.c-spotlight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 13px;
+  border-radius: 13px;
+  background: linear-gradient(90deg, var(--i-needs-bg), color-mix(in srgb, var(--i-needs) 4%, transparent));
+  border: 1px solid var(--i-needs-line);
+  cursor: pointer;
+}
+.c-spotlight-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.c-spotlight-top { display: flex; align-items: center; gap: 7px; }
+.c-spotlight-tag { font-size: 10.5px; font-weight: 700; color: var(--i-needs); letter-spacing: 0.02em; }
+
+.c-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.island[data-w="narrow"] .c-grid { grid-template-columns: 1fr; }
+
+.c-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line-soft);
+  cursor: pointer;
+  transition: background 140ms, border-color 140ms, transform 140ms var(--ease);
+}
+.c-card:hover { background: var(--i-bg-hover); border-color: var(--i-line); transform: translateY(-1px); }
+.c-card.working { border-color: color-mix(in srgb, var(--i-run) 26%, var(--i-line-soft)); }
+.c-card.yourTurn { border-color: color-mix(in srgb, var(--i-turn) 28%, var(--i-line-soft)); }
+.c-card-head { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--i-t3); }
+.c-card-head .sp { flex: 1; }
+.c-card-title { font-size: 13.5px; font-weight: 600; color: var(--i-t1); }
+.c-card-term {
+  padding: 4px 8px;
+  border-radius: 7px;
+  background: var(--i-code-bg);
+  font-size: 11.5px;
+  color: var(--i-t2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.c-card-foot { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--i-t3); }
+.c-card-acts {
+  position: absolute;
+  top: 7px; right: 8px;
+  display: none;
+  gap: 2px;
+  background: var(--i-pop);
+  border: 1px solid var(--i-line);
+  border-radius: 8px;
+  padding: 1px;
+}
+.c-card:hover .c-card-acts { display: flex; }
+
+.c-done-label { font-size: 11px; color: var(--i-t3); font-weight: 600; padding: 2px 2px 0; }
+.c-done-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.island[data-w="narrow"] .c-done-grid { grid-template-columns: 1fr; }
+.c-done-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line-soft);
+  cursor: pointer;
+  transition: background 120ms;
+}
+.c-done-pill:hover { background: var(--i-bg-hover); }
+.c-done-pill .t { flex: 1; min-width: 0; font-size: 12.5px; color: var(--i-t2); }
+.c-done-pill.unseen .t { color: var(--i-t1); font-weight: 550; }
+
+/* ==================== SCHEME D: PROJECT COMMAND DECK ==================== */
+.d-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 2px 9px;
+}
+.d-groups { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding-right: 2px; }
+.d-group {
+  border-radius: 13px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line-soft);
+  overflow: hidden;
+}
+.d-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--i-line-soft);
+  font-size: 12px;
+}
+body.light .d-group-head { background: rgba(0, 0, 0, 0.02); }
+.d-group-name { font-weight: 650; color: var(--i-t1); display: inline-flex; align-items: center; gap: 6px; }
+.d-group-stat { font-size: 11px; color: var(--i-t3); }
+.d-group-open { margin-left: auto; font-size: 11px; color: var(--i-t3); display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 6px; }
+.d-group-open:hover { background: var(--i-bg-3); color: var(--i-t1); }
+
+.d-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto 58px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 11px;
+  border-bottom: 1px solid var(--i-line-soft);
+  cursor: pointer;
+  transition: background 120ms;
+}
+.d-row:last-child { border-bottom: 0; }
+.d-row:hover { background: var(--i-bg-hover); }
+.d-row.needs { background: var(--i-needs-bg); }
+.d-row-mid { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.d-row-title { font-size: 13px; font-weight: 560; color: var(--i-t1); }
+.d-row.done .d-row-title { font-weight: 450; color: var(--i-t2); }
+.d-row-sub { font-size: 11.5px; color: var(--i-t3); display: flex; align-items: center; gap: 6px; }
+.d-row-sub .k { color: var(--i-run); font-weight: 600; }
+.d-row.needs .d-row-sub .k { color: var(--i-needs); }
+.d-row-sub .turn { color: var(--i-turn); font-weight: 550; }
+.d-row-col3 { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: var(--i-t3); }
+.island[data-w="narrow"] .d-row-col3 .m { display: none; }
+.d-row-col4 { display: flex; align-items: center; justify-content: flex-end; gap: 2px; font-size: 11.5px; color: var(--i-t3); }
+.d-row .d-acts { display: none; }
+.d-row:hover .d-time { display: none; }
+.d-row:hover .d-acts { display: inline-flex; }
+
+/* ==================== SCHEME E: LINEAR / RAYCAST MINIMAL ==================== */
+.e-usage-rail {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 28px;
+  padding: 0 2px;
+  border-bottom: 1px solid var(--i-line-soft);
+  margin-bottom: 6px;
+  font-size: 11.5px;
+  color: var(--i-t2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.e-usage-rail::-webkit-scrollbar { display: none; }
+.e-u-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px 2px 0;
+  margin-right: 10px;
+  border-right: 1px solid var(--i-line-soft);
+  flex: none;
+  cursor: pointer;
+}
+.e-u-cell:last-child { border-right: 0; }
+.e-u-cell:hover { color: var(--i-t1); }
+.e-u-lbl { color: var(--i-t3); font-size: 10.5px; }
+
+.e-list { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 2px; padding-right: 2px; }
+.e-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 100ms;
+}
+.e-row:hover { background: var(--i-bg-2); }
+.e-row.sel {
+  background: var(--i-bg-3);
+  box-shadow: inset 0 0 0 1px var(--i-line);
+}
+.e-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.e-row-line1 { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.e-proj {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--i-t3);
+  width: 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.e-title { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 560; color: var(--i-t1); }
+.e-row.done .e-title { font-weight: 430; color: var(--i-t2); }
+.e-row.done.unseen .e-title { color: var(--i-t1); font-weight: 530; }
+.e-right { flex: none; display: inline-flex; align-items: center; gap: 9px; font-size: 11.5px; color: var(--i-t3); }
+.island[data-w="narrow"] .e-right .m { display: none; }
+.e-row-line2 {
+  padding-left: 52px;
+  font-size: 12px;
+  color: var(--i-t3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.e-row-line2 .prompt-sym { color: var(--i-run); font-weight: 700; }
+.e-row.needs .e-row-line2 .prompt-sym { color: var(--i-needs); }
+.e-row.yourTurn .e-row-line2 .prompt-sym { color: var(--i-turn); }
+.e-row-expand {
+  padding-left: 52px;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--i-t3);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.e-footer {
+  flex: none;
+  height: 28px;
+  margin-top: 6px;
+  padding: 4px 4px 0;
+  border-top: 1px solid var(--i-line-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--i-t3);
+}
+.e-keys { display: flex; align-items: center; gap: 10px; }
+.e-keys kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--i-bg-2);
+  border: 1px solid var(--i-line);
+  color: var(--i-t2);
+  margin-right: 3px;
+}
+
+/* ==================== COMPARISON MATRIX ==================== */
+.cmp-section { margin-top: 24px; scroll-margin-top: 74px; }
+.cmp-section h2 { font-size: 18px; margin: 0 0 12px; }
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--doc-surface);
+  border: 1px solid var(--doc-line);
+  border-radius: 14px;
+  overflow: hidden;
+  font-size: 12.5px;
+}
+.cmp-table th, .cmp-table td {
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--doc-line);
+}
+.cmp-table th {
+  font-size: 11.5px;
+  color: var(--doc-t3);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.025);
+}
+.cmp-table tr:last-child td { border-bottom: 0; }
+.cmp-table td b { color: var(--doc-t1); }
+.stars { color: var(--gold); letter-spacing: 1px; }
+.mix-box {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: var(--doc-surface-2);
+  border: 1px solid var(--doc-line-strong);
+  font-size: 13px;
+  color: var(--doc-t2);
+}
+.mix-box b { color: var(--doc-t1); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <h1>Agent 页面重设计预览</h1>
+    <span class="tag">5 套方案 · 可交互</span>
+  </div>
+  <nav>
+    <a href="#opt-a" class="rec">A 分层聚焦流 ★</a>
+    <a href="#opt-b">B 双栏工作台</a>
+    <a href="#opt-c">C 智能双列卡</a>
+    <a href="#opt-d">D 项目指挥台</a>
+    <a href="#opt-e">E 极简启动器</a>
+    <a href="#compare">对比选型</a>
+  </nav>
+  <div class="topbar-controls">
+    <div class="ctl">
+      <span>主题</span>
+      <div class="seg" data-ctl="theme">
+        <button data-val="dark" aria-pressed="true">深色岛</button>
+        <button data-val="light" aria-pressed="false">浅色岛</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>岛宽</span>
+      <div class="seg" data-ctl="width">
+        <button data-val="notch" aria-pressed="true">Mac刘海 800</button>
+        <button data-val="medium" aria-pressed="false">标准 580</button>
+        <button data-val="narrow" aria-pressed="false">窄岛 440</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>状态灯</span>
+      <div class="seg" data-ctl="light">
+        <button data-val="jelly" aria-pressed="true">像素水母</button>
+        <button data-val="dot" aria-pressed="false">圆点</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>数据</span>
+      <div class="seg" data-ctl="dataset">
+        <button data-val="shot" aria-pressed="true">截图复刻</button>
+        <button data-val="busy" aria-pressed="false">高并发 9条</button>
+        <button data-val="calm" aria-pressed="false">精简 3条</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>额度</span>
+      <div class="seg" data-ctl="usage">
+        <button data-val="on" aria-pressed="true">显示</button>
+        <button data-val="off" aria-pressed="false">隐藏</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h2>先看现状为什么显得“乱”（基于你的截图）</h2>
+    <p>把你截图里的真实会话与额度直接搬进了下面 5 个交互岛里。你可以切换深浅色、把岛缩窄到 580 / 440 看自适应表现，也可以点击筛选、展开子任务、点选详情或尝试归档。</p>
+    <div class="diag-grid">
+      <div class="diag-card">
+        <span class="num">01 噪音冲突</span>
+        <b>三种胶囊样式互相打架</b>
+        <span>顶部 5 颗厚重圆胶囊额度、右侧灰框模型胶囊、正文蓝字命令块全混在同一屏，圆角和色彩层级打架。</span>
+      </div>
+      <div class="diag-card">
+        <span class="num">02 缺乏分层</span>
+        <b>活跃与已完成一锅炖</b>
+        <span>3 行高的运行中任务和 1 行高的历史完成项紧贴堆叠，行高剧烈跳动，扫一眼分不出谁需要立刻关注。</span>
+      </div>
+      <div class="diag-card">
+        <span class="num">03 对齐失衡</span>
+        <b>宽岛左右撕裂 + 贴字拥挤</b>
+        <span>800px 宽岛中间空出一大片死区，标题挤最左、图标时间挤最右；左侧像素水母几乎贴住首字母 <code>F</code>。</span>
+      </div>
+      <div class="diag-card">
+        <span class="num">04 三层堆字</span>
+        <b>「你：...」和命令撑高列表</b>
+        <span>每个运行中会话占 3 行，标题又把项目名和任务名糊在一起，5 个会话就塞满整页。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- A -->
+  <section class="opt" id="opt-a">
+    <div class="opt-head">
+      <span class="opt-letter">A</span>
+      <h2>分层聚焦流（Focused Split Feed）</h2>
+      <span class="opt-badge">推荐默认</span>
+      <p class="opt-desc">保留最顺手的单列阅读动线，用「顶栏筛选 + 极简微额度 + 活跃/已完成明确分层 + 两行规整结构」彻底消除杂乱。</p>
+    </div>
+    <div class="opt-body">
+      <div class="stage-wrap notch-mode" id="stage-a"></div>
+      <aside class="notes">
+        <h3>核心改法</h3>
+        <ul>
+          <li><strong>顶栏合一</strong>：左侧放状态筛选（全部 / 需处理 / 运行中 / 已完成），右侧放超轻「图标+数字+底色水位线」微额度条，点一下展开完整明细，不再用 5 颗厚重圆胶囊压在列表头上。</li>
+          <li><strong>强分层</strong>：需处理/运行中给轻底色卡 + 左侧语义竖线，固定两行（标题行 + 单行微命令条）；已完成收进底部静默区，极简 34px 单行且支持一键折叠。</li>
+          <li><strong>去噪提纯</strong>：项目名做成柔和微标签与标题分离；模型退出灰框改为极淡纯文字；水母拥有独立 22px 槽位，再也不贴字。</li>
+        </ul>
+        <h3>适合谁</h3>
+        <ul>
+          <li>想要<strong>最平滑升级</strong>、同时兼顾 Mac 刘海宽岛和 Windows 常规岛宽的默认主力布局。</li>
+        </ul>
+        <div class="try-tip">试一试：点顶栏状态筛选、点右上角额度条看浮窗、点「▸ 2 子任务」展开、悬停行右侧试归档与撤销。</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="opt" id="opt-b">
+    <div class="opt-head">
+      <span class="opt-letter">B</span>
+      <h2>双栏工作台（Master-Detail Workbench）</h2>
+      <span class="opt-badge">宽岛体验最佳</span>
+      <p class="opt-desc">像消息页的三栏思路一样善用 800px 宽岛：左栏极简索引高速扫视，右栏实时看完整命令、提问、子任务与快捷按钮。</p>
+    </div>
+    <div class="opt-body">
+      <div class="stage-wrap notch-mode" id="stage-b"></div>
+      <aside class="notes">
+        <h3>核心改法</h3>
+        <ul>
+          <li><strong>左栏彻底瘦身</strong>：只保留「状态灯 + 标题 + 项目微字 + 图标/时间」，所有行等高整齐，扫 10 个会话毫不费眼。</li>
+          <li><strong>右栏即实时视窗</strong>：选中会话立即展示完整命令行（不再截断省略号）、你刚才的提问、模型/权限/路径、子 Agent 进度，底部直接放「跳到窗口」「打开目录」「归档」。</li>
+          <li><strong>宽窄自适应</strong>：800px 展示双栏；切到 580 / 440 窄岛自动退化成单栏列表，点击进入详情页。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li class="tradeoff">只看一眼就想跳转时，比单列多一次「先选中再看详情」的心理分区（但默认自动选中最紧急会话）。</li>
+        </ul>
+        <div class="try-tip">试一试：点击左栏任意会话切换右侧实时面板；把顶部「岛宽」切到 580 / 440 看自动退化为单栏+返回。</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="opt" id="opt-c">
+    <div class="opt-head">
+      <span class="opt-letter">C</span>
+      <h2>智能双列网格（Bento Grid）</h2>
+      <p class="opt-desc">消灭宽岛右侧大片空白：需处理任务横跨置顶，运行中排 2 列活态卡片，已完成排 2 列紧凑胶囊，一屏装下 6–8 条零滚动。</p>
+    </div>
+    <div class="opt-body">
+      <div class="stage-wrap notch-mode" id="stage-c"></div>
+      <aside class="notes">
+        <h3>核心改法</h3>
+        <ul>
+          <li><strong>紧急项横幅置顶</strong>：「等你确认 / 出错」独占顶部整行，给足命令预览和「立即处理」按钮，不可能漏看。</li>
+          <li><strong>双列齐整</strong>：每个活跃卡片内部固定「状态+项目+时间 / 标题 / 微终端条+模型」三段，视线在卡片内垂直扫完，告别 800px 左右横跳。</li>
+          <li><strong>高信息密度</strong>：已完成会话双列静默排布，5–8 个会话常常一屏全览，不用滚轮。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li class="tradeoff">标题非常长时双列卡片会比单列更早触发省略号（悬停可看全文）。</li>
+        </ul>
+        <div class="try-tip">试一试：切换顶栏「高并发 9条」感受双列一屏容纳量，再切到「窄岛 440」看自动回退单列。</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- D -->
+  <section class="opt" id="opt-d">
+    <div class="opt-head">
+      <span class="opt-letter">D</span>
+      <h2>项目指挥台（Project-Grouped Deck）</h2>
+      <p class="opt-desc">去掉每行重复的 <code>Fuyu ·</code> / <code>Fuxi ·</code> 前缀，按项目文件夹收纳成表格对齐块，同一仓库并行多个 Agent 时极度清爽。</p>
+    </div>
+    <div class="opt-body">
+      <div class="stage-wrap notch-mode" id="stage-d"></div>
+      <aside class="notes">
+        <h3>核心改法</h3>
+        <ul>
+          <li><strong>消除重复前缀</strong>：截图里 4 条都在 <code>Fuyu</code> 里，归组后标题瞬间干净一截，组头顺带显示活跃数和「打开文件夹」入口。</li>
+          <li><strong>锋利的四列对齐</strong>：状态列 | 标题与实时动态 | 模型与来源 | 时间/操作，像 IDE 面板一样垂直严丝合缝。</li>
+          <li><strong>项目心智优先</strong>：同时盯 2–3 个仓库做并行开发时，一眼看清每个项目卡在哪一步。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li class="tradeoff">如果大部分会话散落在不同目录（每个目录只有 1 条），分组头会多占一些垂直空间。</li>
+        </ul>
+        <div class="try-tip">试一试：点击组头右侧「打开目录」或点行内交互，切「高并发 9条」看多仓库分组效果。</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- E -->
+  <section class="opt" id="opt-e">
+    <div class="opt-head">
+      <span class="opt-letter">E</span>
+      <h2>极简启动器清单（Linear / Raycast 风格）</h2>
+      <p class="opt-desc">彻底做减法：拿掉所有胶囊框和卡片边框，纯靠字重、等宽列与灰度层级呼吸，配合键盘高亮行与底栏提示。</p>
+    </div>
+    <div class="opt-body">
+      <div class="stage-wrap notch-mode" id="stage-e"></div>
+      <aside class="notes">
+        <h3>核心改法</h3>
+        <ul>
+          <li><strong>零胶囊美学</strong>：顶部额度压成 28px 无边框细刻度轨；命令名不再套蓝底灰块，改为极简终端前缀 <code>› run_command</code>；模型改为最淡的等宽文字。</li>
+          <li><strong>渐进展开</strong>：未选中行极致克制；点击或用 <code>↑↓</code> 选中的行高亮并自动展开「你的提问」与快捷动作，不把所有细节一次性倒在眼前。</li>
+          <li><strong>原生 Mac 质感</strong>：底栏极淡快捷键提示，整体视觉重心稳、最耐看。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li class="tradeoff">视觉非常克制，重度依赖大色块/边框发光的用户可能会觉得状态区分偏素。</li>
+        </ul>
+        <div class="try-tip">试一试：点击列表不同行看渐进展开的「你的提问」与底栏路径联动，也可点击额度细轨查看详情。</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section class="cmp-section" id="compare">
+    <h2>五套方案横向对比</h2>
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>方案</th>
+          <th>视觉清爽度</th>
+          <th>宽岛利用率</th>
+          <th>窄岛兼容</th>
+          <th>改造范围</th>
+          <th>最适合的使用习惯</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>A · 分层聚焦流 ★</b></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★★☆</span></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td>中等（可直接替换现有默认列表）</td>
+          <td>日常主力、兼顾各种宽度，想立刻变干净又不改变操作习惯</td>
+        </tr>
+        <tr>
+          <td><b>B · 双栏工作台</b></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★★☆</span></td>
+          <td>较大（新增右侧实时面板与宽窄切换）</td>
+          <td>Mac 刘海 / 大宽岛常驻，经常想看清完整命令和回复再决定切不切窗口</td>
+        </tr>
+        <tr>
+          <td><b>C · 智能双列卡</b></td>
+          <td><span class="stars">★★★★☆</span></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★★☆</span></td>
+          <td>中等（升级现有「卡片」视图）</td>
+          <td>同时跑 4–8 个 Agent，希望一屏扫全不滚轮、紧急项置顶醒目</td>
+        </tr>
+        <tr>
+          <td><b>D · 项目指挥台</b></td>
+          <td><span class="stars">★★★★☆</span></td>
+          <td><span class="stars">★★★★☆</span></td>
+          <td><span class="stars">★★★★☆</span></td>
+          <td>中等（升级「按项目分组」模式）</td>
+          <td>经常在 Fuyu / Fuxi 等两三个仓库里同时开多个会话并行干活</td>
+        </tr>
+        <tr>
+          <td><b>E · 极简启动器</b></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td><span class="stars">★★★★☆</span></td>
+          <td><span class="stars">★★★★★</span></td>
+          <td>较小（去噪重排 + 键盘选中态）</td>
+          <td>偏爱 Raycast / Linear 极简排版、讨厌一切花哨胶囊与边框</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="mix-box">
+      <b>也支持混搭或做成视图切换：</b>比如拿 <b>A（分层聚焦流）</b> 或 <b>E（极简清单）</b> 做默认列表，再把 <b>B（双栏工作台）</b> 或 <b>C（双列网格）</b> 做成宽岛可选布局；或者单独挑你最喜欢的「顶部极简额度条样式」配任意一套列表。选定方向后直接告诉我编号或你想混搭的组合，我就按定稿去改真实代码。
+    </div>
+  </section>
+</main>
+
+<script>
+const BRAND = {
+  claudeCode: { name: "Claude Code", src: "../../src/assets/brands/claude-code.png", color: "#ff9b5e", short: "C" },
+  antigravity: { name: "Antigravity", src: "../../src/assets/brands/antigravity.png", color: "#52a9ff", short: "A" },
+  codex: { name: "Codex", src: "../../src/assets/brands/codex.webp", color: "#d4d6de", short: "X" },
+  cursor: { name: "Cursor", src: "../../src/assets/brands/cursor.png", color: "#f0a0d0", short: "U" },
+  workbuddy: { name: "WorkBuddy", src: "../../src/assets/brands/workbuddy.svg", color: "#4dd88a", short: "W" },
+  dsh: { name: "DeepSeek", src: "../../src/assets/brands/dsh.png", color: "#6ec3ff", short: "D" }
+};
+
+const USAGES = [
+  { id: "claudeCode", value: "97%", sub: "7天 +1", pct: 97, tone: "u-high", barColor: "#ff9f43", detail: "5小时 62% · 7天 97% · 1天4h重置" },
+  { id: "codex", value: "16%", sub: "7天", pct: 16, tone: "u-ok", barColor: "#34d399", stale: true, detail: "5小时 4% · 7天 16% · 2小时前更新" },
+  { id: "cursor", value: "5%", sub: "本月 +1", pct: 5, tone: "u-ok", barColor: "#34d399", detail: "本月 5% · Auto 12%" },
+  { id: "workbuddy", value: "1.28", sub: "积分 · 7天", pct: 22, tone: "u-info", barColor: "#5eead4", detail: "7天已用 1.28 积分" },
+  { id: "dsh", value: "¥59.26", sub: "余额", pct: 68, tone: "u-muted", barColor: "#74d6ff", detail: "账户余额 ¥59.26" }
+];
+
+const DATASETS = {
+  shot: [
+    {
+      id: "s1", project: "Fuyu", cwd: "~/Desktop/projects/Fuyu",
+      title: "反重力运行审批排查", light: "needs", phaseText: "等你确认",
+      provider: "antigravity", host: "IDE", model: "gemini-4-neon · H", perm: "默认",
+      age: "1m", prompt: "瘦身 按你推荐的来",
+      tool: { name: "run_command", detail: 'git grep -n "AGENTS\\.md" scripts/ tests/ .claude/ && wc -c AGENTS.md src/AGENTS.md' },
+      reply: null, subagents: []
+    },
+    {
+      id: "s2", project: "Fuyu", cwd: "~/Desktop/projects/Fuyu",
+      title: "Mac刘海面板Tab优化建议", light: "working", phaseText: "运行中 · 1m 18s",
+      provider: "antigravity", host: "IDE", model: "gemini-4-neon · H", perm: "自动",
+      age: "1m", prompt: "选2",
+      tool: { name: "run_command", detail: "npx eslint src/lib/settings/notchRingSettings.ts src/lib/settings/notchSettingsModel.ts" },
+      todos: { done: 3, total: 5 },
+      subagents: [
+        { name: "检查浅色岛对比度", tool: "read_file", age: "24s" },
+        { name: "验证刘海溢出行单测", tool: "run_command", age: "11s" }
+      ]
+    },
+    {
+      id: "s3", project: "Fuxi", cwd: "~/Desktop/projects/Fuxi",
+      title: "多窗口状态同步评审", light: "yourTurn", phaseText: "等你回复",
+      provider: "claudeCode", host: "T", model: "Opus 4.6 · H", perm: "自动",
+      age: "4m", prompt: "对比一下广播和轮询两种实现",
+      reply: "已整理 3 种同步方案，推荐用事件广播配合本地版本号校验，改动最小，是否按方案 B 开始实现？",
+      subagents: []
+    },
+    {
+      id: "s4", project: "Fuxi", cwd: "~/Desktop/projects/Fuxi",
+      title: "全面分析与后续规划", light: "done", unseen: true, phaseText: "刚完成",
+      provider: "claudeCode", host: "T", model: "Opus 4.6", age: "23m",
+      prompt: "把现状和下一步优先级整理一下",
+      reply: "已完成全仓结构梳理并输出 4 个阶段的里程碑规划，写入 docs/architecture/roadmap.md。"
+    },
+    {
+      id: "s5", project: "Fuyu", cwd: "~/Desktop/projects/Fuyu",
+      title: "Claude 额度过期提示排查", light: "done", phaseText: "已完成",
+      provider: "claudeCode", host: "T", model: "Sonnet 4.5", age: "29m",
+      prompt: "检查一下额度过了重置时间后的展示",
+      reply: "修复了窗口已重置仍显示旧百分比的问题，并补充了过期芯片的重新安装入口。"
+    },
+    {
+      id: "s6", project: null, cwd: "~",
+      title: "计算重置剩余时间", light: "done", phaseText: "已完成",
+      provider: "claudeCode", host: "T", model: "Sonnet 4.5", age: "41m",
+      prompt: "把倒计时文案改成简短格式",
+      reply: "统一为「1天10小时」「42分钟」格式，并补充边界单测。"
+    }
+  ],
+  busy: [
+    {
+      id: "b1", project: "Fuyu", cwd: "~/Desktop/projects/Fuyu",
+      title: "反重力运行审批排查", light: "needs", phaseText: "等你确认",
+      provider: "antigravity", host: "IDE", model: "gemini-4-neon · H", perm: "跳过确认",
+      age: "38s", prompt: "瘦身 按你推荐的来",
+      tool: { name: "run_command", detail: 'git grep -n "AGENTS\\.md" scripts/ tests/ .claude/ && wc -c AGENTS.md' },
+      subagents: []
+    },
+    {
+      id: "b2", project: "Fuyu", cwd: "~/Desktop/projects/Fuyu",
+      title: "Mac刘海面板Tab优化建议", light: "working", phaseText: "运行中 · 1m 42s",
+      provider: "antigravity", host: "IDE", model: "gemini-4-neon · H", perm: "自动",
+      age: "1m", prompt: "选2",
+      tool: { name: "run_command", detail: "npx eslint src/lib/settings/notchRingSettings.ts src/windows/island/IslandHeader.tsx" },
+      todos: { done: 3, total: 5 },
+      subagents: [
+        { name: "检查浅色岛对比度", tool: "read_file", age: "24s" },
+        { name: "运行 notch-ring 单测", tool: "run_command", age: "11s" }
+      ]
+    },
+    {
+      id: "b3", project: "Fuyu", cwd: "gpu-01:~/work/fuyu-voice", remote: "gpu-01",
+      title: "离线语音模型量化压测", light: "working", phaseText: "运行中 · 6m 10s",
+      provider: "codex", host: "SSH", model: "gpt-5.4 · XH", perm: "自动",
+      age: "6m", prompt: "跑一轮 int8 和 fp16 延迟对比",
+      tool: { name: "Bash", detail: "python3 bench_whisper.py --quant int8 --threads 8 --samples 120" },
+      subagents: []
+    },
+    {
+      id: "b4", project: "Fuxi", cwd: "~/Desktop/projects/Fuxi",
+      title: "多窗口状态同步评审", light: "yourTurn", phaseText: "等你回复",
+      provider: "claudeCode", host: "T", model: "Opus 4.6 · H", perm: "自动",
+      age: "4m", prompt: "对比一下广播和轮询",
+      reply: "推荐用事件广播方案，是否按方案 B 开始改动？",
+      subagents: []
+    },
+    {
+      id: "b5", project: "Fuxi", cwd: "~/Desktop/projects/Fuxi",
+      title: "CI 打包签名失败排查", light: "failed", phaseText: "出错了",
+      provider: "cursor", host: "IDE", model: "Claude 4.6", perm: "默认",
+      age: "9m", prompt: "看下 macOS notarization 日志",
+      reply: "apple-notary 返回 401：环境变量 APPLE_API_KEY 缺失或已过期。"
+    },
+    {
+      id: "b6", project: "Fuxi", cwd: "~/Desktop/projects/Fuxi",
+      title: "全面分析与后续规划", light: "done", unseen: true, phaseText: "刚完成",
+      provider: "claudeCode", host: "T", model: "Opus 4.6", age: "23m",
+      reply: "已完成全仓结构梳理并输出 4 个阶段规划。"
+    },
+    {
+      id: "b7", project: "Fuyu", cwd: "~/Desktop/projects/Fuyu",
+      title: "Claude 额度过期提示排查", light: "done", phaseText: "已完成",
+      provider: "claudeCode", host: "T", model: "Sonnet 4.5", age: "29m",
+      reply: "修复了已重置窗口仍展示旧百分比的问题。"
+    },
+    {
+      id: "b8", project: "Plugins", cwd: "~/Desktop/projects/fuyu-plugins",
+      title: "官网插件市场索引签名校验", light: "done", phaseText: "已完成",
+      provider: "workbuddy", host: "T", model: "GLM-4.7", age: "1h",
+      reply: "已校验 14 个官方插件 manifest 并通过签名验证。"
+    },
+    {
+      id: "b9", project: null, cwd: "~",
+      title: "计算重置剩余时间", light: "done", phaseText: "已完成",
+      provider: "claudeCode", host: "T", model: "Sonnet 4.5", age: "2h",
+      reply: "格式化函数已合并。"
+    }
+  ],
+  calm: [
+    {
+      id: "c1", project: "Fuyu", cwd: "~/Desktop/projects/Fuyu",
+      title: "Mac刘海面板Tab优化建议", light: "working", phaseText: "运行中 · 1m 05s",
+      provider: "antigravity", host: "IDE", model: "gemini-4-neon · H", perm: "自动",
+      age: "1m", prompt: "选2",
+      tool: { name: "run_command", detail: "npx eslint src/lib/settings/notchRingSettings.ts" },
+      subagents: []
+    },
+    {
+      id: "c2", project: "Fuxi", cwd: "~/Desktop/projects/Fuxi",
+      title: "全面分析与后续规划", light: "done", unseen: true, phaseText: "刚完成",
+      provider: "claudeCode", host: "T", model: "Opus 4.6", age: "18m",
+      reply: "规划文档已写入 docs/architecture/roadmap.md。"
+    },
+    {
+      id: "c3", project: "Fuyu", cwd: "~/Desktop/projects/Fuyu",
+      title: "Claude 额度过期提示排查", light: "done", phaseText: "已完成",
+      provider: "claudeCode", host: "T", model: "Sonnet 4.5", age: "34m",
+      reply: "已修复并验证通过。"
+    }
+  ]
+};
+
+const state = {
+  theme: "dark",
+  width: "notch",
+  light: "jelly",
+  dataset: "shot",
+  usage: "on",
+  aFilter: "all",
+  aCollapseDone: false,
+  aOpenSubs: { s2: true, b2: true },
+  bSelected: null,
+  bShowDetail: false,
+  dFilter: "all",
+  eSelected: null,
+  usagePop: null,
+  archived: { a: [], b: [], c: [], d: [], e: [] },
+  toast: {}
+};
+
+function esc(str) {
+  return String(str ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+
+function getSessions(scheme) {
+  const archived = new Set(state.archived[scheme] || []);
+  return DATASETS[state.dataset].filter(s => !archived.has(s.id));
+}
+
+function isActive(s) {
+  return s.light === "needs" || s.light === "working" || s.light === "yourTurn" || s.light === "failed";
+}
+
+function provImg(id, size = 14) {
+  const b = BRAND[id] || BRAND.claudeCode;
+  return `<img class="prov-ic" src="${b.src}" width="${size}" height="${size}" alt="${b.name}" onerror="this.outerHTML='<span style=&quot;width:${size}px;height:${size}px;border-radius:4px;background:${b.color};color:#0b0c10;display:inline-grid;place-items:center;font-size:9px;font-weight:800;flex:none&quot;>${b.short}</span>'">`;
+}
+
+function provBadge(s, size = 14) {
+  return `<span class="prov-wrap" title="${BRAND[s.provider]?.name || s.provider}${s.host ? " · " + s.host : ""}">${provImg(s.provider, size)}</span>`;
+}
+
+function jellySvg(light, unseen) {
+  const palette = {
+    needs: { body: "#ff9f43", rim: "#ffd29d", eye: "#1f1200" },
+    working: { body: "#52a9ff", rim: "#a9d6ff", eye: "#06192c" },
+    yourTurn: { body: "#ffd166", rim: "#fff0b8", eye: "#241900" },
+    failed: { body: "#ff6b6b", rim: "#ffb3b3", eye: "#2a0808" },
+    done: unseen
+      ? { body: "#34d399", rim: "#a7f3d0", eye: "#05261b" }
+      : { body: "#8d8a96", rim: "#b9b5c2", eye: "#1b1a20" }
+  }[light] || { body: "#8d8a96", rim: "#b9b5c2", eye: "#1b1a20" };
+
+  return `<svg class="jelly ${light}" viewBox="0 0 12 11" aria-hidden="true">
+    <rect x="3" y="1" width="6" height="1" fill="${palette.rim}"/>
+    <rect x="2" y="2" width="8" height="1" fill="${palette.body}"/>
+    <rect x="1" y="3" width="10" height="4" fill="${palette.body}"/>
+    <rect x="2" y="3" width="2" height="1" fill="${palette.rim}" opacity="0.55"/>
+    <rect x="3" y="4" width="1.5" height="1.5" fill="${palette.eye}"/>
+    <rect x="7.5" y="4" width="1.5" height="1.5" fill="${palette.eye}"/>
+    <rect x="2" y="7" width="8" height="1" fill="${palette.rim}" opacity="0.65"/>
+    <rect x="2" y="8" width="1.5" height="2" fill="${palette.body}" opacity="0.85"/>
+    <rect x="5.2" y="8" width="1.6" height="2.4" fill="${palette.body}" opacity="0.9"/>
+    <rect x="8.5" y="8" width="1.5" height="2" fill="${palette.body}" opacity="0.85"/>
+  </svg>`;
+}
+
+function statusMark(s) {
+  if (state.light === "jelly") {
+    return `<span class="status-slot" title="${esc(s.phaseText)}">${jellySvg(s.light, s.unseen)}</span>`;
+  }
+  return `<span class="status-slot" title="${esc(s.phaseText)}"><span class="status-dot ${s.light}${s.unseen ? " unseen" : ""}"></span></span>`;
+}
+
+function headerHtml() {
+  return `
+    <div class="i-header">
+      <div class="i-header-left">
+        <span class="i-tab" title="首页">${jellySvg("done", false)}</span>
+        <span class="i-tab active" title="Agent">
+          <svg class="ic" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M2 13h2M20 13h2"/></svg>
+        </span>
+        <span class="i-tab" title="待办"><svg class="ic" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></span>
+        <span class="i-tab hide-narrow" title="音乐"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+        <span class="i-tab hide-medium hide-narrow" title="日历"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        <span class="i-tab hide-medium hide-narrow" title="剪贴板"><svg class="ic" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></span>
+        <span class="i-tab-more">••• +4</span>
+      </div>
+      <div class="i-notch">DEV</div>
+      <div class="i-header-right">
+        <span class="i-tab" title="排序与分组"><svg class="ic" viewBox="0 0 24 24"><path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/></svg></span>
+        <span class="i-tab hide-narrow" title="通知"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+        <span class="i-tab hide-medium hide-narrow" title="截图"><svg class="ic" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg></span>
+        <span class="i-tab" title="设置"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+      </div>
+    </div>`;
+}
+
+function usagePopoverHtml(scheme) {
+  if (state.usagePop !== scheme) return "";
+  return `
+    <div class="usage-pop" data-stop>
+      <h4><span>额度详情（实时读取）</span><button data-close-pop>关闭</button></h4>
+      ${USAGES.map(u => `
+        <div class="usage-pop-row">
+          ${provImg(u.id, 14)}
+          <span class="ell">${BRAND[u.id].name}</span>
+          <div class="usage-pop-bar"><i style="width:${u.pct}%;background:${u.barColor}"></i></div>
+          <span class="tnum ${u.tone}" style="font-weight:600">${u.value}</span>
+        </div>
+        <div style="font-size:10.5px;color:var(--i-t3);margin:-2px 0 4px 26px">${u.detail}</div>
+      `).join("")}
+    </div>`;
+}
+
+function toastHtml(scheme) {
+  const t = state.toast[scheme];
+  if (!t) return "";
+  return `<div class="i-toast"><span>${esc(t.text)}</span>${t.undo ? `<button data-undo="${scheme}">撤销</button>` : ""}</div>`;
+}
+
+function islandShell(scheme, bodyHtml, extraClass = "") {
+  const wMap = { notch: 800, medium: 580, narrow: 440 };
+  const hMap = { notch: 432, medium: 438, narrow: 460 };
+  const cls = `island${state.width === "notch" ? " is-notch" : ""} ${extraClass}`;
+  return `
+    <div class="${cls}" data-scheme="${scheme}" data-w="${state.width}" style="--island-w:${wMap[state.width]}px;--island-h:${hMap[state.width]}px">
+      ${headerHtml()}
+      <div class="i-body">
+        ${bodyHtml}
+        ${usagePopoverHtml(scheme)}
+        ${toastHtml(scheme)}
+      </div>
+      <div class="i-grab"></div>
+    </div>`;
+}
+
+function icArchive() {
+  return `<svg class="ic" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="5" rx="1"/><path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9M10 13h4"/></svg>`;
+}
+function icMore() {
+  return `<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`;
+}
+function icFolder() {
+  return `<svg class="ic" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`;
+}
+function icJump() {
+  return `<svg class="ic" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
+}
+
+/* ==================== RENDER A ==================== */
+function renderA() {
+  const all = getSessions("a");
+  const needCnt = all.filter(s => s.light === "needs" || s.light === "yourTurn" || s.light === "failed").length;
+  const runCnt = all.filter(s => s.light === "working").length;
+  const doneCnt = all.filter(s => s.light === "done").length;
+
+  const filtered = all.filter(s => {
+    if (state.aFilter === "need") return s.light === "needs" || s.light === "yourTurn" || s.light === "failed";
+    if (state.aFilter === "run") return s.light === "working";
+    if (state.aFilter === "done") return s.light === "done";
+    return true;
+  });
+  const active = filtered.filter(isActive);
+  const done = filtered.filter(s => !isActive(s));
+
+  const usageStrip = state.usage === "on" ? `
+    <div class="a-usage-strip" data-toggle-pop="a" title="点击展开完整额度">
+      ${USAGES.map((u, idx) => `
+        <span class="a-u-item${idx >= 3 ? " hide-narrow" : ""}">
+          ${provImg(u.id, 13)}
+          <span class="tnum ${u.tone}" style="font-weight:600">${u.value}</span>
+          <i class="u-line" style="background:${u.barColor}"></i>
+        </span>
+      `).join("")}
+    </div>` : "";
+
+  const activeRows = active.map(s => {
+    const subs = s.subagents || [];
+    const subOpen = Boolean(state.aOpenSubs[s.id]);
+    const cmdHtml = s.light === "needs" && s.tool
+      ? `<div class="a-cmd needs-cmd ell"><span class="verb">等待授权</span><span class="mono ell">${esc(s.tool.name)} ${esc(s.tool.detail)}</span></div><button class="a-cta" data-focus="a:${s.id}">查看 ↗</button>`
+      : s.tool
+      ? `<div class="a-cmd ell"><span class="verb">› ${esc(s.tool.name)}</span><span class="mono ell">${esc(s.tool.detail)}</span></div>`
+      : `<div class="a-cmd ell"><span class="verb" style="color:${s.light === "yourTurn" ? "var(--i-turn)" : s.light === "failed" ? "var(--i-err)" : "var(--i-t2)"}">${esc(s.phaseText)}</span><span class="ell">${esc(s.reply || "")}</span></div>`;
+
+    return `
+      <div class="a-row-active ${s.light}" data-focus="a:${s.id}">
+        ${statusMark(s)}
+        <div class="a-main">
+          <div class="a-top">
+            ${s.project ? `<span class="a-proj">${esc(s.project)}</span>` : ""}
+            <span class="a-title ell">${esc(s.title)}</span>
+            <div class="a-meta">
+              <span class="a-model a-meta-rest">${esc(s.model)}</span>
+              <span class="a-meta-rest">${provBadge(s, 14)}</span>
+              <span class="tnum a-meta-rest" style="min-width:24px;text-align:right">${esc(s.age)}</span>
+              <span class="a-actions" data-stop>
+                <button class="act-btn" title="跳到窗口" data-focus="a:${s.id}">${icJump()}</button>
+                <button class="act-btn" title="更多操作" data-notice="a:已复制目录路径">${icMore()}</button>
+                <button class="act-btn" title="归档" data-archive="a:${s.id}">${icArchive()}</button>
+              </span>
+            </div>
+          </div>
+          <div class="a-sub">
+            ${cmdHtml}
+            ${s.todos ? `<span class="a-sub-pill tnum">${s.todos.done}/${s.todos.total}</span>` : ""}
+            ${subs.length ? `<button class="a-sub-pill" data-stop data-toggle-sub="${s.id}">${subOpen ? "▾" : "▸"} ${subs.length} 子任务</button>` : ""}
+          </div>
+          ${subs.length && subOpen ? `
+            <div class="a-subagents" data-stop>
+              ${subs.map(sub => `<div class="a-subagent-row"><span class="st">●</span><span class="ell">${esc(sub.name)}</span><span class="mono" style="color:var(--i-t3)">${esc(sub.tool)}</span><span class="tnum" style="margin-left:auto;color:var(--i-t3)">${esc(sub.age)}</span></div>`).join("")}
+            </div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+
+  const doneBlock = done.length ? `
+    <div class="a-sec-head">
+      <span>最近完成 · ${done.length}</span>
+      <button data-toggle-adone>${state.aCollapseDone ? "展开" : "收起"}</button>
+    </div>
+    ${state.aCollapseDone ? "" : done.map(s => `
+      <div class="a-row-done${s.unseen ? " unseen" : ""}" data-focus="a:${s.id}">
+        ${statusMark(s)}
+        ${s.project ? `<span class="a-proj">${esc(s.project)}</span>` : ""}
+        <span class="a-title ell">${esc(s.title)}</span>
+        <div class="a-meta">
+          <span class="a-meta-rest">${provBadge(s, 13)}</span>
+          <span class="tnum a-meta-rest" style="min-width:28px;text-align:right">${esc(s.age)}</span>
+          <span class="a-actions" data-stop>
+            <button class="act-btn" title="更多" data-notice="a:已复制会话 ID">${icMore()}</button>
+            <button class="act-btn" title="归档" data-archive="a:${s.id}">${icArchive()}</button>
+          </span>
+        </div>
+      </div>`).join("")}` : "";
+
+  const html = `
+    <div class="a-toolbar">
+      <div class="a-filters">
+        <button class="a-filter${state.aFilter === "all" ? " on" : ""}" data-af="all">全部 <span class="cnt">${all.length}</span></button>
+        <button class="a-filter${state.aFilter === "need" ? " on" : ""}" data-af="need">需处理 <span class="cnt${needCnt ? " alert" : ""}">${needCnt}</span></button>
+        <button class="a-filter${state.aFilter === "run" ? " on" : ""}" data-af="run">运行中 <span class="cnt">${runCnt}</span></button>
+        <button class="a-filter${state.aFilter === "done" ? " on" : ""}" data-af="done">已完成 <span class="cnt">${doneCnt}</span></button>
+      </div>
+      ${usageStrip}
+    </div>
+    <div class="a-list scroll">
+      ${activeRows}
+      ${doneBlock}
+    </div>`;
+
+  const wrap = document.getElementById("stage-a");
+  wrap.className = `stage-wrap${state.width === "notch" ? " notch-mode" : ""}`;
+  wrap.innerHTML = islandShell("a", html);
+}
+
+/* ==================== RENDER B ==================== */
+function renderB() {
+  const all = getSessions("b");
+  const sel = all.find(s => s.id === state.bSelected) || all[0];
+  if (sel) state.bSelected = sel.id;
+  const active = all.filter(isActive);
+  const done = all.filter(s => !isActive(s));
+
+  const usageBar = state.usage === "on" ? `
+    <div class="b-usage-bar">
+      ${USAGES.map(u => `
+        <span class="b-u" title="${u.detail}">
+          ${provImg(u.id, 13)}
+          <span class="tnum ${u.tone}" style="font-weight:600">${u.value}</span>
+          <span class="b-u-track"><i style="width:${u.pct}%;background:${u.barColor}"></i></span>
+          <span style="color:var(--i-t3);font-size:10.5px">${u.sub}</span>
+        </span>
+      `).join("")}
+    </div>` : "";
+
+  const renderItem = s => `
+    <button class="b-item ${s.light}${sel && sel.id === s.id ? " sel" : ""}" data-bsel="${s.id}">
+      ${statusMark(s)}
+      <span class="b-item-mid">
+        <span class="b-item-title ell">${esc(s.title)}</span>
+        <span class="b-item-sub ell">${s.project ? `<span>${esc(s.project)}</span><span>·</span>` : ""}<span>${esc(s.phaseText)}</span></span>
+      </span>
+      <span class="b-item-right">
+        ${provBadge(s, 13)}
+        <span class="tnum">${esc(s.age)}</span>
+      </span>
+    </button>`;
+
+  const detailHtml = sel ? `
+    <button class="b-back" data-bback>← 返回会话列表</button>
+    <div class="b-d-top">
+      <span class="b-d-crumb">${icFolder()} <span class="mono ell">${esc(sel.cwd)}</span></span>
+      <span class="b-d-status ${sel.light}">${esc(sel.phaseText)}</span>
+    </div>
+    <h3 class="b-d-title">${esc(sel.title)}</h3>
+    <div class="b-d-meta">
+      <span class="b-d-chip">${provImg(sel.provider, 13)} ${BRAND[sel.provider].name}</span>
+      <span class="b-d-chip mono">${esc(sel.model)}</span>
+      ${sel.perm ? `<span class="b-d-chip">权限：${esc(sel.perm)}</span>` : ""}
+      ${sel.remote ? `<span class="b-d-chip">SSH · ${esc(sel.remote)}</span>` : ""}
+    </div>
+    ${sel.prompt ? `<div class="b-d-prompt"><b>你：</b>${esc(sel.prompt)}</div>` : ""}
+    <div class="b-d-console scroll">
+      ${sel.tool
+        ? `<div class="head"><span>${sel.light === "needs" ? "待确认命令" : "正在执行"} · ${esc(sel.tool.name)}</span><span class="tnum">${esc(sel.age)}</span></div><code>${esc(sel.tool.detail)}</code>`
+        : `<div class="head"><span>最新回复</span><span class="tnum">${esc(sel.age)}</span></div><p>${esc(sel.reply || "暂无正文摘要")}</p>`}
+      ${sel.subagents && sel.subagents.length ? `
+        <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--i-line-soft);display:flex;flex-direction:column;gap:3px">
+          <div class="head"><span>并行子 Agent (${sel.subagents.length})</span><span>${sel.todos ? `待办 ${sel.todos.done}/${sel.todos.total}` : ""}</span></div>
+          ${sel.subagents.map(sub => `<div style="display:flex;gap:8px;font-size:11.5px"><span style="color:var(--i-run)">●</span><span>${esc(sub.name)}</span><span class="mono" style="color:var(--i-t3)">${esc(sub.tool)}</span><span class="tnum" style="margin-left:auto;color:var(--i-t3)">${esc(sub.age)}</span></div>`).join("")}
+        </div>` : ""}
+    </div>
+    <div class="b-d-foot">
+      <button class="b-btn-primary${sel.light === "needs" ? " needs" : ""}" data-focus="b:${sel.id}">${sel.light === "needs" ? "前往审批 ↗" : "跳到窗口 ↵"}</button>
+      <button class="b-btn" data-notice="b:已在访达中打开目录">${icFolder()} 目录</button>
+      <button class="b-btn right" data-archive="b:${sel.id}">${icArchive()} 归档</button>
+    </div>` : `<div style="margin:auto;color:var(--i-t3)">暂无会话</div>`;
+
+  const html = `
+    ${usageBar}
+    <div class="b-split">
+      <div class="b-master scroll">
+        ${active.length ? `<div class="b-sec">进行中 · ${active.length}</div>${active.map(renderItem).join("")}` : ""}
+        ${done.length ? `<div class="b-sec">最近完成 · ${done.length}</div>${done.map(renderItem).join("")}` : ""}
+      </div>
+      <div class="b-detail">${detailHtml}</div>
+    </div>`;
+
+  const wrap = document.getElementById("stage-b");
+  wrap.className = `stage-wrap${state.width === "notch" ? " notch-mode" : ""}`;
+  wrap.innerHTML = islandShell("b", html, state.bShowDetail ? "b-show-detail" : "");
+}
+
+/* ==================== RENDER C ==================== */
+function renderC() {
+  const all = getSessions("c");
+  const spotlights = all.filter(s => s.light === "needs" || s.light === "failed");
+  const active = all.filter(s => s.light === "working" || s.light === "yourTurn");
+  const done = all.filter(s => s.light === "done");
+
+  const usageMini = state.usage === "on" ? `
+    <div class="c-usage-mini">
+      ${USAGES.slice(0, 3).map((u, i) => `
+        <span class="c-u-pill${i === 2 ? " hide-narrow" : ""}" data-toggle-pop="c">
+          ${provImg(u.id, 12)}
+          <span class="tnum ${u.tone}" style="font-weight:600">${u.value}</span>
+        </span>`).join("")}
+      <span class="c-u-pill" data-toggle-pop="c" style="color:var(--i-t3)">+2</span>
+    </div>` : "";
+
+  const spotHtml = spotlights.map(s => `
+    <div class="c-spotlight" data-focus="c:${s.id}">
+      ${statusMark(s)}
+      <div class="c-spotlight-mid">
+        <div class="c-spotlight-top">
+          <span class="c-spotlight-tag">${esc(s.phaseText)}</span>
+          ${s.project ? `<span class="a-proj">${esc(s.project)}</span>` : ""}
+          <span class="a-title ell">${esc(s.title)}</span>
+        </div>
+        <div class="mono ell" style="font-size:11.5px;color:var(--i-t2)">${s.tool ? `${esc(s.tool.name)} · ${esc(s.tool.detail)}` : esc(s.reply || "")}</div>
+      </div>
+      <button class="a-cta" data-stop data-focus="c:${s.id}">立即处理</button>
+    </div>`).join("");
+
+  const cardsHtml = active.length ? `
+    <div class="c-grid">
+      ${active.map(s => `
+        <div class="c-card ${s.light}" data-focus="c:${s.id}">
+          <div class="c-card-acts" data-stop>
+            <button class="act-btn" title="更多" data-notice="c:已复制路径">${icMore()}</button>
+            <button class="act-btn" title="归档" data-archive="c:${s.id}">${icArchive()}</button>
+          </div>
+          <div class="c-card-head">
+            ${statusMark(s)}
+            ${s.project ? `<span class="a-proj">${esc(s.project)}</span>` : ""}
+            <span style="color:${s.light === "yourTurn" ? "var(--i-turn)" : "var(--i-run)"};font-weight:550">${esc(s.phaseText)}</span>
+            <span class="sp"></span>
+            ${provBadge(s, 13)}
+          </div>
+          <div class="c-card-title ell">${esc(s.title)}</div>
+          <div class="c-card-term ell">
+            ${s.tool
+              ? `<span style="color:var(--i-run);font-weight:600;flex:none">› ${esc(s.tool.name)}</span><span class="mono ell">${esc(s.tool.detail)}</span>`
+              : `<span class="ell">${esc(s.reply || "")}</span>`}
+          </div>
+          <div class="c-card-foot">
+            <span class="mono ell">${esc(s.model)}${s.todos ? ` · 待办 ${s.todos.done}/${s.todos.total}` : ""}${s.subagents?.length ? ` · ${s.subagents.length} 子任务` : ""}</span>
+            <span class="tnum">${esc(s.age)}</span>
+          </div>
+        </div>`).join("")}
+    </div>` : "";
+
+  const doneHtml = done.length ? `
+    <div class="c-done-label">最近完成 · ${done.length}</div>
+    <div class="c-done-grid">
+      ${done.map(s => `
+        <div class="c-done-pill${s.unseen ? " unseen" : ""}" data-focus="c:${s.id}">
+          ${statusMark(s)}
+          <span class="t ell">${s.project ? `<span style="color:var(--i-t3)">${esc(s.project)} · </span>` : ""}${esc(s.title)}</span>
+          ${provBadge(s, 13)}
+          <span class="tnum" style="font-size:11px;color:var(--i-t3)">${esc(s.age)}</span>
+        </div>`).join("")}
+    </div>` : "";
+
+  const html = `
+    <div class="c-top">
+      <div class="c-summary">
+        <span class="c-dot-inline"><i style="background:var(--i-needs)"></i> <b>${spotlights.length}</b> 需处理</span>
+        <span class="c-dot-inline"><i style="background:var(--i-run)"></i> <b>${active.length}</b> 进行中</span>
+        <span class="c-dot-inline"><i style="background:var(--i-t4)"></i> ${done.length} 完成</span>
+      </div>
+      ${usageMini}
+    </div>
+    <div class="c-scroll scroll">
+      ${spotHtml}
+      ${cardsHtml}
+      ${doneHtml}
+    </div>`;
+
+  const wrap = document.getElementById("stage-c");
+  wrap.className = `stage-wrap${state.width === "notch" ? " notch-mode" : ""}`;
+  wrap.innerHTML = islandShell("c", html);
+}
+
+/* ==================== RENDER D ==================== */
+function renderD() {
+  const all = getSessions("d").filter(s => state.dFilter === "active" ? isActive(s) : true);
+  const map = new Map();
+  for (const s of all) {
+    const key = s.project || "其他会话";
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(s);
+  }
+
+  const usageStrip = state.usage === "on" ? `
+    <div class="a-usage-strip" data-toggle-pop="d">
+      ${USAGES.map((u, idx) => `
+        <span class="a-u-item${idx >= 3 ? " hide-narrow" : ""}">
+          ${provImg(u.id, 13)}
+          <span class="tnum ${u.tone}" style="font-weight:600">${u.value}</span>
+          <i class="u-line" style="background:${u.barColor}"></i>
+        </span>`).join("")}
+    </div>` : "";
+
+  const groupsHtml = [...map.entries()].map(([proj, list]) => {
+    const actCount = list.filter(isActive).length;
+    return `
+      <div class="d-group">
+        <div class="d-group-head">
+          <span class="d-group-name">${icFolder()} ${esc(proj)}</span>
+          <span class="d-group-stat">${list.length} 个会话${actCount ? ` · <span style="color:var(--i-run)">${actCount} 活跃</span>` : ""}</span>
+          ${proj !== "其他会话" ? `<button class="d-group-open" data-notice="d:已打开项目目录 ${esc(proj)}">打开目录 ↗</button>` : ""}
+        </div>
+        ${list.map(s => `
+          <div class="d-row ${s.light}" data-focus="d:${s.id}">
+            ${statusMark(s)}
+            <div class="d-row-mid">
+              <span class="d-row-title ell">${esc(s.title)}</span>
+              ${isActive(s) ? `
+                <span class="d-row-sub ell">
+                  ${s.tool
+                    ? `<span class="k">${s.light === "needs" ? "等待授权" : esc(s.tool.name)}</span><span class="mono ell">${esc(s.tool.detail)}</span>`
+                    : `<span class="turn">${esc(s.phaseText)}</span><span class="ell">${esc(s.reply || "")}</span>`}
+                </span>` : ""}
+            </div>
+            <div class="d-row-col3">
+              ${isActive(s) ? `<span class="m mono">${esc(s.model)}</span>` : ""}
+              ${provBadge(s, 14)}
+            </div>
+            <div class="d-row-col4">
+              <span class="d-time tnum">${esc(s.age)}</span>
+              <span class="d-acts" data-stop>
+                <button class="act-btn" title="更多" data-notice="d:已复制会话路径">${icMore()}</button>
+                <button class="act-btn" title="归档" data-archive="d:${s.id}">${icArchive()}</button>
+              </span>
+            </div>
+          </div>`).join("")}
+      </div>`;
+  }).join("");
+
+  const html = `
+    <div class="d-head">
+      <div class="a-filters">
+        <button class="a-filter${state.dFilter === "all" ? " on" : ""}" data-df="all">全部项目</button>
+        <button class="a-filter${state.dFilter === "active" ? " on" : ""}" data-df="active">只看活跃</button>
+      </div>
+      ${usageStrip}
+    </div>
+    <div class="d-groups scroll">${groupsHtml}</div>`;
+
+  const wrap = document.getElementById("stage-d");
+  wrap.className = `stage-wrap${state.width === "notch" ? " notch-mode" : ""}`;
+  wrap.innerHTML = islandShell("d", html);
+}
+
+/* ==================== RENDER E ==================== */
+function renderE() {
+  const all = getSessions("e");
+  const sel = all.find(s => s.id === state.eSelected) || all[0];
+  if (sel) state.eSelected = sel.id;
+
+  const usageRail = state.usage === "on" ? `
+    <div class="e-usage-rail">
+      ${USAGES.map(u => `
+        <span class="e-u-cell" data-toggle-pop="e" title="${u.detail}">
+          ${provImg(u.id, 13)}
+          <span class="tnum ${u.tone}" style="font-weight:600">${u.value}</span>
+          <span class="e-u-lbl">${u.sub}</span>
+        </span>`).join("")}
+    </div>` : "";
+
+  const rowsHtml = all.map(s => {
+    const isSel = sel && sel.id === s.id;
+    const line2 = isActive(s)
+      ? `<div class="e-row-line2 ell">
+           <span class="prompt-sym">${s.light === "needs" ? "!" : s.light === "yourTurn" ? "?" : "›"}</span>
+           ${s.tool
+             ? `<span class="mono" style="color:var(--i-t2);flex:none">${esc(s.tool.name)}</span><span class="mono ell">${esc(s.tool.detail)}</span>`
+             : `<span class="ell">${esc(s.phaseText)} · ${esc(s.reply || "")}</span>`}
+         </div>` : "";
+    const expand = isSel && (s.prompt || s.reply)
+      ? `<div class="e-row-expand ell">
+           ${s.prompt ? `<span class="ell">你：${esc(s.prompt)}</span>` : ""}
+           ${s.subagents?.length ? `<span style="color:var(--i-run);flex:none">${s.subagents.length} 个子 Agent 运行中</span>` : ""}
+         </div>` : "";
+    return `
+      <div class="e-row ${s.light}${s.unseen ? " unseen" : ""}${isSel ? " sel" : ""}" data-esel="${s.id}">
+        ${statusMark(s)}
+        <div class="e-row-body">
+          <div class="e-row-line1">
+            <span class="e-proj">${esc(s.project || "—")}</span>
+            <span class="e-title ell">${esc(s.title)}</span>
+            <span class="e-right">
+              ${isActive(s) ? `<span class="m mono">${esc(s.model)}</span>` : ""}
+              ${provBadge(s, 13)}
+              <span class="tnum" style="min-width:26px;text-align:right">${esc(s.age)}</span>
+            </span>
+          </div>
+          ${line2}
+          ${expand}
+        </div>
+      </div>`;
+  }).join("");
+
+  const html = `
+    ${usageRail}
+    <div class="e-list scroll">${rowsHtml}</div>
+    <div class="e-footer">
+      <span class="mono ell">${sel ? esc(sel.cwd) : ""}</span>
+      <span class="e-keys">
+        <span><kbd>↵</kbd>跳到窗口</span>
+        <span><kbd>⌘O</kbd>目录</span>
+        <span><kbd>⌫</kbd>归档</span>
+      </span>
+    </div>`;
+
+  const wrap = document.getElementById("stage-e");
+  wrap.className = `stage-wrap${state.width === "notch" ? " notch-mode" : ""}`;
+  wrap.innerHTML = islandShell("e", html);
+}
+
+function showToast(scheme, text, undo = false) {
+  state.toast[scheme] = { text, undo };
+  renderScheme(scheme);
+  clearTimeout(showToast["t_" + scheme]);
+  showToast["t_" + scheme] = setTimeout(() => {
+    delete state.toast[scheme];
+    renderScheme(scheme);
+  }, 3400);
+}
+
+function renderScheme(s) {
+  ({ a: renderA, b: renderB, c: renderC, d: renderD, e: renderE })[s]();
+}
+
+function renderAll() {
+  document.body.classList.toggle("light", state.theme === "light");
+  renderA(); renderB(); renderC(); renderD(); renderE();
+}
+
+document.querySelector(".topbar").addEventListener("click", e => {
+  const btn = e.target.closest(".seg button");
+  if (!btn) return;
+  const seg = btn.closest(".seg");
+  const key = seg.dataset.ctl;
+  const val = btn.dataset.val;
+  state[key] = val;
+  if (key === "dataset") {
+    state.archived = { a: [], b: [], c: [], d: [], e: [] };
+    state.bSelected = null;
+    state.eSelected = null;
+    state.bShowDetail = false;
+  }
+  seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+  renderAll();
+});
+
+document.addEventListener("click", e => {
+  const closePop = e.target.closest("[data-close-pop]");
+  if (closePop) {
+    state.usagePop = null;
+    renderAll();
+    return;
+  }
+  const popBtn = e.target.closest("[data-toggle-pop]");
+  if (popBtn) {
+    const sc = popBtn.dataset.togglePop;
+    state.usagePop = state.usagePop === sc ? null : sc;
+    renderAll();
+    return;
+  }
+  const undoBtn = e.target.closest("[data-undo]");
+  if (undoBtn) {
+    const sc = undoBtn.dataset.undo;
+    state.archived[sc].pop();
+    delete state.toast[sc];
+    renderScheme(sc);
+    return;
+  }
+  const archBtn = e.target.closest("[data-archive]");
+  if (archBtn) {
+    const [sc, id] = archBtn.dataset.archive.split(":");
+    state.archived[sc].push(id);
+    showToast(sc, "已归档该会话", true);
+    return;
+  }
+  const noticeBtn = e.target.closest("[data-notice]");
+  if (noticeBtn) {
+    const idx = noticeBtn.dataset.notice.indexOf(":");
+    const sc = noticeBtn.dataset.notice.slice(0, idx);
+    const msg = noticeBtn.dataset.notice.slice(idx + 1);
+    showToast(sc, msg, false);
+    return;
+  }
+  const af = e.target.closest("[data-af]");
+  if (af) { state.aFilter = af.dataset.af; renderA(); return; }
+  const df = e.target.closest("[data-df]");
+  if (df) { state.dFilter = df.dataset.df; renderD(); return; }
+  if (e.target.closest("[data-toggle-adone]")) { state.aCollapseDone = !state.aCollapseDone; renderA(); return; }
+  const subBtn = e.target.closest("[data-toggle-sub]");
+  if (subBtn) {
+    const id = subBtn.dataset.toggleSub;
+    state.aOpenSubs[id] = !state.aOpenSubs[id];
+    renderA();
+    return;
+  }
+  const bsel = e.target.closest("[data-bsel]");
+  if (bsel) {
+    state.bSelected = bsel.dataset.bsel;
+    if (state.width !== "notch") state.bShowDetail = true;
+    renderB();
+    return;
+  }
+  if (e.target.closest("[data-bback]")) { state.bShowDetail = false; renderB(); return; }
+  const esel = e.target.closest("[data-esel]");
+  if (esel) { state.eSelected = esel.dataset.esel; renderE(); return; }
+
+  const focusBtn = e.target.closest("[data-focus]");
+  if (focusBtn && !e.target.closest("[data-stop]")) {
+    const [sc, id] = focusBtn.dataset.focus.split(":");
+    const item = DATASETS[state.dataset].find(x => x.id === id);
+    if (item) showToast(sc, `已切换到「${item.title}」所在窗口`, false);
+    return;
+  }
+  if (state.usagePop && !e.target.closest(".usage-pop")) {
+    state.usagePop = null;
+    renderAll();
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>

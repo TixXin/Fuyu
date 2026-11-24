@@ -138,7 +138,7 @@ const headerSlot = defineSlot<HeaderContext, IslandHeaderMeta<HeaderContext>>("i
 
 function ArrangeButton() {
   const arrange = agentArrange.use();
-  return arrange && <AgentArrangeButton sort={arrange.sort} group={arrange.group} onChange={arrange.onChange} />;
+  return arrange && <AgentArrangeButton view={arrange.view} sort={arrange.sort} group={arrange.group} onChange={arrange.onChange} />;
 }
 
 headerSlot.add({ id: "agent-arrange", order: 0, enabled: ({ page }) => page === "agents", component: ArrangeButton }, OWNER);

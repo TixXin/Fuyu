@@ -30,7 +30,7 @@ export type IslandRevealContribution = { kind: "reveal"; reveal?: "always" | "al
 export type IslandHoldContribution = { kind: "hold"; reason: string };
 export type IslandSideContribution = { kind: "side"; item: string; height: number; grow?: boolean };
 export type IslandStatusContribution = { kind: "status"; state: string; label: string };
-export type IslandPopupContribution = { kind: "popup"; page: string; height?: number; saving?: number; open?: boolean; wide?: boolean; label?: string; icon?: "music" | "bell"; iconUrl?: string };
+export type IslandPopupContribution = { kind: "popup"; page: string; height?: number; saving?: number; open?: boolean; wide?: boolean; urgent?: boolean; label?: string; icon?: "music" | "bell"; iconUrl?: string };
 export type IslandStyleContribution = { kind: "style"; vars?: Readonly<Record<string, string>>; className?: string; tint?: string };
 export type IslandBusyContribution = { kind: "busy" };
 export type IslandHintContribution = { kind: "hint"; key: string };
@@ -302,6 +302,13 @@ export function labelLine(lines: readonly IslandLineContribution[]): IslandLineC
 
 export function leadLine(lines: readonly IslandLineContribution[], { reserved = false }: { reserved?: boolean } = {}): IslandLineContribution | null {
   return lines.find((line) => line.lead === true && (reserved || line.reserve !== true)) ?? null;
+}
+
+export function urgentPopupPage(popups: ReadonlyMap<string, IslandPopupContribution>): string | null {
+  for (const entry of popups.values()) {
+    if (entry.urgent === true) return entry.page;
+  }
+  return null;
 }
 
 export function createIslandContributions(): IslandContributionStore {

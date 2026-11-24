@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import { createPortal } from "react-dom";
 import { Ellipsis } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { NOTCH_MENU_INSET, notchHeaderMenuMaxHeight } from "./notchHeaderOverflow";
 import type { IslandPage } from "./types";
 import type { SpotlightProps } from "./usePluginSpotlight";
 import "./NotchHeaderMore.css";
@@ -18,6 +19,7 @@ export type NotchHeaderMoreItem = {
 type MenuPlace = {
   top: number;
   left: number | null;
+  maxHeight: number;
   anchorLeft: number;
   minLeft: number;
   maxRight: number;
@@ -25,16 +27,18 @@ type MenuPlace = {
 };
 
 const MENU_OFFSET = 6;
-const EDGE_INSET = 8;
+const EDGE_INSET = NOTCH_MENU_INSET;
 
 export function NotchHeaderMore({
   items,
   page,
+  isExpanded = true,
   buttonRef,
   onSelect,
 }: {
   items: readonly NotchHeaderMoreItem[];
   page: IslandPage;
+  isExpanded?: boolean;
   buttonRef?: (element: HTMLButtonElement | null) => void;
   onSelect: (page: IslandPage) => void;
 }) {
@@ -55,22 +59,24 @@ export function NotchHeaderMore({
 
   const show = useCallback(() => {
     const trigger = triggerRef.current;
-    if (!trigger) return;
+    if (!trigger || !isExpanded) return;
     const anchor = trigger.getBoundingClientRect();
-    const island = (trigger.closest(".island") ?? trigger).getBoundingClientRect();
+    const panel = (trigger.closest(".island__expanded") ?? trigger.closest(".island") ?? trigger).getBoundingClientRect();
+    const top = anchor.bottom + MENU_OFFSET;
     setPlace({
-      top: anchor.bottom + MENU_OFFSET,
+      top,
       left: null,
+      maxHeight: notchHeaderMenuMaxHeight(panel.bottom, top, EDGE_INSET),
       anchorLeft: anchor.left,
-      minLeft: island.left + EDGE_INSET,
-      maxRight: island.right - EDGE_INSET,
+      minLeft: panel.left + EDGE_INSET,
+      maxRight: panel.right - EDGE_INSET,
       root: trigger.closest(".stage") ?? document.body,
     });
-  }, []);
+  }, [isExpanded]);
 
   useEffect(() => {
     setPlace(null);
-  }, [page, items.length]);
+  }, [page, items.length, isExpanded]);
 
   useLayoutEffect(() => {
     const menu = menuRef.current;
@@ -135,6 +141,7 @@ export function NotchHeaderMore({
         aria-label={copy.headerMore(items.length)}
         aria-haspopup="menu"
         aria-expanded={open}
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
           if (open) hide();
@@ -152,7 +159,8 @@ export function NotchHeaderMore({
           className="island-header-more-menu"
           role="menu"
           aria-label={copy.headerMoreMenu}
-          style={{ top: place.top, left: place.left ?? place.anchorLeft, visibility: place.left === null ? "hidden" : undefined }}
+          style={{ top: place.top, left: place.left ?? place.anchorLeft, maxHeight: place.maxHeight, visibility: place.left === null ? "hidden" : undefined }}
+          onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
           onKeyDown={onMenuKey}
         >
