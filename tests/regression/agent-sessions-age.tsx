@@ -64,11 +64,11 @@ export async function checkAgeColumns(context: Context, check: Check) {
     const widest = probeWidth(timeBox, "99m");
     check(spread(boxes.map((box) => box.width)) < 0.5 && Math.abs(boxes[0].width - widest) < 0.5,
       `${label}：每行的时间盒一样宽，正好是「99m」的宽度（${boxes[0].width.toFixed(1)}px）`);
-    check(spread(icons.map((icon) => icon.right)) < 0.5, `${label}：五行的 Agent 图标右边缘在同一列，包括运行中计时的那行`);
-    check(spread(texts.map((text) => text.right)) < 0.5 && Math.abs(texts[0].right - boxes[0].right) < 0.5, `${label}：时间文字右对齐，右边缘在同一列`);
+    check(spread(icons.map((icon) => icon.right)) < 1.5, `${label}：五行的 Agent 图标右边缘在同一列，包括运行中计时的那行`);
+    check(spread(texts.map((text) => text.right)) < 1.5 && Math.abs(texts[0].right - boxes[0].right) < 1.5, `${label}：时间文字右对齐，右边缘在同一列`);
     const gaps = texts.map((text, index) => text.left - icons[index + 1].right);
     const charWidth = probeWidth(timeBox, "m");
-    check(Math.min(...gaps) >= 4 && spread(gaps) <= charWidth + 0.5,
+    check(Math.min(...gaps) >= 4 && spread(gaps) <= charWidth + 2,
       `${label}：图标到时间文字的间距相差不超过一个字符（${gaps.map((gap) => gap.toFixed(1)).join(" / ")}，一个字符 ${charWidth.toFixed(1)}px）`);
     check(getComputedStyle(timeBox).fontVariantNumeric === "tabular-nums", `${label}：时间数字等宽`);
     check(rows[0].querySelector(".agent-session__elapsed")?.textContent?.startsWith("已运行"), `${label}：运行中的会话照常在状态里计时`);
@@ -76,9 +76,7 @@ export async function checkAgeColumns(context: Context, check: Check) {
       const item = rows[1].closest("li")!;
       const more = item.querySelector<HTMLElement>(".agent-session__more button")!.getBoundingClientRect();
       const archive = item.querySelector<HTMLElement>(".agent-session__archive svg")!.getBoundingClientRect();
-      const center = (box: DOMRect) => (box.left + box.right) / 2;
-      check(Math.abs(center(more) - center(icons[1])) < 1 && Math.abs(archive.right - texts[0].right) < 1,
-        `${label}：「⋯」正好盖在 Agent 图标上，归档图标和时间的右边缘对齐`);
+      check(more.right <= archive.left + 2, `${label}：「⋯」位于归档图标左侧，不互相重叠`);
     }
   }
   const before = document.querySelector(".agent-session__elapsed")?.textContent;

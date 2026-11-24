@@ -11,7 +11,7 @@ function openMenu(item: Element | null) {
 }
 
 export function useSessionKeyboard(onArchive: ((key: string) => void) | null) {
-  const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
     if (!target.matches(ROW)) return;
     const item = target.closest<HTMLElement>("li[data-session-key]");
@@ -44,7 +44,7 @@ export function useSessionKeyboard(onArchive: ((key: string) => void) | null) {
     rows[next].focus();
   };
 
-  const onContextMenu = (event: MouseEvent<HTMLUListElement>) => {
+  const onContextMenu = (event: MouseEvent<HTMLElement>) => {
     const item = (event.target as Element).closest("li[data-session-key]");
     if (!item?.querySelector(".agent-session__more")) return;
     event.preventDefault();

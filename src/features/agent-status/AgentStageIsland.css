@@ -17,6 +17,9 @@
   --color-agent-idle: var(--agent-stage-low, #35e985);
   --color-agent-waiting: var(--agent-stage-medium, #ff9f43);
   --color-warning: var(--agent-stage-high, #ffd166);
+  --error-text: var(--color-light-needs);
+  --warning-text: var(--color-agent-waiting);
+  --info-text: var(--color-agent-running);
 }
 
 .agent-stage-island.agent-stage-island--dark .agent-usage__value--medium {
@@ -118,4 +121,19 @@
 
 .agent-stage-island .agent-usage-layout > * {
   margin-bottom: 0;
+}
+
+.agent-stage-island__sessions {
+  height: 248px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 6px;
+}
+
+.agent-stage-island__sessions .agent-sessions {
+  height: 100%;
+  margin-inline: 0;
+  padding-top: 0;
+  --agent-ink: var(--overlay-rgb, 241, 240, 246);
 }

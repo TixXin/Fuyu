@@ -3,7 +3,8 @@
   height: 100%;
   display: grid;
   place-items: center;
-  padding: 6px 12px;
+  padding: 6px 10px;
+  box-sizing: border-box;
 }
 
 .agent-glyph--stack {
@@ -11,38 +12,117 @@
   gap: 4px;
 }
 
-.agent-glyph__card {
-  width: 134px;
-  display: grid;
-  gap: 6px;
-  padding: 7px 9px;
-  background: var(--color-white-a06);
-  border: 1px solid color-mix(in srgb, var(--color-light-working) 55%, transparent);
-  border-radius: var(--radius-md);
-}
-
-.agent-glyph__card-top,
-.agent-glyph__card-bottom {
+.agent-glyph__focused-card {
+  width: 100%;
+  max-width: 130px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 6px;
+  padding: 5px 7px;
+  background: var(--color-white-a08);
+  border-radius: var(--radius-sm);
 }
 
-.agent-glyph__pill {
-  flex: none;
-  width: 24px;
+.agent-glyph--split {
+  grid-template-columns: 44% 1fr;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.agent-glyph__split-left,
+.agent-glyph__split-right {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.agent-glyph__split-right {
+  padding-left: 6px;
+  border-left: 1px solid var(--color-white-a12);
+}
+
+.agent-glyph__split-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px;
+  border-radius: 4px;
+}
+
+.agent-glyph__split-row--on {
+  background: var(--color-white-a10);
+}
+
+.agent-glyph__split-box {
+  flex: 1;
+  border-radius: 4px;
+  background: var(--color-white-a06);
+}
+
+.agent-glyph__split-cta {
+  width: 28px;
   height: 6px;
   border-radius: var(--radius-pill);
-  background: var(--color-white-a16);
+  background: var(--color-accent);
+  opacity: 0.75;
 }
 
-.agent-glyph__state-chip {
-  flex: none;
-  width: 18px;
-  height: 5px;
-  border-radius: var(--radius-pill);
-  background: var(--color-light-working);
+.agent-glyph--bento {
+  align-content: center;
+  gap: 4px;
+}
+
+.agent-glyph__bento-spot {
+  width: 100%;
+  max-width: 130px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--color-agent-waiting) 18%, transparent);
+}
+
+.agent-glyph__bento-grid {
+  width: 100%;
+  max-width: 130px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.agent-glyph__bento-cell {
+  display: grid;
+  gap: 3px;
+  padding: 5px 6px;
+  border-radius: 5px;
+  background: var(--color-white-a06);
+}
+
+.agent-glyph--projects {
+  align-content: center;
+}
+
+.agent-glyph__proj-box {
+  width: 100%;
+  max-width: 130px;
+  display: grid;
+  border: 1px solid var(--color-white-a10);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.agent-glyph__proj-head {
+  padding: 4px 6px;
+  background: var(--color-white-a08);
+}
+
+.agent-glyph__proj-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-top: 1px solid var(--color-white-a06);
 }
 
 .agent-glyph__bar {
@@ -62,7 +142,7 @@
 }
 
 .agent-glyph__bar--short {
-  max-width: 55%;
+  max-width: 48%;
 }
 
 .agent-glyph__bar--soft {
@@ -71,21 +151,12 @@
   background: var(--color-white-a12);
 }
 
-.agent-glyph__list-row {
-  width: 134px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 7px;
-  background: var(--color-white-a04);
-  border-radius: var(--radius-sm);
-}
-
 .agent-glyph__list-dot {
   flex: none;
   width: 5px;
   height: 5px;
   border-radius: var(--radius-circle);
+  background: var(--color-light-done);
 }
 
 .agent-glyph__list-dot--work {
@@ -104,29 +175,30 @@
 }
 
 .agent-glyph__compact-row {
-  width: 134px;
+  width: 100%;
+  max-width: 130px;
   height: 12px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   padding: 0 6px;
-  background: var(--color-white-a04);
   border-radius: 4px;
+}
+
+.agent-glyph__compact-row--on {
+  background: var(--color-white-a08);
 }
 
 .agent-glyph__stripe {
   flex: none;
   width: 2.5px;
-  height: 7px;
+  height: 14px;
   border-radius: var(--radius-pill);
 }
 
 .agent-glyph__stripe--needs {
+  height: 8px;
   background: var(--color-light-needs);
-}
-
-.agent-glyph__stripe--turn {
-  background: var(--color-light-your-turn);
 }
 
 .agent-glyph__stripe--work {

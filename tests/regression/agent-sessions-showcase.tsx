@@ -36,14 +36,14 @@ export async function checkNarrow({ root, fixture, sessions, chromeHeight }: Con
   });
   const rows = [...document.querySelectorAll<HTMLElement>(".agent-session")];
   const inside = rows.every((row) => {
-    const heading = row.querySelector(".agent-session__heading")!.getBoundingClientRect();
-    return [...row.querySelector(".agent-session__heading")!.children].every((child) => child.getBoundingClientRect().right <= heading.right + 0.5);
+    const box = row.getBoundingClientRect();
+    return row.scrollWidth <= row.clientWidth + 1 && box.width <= 362;
   });
   const times = rows.flatMap((row) => [...row.querySelectorAll<HTMLElement>(".agent-session__time")]);
-  const titles = rows.map((row) => row.querySelector<HTMLElement>(".agent-session__title")!.clientWidth);
-  const effort = rows[0].querySelector<HTMLElement>(".agent-session__pill-effort");
-  check(inside && times.length >= 2 && times.every((time) => time.scrollWidth <= time.clientWidth) && titles.every((width) => width >= 28), "400 宽（弹出提醒）时标题行不溢出，时间不被截，标题留得下几个字");
-  check(effort && getComputedStyle(effort).display === "none" && rows[0].querySelector(".agent-session__pill-mode"), "放不下时胶囊先省掉推理强度，权限还在");
+  const titles = rows.map((row) => row.querySelector<HTMLElement>(".agent-v__title")!.clientWidth);
+  const model = rows[0].querySelector<HTMLElement>(".agent-v__model");
+  check(inside && times.length >= 2 && times.every((time) => time.scrollWidth <= time.clientWidth) && titles.every((width) => width >= 28), "窄岛时标题行不溢出，时间不被截，标题留得下几个字");
+  check(!model || getComputedStyle(model).display === "none", "窄岛时自动隐藏模型文字给标题留出空间");
   const tail = rows[0].querySelector<HTMLElement>(".agent-session__tool-tail");
   check(tail?.textContent === "/run-regression.mjs agent-sessions" && tail.getBoundingClientRect().right <= rows[0].getBoundingClientRect().right, "工具参数太长时省略中间，路径的尾部留在行内");
   fixture.style.width = "";

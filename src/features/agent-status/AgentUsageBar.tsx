@@ -3,6 +3,7 @@ import { AgentUsageChips } from "./AgentUsageChips";
 import { AgentUsageExpired } from "./AgentUsageExpired";
 import { AgentUsageLead } from "./AgentUsageLead";
 import { AgentUsageRuler } from "./AgentUsageRuler";
+import { AgentUsageStrip } from "./AgentUsageStrip";
 import { AgentUsageTable } from "./AgentUsageTable";
 import { AgentUsageTiles } from "./AgentUsageTiles";
 import type { UsageToggle } from "./UsageBits";
@@ -16,6 +17,8 @@ type LayoutProps = { lines: readonly UsageLine[]; now: number; view: UsageView; 
 
 function UsageLayout({ lines, now, view, onToggle }: LayoutProps) {
   switch (view.layout ?? "chips") {
+    case "strip":
+      return <AgentUsageStrip lines={lines} now={now} onToggle={onToggle} />;
     case "tiles":
       return <AgentUsageTiles lines={lines} now={now} view={view} onToggle={onToggle} />;
     case "lead":

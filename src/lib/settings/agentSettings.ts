@@ -2,7 +2,7 @@ import { AGENT_ALERT_SECONDS, oneOf } from "./settingsLimits.ts";
 import type { LegacyIslandSettings } from "./types";
 
 export type AgentHostDisplay = "both" | "icon" | "name" | "off";
-export type AgentSessionView = "list" | "cards" | "compact";
+export type AgentSessionView = "focused" | "split" | "bento" | "projects" | "minimal";
 export type AgentSessionSort = "status" | "recent" | "firstSeen";
 export type AgentSessionGroup = "computer" | "project" | "none";
 export type AgentArchiveMotion = "slide" | "dissolve";
@@ -19,11 +19,11 @@ export type AgentUsageSource = "claudeCode" | "codex" | "antigravity" | "cursor"
 export type AgentUsageItem = AgentUsageSource | "fiveHour" | "sevenDay" | "models";
 export type AgentUsageReset = "tightest" | "each" | "off";
 export type AgentUsageStyle = "number" | "bar" | "ring";
-export type AgentUsageLayout = "chips" | "tiles" | "lead" | "ruler" | "table";
+export type AgentUsageLayout = "strip" | "chips" | "tiles" | "lead" | "ruler" | "table";
 export type AgentEmptyStyle = "sleep" | "standby" | "recent" | "quota" | "tide" | "minimal";
 
 export const AGENT_HOST_DISPLAYS: readonly AgentHostDisplay[] = ["both", "icon", "name", "off"];
-export const AGENT_SESSION_VIEWS: readonly AgentSessionView[] = ["list", "cards", "compact"];
+export const AGENT_SESSION_VIEWS: readonly AgentSessionView[] = ["focused", "split", "bento", "projects", "minimal"];
 export const AGENT_SESSION_SORTS: readonly AgentSessionSort[] = ["status", "recent", "firstSeen"];
 export const AGENT_SESSION_GROUPS: readonly AgentSessionGroup[] = ["computer", "project", "none"];
 export const AGENT_ARCHIVE_MOTIONS: readonly AgentArchiveMotion[] = ["slide", "dissolve"];
@@ -41,7 +41,7 @@ export const AGENT_USAGE_COLUMNS = ["fiveHour", "sevenDay", "models"] as const;
 export const AGENT_USAGE_ITEMS: readonly AgentUsageItem[] = [...AGENT_USAGE_SOURCES, ...AGENT_USAGE_COLUMNS];
 export const AGENT_USAGE_RESETS: readonly AgentUsageReset[] = ["tightest", "each", "off"];
 export const AGENT_USAGE_STYLES: readonly AgentUsageStyle[] = ["number", "bar", "ring"];
-export const AGENT_USAGE_LAYOUTS: readonly AgentUsageLayout[] = ["chips", "tiles", "lead", "ruler", "table"];
+export const AGENT_USAGE_LAYOUTS: readonly AgentUsageLayout[] = ["strip", "chips", "tiles", "lead", "ruler", "table"];
 export const AGENT_EMPTY_STYLES: readonly AgentEmptyStyle[] = ["sleep", "standby", "recent", "quota", "tide", "minimal"];
 export const AGENT_NOTICE_MESSAGE_LINES = [4, 6, 8, 12, 0] as const;
 export const AGENT_NOTICE_COMMAND_LINES = [1, 2, 3, 5] as const;
@@ -100,7 +100,7 @@ export type AgentSettingValues = {
 
 export const DEFAULT_AGENT_SETTINGS: AgentSettingValues = {
   agentHostDisplay: "icon",
-  agentSessionView: "cards",
+  agentSessionView: "focused",
   agentSessionSort: "status",
   agentSessionGroup: "computer",
   agentArchiveMotion: "dissolve",
@@ -156,7 +156,7 @@ export function normalizeAgentSettings(settings: LegacyIslandSettings | null | u
     agentHostDisplay: AGENT_HOST_DISPLAYS.includes(settings?.agentHostDisplay as AgentHostDisplay)
       ? (settings?.agentHostDisplay as AgentHostDisplay)
       : DEFAULT_AGENT_SETTINGS.agentHostDisplay,
-    agentSessionView: oneOf(AGENT_SESSION_VIEWS, settings?.agentSessionView, DEFAULT_AGENT_SETTINGS.agentSessionView),
+    agentSessionView: normalizeSessionView(settings?.agentSessionView),
     agentSessionSort: oneOf(AGENT_SESSION_SORTS, settings?.agentSessionSort, DEFAULT_AGENT_SETTINGS.agentSessionSort),
     agentSessionGroup: oneOf(AGENT_SESSION_GROUPS, settings?.agentSessionGroup, DEFAULT_AGENT_SETTINGS.agentSessionGroup),
     agentArchiveMotion: oneOf(AGENT_ARCHIVE_MOTIONS, settings?.agentArchiveMotion, DEFAULT_AGENT_SETTINGS.agentArchiveMotion),
@@ -216,4 +216,18 @@ function normalizeHiddenProviders(settings: LegacyIslandSettings | null | undefi
 function normalizeUsageHidden(saved: unknown): AgentUsageItem[] {
   if (!Array.isArray(saved)) return [];
   return AGENT_USAGE_ITEMS.filter((item) => saved.includes(item));
+}
+
+const LEGACY_SESSION_VIEWS: Record<string, AgentSessionView> = {
+  list: "focused",
+  cards: "bento",
+  compact: "minimal",
+};
+
+export function normalizeSessionView(saved: unknown): AgentSessionView {
+  if (typeof saved === "string") {
+    if (AGENT_SESSION_VIEWS.includes(saved as AgentSessionView)) return saved as AgentSessionView;
+    if (saved in LEGACY_SESSION_VIEWS) return LEGACY_SESSION_VIEWS[saved];
+  }
+  return DEFAULT_AGENT_SETTINGS.agentSessionView;
 }

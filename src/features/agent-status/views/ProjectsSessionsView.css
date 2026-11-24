@@ -1,0 +1,101 @@
+.agent-sessions__list--projects {
+  gap: 0;
+  padding: 0 6px;
+}
+
+.agent-projects__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 7px 11px;
+  border: 1px solid rgba(var(--agent-ink), 0.08);
+  border-bottom: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: rgba(var(--agent-ink), 0.055);
+  font-size: 12px;
+}
+
+.agent-projects__head:first-child {
+  margin-top: 0;
+}
+
+.agent-projects__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.agent-projects__stat {
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.agent-projects__open {
+  margin-left: auto;
+  padding: 2px 7px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-3);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.agent-projects__open:hover {
+  background: rgba(var(--agent-ink), 0.08);
+  color: var(--text-1);
+}
+
+.agent-projects__item {
+  border-inline: 1px solid rgba(var(--agent-ink), 0.08);
+  border-top: 1px solid rgba(var(--agent-ink), 0.06);
+  background: rgba(var(--agent-ink), 0.03);
+}
+
+.agent-projects__item--last {
+  border-bottom: 1px solid rgba(var(--agent-ink), 0.08);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.agent-projects__row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 0;
+}
+
+.agent-projects__row--last {
+  border-radius: 0 0 calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px);
+}
+
+.agent-projects__mid {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-projects__col3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.agent-sessions__list--projects .agent-session__archive {
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+
+.agent-sessions__list--projects .agent-session__more {
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+}

@@ -1,0 +1,113 @@
+.agent-sessions__list--minimal {
+  gap: 1px;
+  padding: 0 4px;
+}
+
+.agent-minimal__row {
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+}
+
+.agent-minimal__row--selected {
+  background: rgba(var(--agent-ink), 0.08);
+  box-shadow: inset 0 0 0 1px rgba(var(--agent-ink), 0.09);
+}
+
+.agent-minimal__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-minimal__line1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.agent-minimal__proj {
+  flex: none;
+  width: 54px;
+  overflow: hidden;
+  color: var(--text-3);
+  font-family: "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-minimal__line2,
+.agent-minimal__expand {
+  padding-left: 62px;
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-minimal__footer {
+  flex: none;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 4px 10px 0;
+  border-top: 1px solid rgba(var(--agent-ink), 0.07);
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.agent-minimal__cwd {
+  min-width: 0;
+  overflow: hidden;
+  font-family: "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-minimal__keys {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.agent-minimal__keys kbd {
+  margin-right: 3px;
+  padding: 0 4px;
+  border: 1px solid rgba(var(--agent-ink), 0.14);
+  border-radius: 4px;
+  background: rgba(var(--agent-ink), 0.06);
+  color: var(--text-2);
+  font-family: "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+}
+
+.agent-sessions__list--minimal .agent-session__archive {
+  top: 6px;
+  right: 8px;
+}
+
+.agent-sessions__list--minimal .agent-session__more {
+  top: 6px;
+  right: 10px;
+}
+
+@container agent-panel (max-width: 440px) {
+  .agent-minimal__proj {
+    width: 42px;
+  }
+
+  .agent-minimal__line2,
+  .agent-minimal__expand {
+    padding-left: 50px;
+  }
+}

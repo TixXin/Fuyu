@@ -139,6 +139,7 @@ export type UsageView = { hidden: readonly AgentUsageItem[]; tightest: boolean; 
 export const DEFAULT_USAGE_VIEW: UsageView = { hidden: [], tightest: false, reset: "tightest", style: "number", layout: "chips" };
 
 export const LAYOUT_CONTROLS: Record<AgentUsageLayout, { style: boolean; reset: boolean; tightest: boolean }> = {
+  strip: { style: false, reset: false, tightest: false },
   chips: { style: true, reset: false, tightest: false },
   tiles: { style: false, reset: true, tightest: false },
   lead: { style: false, reset: true, tightest: false },
