@@ -296,10 +296,10 @@ if (siteProblems.length > 0) {
 
 function renderShareImage() {
   const out = join(mainCheckout(), "src-tauri", "target", "release-share", tag);
-  const push = Boolean(process.env.FUYU_BOT_INBOX);
+  const push = Boolean(process.env.FUYU_BOT_INBOX || process.env.FUYU_FUXI);
   const result = run(process.execPath, [join("scripts", "release", "share-card.mjs"), version, "--out", out, ...(push ? ["--push"] : [])], { allowFailure: true });
   if (result.status !== 0) console.error(`  Could not render or push the share image for ${tag}; run pnpm release:share ${version} by hand.`);
-  else if (!push) console.error(`\n! The share image was not pushed to the bot: FUYU_BOT_INBOX is not set on this machine (see bot/README.md). Set it, then run FUYU_BOT_INBOX=<host>:<inbox>/ pnpm release:share ${version} --push.`);
+  else if (!push) console.error(`\n! The share image was not pushed anywhere: neither FUYU_BOT_INBOX (QQ bot, see bot/README.md) nor FUYU_FUXI (WeChat through Fuxi) is set on this machine. Set one, then run pnpm release:share ${version} --push.`);
 }
 
 function installLocally() {
