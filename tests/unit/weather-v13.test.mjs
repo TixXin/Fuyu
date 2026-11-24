@@ -193,6 +193,9 @@ test("weather v1.3 host: multi-city, controlled http, opt-in AQI, offline unit s
       const href = String(url);
       fetched.push(href);
       if (offline) throw new Error("network down");
+      if (href.includes("www.nmc.cn")) {
+        throw new Error("nmc unavailable in unit mock");
+      }
       if (href.includes("air-quality-api.open-meteo.com")) {
         return jsonResponse({ current: { time: "2026-11-19T14:00", us_aqi: 48, pm2_5: 11.2, pm10: 20.1 } });
       }

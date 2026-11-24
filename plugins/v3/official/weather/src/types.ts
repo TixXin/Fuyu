@@ -1,4 +1,4 @@
-import type { WeatherConfig } from "./config.ts";
+import type { WeatherConfig, WeatherSourceId } from "./config.ts";
 
 export interface WeatherPlace {
   id?: string;
@@ -9,6 +9,7 @@ export interface WeatherPlace {
   latitude: number;
   longitude: number;
   timezone?: string;
+  nmcStationId?: string;
 }
 
 export interface WeatherCurrent {
@@ -75,6 +76,8 @@ export interface WeatherState {
   primaryPlace: WeatherPlace | null;
   primaryForecast: WeatherForecast | null;
   primaryAqi: WeatherAirQuality | null;
+  sourceUsed: WeatherSourceId | null;
+  fallbackFrom: WeatherSourceId | null;
   loading: boolean;
   problem: WeatherProblem | null;
   updatedAt: number;

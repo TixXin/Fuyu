@@ -1,5 +1,19 @@
 # 更新记录 · Changelog
 
+## 1.4.0
+
+多免费数据源切换与自动故障切换，补齐中国县区地名搜索并修复设置页输入卡死。
+
+- **双源地名搜索**：新增 OpenStreetMap Photon（`photon.komoot.io`）与 Open-Meteo Geocoding 并行合并去重，解决「镇远」等中国县区在单源里搜不到或错匹配到同名小地名的问题。
+- **5 个免费免 Key 天气源，支持手动切换与自动切换**：接入中央气象台（中国官方地面实况）、Open-Meteo（全球）、Open-Meteo（中国气象局模式）、MET Norway（挪威气象局）和 wttr.in；默认「自动选择」（国内优先中央气象台实况并融合逐小时预报，海外优先 Open-Meteo），开启「失败时自动切换备用源」（默认开）后单源异常自动降级，并在天气页底部标注实际生效的数据源。
+- **修复设置页输入卡死**：不再把 Cordis `ctx` 作为 React prop 传递，窗口侧防抖与重试改用受控清理的浏览器定时器并支持中文输入法组合态。
+
+Multiple free no-key weather sources with manual and automatic failover, dual geocoding for Chinese counties, and a settings input freeze fix.
+
+- **Dual geocoding**: queries OpenStreetMap Photon (`photon.komoot.io`) and Open-Meteo together, fixing missing Chinese counties and same-name mismatches.
+- **5 free no-key weather sources**: adds NMC China (official ground stations), Open-Meteo (global), Open-Meteo (CMA model), MET Norway, and wttr.in, with Auto mode (NMC in China with merged hourly data, Open-Meteo globally), automatic fallback on failure (on by default), and active-source display in the page footer.
+- **Fix settings freeze**: stop passing Cordis `ctx` as a React prop, replace host-only `ctx.setTimeout` in window hooks, and guard IME composition during city search.
+
 ## 1.3.0
 
 补齐城市搜索候选、多城市切换、极端天气提醒、可选空气质量与日出日落/紫外线，并打磨页面、面板组件和刘海表现。

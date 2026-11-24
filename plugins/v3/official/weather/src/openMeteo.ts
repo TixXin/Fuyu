@@ -164,9 +164,10 @@ function optNumber(list: number[] | undefined, index: number): number | undefine
   return typeof val === "number" && Number.isFinite(val) ? val : undefined;
 }
 
-export async function fetchForecast(
+export async function fetchOpenMeteo(
   place: WeatherPlace,
   units: TemperatureUnit,
+  model: "best_match" | "cma_grapes_global" = "best_match",
   fetcher: HttpFetch = defaultFetch,
 ): Promise<WeatherForecast> {
   const url = new URL("https://api.open-meteo.com/v1/forecast");
@@ -177,6 +178,9 @@ export async function fetchForecast(
   url.searchParams.set("longitude", String(place.longitude));
   url.searchParams.set("temperature_unit", units);
   url.searchParams.set("wind_speed_unit", "kmh");
+  if (model !== "best_match") {
+    url.searchParams.set("models", model);
+  }
   url.searchParams.set(
     "current",
     "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,precipitation",
@@ -255,6 +259,14 @@ export async function fetchForecast(
     daily,
     soon,
   };
+}
+
+export async function fetchForecast(
+  place: WeatherPlace,
+  units: TemperatureUnit,
+  fetcher: HttpFetch = defaultFetch,
+): Promise<WeatherForecast> {
+  return fetchOpenMeteo(place, units, "best_match", fetcher);
 }
 
 export async function fetchAirQuality(

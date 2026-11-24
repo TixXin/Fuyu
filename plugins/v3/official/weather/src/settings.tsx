@@ -1,6 +1,6 @@
 import type { Context } from "@fuyu/plugin-base";
 import type { ReactNode } from "react";
-import { HOUR_CHOICES, LEAD_CHOICES, REFRESH_CHOICES, type WeatherConfig } from "./config.ts";
+import { HOUR_CHOICES, LEAD_CHOICES, REFRESH_CHOICES, WEATHER_SOURCES, type WeatherConfig, type WeatherSourceId } from "./config.ts";
 import { CityManager } from "./settingsCities.tsx";
 import { problemText, textFor } from "./text.ts";
 import { useWeather } from "./useWeather.ts";
@@ -156,6 +156,25 @@ export default function apply(ctx: Context) {
             addCity={addCity}
             removeCity={removeCity}
             setPrimaryCity={setPrimaryCity}
+          />
+          <Row label={copy.sourceLabel}>
+            <select
+              className="fuyu-weather-set__input"
+              aria-label={copy.sourceLabel}
+              value={config.weatherSource}
+              onChange={(e) => patch({ weatherSource: e.target.value as WeatherSourceId })}
+            >
+              {WEATHER_SOURCES.map((id) => (
+                <option key={id} value={id}>
+                  {copy.sourceNames[id]}
+                </option>
+              ))}
+            </select>
+          </Row>
+          <Flag
+            label={copy.autoFallback}
+            checked={config.autoFallback}
+            onChange={(autoFallback) => patch({ autoFallback })}
           />
           <Choice name="units" label={copy.unitsLabel} config={config} patch={patch} copy={copy} />
           <Choice name="windUnit" label={copy.windLabel} config={config} patch={patch} copy={copy} />

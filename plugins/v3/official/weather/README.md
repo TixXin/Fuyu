@@ -26,7 +26,9 @@
 
 **城市和单位**
 
-- **添加城市**：没有城市时不联网；还没选时，浮屿「设置 → 插件」里这个插件会标出「待设置」（需要较新的浮屿）。搜索后从「城市 · 省/州 · 国家」候选里点选并记住精确坐标，已保存列表会显示核对位置。
+- **添加城市**：没有城市时不联网；还没选时，浮屿「设置 → 插件」里这个插件会标出「待设置」（需要较新的浮屿）。搜索并行查询 OpenStreetMap Photon 与 Open-Meteo 地名库（覆盖中国县区与全球城市），从「城市 · 省/州 · 国家」候选里点选并记住精确坐标，已保存列表会显示核对位置。
+- **天气数据源**：自动选择（默认，中国城市优先中央气象台实况并融合逐小时预报，海外优先 Open-Meteo）、中央气象台（中国官方实况）、Open-Meteo（全球）、Open-Meteo（中国气象局模式）、MET Norway（挪威气象局）、wttr.in（全球备用）；天气页底部会显示当前实际生效的来源。
+- **失败时自动切换备用源**：默认开；选定的源超时、出错或不支持该地区时，自动按序切换到其他可用免费源。
 - **温度单位**：°C（默认）/ °F。
 - **风速单位**：km/h（默认）/ m/s / mph / 级（蒲福风级）。
 - **时间格式**：跟随系统（默认）/ 24 小时 / 12 小时；用在逐小时预报、日出日落、「更新于」和天气提醒里。
@@ -53,12 +55,12 @@
 
 ## 开销和数据来源
 
-- **联网**：只访问 Open-Meteo 的接口：`geocoding-api.open-meteo.com`（搜索城市候选）、`api.open-meteo.com`（查天气预报），以及在用户显式打开「空气质量（AQI）」时才访问 `air-quality-api.open-meteo.com`。发出去的只有城市搜索词和经纬度。没有城市时不发任何请求。
+- **联网**：全部使用免费免 API Key 的 HTTPS 公开源：地名搜索访问 `photon.komoot.io` 与 `geocoding-api.open-meteo.com`；天气预报按所选数据源与自动切换顺序访问 `www.nmc.cn`（中央气象台）、`api.open-meteo.com`（Open-Meteo / 中国气象局模式）、`api.met.no`（MET Norway）或 `wttr.in`；空气质量仅在用户显式打开「空气质量（AQI）」时访问 `air-quality-api.open-meteo.com`。发出去的只有城市搜索词和经纬度。没有城市时不发任何请求。
 - 按刷新间隔只定时刷新主城市；其他收藏城市在切换查看或点刷新时按需更新。
 - 设置和最近一次的天气只保存在本机的插件数据目录里。
 - 下雨与极端天气提醒在岛上弹出，并记入提醒列表。
 
-天气与空气质量数据来自 [Open-Meteo](https://open-meteo.com/)。
+天气与地名数据来自 [中央气象台](https://www.nmc.cn/)、[Open-Meteo](https://open-meteo.com/)、[MET Norway](https://api.met.no/)、[wttr.in](https://wttr.in/) 与 [Photon (OpenStreetMap)](https://photon.komoot.io/)。
 
 ---
 
@@ -90,7 +92,9 @@ Changes apply right away; there is no Save button.
 
 **Cities and units**
 
-- **Add city**: stays offline until you pick a city. Until then, Fuyu marks the plugin as "Needs setup" under Settings → Plugins (needs a newer Fuyu). Picking a search candidate saves its exact coordinates and shows a verification line (region and country).
+- **Add city**: stays offline until you pick a city. Until then, Fuyu marks the plugin as "Needs setup" under Settings → Plugins (needs a newer Fuyu). Search queries OpenStreetMap Photon and Open-Meteo together (covering Chinese counties as well as global cities); picking a candidate saves its exact coordinates and shows a verification line.
+- **Weather source**: Auto (default — NMC China stations in China with merged hourly data, Open-Meteo globally), NMC China, Open-Meteo (global), Open-Meteo (CMA model), MET Norway, or wttr.in. The Weather page footer shows the active source.
+- **Auto-switch on failure**: on by default; falls back to the next working free source if the chosen source fails or does not cover that region.
 - **Temperature**: °C (default) / °F.
 - **Wind speed**: km/h (default) / m/s / mph / Beaufort.
 - **Time format**: System (default) / 24-hour / 12-hour; used for the hourly forecast, sunrise/sunset, "Updated" and weather alerts.
@@ -117,12 +121,12 @@ Upgrading from older versions: your saved city is migrated into the city list wi
 
 ### Cost and data source
 
-- **Network**: only Open-Meteo endpoints — `geocoding-api.open-meteo.com` (city search), `api.open-meteo.com` (forecasts), and `air-quality-api.open-meteo.com` only when "Air quality (AQI)" is turned on. Only city queries and coordinates are sent. Nothing is requested when no city is saved.
+- **Network**: all free, no-API-key HTTPS endpoints — `photon.komoot.io` and `geocoding-api.open-meteo.com` for city search; `www.nmc.cn` (NMC China), `api.open-meteo.com` (Open-Meteo / CMA model), `api.met.no` (MET Norway) or `wttr.in` per your source choice and fallback order; and `air-quality-api.open-meteo.com` only when "Air quality (AQI)" is turned on. Only city queries and coordinates are sent. Nothing is requested when no city is saved.
 - Scheduled refreshes run only for the primary city; other saved cities update on demand when viewed or refreshed.
 - Settings and cached weather are stored only in the plugin's data folder on your computer.
 - Rain and severe weather alerts show on the island and go into the notification list.
 
-Weather and air quality data by [Open-Meteo](https://open-meteo.com/).
+Weather and geocoding data by [NMC China](https://www.nmc.cn/), [Open-Meteo](https://open-meteo.com/), [MET Norway](https://api.met.no/), [wttr.in](https://wttr.in/) and [Photon (OpenStreetMap)](https://photon.komoot.io/).
 
 ---
 
@@ -131,5 +135,5 @@ Weather and air quality data by [Open-Meteo](https://open-meteo.com/).
 - 服务：`commands`、`messages/v1`（必需），`http`、`settings`（可选）
 - 插槽：`island.page/v1`、`island.collapsed/v1`、`island.widget/v1`、`settings.section/v1`
 - 命令：`refresh`
-- 联网清单：`api.open-meteo.com`、`geocoding-api.open-meteo.com`、`air-quality-api.open-meteo.com`
+- 联网清单：`api.open-meteo.com`、`geocoding-api.open-meteo.com`、`air-quality-api.open-meteo.com`、`photon.komoot.io`、`www.nmc.cn`、`api.met.no`、`wttr.in`
 - 在本目录 `pnpm build` 构建、`pnpm dev` 调试；写插件看[插件文档](https://github.com/TixXin/fuyu/blob/main/docs/plugins/README.md)。

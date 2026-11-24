@@ -99,6 +99,8 @@ const state: WeatherState = {
   primaryPlace: place,
   primaryForecast: forecast,
   primaryAqi: { usAqi: 42, pm25: 10.4, pm10: 21.8, time: "2026-11-19T10:00" },
+  sourceUsed: "nmc",
+  fallbackFrom: null,
   loading: false,
   problem: null,
   updatedAt: NOW,
