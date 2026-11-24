@@ -1,4 +1,3 @@
-import type { Context } from "@fuyu/plugin-base";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MAX_CITIES, coordsId, type SavedCity } from "./config.ts";
 import { placeDetail } from "./format.ts";
@@ -16,7 +15,6 @@ function shouldAutoSearch(query: string): boolean {
 }
 
 export function CityManager({
-  ctx,
   cities,
   copy,
   searchCities,
@@ -24,7 +22,6 @@ export function CityManager({
   removeCity,
   setPrimaryCity,
 }: {
-  ctx: Context;
   cities: readonly SavedCity[];
   copy: Copy;
   searchCities: (query: string) => Promise<WeatherPlace[]>;
@@ -33,11 +30,19 @@ export function CityManager({
   setPrimaryCity: (id: string) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [composing, setComposing] = useState(false);
   const [results, setResults] = useState<WeatherPlace[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const seqRef = useRef(0);
-  const debounceRef = useRef<(() => unknown) | null>(null);
+  const debounceRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
+
+  const clearDebounce = useCallback(() => {
+    if (debounceRef.current !== null) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+  }, []);
 
   const runSearch = useCallback(
     async (raw: string) => {
@@ -67,8 +72,8 @@ export function CityManager({
   );
 
   useEffect(() => {
-    debounceRef.current?.();
-    debounceRef.current = null;
+    clearDebounce();
+    if (composing) return;
     const trimmed = draft.trim();
     if (!trimmed) {
       seqRef.current += 1;
@@ -78,19 +83,19 @@ export function CityManager({
       return;
     }
     if (!shouldAutoSearch(trimmed)) return;
-    debounceRef.current = ctx.setTimeout(() => {
+    // eslint-disable-next-line no-restricted-globals
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
       void runSearch(trimmed);
     }, 380);
-    return () => {
-      debounceRef.current?.();
-      debounceRef.current = null;
-    };
-  }, [ctx, draft, runSearch]);
+    return clearDebounce;
+  }, [clearDebounce, composing, draft, runSearch]);
 
   const savedIds = new Set(cities.map((item) => item.id));
   const atLimit = cities.length >= MAX_CITIES;
 
   const pickCandidate = (place: WeatherPlace) => {
+    clearDebounce();
     addCity(place);
     setDraft("");
     setResults(null);
@@ -109,11 +114,16 @@ export function CityManager({
             value={draft}
             disabled={atLimit}
             placeholder={atLimit ? copy.cityLimit(MAX_CITIES) : copy.cityPlaceholder}
+            onCompositionStart={() => setComposing(true)}
+            onCompositionEnd={(e) => {
+              setComposing(false);
+              setDraft(e.currentTarget.value);
+            }}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" && !composing && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                debounceRef.current?.();
+                clearDebounce();
                 void runSearch(draft);
               }
             }}
@@ -123,7 +133,7 @@ export function CityManager({
             className="fuyu-weather-set__btn"
             disabled={atLimit || searching || !draft.trim()}
             onClick={() => {
-              debounceRef.current?.();
+              clearDebounce();
               void runSearch(draft);
             }}
           >

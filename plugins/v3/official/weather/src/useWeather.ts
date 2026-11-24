@@ -32,7 +32,7 @@ export function useWeather(ctx: Context) {
 
   useEffect(() => {
     let alive = true;
-    let retry: (() => unknown) | null = null;
+    let retry: ReturnType<typeof globalThis.setTimeout> | null = null;
     const off = ctx.host.on(TOPICS.state, take);
     const load = (left: number) => {
       ctx.host.call<WeatherState>(METHODS.getState).then(
@@ -43,15 +43,19 @@ export function useWeather(ctx: Context) {
         },
         (reason: unknown) => {
           if (!alive) return;
-          if (left > 0) retry = ctx.setTimeout(() => load(left - 1), 2000);
-          else setError(errorText(reason));
+          if (left > 0) {
+            // eslint-disable-next-line no-restricted-globals
+            retry = setTimeout(() => load(left - 1), 2000);
+          } else {
+            setError(errorText(reason));
+          }
         },
       );
     };
     load(5);
     return () => {
       alive = false;
-      retry?.();
+      if (retry !== null) clearTimeout(retry);
       void off();
     };
   }, [ctx, take]);

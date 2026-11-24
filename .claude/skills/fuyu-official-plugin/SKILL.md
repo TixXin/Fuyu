@@ -33,7 +33,8 @@ pnpm plugin:dev <名>
 - **样式主题与颜色**：颜色只用 `--fuyu-plugin-*` 变量或 `light-dark(#hex, #hex)`；`light-dark()` 内不要写 `rgba()` / `hsl()`（官方插件 CSS 校验按无嵌套括号剥离 `light-dark(...)`，带括号会误报硬编码颜色）；禁止裸 `#hex`、`rgb()`、`hsl()`。
 - **宿主与窗口限制**：
   - 联网经 `ctx.http.fetch`（声明 `http` 为可选或必需注入，并在 `fuyu.network` 列出全部域名），加 `AbortSignal.timeout(...)` 防断网挂死。
-  - 定时用 `ctx.setTimeout` / `ctx.setInterval`，禁用全局 `setTimeout`、`setInterval`、`addEventListener`（插件 `eslint.config.mjs` 拦截）。
+  - 定时在宿主侧用 `ctx.setTimeout` / `ctx.setInterval`，禁用全局 `setTimeout`、`setInterval`、`addEventListener`（插件 `eslint.config.mjs` 拦截）；**窗口侧没有 `ctx.setTimeout`**（调用会抛 `cannot get property "setTimeout" without inject`），窗口侧 React 钩子里若必须延时防抖，用 `eslint-disable-next-line no-restricted-globals` 调浏览器 `setTimeout` 并在 `useEffect` 清理里 `clearTimeout`。
+  - **绝不把 Cordis `ctx` 当 React prop 传给子组件**：`ctx` 是 Proxy，React 开发态读 `prop.$$typeof` 会抛 `cannot get property "$$typeof" without inject` 把设置页/岛页直接弄崩；只传纯数据和回调函数。
   - 密钥存 `secrets/v1`，绝不写进 `config.json`。
 - **默认克制与老数据兼容**：新增提醒、收起条展示或额外外连（如 AQI）对新装默认关；升级时无损迁移老版 `config.json` 与 `cache.json`，不覆盖老用户已开启的项；设置即改即生效，不放保存按钮。
 - **双语、窄面板与刘海**：全部用户文案含简体中文和英文；有收起条的插件注意窄空间与 `.island__notch-wing`（刘海两翼自动收敛，避免被挤进 `+N`）。

@@ -150,7 +150,6 @@ export default function apply(ctx: Context) {
       <section className="fuyu-weather-set">
         <Group title={copy.placeTitle} hint={copy.placeHint}>
           <CityManager
-            ctx={ctx}
             cities={config.cities}
             copy={copy}
             searchCities={searchCities}
