@@ -141,9 +141,11 @@ jobs:
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 
   # macOS 适配（G1）：Mac 上暂不支持的模块用 *_unsupported.rs / unsupported.rs，这里保证它们编得过、测试能跑。
+  # A release PR opened on a Mac carries the mac-verified label: pnpm release:open turns on auto-merge only after
+  # pnpm verify (with the Rust tests) passed on that Mac, so this job would repeat it and wait for a scarce macOS runner.
   rust-macos:
     needs: scope
-    if: needs.scope.outputs.docs != 'true'
+    if: needs.scope.outputs.docs != 'true' && !contains(github.event.pull_request.labels.*.name, 'mac-verified')
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -181,11 +183,12 @@ jobs:
           REGRESSION: ${{ needs.regression.result }}
           RUST: ${{ needs.rust.result }}
           RUST_MACOS: ${{ needs.rust-macos.result }}
+          MAC_VERIFIED: ${{ contains(github.event.pull_request.labels.*.name, 'mac-verified') }}
         run: |
           echo "scope=$SCOPE docs-only=$DOCS_ONLY docs=$DOCS frontend=$FRONTEND regression=$REGRESSION rust=$RUST rust-macos=$RUST_MACOS"
           [ "$SCOPE" = success ] || exit 1
           if [ "$DOCS_ONLY" = true ]; then
             [ "$DOCS" = success ]
           else
-            [ "$FRONTEND" = success ] && [ "$REGRESSION" = success ] && [ "$RUST" = success ] && [ "$RUST_MACOS" = success ]
+            [ "$FRONTEND" = success ] && [ "$REGRESSION" = success ] && [ "$RUST" = success ] && { [ "$RUST_MACOS" = success ] || { [ "$RUST_MACOS" = skipped ] && [ "$MAC_VERIFIED" = true ]; }; }
           fi

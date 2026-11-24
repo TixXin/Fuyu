@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { closure, rustFilters, rustReaders, select, specifiers } from "../../scripts/test-changed.mjs";
+import { closure, lintable, rustFilters, rustReaders, select, specifiers } from "../../scripts/test-changed.mjs";
 
 const REPO = path.resolve(import.meta.dirname, "..", "..");
 
@@ -94,4 +94,12 @@ test("a data file outside src-tauri runs the tests of the Rust modules that read
 
 test("in this repo, changing builtins.json runs the plugin_kernel tests (0.3.12 slipped past test:changed)", () => {
   assert.deepEqual(rustFilters(["src/features/builtins.json"], rustReaders(REPO)), ["plugin_kernel::"]);
+});
+
+test("ESLint gets the changed scripts that still exist, not Rust, styles or deleted files", () => {
+  const exists = (file) => !file.endsWith("gone.ts");
+  assert.deepEqual(
+    lintable(["src/features/agent-status/useFullscreenAgentAlerts.ts", "scripts/mq/wait.mjs", "src/a.css", "src-tauri/src/lib.rs", "src-tauri/scripts/x.mjs", "src/gone.ts", "docs/x.md"], exists),
+    ["src/features/agent-status/useFullscreenAgentAlerts.ts", "scripts/mq/wait.mjs"],
+  );
 });

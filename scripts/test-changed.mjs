@@ -155,6 +155,8 @@ function changedFiles(since) {
   ])];
 }
 
+export const lintable = (changed, exists = existsSync) => changed.filter((file) => /\.(ts|tsx|mjs|js)$/.test(file) && !file.startsWith("src-tauri/") && exists(path.join(ROOT, file)));
+
 const pageWord = (page) => (isBuiltinsOffPage(page) ? page : page.split("?")[0]);
 
 function main(args) {
@@ -178,8 +180,11 @@ function main(args) {
   console.log(`[test:changed] ${changed.length} 个改动的文件 → 回归页 ${pages.length} 页、单元测试 ${tests.length} 个文件${rust ? `、Rust ${rust.length ? rust.join(" ") : "整个 lib"}` : ""}`);
   for (const page of pages) console.log(`  页  ${page}`);
   for (const test of tests) console.log(`  测  ${test}`);
+  const linted = lintable(changed);
+  if (linted.length) console.log(`[test:changed] ESLint 查改动的 ${linted.length} 个脚本文件`);
   if (dryRun) return 0;
   let code = 0;
+  if (linted.length) code ||= spawnSync("pnpm", ["exec", "eslint", "--no-warn-ignored", ...linted], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;
   if (tests.length) code ||= spawnSync(process.execPath, ["--test", ...tests], { cwd: ROOT, stdio: "inherit" }).status ?? 1;
   if (pages.length) code ||= spawnSync("pnpm", ["test:regression", "--jobs", String(Math.min(REGRESSION_JOBS, pages.length)), ...pages.map(pageWord)], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;
   if (rust) code ||= spawnSync("pnpm", ["heavy", "--label", "test:changed", "--", "cargo", "test", "--manifest-path", "src-tauri/Cargo.toml", "--lib", "--", ...rust], { cwd: ROOT, shell: WINDOWS, stdio: "inherit" }).status ?? 1;

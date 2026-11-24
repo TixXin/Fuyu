@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { MAX_SHORTAGE_RERUNS, runShortage } from "../mq/runnerShortage.mjs";
 import { commandLine } from "./command-line.mjs";
 import { dispatchedRun, sleep, watchRun } from "./smoke-test.mjs";
 import { releaseClock, sizeText } from "./timing.mjs";
@@ -49,11 +50,15 @@ export function dirBytes(dir) {
   return total;
 }
 
-export function downloadCiBuild(run, { workflow, label, repo, artifact, since, runId, dir, clock = releaseClock, wait = sleep, now = Date.now, onBuilt = null }) {
+export function downloadCiBuild(run, { workflow, label, repo, artifact, since, runId, dir, clock = releaseClock, wait = sleep, now = Date.now, onBuilt = null, shortage = runShortage }) {
   const found = runId ? { databaseId: runId, url: `https://github.com/${repo}/actions/runs/${runId}` } : findCiRun(run, { workflow, repo, since });
   if (!found) return `${workflow} was started but its run did not show up within a minute`;
   console.log(`${clock.stamp()} ${label} build running: ${found.url}`);
-  if (!watchRun(run, { repo, id: found.databaseId, interval: 20 })) return `the ${label} build failed: ${found.url}`;
+  for (let reruns = 0; !watchRun(run, { repo, id: found.databaseId, interval: 20 }); reruns += 1) {
+    if (reruns >= MAX_SHORTAGE_RERUNS || !shortage(run, repo, found.databaseId)) return `the ${label} build failed: ${found.url}`;
+    console.log(`${clock.stamp()} GitHub had no ${label} runner free and cancelled the build; rerunning it: ${found.url}`);
+    wait(15000);
+  }
   clock.done(`${label} build`, `The ${label} build finished on GitHub Actions.`);
   onBuilt?.(found);
   mkdirSync(dir, { recursive: true });

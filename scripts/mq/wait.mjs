@@ -1,6 +1,7 @@
 import { thisMachine } from "../machine-name.mjs";
 import { mergedReminder } from "../tasks/taskIssues.mjs";
 import { flakyReport } from "./flaky.mjs";
+import { MAX_SHORTAGE_RERUNS, rerunStarved } from "./runnerShortage.mjs";
 import { failedChecks, isNetworkError, github as realGitHub, landBranchName } from "./github.mjs";
 import { INTEGRATION_BRANCH, tryGit } from "./settings.mjs";
 import { sync } from "./sync.mjs";
@@ -21,9 +22,10 @@ async function afterMerge(oid) {
 
 export async function waitFor(number, options = {}) {
   const { github = realGitHub, interval = POLL_MS, timeout = TIMEOUT_MS, sleep = pause, onMerged = afterMerge, updateBehind = false } = options;
-  const { retries = NETWORK_RETRIES, retryInterval = RETRY_MS, flaky = flakyReport } = options;
+  const { retries = NETWORK_RETRIES, retryInterval = RETRY_MS, flaky = flakyReport, shortage = rerunStarved } = options;
   const deadline = Date.now() + timeout;
   let misses = 0;
+  let reruns = 0;
   console.log(`[wait] 等 PR #${number} 合入 ${INTEGRATION_BRANCH}…`);
   while (Date.now() < deadline) {
     let pr;
@@ -52,6 +54,12 @@ export async function waitFor(number, options = {}) {
       return 1;
     }
     const failed = failedChecks(pr.statusCheckRollup);
+    const starved = failed.length && reruns < MAX_SHORTAGE_RERUNS ? shortage(github, failed) : null;
+    if (starved) {
+      if (starved === "rerun") reruns += 1;
+      await sleep(interval);
+      continue;
+    }
     if (failed.length) {
       console.error(`[wait] PR #${number} 的检查没通过，自动合并会一直等着：`);
       for (const { name, url } of failed) console.error(`  ${name}  ${url}`);

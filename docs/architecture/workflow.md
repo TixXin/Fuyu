@@ -92,7 +92,7 @@ pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
   - 挂了：在主工作区修好、提交，再 `pnpm mq:verify` 验新的提交；只重跑挂的用 `--only verify,regression,exe,ci` 里的几项或 `--pages <词…>`（覆盖了上次挂的全部页才算回归页过）。上一个提交上已经过的几项会沿用，命令会打出来；拿不准后来的提交有没有影响它们就全跑。
   - 快照可以在验证目录里 `--update-snapshots`，看过差异后复制回主工作区提交；验证目录里留着改动时 `mq:verify` 不会切走，复制完加 `--force`。验证目录不提交（`mq:land` 只认本地 `main` 上的提交）。
   - 全过了 `pnpm mq:land --yes --upto <验过的提交> --body <文件>`。land 检查这份记录：要带上的提交没验完（四项都过，含 `ci`）就拒绝，只改了 `docs/` 和 `*.md` 的、`--only` 的紧急修复不查，用户同意这批不验时加 `--unverified`。之后别的会话提交的跟下一批走。
-- **开发中：`pnpm test:changed`**。从没提交的改动（或 `--since <提交>`、直接给的文件）出发，顺着 import 找出碰到它们的回归页、单元测试文件（`tests/unit`、`tests/scripts`、`packages/*/test`）和 Rust 模块（`cargo test --lib -- <模块>::`），只跑这些；回归页开 3 个浏览器（页数更少时按页数），`--dry-run` 只列出来。扫整个目录的检查（减少动画、颜色字面量）一个文件改动挑不出来，推的时候全量会跑到。
+- **开发中：`pnpm test:changed`**。从没提交的改动（或 `--since <提交>`、直接给的文件）出发，顺着 import 找出碰到它们的回归页、单元测试文件（`tests/unit`、`tests/scripts`、`packages/*/test`）和 Rust 模块（`cargo test --lib -- <模块>::`），只跑这些；回归页开 3 个浏览器（页数更少时按页数），`--dry-run` 只列出来。改到的 `.ts` / `.tsx` / `.mjs` / `.js`（`src-tauri/` 除外）先跑一遍 ESLint：`invoke`、`listen` 只能写在 `api.ts` 这类规则 `tsc` 和测试都查不出，以前要到推的时候全量 lint 才发现，多验一轮。扫整个目录的检查（减少动画、颜色字面量）一个文件改动挑不出来，推的时候全量会跑到。
   - **回归页按覆盖率表挑**（2026-11-22 起，D120.3）。全量跑回归页（不带页面名、不分片、不在 CI，`mq:verify` 就是）时，每页打开 Chrome 的精确块覆盖率，记下这一页执行到了哪些源文件的哪几行：Vite 开发服务器按源文件提供模块，用它内联的 source map 换回源码行号。跑完写进 git 公共目录的 `fuyu-regression-coverage.json`（主工作区和验证目录共用，不进仓库），只在 `src`、`tests`、`packages`、`vendor` 没有没提交的改动、HEAD 没动时写，行号才对得上提交，所以主工作区里的全量一般不写；没过的页不记。`REGRESSION_COVERAGE=0` 关掉，`=1` 带页面名的运行也收（写不写照样看上面的条件）。
   - `test:changed` 用表时拿 `git diff <表的提交>` 的改动行，挑执行过这些行的页：函数里的一行只挑调用过这个函数的页，改顶层代码（import、常量）等于挑所有加载这个文件的页，只有类型的改动和没被任何页加载的代码文件一页不挑。文案文件（`src/i18n/sections/`、`src/i18n/locales/` 里 `key: "文字"` 的行）不看行号：挑快照里有这段文字、或回归页自己的源码里有这段文字或其中一个词（搜索关键词就是这样漏过的）的页；不是这种行就按行号。
   - 退回 import 关系：没有表、表超过 14 天、表的提交不在本地时整个退回；表里没有的页（新页、上次没过的页），表的提交之后才有的文件，以及 TS / JS、CSS、JSON 之外的文件（图片等）各自退回。`--by-imports` 强制按 import 关系。第一行输出写用了哪种、两种各挑几页。漏挑由推 PR 前的全量 `mq:verify` 兜底。
@@ -207,6 +207,42 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络：从上游 fork 出来的仓库不能再向本仓库提 PR，外部贡献者要从 `TixXin/fuyu` fork。也不从上游同步或合并提交。
 
 回复和任务的顺序见 [docs/tasks/README.md](../tasks/README.md)「GitHub PR」。
+
+### 上游的 PR：先看，再申请借鉴
+
+用户发来 `flyl1u/fly-island` 的 PR 链接时，那个 PR 不归我们合，要做的是这几步：
+
+1. **看**：`gh pr view` 和 `gh pr diff` 读说明和关键代码，对照本仓库有没有同类功能（`grep` `src/features/`、`plugins/v3/`），给用户讲：做了什么、哪些值得借鉴、代码质量和问题、能不能照搬（通常不能：上游还是第 2 版结构和 `fly-island-*` 的 key）。
+2. **起草回复**：按下面的模板写，只填具体内容，先给用户看，不直接发。
+3. **用户说发**：正文写进 scratchpad 的文件，`gh pr comment <编号> --repo flyl1u/fly-island --body-file <文件>`，把评论链接给用户。
+4. **之后真做**：按 `fuyu-task` 开任务（新的 v3 插件），任务和提交说明里写「思路参考自 @作者 在 flyl1u/fly-island#<编号>」并附链接；实现基本相同的代码段，在提交里写明出处。
+
+许可证：上游 GPL-3.0，本仓库 AGPL-3.0，GPLv3 第 13 条允许两者组合，所以回复是礼貌告知加征求意见，不写成请求授权。
+
+回复模板（中文；作者是外国人时译成英文）：
+
+```markdown
+你好 @<作者> 👋 我是 [Fuyu（浮屿）](https://github.com/TixXin/fuyu) 的维护者。Fuyu 最早是从 fly-island fork 出来的，现在已经独立开发。
+
+这个<功能>插件做得很用心，读下来很有收获。尤其是这几处：
+
+- <具体的亮点 1>；
+- <具体的亮点 2>；
+- <具体的亮点 3>。
+
+想问一下，你介不介意我们参考这些思路，在 Fuyu 里做一个<功能>插件？
+
+Fuyu 的插件系统已经重写成「万物皆插件」的架构，思路和 DeepSeek Harness 一样：基于 [Cordis](https://github.com/cordiverse/cordis)，内置功能本身也都是插件，跑在一个独立的插件宿主进程里，宿主只提供插槽和服务（设计文档见[这里](https://github.com/TixXin/fuyu/blob/main/docs/architecture/plugins/v3-everything-plugin.md)）。所以<功能>会做成一个独立的插件，通过插槽接入<接入的位置>，不需要改动岛本身的代码。也正因为结构不同，我们会按这套架构重新实现，不会直接合入这个分支，你在这边的 PR 不受影响。
+
+我们会这样处理：
+
+- 在插件说明和相关提交里注明「思路参考自 @<作者> 在 flyl1u/fly-island#<编号> 的<功能>插件」，并附上这个 PR 的链接；
+- 如果某段实现和你的代码基本相同（比如<最可能相同的那段>），会在提交里写明出处。两个项目的许可证（GPL-3.0 / AGPL-3.0）可以兼容。
+
+也非常欢迎你来 Fuyu 参与：直接写这个插件、提 PR、帮忙 review 或者提 issue 都可以，到时候作者就署你的名字。如果你不希望我们参考，回复一声就好，我们就不做了。谢谢！
+```
+
+亮点要具体到读过代码才写得出的程度，不写空泛的夸奖。最后一句「不希望就不做」是承诺：对方拒绝就真的不做。第一次用这个模板是 [flyl1u/fly-island#126](https://github.com/flyl1u/fly-island/pull/126)（笔记本电池，2026-11-23）。
 
 ## Rust 构建
 
