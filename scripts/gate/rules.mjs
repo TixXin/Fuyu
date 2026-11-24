@@ -68,4 +68,10 @@ export const RULES = [
     require: { skill: "fuyu-skill-writing" },
     hint: "改 {target} 是在写 skill",
   },
+  {
+    id: "fuyu-official-plugin",
+    when: { paths: ["plugins/v3/official/"] },
+    require: { skill: "fuyu-official-plugin" },
+    hint: "改 {target} 是在开发官方插件",
+  },
 ];
