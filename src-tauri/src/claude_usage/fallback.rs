@@ -5,7 +5,7 @@ use std::{
 
 use serde_json::Value;
 
-use super::{background::PLUGIN_ID, source, ClaudeUsage};
+use super::{background::PLUGIN_ID, source, ClaudeUsage, UsageError};
 
 const GAP: Duration = Duration::from_secs(15 * 60);
 const MAX_GAP: Duration = Duration::from_secs(2 * 60 * 60);
@@ -16,6 +16,7 @@ struct Fallback {
     next_try: Option<Instant>,
     failures: u32,
     in_flight: bool,
+    error: Option<UsageError>,
 }
 
 fn state() -> MutexGuard<'static, Fallback> {
@@ -68,14 +69,24 @@ pub(crate) async fn usage(stale: bool) -> Option<ClaudeUsage> {
         match result {
             Ok(limits) => {
                 state.failures = 0;
+                state.error = None;
                 state.next_try = Some(now + GAP);
                 state.usage = Some(ClaudeUsage { five_hour: limits.five_hour, seven_day: limits.seven_day, updated_at: Some(now_ms), error: None });
             }
             Err(error) => {
                 state.next_try = Some(now + wait_after(state.failures, error.retry_after));
                 state.failures = state.failures.saturating_add(1);
+                state.error = Some(UsageError { kind: error.kind, message: error.message });
             }
         }
     }
-    state().usage.clone()
+    let state = state();
+    answer(state.usage.clone(), state.error.clone(), stale)
+}
+
+pub(super) fn answer(usage: Option<ClaudeUsage>, error: Option<UsageError>, stale: bool) -> Option<ClaudeUsage> {
+    match error.filter(|_| stale) {
+        Some(error) => Some(ClaudeUsage { error: Some(error), ..usage.unwrap_or_default() }),
+        None => usage,
+    }
 }

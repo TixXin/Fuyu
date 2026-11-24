@@ -15,7 +15,8 @@ export function AgentUsageExpired({ lines, now, onToggle }: { lines: readonly Ex
       {lines.map(({ source, usage, updatedAt }) => {
         const ago = formatAge(Math.max(0, now - updatedAt), sources.ago);
         const from = usage.source === "statusline" ? sources.fromStatusline : usage.source === "api" ? sources.fromApi : usage.source === "codex" ? sources.fromCodex : sources.fromHud;
-        const hover = [{ text: USAGE_SOURCE_LABELS[source] }, { text: text.expiredDetail(ago, from) }, ...(source === "claudeCode" ? [{ text: text.expiredFix, muted: true }] : [])];
+        const failure = source === "claudeCode" && usage.error ? [{ text: sources.errors[usage.error.kind] }] : [];
+        const hover = [{ text: USAGE_SOURCE_LABELS[source] }, { text: text.expiredDetail(ago, from) }, ...failure, ...(source === "claudeCode" ? [{ text: text.expiredFix, muted: true }] : [])];
         return (
           <Fragment key={source}>
             <IslandHoverCard lines={hover} alignTo=":scope" anchorClassName="agent-usage-chip__hover">
