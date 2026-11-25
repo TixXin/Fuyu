@@ -151,7 +151,7 @@ if (!automated) {
       "Turning Apple Music lyrics on saves it and shows the token row, saying no token is saved and how to get one");
     await act(async () => { appleSwitch()!.click(); });
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
-    await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound and break reminders");
+    await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|计时器页布局|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound, layout and break reminders");
     await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && /^音量与亮度\|耳机与充电\|大写锁定(\|提示方式\|关掉大写时也提示\|点角标关掉大写)?\|摄像头和麦克风使用提示$/.test(texts(".settings-row__title")), "Volume, headphones, Caps Lock and camera alerts are one group on the System alerts tab, Caps Lock's options right under its switch");
     await openPage("general"); check(texts(".settings-group__title") === "启动与语言|网络代理" && !texts(".settings-row__title").includes("最小化按钮") && !texts(".settings-tabs__tab").includes("本机接口"), "General opens on startup, language and network proxy, without a Local API tab");
     const proxyModeRow = settingRow("代理模式");

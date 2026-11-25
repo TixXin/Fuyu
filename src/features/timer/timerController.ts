@@ -177,8 +177,8 @@ export function createTimerController({
         if (removed) removeLocal(id);
       }).catch(report);
     },
-    extendTimer(id: string) {
-      void client.extend({ id }).then(({ timer }) => upsertLocal(timer)).catch(report);
+    extendTimer(id: string, byMs?: number) {
+      void client.extend(byMs === undefined ? { id } : { id, byMs }).then(({ timer }) => upsertLocal(timer)).catch(report);
     },
     dismissRinging() {
       void client.dismissRinging().then(({ removed }) => {

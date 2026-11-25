@@ -120,6 +120,18 @@
         "group": "Calendar panel",
         "title": "Show international festivals"
       }
+    },
+    {
+      "page": "timerAlerts",
+      "since": "next",
+      "zh-CN": {
+        "group": "计时器",
+        "title": "计时器页布局"
+      },
+      "en": {
+        "group": "Timer",
+        "title": "Timer layout"
+      }
     }
   ]
 }

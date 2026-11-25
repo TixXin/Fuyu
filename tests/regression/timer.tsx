@@ -17,13 +17,14 @@ import { TimerNotice, TimerNoticeActions } from "../../src/features/timer/TimerN
 import { BreakRemindersGroup } from "../../src/features/timer/BreakRemindersGroup";
 import { ReminderNotice, ReminderNoticeActions } from "../../src/features/timer/ReminderNotice";
 import { pushIslandReminder } from "../../src/features/timer/reminders";
-import { BREAK_REMINDERS_KEY } from "../../src/features/timer/storage";
+import { BREAK_REMINDERS_KEY, TIMER_RECENTS_KEY } from "../../src/features/timer/storage";
 import { useIslandReminder } from "../../src/features/timer/useIslandReminder";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 localStorage.removeItem(BREAK_REMINDERS_KEY);
 localStorage.removeItem(TIMERS_KEY);
 localStorage.removeItem(TIMERS_MIGRATED_KEY);
+localStorage.removeItem(TIMER_RECENTS_KEY);
 mockIPC((command) => (command === "get_foreground_fullscreen" ? { active: false, onIslandMonitor: false } : null), { shouldMockEvents: true });
 mockWindows("main");
 
@@ -100,7 +101,7 @@ function Harness() {
   const ringing = useTimers().timers.filter((timer) => timer.alerted);
   const reminder = useIslandReminder();
   return (
-    <div style={{ width: 380, display: "grid", gap: 10, background: "var(--island-background-color, #000)", padding: 12 }}>
+    <div style={{ width: 760, display: "grid", gap: 10, background: "var(--island-background-color, #000)", padding: 12 }}>
       <div className="bar" style={{ display: "flex", alignItems: "center", gap: 8, height: 38, padding: "0 18px" }}>
         {ringing.length > 0 && <><TimerNotice ringing={ringing} /><TimerNoticeActions /></>}
         <TimerChip paused={false} />
@@ -108,7 +109,7 @@ function Harness() {
       <div className="reminder-bar" style={{ display: "flex", alignItems: "center", gap: 8, height: 38, padding: "0 18px" }}>
         {reminder && <><ReminderNotice reminder={reminder} /><ReminderNoticeActions reminder={reminder} /></>}
       </div>
-      <div style={{ height: 260, display: "flex" }}>
+      <div style={{ height: 248, display: "flex" }}>
         <TimerPanel isOpen />
       </div>
       <div className="settings-harness" style={{ width: 360 }}>
@@ -187,6 +188,7 @@ async function runChecks() {
 
     await checkPluginTimers();
     await checkBreakReminders();
+    await checkLayouts();
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
@@ -252,6 +254,29 @@ async function checkBreakReminders() {
   check(!button("5 分钟后再提醒", reminderBar) && button("跳过", reminderBar), "A reminder that can't be snoozed only offers skip");
   await click(button("跳过", reminderBar));
   check(!document.querySelector(".reminder-notice"), "Skip clears it");
+}
+
+async function checkLayouts() {
+  const panel = () => document.querySelector<HTMLElement>(".timer-panel")!;
+  const openLayoutMenu = async () => {
+    const trigger = panel().querySelector<HTMLButtonElement>('button[aria-haspopup="menu"]');
+    await click(trigger);
+  };
+  const pickLayout = async (name: string) => {
+    await openLayoutMenu();
+    const item = [...document.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')].find((entry) => entry.textContent?.includes(name)) ?? null;
+    await click(item);
+  };
+
+  check(panel().dataset.layout === "split", "Timer page starts on the split layout by default");
+  await pickLayout("双模式大表盘");
+  check(panel().dataset.layout === "dial" && Boolean(panel().querySelector(".timer-dial__tabs")), "Switching to dial layout shows countdown and stopwatch tabs");
+  await pickLayout("速启卡片网格");
+  check(panel().dataset.layout === "grid" && panel().querySelectorAll(".timer-grid__tile").length >= 6, "Switching to grid layout fills the tile grid");
+  await pickLayout("时间中枢");
+  check(panel().dataset.layout === "hub" && Boolean(panel().querySelector(".timer-hub__right")), "Switching to hub layout shows the break reminders panel");
+  await pickLayout("左右双栏");
+  check(panel().dataset.layout === "split", "Switching back returns to the default split layout");
 }
 
 void runChecks();

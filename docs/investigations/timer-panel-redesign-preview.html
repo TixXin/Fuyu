@@ -1,0 +1,2308 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>计时器页面重新设计 · 四套方案交互预览</title>
+<style>
+:root {
+  --font-ui: "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --doc-bg: #0b0c10;
+  --doc-card: #14161c;
+  --doc-card-2: #1a1d25;
+  --doc-line: rgba(255, 255, 255, 0.08);
+  --doc-t1: rgba(248, 246, 240, 0.96);
+  --doc-t2: rgba(248, 246, 240, 0.68);
+  --doc-t3: rgba(248, 246, 240, 0.46);
+  --accent: #74d6ff;
+  --ok: #35e985;
+  --warn: #ffd166;
+  --danger: #ff6b7a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--doc-t1);
+  background: var(--doc-bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+svg.ic {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 11px 24px;
+  background: rgba(11, 12, 16, 0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--doc-line);
+}
+.topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.topbar-title h1 {
+  font-size: 14.5px;
+  font-weight: 650;
+  margin: 0;
+}
+.topbar-title .badge {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: rgba(116, 214, 255, 0.14);
+  color: var(--accent);
+  font-weight: 600;
+}
+.topbar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.topbar nav a {
+  text-decoration: none;
+  color: var(--doc-t2);
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.topbar nav a:hover { background: rgba(255, 255, 255, 0.08); color: var(--doc-t1); }
+.topbar nav a.rec { color: var(--accent); }
+.topbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-left: auto;
+}
+.ctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--doc-t3);
+}
+.seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--doc-line);
+  gap: 2px;
+}
+.seg button {
+  padding: 3px 9px;
+  border-radius: 6.5px;
+  font-size: 12px;
+  color: var(--doc-t2);
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.seg button:hover { color: var(--doc-t1); }
+.seg button[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--doc-t1);
+  font-weight: 600;
+}
+
+main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 26px 24px 88px;
+}
+.intro {
+  color: var(--doc-t2);
+  max-width: 920px;
+  margin: 0 0 16px;
+}
+.intro b { color: var(--doc-t1); }
+.problems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0 0 36px;
+}
+.problems div {
+  background: var(--doc-card);
+  border: 1px solid var(--doc-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: var(--doc-t2);
+}
+.problems b {
+  display: block;
+  color: var(--doc-t1);
+  margin-bottom: 3px;
+  font-size: 13px;
+}
+
+section.opt {
+  margin: 0 0 54px;
+  scroll-margin-top: 72px;
+}
+.opt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+}
+.opt-head .letter {
+  font: 700 12.5px var(--font-mono);
+  color: #06202c;
+  background: var(--accent);
+  border-radius: 7px;
+  padding: 2px 8px;
+}
+.opt-head .letter.alt {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--doc-t1);
+}
+.opt-head h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+}
+.opt-head .rec-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(53, 233, 133, 0.14);
+  color: var(--ok);
+  font-weight: 600;
+}
+.opt-head p {
+  margin: 0;
+  color: var(--doc-t2);
+  flex-basis: 100%;
+  font-size: 13px;
+}
+.opt-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.notes {
+  flex: 1 1 280px;
+  min-width: 260px;
+  background: var(--doc-card);
+  border: 1px solid var(--doc-line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 12.5px;
+  color: var(--doc-t2);
+}
+.notes h3 {
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--doc-t3);
+  margin: 12px 0 5px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.notes h3:first-child { margin-top: 0; }
+.notes ul { margin: 0; padding-left: 16px; }
+.notes li { margin: 3px 0; }
+.notes .tag-ok { color: var(--ok); font-weight: 600; }
+.notes .tag-ext { color: var(--warn); font-weight: 600; }
+.try {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--doc-line);
+  font-size: 12px;
+  color: var(--doc-t3);
+}
+
+.stage {
+  flex: none;
+  padding: 0 20px 22px;
+  border-radius: 18px;
+  background: radial-gradient(120% 130% at 18% 0%, #2a3447 0%, #151922 52%, #0e1014 100%);
+  border: 1px solid var(--doc-line);
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+  overflow-x: auto;
+}
+body.light .stage {
+  background: radial-gradient(120% 130% at 18% 0%, #f1efe8 0%, #dce4f0 55%, #c8d2e2 100%);
+}
+
+.island {
+  --ink: 248, 246, 240;
+  --bg: #030303;
+  --fg1: rgba(248, 246, 240, 0.96);
+  --fg2: rgba(248, 246, 240, 0.68);
+  --fg3: rgba(248, 246, 240, 0.46);
+  --s04: rgba(255, 255, 255, 0.045);
+  --s06: rgba(255, 255, 255, 0.068);
+  --s09: rgba(255, 255, 255, 0.095);
+  --s14: rgba(255, 255, 255, 0.145);
+  --bd: rgba(255, 255, 255, 0.08);
+  --acc: #74d6ff;
+  --on-acc: #051e2a;
+  --warn-c: #ffd166;
+  --ok-c: #35e985;
+  --err-c: #ff7a88;
+  width: 800px;
+  height: 320px;
+  border-radius: 0 0 26px 26px;
+  background: var(--bg);
+  color: var(--fg1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 18px 48px rgba(0, 0, 0, 0.58);
+  transition: width 240ms var(--ease);
+}
+body.narrow .island { width: 560px; }
+body.light .island {
+  --ink: 24, 24, 30;
+  --bg: #f5f5f8;
+  --fg1: rgba(24, 24, 30, 0.94);
+  --fg2: rgba(24, 24, 30, 0.68);
+  --fg3: rgba(24, 24, 30, 0.50);
+  --s04: rgba(24, 24, 30, 0.038);
+  --s06: rgba(24, 24, 30, 0.06);
+  --s09: rgba(24, 24, 30, 0.088);
+  --s14: rgba(24, 24, 30, 0.13);
+  --bd: rgba(24, 24, 30, 0.085);
+  --acc: #0a7fd1;
+  --on-acc: #ffffff;
+  --warn-c: #b7791f;
+  --ok-c: #1f8a5b;
+  --err-c: #c0283f;
+  box-shadow: 0 0 0 1px rgba(24, 24, 30, 0.1), 0 18px 48px rgba(0, 0, 0, 0.22);
+}
+
+.ibar {
+  flex: none;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px 0 26px;
+  gap: 8px;
+  position: relative;
+}
+.ibar .brand {
+  font-weight: 700;
+  font-size: 14.5px;
+  margin-right: 6px;
+  letter-spacing: 0.01em;
+}
+.ibar .pg {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--fg3);
+  font-size: 15px;
+}
+.ibar .pg.on {
+  color: var(--fg1);
+  background: var(--s09);
+}
+.ibar .more {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 99px;
+  background: var(--s09);
+  color: var(--fg2);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.ibar .notch {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 196px;
+  height: 32px;
+  border-radius: 0 0 14px 14px;
+  border: 1px solid var(--bd);
+  border-top: 0;
+  display: grid;
+  place-items: center;
+  font: 600 10px var(--font-mono);
+  letter-spacing: 0.18em;
+  color: var(--fg3);
+  pointer-events: none;
+}
+body.narrow .ibar .notch { width: 130px; }
+.ibar .sp { flex: 1; }
+.ibar .rb {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: var(--fg2);
+  font-size: 15px;
+}
+
+.chev {
+  position: absolute;
+  top: 56%;
+  transform: translateY(-50%);
+  color: var(--fg3);
+  opacity: 0.55;
+  font-size: 14px;
+  pointer-events: none;
+}
+.chev.l { left: 7px; }
+.chev.r { right: 7px; }
+
+.ibody {
+  flex: 1;
+  min-height: 0;
+  padding: 6px 26px 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.tnum { font-variant-numeric: tabular-nums; }
+.ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--s14) transparent; }
+
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--s09);
+  color: var(--fg1);
+  transition: background 140ms var(--ease), transform 120ms var(--ease), color 140ms var(--ease);
+}
+.pill-btn:hover { background: var(--s14); }
+.pill-btn:active { transform: scale(0.97); }
+.pill-btn.acc {
+  background: var(--acc);
+  color: var(--on-acc);
+}
+.pill-btn.acc:hover { filter: brightness(1.06); }
+.pill-btn.soft {
+  background: color-mix(in srgb, var(--acc) 15%, transparent);
+  color: var(--acc);
+}
+.pill-btn.soft:hover { background: color-mix(in srgb, var(--acc) 24%, transparent); }
+
+.icon-btn {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 99px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--s06);
+  color: var(--fg2);
+  font-size: 13px;
+  transition: background 140ms var(--ease), color 140ms var(--ease), transform 120ms var(--ease);
+}
+.icon-btn:hover { background: var(--s14); color: var(--fg1); }
+.icon-btn:active { transform: scale(0.94); }
+.icon-btn.acc {
+  background: color-mix(in srgb, var(--acc) 16%, transparent);
+  color: var(--acc);
+}
+.icon-btn.acc:hover {
+  background: color-mix(in srgb, var(--acc) 26%, transparent);
+  color: var(--fg1);
+}
+.icon-btn.solid {
+  background: var(--acc);
+  color: var(--on-acc);
+}
+.icon-btn.solid:hover { filter: brightness(1.06); }
+
+.smart-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 5px 0 11px;
+  border-radius: 11px;
+  background: var(--s06);
+  border: 1px solid transparent;
+  transition: border-color 140ms var(--ease), background 140ms var(--ease);
+}
+.smart-form:focus-within {
+  border-color: color-mix(in srgb, var(--acc) 65%, transparent);
+  background: var(--s09);
+}
+.smart-form.err {
+  border-color: var(--err-c);
+}
+.smart-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 12.5px;
+  color: var(--fg1);
+}
+.smart-form input::placeholder { color: var(--fg3); }
+.smart-form .parsed {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--acc) 18%, transparent);
+  color: var(--acc);
+}
+.smart-form .go {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--acc);
+  color: var(--on-acc);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+.smart-form .go:hover { filter: brightness(1.07); }
+
+@keyframes ringPulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--acc) 55%, transparent); }
+  50% { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--acc) 95%, transparent), 0 0 18px color-mix(in srgb, var(--acc) 20%, transparent); }
+}
+.ringing-card {
+  background: color-mix(in srgb, var(--acc) 13%, var(--s04)) !important;
+  animation: ringPulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ringing-card { animation: none; box-shadow: inset 0 0 0 1.5px var(--acc); }
+}
+
+/* ==================== 方案 A：左右双栏 ==================== */
+.a-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 288px 1fr;
+  gap: 14px;
+}
+body.narrow .a-grid { grid-template-columns: 214px 1fr; gap: 10px; }
+.a-left {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 0;
+}
+.a-presets {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 7px;
+}
+.a-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: 11px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  transition: background 140ms var(--ease), border-color 140ms var(--ease), transform 120ms var(--ease);
+}
+.a-preset:hover {
+  background: color-mix(in srgb, var(--acc) 12%, var(--s06));
+  border-color: color-mix(in srgb, var(--acc) 36%, transparent);
+}
+.a-preset:active { transform: scale(0.97); }
+.a-preset strong {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.15;
+  color: var(--fg1);
+}
+.a-preset span {
+  font-size: 10.5px;
+  color: var(--fg3);
+}
+.a-foot {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.a-sw-btn {
+  flex: 1;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: var(--s06);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--fg2);
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.a-sw-btn:hover { background: var(--s09); color: var(--fg1); }
+.a-sw-btn .live {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--acc);
+}
+.a-stage {
+  min-height: 0;
+  border-radius: 16px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.a-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+body.narrow .a-empty { flex-direction: column; gap: 10px; }
+.a-dial-wrap {
+  position: relative;
+  width: 116px;
+  height: 116px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+body.narrow .a-dial-wrap { width: 92px; height: 92px; }
+.a-dial-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.a-dial-track { stroke: var(--s09); stroke-width: 5; fill: none; }
+.a-dial-arc {
+  stroke: var(--acc);
+  stroke-width: 5;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke-dashoffset 220ms var(--ease);
+}
+.a-dial-center {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.a-dial-time {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+body.narrow .a-dial-time { font-size: 18px; }
+.a-dial-sub {
+  font-size: 10.5px;
+  color: var(--fg3);
+  margin-top: 2px;
+}
+.a-empty-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  min-width: 0;
+}
+body.narrow .a-empty-side { align-items: center; text-align: center; }
+.a-step-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.a-step-btn {
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: var(--s06);
+  color: var(--fg2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.a-step-btn:hover { background: var(--s14); color: var(--fg1); }
+.a-hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+body.narrow .a-hero { gap: 12px; }
+.a-hero-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.a-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fg2);
+}
+.a-hero-tag .src {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--s09);
+  font-size: 11px;
+  color: var(--fg2);
+}
+.a-hero-meta {
+  font-size: 12px;
+  color: var(--fg3);
+}
+.a-hero-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.a-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  color: var(--fg3);
+}
+.a-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.a-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: var(--s04);
+  overflow: hidden;
+}
+.a-row .pbar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2.5px;
+  background: var(--acc);
+  opacity: 0.7;
+  transition: width 250ms linear;
+}
+.a-row.paused { opacity: 0.72; }
+.a-row.paused .pbar { background: var(--fg3); }
+.a-row .meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.a-row .meta strong { font-size: 12.5px; font-weight: 560; }
+.a-row .meta small { font-size: 11px; color: var(--fg3); }
+.a-row .clk {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin-right: 4px;
+}
+.a-row .acts { display: flex; gap: 4px; }
+
+/* ==================== 方案 B：双模式大表盘 ==================== */
+.b-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.b-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.b-tabs {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 99px;
+  background: var(--s06);
+  gap: 2px;
+}
+.b-tabs button {
+  height: 26px;
+  padding: 0 13px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg2);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.b-tabs button.on {
+  background: var(--s14);
+  color: var(--fg1);
+}
+.b-tabs .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--acc);
+}
+.b-bar .smart-form {
+  height: 30px;
+  width: 240px;
+  margin-left: auto;
+}
+body.narrow .b-bar .smart-form { width: 185px; }
+.b-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+}
+.b-stage {
+  flex: 1;
+  min-width: 0;
+  border-radius: 16px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+}
+.b-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.b-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.b-unit button {
+  width: 34px;
+  height: 18px;
+  border-radius: 6px;
+  color: var(--fg3);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+}
+.b-unit button:hover { background: var(--s09); color: var(--fg1); }
+.b-unit .num {
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  width: 58px;
+  text-align: center;
+}
+.b-unit .lbl { font-size: 10.5px; color: var(--fg3); }
+.b-colon {
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--fg3);
+  margin-top: -12px;
+}
+.b-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.b-chip {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 99px;
+  background: var(--s06);
+  color: var(--fg2);
+  font-size: 12px;
+  font-weight: 550;
+}
+.b-chip:hover { background: color-mix(in srgb, var(--acc) 18%, transparent); color: var(--fg1); }
+.b-big-clock {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+body.narrow .b-big-clock { font-size: 38px; }
+.b-big-clock small {
+  font-size: 24px;
+  color: var(--fg3);
+  font-weight: 550;
+}
+.b-prog-track {
+  width: min(360px, 100%);
+  height: 5px;
+  border-radius: 99px;
+  background: var(--s09);
+  overflow: hidden;
+}
+.b-prog-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--acc);
+  transition: width 250ms linear;
+}
+.b-rail {
+  width: 224px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+body.narrow .b-rail { width: 168px; }
+.b-qitem {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.b-qitem:hover { background: var(--s06); }
+.b-qitem.sel {
+  background: color-mix(in srgb, var(--acc) 12%, var(--s04));
+  border-color: color-mix(in srgb, var(--acc) 42%, transparent);
+}
+.b-qitem .t { font-size: 15px; font-weight: 650; margin-left: auto; }
+.b-laps {
+  width: 224px;
+  flex: none;
+  border-radius: 14px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+body.narrow .b-laps { width: 168px; }
+.b-lap-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--fg2);
+  padding: 3px 0;
+  border-bottom: 1px solid var(--bd);
+}
+.b-lap-row:last-child { border-bottom: 0; }
+
+/* ==================== 方案 C：速启卡片网格 ==================== */
+.c-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.c-top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.c-top .smart-form { flex: 1; }
+.c-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(90px, 1fr);
+  gap: 9px;
+}
+body.narrow .c-grid { grid-template-columns: repeat(2, 1fr); }
+.c-tile {
+  position: relative;
+  border-radius: 14px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  text-align: left;
+  transition: background 140ms var(--ease), border-color 140ms var(--ease), transform 120ms var(--ease);
+}
+.c-tile.preset { cursor: pointer; }
+.c-tile.preset:hover {
+  background: color-mix(in srgb, var(--acc) 10%, var(--s06));
+  border-color: color-mix(in srgb, var(--acc) 36%, transparent);
+}
+.c-tile.preset:active { transform: scale(0.98); }
+.c-tile .fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--acc) 11%, transparent);
+  pointer-events: none;
+  transition: width 260ms linear;
+}
+.c-tile.paused .fill { background: var(--s06); }
+.c-tile .head, .c-tile .mid, .c-tile .foot {
+  position: relative;
+  z-index: 1;
+}
+.c-tile .head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--fg3);
+}
+.c-tile .head .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.c-tile .big {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--fg1);
+}
+.c-tile.paused .big { color: var(--fg2); }
+.c-tile .foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--fg3);
+}
+.c-tile .acts {
+  display: flex;
+  gap: 4px;
+}
+.c-tile .acts .icon-btn { width: 24px; height: 24px; font-size: 12px; }
+.c-tile.preset .play-hint {
+  width: 22px;
+  height: 22px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  background: var(--s06);
+  color: var(--fg3);
+  font-size: 11px;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.c-tile.preset:hover .play-hint {
+  background: var(--acc);
+  color: var(--on-acc);
+}
+
+/* ==================== 方案 D：时间中枢（计时 + 休息提醒） ==================== */
+.d-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 236px;
+  gap: 14px;
+}
+body.narrow .d-grid { grid-template-columns: 1fr 186px; gap: 10px; }
+.d-left {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.d-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.d-top .smart-form { flex: 1; }
+.d-preset-strip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.d-preset-strip::-webkit-scrollbar { display: none; }
+.d-chip {
+  flex: none;
+  height: 25px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: var(--s06);
+  color: var(--fg2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.d-chip:hover { background: color-mix(in srgb, var(--acc) 18%, transparent); color: var(--fg1); }
+.d-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.d-empty-card {
+  flex: 1;
+  border-radius: 14px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.d-empty-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.d-empty-top strong { font-size: 14px; }
+.d-empty-top p { margin: 2px 0 0; font-size: 12px; color: var(--fg3); }
+.d-recents {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--fg3);
+}
+.d-hero {
+  flex: 1;
+  border-radius: 14px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.d-hero-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.d-hero-clk {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.d-right {
+  min-height: 0;
+  border-radius: 14px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.d-rhead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg1);
+}
+.d-rhead .sp { flex: 1; }
+.switch {
+  width: 30px;
+  height: 17px;
+  border-radius: 99px;
+  background: var(--s14);
+  position: relative;
+  transition: background 160ms var(--ease);
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 160ms var(--ease);
+}
+.switch.on { background: var(--ok-c); }
+.switch.on::after { transform: translateX(13px); }
+.d-breaks {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.d-breaks.off { opacity: 0.42; pointer-events: none; }
+.d-bitem {
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: var(--s04);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.d-bitem-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.d-bitem-top strong { font-weight: 600; font-size: 12px; }
+.d-bitem-top .rem { margin-left: auto; font-size: 11px; color: var(--fg2); }
+.d-bbar {
+  height: 3px;
+  border-radius: 99px;
+  background: var(--s09);
+  overflow: hidden;
+}
+.d-bbar i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--acc);
+}
+.d-rfoot {
+  font-size: 10.5px;
+  color: var(--fg3);
+  line-height: 1.35;
+}
+
+/* ==================== 原版现状对比 ==================== */
+.old-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.old-input {
+  flex: 1;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--s06);
+  color: var(--fg3);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+.old-empty {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--fg3);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <h1>计时器页重新设计预览</h1>
+    <span class="badge">TimerPanel</span>
+  </div>
+  <nav>
+    <a href="#opt-a" class="rec">A · 左右双栏（推荐）</a>
+    <a href="#opt-b">B · 双模式大表盘</a>
+    <a href="#opt-c">C · 速启卡片网格</a>
+    <a href="#opt-d">D · 时间中枢 + 休息提醒</a>
+    <a href="#opt-old">原版对比</a>
+  </nav>
+  <div class="topbar-controls">
+    <div class="ctl">
+      <span>场景</span>
+      <div class="seg" data-group="scene">
+        <button data-v="empty" aria-pressed="true">空态</button>
+        <button data-v="one">1 个运行中</button>
+        <button data-v="multi">多个 + 秒表</button>
+        <button data-v="ringing">到点响铃</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>主题</span>
+      <div class="seg" data-group="theme">
+        <button data-v="dark" aria-pressed="true">深色</button>
+        <button data-v="light">浅色</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>宽度</span>
+      <div class="seg" data-group="width">
+        <button data-v="wide" aria-pressed="true">800px</button>
+        <button data-v="narrow">560px</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <p class="intro">
+    针对现在 <b>800×320 宽岛里只有一条输入框 + 一行小字、底下大片黑屏</b> 的问题，下面给出四套完整可交互的 redesign 方案。
+    四套方案里的倒计时、秒表、输入框解析（<code>10</code>、<code>10m</code>、<code>1h30m</code>、<code>90s</code>、<code>1:30</code>）、预设一键启动、暂停/加时/到点提醒都能直接点着试，上方工具栏可随时切换 <b>空态 / 单计时 / 多计时 / 响铃</b> 以及 <b>深浅主题 / 宽窄尺寸</b>。
+  </p>
+
+  <div class="problems">
+    <div><b>横向空间浪费</b>默认面板 800×320 是横向画布，现在只放了 1 条 30px 输入框，85% 面积全黑。</div>
+    <div><b>每次都要敲键盘</b>常用 5 分、15 分、25 分在 Fuyu 面板小组件里都有一键预设，计时器主页面反而没有。</div>
+    <div><b>缺少时间感与反馈</b>没有进度环 / 进度条，也没有「预计几点结束」的锚点；运行 1 个计时器时也只是一条细行。</div>
+    <div><b>秒表与休息提醒太隐蔽</b>秒表缩在最右侧无文字图标里；同一模块里的「休息提醒」完全藏在设置窗口中。</div>
+  </div>
+
+  <!-- 方案 A -->
+  <section class="opt" id="opt-a">
+    <div class="opt-head">
+      <span class="letter">A</span>
+      <h2>左右双栏：速启台 + 实时舞台</h2>
+      <span class="rec-pill">推荐 · 零服务改动</span>
+      <p>顺着 800×320 宽岛自然分成左右两块：左侧固定负责「输入 + 6 格常用预设 + 秒表」，右侧专心展示当前计时（空态显示可调表盘，1 个计时用大圆环聚焦，多个自动切进度条列表）。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" id="island-a"></div></div>
+      <aside class="notes">
+        <h3>亮点</h3>
+        <ul>
+          <li><b>空态不再空</b>：左侧 6 格常用预设一键开跑，右侧是带 <code>-1分 / +1分</code> 微调和预计结束时间的待机表盘；在左边打字时，右边表盘会实时预览解析出的时长。</li>
+          <li><b>单计时最有仪式感</b>：只跑 1 个计时器时自动切「大圆环 + 预计到点 + <code>+1分 / +5分</code>」，不用盯着一行小字看。</li>
+          <li><b>多计时不打架</b>：开到第 2 个以上自动切回带底边进度条的紧凑列表，到点响铃自动置顶并高亮。</li>
+          <li><b>快捷键习惯不变</b>：全局快捷键打开依然直接聚焦左上角输入框，敲 <code>10</code> + Enter 立刻开跑。</li>
+        </ul>
+        <h3>实现成本</h3>
+        <ul>
+          <li><span class="tag-ok">完全复用现有 timers/v1</span>：零后端、零宿主协议改动，纯前端 <code>TimerPanel</code> 重构。</li>
+        </ul>
+        <p class="try">试试看：点左侧任意预设，或在输入框里敲 <code>90s</code> 看右侧实时预览；切上方场景看单计时 / 多计时 / 响铃态。</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 方案 B -->
+  <section class="opt" id="opt-b">
+    <div class="opt-head">
+      <span class="letter alt">B</span>
+      <h2>双模式大表盘：倒计时 / 秒表</h2>
+      <p>像独立计时器仪器：顶栏切换「倒计时 / 秒表」并保留右侧快捷输入；空态居中展示可步进的 <code>时 : 分 : 秒</code> 滚轮大数字，秒表模式自带独立大表盘与分段计次。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" id="island-b"></div></div>
+      <aside class="notes">
+        <h3>亮点</h3>
+        <ul>
+          <li><b>超强第一眼聚焦</b>：大号等宽数字（<code>48px</code>）居中，无论空态还是运行态，一展开岛就有很强的视觉重心。</li>
+          <li><b>主副队列联动</b>：同时开多个计时器时，左侧保持大表盘聚焦当前选中的一条，右侧是队列栏，点哪条就把哪条切上主舞台。</li>
+          <li><b>秒表体验完整</b>：切到秒表标签后有 0.1 秒精度大字和右侧「计次」记录表，适合计时测速。</li>
+        </ul>
+        <h3>实现成本</h3>
+        <ul>
+          <li><span class="tag-ok">倒计时部分零服务改动</span>；<span class="tag-ext">秒表计次</span>可先存前端内存（随秒表清除），不改宿主。</li>
+        </ul>
+        <p class="try">试试看：点数字上下的箭头调时长，或切到「秒表」标签体验计次功能；切「多个 + 秒表」场景点右侧队列切换主舞台。</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 方案 C -->
+  <section class="opt" id="opt-c">
+    <div class="opt-head">
+      <span class="letter alt">C</span>
+      <h2>速启卡片网格：磁贴工坊</h2>
+      <p>延续 Fuyu 自定义面板的卡片网格气质：空态是 3×2 六张常用时长磁贴，点一下原地变身带背景进度填充的实时卡片；剩余空位继续保留速启卡，随时一键多开。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" id="island-c"></div></div>
+      <aside class="notes">
+        <h3>亮点</h3>
+        <ul>
+          <li><b>多计时器并排最爽</b>：同时开 2–6 个倒计时 / 秒表时，每个卡片用整张底色当进度条，余光一扫就能看清所有进度。</li>
+          <li><b>从不半空</b>：运行 1–5 个计时器时，后面格位自动补齐常用预设磁贴，整个岛的视觉密度始终均衡。</li>
+          <li><b>和 Fuyu 主面板风格最统一</b>：圆角卡片、等宽大数字、角落微操作按钮，像原生长出来的兄弟页。</li>
+        </ul>
+        <h3>实现成本</h3>
+        <ul>
+          <li><span class="tag-ok">完全复用现有 timers/v1</span>：零后端、零协议改动；超过 6 个时网格自动纵向滚动。</li>
+        </ul>
+        <p class="try">试试看：在「空态」连点两三张预设卡，看它们变成带进度填充的实时卡片并自然排布。</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 方案 D -->
+  <section class="opt" id="opt-d">
+    <div class="opt-head">
+      <span class="letter alt">D</span>
+      <h2>时间中枢：倒计时 + 休息提醒</h2>
+      <p>把同属 <code>timer</code> 模块但目前藏在设置里的「休息提醒（久坐 / 护眼 / 喝水）」搬到右侧常驻，让计时器页在不开倒计时的时候也有活生生的实时进度。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" id="island-d"></div></div>
+      <aside class="notes">
+        <h3>亮点</h3>
+        <ul>
+          <li><b>把隐藏能力亮出来</b>：很多用户不知道 Fuyu 自带久坐 / 护眼提醒（离开 5 分钟自动暂停），搬进计时器页右侧能随时看到「还剩几分钟该起身」、一键开关或提前重置。</li>
+          <li><b>左侧依然利落</b>：输入框 + 单行快捷预设条 + 最近使用记录，运行态同样支持单计时大卡和多计时进度列表。</li>
+        </ul>
+        <h3>实现成本</h3>
+        <ul>
+          <li><span class="tag-ext">需小幅扩展前端状态</span>：把 <code>useBreakReminders.ts</code> 内部 <code>progress.current</code> 暴露成可订阅的 store（约 20 行改动），就能实时同步进度与手动重置。</li>
+        </ul>
+        <p class="try">试试看：点右侧「休息提醒」开关或单条的重置按钮，同时在左侧启动任意倒计时。</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 原版对比 -->
+  <section class="opt" id="opt-old">
+    <div class="opt-head">
+      <span class="letter alt">现状</span>
+      <h2>当前计时器页（对照）</h2>
+      <p>对应你截图里的当前版本：单条输入框 + 两个圆钮 + 一句居中提示，下面全空。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage"><div class="island" id="island-old"></div></div>
+      <aside class="notes">
+        <h3>对照参考</h3>
+        <ul>
+          <li>在 800×320 尺寸下，空态内容高度仅 ~58px，下方留白超过 190px。</li>
+          <li>上面四套方案都在同一个 800×320（和 560×320 窄岛）容器里对比呈现，你可以直接挑一套，或者说「要 A 的双栏 + D 的休息提醒」这样混搭。</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<script>
+const ICONS = {
+  play: '<svg class="ic" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none"/></svg>',
+  pause: '<svg class="ic" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/></svg>',
+  x: '<svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  plus: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  timer: '<svg class="ic" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>',
+  watch: '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><polyline points="12 10 12 12 13 13"/><path d="m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05"/><path d="m7.88 16.36.8 4a2 2 0 0 0 2 1.61h2.72a2 2 0 0 0 2-1.61l.81-4.05"/></svg>',
+  bell: '<svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  vol: '<svg class="ic" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>',
+  volOff: '<svg class="ic" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>',
+  reset: '<svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+  flag: '<svg class="ic" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>',
+  up: '<svg class="ic" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>',
+  down: '<svg class="ic" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
+  stand: '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="m9 20 3-6 3 6"/><path d="m6 8 6 2 6-2"/><path d="M12 10v4"/></svg>',
+  eye: '<svg class="ic" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>',
+  water: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
+  gear: '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  bot: '<svg class="ic" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4"/><circle cx="9" cy="14" r="1" fill="currentColor"/><circle cx="15" cy="14" r="1" fill="currentColor"/></svg>',
+  todo: '<svg class="ic" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>',
+  music: '<svg class="ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+  cal: '<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  clip: '<svg class="ic" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>',
+  lang: '<svg class="ic" viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>',
+};
+
+const PRESETS = [
+  { min: 1, tag: '极速' },
+  { min: 3, tag: '泡茶' },
+  { min: 5, tag: '短休' },
+  { min: 10, tag: '小憩' },
+  { min: 15, tag: '会议' },
+  { min: 25, tag: '专注' },
+];
+
+const UNITS = [
+  [/^(h|hr|hrs|hour|hours|小时|时|个小时)$/, 3600000],
+  [/^(m|min|mins|minute|minutes|分|分钟)$/, 60000],
+  [/^(s|sec|secs|second|seconds|秒|秒钟)$/, 1000],
+];
+
+function parseDuration(text) {
+  const input = (text || '').trim().toLowerCase().replace(/\s+/g, '');
+  if (!input) return null;
+  let total;
+  const clock = /^(\d{1,3}):(\d{1,2})(?::(\d{1,2}))?$/.exec(input);
+  if (clock) {
+    const a = Number(clock[1]), b = Number(clock[2]), c = clock[3] !== undefined ? Number(clock[3]) : undefined;
+    if (b > 59 || (c ?? 0) > 59) return null;
+    total = c === undefined ? a * 60000 + b * 1000 : a * 3600000 + b * 60000 + c * 1000;
+  } else if (/^\d+(\.\d+)?$/.test(input)) {
+    total = Number(input) * 60000;
+  } else {
+    const parts = [...input.matchAll(/(\d+(?:\.\d+)?)([a-z\u4e00-\u9fff]+)/g)];
+    if (!parts.length || parts.map(p => p[0]).join('') !== input) return null;
+    total = 0;
+    for (const [, amt, unit] of parts) {
+      const found = UNITS.find(([re]) => re.test(unit));
+      if (!found) return null;
+      total += Number(amt) * found[1];
+    }
+  }
+  total = Math.round(total);
+  return total >= 1000 && total <= 24 * 3600000 ? total : null;
+}
+
+function clockText(ms, roundUp) {
+  const total = Math.max(0, roundUp ? Math.ceil(ms / 1000) : Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${String(m).padStart(2, '0')}:${s}`;
+}
+
+function etaText(ms) {
+  const d = new Date(Date.now() + ms);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function elapsedOf(t, now) {
+  return t.elapsedMs + (t.runningSince === null ? 0 : Math.max(0, now - t.runningSince));
+}
+function remainingOf(t, now) {
+  return Math.max(0, t.durationMs - elapsedOf(t, now));
+}
+function isFinished(t, now) {
+  return t.kind === 'countdown' && remainingOf(t, now) === 0;
+}
+function shownMs(t, now) {
+  return t.kind === 'countdown' ? remainingOf(t, now) : elapsedOf(t, now);
+}
+function progressOf(t, now) {
+  if (t.kind !== 'countdown' || !t.durationMs) return 0;
+  return Math.min(1, Math.max(0, elapsedOf(t, now) / t.durationMs));
+}
+
+let seq = 1;
+function makeScene(scene) {
+  const now = Date.now();
+  if (scene === 'empty') return [];
+  if (scene === 'one') {
+    return [
+      { id: 't' + seq++, kind: 'countdown', durationMs: 25 * 60000, elapsedMs: 10 * 60000 + 32000, runningSince: now, alerted: false },
+    ];
+  }
+  if (scene === 'multi') {
+    return [
+      { id: 't' + seq++, kind: 'countdown', durationMs: 25 * 60000, elapsedMs: 11 * 60000 + 18000, runningSince: now, alerted: false, owner: '番茄钟' },
+      { id: 't' + seq++, kind: 'countdown', durationMs: 10 * 60000, elapsedMs: 6 * 60000 + 42000, runningSince: now, alerted: false },
+      { id: 't' + seq++, kind: 'countdown', durationMs: 5 * 60000, elapsedMs: 2 * 60000 + 10000, runningSince: null, alerted: false },
+      { id: 't' + seq++, kind: 'stopwatch', durationMs: 0, elapsedMs: 2 * 60000 + 14600, runningSince: now, alerted: false },
+    ];
+  }
+  if (scene === 'ringing') {
+    return [
+      { id: 't' + seq++, kind: 'countdown', durationMs: 5 * 60000, elapsedMs: 5 * 60000, runningSince: null, alerted: true },
+      { id: 't' + seq++, kind: 'countdown', durationMs: 15 * 60000, elapsedMs: 4 * 60000 + 12000, runningSince: now, alerted: false },
+    ];
+  }
+  return [];
+}
+
+const STATE = {
+  scene: 'empty',
+  theme: 'dark',
+  width: 'wide',
+  sound: true,
+  a: { timers: [], input: '', err: false, standbyMin: 5 },
+  b: { timers: [], input: '', err: false, tab: 'countdown', pickH: 0, pickM: 15, pickS: 0, selectedId: null, laps: [12400, 28900] },
+  c: { timers: [], input: '', err: false },
+  d: {
+    timers: [], input: '', err: false,
+    recents: [12, 20, 40],
+    breaksOn: true,
+    breaks: [
+      { id: 'sit', icon: 'stand', name: '久坐提醒', totalMin: 60, elapsedMin: 22 },
+      { id: 'eye', icon: 'eye', name: '护眼远眺', totalMin: 20, elapsedMin: 13 },
+      { id: 'water', icon: 'water', name: '喝水', totalMin: 45, elapsedMin: 16 },
+    ],
+  },
+};
+
+function applyScene(scene) {
+  STATE.scene = scene;
+  for (const key of ['a', 'b', 'c', 'd']) {
+    STATE[key].timers = makeScene(scene);
+    STATE[key].err = false;
+  }
+  STATE.b.selectedId = STATE.b.timers[0]?.id ?? null;
+  renderAll();
+}
+
+function headerHTML() {
+  return `
+    <div class="ibar">
+      <span class="brand">Fuyu</span>
+      <span class="pg">${ICONS.bot}</span>
+      <span class="pg">${ICONS.todo}</span>
+      <span class="pg">${ICONS.music}</span>
+      <span class="pg">${ICONS.cal}</span>
+      <span class="pg">${ICONS.clip}</span>
+      <span class="pg on">${ICONS.timer}</span>
+      <span class="more">••• +5</span>
+      <div class="notch">DEV</div>
+      <span class="sp"></span>
+      <span class="rb">${ICONS.bell}</span>
+      <span class="rb">${ICONS.lang}</span>
+      <span class="rb">${ICONS.gear}</span>
+    </div>
+    <span class="chev l">‹</span>
+    <span class="chev r">›</span>
+  `;
+}
+
+function startCountdownIn(key, ms) {
+  const s = STATE[key];
+  if (s.timers.length >= 12) return;
+  const t = { id: 't' + seq++, kind: 'countdown', durationMs: ms, elapsedMs: 0, runningSince: Date.now(), alerted: false };
+  s.timers.push(t);
+  if (key === 'b') { s.tab = 'countdown'; s.selectedId = t.id; }
+  if (key === 'd') {
+    const mins = Math.round(ms / 60000);
+    if (mins > 0 && ms % 60000 === 0) s.recents = [mins, ...s.recents.filter(x => x !== mins)].slice(0, 4);
+  }
+  renderOne(key);
+}
+
+function startStopwatchIn(key) {
+  const s = STATE[key];
+  if (s.timers.length >= 12) return;
+  const t = { id: 't' + seq++, kind: 'stopwatch', durationMs: 0, elapsedMs: 0, runningSince: Date.now(), alerted: false };
+  s.timers.push(t);
+  if (key === 'b') { s.tab = 'stopwatch'; s.laps = []; }
+  renderOne(key);
+}
+
+function mutateTimer(key, id, action, extraMs) {
+  const s = STATE[key];
+  const now = Date.now();
+  const idx = s.timers.findIndex(t => t.id === id);
+  if (idx < 0) return;
+  const t = s.timers[idx];
+  if (action === 'cancel') {
+    s.timers.splice(idx, 1);
+    if (key === 'b' && s.selectedId === id) s.selectedId = s.timers[0]?.id ?? null;
+  } else if (action === 'toggle') {
+    if (t.runningSince !== null) {
+      t.elapsedMs = t.kind === 'countdown' ? Math.min(t.durationMs, elapsedOf(t, now)) : elapsedOf(t, now);
+      t.runningSince = null;
+    } else if (!isFinished(t, now)) {
+      t.runningSince = now;
+    }
+  } else if (action === 'extend') {
+    const add = extraMs ?? 5 * 60000;
+    const done = isFinished(t, now);
+    if (done) {
+      t.elapsedMs = t.durationMs;
+      t.durationMs = t.durationMs + add;
+      t.runningSince = now;
+      t.alerted = false;
+    } else {
+      t.durationMs = Math.min(24 * 3600000, t.durationMs + add);
+    }
+  }
+  renderOne(key);
+}
+
+function submitInput(key) {
+  const s = STATE[key];
+  const ms = parseDuration(s.input);
+  if (ms === null) {
+    s.err = true;
+    renderOne(key);
+    return;
+  }
+  s.input = '';
+  s.err = false;
+  startCountdownIn(key, ms);
+}
+
+function sortTimers(timers, now) {
+  return [...timers].sort((a, b) => Number(isFinished(b, now)) - Number(isFinished(a, now)));
+}
+
+/* ---------- Render A ---------- */
+function renderA(now) {
+  const s = STATE.a;
+  const parsed = parseDuration(s.input);
+  const sw = s.timers.find(t => t.kind === 'stopwatch');
+  const sorted = sortTimers(s.timers, now);
+
+  let stageHTML = '';
+  if (sorted.length === 0) {
+    const previewMs = parsed ?? s.standbyMin * 60000;
+    const C = 2 * Math.PI * 52;
+    const frac = Math.min(1, previewMs / (60 * 60000));
+    stageHTML = `
+      <div class="a-empty">
+        <div class="a-dial-wrap">
+          <svg class="a-dial-svg" viewBox="0 0 116 116">
+            <circle class="a-dial-track" cx="58" cy="58" r="52"/>
+            <circle class="a-dial-arc" cx="58" cy="58" r="52" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.max(0.08, frac))}"/>
+          </svg>
+          <div class="a-dial-center">
+            <span class="a-dial-time tnum">${clockText(previewMs, true)}</span>
+            <span class="a-dial-sub">${parsed ? '输入预览' : '快速设定'}</span>
+          </div>
+        </div>
+        <div class="a-empty-side">
+          <div style="font-size:13.5px;font-weight:620">${parsed ? '按 Enter 立即开始' : '点左侧预设，或微调时长'}</div>
+          <div style="font-size:12px;color:var(--fg3)">预计 <span class="tnum" style="color:var(--fg2)">${etaText(previewMs)}</span> 响铃提醒</div>
+          ${parsed ? '' : `
+            <div class="a-step-row">
+              <button class="a-step-btn" data-act="a-step" data-delta="-1">-1 分</button>
+              <button class="a-step-btn" data-act="a-step" data-delta="1">+1 分</button>
+              <button class="a-step-btn" data-act="a-step" data-delta="5">+5 分</button>
+            </div>
+          `}
+          <button class="pill-btn acc" data-act="a-start-standby" style="margin-top:2px">${ICONS.play} 开始 ${clockText(previewMs, true)}</button>
+        </div>
+      </div>
+    `;
+  } else if (sorted.length === 1) {
+    const t = sorted[0];
+    const done = isFinished(t, now);
+    const running = t.runningSince !== null;
+    const ms = shownMs(t, now);
+    const C = 2 * Math.PI * 52;
+    const p = t.kind === 'countdown' ? (done ? 1 : 1 - progressOf(t, now)) : ((ms % 60000) / 60000);
+    stageHTML = `
+      <div class="a-hero">
+        <div class="a-dial-wrap">
+          <svg class="a-dial-svg" viewBox="0 0 116 116">
+            <circle class="a-dial-track" cx="58" cy="58" r="52"/>
+            <circle class="a-dial-arc" cx="58" cy="58" r="52" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - p)}" style="${!running && !done ? 'stroke:var(--fg3)' : ''}"/>
+          </svg>
+          <div class="a-dial-center">
+            <span class="a-dial-time tnum">${clockText(ms, t.kind === 'countdown')}</span>
+            <span class="a-dial-sub">${done ? '到点了' : running ? (t.kind === 'countdown' ? '剩余' : '已计时') : '已暂停'}</span>
+          </div>
+        </div>
+        <div class="a-hero-info">
+          <div class="a-hero-tag">
+            ${done ? ICONS.bell : t.kind === 'countdown' ? ICONS.timer : ICONS.watch}
+            <strong style="color:var(--fg1)">${done ? '时间到了' : t.kind === 'countdown' ? `倒计时 · ${clockText(t.durationMs, true)}` : '秒表'}</strong>
+            ${t.owner ? `<span class="src">来自 ${t.owner}</span>` : ''}
+          </div>
+          <div class="a-hero-meta">
+            ${done ? '点击加时可再延 5 分钟' : t.kind === 'countdown' ? (running ? `预计 ${etaText(ms)} 到点` : '已暂停，点击继续') : (running ? '正在正向计时' : '秒表已暂停')}
+          </div>
+          <div class="a-hero-acts">
+            ${done ? `
+              <button class="pill-btn acc" data-act="extend" data-k="a" data-id="${t.id}" data-ms="300000">${ICONS.plus} 再加 5 分钟</button>
+              <button class="pill-btn" data-act="cancel" data-k="a" data-id="${t.id}">知道了</button>
+            ` : `
+              <button class="pill-btn acc" data-act="toggle" data-k="a" data-id="${t.id}">${running ? `${ICONS.pause} 暂停` : `${ICONS.play} 继续`}</button>
+              ${t.kind === 'countdown' ? `<button class="pill-btn soft" data-act="extend" data-k="a" data-id="${t.id}" data-ms="60000">+1 分</button><button class="pill-btn soft" data-act="extend" data-k="a" data-id="${t.id}" data-ms="300000">+5 分</button>` : ''}
+              <button class="icon-btn" title="取消" data-act="cancel" data-k="a" data-id="${t.id}">${ICONS.x}</button>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    stageHTML = `
+      <div class="a-list-head">
+        <span>进行中 · <b class="tnum" style="color:var(--fg2)">${sorted.length}</b> / 12</span>
+        <span>${sorted.filter(t => isFinished(t, now)).length ? '有倒计时已到点' : '按剩余与状态排序'}</span>
+      </div>
+      <div class="a-list scroll">
+        ${sorted.map(t => {
+          const done = isFinished(t, now);
+          const running = t.runningSince !== null;
+          const ms = shownMs(t, now);
+          const pct = t.kind === 'countdown' ? (done ? 100 : (1 - progressOf(t, now)) * 100) : 100;
+          return `
+            <div class="a-row ${done ? 'ringing-card' : ''} ${!running && !done ? 'paused' : ''}">
+              <span style="color:${done ? 'var(--acc)' : 'var(--fg3)'};display:grid;place-items:center">${done ? ICONS.bell : t.kind === 'countdown' ? ICONS.timer : ICONS.watch}</span>
+              <div class="meta">
+                <strong class="ell">${done ? '到点了' : t.kind === 'countdown' ? `${clockText(t.durationMs, true)} 倒计时` : '秒表'}${t.owner ? ` · ${t.owner}` : ''}</strong>
+                <small>${done ? '已结束' : t.kind === 'countdown' ? (running ? `预计 ${etaText(ms)}` : '已暂停') : (running ? '运行中' : '已暂停')}</small>
+              </div>
+              <span class="clk tnum">${clockText(ms, t.kind === 'countdown')}</span>
+              <div class="acts">
+                ${done
+                  ? `<button class="pill-btn acc" style="height:24px;padding:0 8px;font-size:11px" data-act="extend" data-k="a" data-id="${t.id}" data-ms="300000">+5分</button>`
+                  : `<button class="icon-btn acc" data-act="toggle" data-k="a" data-id="${t.id}">${running ? ICONS.pause : ICONS.play}</button>`}
+                <button class="icon-btn" data-act="cancel" data-k="a" data-id="${t.id}">${ICONS.x}</button>
+              </div>
+              <div class="pbar" style="width:${pct.toFixed(1)}%"></div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  const singleRinging = sorted.length === 1 && isFinished(sorted[0], now);
+  return `
+    ${headerHTML()}
+    <div class="ibody">
+      <div class="a-grid">
+        <div class="a-left">
+          <form class="smart-form ${s.err ? 'err' : ''}" data-form="a">
+            <input data-input="a" value="${s.input.replace(/"/g, '&quot;')}" placeholder="10、10m、1h30m、90s" />
+            ${parsed ? `<span class="parsed tnum">${clockText(parsed, true)}</span>` : ''}
+            <button class="go" type="submit" title="开始倒计时">${ICONS.play}</button>
+          </form>
+          <div class="a-presets">
+            ${PRESETS.map(p => `
+              <button class="a-preset" data-act="preset" data-k="a" data-min="${p.min}">
+                <strong class="tnum">${p.min}<small style="font-size:11px;font-weight:500;color:var(--fg2)"> 分</small></strong>
+                <span>${p.tag}</span>
+              </button>
+            `).join('')}
+          </div>
+          <div class="a-foot">
+            <button class="a-sw-btn" data-act="stopwatch" data-k="a">
+              ${ICONS.watch}
+              <span>${sw ? '再开秒表' : '开启秒表'}</span>
+              ${sw ? `<span class="live tnum">${clockText(shownMs(sw, now), false)}</span>` : ''}
+            </button>
+            <button class="icon-btn ${STATE.sound ? 'acc' : ''}" title="到点提示音" data-act="sound">
+              ${STATE.sound ? ICONS.vol : ICONS.volOff}
+            </button>
+          </div>
+        </div>
+        <div class="a-stage ${singleRinging ? 'ringing-card' : ''}">
+          ${stageHTML}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Render B ---------- */
+function renderB(now) {
+  const s = STATE.b;
+  const parsed = parseDuration(s.input);
+  const countdowns = sortTimers(s.timers.filter(t => t.kind === 'countdown'), now);
+  const sw = [...s.timers].reverse().find(t => t.kind === 'stopwatch') ?? null;
+
+  let mainHTML = '';
+  if (s.tab === 'stopwatch') {
+    const running = sw && sw.runningSince !== null;
+    const ms = sw ? elapsedOf(sw, now) : 0;
+    const tenths = Math.floor((ms % 1000) / 100);
+    mainHTML = `
+      <div class="b-stage">
+        <div class="b-big-clock tnum">${clockText(ms, false)}<small>.${tenths}</small></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="pill-btn acc" data-act="b-sw-toggle">${running ? `${ICONS.pause} 暂停` : `${ICONS.play} ${sw ? '继续' : '开始'}`}</button>
+          <button class="pill-btn" data-act="b-sw-lap" ${!sw ? 'style="opacity:.4;pointer-events:none"' : ''}>${ICONS.flag} 计次</button>
+          ${sw ? `<button class="icon-btn" title="复位" data-act="b-sw-reset">${ICONS.reset}</button>` : ''}
+        </div>
+      </div>
+      <div class="b-laps">
+        <div style="font-size:11.5px;color:var(--fg3);display:flex;justify-content:space-between">
+          <span>分段计次</span><span class="tnum">${s.laps.length} 条</span>
+        </div>
+        <div class="scroll" style="flex:1;min-height:0">
+          ${s.laps.length === 0
+            ? '<div style="font-size:12px;color:var(--fg3);padding-top:34px;text-align:center">开始后点「计次」记录分段</div>'
+            : [...s.laps].reverse().map((v, i, arr) => {
+                const idx = arr.length - i;
+                const prev = idx > 1 ? s.laps[idx - 2] : 0;
+                const diff = v - prev;
+                return `<div class="b-lap-row tnum"><span>#${idx}</span><span style="color:var(--fg3)">+${clockText(diff, false)}.${Math.floor((diff % 1000) / 100)}</span><strong style="color:var(--fg1)">${clockText(v, false)}.${Math.floor((v % 1000) / 100)}</strong></div>`;
+              }).join('')}
+        </div>
+      </div>
+    `;
+  } else if (countdowns.length === 0) {
+    const pickMs = (s.pickH * 3600 + s.pickM * 60 + s.pickS) * 1000;
+    const pad = n => String(n).padStart(2, '0');
+    mainHTML = `
+      <div class="b-stage">
+        <div class="b-picker">
+          <div class="b-unit">
+            <button data-act="b-pick" data-f="pickH" data-d="1">${ICONS.up}</button>
+            <span class="num tnum">${pad(s.pickH)}</span>
+            <button data-act="b-pick" data-f="pickH" data-d="-1">${ICONS.down}</button>
+            <span class="lbl">小时</span>
+          </div>
+          <span class="b-colon">:</span>
+          <div class="b-unit">
+            <button data-act="b-pick" data-f="pickM" data-d="1">${ICONS.up}</button>
+            <span class="num tnum">${pad(s.pickM)}</span>
+            <button data-act="b-pick" data-f="pickM" data-d="-1">${ICONS.down}</button>
+            <span class="lbl">分钟</span>
+          </div>
+          <span class="b-colon">:</span>
+          <div class="b-unit">
+            <button data-act="b-pick" data-f="pickS" data-d="10">${ICONS.up}</button>
+            <span class="num tnum">${pad(s.pickS)}</span>
+            <button data-act="b-pick" data-f="pickS" data-d="-10">${ICONS.down}</button>
+            <span class="lbl">秒</span>
+          </div>
+          <button class="pill-btn acc" style="height:36px;padding:0 18px;margin-left:10px" data-act="b-start-pick">${ICONS.play} 开始</button>
+        </div>
+        <div class="b-chips">
+          ${[1, 3, 5, 10, 15, 25, 45].map(m => `<button class="b-chip" data-act="preset" data-k="b" data-min="${m}">${m} 分钟</button>`).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    const active = countdowns.find(t => t.id === s.selectedId) ?? countdowns[0];
+    const done = isFinished(active, now);
+    const running = active.runningSince !== null;
+    const ms = shownMs(active, now);
+    const pct = done ? 100 : (1 - progressOf(active, now)) * 100;
+    mainHTML = `
+      <div class="b-stage ${done ? 'ringing-card' : ''}">
+        <div style="font-size:12px;color:var(--fg2);display:flex;align-items:center;gap:6px">
+          ${done ? ICONS.bell : ICONS.timer}
+          <span>${done ? '时间到了' : `${clockText(active.durationMs, true)} 倒计时`}${active.owner ? ` · 来自 ${active.owner}` : ''}</span>
+          ${!done && running ? `<span style="color:var(--fg3)">· 预计 ${etaText(ms)}</span>` : ''}
+        </div>
+        <div class="b-big-clock tnum" style="${!running && !done ? 'color:var(--fg2)' : ''}">${clockText(ms, true)}</div>
+        <div class="b-prog-track"><div class="b-prog-fill" style="width:${pct.toFixed(1)}%"></div></div>
+        <div style="display:flex;gap:7px;align-items:center;margin-top:2px">
+          ${done ? `
+            <button class="pill-btn acc" data-act="extend" data-k="b" data-id="${active.id}" data-ms="300000">${ICONS.plus} 再加 5 分钟</button>
+            <button class="pill-btn" data-act="cancel" data-k="b" data-id="${active.id}">知道了</button>
+          ` : `
+            <button class="pill-btn soft" data-act="extend" data-k="b" data-id="${active.id}" data-ms="60000">+1 分</button>
+            <button class="pill-btn acc" data-act="toggle" data-k="b" data-id="${active.id}">${running ? `${ICONS.pause} 暂停` : `${ICONS.play} 继续`}</button>
+            <button class="pill-btn soft" data-act="extend" data-k="b" data-id="${active.id}" data-ms="300000">+5 分</button>
+            <button class="icon-btn" title="取消" data-act="cancel" data-k="b" data-id="${active.id}">${ICONS.x}</button>
+          `}
+        </div>
+      </div>
+      ${countdowns.length > 1 ? `
+        <div class="b-rail scroll">
+          <div style="font-size:11px;color:var(--fg3);padding:0 4px">全部倒计时 (${countdowns.length})</div>
+          ${countdowns.map(t => {
+            const d = isFinished(t, now);
+            return `
+              <button class="b-qitem ${t.id === active.id ? 'sel' : ''} ${d ? 'ringing-card' : ''}" data-act="b-sel" data-id="${t.id}">
+                <span style="color:${d ? 'var(--acc)' : 'var(--fg3)'}">${d ? ICONS.bell : ICONS.timer}</span>
+                <span class="ell" style="font-size:12px;color:var(--fg2)">${d ? '到点了' : (t.owner || clockText(t.durationMs, true))}</span>
+                <span class="t tnum">${clockText(shownMs(t, now), true)}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      ` : ''}
+    `;
+  }
+
+  return `
+    ${headerHTML()}
+    <div class="ibody">
+      <div class="b-wrap">
+        <div class="b-bar">
+          <div class="b-tabs">
+            <button class="${s.tab === 'countdown' ? 'on' : ''}" data-act="b-tab" data-tab="countdown">
+              倒计时 ${countdowns.length ? `<span class="dot"></span>` : ''}
+            </button>
+            <button class="${s.tab === 'stopwatch' ? 'on' : ''}" data-act="b-tab" data-tab="stopwatch">
+              秒表 ${sw ? `<span class="dot"></span>` : ''}
+            </button>
+          </div>
+          <form class="smart-form ${s.err ? 'err' : ''}" data-form="b">
+            <input data-input="b" value="${s.input.replace(/"/g, '&quot;')}" placeholder="快捷输入 10m、1h30m…" />
+            ${parsed ? `<span class="parsed tnum">${clockText(parsed, true)}</span>` : ''}
+            <button class="go" type="submit">${ICONS.play}</button>
+          </form>
+        </div>
+        <div class="b-main">${mainHTML}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Render C ---------- */
+function renderC(now) {
+  const s = STATE.c;
+  const parsed = parseDuration(s.input);
+  const sorted = sortTimers(s.timers, now);
+
+  const tiles = [];
+  for (const t of sorted) {
+    const done = isFinished(t, now);
+    const running = t.runningSince !== null;
+    const ms = shownMs(t, now);
+    const fillPct = t.kind === 'countdown' ? (done ? 100 : (1 - progressOf(t, now)) * 100) : 100;
+    tiles.push(`
+      <div class="c-tile ${done ? 'ringing-card' : ''} ${!running && !done ? 'paused' : ''}">
+        <div class="fill" style="width:${fillPct.toFixed(1)}%"></div>
+        <div class="head">
+          <span class="tag ell" style="color:${done ? 'var(--acc)' : 'var(--fg2)'}">
+            ${done ? ICONS.bell : t.kind === 'countdown' ? ICONS.timer : ICONS.watch}
+            <span class="ell">${done ? '到点了' : t.kind === 'countdown' ? `${clockText(t.durationMs, true)}${t.owner ? ` · ${t.owner}` : ''}` : '秒表'}</span>
+          </span>
+          ${!done && t.kind === 'countdown' ? `<span class="tnum">${running ? etaText(ms) : '暂停'}</span>` : ''}
+        </div>
+        <div class="big tnum">${clockText(ms, t.kind === 'countdown')}</div>
+        <div class="foot">
+          <span>${done ? '点击加时或关闭' : t.kind === 'countdown' ? (running ? '进行中' : '已暂停') : (running ? '正向计时' : '已暂停')}</span>
+          <div class="acts">
+            ${done
+              ? `<button class="pill-btn acc" style="height:22px;padding:0 8px;font-size:11px" data-act="extend" data-k="c" data-id="${t.id}" data-ms="300000">+5分</button>`
+              : `<button class="icon-btn acc" data-act="toggle" data-k="c" data-id="${t.id}">${running ? ICONS.pause : ICONS.play}</button>`}
+            <button class="icon-btn" data-act="cancel" data-k="c" data-id="${t.id}">${ICONS.x}</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  const fillCount = Math.max(0, 6 - tiles.length);
+  const fillerPresets = PRESETS.slice(0, fillCount);
+  for (const p of fillerPresets) {
+    tiles.push(`
+      <button class="c-tile preset" data-act="preset" data-k="c" data-min="${p.min}">
+        <div class="head">
+          <span class="tag">${ICONS.timer} <span>${p.tag}</span></span>
+          <span class="play-hint">${ICONS.play}</span>
+        </div>
+        <div class="big tnum">${String(p.min).padStart(2, '0')}:00</div>
+        <div class="foot"><span>点一下立即开始</span><span>${p.min} 分钟</span></div>
+      </button>
+    `);
+  }
+
+  return `
+    ${headerHTML()}
+    <div class="ibody">
+      <div class="c-wrap">
+        <div class="c-top">
+          <form class="smart-form ${s.err ? 'err' : ''}" data-form="c">
+            <input data-input="c" value="${s.input.replace(/"/g, '&quot;')}" placeholder="输入自定义时长：10、10m、1h30m、90s" />
+            ${parsed ? `<span class="parsed tnum">${clockText(parsed, true)}</span>` : ''}
+            <button class="go" type="submit">${ICONS.play}</button>
+          </form>
+          <button class="pill-btn soft" style="height:34px" data-act="stopwatch" data-k="c">${ICONS.watch} 秒表</button>
+          <span style="font-size:11.5px;color:var(--fg3);white-space:nowrap" class="tnum">${sorted.length}/12</span>
+        </div>
+        <div class="c-grid scroll">${tiles.join('')}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Render D ---------- */
+function renderD(now) {
+  const s = STATE.d;
+  const parsed = parseDuration(s.input);
+  const sorted = sortTimers(s.timers, now);
+
+  let bodyHTML = '';
+  if (sorted.length === 0) {
+    bodyHTML = `
+      <div class="d-empty-card">
+        <div class="d-empty-top">
+          <div>
+            <strong>随时起一个倒计时</strong>
+            <p>上方输入时长按 Enter，或点快捷预设直接开始</p>
+          </div>
+          <button class="pill-btn acc" data-act="preset" data-k="d" data-min="25">${ICONS.play} 25 分钟专注</button>
+        </div>
+        <div class="d-recents">
+          <span>最近使用</span>
+          ${s.recents.map(m => `<button class="d-chip tnum" data-act="preset" data-k="d" data-min="${m}">${m} 分钟</button>`).join('')}
+        </div>
+      </div>
+    `;
+  } else if (sorted.length === 1) {
+    const t = sorted[0];
+    const done = isFinished(t, now);
+    const running = t.runningSince !== null;
+    const ms = shownMs(t, now);
+    const pct = t.kind === 'countdown' ? (done ? 100 : (1 - progressOf(t, now)) * 100) : 100;
+    bodyHTML = `
+      <div class="d-hero ${done ? 'ringing-card' : ''}">
+        <div class="d-hero-row">
+          <div>
+            <div style="font-size:12px;color:var(--fg2);display:flex;align-items:center;gap:5px">
+              ${done ? ICONS.bell : t.kind === 'countdown' ? ICONS.timer : ICONS.watch}
+              <span>${done ? '时间到了' : t.kind === 'countdown' ? `${clockText(t.durationMs, true)} 倒计时` : '秒表'}</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--fg3);margin-top:2px">
+              ${done ? '到点了，可以延 5 分钟或关闭' : t.kind === 'countdown' ? (running ? `预计 ${etaText(ms)} 到点` : '已暂停') : '正向计时中'}
+            </div>
+          </div>
+          <div class="d-hero-clk tnum">${clockText(ms, t.kind === 'countdown')}</div>
+        </div>
+        <div class="b-prog-track" style="width:100%"><div class="b-prog-fill" style="width:${pct.toFixed(1)}%"></div></div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${done ? `
+            <button class="pill-btn acc" data-act="extend" data-k="d" data-id="${t.id}" data-ms="300000">${ICONS.plus} 再加 5 分钟</button>
+            <button class="pill-btn" data-act="cancel" data-k="d" data-id="${t.id}">知道了</button>
+          ` : `
+            <button class="pill-btn acc" data-act="toggle" data-k="d" data-id="${t.id}">${running ? `${ICONS.pause} 暂停` : `${ICONS.play} 继续`}</button>
+            ${t.kind === 'countdown' ? `<button class="pill-btn soft" data-act="extend" data-k="d" data-id="${t.id}" data-ms="300000">+5 分</button>` : ''}
+            <button class="icon-btn" style="margin-left:auto" data-act="cancel" data-k="d" data-id="${t.id}">${ICONS.x}</button>
+          `}
+        </div>
+      </div>
+    `;
+  } else {
+    bodyHTML = `
+      <div class="a-list scroll">
+        ${sorted.map(t => {
+          const done = isFinished(t, now);
+          const running = t.runningSince !== null;
+          const ms = shownMs(t, now);
+          const pct = t.kind === 'countdown' ? (done ? 100 : (1 - progressOf(t, now)) * 100) : 100;
+          return `
+            <div class="a-row ${done ? 'ringing-card' : ''} ${!running && !done ? 'paused' : ''}">
+              <span style="color:${done ? 'var(--acc)' : 'var(--fg3)'};display:grid;place-items:center">${done ? ICONS.bell : t.kind === 'countdown' ? ICONS.timer : ICONS.watch}</span>
+              <div class="meta">
+                <strong class="ell">${done ? '到点了' : t.kind === 'countdown' ? `${clockText(t.durationMs, true)} 倒计时` : '秒表'}${t.owner ? ` · ${t.owner}` : ''}</strong>
+              </div>
+              <span class="clk tnum">${clockText(ms, t.kind === 'countdown')}</span>
+              <div class="acts">
+                ${done
+                  ? `<button class="pill-btn acc" style="height:24px;padding:0 8px;font-size:11px" data-act="extend" data-k="d" data-id="${t.id}" data-ms="300000">+5分</button>`
+                  : `<button class="icon-btn acc" data-act="toggle" data-k="d" data-id="${t.id}">${running ? ICONS.pause : ICONS.play}</button>`}
+                <button class="icon-btn" data-act="cancel" data-k="d" data-id="${t.id}">${ICONS.x}</button>
+              </div>
+              <div class="pbar" style="width:${pct.toFixed(1)}%"></div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  return `
+    ${headerHTML()}
+    <div class="ibody">
+      <div class="d-grid">
+        <div class="d-left">
+          <div class="d-top">
+            <form class="smart-form ${s.err ? 'err' : ''}" data-form="d">
+              <input data-input="d" value="${s.input.replace(/"/g, '&quot;')}" placeholder="10、10m、1h30m、90s" />
+              ${parsed ? `<span class="parsed tnum">${clockText(parsed, true)}</span>` : ''}
+              <button class="go" type="submit">${ICONS.play}</button>
+            </form>
+            <button class="icon-btn acc" style="width:34px;height:34px" title="开启秒表" data-act="stopwatch" data-k="d">${ICONS.watch}</button>
+          </div>
+          <div class="d-preset-strip">
+            ${[1, 3, 5, 10, 15, 25, 45, 60].map(m => `<button class="d-chip tnum" data-act="preset" data-k="d" data-min="${m}">${m === 60 ? '1h' : m + 'm'}</button>`).join('')}
+          </div>
+          <div class="d-body">${bodyHTML}</div>
+        </div>
+        <div class="d-right">
+          <div class="d-rhead">
+            <span>休息提醒</span>
+            <span class="sp"></span>
+            <button class="switch ${s.breaksOn ? 'on' : ''}" data-act="d-breaks-toggle" aria-label="开关休息提醒"></button>
+          </div>
+          <div class="d-breaks scroll ${s.breaksOn ? '' : 'off'}">
+            ${s.breaks.map(b => {
+              const rem = Math.max(1, b.totalMin - b.elapsedMin);
+              const pct = Math.min(100, (b.elapsedMin / b.totalMin) * 100);
+              return `
+                <div class="d-bitem">
+                  <div class="d-bitem-top">
+                    <span style="color:var(--acc);display:grid;place-items:center">${ICONS[b.icon]}</span>
+                    <strong class="ell">${b.name}</strong>
+                    <span class="rem tnum">${rem}分后</span>
+                    <button class="icon-btn" style="width:20px;height:20px;font-size:11px" title="刚休息过，重新计时" data-act="d-break-reset" data-bid="${b.id}">${ICONS.reset}</button>
+                  </div>
+                  <div class="d-bbar"><i style="width:${pct.toFixed(0)}%"></i></div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div class="d-rfoot">${s.breaksOn ? '离开电脑 5 分钟自动暂停计时' : '已关闭 · 开启后按间隔提醒起身与护眼'}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Render Old ---------- */
+function renderOld() {
+  return `
+    ${headerHTML()}
+    <div class="ibody">
+      <div class="old-form">
+        <div class="old-input">10、10m、1h30m、90s</div>
+        <span class="icon-btn acc" style="width:30px;height:30px">${ICONS.play}</span>
+        <span class="icon-btn acc">${ICONS.watch}</span>
+      </div>
+      <p class="old-empty">输入时长开始倒计时，或开一个秒表</p>
+    </div>
+  `;
+}
+
+function renderOne(key) {
+  const now = Date.now();
+  const el = document.getElementById('island-' + key);
+  if (!el) return;
+  const active = document.activeElement;
+  const keepFocus = active && active.dataset && active.dataset.input === key;
+  const selStart = keepFocus ? active.selectionStart : null;
+
+  if (key === 'a') el.innerHTML = renderA(now);
+  else if (key === 'b') el.innerHTML = renderB(now);
+  else if (key === 'c') el.innerHTML = renderC(now);
+  else if (key === 'd') el.innerHTML = renderD(now);
+
+  if (keepFocus) {
+    const nextInput = el.querySelector(`input[data-input="${key}"]`);
+    if (nextInput) {
+      nextInput.focus();
+      if (selStart !== null) nextInput.setSelectionRange(selStart, selStart);
+    }
+  }
+}
+
+function renderAll() {
+  for (const k of ['a', 'b', 'c', 'd']) renderOne(k);
+  const old = document.getElementById('island-old');
+  if (old) old.innerHTML = renderOld();
+}
+
+document.addEventListener('click', (e) => {
+  const segBtn = e.target.closest('.seg button');
+  if (segBtn) {
+    const group = segBtn.parentElement.dataset.group;
+    const val = segBtn.dataset.v;
+    segBtn.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === segBtn)));
+    if (group === 'scene') applyScene(val);
+    else if (group === 'theme') document.body.classList.toggle('light', val === 'light');
+    else if (group === 'width') document.body.classList.toggle('narrow', val === 'narrow');
+    return;
+  }
+
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const act = btn.dataset.act;
+  const k = btn.dataset.k;
+  if (act === 'preset') startCountdownIn(k, Number(btn.dataset.min) * 60000);
+  else if (act === 'stopwatch') startStopwatchIn(k);
+  else if (act === 'toggle') mutateTimer(k, btn.dataset.id, 'toggle');
+  else if (act === 'cancel') mutateTimer(k, btn.dataset.id, 'cancel');
+  else if (act === 'extend') mutateTimer(k, btn.dataset.id, 'extend', Number(btn.dataset.ms));
+  else if (act === 'sound') { STATE.sound = !STATE.sound; renderOne('a'); }
+  else if (act === 'a-step') {
+    STATE.a.standbyMin = Math.min(180, Math.max(1, STATE.a.standbyMin + Number(btn.dataset.delta)));
+    renderOne('a');
+  } else if (act === 'a-start-standby') {
+    const ms = parseDuration(STATE.a.input) ?? STATE.a.standbyMin * 60000;
+    STATE.a.input = '';
+    startCountdownIn('a', ms);
+  } else if (act === 'b-tab') {
+    STATE.b.tab = btn.dataset.tab;
+    renderOne('b');
+  } else if (act === 'b-pick') {
+    const f = btn.dataset.f, d = Number(btn.dataset.d);
+    const max = f === 'pickH' ? 23 : 59;
+    STATE.b[f] = (STATE.b[f] + d + max + 1) % (max + 1);
+    renderOne('b');
+  } else if (act === 'b-start-pick') {
+    const ms = (STATE.b.pickH * 3600 + STATE.b.pickM * 60 + STATE.b.pickS) * 1000;
+    if (ms >= 1000) startCountdownIn('b', ms);
+  } else if (act === 'b-sel') {
+    STATE.b.selectedId = btn.dataset.id;
+    renderOne('b');
+  } else if (act === 'b-sw-toggle') {
+    const sw = [...STATE.b.timers].reverse().find(t => t.kind === 'stopwatch');
+    if (!sw) startStopwatchIn('b');
+    else mutateTimer('b', sw.id, 'toggle');
+  } else if (act === 'b-sw-lap') {
+    const sw = [...STATE.b.timers].reverse().find(t => t.kind === 'stopwatch');
+    if (sw) { STATE.b.laps.push(elapsedOf(sw, Date.now())); renderOne('b'); }
+  } else if (act === 'b-sw-reset') {
+    const sw = [...STATE.b.timers].reverse().find(t => t.kind === 'stopwatch');
+    if (sw) { STATE.b.laps = []; mutateTimer('b', sw.id, 'cancel'); }
+  } else if (act === 'd-breaks-toggle') {
+    STATE.d.breaksOn = !STATE.d.breaksOn;
+    renderOne('d');
+  } else if (act === 'd-break-reset') {
+    const item = STATE.d.breaks.find(b => b.id === btn.dataset.bid);
+    if (item) { item.elapsedMin = 0; renderOne('d'); }
+  }
+});
+
+document.addEventListener('input', (e) => {
+  const inp = e.target.closest('input[data-input]');
+  if (!inp) return;
+  const k = inp.dataset.input;
+  STATE[k].input = inp.value;
+  STATE[k].err = false;
+  renderOne(k);
+});
+
+document.addEventListener('submit', (e) => {
+  const form = e.target.closest('form[data-form]');
+  if (!form) return;
+  e.preventDefault();
+  submitInput(form.dataset.form);
+});
+
+setInterval(() => {
+  for (const k of ['a', 'b', 'c', 'd']) {
+    const hasRunning = STATE[k].timers.some(t => t.runningSince !== null);
+    if (hasRunning) renderOne(k);
+  }
+}, 250);
+
+applyScene('empty');
+</script>
+</body>
+</html>

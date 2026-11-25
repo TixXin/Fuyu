@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { readPresence } from "./api";
+import { publishBreakProgress, subscribeBreakReset } from "./breakProgressStore";
 import { advanceBreaks, snoozedProgress, type BreakReminder, type BreakReminderSettings, type Presence } from "./breakReminders";
 import { replaceIslandReminders } from "./reminders";
 import { useBreakReminderSettings } from "./useBreakReminderSettings";
@@ -28,8 +29,15 @@ export function useBreakReminders() {
     settingsRef.current = settings;
     const result = advanceBreaks(settings, progress.current, 0, UNKNOWN);
     progress.current = result.progress;
+    publishBreakProgress(result.progress);
     setDue((current) => (sameItems(current, result.due) ? current : result.due));
   }, [settings]);
+
+  useEffect(() => subscribeBreakReset((id) => {
+    progress.current = { ...progress.current, [id]: 0 };
+    publishBreakProgress(progress.current);
+    setDue((current) => current.filter((entry) => entry.id !== id));
+  }), []);
 
   useEffect(() => {
     if (!running) return;
@@ -42,6 +50,7 @@ export function useBreakReminders() {
       const result = advanceBreaks(settingsRef.current, progress.current, now - last, presence);
       last = now;
       progress.current = result.progress;
+      publishBreakProgress(result.progress);
       setDue((current) => (sameItems(current, result.due) ? current : result.due));
     };
     const stop = visibilityInterval(() => void tick(), TICK_MS);
@@ -57,7 +66,10 @@ export function useBreakReminders() {
       if (known) return known;
       const settle = (elapsed: (item: BreakReminder) => number) => {
         const item = settingsRef.current.items.find((entry) => entry.id === id);
-        if (item) progress.current = { ...progress.current, [id]: elapsed(item) };
+        if (item) {
+          progress.current = { ...progress.current, [id]: elapsed(item) };
+          publishBreakProgress(progress.current);
+        }
         setDue((current) => current.filter((entry) => entry.id !== id));
       };
       const created = { onSnooze: () => settle(snoozedProgress), onDismiss: () => settle(() => 0) };
@@ -77,5 +89,8 @@ export function useBreakReminders() {
     })));
   }, [due, t]);
 
-  useEffect(() => () => replaceIslandReminders(SOURCE, []), []);
+  useEffect(() => () => {
+    replaceIslandReminders(SOURCE, []);
+    publishBreakProgress({});
+  }, []);
 }

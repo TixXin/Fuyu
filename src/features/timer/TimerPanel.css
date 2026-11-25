@@ -1,4 +1,5 @@
 .timer-panel {
+  container-type: inline-size;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -7,31 +8,168 @@
 }
 
 .timer-panel__form {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 0 4px 0 10px;
+  background: rgba(var(--list-ink), 0.06);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  transition: border-color var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease);
+}
+
+.timer-panel__form:focus-within {
+  background: rgba(var(--list-ink), 0.09);
+  border-color: color-mix(in srgb, var(--color-accent) 65%, transparent);
+}
+
+.timer-panel__form--compact {
+  height: 28px;
+  padding: 0 3px 0 9px;
+}
+
+.timer-panel__form--invalid {
+  border-color: var(--error-text, var(--color-danger));
 }
 
 .timer-panel__input {
   flex: 1;
   min-width: 0;
-  height: 30px;
-  padding: 0 10px;
+  height: 100%;
+  padding: 0;
   font: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text-1);
-  background: rgba(var(--list-ink), 0.06);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  background: transparent;
+  border: 0;
   outline: none;
 }
 
-.timer-panel__input:focus-visible {
-  border-color: var(--color-accent);
+.timer-panel__input::placeholder {
+  color: var(--text-3);
 }
 
-.timer-panel__input[aria-invalid="true"] {
-  border-color: var(--color-danger);
+.timer-panel__parsed {
+  flex: none;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--list-accent-text);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.timer-panel__go {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.timer-panel__form--compact .timer-panel__go {
+  width: 22px;
+  height: 22px;
+}
+
+.timer-panel__go:hover,
+.timer-panel__go:focus-visible {
+  opacity: 0.9;
+}
+
+.timer-panel__icon-btn {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--text-2);
+  background: rgba(var(--list-ink), 0.06);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
+}
+
+.timer-panel__icon-btn:hover,
+.timer-panel__icon-btn:focus-visible {
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.12);
+}
+
+.timer-panel__icon-btn--accent {
+  color: var(--list-accent-text);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.timer-panel__icon-btn--accent:hover,
+.timer-panel__icon-btn--accent:focus-visible {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--color-accent) 24%, transparent);
+}
+
+.timer-panel__pill {
+  flex: none;
+  height: 28px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.09);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease), opacity var(--motion-fast) var(--motion-ease);
+}
+
+.timer-panel__pill:hover:not(:disabled),
+.timer-panel__pill:focus-visible:not(:disabled) {
+  background: rgba(var(--list-ink), 0.15);
+}
+
+.timer-panel__pill:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.timer-panel__pill--accent {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.timer-panel__pill--accent:hover:not(:disabled),
+.timer-panel__pill--accent:focus-visible:not(:disabled) {
+  background: var(--color-accent);
+  opacity: 0.9;
+}
+
+.timer-panel__pill--soft {
+  color: var(--list-accent-text);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.timer-panel__pill--soft:hover:not(:disabled),
+.timer-panel__pill--soft:focus-visible:not(:disabled) {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
 .timer-panel__button {
@@ -41,8 +179,8 @@
   display: inline-grid;
   place-items: center;
   padding: 0;
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--list-accent-text);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
@@ -52,25 +190,42 @@
 .timer-panel__button:hover,
 .timer-panel__button:focus-visible {
   color: var(--text-1);
-  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
-.timer-panel__button--main {
-  width: 30px;
-  height: 30px;
+.timer-panel__button--solid {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.timer-panel__button--solid:hover,
+.timer-panel__button--solid:focus-visible {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  opacity: 0.9;
+}
+
+.timer-panel__button--ghost {
+  color: var(--text-2);
+  background: rgba(var(--list-ink), 0.06);
+}
+
+.timer-panel__button--ghost:hover,
+.timer-panel__button--ghost:focus-visible {
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.14);
 }
 
 .timer-panel__problem {
   margin: 0;
-  font-size: 12px;
-  color: var(--color-danger);
+  font-size: 11.5px;
+  color: var(--error-text, var(--color-danger));
 }
 
 .timer-panel__empty {
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 12px;
   color: var(--text-3);
-  text-align: center;
 }
 
 .timer-panel__list {
@@ -78,25 +233,34 @@
   min-height: 0;
   display: grid;
   align-content: start;
-  gap: 4px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   overflow-y: auto;
   list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--list-ink), 0.2) transparent;
 }
 
 .timer-panel__row {
+  position: relative;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 7px 10px;
   background: rgba(var(--list-ink), 0.05);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .timer-panel__row--done {
-  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 14%, rgba(var(--list-ink), 0.04));
+  animation: timerRingPulse 1.6s var(--motion-ease-in-out) infinite;
+}
+
+.timer-panel__row--paused {
+  opacity: 0.78;
 }
 
 .timer-panel__icon {
@@ -105,7 +269,7 @@
 }
 
 .timer-panel__row--done .timer-panel__icon {
-  color: var(--color-accent);
+  color: var(--list-accent-text);
 }
 
 .timer-panel__label {
@@ -125,21 +289,28 @@
 }
 
 .timer-panel__kind,
-.timer-panel__source {
+.timer-panel__source,
+.timer-panel__sub {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.timer-panel__source {
+.timer-panel__kind {
+  color: var(--text-1);
+  font-weight: 500;
+}
+
+.timer-panel__source,
+.timer-panel__sub {
   font-size: 11px;
   color: var(--text-3);
 }
 
 .timer-panel__time {
   flex: none;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text-1);
@@ -152,5 +323,37 @@
 .timer-panel__actions {
   flex: none;
   display: inline-flex;
+  align-items: center;
   gap: 4px;
+}
+
+.timer-panel__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--timer-progress, 0%);
+  height: 2px;
+  background: var(--color-accent);
+  opacity: 0.75;
+  transition: width var(--motion-base) var(--motion-ease);
+}
+
+.timer-panel__row--paused .timer-panel__bar {
+  background: var(--text-3);
+}
+
+@keyframes timerRingPulse {
+  0%, 100% {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+  50% {
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-accent) 88%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-panel__row--done {
+    animation: none;
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-accent) 75%, transparent);
+  }
 }

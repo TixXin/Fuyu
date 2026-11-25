@@ -15,6 +15,15 @@ import {
   shownMs,
   shownTimer,
 } from "../../src/features/timer/timers.ts";
+import {
+  DEFAULT_TIMER_LAYOUT,
+  extendedRunningByMs,
+  normalizeRecentMinutes,
+  normalizeTimerLayout,
+  progressOf,
+  pushRecentMinutes,
+  sortPanelTimers,
+} from "../../src/features/timer/timerLayout.ts";
 
 const MIN = 60_000;
 
@@ -95,4 +104,18 @@ test("saved timers keep who started them and whether they are hidden; older ones
   assert.equal(kept.owner, "pomodoro");
   assert.equal(kept.hidden, true);
   assert.deepEqual(newCountdown("c", MIN, 0, { owner: "x", hidden: false }), { id: "c", kind: "countdown", durationMs: MIN, elapsedMs: 0, runningSince: 0, alerted: false, owner: "x" });
+});
+
+test("timer panel layout helpers normalize layouts, sort finished timers first and extend running timers additively", () => {
+  assert.equal(normalizeTimerLayout("grid"), "grid");
+  assert.equal(normalizeTimerLayout("bad"), DEFAULT_TIMER_LAYOUT);
+  const running = newCountdown("run", 10 * MIN, 0);
+  const done = { ...newCountdown("done", MIN, 0), elapsedMs: MIN, runningSince: null, alerted: true };
+  assert.deepEqual(sortPanelTimers([running, done], 2 * MIN).map((t) => t.id), ["done", "run"]);
+  assert.equal(progressOf(running, 4 * MIN), 0.4);
+  assert.equal(extendedRunningByMs(running, 4 * MIN, 5 * MIN), 11 * MIN);
+  assert.equal(extendedRunningByMs(done, 4 * MIN, 5 * MIN), 5 * MIN);
+  assert.deepEqual(normalizeRecentMinutes([5, 5, 0, 1.5, 25, 10, 15, 30]), [5, 25, 10, 15]);
+  assert.deepEqual(pushRecentMinutes([5, 10, 15, 25], 10 * MIN), [10, 5, 15, 25]);
+  assert.deepEqual(pushRecentMinutes([5, 10], 90_000), [5, 10]);
 });

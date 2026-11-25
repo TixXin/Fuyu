@@ -3886,6 +3886,18 @@
     {
       "page": "timerAlerts",
       "zh-CN": {
+        "group": "计时器",
+        "title": "计时器页布局"
+      },
+      "en": {
+        "group": "Timer",
+        "title": "Timer layout"
+      },
+      "since": "next"
+    },
+    {
+      "page": "timerAlerts",
+      "zh-CN": {
         "group": "休息提醒",
         "title": "休息提醒",
         "description": "按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒"
