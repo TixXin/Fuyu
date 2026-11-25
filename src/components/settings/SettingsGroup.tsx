@@ -2,16 +2,19 @@ import { createContext, type ReactNode } from "react";
 import "./SettingsGroup.css";
 
 export const SettingsGroupTitleContext = createContext("");
+export const SettingsDisabledContext = createContext(false);
 
 export function SettingsGroup({
   title,
   action,
   footer,
+  plain = false,
   children,
 }: {
   title?: string;
   action?: ReactNode;
   footer?: ReactNode;
+  plain?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -23,9 +26,29 @@ export function SettingsGroup({
         </div>
       ) : null}
       <SettingsGroupTitleContext.Provider value={title ?? ""}>
-        <div className="settings-group__card">{children}</div>
+        {plain ? children : <div className="settings-group__card">{children}</div>}
       </SettingsGroupTitleContext.Provider>
       {footer ? <div className="settings-group__footer">{footer}</div> : null}
     </section>
+  );
+}
+
+export function SettingsDisabledArea({
+  disabled,
+  children,
+}: {
+  disabled: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <SettingsDisabledContext.Provider value={disabled}>
+      <div
+        className={disabled ? "settings-disabled-area settings-disabled-area--disabled" : "settings-disabled-area"}
+        aria-disabled={disabled || undefined}
+        inert={disabled || undefined}
+      >
+        {children}
+      </div>
+    </SettingsDisabledContext.Provider>
   );
 }

@@ -1,7 +1,9 @@
 import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
+import { LocalApiPageView } from "../../../features/local-api/LocalApiPageView";
 import { isBuiltinEnabled, switchBuiltinPlugin } from "../../../features/plugin-kernel/builtinSwitches";
+import type { SettingsLink } from "../../../features/plugin-kernel/settingsCategories";
 import { islandItemStyleId, islandItemStyles } from "../../../features/plugin-kernel/settingsSlots";
 import { useBuiltinPlugins } from "../../../features/plugin-kernel/useBuiltinPlugins";
 import { useTranslation } from "../../../i18n";
@@ -9,6 +11,8 @@ import type { BuiltinPluginName } from "../../../i18n/sections/settings/pluginHo
 import { settingsSections } from "./sectionSlot";
 
 type ModuleCategory = "generalApi" | "agentRings" | "agentPush" | "agentRemote";
+
+const noop = () => undefined;
 
 function ModuleOffCard({
   pluginId,
@@ -36,9 +40,30 @@ function ModuleOffCard({
   );
 }
 
-function LocalApiOff() {
-  const t = useTranslation().settings;
-  return <ModuleOffCard pluginId="local-api" title={t.localApi.title} description={t.pluginHost.builtinSummaries["local-api"]} footer={t.localApi.hint} />;
+function LocalApiOff({ onOpenPage }: { onOpenPage?: (page: SettingsLink) => void }) {
+  const plugins = useBuiltinPlugins();
+  if (isBuiltinEnabled(plugins, "local-api")) return null;
+  const plugin = plugins?.find((item) => item.id === "local-api");
+  return (
+    <LocalApiPageView
+      enabled={false}
+      info={null}
+      error={null}
+      failure={null}
+      allowWrite={plugin?.config.allowWrite === true}
+      allowNotify={plugin?.config.allowNotify === true}
+      copied={null}
+      onToggleEnabled={(on) => void switchBuiltinPlugin("local-api", on).catch(() => undefined)}
+      onAllowWriteChange={noop}
+      onAllowNotifyChange={noop}
+      onCopyAddress={noop}
+      onCopyToken={noop}
+      onResetToken={noop}
+      onRevealConfig={noop}
+      onOpenDocs={noop}
+      onOpenPage={onOpenPage ?? noop}
+    />
+  );
 }
 
 function CenterPatternOff() {

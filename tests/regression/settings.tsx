@@ -163,13 +163,13 @@ if (!automated) {
     await act(async () => { proxySystemButton?.click(); });
     await openPage("generalData"); check(texts(".settings-group__title") === "数据|升级前的备份" && texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"), "Data and backup tab shows data folder, backup and pre-update backups");
     await openPage("generalApi");
-    const localApi = [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.startsWith("本机接口")); await act(async () => { [...(localApi?.querySelectorAll<HTMLButtonElement>(".settings-row") ?? [])].find((row) => row.textContent?.startsWith("访问令牌"))?.querySelector("button")?.click(); });
-    check(Boolean(localApi?.textContent?.includes("http://127.0.0.1:39271/v1")) && commands.includes("copy_local_api_token") && !/[0-9a-f]{64}/.test(localApi?.textContent ?? ""), "The local API group shows the address, copies the token through Rust and never shows it");
+    const localApi = [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.querySelector(".settings-group__title")?.textContent === "连接与凭据"); await act(async () => { [...(localApi?.querySelectorAll<HTMLButtonElement>(".settings-row") ?? [])].find((row) => row.textContent?.startsWith("访问令牌"))?.querySelector("button")?.click(); });
+    check(Boolean(document.querySelector(".settings-status-card--ok")?.textContent?.includes("运行中")) && Boolean(localApi?.textContent?.includes("http://127.0.0.1:39271/v1")) && commands.includes("copy_local_api_token") && !/[0-9a-f]{64}/.test(localApi?.textContent ?? ""), "The local API page shows a running status card and connection group, copies the token through Rust and never shows it");
     check(categories().includes("generalApi") && element(".settings-sidebar__item[data-category='generalApi']").closest(".settings-sidebar__group")?.querySelector<HTMLElement>("[data-group]")?.dataset.group === "extensions" && !document.querySelector(".settings-tabs__tab"),
       "The local API is its own sidebar page in the Extensions group, with no tabs");
-    const localApiRows = texts(".settings-row__title");
-    check(texts(".settings-group__title") === "本机接口|权限|试一下" && ["待办和每日笔记", "AI Agent 状态灯", "剪贴板历史"].every((title) => localApiRows.includes(title)),
-      "The page has three groups: the connection, what is open through it, and an example to try");
+    const capabilityTitles = texts(".settings-capability-card__title");
+    check(texts(".settings-group__title") === "连接与凭据|权限|开放的能力|试一下" && ["待办和每日笔记", "AI Agent 状态灯", "弹消息", "剪贴板历史"].every((title) => capabilityTitles.includes(title)),
+      "The page has connection, permissions, capability cards and an example to try");
     const example = element(".local-api-example__code").textContent ?? "";
     check(example.includes("local-api.json") && example.includes("http://127.0.0.1:39271/v1/health") && !/[0-9a-f]{64}/.test(element(".editor-panel").textContent ?? ""),
       "The example reads the token from the config file and calls the health route; the page never shows the token");
