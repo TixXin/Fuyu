@@ -75,15 +75,16 @@ const BUNDLED_BUILTINS: &str = "plugins-v3/builtins";
 struct HostFiles {
     script: PathBuf,
     builtins: PathBuf,
+    bundled: bool,
 }
 
 fn host_files(resources: Option<&std::path::Path>, development: bool) -> HostFiles {
     match resources.filter(|_| !development) {
         Some(dir) if dir.join(BUNDLED_HOST).is_file() => {
             let dir = without_verbatim_prefix(dir);
-            HostFiles { script: dir.join(BUNDLED_HOST), builtins: dir.join(BUNDLED_BUILTINS) }
+            HostFiles { script: dir.join(BUNDLED_HOST), builtins: dir.join(BUNDLED_BUILTINS), bundled: true }
         }
-        _ => HostFiles { script: host_script(), builtins: builtins_dir() },
+        _ => HostFiles { script: host_script(), builtins: builtins_dir(), bundled: false },
     }
 }
 
@@ -107,16 +108,36 @@ fn host_origins(development: bool, dev_url: Option<&str>) -> Vec<String> {
 }
 
 const SAFE_SWITCH: &str = "FUYU_PLUGINS_V3_SAFE";
+const MAX_OLD_SPACE_SWITCH: &str = "FUYU_PLUGIN_HOST_MAX_OLD_SPACE_MB";
+const MAX_SEMI_SPACE_MB: u32 = 2;
+const DEFAULT_MAX_OLD_SPACE_MB: u32 = 192;
+const MIN_MAX_OLD_SPACE_MB: u32 = 64;
+const MAX_MAX_OLD_SPACE_MB: u32 = 2048;
+
+fn resolve_max_old_space_mb(raw: Option<&str>) -> u32 {
+    raw.and_then(|value| value.trim().parse::<u32>().ok())
+        .map(|mb| mb.clamp(MIN_MAX_OLD_SPACE_MB, MAX_MAX_OLD_SPACE_MB))
+        .unwrap_or(DEFAULT_MAX_OLD_SPACE_MB)
+}
 
 #[derive(Debug, Clone, Default, PartialEq)]
 struct HostMode {
     development: bool,
     safe: Option<String>,
     bisect: Vec<String>,
+    max_old_space_mb: Option<u32>,
 }
 
 fn host_args(dir: PathBuf, files: &HostFiles, origins: &[String], mode: &HostMode) -> Vec<std::ffi::OsString> {
-    let mut args: Vec<std::ffi::OsString> = vec!["--disallow-code-generation-from-strings".into()];
+    let old_space_mb = mode.max_old_space_mb.unwrap_or(DEFAULT_MAX_OLD_SPACE_MB).clamp(MIN_MAX_OLD_SPACE_MB, MAX_MAX_OLD_SPACE_MB);
+    let mut args: Vec<std::ffi::OsString> = vec![
+        "--disallow-code-generation-from-strings".into(),
+        format!("--max-semi-space-size={MAX_SEMI_SPACE_MB}").into(),
+        format!("--max-old-space-size={old_space_mb}").into(),
+    ];
+    if files.bundled && !mode.development {
+        args.push("--no-experimental-strip-types".into());
+    }
     if mode.development {
         args.push("--expose-internals".into());
     }
@@ -229,7 +250,12 @@ fn spec_for(node: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>,
         if !off.is_empty() {
             eprintln!("[plugins-v3] bisect: switching off {}", off.join(", "));
         }
-        let mode = HostMode { development, safe: safe.map(|safe| safe.mode), bisect: off };
+        let mode = HostMode {
+            development,
+            safe: safe.map(|safe| safe.mode),
+            bisect: off,
+            max_old_space_mb: Some(resolve_max_old_space_mb(std::env::var(MAX_OLD_SPACE_SWITCH).ok().as_deref())),
+        };
         HostSpec { program: node.clone(), args: host_args(dir.clone(), &files, &origins, &mode), env: env.clone(), current_dir: None }
     }
 }

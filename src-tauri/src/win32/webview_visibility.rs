@@ -12,10 +12,12 @@ use windows::Win32::{
 
 const SUBCLASS_ID: usize = 0x4655_5956;
 
-pub(crate) fn follow_window(window: isize, controller: ICoreWebView2Controller) -> Result<(), String> {
+pub(crate) fn follow_window(window: isize, controller: ICoreWebView2Controller, sync_initial: bool) -> Result<(), String> {
     let hwnd = HWND(window as *mut core::ffi::c_void);
-    let visible = unsafe { IsWindowVisible(hwnd) }.as_bool();
-    unsafe { controller.SetIsVisible(visible) }.map_err(|error| format!("Could not set the WebView visibility: {error}"))?;
+    if sync_initial {
+        let visible = unsafe { IsWindowVisible(hwnd) }.as_bool();
+        unsafe { controller.SetIsVisible(visible) }.map_err(|error| format!("Could not set the WebView visibility: {error}"))?;
+    }
     let mut previous = 0usize;
     let had_previous = unsafe { GetWindowSubclass(hwnd, Some(on_message), SUBCLASS_ID, Some(&mut previous)) }.as_bool();
     let data = Box::into_raw(Box::new(controller)) as usize;

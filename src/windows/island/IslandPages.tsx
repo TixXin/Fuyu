@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "../../i18n";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
@@ -94,11 +94,18 @@ export function IslandPages(props: IslandPagesProps): ReactNode {
   const folded = entries.find((entry) => entry.fold?.into === page && entry.fold.when(features));
   if (folded?.fold) {
     const Folded = folded.component;
-    pageProps.extraView = { label: folded.fold.label(t), content: <Folded {...pageProps} embedded /> };
+    pageProps.extraView = {
+      label: folded.fold.label(t),
+      content: (
+        <Suspense fallback={null}>
+          <Folded {...pageProps} embedded />
+        </Suspense>
+      ),
+    };
   }
   return (
-    <>
+    <Suspense fallback={null}>
       <SlotView slot={pageSlot} props={pageProps} select={(items) => items.filter((item) => item.id === page)} />
-    </>
+    </Suspense>
   );
 }

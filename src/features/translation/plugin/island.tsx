@@ -1,9 +1,11 @@
+import { lazy } from "react";
 import { Languages } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
-import { TranslationPanel } from "../TranslationPanel";
 import { islandPage } from "./page.ts";
 import { OWNER } from "./owner.ts";
+
+const TranslationPanel = lazy(() => import("../TranslationPanel").then((m) => ({ default: m.TranslationPanel })));
 
 type TranslationPageProps = { mode: string; onOpenSettings: (section: "translation") => void };
 

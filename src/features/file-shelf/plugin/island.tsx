@@ -1,10 +1,12 @@
+import { lazy } from "react";
 import { Inbox } from "lucide-react";
 import type { Translations } from "../../../i18n";
 import { defineSlot, type IslandCollapsedMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
-import { FileShelfPanel } from "../FileShelfPanel";
 import { SHELF_COUNT_HINT, shelfIsland } from "./islandState";
 import { islandPage } from "./page.ts";
 import { OWNER } from "./owner.ts";
+
+const FileShelfPanel = lazy(() => import("../FileShelfPanel").then((m) => ({ default: m.FileShelfPanel })));
 
 type ShelfPageProps = {
   settings: { shelfDoubleClick: string };

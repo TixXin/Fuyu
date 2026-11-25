@@ -1,13 +1,15 @@
+import { lazy } from "react";
 import { Scissors } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandHeaderMeta, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { runIslandAction } from "../../plugin-kernel/useIslandContributions";
 import { RecordingNotice, RecordingNoticeActions } from "../RecordingNotice";
 import { ScreenshotNotice, ScreenshotNoticeActions } from "../ScreenshotNotice";
-import { ScreenshotHistoryPanel } from "../ScreenshotHistoryPanel";
 import { islandPage } from "./page.ts";
 import { screenshotIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
+
+const ScreenshotHistoryPanel = lazy(() => import("../ScreenshotHistoryPanel").then((m) => ({ default: m.ScreenshotHistoryPanel })));
 
 type ScreenshotsPageProps = { embedded?: boolean };
 

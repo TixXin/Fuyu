@@ -104,6 +104,10 @@ pub fn run() {
     if let Some(code) = macos::ocr_worker::run_from_args() {
         std::process::exit(code);
     }
+    #[cfg(windows)]
+    if let Some(code) = win32::ocr_worker::run_from_args() {
+        std::process::exit(code);
+    }
     if uninstall_cleanup::maybe_run_from_args() {
         std::process::exit(0);
     }

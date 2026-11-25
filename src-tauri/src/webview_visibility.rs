@@ -2,23 +2,21 @@ use tauri::{Runtime, Webview};
 
 use crate::win32::webview_visibility;
 
-const KEEP_VISIBLE: &[&str] = &["main"];
+const DEFER_INITIAL_SYNC: &[&str] = &["main"];
 
-fn follows(label: &str) -> bool {
-    !KEEP_VISIBLE.contains(&label)
+fn sync_initial_for(label: &str) -> bool {
+    !DEFER_INITIAL_SYNC.contains(&label)
 }
 
 pub(crate) fn attach<R: Runtime>(webview: &Webview<R>) {
     let label = webview.label().to_string();
-    if !follows(&label) {
-        return;
-    }
+    let sync_initial = sync_initial_for(&label);
     let window = match webview.window().hwnd() {
         Ok(hwnd) => hwnd.0 as isize,
         Err(error) => return eprintln!("webview visibility for {label}: {error}"),
     };
     let result = webview.with_webview(move |platform| {
-        if let Err(error) = webview_visibility::follow_window(window, platform.controller()) {
+        if let Err(error) = webview_visibility::follow_window(window, platform.controller(), sync_initial) {
             eprintln!("webview visibility for {label}: {error}");
         }
     });
@@ -29,16 +27,16 @@ pub(crate) fn attach<R: Runtime>(webview: &Webview<R>) {
 
 #[cfg(test)]
 mod tests {
-    use super::follows;
+    use super::sync_initial_for;
 
     #[test]
-    fn the_island_keeps_its_webview_visible() {
-        assert!(!follows("main"));
-        assert!(follows("clipboard"));
-        assert!(follows("clipboard-preview"));
-        assert!(follows("translation"));
-        assert!(follows("tray-menu"));
-        assert!(follows("screenshot-0"));
-        assert!(follows("plugin-window-1"));
+    fn the_island_defers_initial_sync_while_auxiliary_windows_sync_immediately() {
+        assert!(!sync_initial_for("main"));
+        assert!(sync_initial_for("clipboard"));
+        assert!(sync_initial_for("clipboard-preview"));
+        assert!(sync_initial_for("translation"));
+        assert!(sync_initial_for("tray-menu"));
+        assert!(sync_initial_for("screenshot-0"));
+        assert!(sync_initial_for("plugin-window-1"));
     }
 }

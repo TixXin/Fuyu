@@ -16,7 +16,7 @@ use super::{hotkey, HAS_POSITIONED_WINDOW, PLUGIN_ID, WINDOW_LABEL};
 pub(super) const SHORTCUTS: &str = "shortcuts";
 pub(super) const WINDOW: &str = "window";
 
-const IDLE_DESTROY_DELAY: Duration = Duration::from_secs(10 * 60);
+const IDLE_DESTROY_DELAY: Duration = Duration::from_secs(3 * 60);
 
 static IDLE_GENERATION: AtomicU64 = AtomicU64::new(0);
 

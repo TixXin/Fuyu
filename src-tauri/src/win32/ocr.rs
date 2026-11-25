@@ -1,13 +1,13 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use windows::{
     Graphics::Imaging::{BitmapAlphaMode, BitmapPixelFormat, SoftwareBitmap},
     Media::Ocr::{OcrEngine, OcrResult},
     Storage::Streams::DataWriter,
 };
 
-use super::com::WinRtApartment;
+use super::{com::WinRtApartment, ocr_worker::Mode};
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub(crate) struct OcrWord {
     pub(crate) text: String,
     pub(crate) x: f32,
@@ -17,6 +17,14 @@ pub(crate) struct OcrWord {
 }
 
 pub(crate) fn recognize(width: u32, height: u32, rgba: &[u8]) -> Option<String> {
+    super::ocr_worker::ask(Mode::Text, width, height, rgba).flatten()
+}
+
+pub(crate) fn recognize_words(width: u32, height: u32, rgba: &[u8]) -> Option<Vec<Vec<OcrWord>>> {
+    super::ocr_worker::ask(Mode::Words, width, height, rgba).flatten()
+}
+
+pub(super) fn recognize_here(width: u32, height: u32, rgba: &[u8]) -> Option<String> {
     with_result(width, height, rgba, |result| {
         let lines: Vec<String> = result
             .Lines()
@@ -30,7 +38,7 @@ pub(crate) fn recognize(width: u32, height: u32, rgba: &[u8]) -> Option<String> 
     })
 }
 
-pub(crate) fn recognize_words(width: u32, height: u32, rgba: &[u8]) -> Option<Vec<Vec<OcrWord>>> {
+pub(super) fn recognize_words_here(width: u32, height: u32, rgba: &[u8]) -> Option<Vec<Vec<OcrWord>>> {
     with_result(width, height, rgba, |result| {
         let lines = result
             .Lines()

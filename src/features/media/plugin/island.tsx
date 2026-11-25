@@ -1,14 +1,16 @@
-import type { ComponentProps } from "react";
+import { lazy, type ComponentProps } from "react";
 import type { Translations } from "../../../i18n";
 import { defineSlot, type IslandCollapsedMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { MusicWaveButton } from "../MusicWaveButton";
-import { MusicPlayerPanel } from "../MusicPlayerPanel";
+import type { MusicPlayerPanel as MusicPlayerPanelComponent } from "../MusicPlayerPanel";
 import { mediaIsland } from "./islandState";
 import { islandPage } from "./page.ts";
 import { OWNER } from "./owner.ts";
 
+const MusicPlayerPanel = lazy(() => import("../MusicPlayerPanel").then((m) => ({ default: m.MusicPlayerPanel })));
+
 type MusicPageProps = {
-  settings: NonNullable<ComponentProps<typeof MusicPlayerPanel>["lyricsSettings"]>;
+  settings: NonNullable<ComponentProps<typeof MusicPlayerPanelComponent>["lyricsSettings"]>;
   onOpenSettings: (section: "music") => void;
 };
 

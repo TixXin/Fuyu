@@ -117,3 +117,43 @@ test("the check finds what a plugin leaves behind when it goes around ctx", { ti
   assert.equal(leaky.length, 1, leaky.join("\n"));
   assert.match(leaky[0], /^leaky left 1 Timeout behind/);
 });
+
+test("a built-in plugin disabled at startup is never imported until it is switched on", { timeout: 30_000 }, async () => {
+  const root = mkdtempSync(join(tmpdir(), "builtins-off-lazy-"));
+  cleanup.push(() => rmSync(root, { recursive: true, force: true }));
+  const builtins = join(root, "builtins");
+  const dir = join(root, "data");
+  mkdirSync(join(builtins, "sleeping", "host"), { recursive: true });
+  mkdirSync(join(builtins, "awake", "host"), { recursive: true });
+  mkdirSync(dir);
+  writeFileSync(
+    join(builtins, "builtins.json"),
+    JSON.stringify({
+      format: 1,
+      plugins: [
+        { id: "sleeping", root: "sleeping", host: "host/index.mjs" },
+        { id: "awake", root: "awake", host: "host/index.mjs" },
+      ],
+    }),
+  );
+  const marker = `lazyLoaded_${process.pid}_${Date.now()}`;
+  writeFileSync(
+    join(builtins, "sleeping", "host", "index.mjs"),
+    `globalThis.${marker} = (globalThis.${marker} ?? 0) + 1;\nexport const name = "sleeping";\nexport function apply() {}\n`,
+  );
+  writeFileSync(
+    join(builtins, "awake", "host", "index.mjs"),
+    'export const name = "awake";\nexport function apply() {}\n',
+  );
+  writeFileSync(join(dir, "plugins.yml"), RUST_WRITES(["sleeping"]));
+  const host = await startHost({ dir, builtins, watch: true });
+  cleanup.push(() => host.stop());
+  await host.settle();
+  assert.equal(globalThis[marker], undefined);
+  assert.equal(host.status().find((plugin) => plugin.id === "sleeping")?.state, "disabled");
+  assert.equal(host.status().find((plugin) => plugin.id === "awake")?.state, "running");
+  await switchTo(host, dir, []);
+  assert.equal(globalThis[marker], 1);
+  assert.equal(host.status().find((plugin) => plugin.id === "sleeping")?.state, "running");
+  delete globalThis[marker];
+});

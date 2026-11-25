@@ -1,8 +1,10 @@
+import { lazy } from "react";
 import { defineSlot, type IslandPageMeta } from "../../plugin-kernel/slots";
-import { TodoIslandPage } from "../island/TodoIslandPage";
 import { todosIsland } from "./islandState";
 import { islandPage } from "./page.ts";
 import { OWNER } from "./owner.ts";
+
+const TodoIslandPage = lazy(() => import("../island/TodoIslandPage").then((m) => ({ default: m.TodoIslandPage })));
 
 type TodoPageProps = {
   settings: { enableTodoReorder: boolean };
