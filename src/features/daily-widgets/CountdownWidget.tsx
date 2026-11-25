@@ -3,7 +3,7 @@ import { PartyPopper, Pencil } from "lucide-react";
 import { WidgetFrame } from "../../components/island-widget/WidgetFrame";
 import { clickOnly } from "../../components/island-widget/clickOnly";
 import { useLocale, useTranslation } from "../../i18n";
-import { countdownTarget, daysBetween, isYearly } from "./countdowns.ts";
+import { countdownTarget, daysBetween, formatCountdownLunar, isYearly } from "./countdowns.ts";
 import { CountdownEditor } from "./CountdownEditor";
 import { showNextCountdown } from "./customize.ts";
 import { nextCountdown } from "./days.ts";
@@ -20,11 +20,17 @@ export function CountdownWidget() {
     return <CountdownEditor at={editing === "new" ? null : editing} entry={editing === "new" ? null : (data.countdowns[editing] ?? null)} count={data.countdowns.length} onEdit={setEditing} onClose={() => setEditing(null)} />;
   }
   const fallback = entry ? null : nextCountdown(now);
-  const target = entry ? countdownTarget(entry.date, now) : (fallback?.date ?? now);
+  const target = entry ? countdownTarget(entry, now) : (fallback?.date ?? now);
   const title = entry ? entry.name || t.countdownUntitled : t.countdownTo[fallback?.kind ?? "newYear"];
   const days = daysBetween(now, target);
   const several = data.countdowns.length > 1;
   const dateText = target.toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
+  const lunarText = entry?.calendar === "lunar" ? formatCountdownLunar(entry.date, entry.leap, locale) : null;
+  const metaText = lunarText
+    ? `${dateText} · ${t.countdownLunarPrefix}${lunarText}`
+    : entry && isYearly(entry.date)
+      ? `${dateText} · ${t.everyYear}`
+      : dateText;
   const pencil = (
     <button className="daily-icon-button" type="button" aria-label={t.edit} title={t.edit} onClick={clickOnly(() => setEditing(entry ? data.countdownAt : "new"))}>
       <Pencil size={11} strokeWidth={2.2} />
@@ -37,8 +43,8 @@ export function CountdownWidget() {
         {days === 0 ? t.isToday : Math.abs(days)}
         {days === 0 ? null : <span className="daily-unit daily-muted">{days < 0 ? t.daysAgo : t.days}</span>}
       </div>
-      <div className="daily-small daily-muted daily-countdown__date">
-        {entry && isYearly(entry.date) ? `${dateText} · ${t.everyYear}` : dateText}
+      <div className="daily-small daily-muted daily-countdown__date" title={metaText}>
+        {metaText}
       </div>
     </>
   );

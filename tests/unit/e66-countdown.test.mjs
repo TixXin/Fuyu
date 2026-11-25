@@ -212,10 +212,61 @@ test("countdown setup: a fresh install needs a date, and stops needing one once 
   assert.equal(reports.at(-1).needed, true, "the last date was deleted");
 });
 
+test("countdown lunar support: solar/lunar conversion, yearly lunar repeat, anniversary day N, and host persistence", () => {
+  const now = at(2026, 9, 20);
+  const bday = {
+    id: "lunar-bday",
+    title: "农历生日",
+    date: "1995-09-09",
+    calendar: "lunar",
+    lunar: { year: 1995, month: 8, day: 15 },
+    pinned: false,
+    kind: "countdown",
+    repeat: true,
+  };
+  assert.equal(effectiveDate(bday, now), "2026-09-25");
+  assert.deepEqual(readItem(bday, now), { type: "left", days: 5 });
+  assert.equal(effectiveDate(bday, at(2026, 9, 26)), "2027-09-15");
+
+  const leapBday = {
+    id: "lunar-leap",
+    title: "闰月纪念",
+    date: "2025-07-29",
+    calendar: "lunar",
+    lunar: { year: 2025, month: 6, day: 5, leap: true },
+    pinned: false,
+    kind: "anniversary",
+    repeat: true,
+  };
+  assert.equal(effectiveDate(leapBday, at(2026, 1, 1)), "2026-07-18");
+  assert.equal(readItem(leapBday, at(2026, 7, 18)).type, "day");
+
+  const dataDir = join(scratch, "lunar-host");
+  mkdirSync(dataDir, { recursive: true });
+  const { ctx, call } = fakeContext(dataDir, []);
+  apply(ctx);
+  const added = call(METHODS.add, {
+    title: "中秋团圆",
+    calendar: "lunar",
+    lunar: { year: 2026, month: 8, day: 15 },
+    kind: "countdown",
+    repeat: true,
+  });
+  assert.equal(added.items.length, 1);
+  assert.equal(added.items[0].calendar, "lunar");
+  assert.equal(added.items[0].date, "2026-09-25");
+  assert.deepEqual(added.items[0].lunar, { year: 2026, month: 8, day: 15 });
+
+  const switched = call(METHODS.update, { id: added.items[0].id, calendar: "solar", date: "2026-10-01" });
+  assert.equal(switched.items[0].calendar, undefined);
+  assert.equal(switched.items[0].lunar, undefined);
+  assert.equal(switched.items[0].date, "2026-10-01");
+});
+
 test("countdown manifest: Day counter in English, same id, check passes", async () => {
   const manifest = JSON.parse(readFileSync(join(PLUGIN_DIR, "package.json"), "utf8"));
   assert.equal(manifest.name, "@fuyu/countdown");
-  assert.equal(manifest.version, "1.1.1");
+  assert.equal(manifest.version, "1.2.0");
   assert.equal(manifest.fuyu.displayName.en, "Day counter");
   assert.equal(manifest.fuyu.displayName["zh-CN"], "倒数日");
   assert.equal(manifest.description, manifest.fuyu.description.en);

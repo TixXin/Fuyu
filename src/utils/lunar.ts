@@ -1,4 +1,5 @@
 export type LunarDate = { month: string; day: number };
+export type LunarParts = { year: number; month: number; day: number; leap: boolean };
 
 const LUNAR_YEARS = [
   0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
@@ -24,6 +25,8 @@ const LUNAR_YEARS = [
   0x0d520,
 ];
 const LUNAR_BASE = Date.UTC(1900, 0, 31);
+export const LUNAR_MIN_YEAR = 1900;
+export const LUNAR_MAX_YEAR = LUNAR_MIN_YEAR + LUNAR_YEARS.length - 1;
 const MONTH_NAMES = ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"];
 
 const monthDays = (info: number, month: number) => (info & (0x10000 >> month) ? 30 : 29);
@@ -34,7 +37,20 @@ const yearDays = (info: number) => {
   return days;
 };
 
-export function lunarDate(date: Date): LunarDate | null {
+export function lunarLeapMonth(year: number): number {
+  if (!Number.isInteger(year) || year < LUNAR_MIN_YEAR || year > LUNAR_MAX_YEAR) return 0;
+  return LUNAR_YEARS[year - LUNAR_MIN_YEAR] & 0xf;
+}
+
+export function lunarMonthDays(year: number, month: number, leap = false): number {
+  if (!Number.isInteger(year) || year < LUNAR_MIN_YEAR || year > LUNAR_MAX_YEAR) return 0;
+  if (!Number.isInteger(month) || month < 1 || month > 12) return 0;
+  const info = LUNAR_YEARS[year - LUNAR_MIN_YEAR];
+  if (leap) return (info & 0xf) === month ? leapDays(info) : 0;
+  return monthDays(info, month);
+}
+
+export function lunarParts(date: Date): LunarParts | null {
   let offset = Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - LUNAR_BASE) / 86_400_000);
   if (offset < 0) return null;
   let year = 0;
@@ -44,14 +60,59 @@ export function lunarDate(date: Date): LunarDate | null {
   const leap = info & 0xf;
   for (let month = 1; month <= 12; month++) {
     const days = monthDays(info, month);
-    if (offset < days) return { month: MONTH_NAMES[month - 1], day: offset + 1 };
+    if (offset < days) return { year: LUNAR_MIN_YEAR + year, month, day: offset + 1, leap: false };
     offset -= days;
     if (month === leap) {
-      if (offset < leapDays(info)) return { month: `闰${MONTH_NAMES[month - 1]}`, day: offset + 1 };
+      if (offset < leapDays(info)) return { year: LUNAR_MIN_YEAR + year, month, day: offset + 1, leap: true };
       offset -= leapDays(info);
     }
   }
   return null;
+}
+
+export function lunarToSolar(year: number, month: number, day: number, leap = false, strictLeap = false): Date | null {
+  if (!Number.isInteger(year) || year < LUNAR_MIN_YEAR || year > LUNAR_MAX_YEAR) return null;
+  if (!Number.isInteger(month) || month < 1 || month > 12) return null;
+  if (!Number.isInteger(day) || day < 1 || day > 30) return null;
+  const index = year - LUNAR_MIN_YEAR;
+  let offset = 0;
+  for (let y = 0; y < index; y++) offset += yearDays(LUNAR_YEARS[y]);
+  const info = LUNAR_YEARS[index];
+  const yearLeap = info & 0xf;
+  for (let m = 1; m < month; m++) {
+    offset += monthDays(info, m);
+    if (m === yearLeap) offset += leapDays(info);
+  }
+  let maxDays: number;
+  if (leap) {
+    if (yearLeap === month) {
+      offset += monthDays(info, month);
+      maxDays = leapDays(info);
+    } else if (strictLeap) {
+      return null;
+    } else {
+      maxDays = monthDays(info, month);
+    }
+  } else {
+    maxDays = monthDays(info, month);
+  }
+  offset += Math.min(day, maxDays) - 1;
+  const utc = new Date(LUNAR_BASE + offset * 86_400_000);
+  return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
+}
+
+export function lunarDate(date: Date): LunarDate | null {
+  const parts = lunarParts(date);
+  if (!parts) return null;
+  const name = MONTH_NAMES[parts.month - 1];
+  return { month: parts.leap ? `闰${name}` : name, day: parts.day };
+}
+
+export function formatLunarDate(month: number, day: number, leap = false, year?: number): string {
+  const name = MONTH_NAMES[month - 1];
+  if (!name || day < 1 || day > 30) return "";
+  const label = `${leap ? "闰" : ""}${name}${lunarDayName(day)}`;
+  return year !== undefined ? `${year}年${label}` : label;
 }
 
 const DAY_DIGITS = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];

@@ -16,7 +16,9 @@ export function removeHabit(names: readonly string[], at: number) {
 
 export function saveCountdown(at: number | null, entry: CountdownEntry): number {
   const state = currentDaily();
-  const clean = { name: entry.name.trim().slice(0, COUNTDOWN_NAME_MAX), date: entry.date };
+  const base = { name: entry.name.trim().slice(0, COUNTDOWN_NAME_MAX), date: entry.date };
+  const clean: CountdownEntry =
+    entry.calendar === "lunar" ? (entry.leap ? { ...base, calendar: "lunar", leap: true } : { ...base, calendar: "lunar" }) : base;
   const list = [...state.countdowns];
   const index = at === null || at >= list.length ? Math.min(list.length, MAX_COUNTDOWNS - 1) : at;
   list[index] = clean;

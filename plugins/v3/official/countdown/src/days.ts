@@ -1,8 +1,13 @@
+import { lunarToSolarKey, solarToLunar, type LunarDate } from "./lunar.ts";
+
 export type CountdownKind = "countdown" | "anniversary";
+export type CalendarKind = "solar" | "lunar";
 
 export type Datable = {
   id: string;
   date: string;
+  calendar?: CalendarKind;
+  lunar?: LunarDate;
   pinned: boolean;
   kind?: CountdownKind;
   repeat?: boolean;
@@ -50,14 +55,30 @@ export function occurrenceIn(dateKey: string, year: number): string {
   return `${year}-${String(m).padStart(2, "0")}-${String(Math.min(d, last)).padStart(2, "0")}`;
 }
 
-export function effectiveDate(item: Pick<Datable, "date" | "repeat">, at: number): string {
+export function resolveLunarRef(item: Pick<Datable, "date" | "calendar" | "lunar">): LunarDate | null {
+  if (item.calendar !== "lunar") return null;
+  return item.lunar ?? solarToLunar(item.date);
+}
+
+export function effectiveDate(item: Pick<Datable, "date" | "repeat" | "calendar" | "lunar">, at: number): string {
   if (!item.repeat || daysDelta(item.date, at) >= 0) return item.date;
+  if (item.calendar === "lunar") {
+    const lunar = resolveLunarRef(item);
+    if (lunar) {
+      const todayLunar = solarToLunar(dateKeyOf(at));
+      const baseYear = todayLunar?.year ?? new Date(at).getFullYear();
+      for (let year = baseYear - 1; year <= baseYear + 2; year += 1) {
+        const candidate = lunarToSolarKey(year, lunar.month, lunar.day, Boolean(lunar.leap), false);
+        if (candidate && daysDelta(candidate, at) >= 0) return candidate;
+      }
+    }
+  }
   const year = new Date(at).getFullYear();
   const thisYear = occurrenceIn(item.date, year);
   return daysDelta(thisYear, at) >= 0 ? thisYear : occurrenceIn(item.date, year + 1);
 }
 
-export function readItem(item: Pick<Datable, "date" | "repeat" | "kind">, at: number): Reading {
+export function readItem(item: Pick<Datable, "date" | "repeat" | "kind" | "calendar" | "lunar">, at: number): Reading {
   const since = daysDelta(item.date, at);
   if (item.kind === "anniversary" && since <= 0) return { type: "day", n: 1 - since };
   const delta = daysDelta(effectiveDate(item, at), at);
@@ -65,8 +86,14 @@ export function readItem(item: Pick<Datable, "date" | "repeat" | "kind">, at: nu
   return delta > 0 ? { type: "left", days: delta } : { type: "past", days: -delta };
 }
 
-export function yearsSince(item: Pick<Datable, "date" | "repeat">, at: number): number {
-  return Number(effectiveDate(item, at).slice(0, 4)) - Number(item.date.slice(0, 4));
+export function yearsSince(item: Pick<Datable, "date" | "repeat" | "calendar" | "lunar">, at: number): number {
+  const next = effectiveDate(item, at);
+  if (item.calendar === "lunar") {
+    const base = resolveLunarRef(item);
+    const hit = solarToLunar(next);
+    if (base && hit) return hit.year - base.year;
+  }
+  return Number(next.slice(0, 4)) - Number(item.date.slice(0, 4));
 }
 
 function rank(item: Datable, at: number): [number, number] {

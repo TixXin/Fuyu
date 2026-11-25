@@ -1,6 +1,6 @@
 import type { Context } from "@fuyu/plugin-base";
 import { CalendarIcon, ChevronIcon } from "./icons.tsx";
-import { barLabel, heroLabel, rowLabel } from "./labels.ts";
+import { barLabel, formatItemDate, heroLabel, rowLabel } from "./labels.ts";
 import { barItem, pageView, readingOf, type CountdownItem, type CountdownSettings } from "./model.ts";
 import { PAGE_TITLE, text } from "./text.ts";
 import { useBackground, useCountdown, useToday } from "./useCountdown.ts";
@@ -25,7 +25,7 @@ function Hero({ ctx, item, at, settings }: { ctx: Context; item: CountdownItem; 
       <div className="fuyu-countdown__hero-shade">
         <div className="fuyu-countdown__hero-main">
           <span className="fuyu-countdown__hero-title">{item.title}</span>
-          {settings.showDate && <span className="fuyu-countdown__hero-date">{item.date}</span>}
+          {settings.showDate && <span className="fuyu-countdown__hero-date">{formatItemDate(item, at)}</span>}
         </div>
         <span className="fuyu-countdown__hero-days">{heroLabel(reading)}</span>
       </div>
@@ -39,7 +39,7 @@ function Row({ item, at, settings }: { item: CountdownItem; at: number; settings
   return (
     <li className={dim ? "fuyu-countdown__row is-dim" : "fuyu-countdown__row"}>
       <span className="fuyu-countdown__row-title">{item.title}</span>
-      {settings.showDate && <span className="fuyu-countdown__row-date">{item.date}</span>}
+      {settings.showDate && <span className="fuyu-countdown__row-date">{formatItemDate(item, at, false)}</span>}
       <span className="fuyu-countdown__row-days">{rowLabel(reading)}</span>
     </li>
   );

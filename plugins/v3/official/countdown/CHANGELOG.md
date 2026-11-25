@@ -1,5 +1,15 @@
 # 更新记录 · Changelog
 
+## 1.2.0
+
+- 选择日期支持公历 / 农历切换：可按农历年、月（含闰月）、日选择倒数日与纪念日，并实时显示对应公历日期。
+- 农历日期支持「每年重复」，按农历跨年推算下一次目标日和周年数（非闰年自动回退至平月、小月 29 天自动对齐）。
+- 设置列表与岛上日期展示同步标注农历和对应公历日期；旧版公历数据无损兼容。
+
+- Added Solar / Lunar calendar toggle when picking dates: choose lunar year, month (including leap months), and day with live solar date preview.
+- Yearly repeat now rolls lunar dates by the lunar calendar (handling leap-month and 29-day month fallbacks) and computes lunar anniversaries accurately.
+- Settings list and island date display now show lunar dates alongside solar dates; existing solar items carry over unchanged.
+
 ## 1.1.1
 
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。

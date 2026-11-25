@@ -45,6 +45,12 @@ export type DailyWidgetsText = {
   countdownNamePlaceholder: string;
   countdownDate: string;
   countdownDateHint: string;
+  countdownCalendarLabel: string;
+  countdownSolar: string;
+  countdownLunar: string;
+  countdownLunarPlaceholder: string;
+  countdownLunarHint: string;
+  countdownLunarPrefix: string;
   countdownUntitled: string;
   nextCountdown: string;
   daysAgo: string;
@@ -143,6 +149,12 @@ export const zhCN: DailyWidgetsText = {
   countdownNamePlaceholder: "生日、纪念日…",
   countdownDate: "日期",
   countdownDateHint: "写 12-25 即每年",
+  countdownCalendarLabel: "历法",
+  countdownSolar: "公历",
+  countdownLunar: "农历",
+  countdownLunarPlaceholder: "08-15 或 八月十五",
+  countdownLunarHint: "支持 08-15、八月十五、闰6-15、除夕",
+  countdownLunarPrefix: "农历",
   countdownUntitled: "倒数日",
   nextCountdown: "下一个",
   daysAgo: "天前",
@@ -241,6 +253,12 @@ export const en: DailyWidgetsText = {
   countdownNamePlaceholder: "Birthday, trip…",
   countdownDate: "Date",
   countdownDateHint: "12-25 = every year",
+  countdownCalendarLabel: "Calendar",
+  countdownSolar: "Solar",
+  countdownLunar: "Lunar",
+  countdownLunarPlaceholder: "08-15 (Lunar)",
+  countdownLunarHint: "e.g. 08-15, 2026-08-15, or 闰6-15",
+  countdownLunarPrefix: "Lunar ",
   countdownUntitled: "Countdown",
   nextCountdown: "Next",
   daysAgo: "days ago",
