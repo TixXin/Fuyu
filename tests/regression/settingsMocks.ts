@@ -109,6 +109,14 @@ mockIPC((command, payload) => {
     case "get_local_api_info": return { running: true, url: "http://127.0.0.1:39271/v1", configPath: "C:\\Users\\demo\\.fuyu\\local-api.json" };
     case "copy_local_api_token": return null;
     case "get_data_home": return { home: "C:\\Users\\demo\\.fuyu", defaultHome: "C:\\Users\\demo\\.fuyu", source: "default" };
+    case "get_webview_gpu_state": return { supported: true, configuredMode: "auto", activeMode: "auto", autoEnabled: false, autoReason: null, restartRequired: false, gpuUnstable: false };
+    case "set_webview_gpu_mode": {
+      const mode = args.mode === "warp" ? "warp" : "auto";
+      return { supported: true, configuredMode: mode, activeMode: "auto", autoEnabled: false, autoReason: null, restartRequired: mode !== "auto", gpuUnstable: false };
+    }
+    case "clear_webview_gpu_cache_and_restart":
+    case "restart_island":
+      return null;
     case "get_sync_status":
     case "set_sync_config":
       return {

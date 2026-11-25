@@ -15,6 +15,7 @@ mod drag_follow;
 mod drag_grid;
 pub(crate) mod drag_grid_window;
 mod drag_hint;
+mod drag_passthrough;
 mod edge;
 mod geometry;
 mod hover_linger;
@@ -519,6 +520,40 @@ pub fn get_island_taskbar() -> taskbar::IslandTaskbar {
     taskbar::reported()
 }
 
+pub(crate) fn apply_initial_file_drop<R: tauri::Runtime>(webview: &tauri::Webview<R>) {
+    #[cfg(windows)]
+    if webview.label() == WINDOW_LABEL {
+        apply_webview_external_drop(webview, read_window_state().accepts_file_drop);
+    }
+    #[cfg(not(windows))]
+    let _ = webview;
+}
+
+#[cfg(windows)]
+fn apply_webview_external_drop<R: tauri::Runtime>(webview: &tauri::Webview<R>, accepted: bool) {
+    let label = webview.label().to_string();
+    let result = webview.with_webview(move |platform| {
+        if let Err(error) = win32::webview_drop::set_allow_external_drop(&platform.controller(), accepted) {
+            eprintln!("webview external drop for {label}: {error}");
+        }
+    });
+    if let Err(error) = result {
+        eprintln!("webview external drop: {error}");
+    }
+}
+
+#[tauri::command]
+pub fn set_island_file_drop_accepted(webview: tauri::Webview, accepted: bool) {
+    if webview.label() == WINDOW_LABEL {
+        mutate_window_state(|state| {
+            state.accepts_file_drop = accepted;
+            *state
+        });
+    }
+    #[cfg(windows)]
+    apply_webview_external_drop(&webview, accepted);
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -548,6 +583,7 @@ macro_rules! tauri_commands {
             crate::island::focus::release_island_hover_focus,
             crate::island::focus::island_is_foreground,
             crate::island::passthrough::set_island_cursor_tracking,
+            crate::island::set_island_file_drop_accepted,
             crate::island::resize::start_island_resize,
             crate::island::banner_hit::set_island_banner_rect,
             crate::island::banner_hit::set_island_overflow_rect,

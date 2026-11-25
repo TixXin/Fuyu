@@ -36,6 +36,10 @@ export function getDropResult(
   return { ids, allExisting };
 }
 
+export function shouldAcceptFileDrop(enabled: boolean, expandOnDrop: boolean, mode: string, page: string) {
+  return enabled && (expandOnDrop || (mode === "expanded" && page === "shelf"));
+}
+
 const SIZE_UNITS =["B", "KB", "MB", "GB", "TB"];
 
 export function formatFileSize(bytes: number) {

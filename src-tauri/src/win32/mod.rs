@@ -51,6 +51,7 @@ pub(crate) mod wallpaper;
 pub(crate) mod uia_tabs;
 pub(crate) mod video_writer;
 pub(crate) mod webview_crash;
+pub(crate) mod webview_drop;
 pub(crate) mod webview_memory;
 pub(crate) mod webview_scale;
 pub(crate) mod webview_visibility;

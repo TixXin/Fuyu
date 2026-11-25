@@ -55,7 +55,8 @@ src-tauri/src/
 ├── settings_window/         # 设置窗口：按需创建与显示（mod.rs）
 ├── app_identity/            # 只在 macOS 上编译：应用菜单栏（menu.rs）、Dock 上的应用名和设置窗口标题，都跟岛的语言（set_tray_language）走；设置窗口开着时应用进 Dock（settings_window/dock_icon.rs），改名用 macos/display_name.rs 的 LaunchServices 私有接口，失败时退回包里按系统语言的名字
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
-├── webview_recovery.rs      # 窗口的 WebView2 渲染进程崩溃或无响应后自动重载（D66）：on_page_load 时给每个 WebView 挂一次，同一窗口 1 分钟内崩 3 次后停在崩溃页，记 webview-crashes.log；Mac 上是 webview_recovery_unsupported.rs
+├── webview_gpu.rs           # Windows WebView2 图形兼容模式（D123）：建 WebView2 前读家目录 webview-gpu.json / FUYU_GPU_MODE / --software-rendering，按需拼 --use-angle=warp 并清理损坏 GPU 着色器缓存；命令 get_webview_gpu_state / set_webview_gpu_mode / clear_webview_gpu_cache_and_restart
+├── webview_recovery.rs      # 窗口的 WebView2 渲染进程崩溃或无响应后自动重载（D66），以及 GPU 进程 60 秒内连崩 3 次自动切 WARP 软渲染重启、不稳定态退回原生托盘菜单（D123）：on_page_load 时给每个 WebView 挂一次，记 webview-crashes.log；Mac 上是 webview_recovery_unsupported.rs
 ├── webview_memory.rs        # 隐藏的翻译、剪贴板、截图选区窗口把 WebView2 的 MemoryUsageTargetLevel 设成 Low、显示前改回 Normal（D48，默认关，设 FUYU_WEBVIEW_LOW_MEMORY=1 才生效）；Mac 上是 webview_memory_unsupported.rs
 ├── webview_visibility.rs    # 窗口隐藏、显示时同步 WebView2 控制器的 IsVisible（D117）：Tauri 的 hide() 不设它，隐藏窗口里的页面一直是 visible，动画帧和定时器照跑、缓存不释放；on_page_load 时给每个 WebView 挂一次（窗口子类在 win32/webview_visibility.rs），主岛 main 不接；Mac 上是 webview_visibility_unsupported.rs
 ├── webview_scale.rs         # 把每个 WebView2 的缩放（RasterizationScale）固定成窗口的显示器缩放，不跟系统「文本大小」（D122）：WebView2 默认按显示器缩放 × 文本大小画，而窗口尺寸都按「CSS 像素 × scale_factor()」算，文本大小不是 100% 时内容会比窗口大；on_page_load 时给每个 WebView 设一次（含主岛 main），ScaleFactorChanged 时再设；接口在 win32/webview_scale.rs；Mac 上是 webview_scale_unsupported.rs

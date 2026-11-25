@@ -33,6 +33,14 @@ pub(crate) fn labels(language: TrayLanguage, island_visible: bool) -> [&'static 
     }
 }
 
+#[cfg(any(windows, test))]
+pub(crate) fn compat_restart_label(language: TrayLanguage) -> &'static str {
+    match language {
+        TrayLanguage::Chinese => "兼容渲染重启",
+        TrayLanguage::English => "Restart (Compat Render)",
+    }
+}
+
 pub(crate) fn tooltip(language: TrayLanguage, development: bool) -> &'static str {
     match (development, language) {
         (false, _) => "Fuyu",
@@ -47,6 +55,8 @@ struct TrayMenu {
     menu: Menu<Wry>,
     toggle: MenuItem<Wry>,
     settings: MenuItem<Wry>,
+    #[cfg(windows)]
+    compat_restart: MenuItem<Wry>,
     quit: MenuItem<Wry>,
     shown: Mutex<(TrayLanguage, bool)>,
 }
@@ -92,6 +102,8 @@ fn refresh(app: &AppHandle, language: Option<TrayLanguage>) {
     let [toggle, settings, quit] = labels(next.0, next.1);
     let _ = menu.toggle.set_text(toggle);
     let _ = menu.settings.set_text(settings);
+    #[cfg(windows)]
+    let _ = menu.compat_restart.set_text(compat_restart_label(next.0));
     let _ = menu.quit.set_text(quit);
     if let Some(tray) = app.tray_by_id(TRAY_ID) {
         let _ = tray.set_tooltip(Some(tooltip(next.0, crate::dev_lane::lane().is_some())));
@@ -169,9 +181,22 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
     let [toggle_text, settings_text, quit_text] = labels(TrayLanguage::Chinese, true);
     let toggle = MenuItem::with_id(app, "toggle", toggle_text, true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", settings_text, true, None::<&str>)?;
+    #[cfg(windows)]
+    let compat_restart = MenuItem::with_id(app, "compat_restart", compat_restart_label(TrayLanguage::Chinese), true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", quit_text, true, None::<&str>)?;
+    #[cfg(windows)]
+    let menu = Menu::with_items(app, &[&toggle, &settings, &compat_restart, &quit])?;
+    #[cfg(not(windows))]
     let menu = Menu::with_items(app, &[&toggle, &settings, &quit])?;
-    app.manage(TrayMenu { menu, toggle, settings, quit, shown: Mutex::new((TrayLanguage::Chinese, true)) });
+    app.manage(TrayMenu {
+        menu,
+        toggle,
+        settings,
+        #[cfg(windows)]
+        compat_restart,
+        quit,
+        shown: Mutex::new((TrayLanguage::Chinese, true)),
+    });
 
     let mut tray = TrayIconBuilder::with_id(TRAY_ID)
         .tooltip(tooltip(TrayLanguage::Chinese, crate::dev_lane::lane().is_some()))
@@ -182,6 +207,8 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
                     eprintln!("failed to open settings window: {error}");
                 }
             }
+            #[cfg(windows)]
+            "compat_restart" => crate::webview_gpu::enable_manual_warp_and_restart(app),
             "quit" => {
                 settings_window::remember_bounds(app);
                 app.exit(0);
@@ -239,6 +266,8 @@ mod tests {
         assert_eq!(labels(TrayLanguage::Chinese, true)[0], "隐藏岛屿");
         assert_eq!(labels(TrayLanguage::English, false), ["Show Island", "Settings", "Quit"]);
         assert_eq!(labels(TrayLanguage::English, true)[0], "Hide Island");
+        assert_eq!(super::compat_restart_label(TrayLanguage::Chinese), "兼容渲染重启");
+        assert_eq!(super::compat_restart_label(TrayLanguage::English), "Restart (Compat Render)");
     }
 
     #[test]

@@ -7,6 +7,7 @@ use tauri::{AppHandle, Emitter, WebviewWindow};
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
+    drag_passthrough::{external_drag_passthrough, ExternalDragGuard},
     hover_linger::HoverLinger,
     resize,
     geometry::{
@@ -108,11 +109,13 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
         let mut dim_wake = DimWakeTracker::default();
+        let mut external_drag_guard = ExternalDragGuard::default();
         let mut linger = HoverLinger::default();
 
         loop {
             if !window.is_visible().unwrap_or(true) {
                 dim_wake = DimWakeTracker::default();
+                external_drag_guard = ExternalDragGuard::default();
                 thread::sleep(passthrough_sleep_duration(false, false));
                 continue;
             }
@@ -134,9 +137,20 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
             }
             let panel = pointer.map(|p| island_rect(p.left, p.top, p.width, p.height, state));
-            let is_inside = linger.poll(state, hover_inside(state, raw_inside), panel, raw_cursor) || resize::is_resizing();
             let is_on_banner = pointer.is_some_and(on_banner);
-            let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
+            let external_drag = external_drag_guard.poll(
+                crate::macos::input::is_left_button_down(),
+                raw_inside,
+                is_on_banner,
+                state.is_dragging || resize::is_resizing(),
+            );
+            let drag_passthrough = external_drag_passthrough(state, external_drag);
+            let is_inside = if drag_passthrough {
+                false
+            } else {
+                linger.poll(state, hover_inside(state, raw_inside), panel, raw_cursor) || resize::is_resizing()
+            };
+            let should_ignore = drag_passthrough || should_ignore_cursor(state, raw_inside, is_on_banner);
 
             if should_ignore != ignoring_cursor && window.set_ignore_cursor_events(should_ignore).is_ok() {
                 ignoring_cursor = should_ignore;
