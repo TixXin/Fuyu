@@ -1,0 +1,74 @@
+.sd-page-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: rgba(var(--side-overlay-rgb, 255, 255, 255), 0.9);
+  opacity: 0;
+  translate: 0 -50%;
+  cursor: pointer;
+  transition:
+    opacity var(--motion-base) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+
+.sd-page-arrow--previous {
+  left: 2px;
+}
+
+.sd-page-arrow--next {
+  right: 2px;
+}
+
+.side-dock-drawer:hover .sd-page-arrow {
+  opacity: 0.28;
+}
+
+.side-dock-drawer .sd-page-arrow:hover,
+.side-dock-drawer .sd-page-arrow:focus-visible,
+.side-dock-drawer .sd-page-arrow.sd-page-arrow--flash {
+  opacity: 1;
+  transition-duration: var(--motion-fast);
+}
+
+.side-dock-drawer .sd-page-arrow:hover {
+  background: rgba(var(--side-overlay-rgb, 255, 255, 255), 0.1);
+}
+
+.sd-page-arrow__icon {
+  display: grid;
+  place-items: center;
+}
+
+.sd-page-arrow--previous .sd-page-arrow__icon--nudge {
+  animation: sd-page-arrow-nudge-prev var(--motion-medium) var(--motion-ease-out) backwards;
+}
+
+.sd-page-arrow--next .sd-page-arrow__icon--nudge {
+  animation: sd-page-arrow-nudge-next var(--motion-medium) var(--motion-ease-out) backwards;
+}
+
+@keyframes sd-page-arrow-nudge-prev {
+  from {
+    translate: -4px 0;
+  }
+}
+
+@keyframes sd-page-arrow-nudge-next {
+  from {
+    translate: 4px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-page-arrow__icon--nudge {
+    animation: none;
+  }
+}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { JellyfishStyleContext } from "../../components/jellyfish/jellyfishStyleContext";
 import { pluginRuntime } from "../../features/plugin-kernel/runtime";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
@@ -21,26 +21,25 @@ import { pageSlot } from "../island/slots/pageSlot";
 import type { IslandPage } from "../island/types";
 import { useGlassPointer } from "../island/useGlassPointer";
 import { useIslandGlass } from "../island/useIslandGlass";
+import { pulsePageArrow } from "../island/usePageArrowKeys";
 import { usePageLabel } from "../island/usePageLabel";
 import "../island/slots/builtins";
 import { focusSideDock } from "./api";
 import { SideDockDrawerHeader } from "./SideDockDrawerHeader";
 import { renderSideDockIcon, sideDockPageLabel } from "./sideDockMeta";
+import { SideDockPageArrows } from "./SideDockPageArrows";
 import { SideDockRunners } from "./SideDockRunners";
 import { computeSideDockSurface } from "./sideDockSurfaceStyle";
 import { useSideDockHandleDrag } from "./useSideDockHandleDrag";
 import { useSideDockPages } from "./useSideDockPages";
+import { useSideDockPill } from "./useSideDockPill";
 import { useSideDockState } from "./useSideDockState";
+import { useSideDockSwipe } from "./useSideDockSwipe";
 import "./SideDockWindow.css";
 import "./SideDockPages.css";
 
 function parseEdge(): SideDockEdge {
   return new URLSearchParams(window.location.search).get("edge") === "left" ? "left" : "right";
-}
-
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  return target.closest("input, textarea, select, [contenteditable='true']") !== null;
 }
 
 export function SideDockWindow() {
@@ -51,6 +50,7 @@ export function SideDockWindow() {
   const settings = useResolvedTheme(storedSettings);
   const accent = useAccentColor(settings);
   const reducedMotion = useReducedMotion();
+  const instantMotion = reducedMotion || settings.islandMotion === "none";
   const { layout: pageLayout } = useIslandPages();
   const { settings: sideDocks, save: saveSideDocks } = useSideDocks();
   const { pageLabel } = usePageLabel();
@@ -67,11 +67,14 @@ export function SideDockWindow() {
 
   const {
     visualState,
-    closing,
+    phase,
+    drawerPhase,
     activePage,
     handleHovered,
     openOnTrigger,
     selectPage,
+    hoverStripPage,
+    cancelStripHover,
     togglePin,
     dismiss,
     handleHoverChange,
@@ -81,6 +84,7 @@ export function SideDockWindow() {
     sideDocks,
     saveSideDocks,
     stripCount: dockPages.length,
+    instantMotion,
   });
 
   const handleDrag = useSideDockHandleDrag(edge, sideDocks, saveSideDocks, clearTimers, openOnTrigger);
@@ -89,6 +93,9 @@ export function SideDockWindow() {
     () => dockPages.find((entry) => entry.id === activePage) ?? dockPages[0] ?? null,
     [activePage, dockPages],
   );
+
+  const stripRailKey = `${visualState}|${currentEntry?.id ?? ""}|${sideDocks.stripStyle}|${sideDocks.density}|${dockPages.length}`;
+  const stripRailRef = useSideDockPill(stripRef, "y", stripRailKey, instantMotion);
 
   const labelFor = useCallback(
     (entry: (typeof dockPages)[number]) => sideDockPageLabel(entry, pageLabel, t.island),
@@ -104,6 +111,12 @@ export function SideDockWindow() {
     },
     [currentEntry?.id, dockPages, selectPage],
   );
+
+  useSideDockSwipe({
+    enabled: settings.pageSwipe && visualState === "drawer",
+    canStep: dockPages.length >= 2,
+    onStep: stepPage,
+  });
 
   useEffect(() => {
     void pluginRuntime("island");
@@ -132,9 +145,11 @@ export function SideDockWindow() {
         return;
       }
       if (inInput || dockPages.length < 2) return;
-      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      if (settings.pageArrowKeys && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
         event.preventDefault();
-        stepPage(event.key === "ArrowRight" ? 1 : -1);
+        const dir = event.key === "ArrowRight" ? 1 : -1;
+        stepPage(dir);
+        pulsePageArrow(dir < 0 ? "previous" : "next");
       }
       if (event.altKey && event.key >= "1" && event.key <= "9") {
         const picked = dockPages[Number(event.key) - 1];
@@ -146,26 +161,31 @@ export function SideDockWindow() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [dismiss, dockPages, selectPage, stepPage, visualState]);
+  }, [dismiss, dockPages, selectPage, settings.pageArrowKeys, stepPage, visualState]);
 
   useLayoutEffect(() => {
     const nextId = currentEntry?.id ?? null;
     const prevId = prevPageRef.current;
     prevPageRef.current = nextId;
     const stage = bodyRef.current;
-    if (!stage || !prevId || !nextId || prevId === nextId || visualState !== "drawer") return;
+    if (!stage || !prevId || !nextId || prevId === nextId || visualState !== "drawer" || drawerPhase !== "open") return;
     switchHandleRef.current?.finish();
     switchHandleRef.current = null;
     const effect = resolvePageSwitch(
       settings.pageSwitchPanel,
       settings.pageSwitchPanel === "carousel" ? nextCarouselTurn() : 0,
-      reducedMotion,
+      instantMotion,
     );
     if (effect === "none") return;
     const prevIdx = dockPages.findIndex((item) => item.id === prevId);
     const nextIdx = dockPages.findIndex((item) => item.id === nextId);
     const direction = settings.pageSwitchDirectional && prevIdx >= 0 && nextIdx >= 0 ? (nextIdx > prevIdx ? 1 : -1) : 0;
-    const targets = [...stage.children].filter((child): child is HTMLElement => child instanceof HTMLElement && !child.dataset.pageSwitchOverlay);
+    const targets = [...stage.children].filter(
+      (child): child is HTMLElement =>
+        child instanceof HTMLElement &&
+        !child.classList.contains("sd-page-arrow") &&
+        !child.dataset.pageSwitchOverlay,
+    );
     if (targets.length === 0) return;
     switchHandleRef.current = playPageSwitch({
       stage,
@@ -176,7 +196,7 @@ export function SideDockWindow() {
       origin: null,
       speed: pageSwitchSpeed(settings.pageSwitchSpeed),
     });
-  }, [currentEntry?.id, dockPages, reducedMotion, settings.pageSwitchDirectional, settings.pageSwitchPanel, settings.pageSwitchSpeed, visualState]);
+  }, [currentEntry?.id, dockPages, drawerPhase, instantMotion, settings.pageSwitchDirectional, settings.pageSwitchPanel, settings.pageSwitchSpeed, visualState]);
 
   const surface = useMemo(() => computeSideDockSurface(settings, sideDocks, accent), [accent, settings, sideDocks]);
   const { glass, glassStyle } = useIslandGlass({
@@ -187,7 +207,7 @@ export function SideDockWindow() {
     mode: visualState === "handle" ? "collapsed" : "expanded",
     isTucked: false,
     quiet: false,
-    reducedMotion,
+    reducedMotion: instantMotion,
   });
   const { handleGlassPointerMove, resetGlassPointer } = useGlassPointer(surface.isGlass && glass.specular);
   const rootStyle = useMemo(() => ({ ...surface.style, ...(surface.isGlass ? glassStyle : {}) }), [glassStyle, surface.isGlass, surface.style]);
@@ -213,14 +233,9 @@ export function SideDockWindow() {
   }, [allEntries, currentEntry, features, settings, sideDocks.drawerHeight, t]);
 
   const openDockPage = useCallback((page: IslandPage) => selectPage(page), [selectPage]);
-  const onDrawerPointerDownCapture = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => {
-      if (isEditableTarget(event.target)) {
-        void focusSideDock(edge).catch(() => undefined);
-      }
-    },
-    [edge],
-  );
+  const onDrawerPointerDownCapture = useCallback(() => {
+    void focusSideDock(edge).catch(() => undefined);
+  }, [edge]);
 
   const handleStatus = contributed.status?.state === "waiting" ? "waiting" : contributed.status?.state === "running" ? "running" : "idle";
   const drawerGlassClass = surface.isGlass
@@ -248,7 +263,9 @@ export function SideDockWindow() {
         className={`side-dock-root stage--font-${settings.fontFamily}${surface.isLight ? " island-light" : ""}`}
         data-edge={edge}
         data-state={visualState}
-        data-closing={closing}
+        data-phase={phase}
+        data-drawer-phase={drawerPhase}
+        data-motion={instantMotion ? "none" : "on"}
         data-stages={showStrip ? 3 : 2}
         data-material={surface.isGlass ? "glass" : "solid"}
         data-density={sideDocks.density}
@@ -282,68 +299,80 @@ export function SideDockWindow() {
                   onPointerLeave={resetGlassPointer}
                 >
                   {surface.isGlass && <IslandGlassLayer glass={glass} />}
-                  <SideDockDrawerHeader
-                    dockPages={dockPages}
-                    currentEntry={currentEntry}
-                    pageLayout={pageLayout}
-                    fuyuTabIcon={settings.fuyuTabIcon}
-                    headerStyle={sideDocks.headerStyle}
-                    showStrip={showStrip}
-                    pinned={sideConfig.pinned}
-                    islandText={t.island}
-                    labelFor={labelFor}
-                    onSelectPage={selectPage}
-                    onStepPage={stepPage}
-                    onTogglePin={togglePin}
-                    onDismiss={dismiss}
-                  />
-                  <div ref={bodyRef} className="side-dock-drawer__body">
-                    {currentEntry && pageProps ? (
-                      <SlotView
-                        slot={pageSlot}
-                        props={pageProps}
-                        select={(items) => items.filter((item) => item.id === currentEntry.id)}
-                      />
-                    ) : (
-                      <div className="side-dock-drawer__empty">
-                        <span>{text.emptyHint}</span>
-                        <button
-                          type="button"
-                          className="side-dock-drawer__empty-btn"
-                          onClick={() => void openSettingsWindow("sideDocks")}
-                        >
-                          {text.openSettingsAria}
-                        </button>
-                      </div>
-                    )}
+                  <div className="side-dock-drawer__inner">
+                    <SideDockDrawerHeader
+                      dockPages={dockPages}
+                      currentEntry={currentEntry}
+                      pageLayout={pageLayout}
+                      fuyuTabIcon={settings.fuyuTabIcon}
+                      headerStyle={sideDocks.headerStyle}
+                      showStrip={showStrip}
+                      pinned={sideConfig.pinned}
+                      reducedMotion={instantMotion}
+                      hoverSwitchPage={settings.hoverSwitchPage}
+                      hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
+                      islandText={t.island}
+                      labelFor={labelFor}
+                      onSelectPage={selectPage}
+                      onStepPage={stepPage}
+                      onTogglePin={togglePin}
+                      onDismiss={dismiss}
+                    />
+                    <div ref={bodyRef} className="side-dock-drawer__body">
+                      {currentEntry && pageProps ? (
+                        <SlotView
+                          slot={pageSlot}
+                          props={pageProps}
+                          select={(items) => items.filter((item) => item.id === currentEntry.id)}
+                        />
+                      ) : (
+                        <div className="side-dock-drawer__empty">
+                          <span>{text.emptyHint}</span>
+                          <button
+                            type="button"
+                            className="side-dock-drawer__empty-btn"
+                            onClick={() => void openSettingsWindow("sideDocks")}
+                          >
+                            {text.openSettingsAria}
+                          </button>
+                        </div>
+                      )}
+                      {settings.pageArrows && (
+                        <SideDockPageArrows
+                          dockPages={dockPages}
+                          currentId={currentEntry?.id ?? null}
+                          labelFor={labelFor}
+                          onSelectPage={selectPage}
+                        />
+                      )}
+                    </div>
                   </div>
                 </section>
               )}
               {showStrip && (
-                <nav ref={stripRef} className="side-dock-strip" aria-label={text.title}>
-                  {dockPages.map((entry) => {
-                    const label = labelFor(entry);
-                    return (
-                      <button
-                        key={entry.id}
-                        type="button"
-                        className="side-dock-strip__btn"
-                        data-active={visualState === "drawer" && entry.id === currentEntry?.id}
-                        title={label}
-                        onPointerEnter={() => {
-                          if (sideDocks.autoDrawer === "hover-item") {
-                            selectPage(entry.id);
-                          }
-                        }}
-                        onClick={() => selectPage(entry.id)}
-                      >
-                        <span className="side-dock-strip__icon">
-                          {renderSideDockIcon(entry, label, pageLayout, settings.fuyuTabIcon, sideDocks.density === "compact" ? 14 : 15)}
-                        </span>
-                        {sideDocks.stripStyle === "label" && <span className="side-dock-strip__label">{label}</span>}
-                      </button>
-                    );
-                  })}
+                <nav ref={stripRef} className="side-dock-strip" aria-label={text.title} onPointerLeave={cancelStripHover}>
+                  <span ref={stripRailRef} className="side-dock-strip__rail-pill" aria-hidden="true" />
+                  <div className="side-dock-strip__inner">
+                    {dockPages.map((entry) => {
+                      const label = labelFor(entry);
+                      return (
+                        <button
+                          key={entry.id}
+                          type="button"
+                          className="side-dock-strip__btn"
+                          data-active={visualState === "drawer" && entry.id === currentEntry?.id}
+                          title={label}
+                          onPointerEnter={() => hoverStripPage(entry.id)}
+                          onClick={() => selectPage(entry.id)}
+                        >
+                          <span className="side-dock-strip__icon">
+                            {renderSideDockIcon(entry, label, pageLayout, settings.fuyuTabIcon, sideDocks.density === "compact" ? 14 : 15)}
+                          </span>
+                          {sideDocks.stripStyle === "label" && <span className="side-dock-strip__label">{label}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </nav>
               )}
             </>

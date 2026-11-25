@@ -60,7 +60,7 @@ export function renderSideDockIcon(
   if (entry.external) {
     return <PluginIcon icon={entry.icon} owner={entry.owner} label={label} size={size} strokeWidth={1.7} />;
   }
-  if (typeof entry.icon === "function") {
+  if (entry.icon) {
     const Builtin = entry.icon === FuyuTextIcon ? LayoutGrid : entry.icon;
     return <Builtin size={size} strokeWidth={1.7} aria-hidden="true" />;
   }

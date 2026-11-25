@@ -4,7 +4,11 @@ import type { IslandText } from "../../i18n/sections/island";
 import type { IslandPagesLayout } from "../../lib/settings/islandPages";
 import type { SideDockHeaderStyle } from "../../lib/settings/sideDocks";
 import { openSettingsWindow } from "../settings/api";
+import type { IslandPage } from "../island/types";
+import { usePageHoverSwitch } from "../island/usePageHoverSwitch";
 import { renderSideDockIcon, type SideDockPageEntry } from "./sideDockMeta";
+import { useSideDockPill } from "./useSideDockPill";
+import "./SideDockDrawerHeader.css";
 
 type SideDockDrawerHeaderProps = {
   dockPages: readonly SideDockPageEntry[];
@@ -14,6 +18,9 @@ type SideDockDrawerHeaderProps = {
   headerStyle: SideDockHeaderStyle;
   showStrip: boolean;
   pinned: boolean;
+  reducedMotion: boolean;
+  hoverSwitchPage: boolean;
+  hoverSwitchDelayMs: number;
   islandText: IslandText;
   labelFor: (entry: SideDockPageEntry) => string;
   onSelectPage: (pageId: string) => void;
@@ -30,6 +37,9 @@ export function SideDockDrawerHeader({
   headerStyle,
   showStrip,
   pinned,
+  reducedMotion,
+  hoverSwitchPage,
+  hoverSwitchDelayMs,
   islandText,
   labelFor,
   onSelectPage,
@@ -40,6 +50,14 @@ export function SideDockDrawerHeader({
   const tabsRef = useRef<HTMLDivElement>(null);
   const text = islandText.sideDock;
   const minimalHeader = headerStyle === "minimal";
+  const pillKey = `${currentEntry?.id ?? ""}|${headerStyle}|${dockPages.length}`;
+  const tabPillRef = useSideDockPill(tabsRef, "x", pillKey, reducedMotion);
+  const hoverSwitch = usePageHoverSwitch(
+    hoverSwitchPage && !minimalHeader,
+    hoverSwitchDelayMs,
+    (currentEntry?.id ?? "todo") as IslandPage,
+    onSelectPage,
+  );
 
   useEffect(() => {
     tabsRef.current?.querySelector<HTMLElement>("[data-active='true']")?.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -82,6 +100,7 @@ export function SideDockDrawerHeader({
         </div>
       ) : (
         <div ref={tabsRef} className="side-dock-drawer__tabs" role="tablist" onWheel={onTabsWheel}>
+          <span ref={tabPillRef} className="side-dock-drawer__tab-pill" aria-hidden="true" />
           {dockPages.map((entry) => {
             const label = labelFor(entry);
             return (
@@ -93,6 +112,7 @@ export function SideDockDrawerHeader({
                 className="side-dock-drawer__tab"
                 data-active={entry.id === currentEntry?.id}
                 title={label}
+                {...hoverSwitch(entry.id as IslandPage)}
                 onClick={() => onSelectPage(entry.id)}
               >
                 {renderSideDockIcon(entry, label, pageLayout, fuyuTabIcon)}

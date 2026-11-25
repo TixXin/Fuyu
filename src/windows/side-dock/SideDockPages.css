@@ -37,8 +37,10 @@
 }
 
 .side-dock-drawer__body .calendar-panel {
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 10px;
+  height: 100%;
+  min-height: 0;
 }
 
 .side-dock-drawer__body .calendar-panel > * {
@@ -47,9 +49,31 @@
   min-width: 0;
 }
 
+.side-dock-drawer__body .calendar-month {
+  flex: none;
+  width: 100%;
+  gap: 4px;
+}
+
+.side-dock-drawer__body .calendar-month__grid {
+  flex: none;
+  height: 228px;
+}
+
+.side-dock-root[data-density="compact"] .side-dock-drawer__body .calendar-month__grid {
+  height: 186px;
+}
+
+.side-dock-drawer__body .calendar-month__day {
+  margin: 1px 2px;
+}
+
 .side-dock-drawer__body .calendar-panel__list {
   flex: 1;
-  min-height: 140px;
+  min-height: 120px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(var(--side-overlay-rgb), 0.08);
+  overflow: hidden;
 }
 
 .side-dock-drawer__body .custom-panel,
