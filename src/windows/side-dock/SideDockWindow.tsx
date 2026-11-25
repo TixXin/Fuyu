@@ -1,33 +1,35 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, type WheelEvent } from "react";
 import { ChevronLeft, ChevronRight, Pin, PinOff, Settings, X } from "lucide-react";
 import { JellyfishStyleContext } from "../../components/jellyfish/jellyfishStyleContext";
 import { pluginRuntime } from "../../features/plugin-kernel/runtime";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useTranslation } from "../../i18n";
-import { hexToRgba } from "../../lib/settings/settings";
-import { handleRadiusFor, innerRadiusFor, sideDockEnabledSides, type SideDockEdge } from "../../lib/settings/sideDocks";
+import { sideDockEnabledSides, type SideDockEdge } from "../../lib/settings/sideDocks";
 import { useIslandPages } from "../../lib/settings/useIslandPages";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useSideDocks } from "../../lib/settings/useSideDocks";
 import { nextCarouselTurn, pageSwitchSpeed, resolvePageSwitch } from "../../lib/theme/pageSwitch";
 import { playPageSwitch, type PageSwitchHandle } from "../../lib/theme/playPageSwitch";
-import { accentVariables, inkVariables, surfaceThemeColors } from "../../lib/theme/themeMode";
 import { useAccentColor } from "../../lib/theme/useAccentColor";
+import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
-import { isLightIsland } from "../../utils/color";
 import { openSettingsWindow } from "../settings/api";
+import { IslandGlassLayer } from "../island/IslandGlassLayer";
 import type { IslandPageProps } from "../island/IslandPages";
 import { getTodoScrollStartRows } from "../island/layout";
 import { pageSlot } from "../island/slots/pageSlot";
 import type { IslandPage } from "../island/types";
+import { useGlassPointer } from "../island/useGlassPointer";
+import { useIslandGlass } from "../island/useIslandGlass";
 import { usePageLabel } from "../island/usePageLabel";
 import "../island/slots/builtins";
-import { stripWidthFor } from "./dockGeometry";
 import { renderSideDockIcon, sideDockPageLabel } from "./sideDockMeta";
 import { SideDockRunners } from "./SideDockRunners";
+import { computeSideDockSurface } from "./sideDockSurfaceStyle";
 import { useSideDockPages } from "./useSideDockPages";
 import { useSideDockState } from "./useSideDockState";
 import "./SideDockWindow.css";
+import "./SideDockPages.css";
 
 function parseEdge(): SideDockEdge {
   return new URLSearchParams(window.location.search).get("edge") === "left" ? "left" : "right";
@@ -40,11 +42,13 @@ export function SideDockWindow() {
   const [storedSettings, setStoredSettings] = useIslandSettings();
   const settings = useResolvedTheme(storedSettings);
   const accent = useAccentColor(settings);
+  const reducedMotion = useReducedMotion();
   const { layout: pageLayout } = useIslandPages();
   const { settings: sideDocks, save: saveSideDocks } = useSideDocks();
   const { pageLabel } = usePageLabel();
   const sideConfig = sideDocks[edge];
   const bodyRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const prevPageRef = useRef<string | null>(null);
   const switchHandleRef = useRef<PageSwitchHandle | null>(null);
 
@@ -100,6 +104,11 @@ export function SideDockWindow() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (visualState !== "drawer") return;
+      if ((event.metaKey || event.ctrlKey) && event.key === ",") {
+        event.preventDefault();
+        void openSettingsWindow("sideDocks");
+        return;
+      }
       const target = event.target as HTMLElement | null;
       const inInput = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
       if (event.key === "Escape") {
@@ -131,11 +140,10 @@ export function SideDockWindow() {
     if (!stage || !prevId || !nextId || prevId === nextId || visualState !== "drawer") return;
     switchHandleRef.current?.finish();
     switchHandleRef.current = null;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const effect = resolvePageSwitch(
       settings.pageSwitchPanel,
       settings.pageSwitchPanel === "carousel" ? nextCarouselTurn() : 0,
-      reduced,
+      reducedMotion,
     );
     if (effect === "none") return;
     const prevIdx = dockPages.findIndex((item) => item.id === prevId);
@@ -152,41 +160,21 @@ export function SideDockWindow() {
       origin: null,
       speed: pageSwitchSpeed(settings.pageSwitchSpeed),
     });
-  }, [currentEntry?.id, dockPages, settings.pageSwitchDirectional, settings.pageSwitchPanel, settings.pageSwitchSpeed, visualState]);
+  }, [currentEntry?.id, dockPages, reducedMotion, settings.pageSwitchDirectional, settings.pageSwitchPanel, settings.pageSwitchSpeed, visualState]);
 
-  const panelLook = useMemo(() => surfaceThemeColors(settings, "panel"), [settings]);
-  const followMain = sideDocks.appearance === "follow";
-  const isLight = followMain ? isLightIsland(panelLook.islandBackgroundColor) : sideDocks.theme === "light";
-  const isGlass = followMain ? settings.appearanceMode === "liquidGlass" : sideDocks.material === "glass";
-  const surfaceFill = followMain
-    ? hexToRgba(panelLook.islandBackgroundColor, settings.opacity / 100)
-    : isGlass
-      ? `rgba(${isLight ? "245, 247, 252" : "14, 15, 22"}, ${sideDocks.surfaceOpacity / 100})`
-      : isLight
-        ? "rgb(245, 247, 252)"
-        : "rgb(18, 19, 26)";
-  const panelBlurPx = followMain ? Math.round(14 + (settings.glassIntensity / 100) * 14) : 26;
-
-  const rootStyle = useMemo<CSSProperties>(
-    () =>
-      ({
-        ...(followMain ? inkVariables(panelLook) : {}),
-        ...accentVariables(accent),
-        "--side-surface-fill": surfaceFill,
-        "--side-panel-blur": `${panelBlurPx}px`,
-        "--side-outer-r": `${sideDocks.outerRadius}px`,
-        "--side-inner-r": `${innerRadiusFor(sideDocks.outerRadius)}px`,
-        "--side-handle-r": `${handleRadiusFor(sideDocks.outerRadius)}px`,
-        "--side-handle-w": `${sideDocks.handleWidth}px`,
-        "--side-handle-h": `${sideDocks.handleHeight}px`,
-        "--side-handle-alpha": String(sideDocks.handleOpacity / 100),
-        "--side-strip-w": `${stripWidthFor(sideDocks)}px`,
-        "--side-gap": `${sideDocks.gap}px`,
-        "--side-drawer-w": `${sideDocks.drawerWidth}px`,
-        "--side-drawer-h": `${sideDocks.drawerHeight}px`,
-      }) as CSSProperties,
-    [accent, followMain, panelBlurPx, panelLook, sideDocks, surfaceFill],
-  );
+  const surface = useMemo(() => computeSideDockSurface(settings, sideDocks, accent), [accent, settings, sideDocks]);
+  const { glass, glassStyle } = useIslandGlass({
+    settings: surface.glassSettings,
+    background: surface.backgroundHex,
+    accent,
+    cover: null,
+    mode: visualState === "handle" ? "collapsed" : "expanded",
+    isTucked: false,
+    quiet: false,
+    reducedMotion,
+  });
+  const { handleGlassPointerMove, resetGlassPointer } = useGlassPointer(surface.isGlass && glass.specular);
+  const rootStyle = useMemo(() => ({ ...surface.style, ...(surface.isGlass ? glassStyle : {}) }), [glassStyle, surface.isGlass, surface.style]);
 
   const pageIds = useMemo(() => dockPages.map((entry) => entry.id), [dockPages]);
 
@@ -210,6 +198,15 @@ export function SideDockWindow() {
 
   const minimalHeader = sideDocks.headerStyle === "minimal";
   const openDockPage = useCallback((page: IslandPage) => selectPage(page), [selectPage]);
+  const onTabsWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
+    const el = tabsRef.current;
+    if (!el || el.scrollWidth <= el.clientWidth || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    el.scrollLeft += event.deltaY;
+  }, []);
+
+  const drawerGlassClass = surface.isGlass
+    ? `island island--expanded island--appearance-liquidGlass island--glass-css-fallback ${glass.className}`
+    : "";
 
   return (
     <JellyfishStyleContext.Provider value={settings.jellyfishStyle}>
@@ -217,7 +214,7 @@ export function SideDockWindow() {
         pageIds={pageIds}
         activePage={(currentEntry?.id ?? "todo") as IslandPage}
         expanded={visualState === "drawer"}
-        isLight={isLight}
+        isLight={surface.isLight}
         accent={accent}
         settings={settings}
         setSettings={setStoredSettings}
@@ -229,12 +226,12 @@ export function SideDockWindow() {
         onReveal={openOnTrigger}
       />
       <div
-        className={`side-dock-root stage--font-${settings.fontFamily}${isLight ? " island-light" : ""}`}
+        className={`side-dock-root stage--font-${settings.fontFamily}${surface.isLight ? " island-light" : ""}`}
         data-edge={edge}
         data-state={visualState}
         data-closing={closing}
         data-stages={showStrip ? 3 : 2}
-        data-material={isGlass ? "glass" : "solid"}
+        data-material={surface.isGlass ? "glass" : "solid"}
         data-density={sideDocks.density}
         style={rootStyle}
         onPointerEnter={() => handleHoverChange(true)}
@@ -248,11 +245,6 @@ export function SideDockWindow() {
               data-hovered={handleHovered}
               aria-label={text.openAria}
               onClick={openOnTrigger}
-              onDragEnter={() => {
-                if (sideDocks.dragDropShelf && pageIds.includes("shelf")) {
-                  selectPage("shelf");
-                }
-              }}
             >
               <span className="side-dock-handle">
                 {sideDocks.handleDot && <span className="side-dock-handle__dot" aria-hidden="true" />}
@@ -262,7 +254,12 @@ export function SideDockWindow() {
           ) : (
             <>
               {visualState === "drawer" && (
-                <section className="side-dock-drawer">
+                <section
+                  className={`side-dock-drawer ${drawerGlassClass}`.trim()}
+                  onPointerMove={handleGlassPointerMove}
+                  onPointerLeave={resetGlassPointer}
+                >
+                  {surface.isGlass && <IslandGlassLayer glass={glass} />}
                   <header className="side-dock-drawer__head">
                     {minimalHeader ? (
                       <div className="side-dock-drawer__title">
@@ -282,7 +279,7 @@ export function SideDockWindow() {
                         )}
                       </div>
                     ) : (
-                      <div className="side-dock-drawer__tabs" role="tablist">
+                      <div ref={tabsRef} className="side-dock-drawer__tabs" role="tablist" onWheel={onTabsWheel}>
                         {dockPages.map((entry) => {
                           const label = labelFor(entry);
                           return (

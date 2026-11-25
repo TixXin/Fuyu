@@ -85,8 +85,9 @@
 .side-dock-handle {
   width: var(--side-handle-w);
   height: var(--side-handle-h);
-  border: 1px solid rgba(var(--side-overlay-rgb), 0.16);
+  border: 1px solid rgba(var(--side-overlay-rgb), 0.18);
   background: var(--side-surface-fill);
+  box-shadow: inset 0 1px 0 rgba(var(--side-overlay-rgb), 0.14);
   opacity: var(--side-handle-alpha);
   display: flex;
   flex-direction: column;
@@ -111,7 +112,7 @@
 .side-dock-handle-zone:focus-visible .side-dock-handle {
   width: calc(var(--side-handle-w) + 5px);
   opacity: 1;
-  border-color: color-mix(in srgb, var(--color-accent) 45%, rgba(var(--side-overlay-rgb), 0.22));
+  border-color: color-mix(in srgb, var(--color-accent) 48%, rgba(var(--side-overlay-rgb), 0.22));
 }
 
 .side-dock-handle__dot {
@@ -125,17 +126,18 @@
   width: min(3px, max(2px, calc(var(--side-handle-w) - 4px)));
   height: 24px;
   border-radius: var(--radius-pill);
-  background: rgba(var(--side-overlay-rgb), 0.4);
+  background: rgba(var(--side-overlay-rgb), 0.42);
   transition: background-color var(--motion-fast) var(--motion-ease), height var(--motion-base) var(--motion-ease);
 }
 
 .side-dock-handle-zone:hover .side-dock-handle__pill,
 .side-dock-handle-zone[data-hovered="true"] .side-dock-handle__pill {
   background: var(--color-accent);
-  height: 32px;
+  height: 34px;
 }
 
 .side-dock-strip {
+  position: relative;
   width: var(--side-strip-w);
   border: 1px solid rgba(var(--side-overlay-rgb), 0.14);
   background: var(--side-surface-fill);
@@ -148,10 +150,13 @@
   transition: opacity var(--motion-base) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
 }
 
-.side-dock-drawer {
+.side-dock-drawer,
+.side-dock-drawer.island {
+  position: relative;
   width: var(--side-drawer-w);
   height: var(--side-drawer-h);
   max-height: calc(100vh - 16px);
+  margin: 0;
   border: 1px solid rgba(var(--side-overlay-rgb), 0.14);
   border-radius: var(--side-outer-r);
   background: var(--side-surface-fill);
@@ -162,11 +167,10 @@
   transition: opacity var(--motion-base) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
 }
 
-.side-dock-root[data-material="glass"] .side-dock-strip,
-.side-dock-root[data-material="glass"] .side-dock-drawer {
+.side-dock-root[data-material="glass"] .side-dock-strip {
   backdrop-filter: blur(var(--side-panel-blur)) saturate(185%);
   border-color: rgba(var(--side-overlay-rgb), 0.2);
-  box-shadow: inset 0 1px 0 rgba(var(--side-overlay-rgb), 0.12);
+  box-shadow: inset 0 1px 0 rgba(var(--side-overlay-rgb), 0.14);
 }
 
 .side-dock-root[data-material="solid"] .side-dock-strip,
@@ -196,6 +200,7 @@
 }
 
 .side-dock-strip__btn {
+  position: relative;
   width: calc(var(--side-strip-w) - 10px);
   border: 0;
   background: transparent;
@@ -211,6 +216,30 @@
   line-height: 1.2;
   cursor: pointer;
   transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.side-dock-strip__btn::before {
+  content: "";
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  width: 2.5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.side-dock-root[data-edge="right"] .side-dock-strip__btn::before {
+  right: -4px;
+}
+
+.side-dock-root[data-edge="left"] .side-dock-strip__btn::before {
+  left: -4px;
+}
+
+.side-dock-strip__btn[data-active="true"]::before {
+  opacity: 1;
 }
 
 .side-dock-root[data-density="compact"] .side-dock-strip__btn {
@@ -264,6 +293,8 @@
 }
 
 .side-dock-drawer__head {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -383,18 +414,6 @@
   color: var(--color-accent);
 }
 
-.side-dock-drawer__body {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 10px 12px 14px;
-}
-
-.side-dock-root[data-density="compact"] .side-dock-drawer__body {
-  padding: 6px 8px 8px;
-}
-
 .side-dock-drawer__empty {
   height: 100%;
   display: flex;
@@ -426,7 +445,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .side-dock-strip,
-  .side-dock-drawer {
+  .side-dock-drawer,
+  .side-dock-drawer.island {
     animation: none;
   }
 }

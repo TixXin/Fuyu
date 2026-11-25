@@ -20,6 +20,7 @@ use geometry::{cursor_hits_dock, dock_window_rect, pick_outer_monitor, DockHitSh
 
 pub(crate) const OPEN_PAGE_EVENT: &str = "side-dock-open-page";
 pub(crate) const HOVER_EVENT: &str = "side-dock-hover";
+pub(crate) const PREVIEW_EVENT: &str = "side-dock-preview";
 
 const IDLE_POLL_MS: u64 = 36;
 const ACTIVE_POLL_MS: u64 = 20;
@@ -36,6 +37,13 @@ struct OpenPagePayload {
 struct HoverPayload {
     edge: SideDockEdge,
     inside: bool,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PreviewPayload {
+    edge: SideDockEdge,
+    open: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -338,8 +346,30 @@ pub async fn set_side_dock_visible(app: AppHandle, edge: SideDockEdge, visible: 
 #[tauri::command]
 pub async fn request_side_dock_page(app: AppHandle, edge: SideDockEdge, page: String) -> Result<(), String> {
     let label = edge.label();
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        if let Some(window) = handle.get_webview_window(label) {
+            let _ = show_window(&handle, &window);
+        }
+    });
     let payload = OpenPagePayload { edge, page };
     let _ = app.emit_to(label, OPEN_PAGE_EVENT, payload);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn preview_side_dock(app: AppHandle, edge: SideDockEdge, open: bool) -> Result<(), String> {
+    let label = edge.label();
+    if open {
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            if let Some(window) = handle.get_webview_window(label) {
+                let _ = show_window(&handle, &window);
+            }
+        });
+    }
+    let payload = PreviewPayload { edge, open };
+    let _ = app.emit_to(label, PREVIEW_EVENT, payload);
     Ok(())
 }
 
@@ -350,6 +380,7 @@ macro_rules! tauri_commands {
             crate::side_dock::set_side_dock_geometry,
             crate::side_dock::set_side_dock_visible,
             crate::side_dock::request_side_dock_page,
+            crate::side_dock::preview_side_dock,
         ] $($rest);*)
     };
 }

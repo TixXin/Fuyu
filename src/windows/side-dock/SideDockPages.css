@@ -1,0 +1,73 @@
+.side-dock-drawer__body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  container-type: inline-size;
+  padding: 10px 12px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--side-overlay-rgb), 0.18) transparent;
+}
+
+.side-dock-drawer__body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.side-dock-drawer__body::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-pill);
+  background: rgba(var(--side-overlay-rgb), 0.18);
+}
+
+.side-dock-drawer__body::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--side-overlay-rgb), 0.3);
+}
+
+.side-dock-root[data-density="compact"] .side-dock-drawer__body {
+  padding: 6px 8px 8px;
+}
+
+.side-dock-drawer__body > * {
+  min-width: 0;
+  width: 100%;
+}
+
+.side-dock-drawer__body .calendar-panel {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.side-dock-drawer__body .calendar-panel > * {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.side-dock-drawer__body .calendar-panel__list {
+  flex: 1;
+  min-height: 140px;
+}
+
+.side-dock-drawer__body .custom-panel,
+.side-dock-drawer__body .agent-sessions,
+.side-dock-drawer__body .todo-island-page,
+.side-dock-drawer__body .clipboard-panel,
+.side-dock-drawer__body .file-shelf,
+.side-dock-drawer__body .music-panel,
+.side-dock-drawer__body .timer-panel {
+  height: 100%;
+  min-height: 0;
+  max-width: 100%;
+}
+
+.side-dock-drawer__body .custom-panel__scroll {
+  overflow: auto;
+}
+
+.side-dock-drawer__body .focus-layout__sidebar {
+  width: 100%;
+}

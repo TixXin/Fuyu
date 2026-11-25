@@ -4,6 +4,7 @@ import type { SideDockEdge } from "../../lib/settings/sideDocks";
 
 export const SIDE_DOCK_OPEN_PAGE_EVENT = "side-dock-open-page";
 export const SIDE_DOCK_HOVER_EVENT = "side-dock-hover";
+export const SIDE_DOCK_PREVIEW_EVENT = "side-dock-preview";
 
 export type SideDockOpenPagePayload = {
   edge: SideDockEdge;
@@ -13,6 +14,11 @@ export type SideDockOpenPagePayload = {
 export type SideDockHoverPayload = {
   edge: SideDockEdge;
   inside: boolean;
+};
+
+export type SideDockPreviewPayload = {
+  edge: SideDockEdge;
+  open: boolean;
 };
 
 export type SideDockGeometryShape = {
@@ -67,6 +73,11 @@ export async function requestSideDockPage(edge: SideDockEdge, page: string): Pro
   await invoke("request_side_dock_page", { edge, page });
 }
 
+export async function previewSideDock(edge: SideDockEdge, open: boolean): Promise<void> {
+  if (!isTauri()) return;
+  await invoke("preview_side_dock", { edge, open });
+}
+
 export async function listenSideDockOpenPage(
   edge: SideDockEdge,
   onOpen: (page: string) => void,
@@ -87,6 +98,18 @@ export async function listenSideDockHover(
   return listen<SideDockHoverPayload>(SIDE_DOCK_HOVER_EVENT, (event) => {
     if (event.payload?.edge === edge && typeof event.payload.inside === "boolean") {
       onHover(event.payload.inside);
+    }
+  });
+}
+
+export async function listenSideDockPreview(
+  edge: SideDockEdge,
+  onPreview: (open: boolean) => void,
+): Promise<() => void> {
+  if (!isTauri()) return () => undefined;
+  return listen<SideDockPreviewPayload>(SIDE_DOCK_PREVIEW_EVENT, (event) => {
+    if (event.payload?.edge === edge && typeof event.payload.open === "boolean") {
+      onPreview(event.payload.open);
     }
   });
 }

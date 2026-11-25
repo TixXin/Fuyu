@@ -1,6 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { SIDE_DOCK_LIMITS, type SideDockEdge, type SideDocksSettings } from "../../../lib/settings/sideDocks";
+import { previewSideDock } from "../../side-dock/api";
 import "./SideDockMonitorStage.css";
 
 type SideDockMonitorStageProps = {
@@ -18,6 +20,7 @@ export function SideDockMonitorStage({ sideDocks, saveSideDocks }: SideDockMonit
   const text = useTranslation().settings.islandPages.sideDocks;
   const [dual, setDual] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<SideDockEdge>("right");
+  const [previewEdge, setPreviewEdge] = useState<SideDockEdge | null>(null);
   const [snappedCenter, setSnappedCenter] = useState(false);
   const primaryBoxRef = useRef<HTMLDivElement>(null);
   const secondaryBoxRef = useRef<HTMLDivElement>(null);
@@ -30,6 +33,39 @@ export function SideDockMonitorStage({ sideDocks, saveSideDocks }: SideDockMonit
       : sideDocks.right.enabled
         ? "right"
         : "left";
+
+  useEffect(() => {
+    return () => {
+      void previewSideDock("left", false).catch(() => undefined);
+      void previewSideDock("right", false).catch(() => undefined);
+    };
+  }, []);
+
+  const togglePreview = () => {
+    if (previewEdge === activeEdge) {
+      setPreviewEdge(null);
+      void previewSideDock(activeEdge, false).catch(() => undefined);
+      return;
+    }
+    if (previewEdge) {
+      void previewSideDock(previewEdge, false).catch(() => undefined);
+    }
+    const wasEnabled = sideDocks[activeEdge].enabled;
+    if (!wasEnabled) {
+      saveSideDocks({
+        ...sideDocks,
+        [activeEdge]: { ...sideDocks[activeEdge], enabled: true },
+      });
+    }
+    setPreviewEdge(activeEdge);
+    if (wasEnabled) {
+      void previewSideDock(activeEdge, true).catch(() => undefined);
+    } else {
+      window.setTimeout(() => {
+        void previewSideDock(activeEdge, true).catch(() => undefined);
+      }, 360);
+    }
+  };
 
   const sideConfig = sideDocks[activeEdge];
   const scaleW = Math.round((sideDocks.drawerWidth / 1280) * 280);
@@ -106,6 +142,7 @@ export function SideDockMonitorStage({ sideDocks, saveSideDocks }: SideDockMonit
 
   const edgeName = activeEdge === "right" ? text.zones.right : text.zones.left;
   const drawerRadius = Math.max(4, Math.round(sideDocks.outerRadius * 0.45));
+  const previewing = previewEdge === activeEdge;
 
   return (
     <div className="sd-block">
@@ -115,6 +152,14 @@ export function SideDockMonitorStage({ sideDocks, saveSideDocks }: SideDockMonit
           <p className="sd-block__hint">{text.monitor.hint}</p>
         </div>
         <div className="sd-monitor-controls">
+          <button
+            type="button"
+            className={`sd-btn sd-preview-btn${previewing ? " sd-btn--accent" : ""}`}
+            onClick={togglePreview}
+          >
+            {previewing ? <EyeOff size={13} strokeWidth={1.7} aria-hidden="true" /> : <Eye size={13} strokeWidth={1.7} aria-hidden="true" />}
+            <span>{previewing ? text.monitor.previewClose : text.monitor.previewOpen}</span>
+          </button>
           <div className="sd-seg">
             <button type="button" className="sd-seg__btn" data-on={activeEdge === "left"} onClick={() => setSelectedEdge("left")}>
               {text.zones.left}

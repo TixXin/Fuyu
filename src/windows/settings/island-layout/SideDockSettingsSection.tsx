@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import type { IslandPagesLayout } from "../../../lib/settings/islandPages";
 import {
@@ -33,6 +35,7 @@ export function SideDockSettingsSection({ rows, layout, save }: SideDockSettings
   const [storedIsland] = useIslandSettings();
   const islandSettings = useResolvedTheme(storedIsland);
   const { settings: sideDocks, save: saveSideDocks } = useSideDocks();
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const patch = (partial: Partial<SideDocksSettings>) => saveSideDocks({ ...sideDocks, ...partial });
 
@@ -43,6 +46,8 @@ export function SideDockSettingsSection({ rows, layout, save }: SideDockSettings
   const panelLook = surfaceThemeColors(islandSettings, "panel");
   const mainToneLabel = isLightIsland(panelLook.islandBackgroundColor) ? text.fine.light : text.fine.dark;
   const mainMaterialLabel = islandSettings.appearanceMode === "liquidGlass" ? text.fine.glass : text.fine.solid;
+  const triggerSummary = clickOnly ? text.fine.click : `${text.fine.hover} ${sideDocks.hoverDelayMs}ms`;
+  const densitySummary = sideDocks.density === "compact" ? text.fine.compact : text.fine.cozy;
 
   return (
     <section className="sd-section">
@@ -244,10 +249,21 @@ export function SideDockSettingsSection({ rows, layout, save }: SideDockSettings
       </div>
 
       <div className="sd-block">
-        <div className="sd-block__head">
-          <h4 className="sd-block__subtitle">{text.fine.title}</h4>
-        </div>
-        <div className="sd-fine-grid">
+        <button
+          type="button"
+          className="sd-collapse-head"
+          aria-expanded={advancedOpen}
+          onClick={() => setAdvancedOpen((open) => !open)}
+        >
+          <div className="sd-collapse-head__text">
+            <h4 className="sd-block__subtitle">{text.fine.title}</h4>
+            <p className="sd-block__hint">
+              {text.fine.summary(triggerSummary, sideDocks.handleWidth, sideDocks.handleHeight, densitySummary)}
+            </p>
+          </div>
+          <ChevronDown size={16} strokeWidth={1.7} className="sd-collapse-head__icon" data-open={advancedOpen} aria-hidden="true" />
+        </button>
+        {advancedOpen && <div className="sd-fine-grid">
           <div className="sd-fine-row">
             <span>{text.fine.trigger}</span>
             <div className="sd-seg">
@@ -346,7 +362,7 @@ export function SideDockSettingsSection({ rows, layout, save }: SideDockSettings
               <button type="button" className="sd-seg__btn" data-on={!sideDocks.hideInFullscreen} onClick={() => patch({ hideInFullscreen: false })}>{text.zones.disabled}</button>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </section>
   );

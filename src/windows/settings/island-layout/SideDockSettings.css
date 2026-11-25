@@ -235,6 +235,42 @@
   font-weight: 600;
 }
 
+.sd-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sd-collapse-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sd-collapse-head__text {
+  min-width: 0;
+}
+
+.sd-collapse-head__icon {
+  flex: none;
+  color: var(--text-3);
+  transition: transform var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.sd-collapse-head__icon[data-open="true"] {
+  transform: rotate(180deg);
+  color: var(--text-1);
+}
+
 .sd-appearance-summary {
   padding: 9px 12px;
   border-radius: var(--radius-md);

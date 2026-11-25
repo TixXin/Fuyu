@@ -143,6 +143,8 @@ export type SettingsIslandPagesText = {
       compact: string;
       standard: string;
       wide: string;
+      previewOpen: string;
+      previewClose: string;
       readout: (edge: string, percent: number, width: number, height: number) => string;
     };
     mode: {
@@ -183,6 +185,7 @@ export type SettingsIslandPagesText = {
     };
     fine: {
       title: string;
+      summary: (trigger: string, handleW: number, handleH: number, density: string) => string;
       trigger: string;
       hover: string;
       click: string;
@@ -386,6 +389,8 @@ export const zhCN: SettingsIslandPagesText = {
       compact: "紧凑",
       standard: "标准",
       wide: "宽大",
+      previewOpen: "预览展开",
+      previewClose: "收起预览",
       readout: (edge, percent, width, height) => `${edge} · 沿边 ${percent}% · 抽屉 ${width} × ${height}px · 仅贴物理外侧边`,
     },
     mode: {
@@ -425,7 +430,8 @@ export const zhCN: SettingsIslandPagesText = {
       glassOpacity: "玻璃背景不透明度",
     },
     fine: {
-      title: "交互与精细参数",
+      title: "高级交互与把手参数",
+      summary: (trigger, handleW, handleH, density) => `${trigger} · 把手 ${handleW}×${handleH}px · ${density}`,
       trigger: "触发方式",
       hover: "悬停展开",
       click: "仅点击把手",
@@ -629,6 +635,8 @@ export const en: SettingsIslandPagesText = {
       compact: "Compact",
       standard: "Standard",
       wide: "Wide",
+      previewOpen: "Live preview",
+      previewClose: "Stop preview",
       readout: (edge, percent, width, height) => `${edge} · ${percent}% along edge · ${width} × ${height}px · Outer edges only`,
     },
     mode: {
@@ -668,7 +676,8 @@ export const en: SettingsIslandPagesText = {
       glassOpacity: "Glass surface opacity",
     },
     fine: {
-      title: "Interaction & fine tuning",
+      title: "Advanced interaction & handle",
+      summary: (trigger, handleW, handleH, density) => `${trigger} · Handle ${handleW}×${handleH}px · ${density}`,
       trigger: "Trigger",
       hover: "Hover",
       click: "Click only",
