@@ -229,6 +229,26 @@
   flex: 0 1 150px;
 }
 
+.fuyu-countdown-set__lunar {
+  gap: 6px 8px;
+}
+
+.fuyu-countdown-set__select {
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.fuyu-countdown-set__select:focus {
+  outline: none;
+  border-color: var(--fuyu-plugin-accent);
+}
+
 .fuyu-countdown-set__actions {
   justify-content: flex-end;
 }

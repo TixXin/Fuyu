@@ -46,6 +46,7 @@ import { useV2UpgradeNotice } from "./useV2UpgradeNotice";
 import { useIslandLayerNotice } from "./useIslandLayerNotice";
 import { useIslandNotice } from "./islandNotice";
 import { useIslandSide } from "./useIslandSide";
+import { useSideDocksSync } from "../side-dock/useSideDocksSync";
 import { sideColumnTarget } from "./sideColumn";
 import { IslandRunners } from "./IslandRunners";
 import { islandMarginY } from "./islandForm";
@@ -90,7 +91,11 @@ export function IslandApp() {
   const settings = useResolvedTheme(useSettingsWithBuiltinSwitches(storedSettings));
   useTrayMark(settings.jellyfishStyle);
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
-  useFirstRunGuide();
+  const director = useMemo(
+    () => ({ openIslandPage, collapseIsland, tuckIsland, revealIsland }),
+    [openIslandPage, collapseIsland, tuckIsland, revealIsland],
+  );
+  useFirstRunGuide(director);
   const demo = useOnboardingDemo();
   const decor = useIslandDecor();
   const gauges = useCollapsedGauges(mode !== "collapsed" || isTucked || game.quiet);
@@ -131,13 +136,14 @@ export function IslandApp() {
   const notchWingNeed = useNotchWingNeed();
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0, Math.max(settings.notchWingMax, notchWingNeed ?? 0));
   useIslandTucking({ settings, navigation });
-
+  useSideDocksSync(side, game.quiet);
 
   const { features, openEnabledPage } = useIslandFeatures({
     settings,
     page,
     setPage,
     openIslandPage,
+    islandSide: side,
   });
   const urgentPage = urgentPopupPage(popups) as IslandPage | null;
   const homePage: IslandPage = urgentPage && isPageEnabled(urgentPage, features)

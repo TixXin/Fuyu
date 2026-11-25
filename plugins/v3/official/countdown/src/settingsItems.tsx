@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { GripIcon, PencilIcon, StarIcon, XIcon } from "./icons.tsx";
 import { ItemForm, type Invoke } from "./itemForm.tsx";
-import { rowLabel } from "./labels.ts";
+import { formatItemDate, rowLabel } from "./labels.ts";
 import { MAX_ITEMS, METHODS, readingOf, type CountdownItem } from "./model.ts";
 import { text } from "./text.ts";
 import { useDragSort } from "./useDragSort.ts";
 
 function describe(item: CountdownItem, at: number): string {
-  const parts = [item.date, item.kind === "anniversary" ? text.kindAnniversary : "", item.repeat ? text.repeatShort : "", rowLabel(readingOf(item, at))];
+  const parts = [formatItemDate(item, at), item.kind === "anniversary" ? text.kindAnniversary : "", item.repeat ? text.repeatShort : "", rowLabel(readingOf(item, at))];
   return parts.filter(Boolean).join(" · ");
 }
 

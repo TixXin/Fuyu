@@ -342,6 +342,15 @@ if (!automated) {
     await act(async () => { aboutLink("退出")!.click(); });
     check(commands.includes("quit_island"), "Quit asks the island to exit");
 
+    const closeCount = () => commands.filter((command) => command === "plugin:window|close").length;
+    const beforeClose = closeCount();
+    const sidebarSearch = element<HTMLInputElement>(".settings-sidebar__search input");
+    await type(sidebarSearch, "主题");
+    await act(async () => { sidebarSearch.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })); });
+    check(sidebarSearch.value === "" && closeCount() === beforeClose, "Escape clears a non-empty sidebar search without closing the settings window");
+    await act(async () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })); });
+    check(closeCount() === beforeClose + 1, "Pressing Escape closes the settings window");
+
     await act(async () => { root.unmount(); });
     document.documentElement.dataset.testResult = "passed";
   } catch (error) {

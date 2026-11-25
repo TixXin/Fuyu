@@ -1,9 +1,11 @@
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import { useTranslation } from "../../i18n";
 import { AgentPagePreview } from "./AgentPagePreview";
 import { glassPalette, glassPaused, glassVariables } from "../../lib/theme/glassPalette";
-import { hexToRgba } from "../../lib/settings/settings";
+import { DEFAULT_FONT_SCALE, hexToRgba } from "../../lib/settings/settings";
+import { fontScaleCssValue, isValidCustomFontId, previewFontStackFor } from "../../lib/theme/fonts";
+import { ensureCustomFontLoaded, getLoadedCustomFontIds, isCustomFontLoaded, subscribeLoadedCustomFonts } from "../../lib/theme/windowFont";
 import { islandInkRgb, notchLook, surfaceThemeColors } from "../../lib/theme/themeMode";
 import { isLightIsland } from "../../utils/color";
 import type { IslandSettings } from "../../lib/settings/types";
@@ -15,7 +17,19 @@ export function IslandPreview({ settings, compact = false, notch = false }: {
   notch?: boolean;
 }) {
   const text = useTranslation().settings.appearance.preview;
+  const [, setFontVersion] = useState(0);
+  useEffect(() => subscribeLoadedCustomFonts(() => setFontVersion((value) => value + 1)), []);
+  useEffect(() => {
+    if (settings.fontFamily === "custom" && isValidCustomFontId(settings.customFontId) && !isCustomFontLoaded(settings.customFontId)) {
+      void ensureCustomFontLoaded(settings.customFontId);
+    }
+  }, [settings.fontFamily, settings.customFontId]);
+
   const glass = settings.appearanceMode === "liquidGlass";
+  const previewFont = settings.fontFamily === "pixel"
+    ? null
+    : previewFontStackFor(settings, getLoadedCustomFontIds());
+  const previewScale = settings.fontScale !== DEFAULT_FONT_SCALE ? fontScaleCssValue(settings.fontScale) : null;
   const style = {
     "--preview-glass": settings.glassIntensity / 100,
     "--preview-radius": `${settings.islandCornerRadius}px`,
@@ -24,6 +38,8 @@ export function IslandPreview({ settings, compact = false, notch = false }: {
     "--preview-pulse-brightness": `${settings.pulseBrightness}%`,
     "--preview-collapsed-scale": settings.collapsedScale,
     "--preview-expanded-scale": settings.expandedScale,
+    ...(previewFont ? { "--preview-font": previewFont } : {}),
+    ...(previewScale ? { "--font-scale": previewScale, "--preview-font-scale": previewScale } : {}),
   } as CSSProperties;
   const paused = glassPaused(settings, { mode: "expanded", isTucked: false, quiet: false, hidden: false, reducedMotion: false });
   const panelLook = surfaceThemeColors(settings, "panel");

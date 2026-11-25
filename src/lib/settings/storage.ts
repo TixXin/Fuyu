@@ -5,6 +5,7 @@ import { readString } from "../storage.ts";
 import type { IslandPreset, IslandSettings } from "./types";
 
 export const STORAGE_KEY = ISLAND_SETTINGS_KEY;
+export const SETTINGS_UPDATED_EVENT = "fuyu-settings-updated";
 export const COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY =
   "fuyu-collapsed-text-default-v1";
 export const GLASS_BACKDROP_DEFAULT_MIGRATION_KEY =
@@ -117,6 +118,9 @@ export function readSettingsText() {
 
 export function saveSettings(settings: IslandSettings) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  if (typeof window.dispatchEvent === "function" && typeof Event === "function") {
+    window.dispatchEvent(new Event(SETTINGS_UPDATED_EVENT));
+  }
 }
 
 export function saveSettingPresets(presets: IslandPreset[]) {

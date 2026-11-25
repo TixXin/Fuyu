@@ -1,12 +1,24 @@
-import { isValidDateKey, readItem, sortByDate, sortCountdownItems, type CountdownKind, type Reading } from "./days.ts";
+import {
+  isValidDateKey,
+  readItem,
+  sortByDate,
+  sortCountdownItems,
+  type CalendarKind,
+  type CountdownKind,
+  type Reading,
+} from "./days.ts";
+import { lunarToSolarKey, normalizeLunarDate, solarToLunar, type LunarDate } from "./lunar.ts";
 
-export { daysDelta, isValidDateKey, parseLocalDate, primaryCountdown, sortCountdownItems, startOfLocalDay } from "./days.ts";
-export type { CountdownKind, Reading } from "./days.ts";
+export { daysDelta, effectiveDate, isValidDateKey, parseLocalDate, primaryCountdown, resolveLunarRef, sortCountdownItems, startOfLocalDay } from "./days.ts";
+export type { CalendarKind, CountdownKind, Reading } from "./days.ts";
+export type { LunarDate } from "./lunar.ts";
 
 export type CountdownItem = {
   id: string;
   title: string;
   date: string;
+  calendar?: CalendarKind;
+  lunar?: LunarDate;
   pinned: boolean;
   kind: CountdownKind;
   repeat: boolean;
@@ -43,7 +55,14 @@ export type Reminded = { day: string; ids: string[] };
 
 export type StoredCountdown = CountdownSettings & { items: StoredItem[]; reminded: Reminded };
 
-export type ItemDraft = { title?: unknown; date?: unknown; kind?: unknown; repeat?: unknown };
+export type ItemDraft = {
+  title?: unknown;
+  date?: unknown;
+  calendar?: unknown;
+  lunar?: unknown;
+  kind?: unknown;
+  repeat?: unknown;
+};
 
 export const MAX_ITEMS = 200;
 export const MAX_TITLE = 80;
@@ -126,17 +145,41 @@ export function cleanKind(value: unknown, fallback: CountdownKind = "countdown")
   return value === "anniversary" || value === "countdown" ? value : fallback;
 }
 
+export function cleanCalendar(value: unknown, fallback: CalendarKind = "solar"): CalendarKind {
+  return value === "lunar" || value === "solar" ? value : fallback;
+}
+
+export function resolveDateDraft(
+  draft: Pick<ItemDraft, "date" | "calendar" | "lunar">,
+  fallbackCalendar: CalendarKind = "solar",
+): { date: string; calendar?: CalendarKind; lunar?: LunarDate } | null {
+  const calendar = cleanCalendar(draft.calendar, fallbackCalendar);
+  if (calendar === "lunar") {
+    const lunar = normalizeLunarDate(draft.lunar) ?? (typeof draft.date === "string" && isValidDateKey(draft.date.trim()) ? solarToLunar(draft.date.trim()) : null);
+    if (!lunar) return null;
+    const solar = lunarToSolarKey(lunar.year, lunar.month, lunar.day, Boolean(lunar.leap), true);
+    if (!solar) return null;
+    return { date: solar, calendar: "lunar", lunar };
+  }
+  const date = typeof draft.date === "string" ? draft.date.trim() : "";
+  if (!isValidDateKey(date)) return null;
+  return { date };
+}
+
 function normalizeItem(entry: unknown): StoredItem | null {
   if (!entry || typeof entry !== "object") return null;
   const raw = entry as Record<string, unknown>;
   const title = cleanTitle(raw.title);
-  if (typeof raw.id !== "string" || !title || typeof raw.date !== "string" || !isValidDateKey(raw.date)) return null;
+  if (typeof raw.id !== "string" || !title) return null;
+  const resolved = resolveDateDraft({ date: raw.date, calendar: raw.calendar, lunar: raw.lunar });
+  if (!resolved) return null;
   const backgroundDataUrl = sanitizeBackground(raw.backgroundDataUrl);
   const rev = typeof raw.bgRev === "number" && Number.isFinite(raw.bgRev) ? raw.bgRev : 1;
   return {
     id: raw.id,
     title,
-    date: raw.date,
+    date: resolved.date,
+    ...(resolved.calendar === "lunar" && resolved.lunar ? { calendar: "lunar" as const, lunar: resolved.lunar } : {}),
     pinned: raw.pinned === true,
     kind: cleanKind(raw.kind),
     repeat: raw.repeat === true,
@@ -189,7 +232,26 @@ export function applyDraft<T extends StoredItem>(item: T, draft: ItemDraft): T {
   const next = { ...item };
   const title = cleanTitle(draft.title);
   if (title) next.title = title;
-  if (typeof draft.date === "string" && isValidDateKey(draft.date)) next.date = draft.date;
+  if (draft.date !== undefined || draft.calendar !== undefined || draft.lunar !== undefined) {
+    const resolved = resolveDateDraft(
+      {
+        date: draft.date ?? item.date,
+        calendar: draft.calendar ?? item.calendar,
+        lunar: draft.lunar !== undefined ? draft.lunar : draft.calendar === "solar" ? undefined : item.lunar,
+      },
+      item.calendar ?? "solar",
+    );
+    if (resolved) {
+      next.date = resolved.date;
+      if (resolved.calendar === "lunar" && resolved.lunar) {
+        next.calendar = "lunar";
+        next.lunar = resolved.lunar;
+      } else {
+        delete next.calendar;
+        delete next.lunar;
+      }
+    }
+  }
   if (draft.kind !== undefined) next.kind = cleanKind(draft.kind, item.kind);
   if (typeof draft.repeat === "boolean") next.repeat = draft.repeat;
   return next;

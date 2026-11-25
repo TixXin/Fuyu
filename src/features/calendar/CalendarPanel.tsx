@@ -11,6 +11,7 @@ import { nextHolidayBreak } from "./holidayBreaks.ts";
 import { joinCalendarMeeting } from "./joinMeeting";
 import { chineseDay } from "../../utils/lunar.ts";
 import { agendaDayStarts, effectiveWeekStart, eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
+import { internationalFestival } from "./worldFestivals.ts";
 import { SCHEDULED_TODO_UID, scheduledTodoEvents } from "./todoEvents";
 import { clockTime } from "./upcoming";
 import { useCalendarPrefs } from "./useCalendarPrefs";
@@ -71,11 +72,15 @@ export function CalendarPanel({
     });
   };
   const subtitle = (day: number) => {
-    if (!lunar) return "";
-    const chinese = chineseDay(new Date(day));
-    const named = chinese.festival ?? chinese.term ?? chinese.memorial;
+    const date = new Date(day);
+    const world = prefs.showInternationalFestivals ? internationalFestival(date, locale) : null;
+    const holiday = day === today ? nextHolidayBreak(events, date) : null;
+    if (!lunar) {
+      return [world, holiday ? text.holidayIn(holiday.name, holiday.days, holiday.length) : ""].filter(Boolean).join(" · ");
+    }
+    const chinese = chineseDay(date);
+    const named = chinese.festival ?? chinese.term ?? chinese.memorial ?? world;
     const coming = day === today && !named ? nextSpecialDay(day) : null;
-    const holiday = day === today ? nextHolidayBreak(events, new Date(day)) : null;
     return [
       chinese.lunar,
       named,
@@ -202,6 +207,7 @@ export function CalendarPanel({
         selected={selected}
         events={events}
         showWeekNumbers={prefs.showWeekNumbers}
+        showInternationalFestivals={prefs.showInternationalFestivals}
         weekStartsOn={effectiveWeekStart(prefs.weekStartsOn, locale)}
         onSelect={select}
         onMonth={(delta) => setMonth(monthStart(shownMonth, delta))}

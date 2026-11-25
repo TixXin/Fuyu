@@ -45,6 +45,12 @@ export function CalendarPanelPrefsSection() {
         onChange={(showWeekNumbers) => setPrefs({ ...prefs, showWeekNumbers })}
       />
       <SettingsToggleRow
+        title={text.showInternationalFestivals}
+        description={text.showInternationalFestivalsHint}
+        checked={prefs.showInternationalFestivals}
+        onChange={(showInternationalFestivals) => setPrefs({ ...prefs, showInternationalFestivals })}
+      />
+      <SettingsToggleRow
         title={text.foldAllDay}
         description={text.foldAllDayHint}
         checked={prefs.foldAllDay}

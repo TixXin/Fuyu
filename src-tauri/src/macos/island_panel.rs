@@ -84,6 +84,23 @@ pub(crate) fn make_popup_panel(window: &WebviewWindow) -> Result<(), String> {
     float_above_island(window, window.to_panel::<PopupPanel>().map_err(|error| error.to_string())?)
 }
 
+pub(crate) fn make_side_dock_panel(window: &WebviewWindow) -> Result<(), String> {
+    let panel = window.to_panel::<PopupPanel>().map_err(|error| error.to_string())?;
+    panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR);
+    panel.set_collection_behavior(
+        CollectionBehavior::new()
+            .can_join_all_spaces()
+            .stationary()
+            .full_screen_auxiliary()
+            .ignores_cycle()
+            .into(),
+    );
+    panel.set_has_shadow(false);
+    panel
+        .add_style_mask(StyleMask::empty().nonactivating_panel().into())
+        .map_err(|error| format!("Could not make {} a non-activating panel: {error:?}", window.label()))
+}
+
 pub(crate) fn make_preview_panel(window: &WebviewWindow) -> Result<(), String> {
     super::preview_panel::reset_can_become_key();
     float_above_island(window, window.to_panel::<PreviewPanel>().map_err(|error| error.to_string())?)

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "page": "general",
+      "since": "next",
+      "zh-CN": {
+        "group": "网络代理",
+        "title": "代理模式"
+      },
+      "en": {
+        "group": "Network proxy",
+        "title": "Proxy mode"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "since": "next",
+      "zh-CN": {
+        "group": "字体",
+        "title": "字体样式"
+      },
+      "en": {
+        "group": "Font",
+        "title": "Font style"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "since": "next",
+      "zh-CN": {
+        "group": "字体",
+        "title": "字体大小"
+      },
+      "en": {
+        "group": "Font",
+        "title": "Font size"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "since": "next",
+      "zh-CN": {
+        "group": "字体",
+        "title": "本地字体"
+      },
+      "en": {
+        "group": "Font",
+        "title": "Local fonts"
+      }
+    },
+    {
+      "page": "sideDocks",
+      "since": "next",
+      "zh-CN": {
+        "group": "屏幕左右侧边翼",
+        "title": "右侧翼"
+      },
+      "en": {
+        "group": "Screen side docks",
+        "title": "Right dock"
+      }
+    },
+    {
+      "page": "sideDocks",
+      "since": "next",
+      "zh-CN": {
+        "group": "屏幕左右侧边翼",
+        "title": "左侧翼"
+      },
+      "en": {
+        "group": "Screen side docks",
+        "title": "Left dock"
+      }
+    },
+    {
+      "page": "calendar",
+      "since": "next",
+      "zh-CN": {
+        "group": "已添加的日历",
+        "title": "国家/地区节假日订阅"
+      },
+      "en": {
+        "group": "Your calendars",
+        "title": "Regional public holidays"
+      }
+    },
+    {
+      "page": "calendar",
+      "since": "next",
+      "zh-CN": {
+        "group": "日历面板",
+        "title": "显示国际节日"
+      },
+      "en": {
+        "group": "Calendar panel",
+        "title": "Show international festivals"
+      }
+    }
+  ]
+}

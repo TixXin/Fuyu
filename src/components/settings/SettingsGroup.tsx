@@ -1,5 +1,7 @@
-import type { ReactNode } from "react";
+import { createContext, type ReactNode } from "react";
 import "./SettingsGroup.css";
+
+export const SettingsGroupTitleContext = createContext("");
 
 export function SettingsGroup({
   title,
@@ -20,7 +22,9 @@ export function SettingsGroup({
           {action}
         </div>
       ) : null}
-      <div className="settings-group__card">{children}</div>
+      <SettingsGroupTitleContext.Provider value={title ?? ""}>
+        <div className="settings-group__card">{children}</div>
+      </SettingsGroupTitleContext.Provider>
       {footer ? <div className="settings-group__footer">{footer}</div> : null}
     </section>
   );

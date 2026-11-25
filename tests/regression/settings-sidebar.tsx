@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { SettingsSidebar } from "../../src/windows/settings/SettingsSidebar";
+import type { SettingsWhatsNewView } from "../../src/windows/settings/useSettingsWhatsNew";
 import "../../src/windows/settings/slots/categories";
 import { FEATURE_PAGES, settingsCategoryFor, type SettingsCategory } from "../../src/windows/settings/categories";
 
@@ -15,12 +16,13 @@ window.addEventListener("beforeunload", () => {
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 let opened: SettingsCategory[] = [];
-function Sidebar({ start, hidden }: { start: SettingsCategory; hidden?: ReadonlySet<SettingsCategory> }) {
+function Sidebar({ start, hidden, whatsNew }: { start: SettingsCategory; hidden?: ReadonlySet<SettingsCategory>; whatsNew?: SettingsWhatsNewView }) {
   const [category, setCategory] = useState<SettingsCategory>(start);
   return (
     <SettingsSidebar
       category={category}
       hidden={hidden}
+      whatsNew={whatsNew}
       onCategoryChange={(next) => {
         opened.push(next);
         setCategory(next);
@@ -37,9 +39,9 @@ const check = (condition: unknown, message: string) => {
 const host = document.getElementById("sidebar")!;
 const root = createRoot(host);
 let mounts = 0;
-const mount = (start: SettingsCategory, hidden?: ReadonlySet<SettingsCategory>) =>
+const mount = (start: SettingsCategory, hidden?: ReadonlySet<SettingsCategory>, whatsNew?: SettingsWhatsNewView) =>
   act(async () => {
-    root.render(<StrictMode><I18nProvider><Sidebar key={++mounts} start={start} hidden={hidden} /></I18nProvider></StrictMode>);
+    root.render(<StrictMode><I18nProvider><Sidebar key={++mounts} start={start} hidden={hidden} whatsNew={whatsNew} /></I18nProvider></StrictMode>);
   });
 const element = <T extends Element = HTMLElement>(selector: string) => {
   const found = host.querySelector<T>(selector);
@@ -63,7 +65,7 @@ try {
   check(groupRows().map((row) => row.dataset.group).join() === "basics,features,agents,extensions"
     && groupRows().every((row) => row.getAttribute("aria-expanded") === "true"),
     "Every group is a row that folds, and all start unfolded");
-  check(listed().join() === "overview,general,appearance,islandLayout,behavior,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,voiceInput,behaviorAlerts,messages,agents,agentAppearance,agentAlerts,agentRemote,pluginsV3,pluginMarket,generalApi,about",
+  check(listed().join() === "overview,general,appearance,islandLayout,sideDocks,behavior,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,voiceInput,behaviorAlerts,messages,agents,agentAppearance,agentAlerts,agentRemote,pluginsV3,pluginMarket,generalApi,about",
     "Every sidebar item is listed at first: the overview on top, Appearance and the island layout, the four AI Agent items in their groups, and Plugins, the plugin market and the local API in Extensions");
   check(host.querySelector(".settings-sidebar__footer [data-category='about']"), "About is pinned below the page list");
   check(element(".settings-sidebar__item--active").dataset.category === "general", "The open page is marked");
@@ -89,7 +91,7 @@ try {
   check(search().value === "" && group("features").getAttribute("aria-expanded") === "false", "Escape clears the search; folded groups stay folded");
   await act(async () => { group("features").click(); });
   await act(async () => { group("basics").click(); });
-  check(listed().length === 24, "Unfolding shows the pages again");
+  check(listed().length === 25, "Unfolding shows the pages again");
   check(!host.querySelector(".settings-sidebar__more"), "With every feature on there is no link to turn more on");
 
   const off = new Set<SettingsCategory>([...FEATURE_PAGES.music, ...FEATURE_PAGES.agents]);
@@ -103,6 +105,39 @@ try {
   check(listed().includes("music") && element(".settings-sidebar__item--active").dataset.category === "music", "The open page stays listed even when its feature is off");
   await type("岛上显示");
   check(listed().join() === "music,agentAppearance", "Search still finds the pages of features that are off");
+  let dismissed = 0;
+  await mount("overview", undefined, {
+    unreadPages: new Set<SettingsCategory>(["general", "behaviorTuck"]),
+    unreadCount: 2,
+    searchSince: new Set(["0.3.14"]),
+    searchPages: new Set(["general", "behaviorTuck"]),
+    onDismissAll: () => { dismissed += 1; },
+  });
+  check(
+    element(".settings-sidebar__whats-new-open").textContent?.includes("本版新增")
+      && element(".settings-sidebar__whats-new-count").textContent === "2",
+    "What's new bar shows the unread count in the sidebar",
+  );
+  const generalBadge = element(".settings-sidebar__item[data-category='general'] .settings-sidebar__new");
+  const generalBadgeBox = generalBadge.getBoundingClientRect();
+  check(
+    generalBadge.textContent === "NEW"
+      && Math.round(generalBadgeBox.height) === 16 && generalBadgeBox.width < 48
+      && element(".settings-sidebar__item[data-category='behavior'] .settings-sidebar__new").textContent === "NEW",
+    "Unread pages and tabs bubble compact NEW badges onto their sidebar items",
+  );
+  await act(async () => { group("basics").click(); });
+  const folderBadge = group("basics").querySelector<HTMLElement>(".settings-sidebar__new");
+  const folderBadgeBox = folderBadge?.getBoundingClientRect();
+  check(
+    folderBadge?.textContent === "NEW" && Boolean(folderBadgeBox) && Math.round(folderBadgeBox!.height) === 16 && folderBadgeBox!.width < 48,
+    "Collapsing a group with unread pages bubbles a compact NEW badge onto the group header",
+  );
+  await act(async () => { element<HTMLButtonElement>(".settings-sidebar__whats-new-open").click(); });
+  check(search().value === "本版新增", "Clicking the What's new bar filters settings by the new query");
+  await act(async () => { element<HTMLButtonElement>(".settings-sidebar__whats-new-dismiss").click(); });
+  check(dismissed === 1, "Clicking mark all as read invokes the dismiss handler");
+
   await mount("sounds");
   check(element(".settings-sidebar__item--active").dataset.category === "agentAlerts", "A tab marks the sidebar item it belongs to");
   await type("音效");

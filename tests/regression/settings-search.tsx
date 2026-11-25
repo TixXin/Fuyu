@@ -8,6 +8,7 @@ import { isSearchIndexLoaded } from "../../src/windows/settings/SettingsSidebar"
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import searchIndex from "../../src/windows/settings/searchIndex.json";
+import whatsNewIndex from "../../src/windows/settings/whatsNewIndex.json";
 import type { SettingsRowText, SettingsSearchEntry } from "../../src/windows/settings/settingsSearch";
 import { entryOf, sidebarItemOf, type SettingsCategory } from "../../src/windows/settings/categories";
 import "./settingsMocks";
@@ -61,7 +62,7 @@ const allPages = async () => {
   return pages;
 };
 
-function rowsOnPage(within = ".editor-panel"): SettingsRowText[] {
+function rowsOnPage(within = ".editor-panel"): (SettingsRowText & { since?: string; indent?: boolean })[] {
   const rows = [...document.querySelectorAll<HTMLElement>(`${within} .settings-row`)].filter((row) => !row.closest("[data-search='off']"));
   return rows.flatMap((row) => {
     const title = text(row.querySelector(".settings-row__title"));
@@ -70,7 +71,9 @@ function rowsOnPage(within = ".editor-panel"): SettingsRowText[] {
     const description = descEl && !descEl.querySelector("[data-search='off']") ? text(descEl) : "";
     const options = [...row.querySelectorAll(".settings-row__control option, .settings-row__control .settings-choice__option")].map(text).filter(Boolean);
     const group = text(row.closest(".settings-group")?.querySelector(".settings-group__title"));
-    return [{ group, title, ...(description ? { description } : {}), ...(options.length ? { options } : {}) }];
+    const since = row.dataset.since?.trim() || "";
+    const indent = row.classList.contains("settings-row--indent");
+    return [{ group, title, ...(description ? { description } : {}), ...(options.length ? { options } : {}), ...(since ? { since } : {}), ...(indent ? { indent: true } : {}) }];
   });
 }
 
@@ -121,7 +124,14 @@ try {
     }
     check(missing.length === 0, `Every row the pages show is in searchIndex.json${missing.length ? ` (missing: ${missing.join("; ")}; run pnpm settings:index)` : ""}`);
 
-    await openPage("general");
+    const whatsNewEntries = whatsNewIndex.entries as { page: string; since: string; "zh-CN": { title: string } }[];
+    const expectedWhatsNew = entries.filter((entry) => entry.since).map((entry) => `${entry.page}:${entry.since}:${entry["zh-CN"].title}`);
+    const actualWhatsNew = whatsNewEntries.map((entry) => `${entry.page}:${entry.since}:${entry["zh-CN"].title}`);
+    check(expectedWhatsNew.join("\n") === actualWhatsNew.join("\n"), "whatsNewIndex.json stays in sync with since entries in searchIndex.json");
+    check(
+      whatsNewEntries.some((entry) => entry.page === "general" && entry["zh-CN"].title === "代理模式"),
+      "Auto-detected new settings appear in whatsNewIndex.json without manual since props",
+    );
     await type("会话来源");
     check(hits("agentSessions").includes("会话来源"), "A setting's title finds the setting under its page");
     await pressEnter();

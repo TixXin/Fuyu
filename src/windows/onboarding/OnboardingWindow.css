@@ -6,29 +6,33 @@
 }
 
 .onboarding__card {
-  --onboarding-fill: #16171b;
+  --onboarding-fill: #16181d;
   position: fixed;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
   background: var(--onboarding-fill);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-white-a12);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px rgba(0, 0, 0, 0.5);
   transition:
     left var(--motion-medium) var(--motion-ease),
     top var(--motion-medium) var(--motion-ease),
-    bottom var(--motion-medium) var(--motion-ease),
+    width var(--motion-medium) var(--motion-ease),
     background-color var(--motion-medium) var(--motion-ease),
     border-color var(--motion-medium) var(--motion-ease),
     box-shadow var(--motion-medium) var(--motion-ease);
-  animation: onboardingCardIn var(--motion-slow) var(--motion-ease-out) 200ms backwards;
+  animation: onboardingCardIn var(--motion-medium) var(--motion-ease-out) backwards;
 }
 
 .onboarding--light .onboarding__card {
-  --onboarding-fill: #f3f4f7;
+  --onboarding-fill: #f4f5f8;
   border-color: rgba(0, 0, 0, 0.1);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 20px 52px rgba(0, 0, 0, 0.24);
 }
 
 .onboarding--light .settings-group__card {
@@ -37,57 +41,197 @@
 }
 
 .onboarding__bar {
-  height: 36px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0 0 20px;
+  gap: var(--space-md);
+  padding: 6px 8px 6px 18px;
+  border-bottom: 1px solid var(--color-white-a06);
+}
+
+.onboarding__stage {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
 }
 
 .onboarding__progress {
   display: flex;
-  gap: var(--space-sm);
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .onboarding__dot {
-  width: 6px;
-  height: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  color: var(--color-text-subtle);
+  font: inherit;
+  font-size: 11.5px;
+  white-space: nowrap;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
-  background: var(--color-white-a16);
-  transition: width var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
+  cursor: default;
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+.onboarding__dot-num {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  flex: none;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--color-white-a06);
+  border-radius: 50%;
 }
 
 .onboarding__dot--done {
-  background: var(--color-text-muted);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.onboarding__dot--done:hover {
+  color: var(--color-text);
+  background: var(--color-white-a06);
+}
+
+.onboarding__dot--done .onboarding__dot-num {
+  color: var(--mint-text, #7ee2b8);
+  background: color-mix(in srgb, var(--mint-text, #7ee2b8) 18%, transparent);
 }
 
 .onboarding__dot--active {
-  width: 18px;
+  color: var(--color-text);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 32%, transparent);
+}
+
+.onboarding__dot--active .onboarding__dot-num {
+  color: var(--color-on-accent);
   background: var(--color-accent);
 }
 
+.onboarding__bar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: none;
+}
+
+.onboarding__track-pill {
+  padding: 2px 9px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-pill);
+}
+
+.onboarding__back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 8px 0 4px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
+}
+
+.onboarding__back-link:hover {
+  color: var(--color-text);
+  background: var(--color-white-a06);
+}
+
+.onboarding__setup-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.onboarding__setup-tab {
+  height: 26px;
+  padding: 0 10px;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+.onboarding__setup-tab:hover {
+  color: var(--color-text);
+  background: var(--color-white-a04);
+}
+
+.onboarding__setup-tab--done {
+  color: var(--color-text);
+}
+
+.onboarding__setup-tab--active {
+  color: var(--color-accent);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 32%, transparent);
+}
+
 .onboarding__close {
-  width: 40px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: grid;
+  flex: none;
   place-items: center;
   padding: 0;
   color: var(--color-text-muted);
   background: transparent;
   border: 0;
+  border-radius: var(--radius-md);
   cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
 }
 
 .onboarding__close:hover {
   color: var(--color-text);
+  background: var(--color-white-a06);
 }
 
 .onboarding__body {
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
-  padding: 0 20px 8px;
-  animation: onboardingAct var(--motion-medium) var(--motion-ease);
+  padding: 18px 24px 14px;
+  animation: onboardingAct var(--motion-base) var(--motion-ease-out) backwards;
 }
 
 .onboarding__notice {
@@ -100,11 +244,11 @@
 }
 
 .onboarding__heading {
-  margin: 4px 0 14px;
+  margin: 0 0 14px;
 }
 
 .onboarding__title {
-  margin: 0 0 6px;
+  margin: 0 0 5px;
   font-size: 19px;
   font-weight: 600;
   line-height: 1.3;
@@ -114,7 +258,38 @@
   margin: 0;
   color: var(--color-text-muted);
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.55;
+}
+
+.onboarding__chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  height: 26px;
+  padding: 0 10px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 11.5px;
+  white-space: nowrap;
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a10);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+
+.onboarding__chip-btn:hover {
+  background: var(--color-white-a10);
+  border-color: var(--color-accent);
+}
+
+.onboarding__chip-btn--active,
+.onboarding__chip-btn--active:hover {
+  color: var(--color-on-accent);
+  font-weight: 600;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .onboarding__footer {
@@ -122,7 +297,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-xl);
-  padding: 10px 20px 16px;
+  padding: 12px 24px 16px;
+  border-top: 1px solid var(--color-white-a06);
 }
 
 .onboarding__esc {
@@ -132,11 +308,12 @@
 
 .onboarding__nav {
   display: flex;
+  align-items: center;
   gap: var(--space-md);
 }
 
 .onboarding__button {
-  min-width: 76px;
+  min-width: 72px;
   height: 32px;
   padding: 0 14px;
   color: var(--color-text);
@@ -144,9 +321,13 @@
   font-size: 13px;
   white-space: nowrap;
   background: var(--color-white-a06);
-  border: 1px solid var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
   border-radius: var(--radius-md);
   cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
 }
 
 .onboarding__button:hover {
@@ -155,7 +336,7 @@
 
 .onboarding__button--quiet {
   min-width: 0;
-  padding: 0 4px;
+  padding: 0 8px;
   color: var(--color-text-muted);
   background: transparent;
   border-color: transparent;
@@ -163,7 +344,7 @@
 
 .onboarding__button--quiet:hover {
   color: var(--color-text);
-  background: transparent;
+  background: var(--color-white-a04);
 }
 
 .onboarding__button--primary,
@@ -175,10 +356,10 @@
 }
 
 .onboarding__button--primary:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.06);
 }
 
-:is(.onboarding__button, .onboarding__close, .onboarding-release__link):focus-visible {
+:is(.onboarding__button, .onboarding__chip-btn, .onboarding__close, .onboarding__dot, .onboarding__back-link, .onboarding__setup-tab, .onboarding-release__link):focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
@@ -190,42 +371,43 @@
 }
 
 .onboarding-release__later {
-  margin: var(--space-2xl) 0 var(--space-md);
+  margin: var(--space-xl) 0 0;
   color: var(--color-text-muted);
   font-size: 12px;
-}
-
-.onboarding-release__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-md);
+  line-height: 1.5;
 }
 
 .onboarding-release__link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  height: 32px;
-  padding: 0 12px;
+  height: 30px;
+  padding: 0 11px;
   color: var(--color-text);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   background: var(--color-white-a04);
-  border: 1px solid var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
   border-radius: var(--radius-md);
   cursor: pointer;
+  transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
 }
 
 .onboarding-release__link:hover {
+  background: var(--color-white-a06);
   border-color: var(--color-accent);
 }
 
 @keyframes onboardingCardIn {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  from {
+    opacity: 0;
+  }
 }
 
 @keyframes onboardingAct {
-  from { opacity: 0; transform: translateX(12px); }
+  from {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

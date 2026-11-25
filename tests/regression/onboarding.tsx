@@ -8,12 +8,38 @@ import "../../src/styles/base.css";
 import catalog from "../../src/features/builtins.json";
 import { BUILTIN_PLUGINS_CHANGED, type BuiltinPlugin } from "../../src/features/plugin-kernel/api";
 import { OnboardingWindow } from "../../src/windows/onboarding/OnboardingWindow";
+import { setOnboardingLaunchMode } from "../../src/windows/onboarding/storage";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { until } from "./pollUntil";
 
 const query = new URLSearchParams(location.search);
 const automated = query.has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
+
+const SAMPLE_QR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+const originalFetch = window.fetch.bind(window);
+window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  if (url.includes("community.json")) {
+    return new Response(
+      JSON.stringify({
+        version: 1,
+        updatedAt: "2026-11-25",
+        groups: [
+          {
+            id: "wechat-users",
+            platform: "wechat",
+            name: { "zh-CN": "浮屿用户交流群", en: "Fuyu users" },
+            qr: "wechat-group.png",
+            expiresAt: "2099-12-31",
+          },
+        ],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  return originalFetch(input, init);
+}) as typeof window.fetch;
 
 const commands: { command: string; args: Record<string, unknown> }[] = [];
 let clipboard: Record<string, unknown> = { enabled: true, winV: false, shortcut: "Ctrl+Shift+W", shortcutEnabled: true };
@@ -32,6 +58,14 @@ mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
   switch (command) {
+    case "plugin:app|version": return "0.3.14-beta.1";
+    case "get_island_edge": return "top";
+    case "get_island_taskbar": return { docked: false, placed: false, light: false };
+    case "get_taskbar_layout": return [{ edge: "bottom" }];
+    case "set_island_edge":
+    case "preview_side_dock":
+    case "sync_side_dock":
+      return null;
     case "get_builtin_plugins": return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
     case "set_builtin_plugin_enabled":
       builtins = builtins.map((plugin) => (plugin.id === String(args.id) ? { ...plugin, enabled: Boolean(args.enabled) } : plugin));
@@ -58,6 +92,15 @@ mockIPC((command, payload) => {
   }
 }, { shouldMockEvents: true });
 mockWindows("onboarding");
+const emittedTo: { label: string; event: string; payload: unknown }[] = [];
+type Invoke = (command: string, args?: unknown, options?: unknown) => Promise<unknown>;
+const internals = (window as unknown as { __TAURI_INTERNALS__: { invoke: Invoke } }).__TAURI_INTERNALS__;
+const mockedInvoke = internals.invoke;
+internals.invoke = (command, args, options) => {
+  const sent = (args ?? {}) as { target?: { label?: string }; event?: unknown; payload?: unknown };
+  if (command === "plugin:event|emit_to") emittedTo.push({ label: sent.target?.label ?? "", event: String(sent.event), payload: sent.payload });
+  return mockedInvoke(command, args, options);
+};
 
 const original = new Map(Object.entries(localStorage).filter(([key]) => key.startsWith("fuyu-")));
 const restore = () => {
@@ -73,6 +116,11 @@ localStorage.removeItem("fuyu-settings");
 localStorage.removeItem("fuyu-onboarding-welcome");
 localStorage.removeItem("fuyu-onboarding-demo");
 localStorage.removeItem("fuyu-onboarding-bundle");
+localStorage.removeItem("fuyu-onboarding-director");
+localStorage.removeItem("fuyu-onboarding-mode");
+localStorage.removeItem("fuyu-onboarding-guide-version");
+localStorage.removeItem("fuyu-side-docks");
+localStorage.removeItem("fuyu-island-pages");
 if (query.has("light")) localStorage.setItem("fuyu-settings", JSON.stringify({ themeMode: "light" }));
 document.body.style.background = "linear-gradient(135deg, #3a3f55, #6a5a7a 50%, #2b4a6a)";
 
@@ -100,14 +148,16 @@ const card = () => document.querySelector<HTMLElement>(".onboarding__card")!;
 const stored = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as Record<string, unknown>;
 const stars = () => document.querySelectorAll(".play-act__task--done").length;
 const welcome = () => JSON.parse(localStorage.getItem("fuyu-onboarding-welcome") ?? "{}") as { kind?: string };
+const director = () => JSON.parse(localStorage.getItem("fuyu-onboarding-director") ?? "{}") as { action?: string; page?: string };
 
 if (!automated) {
+  if (query.get("mode") === "whatsNew") setOnboardingLaunchMode("whatsNew", "0.3.13");
   mount();
   setTimeout(() => void emit("onboarding-island", query.has("open") ? open : closed), 300);
   const target = Number(query.get("act") ?? 1);
   const advance = (left: number) => {
     if (left <= 0) return;
-    const next = button("下一步") ?? button("Next");
+    const next = button("开始定制浮屿") ?? button("Customize Fuyu") ?? button("下一步") ?? button("Next");
     if (!next) {
       setTimeout(() => advance(left), 20);
       return;
@@ -128,118 +178,135 @@ if (!automated) {
     await placeIsland(closed);
     const spotlight = document.querySelector<HTMLElement>(".onboarding-spotlight")!;
     check(!document.querySelector(".onboarding__notice") && parseFloat(spotlight.style.width) === closed.width + 16, "The spotlight lights up the real island");
-    check(parseFloat(card().style.top) === closed.height + 28, "The card sits below the island");
-    check(commands.some(({ command, args }) => command === "set_onboarding_card_rects" && Array.isArray(args.rects) && args.rects.length === 1),
-      "The card's rectangle goes to the native side, so only the card takes the pointer");
-    check(title() === "你好，这就是浮屿" && !button("上一步") && button("跳过"), "Act 1 says hello, with Skip and no Back");
-    check(document.querySelectorAll(".onboarding__dot").length === 8, "The progress shows eight acts, the agent acts and push included while AI Agent is on");
+    check(parseFloat(card().style.top) >= closed.height + 24, "The wide stage card sits comfortably below the island");
+    check(title() === "你好，这就是浮屿" && !button("上一步") && button("稍后再说") && button("开始定制浮屿"), "Act 1 greets with a clear start button and non-ambiguous exit");
+    check(Boolean(document.querySelector(".hello-act__emblem")) && Boolean(document.querySelector(".director-hud")), "Act 1 shows the Fuyu emblem and top-right auto-demo director HUD");
+    check(document.querySelectorAll(".onboarding__dot").length === 5, "The main tour stays concise at 5 steps even while AI Agent is on");
+
+    await until(() => Boolean(document.querySelector(".wechat-corner")));
+    const cornerImg = document.querySelector<HTMLImageElement>(".wechat-corner__qr img");
+    if (cornerImg) cornerImg.src = SAMPLE_QR;
+    await act(async () => { document.querySelector<HTMLElement>(".wechat-corner")!.click(); });
+    await wait(10);
+    check(Boolean(document.querySelector(".wechat-lightbox")), "Clicking anywhere on the bottom-left WeChat card opens the centered large QR lightbox");
+    await act(async () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });
+    await wait(10);
+    check(!document.querySelector(".wechat-lightbox"), "Pressing Esc closes the QR lightbox first without closing onboarding");
+
+    check(document.querySelectorAll("[data-director-group]").length === 3, "Act 1 exposes all three live demo groups (forms & docking, agent notices, panels)");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="formPill"]')!.click(); });
+    await wait(10);
+    check(stored().islandForm === "pill", "Clicking Floating Pill in the director strip transforms the real island form");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="dockRight"]')!.click(); });
+    await wait(10);
+    check(commands.some(({ command, args }) => command === "set_island_edge" && args.edge === "right"), "Clicking Dock Right drives real side-edge adsorption");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="agentApproval"]')!.click(); });
+    await until(() => emittedTo.some((sent) => sent.label === "main" && sent.event === "agent-test-notice"));
+    const noticeEmit = emittedTo.find((sent) => sent.label === "main" && sent.event === "agent-test-notice");
+    check((noticeEmit?.payload as { event?: string } | undefined)?.event === "approval", "Clicking an Agent notice scene triggers a real Agent test notice on the island");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="sideSplit"]')!.click(); });
+    await until(() => commands.some(({ command, args }) => command === "preview_side_dock" && args.edge === "right" && args.open === true));
+    const sideSplitSaved = JSON.parse(localStorage.getItem("fuyu-side-docks") ?? "{}") as { left?: { enabled?: boolean }; right?: { enabled?: boolean } };
+    check(sideSplitSaved.left?.enabled === true && sideSplitSaved.right?.enabled === true && Boolean(document.querySelector(".onboarding-spotlight--off")), "Clicking One-click Split in the live showcase enables both side-dock wings, previews them, and lifts the dark scrim");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="agents"]')!.click(); });
+    await until(() => director().action === "expand" && director().page === "agents");
+    check(director().action === "expand" && director().page === "agents", "Clicking a panel scene clears notices and opens that page on the real island");
+
     await press("English");
-    check(title() === "Hi, this is Fuyu", "Picking English switches the guide at once");
+    check(title() === "Hi, this is Fuyu" && button("Customize Fuyu"), "Picking English switches the guide at once");
     await press("简体中文");
 
-    await press("下一步");
-    check(title() === "把它捏成你喜欢的样子", "Act 2 shapes the island");
-    check(!button("圆角") && !document.querySelector("input[type='range']") && document.querySelectorAll(".onboarding__body .settings-row").length === 3,
-      "Act 2 only asks for dark or light, solid or liquid glass, and the accent; corners and motion are left to Settings");
-    check(stored().appearanceMode !== "liquidGlass" && !document.body.textContent?.includes("透出桌面壁纸"), "The island starts solid and the glass note stays hidden");
+    await press("开始定制浮屿");
+    check(stored().islandForm === "top" && localStorage.getItem("fuyu-side-docks") === null, "Advancing out of Act 1 automatically restores both original island form and side-dock settings");
+    check(title() === "选一种形态，捏成喜欢的样子" && Boolean(document.querySelector(".onboarding-spotlight--calm")), "Act 2 shapes island form, theme, jellyfish and motion with a calm spotlight");
+    check(document.querySelectorAll("[data-island-form]").length === 7, "Act 2 exposes all 7 island forms including taskbar when available");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-island-form="pill"]')!.click(); });
+    await wait(10);
+    check(stored().islandForm === "pill", "Picking Floating Pill saves islandForm=pill to real settings");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-island-form="notch"]')!.click(); });
+    await wait(10);
+    check(stored().islandForm === "notch", "Picking Notch saves islandForm=notch to real settings");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-motion="pop"]')!.click(); });
+    await wait(10);
+    check(stored().islandMotion === "pop" && director().action === "expand", "Picking a motion saves it and triggers a live island motion showcase");
+    await press("像素");
+    check(stored().jellyfishStyle === "fine", "Switching jellyfish style updates real settings");
     await press("液态玻璃");
-    check(stored().appearanceMode === "liquidGlass" && document.body.textContent?.includes("「设置 → 外观 → 样式」") && document.body.textContent?.includes("纯色玻璃"),
-      "Picking liquid glass saves it for the real island and says where to tune it and when it stays solid");
+    check(stored().appearanceMode === "liquidGlass", "Picking liquid glass saves it for the real island");
     await press("纯色");
     check(stored().appearanceMode === "classic", "Going back to solid saves it for the real island");
     await press("浅色");
-    check(stored().themeMode === "light" && document.querySelector(".onboarding--light"), "Picking light saves it for the real island and turns the card light");
+    check(stored().themeMode === "light" && document.querySelector(".onboarding--light"), "Picking light saves it and turns the card light");
 
+    await act(async () => { document.querySelectorAll<HTMLButtonElement>(".onboarding__dot")[0].click(); });
+    await wait(10);
+    check(title() === "你好，这就是浮屿", "Clicking a completed progress chip jumps back to that step");
+    await press("开始定制浮屿");
     await press("下一步");
+
     const body = document.querySelector<HTMLElement>(".onboarding__body")!;
-    check(title() === "留下你用得上的功能" && body.scrollWidth <= body.clientWidth, "Act 3 fits the card's width");
+    check(title() === "核心能力全景，按需装配" && body.scrollWidth <= body.clientWidth, "Act 3 fits the card's width");
+    check(document.querySelector(".outfit-act__count")?.textContent === "已开启 10 / 11", "Act 3 displays all 11 built-in modules and how many are enabled");
     const persona = (at: number) => document.querySelector<HTMLButtonElement>(`.outfit-act__persona:nth-child(${at})`)!;
-    const removed = () => document.querySelector(".outfit-act__removed")?.textContent ?? "";
-    check(persona(1).textContent === "写代码AI Agent、剪贴板、截图、待办、文件中转" && persona(4).textContent === "娱乐音乐、文件中转",
-      "Each answer lists every module it puts on");
-    check(!removed(), "Nothing is listed as taken off before an answer");
     await act(async () => { persona(4).click(); });
     await wait(20);
-    check(pluginOn("music") === true && pluginOn("agents") === false && pluginOn("todos") === false && pluginOn("clipboard") === false && clipboard.enabled === false,
-      "Answering Leisure keeps music and the shelf and takes the rest off");
-    check(document.querySelectorAll(".onboarding__dot").length === 5, "Without AI Agent there is no push act");
-    check(removed() === "已卸下：待办、AI Agent、翻译、邮箱、剪贴板。点贴纸就能装回，以后在设置里也行。", "The card says what the answer took off");
+    check(pluginOn("music") === true && pluginOn("agents") === false && clipboard.enabled === false, "Answering Leisure updates real built-in plugin switches");
     await act(async () => { persona(4).click(); });
     await wait(20);
-    check(pluginOn("todos") === true && pluginOn("agents") === true && pluginOn("screenshot") === false && pluginOn("clipboard") === true && clipboard.enabled === true && !removed(),
-      "Taking the answer back restores the modules that were on before it");
-    await act(async () => { persona(4).click(); });
+    check(pluginOn("agents") === true && clipboard.enabled === true, "Undoing the preset restores the previous modules");
+    await press("在真岛打开这一页");
+    check(director().action === "expand" && director().page === "agents", "Live capability preview opens the corresponding page on the real island");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-action="side-dock-split"]')!.click(); });
     await wait(20);
-    await press("剪贴板");
-    await press("AI Agent");
-    check(clipboard.enabled === true && pluginOn("clipboard") === true && pluginOn("agents") === true, "Clicking a sticker puts that module on");
-    check(removed().startsWith("已卸下：待办、翻译、邮箱。"), "A sticker put back leaves the taken-off list");
-    await press("下一步");
-    await press("上一步");
-    check(persona(4).getAttribute("aria-pressed") === "true" && removed().startsWith("已卸下：待办、翻译、邮箱。"), "The answer is still there after leaving the act and coming back");
+    const splitAfterOutfit = JSON.parse(localStorage.getItem("fuyu-side-docks") ?? "{}") as { left?: { enabled?: boolean }; right?: { enabled?: boolean } };
+    check(splitAfterOutfit.left?.enabled === true && splitAfterOutfit.right?.enabled === true, "Act 3 one-click side-dock split offloads tools to left & right wings");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-action="side-dock-reset"]')!.click(); });
+    await wait(20);
+    check(localStorage.getItem("fuyu-side-docks") === null, "Clicking Move all to top cleanly resets side docks back to default");
 
     await placeIsland(open);
     await press("下一步");
-    check(title() === "在真岛上试一下" && document.querySelectorAll(".play-act__task").length === 3, "Act 4 has three tasks while the shelf and clipboard are on");
-    check(document.querySelector(".onboarding__lead")?.textContent === "岛上正放着一首演示歌曲，还有一个演示 Agent 在干活。完成下面的小任务。", "The practice names the demo song and agent while both modules are on");
-    check(stars() === 0, "An island that was already open when the practice began earns nothing");
+    check(title() === "在真岛上试一下" && document.querySelectorAll(".play-act__task").length === 3 && button("跳过此步"), "Act 4 has three practice tasks and an explicit Skip step button");
+    check(stars() === 0, "An island already open when practice begins earns nothing");
     await placeIsland(closed);
     await press("点击");
     check(stored().expandTrigger === "click", "The island can be set to open on click");
     await placeIsland(open);
-    check(stars() === 1 && document.querySelector(".onboarding-spotlight--open"), "Opening the real island earns a star, and the light grows with it");
-    check(parseFloat(card().style.top || "0") !== closed.height + 28, "The card moves out of the way of the open island");
+    check(stars() === 1 && document.querySelector(".onboarding-spotlight--open"), "Opening the real island earns a star");
     await until(() => commands.some(({ command }) => command === "get_file_shelf"));
     shelfItems = [{ id: "dropped", addedAt: 2 }];
     await until(() => stars() === 2);
-    check(stars() === 2, "A file landing on the shelf earns a star, even when the shelf holds as many entries as before");
+    check(stars() === 2, "A file landing on the shelf earns a star");
     await act(async () => { await emit("clipboard-popup-opened"); });
     await until(() => stars() === 3);
-    check(stars() === 3 && document.querySelector(".onboarding__lead")?.textContent === "全部完成，你已经会用了。", "The real clipboard popup opening earns the last star");
+    check(stars() === 3 && document.querySelector(".onboarding__lead")?.textContent === "全部完成，你已经上手了。", "Opening the clipboard earns the final star");
     await act(async () => { document.querySelector<HTMLInputElement>("#onboarding-winv")!.click(); });
     await until(() => clipboard.winV === true);
     check(clipboard.winV === true, "Win+V is saved in the clipboard settings");
     await placeIsland(closed);
 
     await press("下一步");
-    const choice = (label: string) => document.querySelector<HTMLButtonElement>(`.onboarding__body button[aria-label='${label}']`)?.textContent;
-    check(title() === "AI 代理的会话卡片", "With AI Agent on, the session cards act comes after the practice");
-    check(choice("显示方式") === "分层聚焦（推荐）" && choice("归档动画") === "粒子消散（推荐）" && choice("卡片光效") === "粒子流苏（推荐）",
-      "The session cards start on the recommended choices, marked as such");
-    await act(async () => { document.querySelector<HTMLButtonElement>(".onboarding__body button[aria-label='显示方式']")!.click(); });
-    await act(async () => { document.querySelector<HTMLElement>(".select-control__option[data-value='minimal']")!.click(); });
+    check(title() === "浮屿已就绪" && Boolean(document.querySelector(".release-act__summary")), "The summary act renders the configured form/motion/modules summary");
+    check(Boolean(document.querySelector('[data-extension="agentSetup"]')), "Summary hub exposes the optional AI Agent setup extension when AI Agent is enabled");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-extension="agentSetup"]')!.click(); });
+    await wait(20);
+    check(document.querySelector("main")?.getAttribute("data-mode") === "setup" && Boolean(document.querySelector(".onboarding-spotlight--off")), "Opening AI Agent setup switches to the wide unobstructed workspace mode");
+    check(title() === "选一种 Agent 会话布局" && document.querySelectorAll("[data-session-view]").length === 5, "Agent layout step shows visual cards for all 5 layouts");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-session-view="minimal"]')!.click(); });
     await wait(10);
-    check(stored().agentSessionView === "minimal" && !choice("卡片光效") && choice("归档动画"),
-      "Card glow hides for the minimal layout; the archive motion stays for every layout");
+    check(stored().agentSessionView === "minimal" && !document.querySelector("button[aria-label='卡片光效']"), "Picking minimal layout saves it and hides card effects");
 
     await press("下一步");
-    check(title() === "连上你的 AI 代理" && [...document.querySelectorAll(".onboarding__step")].map((step) => step.textContent?.slice(0, 2)).join("") === "1.2.3.",
-      "The connect act walks through SSH remotes, agents with Install/repair, then the reply marker");
-    check(document.querySelector(".agent-remote__intro") && document.body.textContent?.includes("让 AI 代理在回复末尾标出在等什么"), "The act reuses the settings for remotes and the reply marker");
-
+    check(title() === "连上你的 AI 代理", "Agent connect step keeps SSH remotes, hooks and reply marker");
     await press("下一步");
-    check(title() === "推送到手机" && document.querySelector(".push-act__step--active")?.textContent === "安装", "AI Agent being on adds the push act before the last one");
-    for (let step = 0; step < 4; step += 1) await press("下一步");
-    check(title() === "推送到手机" && document.querySelector(".push-act__step--active")?.textContent === "测试", "Next walks through the five push steps first");
-    await press("上一步");
-    check(document.querySelector(".push-act__step--active")?.textContent === "接机器人", "Back goes back one push step");
-    await press("下一步");
-    await press("下一步");
-    check(title() === "准备好了" && button("开始使用") && !button("跳过"), "The last act finishes instead of skipping");
-    check(parseFloat(card().style.top) === closed.height + 28, "Back below the island after the practice");
-    check(document.body.textContent?.includes("右键托盘里的浮屿图标"), "The last act says where Settings is found later");
-    const closes = () => commands.filter(({ command }) => command.includes("close")).length;
-    await press("连接 AI 编程工具");
-    check(localStorage.getItem("fuyu-settings-focus")?.includes("agentConnect"), "Connect opens Settings on the Agent connect page");
-    const order = commands.map(({ command }) => command);
-    check(closes() === 1 && order.indexOf("open_settings_window") !== -1 && order.indexOf("open_settings_window") < order.findIndex((command) => command.includes("close")),
-      "Connect opens Settings first and then closes the overlay, so Settings is not left under the dimming");
-    check(welcome().kind === "ready" && localStorage.getItem("fuyu-onboarding-demo") === null, "Leaving for Settings ends the guide like Get started does");
-    localStorage.removeItem("fuyu-settings-focus");
-    localStorage.removeItem("fuyu-onboarding-welcome");
-    await press("开始使用");
-    check(welcome().kind === "ready" && localStorage.getItem("fuyu-onboarding-demo") === null, "Get started asks the island to say it is ready and ends the demo");
-    check(closes() === 2, "Get started closes the overlay");
+    check(title() === "推送到手机", "Push step follows inside the setup workspace");
+    await press("跳过此步");
+    check(title() === "浮屿已就绪" && Boolean(document.querySelector(".release-act__done-badge")), "Returning from agent setup marks it as configured");
 
     const offer = (value: string | null) => act(async () => {
       if (value === null) localStorage.removeItem("fuyu-onboarding-bundle");
@@ -248,35 +315,41 @@ if (!automated) {
     });
     const loc = (zh: string, en: string) => ({ "zh-CN": zh, en });
     const bundle = { id: "pomodoro-flow", displayName: loc("番茄工作法", "Pomodoro flow"), description: loc("番茄钟、待办进度环和每日小结", "A timer, a to-do ring and a daily digest"), members: [{ name: "@fuyu/pomodoro", displayName: loc("番茄钟", "Pomodoro") }, { name: "@fuyu/todo-ring", displayName: loc("待办进度环", "To-do ring") }] };
-    const dots = () => document.querySelectorAll(".onboarding__dot").length;
-    const withoutBundle = dots();
-    await act(async () => { root.unmount(); });
     await offer(JSON.stringify(bundle));
-    const again = createRoot(document.getElementById("root")!);
-    await act(async () => { again.render(<StrictMode><I18nProvider><OnboardingWindow /></I18nProvider></StrictMode>); });
-    await placeIsland(closed);
-    check(dots() === withoutBundle + 1, "When the island has a bundle to recommend, the guide has one more act");
-    for (let step = 0; step < 20 && title() !== "装一组搭配好的插件"; step += 1) await press("下一步");
+    await wait(20);
     const offered = document.querySelector<HTMLElement>("[data-onboarding-bundle='pomodoro-flow']");
-    check(offered?.textContent?.includes("番茄工作法") && [...offered.querySelectorAll(".onboarding-bundle__member")].map((item) => item.textContent).join() === "番茄钟,待办进度环", "The bundle act names the bundle and the plugins in it");
-    check(button("下一步") && button("跳过") && offered!.scrollWidth <= offered!.clientWidth, "It is not the last act, and it fits the card");
-    await press("下一步");
-    check(title() === "准备好了", "The act that finishes the guide comes right after it");
-    await press("上一步");
-    localStorage.removeItem("fuyu-settings-focus");
-    localStorage.removeItem("fuyu-onboarding-welcome");
+    check(Boolean(offered) && [...offered!.querySelectorAll(".release-act__member")].map((item) => item.textContent).join() === "番茄钟,待办进度环", "Recommended bundle renders inside the summary hub without inflating main step count");
+
+    const closes = () => commands.filter(({ command }) => command.includes("close")).length;
     const opens = () => commands.filter(({ command }) => command === "open_settings_window").length;
     const before = { opens: opens(), closes: closes() };
-    await press("看看这个套装");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-action="onboarding-bundle-open"]')!.click(); });
+    await wait(20);
     const focus = JSON.parse(localStorage.getItem("fuyu-settings-focus") ?? "{}") as { section?: string; bundle?: string };
-    check(focus.section === "pluginMarket" && focus.bundle === "pomodoro-flow" && opens() === before.opens + 1, "Its button opens Settings on the plugin market, asking for this bundle");
-    check(closes() === before.closes + 1 && welcome().kind === "ready" && !commands.some(({ command }) => /install/i.test(command)), "It ends the guide like the other links to Settings, and the guide installs nothing itself");
+    check(focus.section === "pluginMarket" && focus.bundle === "pomodoro-flow" && opens() === before.opens + 1, "Bundle CTA opens Settings on the plugin market with that bundle selected");
+    check(closes() === before.closes + 1, "Bundle CTA finishes onboarding");
+
     await offer(null);
-    check(dots() === withoutBundle && title() === "准备好了", "When the recommendation goes away, so does the act");
-    await offer("{broken");
-    check(dots() === withoutBundle, "A record that cannot be read adds no act");
-    await offer(null);
-    await act(async () => { again.unmount(); });
+    await act(async () => { root.unmount(); });
+    setOnboardingLaunchMode("whatsNew", "0.3.13");
+    const whatsNewRoot = createRoot(document.getElementById("root")!);
+    await act(async () => { whatsNewRoot.render(<StrictMode><I18nProvider><OnboardingWindow /></I18nProvider></StrictMode>); });
+    await placeIsland(closed);
+    await until(() => Boolean(document.querySelector(".whats-new__pill")));
+    check(document.querySelector("main")?.getAttribute("data-mode") === "whatsNew", "What's New mode launches independently for upgraded users");
+    check(Boolean(document.querySelector(".whats-new__pill")?.textContent?.includes("0.3.14")), "What's New displays the current version badge in the visual hero header");
+    check(document.querySelectorAll(".whats-new__card").length >= 3 && document.querySelectorAll(".whats-new__tab").length >= 2, "What's New renders categorized Bento highlight cards and interactive topic filter tabs");
+    const beforeDockMaxH = parseFloat(card().style.maxHeight);
+    await act(async () => { await emit("onboarding-insets", { top: 38, bottom: 90, left: 0, right: 0 }); });
+    await wait(10);
+    check(parseFloat(card().style.maxHeight) <= beforeDockMaxH - 80, "Safe insets from macOS Dock shrink card maxHeight so the footer stays clear of the Dock");
+    await act(async () => { await emit("onboarding-insets", { top: 0, bottom: 0, left: 0, right: 0 }); });
+    await wait(10);
+    check(Boolean(document.querySelector(".wechat-corner")), "Bottom-left WeChat community card is also available in What's New mode");
+    const whatsNewImg = document.querySelector<HTMLImageElement>(".wechat-corner__qr img");
+    if (whatsNewImg) whatsNewImg.src = SAMPLE_QR;
+    await press("下一步");
+    check(title() === "在真岛上试试新形态与左右侧翼" && document.querySelectorAll("[data-island-form]").length === 7, "Second What's New act lets upgraded users try live island forms and side-dock split");
 
     document.documentElement.dataset.testResult = "passed";
   } catch (error) {

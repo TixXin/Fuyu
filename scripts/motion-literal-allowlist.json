@@ -41,10 +41,6 @@
       "count": 1,
       "reason": "侧边淡出跟岛外壳开合一起由 islandMotion 管"
     },
-    "src/windows/onboarding/PlayAct.css": {
-      "count": 1,
-      "reason": "新手引导里星星的回弹，没有文字的装饰"
-    },
     "src/windows/settings/sections/IslandMotionRow.css": {
       "count": 2,
       "reason": "开合预设预览，跟岛外壳一起由 islandMotion 管"

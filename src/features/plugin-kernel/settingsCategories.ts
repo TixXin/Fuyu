@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Activity, Bell, Blocks, Bot, Cable, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutDashboard, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
+import { Activity, Bell, Blocks, Bot, Cable, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutDashboard, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, PanelRight, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { defineSlot, type SettingsCategoryMeta } from "./slots.ts";
 
@@ -25,6 +25,7 @@ export const BUILTIN_CATEGORIES = [
   { id: "islandLayout", icon: LayoutDashboard, group: "basics", tabs: ["islandLayout", "islandPanel", "islandDisplay"], aliases: ["appearanceCollapsed"] },
   { id: "islandPanel", icon: LayoutDashboard },
   { id: "islandDisplay", icon: LayoutDashboard },
+  { id: "sideDocks", icon: PanelRight, group: "basics" },
   { id: "behavior", icon: MousePointerClick, group: "basics", tabs: ["behavior", "behaviorTuck"], aliases: ["behaviorQuiet"] },
   { id: "behaviorTuck", icon: MousePointerClick },
   { id: "shortcuts", icon: Keyboard, group: "basics", tabs: ["shortcuts", "shortcutsIsland", "shortcutsReference"] },

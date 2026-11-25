@@ -4,6 +4,8 @@ export const SNAPSHOT_EXCLUDED_KEYS = [
   "fuyu-position-reset",
   "fuyu-panel-preview",
   "fuyu-onboarding-demo",
+  "fuyu-onboarding-director",
+  "fuyu-onboarding-mode",
   "fuyu-todo-project-edit",
   "fuyu-calendar-refresh-at",
 ] as const;

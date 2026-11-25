@@ -12,7 +12,7 @@
 
 ## 怎么用
 
-1. 打开设置里的倒数日，填名称、选日期，选类型（倒数 / 纪念日），生日这类每年都有的勾上「每年重复」，点「添加」。
+1. 打开设置里的倒数日，填名称、选公历或农历日期（农历支持选择年、月含闰月、日并预览公历），选类型（倒数 / 纪念日），生日这类每年都有的勾上「每年重复」，点「添加」。
 2. 点 ★ 把某一天放到大卡片和收起条上；没有置顶时显示最近要到的那一天。
 3. 点铅笔编辑：改名称、日期、类型、每年重复，也可以给卡片选一张本机图片作背景（500 KB 以内）或去掉。
 4. 点 ✕ 删除。排序选「手动」时，拖动左边的把手调整岛上的顺序。
@@ -66,7 +66,7 @@ Keep birthdays, holidays, deadlines and anniversaries in one place: upcoming dat
 
 ### How to use it
 
-1. Open Day counter in the settings, enter a name, pick a date and a type (countdown or anniversary), tick "Repeat every year" for things like birthdays, and click "Add".
+1. Open Day counter in the settings, enter a name, switch between Solar and Lunar dates (Lunar supports year, month including leap months, and day with live solar preview), pick a type (countdown or anniversary), tick "Repeat every year" for things like birthdays, and click "Add".
 2. Click ★ to put a date on the large card and the collapsed bar; without a star the nearest upcoming date is shown.
 3. Click the pencil to edit the name, date, type and yearly repeat, or to pick a picture from your computer as the card background (up to 500 KB) or remove it.
 4. Click ✕ to delete. With the order set to Manual, drag the handle on the left to reorder the island page.

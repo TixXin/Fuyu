@@ -5,6 +5,11 @@ export const TUCK_STYLES = ["edge", "line", "hidden"] as const;
 export const TUCK_HINT_STYLES = ["none", "dot", "glow"] as const;
 export const TUCK_HINT_COLORS = ["contrast", "island", "custom"] as const;
 export const JELLYFISH_STYLES = ["vector", "flat", "sticker", "mono", "neon", "chunky", "fine"] as const;
+export const ISLAND_FONTS = ["system", "pixel", "rounded", "serif", "mono", "custom"] as const;
+export const DEFAULT_FONT_SCALE = 100;
+export const MIN_FONT_SCALE = 85;
+export const MAX_FONT_SCALE = 125;
+export const CUSTOM_FONT_ID_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 
 export const MAX_CUSTOM_SETTING_PRESETS = 6;
 export const MIN_TOP_FILLET_RADIUS = 0;

@@ -105,6 +105,12 @@
   gap: 6px;
 }
 
+.calendar-source__region-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .calendar-source__expand {
   display: inline-flex;
   align-items: center;

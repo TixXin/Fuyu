@@ -10,6 +10,7 @@ export function SettingsNumberRow({
   max,
   unit,
   indent,
+  since,
   onChange,
 }: {
   title: ReactNode;
@@ -19,6 +20,7 @@ export function SettingsNumberRow({
   max: number;
   unit?: string;
   indent?: boolean;
+  since?: string;
   onChange: (value: number) => void;
 }) {
   const id = useId();
@@ -37,6 +39,7 @@ export function SettingsNumberRow({
       title={title}
       description={description}
       indent={indent}
+      since={since}
       labelFor={id}
       control={
         <>

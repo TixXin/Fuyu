@@ -5,11 +5,17 @@ export type SettingsCategoriesText = {
     clear: string;
     empty: string;
   };
+  whatsNew: {
+    badge: string;
+    label: string;
+    query: string;
+    markAllRead: string;
+  };
   expand: (group: string) => string;
   collapse: (group: string) => string;
   backTo: (page: string) => string;
   keywords: Record<
-    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "islandLayout" | "islandPanel" | "islandDisplay" | "theme" | "themeStyle" | "shortcuts" | "todos" | "todosReminders" | "todosArchive" | "calendar" | "music" | "translation" | "clipboard"
+    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "islandLayout" | "islandPanel" | "islandDisplay" | "sideDocks" | "theme" | "themeStyle" | "shortcuts" | "todos" | "todosReminders" | "todosArchive" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "agentNoticeLook" | "calendarAlerts" | "voiceInput"
     | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp",
     string
@@ -44,6 +50,7 @@ export type SettingsCategoriesText = {
   islandLayout: string;
   islandPanel: string;
   islandDisplay: string;
+  sideDocks: string;
   theme: string;
   themeStyle: string;
   shortcuts: string;
@@ -86,6 +93,12 @@ export const zhCN: SettingsCategoriesText = {
     clear: "清除搜索",
     empty: "没有匹配的设置",
   },
+  whatsNew: {
+    badge: "NEW",
+    label: "本版新增",
+    query: "本版新增",
+    markAllRead: "全部标为已读",
+  },
   expand: (group) => `展开「${group}」`,
   collapse: (group) => `折叠「${group}」`,
   backTo: (page) => `返回「${page}」`,
@@ -110,6 +123,7 @@ export const zhCN: SettingsCategoriesText = {
     islandLayout: "收起条 项目 排序 左侧 右侧 小面板 中心图案 宠物 眼睛 状态灯 会话环 用量环 样式 剩余待办",
     islandPanel: "展开 面板 页面 顺序 隐藏 图标 小组件 尺寸 布局 模板",
     islandDisplay: "显示内容 标题 +N 刘海 外框 内圈 两侧最宽",
+    sideDocks: "侧边翼 侧边 边栏 左侧 右侧 抽屉 拖拽 分流 把手 圆角 自动展开 快捷条",
     theme: "主题 颜色 背景 浅色 深色 配色 强调色 亮点 文字 我的主题 预设 样式 导入 导出 保存 主题市场 皮肤 下载 应用 分享",
     themeStyle: "风格 经典 像素 透明 不透明度 整体不透明度 闲置 变淡 鼠标穿透 点击穿透 字体 圆角 超椭圆 液态玻璃 折射 流光 模糊 高光 颜色 1 颜色 2 颜色 3 自定义颜色",
     shortcuts: "按键 组合键 热键 全局 上下层 置顶 最前 退到后面",
@@ -238,6 +252,7 @@ export const zhCN: SettingsCategoriesText = {
   islandLayout: "岛屿布局",
   islandPanel: "展开的面板",
   islandDisplay: "显示与刘海",
+  sideDocks: "侧边翼",
   theme: "主题与配色",
   themeStyle: "材质与圆角",
   shortcuts: "快捷键",
@@ -280,6 +295,12 @@ export const en: SettingsCategoriesText = {
     clear: "Clear search",
     empty: "No matching settings",
   },
+  whatsNew: {
+    badge: "NEW",
+    label: "What's new",
+    query: "new",
+    markAllRead: "Mark all as read",
+  },
   expand: (group) => `Expand ${group}`,
   collapse: (group) => `Collapse ${group}`,
   backTo: (page) => `Back to ${page}`,
@@ -304,6 +325,7 @@ export const en: SettingsCategoriesText = {
     islandLayout: "collapsed bar items order left right panel center pattern pet eyes status light session ring usage ring style todo count",
     islandPanel: "expanded panel pages order hide icon widgets size layout template",
     islandDisplay: "display title +N notch border ring wing width",
+    sideDocks: "side docks left right edge drawer drag placement handle radius auto expand quick strip",
     theme: "themes colour color background light dark tone accent pulse ink my themes preset style import export save theme market skins download apply share",
     themeStyle: "style classic pixel opacity island opacity idle dim fade click through passthrough transparency font corner squircle liquid glass refraction flow blur specular colour 1 colour 2 colour 3 custom colours",
     shortcuts: "keys hotkey keyboard global layer topmost front back",
@@ -432,6 +454,7 @@ export const en: SettingsCategoriesText = {
   islandLayout: "Island layout",
   islandPanel: "Expanded panel",
   islandDisplay: "Display and notch",
+  sideDocks: "Side docks",
   theme: "Theme and colors",
   themeStyle: "Material and corners",
   shortcuts: "Shortcuts",

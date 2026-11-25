@@ -3,7 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { DEFAULT_SETTINGS_CATEGORY, featureOf, isCategoryAvailable, settingsCategoryFor, type SettingsCategory } from "./categories";
 import { FeatureOffPage } from "./FeatureOffPage";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
-import { useMacWindowKeys } from "./useMacWindowKeys";
+import { useSettingsWindowKeys } from "./useSettingsWindowKeys";
 import { useFileDropGuard } from "./useFileDropGuard";
 import { useFeatureSwitches } from "./useFeatureSwitches";
 import { LayoutEditor } from "./LayoutEditor";
@@ -31,6 +31,8 @@ import { PluginPageActions } from "./PluginPageActions";
 import { requestMarketView, requestPluginDetail } from "./pluginPageHandoff";
 import { onOpenIslandLayout } from "./island-layout/islandLayoutFocus";
 import { JellyfishStyleContext } from "../../components/jellyfish/jellyfishStyleContext";
+import { SettingsWhatsNewContext } from "../../components/settings/whatsNewContext";
+import { useSettingsWhatsNew } from "./useSettingsWhatsNew";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -52,6 +54,8 @@ export function SettingsWindow() {
   const features = useFeatureSwitches(settings, setSettings);
   const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;
   const page = offFeature ? null : category;
+  const whatsNew = useSettingsWhatsNew(page, features.hiddenPages, unsupported, isMacOS);
+  const resetWhatsNewSession = whatsNew.resetSession;
   useEffect(() => {
     rememberAboutPage(category);
   }, [category]);
@@ -107,6 +111,7 @@ export function SettingsWindow() {
     let stop: (() => void) | undefined;
     let cancelled = false;
     const reopened = () => {
+      resetWhatsNewSession();
       reloadSettings();
       focusRequestedSection();
     };
@@ -117,7 +122,7 @@ export function SettingsWindow() {
       cancelled = true;
       stop?.();
     };
-  }, [focusRequestedSection, reloadSettings]);
+  }, [focusRequestedSection, reloadSettings, resetWhatsNewSession]);
 
   const resetAppearance = useCallback(() => {
     setSettings((current) => withThemeFrom(current, DEFAULT_SETTINGS));
@@ -130,7 +135,7 @@ export function SettingsWindow() {
     setCategory(target);
     if (target !== next) focusSection(next);
   };
-  useMacWindowKeys();
+  useSettingsWindowKeys();
 
   const switchMotion = { effect: settings.pageSwitchSettings, indicator: settings.pageSwitchIndicator, speed: settings.pageSwitchSpeed, directional: settings.pageSwitchDirectional };
   const light = activeTone(settings.themeMode, systemDark) === "light";
@@ -143,14 +148,16 @@ export function SettingsWindow() {
 
   return (
     <JellyfishStyleContext.Provider value={settings.jellyfishStyle}>
-      <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
-        <IconButtonTooltip scope="body" />
-        <SlotView slot={settingsRunners} props={{ settings }} />
-        <LayoutEditor
-          category={category}
-          hidden={features.hiddenPages}
-          motion={switchMotion}
-          onCategoryChange={changeCategory}
+      <SettingsWhatsNewContext.Provider value={whatsNew.context}>
+        <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
+          <IconButtonTooltip scope="body" />
+          <SlotView slot={settingsRunners} props={{ settings }} />
+          <LayoutEditor
+            category={category}
+            hidden={features.hiddenPages}
+            whatsNew={whatsNew.view}
+            motion={switchMotion}
+            onCategoryChange={changeCategory}
           titleAction={
             category === "theme" || category === "themeStyle"
               ? <ResetAppearanceButton onReset={resetAppearance} />
@@ -187,7 +194,8 @@ export function SettingsWindow() {
             select={(items) => items.filter((item) => item.id === page)}
           />
         </LayoutEditor>
-      </main>
+        </main>
+      </SettingsWhatsNewContext.Provider>
     </JellyfishStyleContext.Provider>
   );
 }

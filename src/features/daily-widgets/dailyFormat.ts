@@ -1,5 +1,5 @@
 import { isCityId, type CityId } from "./cities.ts";
-import { normalizeDateText } from "./countdowns.ts";
+import { normalizeDateText, normalizeLunarDateText, type CountdownCalendar } from "./countdowns.ts";
 
 export const POMODORO_LENGTHS = [25, 45, 15, 60] as const;
 export const DEFAULT_POMODORO_MINUTES = 25;
@@ -13,7 +13,7 @@ export const WATER_GOALS = [8, 10, 12, 6] as const;
 export const NOTE_MAX = 2000;
 
 export type Pomodoro = { endsAt: number | null; leftMs: number; minutes: number };
-export type CountdownEntry = { name: string; date: string };
+export type CountdownEntry = { name: string; date: string; calendar?: CountdownCalendar; leap?: boolean };
 
 export type DailyData = {
   water: Record<string, number>;
@@ -76,10 +76,16 @@ function habitNames(value: unknown): string[] | null {
 
 function countdowns(value: unknown): CountdownEntry[] {
   if (!Array.isArray(value)) return [];
-  const entries = value.flatMap((entry) => {
-    if (!isRecord(entry)) return [];
-    const date = typeof entry.date === "string" ? normalizeDateText(entry.date) : null;
-    return date ? [{ name: text(entry.name, COUNTDOWN_NAME_MAX) ?? "", date }] : [];
+  const entries = value.flatMap((entry): CountdownEntry[] => {
+    if (!isRecord(entry) || typeof entry.date !== "string") return [];
+    const name = text(entry.name, COUNTDOWN_NAME_MAX) ?? "";
+    if (entry.calendar === "lunar") {
+      const parsed = normalizeLunarDateText(entry.date, entry.leap === true);
+      if (!parsed) return [];
+      return [parsed.leap ? { name, date: parsed.date, calendar: "lunar", leap: true } : { name, date: parsed.date, calendar: "lunar" }];
+    }
+    const date = normalizeDateText(entry.date);
+    return date ? [{ name, date }] : [];
   });
   return entries.slice(0, MAX_COUNTDOWNS);
 }

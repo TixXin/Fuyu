@@ -54,7 +54,7 @@
       "zh-CN": {
         "group": "网络代理",
         "title": "代理模式",
-        "description": "已检测到系统或环境变量代理：http://127.0.0.1:7890",
+        "description": "已检测到系统代理http://127.0.0.1:7890",
         "options": [
           "跟随系统",
           "手动代理",
@@ -64,13 +64,14 @@
       "en": {
         "group": "Network proxy",
         "title": "Proxy mode",
-        "description": "Detected system or environment proxy: http://127.0.0.1:7890",
+        "description": "Detected system proxyhttp://127.0.0.1:7890",
         "options": [
           "Follow system",
           "Manual",
           "Direct"
         ]
-      }
+      },
+      "since": "next"
     },
     {
       "page": "generalData",
@@ -357,25 +358,6 @@
       "page": "themeStyle",
       "zh-CN": {
         "group": "质感与形状",
-        "title": "字体",
-        "options": [
-          "默认字体",
-          "像素字体"
-        ]
-      },
-      "en": {
-        "group": "Look and shape",
-        "title": "Font",
-        "options": [
-          "System",
-          "Pixel"
-        ]
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "质感与形状",
         "title": "圆角样式",
         "options": [
           "方圆",
@@ -412,6 +394,60 @@
         "group": "Look and shape",
         "title": "Docked corner radius"
       }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "字体",
+        "title": "字体样式",
+        "options": [
+          "默认",
+          "像素",
+          "圆润",
+          "衬线",
+          "等宽"
+        ]
+      },
+      "en": {
+        "group": "Font",
+        "title": "Font style",
+        "options": [
+          "System",
+          "Pixel",
+          "Rounded",
+          "Serif",
+          "Mono"
+        ]
+      },
+      "since": "next"
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "字体",
+        "title": "字体大小",
+        "description": "按比例调整岛屿与设置页的文字大小。"
+      },
+      "en": {
+        "group": "Font",
+        "title": "Font size",
+        "description": "Scales text across the island and settings."
+      },
+      "since": "next"
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "字体",
+        "title": "本地字体",
+        "description": "导入本地字体文件后可立即切换使用，缺失时自动回退默认字体。"
+      },
+      "en": {
+        "group": "Font",
+        "title": "Local fonts",
+        "description": "Import a local font file to switch right away; falls back to System if unavailable."
+      },
+      "since": "next"
     },
     {
       "page": "themeStyle",
@@ -1373,6 +1409,32 @@
         "group": "Text around the notch",
         "title": "Meeting"
       }
+    },
+    {
+      "page": "sideDocks",
+      "zh-CN": {
+        "group": "屏幕左右侧边翼",
+        "title": "右侧翼",
+        "description": "把待办、剪贴板、文件中转等纵长列表拖到屏幕左侧或右侧独立展开，顶部主岛只留轻感知项。拖进未开启的一侧会自动启用它。"
+      },
+      "en": {
+        "group": "Screen side docks",
+        "title": "Right dock",
+        "description": "Drag tall list pages such as Todos, Clipboard, and File shelf to the left or right screen edge so the top island stays clean. Dropping onto a disabled side enables it automatically."
+      },
+      "since": "next"
+    },
+    {
+      "page": "sideDocks",
+      "zh-CN": {
+        "group": "屏幕左右侧边翼",
+        "title": "左侧翼"
+      },
+      "en": {
+        "group": "Screen side docks",
+        "title": "Left dock"
+      },
+      "since": "next"
     },
     {
       "page": "behavior",
@@ -2401,6 +2463,20 @@
     {
       "page": "calendar",
       "zh-CN": {
+        "group": "已添加的日历",
+        "title": "国家/地区节假日订阅",
+        "description": "按需订阅各国家/地区官方 iCloud 公共假期日历，可同时订阅多个地区，无需账号。"
+      },
+      "en": {
+        "group": "Your calendars",
+        "title": "Regional public holidays",
+        "description": "Subscribe to official iCloud public holiday calendars by country or region; multiple regions can be active together without an account."
+      },
+      "since": "next"
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
         "group": "日历面板",
         "title": "默认日程视图",
         "description": "打开日历页时默认展示的议程跨度，面板右上角也可以随时切换。",
@@ -2452,6 +2528,20 @@
         "title": "Show week numbers",
         "description": "Show ISO week numbers alongside the monthly grid."
       }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板",
+        "title": "显示国际节日",
+        "description": "在月历与当日信息中标注常见国际节日与世界纪念日（如万圣节、感恩节、复活节、世界地球日等），优先级低于中国传统节日与节气。"
+      },
+      "en": {
+        "group": "Calendar panel",
+        "title": "Show international festivals",
+        "description": "Show well-known international holidays and observances (Halloween, Thanksgiving, Easter, Earth Day, etc.) on the month grid and day header."
+      },
+      "since": "next"
     },
     {
       "page": "calendar",
@@ -4994,12 +5084,12 @@
       "zh-CN": {
         "group": "帮助",
         "title": "新手引导",
-        "description": "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。"
+        "description": "第一次启动时打开的那个窗口：语言、形态与外观、功能开关，或重看当前版本的更新引导。"
       },
       "en": {
         "group": "Help",
         "title": "Welcome guide",
-        "description": "The window shown on first start: language, appearance, modules and a few common choices."
+        "description": "The window shown on first start: language, island forms, appearance and modules, or replay the current What's New guide."
       }
     },
     {

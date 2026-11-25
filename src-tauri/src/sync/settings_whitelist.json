@@ -6,7 +6,7 @@
     "agentSoundOutput": ["fuyu-agent-sounds/volume", "fuyu-agent-sounds/pack"],
     "agentPushDelivery": ["fuyu-agent-push/enabled", "fuyu-agent-push/channel"],
     "qqMail": ["fuyu-qq-mail-settings"],
-    "collapsedItems": ["fuyu-collapsed-items", "fuyu-island-pages", "fuyu-page-icons", "fuyu-custom-panels", "fuyu-collapsed-text"],
+    "collapsedItems": ["fuyu-collapsed-items", "fuyu-island-pages", "fuyu-side-docks", "fuyu-page-icons", "fuyu-custom-panels", "fuyu-collapsed-text"],
     "updateChannel": ["fuyu-update-channel"]
   },
   "keys": {
@@ -15,6 +15,8 @@
         "topEdgeLayoutVersion": "local",
         "appearanceMode": "sync",
         "fontFamily": "sync",
+        "fontScale": "sync",
+        "customFontId": "local",
         "fuyuTabIcon": "sync",
         "glassIntensity": "sync",
         "opacity": "sync",
@@ -284,6 +286,7 @@
     "fuyu-qq-mail-remote-images": "sync",
     "fuyu-collapsed-items": "optional",
     "fuyu-island-pages": "optional",
+    "fuyu-side-docks": "optional",
     "fuyu-page-icons": "optional",
     "fuyu-custom-panels": "optional",
     "fuyu-collapsed-text": "optional",

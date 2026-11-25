@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useUnsupportedFeatures } from "../../lib/platform";
+import { effectivePageDockZone } from "../../lib/settings/islandPages";
 import { useIslandPages } from "../../lib/settings/useIslandPages";
+import { sideDockEnabledSides, type SideDockEdge } from "../../lib/settings/sideDocks";
+import { useSideDocks } from "../../lib/settings/useSideDocks";
 import { builtinConfigBoolean, isBuiltinEnabled } from "../../features/plugin-kernel/builtinSwitches";
+import { requestSideDockPage } from "../side-dock/api";
 import { foldScreenshotsIntoClipboard, resolveIslandPage, withPageLayout, withoutUnsupported, type IslandFeatures } from "./features";
 import type { IslandPage } from "./types";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
@@ -13,6 +17,7 @@ type IslandFeatureOptions = {
   page: IslandPage;
   setPage: (page: IslandPage) => void;
   openIslandPage: (page: IslandPage) => void;
+  islandSide?: SideDockEdge | null;
 };
 
 export function useIslandFeatures({
@@ -20,11 +25,14 @@ export function useIslandFeatures({
   page,
   setPage,
   openIslandPage,
+  islandSide = null,
 }: IslandFeatureOptions) {
   const unsupported = useUnsupportedFeatures();
   const plugins = useBuiltinPlugins();
   const { pages, settled } = useIslandContributed();
   const { layout: pageLayout } = useIslandPages();
+  const { settings: sideDocks } = useSideDocks();
+  const enabledSides = useMemo(() => sideDockEnabledSides(sideDocks, islandSide), [islandSide, sideDocks]);
   const features = useMemo<IslandFeatures>(() => {
     const enabled = (id: string, fallback = true) => isBuiltinEnabled(plugins, id, fallback);
     const messagesOn = enabled("messages");
@@ -42,8 +50,9 @@ export function useIslandFeatures({
       qqMail: mailOn,
       agents: enabled("agents", settings.agentStatusEnabled),
       translation: enabled("translation", settings.translationEnabled) && settings.translationTarget === "island",
-    }, unsupported)), pageLayout);
+    }, unsupported)), pageLayout, enabledSides);
   }, [
+    enabledSides,
     pageLayout,
     unsupported,
     plugins,
@@ -67,9 +76,14 @@ export function useIslandFeatures({
   }, [features, page, setPage, settled]);
 
   const openEnabledPage = useCallback((target: IslandPage) => {
+    const zone = effectivePageDockZone(pageLayout, target, enabledSides);
+    if (zone === "left" || zone === "right") {
+      void requestSideDockPage(zone, target);
+      return;
+    }
     const next = resolveIslandPage(target, features);
     if (next) openIslandPage(next);
-  }, [features, openIslandPage]);
+  }, [enabledSides, features, openIslandPage, pageLayout]);
 
   return { features, openEnabledPage };
 }

@@ -1,8 +1,32 @@
 export type SettingsAppearanceText = {
   font: string;
   fontLabel: string;
+  fontGroupTitle: string;
+  fontStyle: string;
+  fontSize: string;
+  fontSizeHint: string;
   systemFont: string;
   pixelFont: string;
+  roundedFont: string;
+  serifFont: string;
+  monoFont: string;
+  customFonts: {
+    importRow: string;
+    importHint: string;
+    importAction: string;
+    importing: string;
+    openFolder: string;
+    openFolderMac: string;
+    imported: (name: string) => string;
+    use: string;
+    inUse: string;
+    remove: string;
+    removeConfirm: string;
+    confirmRemove: (name: string) => string;
+    tooLarge: (name: string) => string;
+    unsupportedFormat: (name: string) => string;
+    footer: string;
+  };
   title: string;
   classic: string;
   liquidGlass: string;
@@ -77,8 +101,32 @@ export type SettingsAppearanceText = {
 export const zhCN: SettingsAppearanceText = {
   font: "字体",
   fontLabel: "岛屿字体",
-  systemFont: "默认字体",
-  pixelFont: "像素字体",
+  fontGroupTitle: "字体",
+  fontStyle: "字体样式",
+  fontSize: "字体大小",
+  fontSizeHint: "按比例调整岛屿与设置页的文字大小。",
+  systemFont: "默认",
+  pixelFont: "像素",
+  roundedFont: "圆润",
+  serifFont: "衬线",
+  monoFont: "等宽",
+  customFonts: {
+    importRow: "本地字体",
+    importHint: "导入本地字体文件后可立即切换使用，缺失时自动回退默认字体。",
+    importAction: "导入字体",
+    importing: "导入中…",
+    openFolder: "打开文件夹",
+    openFolderMac: "在访达中显示",
+    imported: (name) => `已导入并切换字体「${name}」`,
+    use: "使用",
+    inUse: "使用中",
+    remove: "删除",
+    removeConfirm: "确认删除",
+    confirmRemove: (name) => `确定删除本地字体「${name}」吗？`,
+    tooLarge: (name) => `字体文件太大或为空：${name}（最大 32 MB）`,
+    unsupportedFormat: (name) => `不支持的字体格式：${name}（支持 TTF、OTF、WOFF、WOFF2）`,
+    footer: "支持导入 .ttf、.otf、.woff、.woff2 格式字体文件（单个不超过 32 MB），保存在浮屿数据目录的 fonts 文件夹内。",
+  },
   title: "外观模式",
   classic: "经典",
   liquidGlass: "液态玻璃",
@@ -153,8 +201,32 @@ export const zhCN: SettingsAppearanceText = {
 export const en: SettingsAppearanceText = {
   font: "Font",
   fontLabel: "Island font",
+  fontGroupTitle: "Font",
+  fontStyle: "Font style",
+  fontSize: "Font size",
+  fontSizeHint: "Scales text across the island and settings.",
   systemFont: "System",
   pixelFont: "Pixel",
+  roundedFont: "Rounded",
+  serifFont: "Serif",
+  monoFont: "Mono",
+  customFonts: {
+    importRow: "Local fonts",
+    importHint: "Import a local font file to switch right away; falls back to System if unavailable.",
+    importAction: "Import font",
+    importing: "Importing…",
+    openFolder: "Open folder",
+    openFolderMac: "Show in Finder",
+    imported: (name) => `Imported and applied “${name}”`,
+    use: "Use",
+    inUse: "Active",
+    remove: "Remove",
+    removeConfirm: "Remove",
+    confirmRemove: (name) => `Remove local font “${name}”?`,
+    tooLarge: (name) => `The font file is empty or too large: ${name} (at most 32 MB).`,
+    unsupportedFormat: (name) => `Unsupported font format: ${name} (TTF, OTF, WOFF, WOFF2).`,
+    footer: "Supports .ttf, .otf, .woff and .woff2 files (up to 32 MB each), saved in the fonts folder under Fuyu's data directory.",
+  },
   title: "Appearance",
   classic: "Classic",
   liquidGlass: "Liquid glass",

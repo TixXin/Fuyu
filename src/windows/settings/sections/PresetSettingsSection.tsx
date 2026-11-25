@@ -80,6 +80,7 @@ export function PresetSettingsSection({
         onKeyDown={(event) => {
           if (event.key === "Enter") commitPresetRename();
           if (event.key === "Escape") {
+            event.preventDefault();
             setEditingPresetId(null);
             setPresetNameDraft("");
           }

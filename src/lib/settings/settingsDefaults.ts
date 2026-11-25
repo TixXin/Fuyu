@@ -6,7 +6,7 @@ import { DEFAULT_NOTCH_RIM_SETTINGS } from "./notchRimSettings.ts";
 import { DEFAULT_NOTCH_RING_SETTINGS } from "./notchRingSettings.ts";
 import { DEFAULT_PAGE_DIGIT_MODIFIERS, DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT } from "./pageShortcuts.ts";
 import {
-  DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, DEFAULT_HOVER_COLLAPSE_DELAY_MS,
+  DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, DEFAULT_FONT_SCALE, DEFAULT_HOVER_COLLAPSE_DELAY_MS,
   DEFAULT_HOVER_EXPAND_DELAY_MS, DEFAULT_HOVER_SWITCH_DELAY_MS, DEFAULT_IDLE_DIM_OPACITY, DEFAULT_IDLE_DIM_SECONDS, DEFAULT_ISLAND_CORNER_RADIUS, DEFAULT_ISLAND_OPACITY, DEFAULT_MAX_PANEL_HEIGHT, DEFAULT_PANEL_WIDTH, DEFAULT_SHELF_ITEMS, DEFAULT_SIDE_HEIGHT, DEFAULT_TASK_TEXT_COLOR,
 } from "./settingsLimits.ts";
 import { isMacOS } from "../platform.ts";
@@ -17,6 +17,8 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   topEdgeLayoutVersion: 1,
   appearanceMode: "classic",
   fontFamily: "system",
+  fontScale: DEFAULT_FONT_SCALE,
+  customFontId: "",
   glassIntensity: 25,
   opacity: 100,
   islandOpacity: DEFAULT_ISLAND_OPACITY,
@@ -144,8 +146,8 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   pageArrows: true,
   pageArrowKeys: true,
   pageSwipe: true,
-  pageSwitchPanel: "wipe",
-  pageSwitchSettings: "wipe",
+  pageSwitchPanel: "fade",
+  pageSwitchSettings: "fade",
   pageSwitchIndicator: "stretch",
   pageSwitchSpeed: "normal",
   pageSwitchDirectional: true,

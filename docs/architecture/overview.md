@@ -6,7 +6,8 @@
 
 ```text
 ┌──────────── WebView2 / WKWebView（同一前端包，按 ?window= 分发）────────────┐
-│  main：悬浮岛    translation：快捷翻译    settings：设置                        │
+│  main：悬浮岛    side-left / side-right：屏幕左右侧边翼（?window=side&edge=left|right）│
+│  translation：快捷翻译    settings：设置                                        │
 │  clipboard：剪贴板    clipboard-preview：剪贴板的空格预览（不抢焦点）           │
 │  onboarding：新手引导（新装第一次启动时打开）    tray-menu：托盘 / 菜单栏卡片   │
 │  screenshot-<n>：截图选区（每个显示器一个）    pin-<n>：贴到屏幕上的截图        │
@@ -18,7 +19,7 @@
 ┌──────────────────────────────── Rust（Tauri 2）──────────────────────────────────────┐
 │  lib.rs 组装：插件 / setup / 托盘 / collect_commands!（汇总各模块的 tauri_commands!） │
 │  plugin_kernel：第 3 版插件宿主的看护（找 Node、拉起宿主、内置插件开关、后台起停）    │
-│  领域模块：island · todos · calendar · timer（计时器快捷键）· media_control · lyrics  │
+│  领域模块：island · side_dock · todos · calendar · timer（计时器快捷键）· media_control · lyrics │
 │           clipboard_history · file_shelf · screenshot · recording（录屏）            │
 │           voice_input（本机语音识别）· sync（跨设备同步）· wallpaper（壁纸，玻璃采样）│
 │           agent_status · agent_approval · phone_push · claude_usage（用量环）       │

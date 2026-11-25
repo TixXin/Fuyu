@@ -1,11 +1,12 @@
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import test from "node:test";
 import "./settingsCategorySlot.mjs";
 import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, entryOf, entryPages, isCategoryAvailable, pagesOfFeaturesOff, searchCategories, settingsCategories, settingsCategoryFor, settingsGroups, sidebarItemOf, parentOf, subPagesOf } from "../../src/windows/settings/categories.ts";
 import { categorySlot } from "../../src/windows/settings/slots/categorySlot.ts";
 import { shortcutLabel } from "../../src/lib/shortcut/shortcut.ts";
-import { isTitleHit, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
-import { mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
+import { isTitleHit, isWhatsNewQuery, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
+import { applyAutoSince, buildWhatsNewIndex, latestReleaseTag, mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
 
 const SETTINGS_CATEGORIES = settingsCategories();
 const SETTINGS_GROUPS = settingsGroups();
@@ -55,13 +56,39 @@ test("pages match words written together or apart", () => {
 });
 
 test("the index keeps each row once and pairs the languages row by row", () => {
-  const on = [{ page: "agents", group: "g", title: "a" }, { page: "agents", group: "g", title: "b" }];
+  const on = [{ page: "agents", group: "g", title: "a", since: "0.3.14" }, { page: "agents", group: "g", title: "b" }];
   const defaults = [{ page: "agents", group: "g", title: "a" }, { page: "agents", group: "g", title: "c" }];
-  assert.deepEqual(mergeStates([on, defaults]).map((entry) => entry.title), ["a", "b", "c"]);
-  const paired = pairLocales({ "zh-CN": [{ page: "agents", group: "组", title: "甲" }], en: [{ page: "agents", group: "G", title: "A" }] });
-  assert.deepEqual(paired, [{ page: "agents", "zh-CN": { group: "组", title: "甲" }, en: { group: "G", title: "A" } }]);
+  const merged = mergeStates([on, defaults]);
+  assert.deepEqual(merged.map((entry) => entry.title), ["a", "b", "c"]);
+  assert.equal(merged[0].since, "0.3.14");
+  const paired = pairLocales({
+    "zh-CN": [{ page: "agents", group: "组", title: "甲", since: "0.3.14" }, { page: "agents", group: "组", title: "乙" }],
+    en: [{ page: "agents", group: "G", title: "A", since: "0.3.14" }, { page: "agents", group: "G", title: "B" }],
+  });
+  assert.deepEqual(paired, [
+    { page: "agents", since: "0.3.14", "zh-CN": { group: "组", title: "甲" }, en: { group: "G", title: "A" } },
+    { page: "agents", "zh-CN": { group: "组", title: "乙" }, en: { group: "G", title: "B" } },
+  ]);
+  assert.deepEqual(buildWhatsNewIndex(paired), [
+    { page: "agents", since: "0.3.14", "zh-CN": { group: "组", title: "甲" }, en: { group: "G", title: "A" } },
+  ]);
   assert.throws(() => pairLocales({ "zh-CN": [{ page: "agents", group: "", title: "x" }], en: [] }));
   assert.throws(() => pairLocales({ "zh-CN": [{ page: "agents", group: "", title: "x" }], en: [{ page: "about", group: "", title: "x" }] }));
+  assert.throws(() => pairLocales({ "zh-CN": [{ page: "agents", group: "", title: "x", since: "0.3.14" }], en: [{ page: "agents", group: "", title: "x" }] }));
+});
+
+test("searching new or 本版新增 surfaces active since entries on top", () => {
+  assert.ok(isWhatsNewQuery("new") && isWhatsNewQuery("本版新增") && isWhatsNewQuery("新功能") && !isWhatsNewQuery("外观"));
+  const withSince = [
+    { ...ENTRIES[0], since: "0.3.14" },
+    ENTRIES[1],
+    { ...ENTRIES[2], since: "0.3.12" },
+  ];
+  const hits = searchSettingsRows("new", withSince, "zh-CN", LOCALES, (page) => PAGES[page], new Set(["0.3.14"]));
+  assert.deepEqual(hits.map((hit) => [hit.text.title, hit.isNew]), [["隐藏已退出的会话", true]]);
+  assert.ok(isTitleHit(hits[0], "new"));
+  assert.deepEqual(searchSettingsRows("new", withSince, "zh-CN", LOCALES, (page) => PAGES[page], new Set(["0.3.14"]), new Set(["agentAlerts"])), []);
+  assert.deepEqual(searchSettingsRows("本版新增", withSince, "zh-CN", LOCALES, (page) => PAGES[page], new Set()), []);
 });
 
 test("a page whose feature the system lacks is not offered", () => {
@@ -147,4 +174,54 @@ test("a category added to settings.category/v1 brings its own group, tabs, switc
   assert.ok(!settingsCategories().includes("demoTools"));
   assert.equal(isCategoryAvailable("demoToolsMore", new Set(), false), false);
   assert.equal(settingsCategoryFor("demo-old"), null);
+});
+
+test("applyAutoSince tags new top-level settings as next, skips indented and opted-out rows, preserves history and prunes expired versions", () => {
+  const baseEntries = [
+    { page: "general", "zh-CN": { group: "基础", title: "语言" }, en: { group: "Basic", title: "Language" } },
+    { page: "themeStyle", since: "0.3.14-beta.1", "zh-CN": { group: "外观", title: "外观模式" }, en: { group: "Look", title: "Appearance" } },
+    { page: "music", since: "0.3.10", "zh-CN": { group: "歌词", title: "歌词偏移" }, en: { group: "Lyrics", title: "Lyric offset" } },
+  ];
+  const currentEntries = [
+    ...baseEntries,
+    { page: "general", since: "0.3.13", "zh-CN": { group: "基础", title: "开机自启" }, en: { group: "Basic", title: "Startup" } },
+  ];
+  const collected = [
+    { page: "general", "zh-CN": { group: "基础", title: "界面语言" }, en: { group: "Basic", title: "Language" } },
+    { page: "themeStyle", "zh-CN": { group: "外观", title: "外观模式" }, en: { group: "Look", title: "Appearance" } },
+    { page: "music", "zh-CN": { group: "歌词", title: "歌词偏移" }, en: { group: "Lyrics", title: "Lyric offset" } },
+    { page: "themeStyle", "zh-CN": { group: "字体", title: "字体大小" }, en: { group: "Font", title: "Font size" } },
+    { page: "themeStyle", indent: true, "zh-CN": { group: "字体", title: "字重细节" }, en: { group: "Font", title: "Weight details" } },
+    { page: "themeStyle", since: "off", "zh-CN": { group: "字体", title: "改名测试" }, en: { group: "Font", title: "Renamed item" } },
+    { page: "themeStyle", indent: true, since: "next", "zh-CN": { group: "字体", title: "重点子项" }, en: { group: "Font", title: "Key sub-item" } },
+  ];
+
+  const { entries, autoTagged, expired } = applyAutoSince(collected, {
+    baseEntries,
+    currentEntries,
+    currentVersion: "0.3.14",
+    keepBases: 2,
+  });
+  assert.deepEqual(expired, ["0.3.10"]);
+  assert.deepEqual(autoTagged.map((item) => item["zh-CN"].title), ["字体大小"]);
+  assert.equal(entries[0].since, undefined, "renaming only one locale does not trigger a false NEW");
+  assert.equal(entries[1].since, "0.3.14-beta.1", "recent historical version is preserved");
+  assert.equal(entries[2].since, undefined, "expired version beyond keepBases is pruned");
+  assert.equal(entries[3].since, "next", "new top-level row is auto-tagged as next");
+  assert.equal(entries[4].since, undefined, "indented child row is skipped by auto-tagging");
+  assert.equal(entries[5].since, undefined, "explicit since=\"off\" opts out of auto-tagging");
+  assert.equal(entries[6].since, "next", "explicit since=\"next\" still works on indented rows");
+  assert.ok(entries.every((entry) => !("indent" in entry)));
+  assert.equal(latestReleaseTag(["v0.3.13", "v0.3.14-beta.1", "sdk-v0.5.0", "v0.3.14-beta.2"]), "v0.3.14-beta.2");
+});
+
+test("committed searchIndex.json and whatsNewIndex.json stay in sync with valid since values", () => {
+  const search = JSON.parse(readFileSync("src/windows/settings/searchIndex.json", "utf8"));
+  const whatsNew = JSON.parse(readFileSync("src/windows/settings/whatsNewIndex.json", "utf8"));
+  const expected = buildWhatsNewIndex(search.entries);
+  assert.deepEqual(whatsNew.entries, expected);
+  const validSince = /^(?:next|\d+\.\d+\.\d+(?:-beta\.\d+)?)$/;
+  for (const entry of whatsNew.entries) {
+    assert.match(entry.since, validSince, `${entry.page}:${entry["zh-CN"].title}`);
+  }
 });

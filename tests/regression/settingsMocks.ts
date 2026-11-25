@@ -247,6 +247,8 @@ mockIPC((command, payload) => {
     case "install_agent_status_hooks": return { scriptsDir: "C:\\Users\\demo\\.fuyu", statusPath: "", installedAt: 1700000000000, remotes: [], dshBridge: null };
     case "install_agent_hooks": return { results: (args.providers as string[]).map((provider) => ({ provider, error: null })), dshBridge: null };
     case "list_sound_packs": return [{ id: "chimes-1", name: "Chimes", author: "Ann", license: "CC0-1.0", sounds: { complete: "complete.wav", error: "error.wav" } }];
+    case "list_custom_fonts": return [];
+    case "open_custom_fonts_folder": return null;
     case "get_v2_plugin_migration":
     case "dismiss_v2_plugin_migration":
       return { official: [], other: [], islandPending: false, settingsPending: false };

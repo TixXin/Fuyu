@@ -8,6 +8,7 @@ import { SettingsTabs } from "./SettingsTabs";
 import { SettingsSidebar } from "./SettingsSidebar";
 import { useFoundRow, type FoundRow } from "./useFoundRow";
 import { useSettingsPageSwitch, type SettingsSwitchMotion } from "./useSettingsPageSwitch";
+import type { SettingsWhatsNewView } from "./useSettingsWhatsNew";
 import { WindowControls } from "./WindowControls";
 import "./LayoutEditor.css";
 import "./SettingsSidebarNarrow.css";
@@ -16,6 +17,7 @@ import "./SettingsMac.css";
 export function LayoutEditor({
   category,
   hidden,
+  whatsNew,
   titleAction,
   motion,
   children,
@@ -23,6 +25,7 @@ export function LayoutEditor({
 }: {
   category: SettingsCategory;
   hidden?: ReadonlySet<SettingsCategory>;
+  whatsNew?: SettingsWhatsNewView;
   titleAction?: ReactNode;
   motion: SettingsSwitchMotion;
   children: ReactNode;
@@ -42,11 +45,12 @@ export function LayoutEditor({
   return (
     <div className="settings-layout" ref={layout} data-tauri-drag-region>
       {!isMacOS && <WindowControls style="windows" />}
-      <DevBar />
+      <DevBar onReplayWhatsNew={whatsNew?.onReplay} />
       <div className="settings-sidebar-card" data-tauri-drag-region>
         <SettingsSidebar
           category={category}
           hidden={hidden}
+          whatsNew={whatsNew}
           onCategoryChange={onCategoryChange}
           onRowOpen={(page, title) => {
             skipSwitch();
@@ -72,7 +76,7 @@ export function LayoutEditor({
           )}
           {titleAction}
         </div>
-        <SettingsTabs category={category} onCategoryChange={onCategoryChange} />
+        <SettingsTabs category={category} unreadPages={whatsNew?.unreadPages} onCategoryChange={onCategoryChange} />
         <div className="editor-panel" key={category} ref={panel}>
           {children}
         </div>

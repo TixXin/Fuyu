@@ -5,6 +5,7 @@ import type { CalendarEvent } from "./api";
 import type { WeekStartsOn } from "./calendarPrefs";
 import { chineseDay } from "../../utils/lunar.ts";
 import { dayMark, monthDays, monthWeekNumbers, namesTheDay, nextDay, resolveWeekStart, startOfDay } from "./monthView.ts";
+import { internationalFestival } from "./worldFestivals.ts";
 import "./CalendarMonth.css";
 
 const KEY_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
@@ -20,6 +21,7 @@ export function CalendarMonth({
   selected,
   events,
   showWeekNumbers = false,
+  showInternationalFestivals = true,
   weekStartsOn = "auto",
   onSelect,
   onMonth,
@@ -29,13 +31,15 @@ export function CalendarMonth({
   selected: number;
   events: readonly CalendarEvent[];
   showWeekNumbers?: boolean;
+  showInternationalFestivals?: boolean;
   weekStartsOn?: WeekStartsOn;
   onSelect: (day: number) => void;
   onMonth: (delta: number) => void;
 }) {
   const t = useTranslation();
   const text = t.calendar;
-  const lunar = useLocale().locale === "zh-CN";
+  const { locale } = useLocale();
+  const lunar = locale === "zh-CN";
   const shown = new Date(month);
   const keyed = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
@@ -71,15 +75,18 @@ export function CalendarMonth({
       gridDays.map((day) => {
         const date = new Date(day);
         const on = eventsByDay.get(formatDayKey(date)) ?? EMPTY_EVENTS;
+        const chinese = chineseDay(date);
+        const world = showInternationalFestivals ? internationalFestival(date, locale) : null;
         return {
           day,
           date,
           on: on.filter((event) => !namesTheDay(event)).length,
           mark: dayMark(on),
-          chinese: chineseDay(date),
+          chinese,
+          world,
         };
       }),
-    [eventsByDay, gridDays],
+    [eventsByDay, gridDays, locale, showInternationalFestivals],
   );
   const weeks = useMemo(
     () => (showWeekNumbers ? monthWeekNumbers(gridDays, weekStartsOn) : []),
@@ -105,7 +112,7 @@ export function CalendarMonth({
   const elsewhere = selected !== today || shown.getMonth() !== new Date(today).getMonth() || shown.getFullYear() !== new Date(today).getFullYear();
   const rootClasses = [
     "calendar-month",
-    !lunar && "calendar-month--plain",
+    !lunar && !showInternationalFestivals && "calendar-month--plain",
     showWeekNumbers && "calendar-month--weeks",
   ].filter(Boolean).join(" ");
 
@@ -130,7 +137,7 @@ export function CalendarMonth({
         {weekdays.map((name, index) => <span key={index}>{name}</span>)}
       </div>
       <div className="calendar-month__grid" ref={grid} onKeyDown={onKeyDown}>
-        {days.map(({ day, date, on, mark, chinese }, index) => {
+        {days.map(({ day, date, on, mark, chinese, world }, index) => {
           const isWeekend = date.getDay() === 0 || date.getDay() === 6;
           const classes = [
             "calendar-month__day",
@@ -140,7 +147,10 @@ export function CalendarMonth({
             day === selected && "calendar-month__day--selected",
             mark && `calendar-month__day--${mark}`,
           ].filter(Boolean).join(" ");
-          const title = [text.dayTitle(date), lunar ? chinese.lunar : "", lunar ? (chinese.festival ?? chinese.term ?? chinese.memorial ?? "") : "", mark === "off" ? text.offLabel : mark === "work" ? text.workLabel : ""]
+          const named = lunar ? (chinese.festival ?? chinese.term ?? chinese.memorial ?? world ?? "") : (world ?? "");
+          const cellLabel = lunar ? (named || chinese.label) : (world ?? "");
+          const cellSpecial = lunar ? (chinese.special || Boolean(world)) : Boolean(world);
+          const title = [text.dayTitle(date), lunar ? chinese.lunar : "", named, mark === "off" ? text.offLabel : mark === "work" ? text.workLabel : ""]
             .filter(Boolean).join(" ");
           const button = (
             <button
@@ -154,8 +164,8 @@ export function CalendarMonth({
               onClick={() => onSelect(day)}
             >
               <span className="calendar-month__date">{date.getDate()}</span>
-              {lunar && chinese.label && (
-                <span className={`calendar-month__lunar${chinese.special ? " calendar-month__lunar--special" : ""}`}>{chinese.label}</span>
+              {cellLabel && (
+                <span className={`calendar-month__lunar${cellSpecial ? " calendar-month__lunar--special" : ""}`}>{cellLabel}</span>
               )}
               {mark && <span className="calendar-month__mark" aria-hidden="true">{mark === "off" ? text.off : text.work}</span>}
               {on > 0 && <span className="calendar-month__dot" aria-hidden="true" />}

@@ -36,9 +36,47 @@
 
 .daily-editor__buttons {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 6px;
   margin-top: auto;
+}
+
+.daily-editor__cal {
+  display: inline-flex;
+  align-items: center;
+  margin-right: auto;
+  padding: 1px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.12);
+  border-radius: 6px;
+}
+
+.daily-editor__cal-btn {
+  height: 18px;
+  padding: 0 6px;
+  color: var(--widget-text-2);
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.daily-editor__cal-btn:hover {
+  color: var(--widget-text-1);
+}
+
+.daily-editor__cal-btn[aria-checked="true"] {
+  color: var(--color-on-accent);
+  background: var(--daily-accent, var(--color-accent));
+}
+
+.daily-editor__cal-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
 }
 
 .daily-aside-buttons {

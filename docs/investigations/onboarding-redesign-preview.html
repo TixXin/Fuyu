@@ -1,0 +1,3283 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>浮屿 Fuyu · 安装引导页 + 岛屿面板自动化演示交互预览 v2</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --font-ui: "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+    --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-fast: 120ms;
+    --motion-base: 160ms;
+    --motion-medium: 240ms;
+    --motion-slow: 420ms;
+
+    --accent: #74d6ff;
+    --on-accent: #05202c;
+    --card-bg: rgba(20, 22, 28, 0.92);
+    --card-surface: rgba(255, 255, 255, 0.045);
+    --card-surface-hover: rgba(255, 255, 255, 0.085);
+    --card-border: rgba(255, 255, 255, 0.11);
+    --card-border-soft: rgba(255, 255, 255, 0.07);
+    --text: #f5f4ef;
+    --text-muted: rgba(245, 244, 239, 0.68);
+    --text-subtle: rgba(245, 244, 239, 0.48);
+    --mint: #5ce1a6;
+    --warn: #ffd166;
+    --danger: #ff7a84;
+
+    --island-bg: #111318;
+    --island-text: #f6f6f2;
+    --island-muted: rgba(246, 246, 242, 0.66);
+    --island-border: rgba(255, 255, 255, 0.13);
+    --island-blur: 0px;
+    --island-motion-ms: 420ms;
+    --island-motion-curve: cubic-bezier(0.34, 1.36, 0.5, 1);
+  }
+
+  .stage--light {
+    --card-bg: rgba(246, 247, 250, 0.94);
+    --card-surface: rgba(20, 24, 34, 0.045);
+    --card-surface-hover: rgba(20, 24, 34, 0.08);
+    --card-border: rgba(20, 24, 34, 0.12);
+    --card-border-soft: rgba(20, 24, 34, 0.07);
+    --text: #171920;
+    --text-muted: rgba(23, 25, 32, 0.68);
+    --text-subtle: rgba(23, 25, 32, 0.48);
+    --mint: #1d8a5a;
+    --warn: #b57614;
+    --on-accent: #ffffff;
+  }
+
+  .reduced-motion *,
+  .reduced-motion *::before,
+  .reduced-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #0b0d12;
+    color: var(--text);
+    font: 13.5px/1.5 var(--font-ui);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .dev-ribbon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 14px;
+    background: #12141b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    font-size: 12px;
+    color: rgba(245, 244, 239, 0.78);
+    flex-wrap: wrap;
+    z-index: 60;
+  }
+  .dev-ribbon__left, .dev-ribbon__right {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .dev-brand {
+    font-weight: 700;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .dev-badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(116, 214, 255, 0.15);
+    color: #74d6ff;
+    border: 1px solid rgba(116, 214, 255, 0.3);
+  }
+  .dev-seg {
+    display: inline-flex;
+    padding: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 8px;
+    gap: 2px;
+  }
+  .dev-btn {
+    border: 0;
+    background: transparent;
+    color: rgba(245, 244, 239, 0.72);
+    font: inherit;
+    font-size: 11.5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+  }
+  .dev-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.07); }
+  .dev-btn.active { background: rgba(116, 214, 255, 0.2); color: #9de4ff; font-weight: 600; }
+  .dev-btn--outline {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .desktop-stage {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 520px at 18% 12%, rgba(74, 148, 224, 0.36), transparent 62%),
+      radial-gradient(760px 480px at 82% 24%, rgba(154, 96, 224, 0.28), transparent 60%),
+      radial-gradient(700px 460px at 54% 88%, rgba(42, 168, 154, 0.24), transparent 64%),
+      linear-gradient(145deg, #121826 0%, #1c1930 52%, #11212b 100%);
+    user-select: none;
+  }
+  .desktop-stage.wallpaper-day {
+    background:
+      radial-gradient(900px 520px at 18% 12%, rgba(145, 205, 255, 0.65), transparent 60%),
+      radial-gradient(760px 480px at 82% 20%, rgba(212, 186, 255, 0.55), transparent 60%),
+      radial-gradient(700px 460px at 55% 90%, rgba(164, 232, 220, 0.52), transparent 64%),
+      linear-gradient(145deg, #d8e5f5 0%, #e8e1f5 52%, #d5ebe7 100%);
+  }
+
+  .director-hud {
+    position: absolute;
+    right: 18px;
+    top: 14px;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 12px;
+    border-radius: 999px;
+    background: rgba(16, 18, 24, 0.84);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    font-size: 11.5px;
+    color: #eef2fa;
+  }
+  .director-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mint);
+    flex: none;
+    animation: dirPulse 1.6s var(--motion-ease) infinite;
+  }
+  .director-dot.paused {
+    background: var(--warn);
+    animation: none;
+  }
+  .director-dot.user {
+    background: var(--accent);
+    animation: none;
+  }
+  @keyframes dirPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .director-caption {
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .director-hud__btn {
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .director-hud__btn:hover { background: rgba(116, 214, 255, 0.22); border-color: rgba(116, 214, 255, 0.5); }
+
+  .desktop-files {
+    position: absolute;
+    left: 24px;
+    top: 74px;
+    display: grid;
+    gap: 14px;
+    z-index: 14;
+    transition: opacity var(--motion-medium) var(--motion-ease);
+  }
+  .desktop-file {
+    width: 78px;
+    display: grid;
+    justify-items: center;
+    gap: 5px;
+    padding: 8px 6px;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 11px;
+    text-align: center;
+    cursor: grab;
+    background: rgba(10, 12, 18, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+  }
+  .desktop-file:hover {
+    background: rgba(116, 214, 255, 0.18);
+    border-color: rgba(116, 214, 255, 0.5);
+  }
+  .desktop-file.pulse-hint {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 26%, transparent);
+  }
+  .desktop-file__icon {
+    width: 34px;
+    height: 38px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 10px;
+    color: #082032;
+    background: linear-gradient(155deg, #9be4ff, #5bb7ff);
+  }
+  .desktop-file__icon--md {
+    background: linear-gradient(155deg, #b8f5d6, #5fd49c);
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    background: rgba(5, 7, 13, 0.5);
+    transition: opacity var(--motion-medium) var(--motion-ease);
+  }
+  .scrim.mode-soft { opacity: 0.34; }
+  .scrim.mode-off { opacity: 0; }
+
+  .spotlight-ring {
+    position: absolute;
+    pointer-events: none;
+    z-index: 25;
+    border: 2px solid var(--accent);
+    border-radius: 0 0 26px 26px;
+    transition:
+      left var(--motion-medium) var(--motion-ease),
+      top var(--motion-medium) var(--motion-ease),
+      width var(--motion-medium) var(--motion-ease),
+      height var(--motion-medium) var(--motion-ease),
+      border-radius var(--motion-medium) var(--motion-ease),
+      opacity var(--motion-medium) var(--motion-ease);
+  }
+  .spotlight-ring.detached { border-radius: 26px; }
+  .spotlight-ring.mode-off { opacity: 0; }
+  .spotlight-ring.mode-calm { opacity: 0.45; }
+  .spotlight-ring.mode-pulse { opacity: 0.92; }
+  .spotlight-ring.mode-pulse::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border: 2px solid var(--accent);
+    border-radius: inherit;
+    animation: spotPulse 2s var(--motion-ease) infinite;
+  }
+  @keyframes spotPulse {
+    from { opacity: 0.85; transform: scale(1); }
+    to { opacity: 0; transform: scale(1.06, 1.24); }
+  }
+
+  .real-island {
+    position: absolute;
+    z-index: 30;
+    background: var(--island-bg);
+    color: var(--island-text);
+    border: 1px solid var(--island-border);
+    backdrop-filter: blur(var(--island-blur));
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.44);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition:
+      left var(--island-motion-ms) var(--island-motion-curve),
+      top var(--island-motion-ms) var(--island-motion-curve),
+      width var(--island-motion-ms) var(--island-motion-curve),
+      height var(--island-motion-ms) var(--island-motion-curve),
+      border-radius var(--island-motion-ms) var(--island-motion-curve),
+      background-color var(--motion-medium) var(--motion-ease),
+      border-color var(--motion-medium) var(--motion-ease);
+  }
+  .real-island.edge-top { border-top: 0; border-radius: 0 0 22px 22px; }
+  .real-island.form-pill { border: 1px solid var(--island-border); border-radius: 999px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); }
+  .real-island.form-pill.expanded { border-radius: 26px; }
+  .real-island.form-notch {
+    border-top: 0;
+    border-radius: 0 0 20px 20px;
+    background: #08090c;
+    color: #f6f6f2;
+    border-color: color-mix(in srgb, var(--accent) 42%, rgba(255, 255, 255, 0.12));
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+  }
+  .real-island.form-notch.expanded {
+    background: var(--island-bg);
+    color: var(--island-text);
+    border-radius: 0 0 24px 24px;
+  }
+  .real-island.edge-bottom { border-bottom: 0; border-radius: 22px 22px 0 0; }
+  .real-island.edge-left { border-left: 0; border-radius: 0 22px 22px 0; }
+  .real-island.edge-right { border-right: 0; border-radius: 22px 0 0 22px; }
+  .real-island.edge-taskbar {
+    border-radius: 10px;
+    box-shadow: none;
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+  .real-island.edge-taskbar.taskbar-transparent:not(.expanded) {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #f6f6f2;
+  }
+  .real-island.edge-taskbar.expanded {
+    border-radius: 20px;
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.5);
+  }
+  .notch-bar {
+    height: 36px;
+    padding: 0 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 156px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    flex: none;
+  }
+  .notch-wing {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+  }
+  .notch-wing--right { justify-content: flex-end; }
+  .notch-cutout {
+    height: 26px;
+    border-radius: 0 0 12px 12px;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    align-self: start;
+  }
+  .notch-camera {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #2b4166, #090d16 70%);
+    border: 1px solid rgba(116, 214, 255, 0.25);
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .form-btn {
+    padding: 7px 4px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border-soft);
+    background: var(--card-surface);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    display: grid;
+    justify-items: center;
+    gap: 5px;
+    transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+  }
+  .form-btn:hover { color: var(--text); border-color: var(--card-border); background: var(--card-surface-hover); }
+  .form-btn.active {
+    color: var(--text);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 13%, var(--card-surface));
+    box-shadow: inset 0 0 0 1px var(--accent);
+    font-weight: 600;
+  }
+  .form-mini {
+    width: 40px;
+    height: 24px;
+    border-radius: 5px;
+    border: 1px solid var(--card-border);
+    background: rgba(128, 134, 152, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .form-mini i { position: absolute; background: var(--accent); border-radius: 99px; }
+  .form-mini--top i { top: 0; left: 10px; width: 18px; height: 4px; border-radius: 0 0 4px 4px; }
+  .form-mini--pill i { top: 4px; left: 9px; width: 20px; height: 4px; }
+  .form-mini--notch i { top: 0; left: 6px; width: 26px; height: 5px; border-radius: 0 0 4px 4px; background: color-mix(in srgb, var(--accent) 65%, #000); }
+  .form-mini--notch b { position: absolute; top: 0; left: 14px; width: 10px; height: 5px; border-radius: 0 0 3px 3px; background: #000; }
+  .form-mini--bottom i { bottom: 0; left: 10px; width: 18px; height: 4px; border-radius: 4px 4px 0 0; }
+  .form-mini--left i { left: 0; top: 5px; width: 4px; height: 12px; border-radius: 0 4px 4px 0; }
+  .form-mini--right i { right: 0; top: 5px; width: 4px; height: 12px; border-radius: 4px 0 0 4px; }
+  .form-mini--taskbar b { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: rgba(128, 134, 152, 0.28); }
+  .form-mini--taskbar i { bottom: 1px; left: 11px; width: 16px; height: 4px; border-radius: 3px; }
+  .taskbar.has-island-slot {
+    background: rgba(14, 16, 24, 0.88);
+    border-top-color: rgba(255, 255, 255, 0.14);
+  }
+  .taskbar-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .taskbar-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .real-island.tucked {
+    border-radius: 0 0 99px 99px;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 42%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  }
+  .real-island.expanded { border-radius: 24px; border: 1px solid var(--island-border); }
+  .real-island.drag-over {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 32%, transparent), 0 18px 44px rgba(0, 0, 0, 0.5);
+  }
+
+  .island-collapsed-bar {
+    height: 40px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    flex: none;
+  }
+  .island-collapsed-left, .island-collapsed-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .island-status-text {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .island-pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: rgba(128, 128, 148, 0.16);
+    color: var(--island-muted);
+    white-space: nowrap;
+  }
+  .island-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #35e985;
+    flex: none;
+  }
+  .island-dot.busy { background: #3d8bff; }
+  .island-dot.wait { background: #ff9f43; }
+  .island-dot.done { background: #35e985; }
+  .island-level-bar {
+    width: 84px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(128, 134, 152, 0.25);
+    overflow: hidden;
+  }
+  .island-level-bar i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    border-radius: inherit;
+    transition: width var(--motion-medium) var(--motion-ease);
+  }
+
+  .island-eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+  }
+  .island-eq i {
+    display: block;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+    animation: eqWave 1.1s var(--motion-ease) infinite alternate;
+  }
+  .island-eq i:nth-child(1) { height: 5px; animation-delay: 0ms; }
+  .island-eq i:nth-child(2) { height: 11px; animation-delay: 180ms; }
+  .island-eq i:nth-child(3) { height: 7px; animation-delay: 360ms; }
+  @keyframes eqWave {
+    from { height: 4px; }
+    to { height: 12px; }
+  }
+
+  .island-expanded-body {
+    padding: 4px 16px 14px;
+    display: grid;
+    gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-base) var(--motion-ease-out);
+  }
+  .real-island.expanded .island-expanded-body {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .island-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .island-tabs__list {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .island-tab {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 0;
+    background: transparent;
+    color: var(--island-muted);
+    font: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+  }
+  .island-tab.active {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--island-text);
+    font-weight: 600;
+  }
+  .island-panel-stage {
+    animation: panelMaskIn var(--motion-medium) var(--motion-ease-out) backwards;
+  }
+  @keyframes panelMaskIn {
+    from { opacity: 0; }
+  }
+  .island-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 10px;
+  }
+  .island-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .island-widget {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(128, 134, 152, 0.12);
+    border: 1px solid rgba(128, 134, 152, 0.18);
+    display: grid;
+    gap: 5px;
+    align-content: start;
+  }
+  .island-widget--accent {
+    border-color: color-mix(in srgb, var(--accent) 45%, rgba(128, 134, 152, 0.2));
+    background: color-mix(in srgb, var(--accent) 12%, rgba(128, 134, 152, 0.1));
+  }
+  .island-widget__title {
+    font-size: 11px;
+    color: var(--island-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .island-widget__main {
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .island-widget__sub {
+    font-size: 11px;
+    color: var(--island-muted);
+    line-height: 1.4;
+  }
+  .island-mini-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 3px;
+  }
+  .island-mini-btn {
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .island-mini-btn--allow {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+  }
+  .lyric-line {
+    font-size: 11.5px;
+    color: var(--island-muted);
+    transition: color var(--motion-base) var(--motion-ease);
+  }
+  .lyric-line.now {
+    color: var(--island-text);
+    font-weight: 600;
+  }
+
+  .island-banner {
+    position: absolute;
+    left: 50%;
+    top: 52px;
+    transform: translateX(-50%);
+    z-index: 36;
+    min-width: 280px;
+    max-width: 420px;
+    padding: 9px 14px;
+    border-radius: 14px;
+    background: var(--island-bg);
+    color: var(--island-text);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--island-border));
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-base) var(--motion-ease-out);
+  }
+  .island-banner.show { opacity: 1; }
+  .island-banner__badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    color: var(--accent);
+    font-size: 14px;
+    flex: none;
+  }
+  .island-banner__body { display: grid; gap: 1px; min-width: 0; }
+  .island-banner__title { font-size: 12px; font-weight: 600; }
+  .island-banner__sub { font-size: 11px; color: var(--island-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .clipboard-popup {
+    position: absolute;
+    right: 28px;
+    top: 70px;
+    width: 252px;
+    z-index: 42;
+    padding: 12px;
+    border-radius: 14px;
+    background: var(--card-bg);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--card-border));
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(16px);
+    display: grid;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-base) var(--motion-ease-out);
+  }
+  .clipboard-popup.show { opacity: 1; pointer-events: auto; }
+  .clipboard-popup__item {
+    padding: 7px 9px;
+    border-radius: 8px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+
+  .stage-card-shell {
+    position: absolute;
+    z-index: 20;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(840px, calc(100% - 44px));
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--card-border);
+    border-radius: 22px;
+    backdrop-filter: blur(22px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 28px 72px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    transition:
+      top var(--motion-medium) var(--motion-ease),
+      max-height var(--motion-medium) var(--motion-ease),
+      background-color var(--motion-medium) var(--motion-ease),
+      border-color var(--motion-medium) var(--motion-ease);
+  }
+
+  .card-header {
+    padding: 11px 16px 11px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid var(--card-border-soft);
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .step-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-subtle);
+    font: inherit;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: default;
+    transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+  }
+  .step-chip__num {
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    background: var(--card-surface);
+  }
+  .step-chip.done { color: var(--text-muted); cursor: pointer; }
+  .step-chip.done:hover { color: var(--text); background: var(--card-surface); }
+  .step-chip.done .step-chip__num {
+    background: color-mix(in srgb, var(--mint) 22%, transparent);
+    color: var(--mint);
+  }
+  .step-chip.active {
+    color: var(--text);
+    font-weight: 600;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  }
+  .step-chip.active .step-chip__num {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: none;
+  }
+  .track-pill {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    color: var(--text-muted);
+  }
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+  }
+  .icon-btn:hover { background: var(--card-surface-hover); color: var(--text); }
+
+  .card-body {
+    overflow-y: auto;
+    padding: 18px 24px 16px;
+    scrollbar-width: thin;
+    animation: fadeAct var(--motion-base) var(--motion-ease-out) backwards;
+  }
+  @keyframes fadeAct {
+    from { opacity: 0; }
+  }
+
+  .card-footer {
+    padding: 12px 24px 15px;
+    border-top: 1px solid var(--card-border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .footer-nav { display: flex; align-items: center; gap: 8px; }
+  .btn {
+    height: 34px;
+    padding: 0 15px;
+    border-radius: 9px;
+    border: 1px solid var(--card-border);
+    background: var(--card-surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+  }
+  .btn:hover { background: var(--card-surface-hover); border-color: color-mix(in srgb, var(--accent) 45%, var(--card-border)); }
+  .btn--quiet { border-color: transparent; background: transparent; color: var(--text-muted); padding: 0 10px; }
+  .btn--quiet:hover { color: var(--text); background: var(--card-surface); border-color: transparent; }
+  .btn--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+  }
+  .btn--primary:hover { filter: brightness(1.06); background: var(--accent); border-color: var(--accent); }
+  .btn--sm { height: 28px; padding: 0 11px; font-size: 12px; border-radius: 7px; }
+
+  .split-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+  .split-stage--wide-left {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr);
+  }
+  .act-title {
+    margin: 0 0 5px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.28;
+    letter-spacing: -0.01em;
+  }
+  .act-lead {
+    margin: 0 0 14px;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.56;
+  }
+  .section-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .choreo-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 9px 12px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 9%, var(--card-surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--card-border-soft));
+    font-size: 12px;
+  }
+  .choreo-strip__scenes {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .scene-chip {
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border-soft);
+    background: var(--card-surface);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+  }
+  .scene-chip:hover { color: var(--text); border-color: var(--card-border); }
+  .scene-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+  }
+
+  .hero-visual {
+    border-radius: 16px;
+    padding: 18px;
+    background:
+      radial-gradient(220px 140px at 50% 28%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 72%),
+      var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 12px;
+    text-align: center;
+  }
+  .jelly-stage {
+    width: 88px;
+    height: 88px;
+    border-radius: 24px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--accent) 14%, var(--card-surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--card-border-soft));
+    cursor: pointer;
+  }
+  .hero-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .hero-tag {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    color: var(--text-muted);
+  }
+
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .theme-card {
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border-soft);
+    background: var(--card-surface);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+    display: grid;
+    gap: 6px;
+    text-align: center;
+  }
+  .theme-card.active {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--card-surface));
+  }
+  .theme-art {
+    height: 34px;
+    border-radius: 8px;
+    display: grid;
+    place-items: start center;
+    padding-top: 5px;
+    background: linear-gradient(135deg, #324a6d, #684f86);
+  }
+  .theme-art__pill {
+    width: 66%;
+    height: 12px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+  }
+  .theme-art__dot { width: 5px; height: 5px; border-radius: 50%; }
+  .theme-card__name { font-size: 11.5px; font-weight: 600; }
+
+  .control-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .control-box {
+    padding: 12px 14px;
+    border-radius: 13px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    display: grid;
+    gap: 9px;
+    align-content: start;
+  }
+  .accent-swatches { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+  .swatch.active {
+    border-color: var(--text);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  .edge-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .edge-btn {
+    padding: 6px;
+    border-radius: 9px;
+    border: 1px solid var(--card-border-soft);
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+  }
+  .edge-btn.active {
+    color: var(--text);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    font-weight: 600;
+  }
+  .edge-mini {
+    width: 32px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--card-border);
+    position: relative;
+  }
+  .edge-mini i { position: absolute; background: var(--accent); border-radius: 99px; }
+  .edge-mini--top i { top: 2px; left: 8px; width: 14px; height: 3px; }
+  .edge-mini--bottom i { bottom: 2px; left: 8px; width: 14px; height: 3px; }
+  .edge-mini--left i { left: 2px; top: 4px; width: 3px; height: 10px; }
+  .edge-mini--right i { right: 2px; top: 4px; width: 3px; height: 10px; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill-btn {
+    height: 27px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border-soft);
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+  }
+  .pill-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+  }
+
+  .persona-bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .persona-card {
+    padding: 8px 10px;
+    border-radius: 11px;
+    border: 1px solid var(--card-border-soft);
+    background: var(--card-surface);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    display: grid;
+    gap: 2px;
+  }
+  .persona-card.active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--card-surface));
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .persona-card__title { font-size: 12.5px; font-weight: 600; }
+  .persona-card__sub { font-size: 10.5px; color: var(--text-muted); }
+
+  .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .feature-tile {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border-soft);
+    background: var(--card-surface);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .feature-tile.on {
+    border-color: color-mix(in srgb, var(--accent) 52%, var(--card-border-soft));
+    background: color-mix(in srgb, var(--accent) 10%, var(--card-surface));
+  }
+  .feature-tile.focused {
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .feature-tile__text { display: grid; gap: 1px; min-width: 0; }
+  .feature-tile__name { font-size: 12px; font-weight: 600; }
+  .feature-tile__desc { font-size: 10.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-toggle {
+    width: 28px;
+    height: 16px;
+    border-radius: 999px;
+    background: rgba(128, 134, 152, 0.35);
+    position: relative;
+    flex: none;
+  }
+  .mini-toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform var(--motion-fast) var(--motion-ease);
+  }
+  .feature-tile.on .mini-toggle { background: var(--accent); }
+  .feature-tile.on .mini-toggle::after { transform: translateX(12px); }
+
+  .preview-pane {
+    border-radius: 14px;
+    padding: 14px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    display: grid;
+    align-content: start;
+    gap: 10px;
+  }
+  .preview-pane__screen {
+    border-radius: 11px;
+    padding: 12px;
+    background: rgba(8, 10, 16, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: grid;
+    gap: 8px;
+  }
+  .stage--light .preview-pane__screen {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(20, 24, 34, 0.08);
+  }
+
+  .check-list { display: grid; gap: 10px; }
+  .check-card {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    display: grid;
+    gap: 8px;
+  }
+  .check-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .check-card__title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .status-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mint) 16%, transparent);
+    color: var(--mint);
+  }
+  .status-tag--warn {
+    background: color-mix(in srgb, var(--warn) 18%, transparent);
+    color: var(--warn);
+  }
+  .agent-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .agent-pill {
+    font-size: 11.5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--card-surface-hover);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 1px 0 var(--card-border);
+  }
+
+  .practice-list { display: grid; gap: 10px; }
+  .practice-row {
+    padding: 12px 14px;
+    border-radius: 13px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .practice-row.done {
+    border-color: color-mix(in srgb, var(--warn) 46%, var(--card-border-soft));
+    background: color-mix(in srgb, var(--warn) 8%, var(--card-surface));
+  }
+  .practice-star {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    background: var(--card-surface);
+    color: var(--text-subtle);
+    flex: none;
+  }
+  .practice-row.done .practice-star {
+    background: color-mix(in srgb, var(--warn) 22%, transparent);
+    color: var(--warn);
+    animation: starPop var(--motion-medium) var(--motion-ease-out) backwards;
+  }
+  @keyframes starPop { from { transform: scale(0.45) rotate(-40deg); } }
+  .practice-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  .practice-title { font-size: 13px; font-weight: 600; }
+  .practice-sub { font-size: 11.5px; color: var(--text-muted); }
+
+  .summary-banner {
+    padding: 11px 14px;
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--accent) 11%, var(--card-surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--card-border-soft));
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .ext-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ext-card {
+    padding: 12px 14px;
+    border-radius: 13px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    display: grid;
+    gap: 7px;
+    align-content: space-between;
+    text-align: left;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+  }
+  .ext-card:hover { border-color: var(--accent); background: var(--card-surface-hover); }
+  .ext-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 13px; }
+  .ext-card__desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
+  .ext-card__foot { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--accent); font-weight: 600; }
+
+  .arch-note {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--card-surface);
+    border: 1px dashed var(--card-border);
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .arch-note code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--card-surface-hover);
+    color: var(--text);
+  }
+
+  .wechat-corner {
+    position: absolute;
+    left: 18px;
+    bottom: 50px;
+    z-index: 44;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px 9px 9px;
+    border-radius: 14px;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42);
+    cursor: zoom-in;
+    transition: opacity var(--motion-base) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
+  }
+  .wechat-corner:hover {
+    border-color: color-mix(in srgb, var(--mint) 60%, var(--card-border));
+    background: color-mix(in srgb, var(--mint) 6%, var(--card-bg));
+  }
+  .wechat-corner.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .wechat-corner.collapsed {
+    padding: 7px 11px;
+    cursor: pointer;
+  }
+  .wechat-corner__qr {
+    width: 66px;
+    height: 66px;
+    padding: 4px;
+    border-radius: 9px;
+    background: #ffffff;
+    flex: none;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .wechat-corner__qr img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .wechat-corner__meta {
+    display: grid;
+    gap: 3px;
+    max-width: 148px;
+  }
+  .wechat-corner__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .wechat-corner__title {
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .wechat-corner__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2aae67;
+    flex: none;
+  }
+  .wechat-corner__sub {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .wechat-corner__hide {
+    border: 0;
+    background: transparent;
+    padding: 1px 4px;
+    border-radius: 5px;
+    color: var(--text-subtle);
+    font: inherit;
+    font-size: 10.5px;
+    cursor: pointer;
+    flex: none;
+  }
+  .wechat-corner__hide:hover {
+    color: var(--text);
+    background: var(--card-surface-hover);
+  }
+  .qr-lightbox {
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    background: rgba(6, 8, 14, 0.68);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-base) var(--motion-ease-out);
+  }
+  .qr-lightbox.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .qr-lightbox__card {
+    width: min(380px, calc(100% - 40px));
+    padding: 24px 24px 20px;
+    border-radius: 22px;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.6);
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    text-align: center;
+    position: relative;
+  }
+  .qr-lightbox__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .qr-lightbox__close:hover {
+    background: var(--card-surface-hover);
+    color: var(--text);
+  }
+  .qr-lightbox__img {
+    width: 280px;
+    height: 280px;
+    padding: 14px;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    display: grid;
+    place-items: center;
+  }
+  .qr-lightbox__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .release-ver-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--accent) 12%, var(--card-surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--card-border-soft));
+  }
+  .release-ver-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .release-ver-pill {
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .changelog-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .changelog-col {
+    padding: 12px 13px;
+    border-radius: 12px;
+    background: var(--card-surface);
+    border: 1px solid var(--card-border-soft);
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .changelog-col__title {
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .changelog-list {
+    margin: 0;
+    padding-left: 16px;
+    display: grid;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.48;
+  }
+
+  .taskbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 36px;
+    background: rgba(12, 14, 20, 0.74);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 11.5px;
+    color: rgba(245, 244, 239, 0.74);
+    z-index: 15;
+  }
+
+  @media (max-width: 860px) {
+    .split-stage, .split-stage--wide-left, .control-grid-2, .ext-grid, .feature-grid, .persona-bar, .changelog-grid { grid-template-columns: 1fr; }
+    .theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .form-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .desktop-files { display: none; }
+    .director-hud { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="dev-ribbon">
+    <div class="dev-ribbon__left">
+      <span class="dev-brand">浮屿 Fuyu · 安装引导 + 岛屿面板自动演示原型 <span class="dev-badge">v2 导演引擎</span></span>
+      <div class="dev-seg" id="trackSeg">
+        <button class="dev-btn active" data-track="firstRun">首次安装引导（6 幕）</button>
+        <button class="dev-btn" data-track="whatsNew">版本更新引导（v0.3.15 · 3 幕）</button>
+        <button class="dev-btn" data-track="agentPush">进阶：手机推送向导</button>
+      </div>
+    </div>
+    <div class="dev-ribbon__right">
+      <div class="dev-seg" id="formSeg" title="快速切换岛屿形态">
+        <button class="dev-btn active" data-qform="top">贴顶</button>
+        <button class="dev-btn" data-qform="pill">药丸</button>
+        <button class="dev-btn" data-qform="notch">刘海</button>
+        <button class="dev-btn" data-qform="bottom">底边</button>
+        <button class="dev-btn" data-qform="left">左侧</button>
+        <button class="dev-btn" data-qform="right">右侧</button>
+        <button class="dev-btn" data-qform="taskbar">任务栏</button>
+      </div>
+      <div class="dev-seg" id="osSeg">
+        <button class="dev-btn active" data-os="mac">macOS</button>
+        <button class="dev-btn" data-os="win">Windows</button>
+      </div>
+      <div class="dev-seg" id="langSeg">
+        <button class="dev-btn active" data-lang="zh">中文</button>
+        <button class="dev-btn" data-lang="en">EN</button>
+      </div>
+      <button class="dev-btn dev-btn--outline" id="reduceMotionBtn">减少动画：关</button>
+      <button class="dev-btn dev-btn--outline" id="resetPracticeBtn">重置预览</button>
+    </div>
+  </div>
+
+  <div class="desktop-stage" id="desktopStage">
+    <div class="director-hud" id="directorHud"></div>
+
+    <div class="desktop-files" id="desktopFiles">
+      <div class="desktop-file" draggable="true" data-file="设计稿-v3.png">
+        <div class="desktop-file__icon">PNG</div>
+        <span>设计稿-v3.png</span>
+      </div>
+      <div class="desktop-file" draggable="true" data-file="需求纪要.md">
+        <div class="desktop-file__icon desktop-file__icon--md">MD</div>
+        <span>需求纪要.md</span>
+      </div>
+    </div>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="spotlight-ring" id="spotlightRing"></div>
+
+    <div class="real-island edge-top" id="realIsland"></div>
+    <div class="island-banner" id="islandBanner"></div>
+
+    <div class="clipboard-popup" id="clipboardPopup">
+      <div class="section-label" style="margin:0">
+        <span>剪贴板历史 · 实时弹出</span>
+        <span class="kbd" id="clipKbdHint">⌘⇧V</span>
+      </div>
+      <div class="clipboard-popup__item">pnpm mq:verify --only regression</div>
+      <div class="clipboard-popup__item">https://fuyu.tix.xin · 浮屿悬浮岛效率工具</div>
+      <div class="clipboard-popup__item">截屏图片 · 1440×900 · 刚刚</div>
+    </div>
+
+    <section class="stage-card-shell" id="cardShell" role="dialog" aria-label="欢迎使用浮屿">
+      <header class="card-header" id="cardHeader"></header>
+      <div class="card-body" id="cardBody"></div>
+      <footer class="card-footer" id="cardFooter"></footer>
+    </section>
+
+    <aside class="wechat-corner" id="wechatCorner" aria-label="浮屿微信交流群"></aside>
+    <div class="qr-lightbox" id="qrLightbox" role="dialog" aria-modal="true" aria-label="浮屿微信交流群二维码"></div>
+
+    <div class="taskbar" id="taskbar">
+      <span class="taskbar-icons" id="taskbarLeft">
+        <span class="taskbar-dot"></span><span class="taskbar-dot"></span><span class="taskbar-dot"></span>
+        <span>顶部 / 侧边 / 任务栏多形态真岛联动 · 鼠标一碰立即让权给你操控</span>
+      </span>
+      <span id="taskbarRight">快捷键：Alt + ← / → 翻页 · ⌘⇧V 弹出剪贴板</span>
+    </div>
+  </div>
+
+<script>
+const THEMES = [
+  { id: "default", name: "玄墨", nameEn: "Obsidian", tone: "dark", bg: "#111318", text: "#f6f6f2", dot: "#35e985", blur: "0px" },
+  { id: "greyWhite", name: "灰白", nameEn: "Cloud", tone: "light", bg: "#e7e9ee", text: "#181a22", dot: "#1f9d55", blur: "0px" },
+  { id: "frostedClear", name: "通透磨砂", nameEn: "Clear Frost", tone: "light", bg: "rgba(248, 250, 253, 0.84)", text: "#16171c", dot: "#16904c", blur: "14px" },
+  { id: "frostedWarm", name: "暖纸磨砂", nameEn: "Warm Paper", tone: "light", bg: "rgba(247, 241, 230, 0.88)", text: "#2a2118", dot: "#2f8f4e", blur: "12px" },
+  { id: "liquidGlass", name: "液态玻璃", nameEn: "Liquid Glass", tone: "dark", bg: "rgba(24, 30, 44, 0.58)", text: "#f7f8fc", dot: "#74d6ff", blur: "22px" },
+];
+
+const ACCENTS = ["#74d6ff", "#a78bfa", "#5ce1a6", "#ff9f5a", "#f472b6", "#60a5fa"];
+
+const MOTIONS = [
+  { id: "pop", name: "Q 弹", nameEn: "Pop", ms: "460ms", curve: "cubic-bezier(0.34, 1.42, 0.48, 1)" },
+  { id: "lively", name: "灵动", nameEn: "Lively", ms: "420ms", curve: "cubic-bezier(0.28, 1.24, 0.44, 1)" },
+  { id: "snappy", name: "利落", nameEn: "Snappy", ms: "280ms", curve: "cubic-bezier(0.22, 1.12, 0.36, 1)" },
+  { id: "soft", name: "柔和", nameEn: "Soft", ms: "400ms", curve: "cubic-bezier(0.22, 1, 0.36, 1)" },
+  { id: "none", name: "无动画", nameEn: "Instant", ms: "0ms", curve: "linear" },
+];
+
+const FEATURES = [
+  { id: "agents", name: "AI Agent 监工", nameEn: "AI Agents", desc: "状态灯、审批卡片、会话列表与用量环", descEn: "Live status light, approvals & quota ring", panel: "agents", demo: "Claude Code 正在重构引导页 · 审批与用量环" },
+  { id: "music", name: "音乐与同步歌词", nameEn: "Music & Lyrics", desc: "悬浮波形、切歌与实时滚动歌词", descEn: "Live waveform, controls & synced lyrics", panel: "music", demo: "正在播放：海边的风 · 同步歌词滚屏" },
+  { id: "todos", name: "待办与日历", nameEn: "Todos & Calendar", desc: "随手记任务、日程会前倒计时", descEn: "Quick tasks & meeting countdowns", panel: "todos", demo: "15:00 产品评审 · 还有 12 分钟" },
+  { id: "clipboard", name: "剪贴板历史", nameEn: "Clipboard", desc: "热键呼出历史文本/图片与收藏", descEn: "Instant hotkey history & previews", panel: "dashboard", demo: "随时热键弹出历史剪贴与图片预览" },
+  { id: "shelf", name: "文件中转", nameEn: "File Shelf", desc: "拖到岛上暂存，切窗口随时拖出", descEn: "Drop files to hold & drag out anywhere", panel: "shelf", demo: "文件只记路径，不移动原文件" },
+  { id: "screenshot", name: "截图、贴图与录屏", nameEn: "Capture & Record", desc: "选区标注、置顶贴图与 GIF/MP4 录制", descEn: "Snip, pin on top & MP4/GIF capture", panel: "dashboard", demo: "截图后可一键贴在屏幕上方对照" },
+  { id: "translation", name: "快捷翻译", nameEn: "Quick Translate", desc: "划词或热键弹窗即时多语翻译", descEn: "Instant hotkey translation popup", panel: "dashboard", demo: "选词即翻，不打断当前阅读" },
+  { id: "voice", name: "离线语音输入", nameEn: "Voice Input", desc: "本地模型语音转文字，直接存待办", descEn: "Offline speech-to-text anywhere", panel: "dashboard", demo: "按住热键说话，松手自动转写输入" },
+  { id: "timer", name: "计时器与番茄钟", nameEn: "Timer & Pomodoro", desc: "收起条常驻倒计时与休息提醒", descEn: "Collapsed countdown & break alerts", panel: "dashboard", demo: "专注中 24:18 · 收起条安静计时" },
+  { id: "messages", name: "IM 与邮箱提醒", nameEn: "Messages & Mail", desc: "QQ/微信/飞书/邮箱新消息轻横幅", descEn: "Unified subtle alerts without noise", panel: "messages", demo: "飞书 · 设计师发来一条新消息横幅" },
+];
+
+const PERSONAS = {
+  code: { name: "写代码", nameEn: "Coding", sub: "Agent·剪贴板·截图·中转·待办", mods: ["agents", "clipboard", "screenshot", "shelf", "todos", "timer"] },
+  office: { name: "日常办公", nameEn: "Work", sub: "待办日历·消息·翻译·剪贴板·中转", mods: ["todos", "messages", "translation", "clipboard", "shelf", "screenshot"] },
+  study: { name: "专注学习", nameEn: "Study", sub: "番茄钟·音乐·翻译·语音·待办", mods: ["timer", "music", "translation", "voice", "todos", "clipboard"] },
+  fun: { name: "轻度娱乐", nameEn: "Leisure", sub: "音乐歌词·文件中转·截图", mods: ["music", "shelf", "screenshot"] },
+};
+
+const ISLAND_FORMS = [
+  { id: "top", name: "贴顶", nameEn: "Top Flush", edge: "top", form: "top", hint: "紧贴屏幕顶边，自然生长" },
+  { id: "pill", name: "悬空药丸", nameEn: "Floating Pill", edge: "top", form: "pill", hint: "离顶悬空 12px，四角全圆角带投影" },
+  { id: "notch", name: "刘海双翼", nameEn: "Notch Wings", edge: "top", form: "notch", hint: "中央物理刘海 + 左右双翼状态栏" },
+  { id: "bottom", name: "底边", nameEn: "Bottom", edge: "bottom", form: "top", hint: "吸附底边上方，向上展开面板" },
+  { id: "left", name: "左侧竖岛", nameEn: "Left Side", edge: "left", form: "top", hint: "竖向细条贴左，向右侧滑出面板" },
+  { id: "right", name: "右侧竖岛", nameEn: "Right Side", edge: "right", form: "top", hint: "竖向细条贴右，向左侧滑出面板" },
+  { id: "taskbar", name: "任务栏", nameEn: "Taskbar", edge: "taskbar", form: "top", hint: "直接嵌入 Win11 任务栏空白槽位" },
+];
+
+const CHOREO_SCENES = [
+  { id: "hello", label: "落岛问候", labelEn: "Greeting", duration: 2400, run: () => {
+    setIslandState({ expanded: false, tucked: false, collapsedMode: "default" });
+    showBanner("👋", zh("你好啊，我在这儿", "Hi there, I'm up here"), zh("平时安静停在屏幕边缘，有事才优雅变大", "Quiet at the edge until something needs you"), 2200);
+  }},
+  { id: "morphForms", label: "百变形态切换", labelEn: "Form Morph", duration: 4800, run: () => {
+    hideBanner();
+    const seq = ["pill", "notch", "right", "taskbar", "top"];
+    seq.forEach((fid, idx) => {
+      const t = setTimeout(() => {
+        if (state.directorMode !== "playing" || state.directorSceneIdx !== 1) return;
+        applyFormPreset(fid, false);
+        const info = ISLAND_FORMS.find((f) => f.id === fid);
+        state.directorCaption = zh(`形态切换：${info.name}`, `Form: ${info.nameEn}`);
+        renderDirectorHud();
+      }, idx * 920);
+      morphTimers.push(t);
+    });
+  }},
+  { id: "level", label: "音量微提示", labelEn: "Volume HUD", duration: 2200, run: () => {
+    setIslandState({ expanded: false, tucked: false, collapsedMode: "volume", volume: 72 });
+    hideBanner();
+  }},
+  { id: "banner", label: "新消息轻横幅", labelEn: "Message Banner", duration: 2600, run: () => {
+    setIslandState({ expanded: false, tucked: false, collapsedMode: "default" });
+    showBanner("💬", zh("飞书 · 设计评审群", "Feishu · Design Review"), zh("“新版引导页的多形态和自动演示太顺滑了！”", "\"The multi-form island & choreography feel super smooth!\""), 2400);
+  }},
+  { id: "panelDashboard", label: "展开：仪表盘小组件", labelEn: "Panel: Dashboard", duration: 3200, run: () => {
+    hideBanner();
+    setIslandState({ expanded: true, tucked: false, panel: "dashboard" });
+  }},
+  { id: "panelAgent", label: "展开：AI Agent 审批", labelEn: "Panel: AI Approval", duration: 3600, run: () => {
+    setIslandState({ expanded: true, tucked: false, panel: "agents", approvalState: "pending" });
+  }},
+  { id: "panelMusic", label: "展开：音乐与歌词", labelEn: "Panel: Music & Lyrics", duration: 3200, run: () => {
+    setIslandState({ expanded: true, tucked: false, panel: "music" });
+  }},
+  { id: "tuckReveal", label: "贴边收起 & 弹出", labelEn: "Tuck & Reveal", duration: 2800, run: () => {
+    applyFormPreset("top", false);
+    setIslandState({ expanded: false, tucked: true, collapsedMode: "default" });
+    showBanner("✨", zh("贴边收起模式", "Edge Tuck Mode"), zh("闲置自动贴边成细光条，鼠标一碰丝滑回来", "Tucks into a slim rim when idle; touch edge to reveal"), 2400);
+  }},
+];
+
+const state = {
+  track: "firstRun",
+  stepIdx: 0,
+  os: "mac",
+  lang: "zh",
+  reducedMotion: false,
+  themeId: "default",
+  accent: "#74d6ff",
+  jellyStyle: "vector",
+  edge: "top",
+  islandForm: "top",
+  formPreset: "top",
+  taskbarLook: "transparent",
+  motionId: "lively",
+  personas: ["code"],
+  modules: new Set(["agents", "music", "todos", "clipboard", "shelf", "screenshot", "timer", "messages"]),
+  focusedFeature: "agents",
+
+  islandExpanded: false,
+  islandTucked: false,
+  islandCollapsedMode: "default",
+  islandVolume: 72,
+  islandPanel: "dashboard",
+  approvalState: "pending",
+  todoChecked: false,
+  shelfFiles: ["原型图.fig"],
+
+  directorMode: "playing",
+  directorSceneIdx: 0,
+  directorCaption: "",
+  tourActive: false,
+
+  expandTrigger: "hover",
+  hooksInstalled: false,
+  macPerms: { accessibility: false, screenRecording: false },
+  practice: { expand: false, drop: false, shortcut: false },
+  launchAtStartup: true,
+  pushStep: 0,
+  pushConfigured: false,
+  qrZoomed: false,
+  qrCollapsed: false,
+};
+
+const UPDATE_RELEASE = {
+  fromVersion: "v0.3.13",
+  version: "v0.3.15",
+  date: "2026-11-25",
+  highlights: [
+    { zh: "支持贴顶、悬空药丸、刘海双翼、四边停靠与 Win11 任务栏 7 种形态自由切换", en: "7 island forms: Top, Floating Pill, Notch Wings, 4-edge dock & Win11 Taskbar" },
+    { zh: "新增离线语音输入（本地 SenseVoice，断网秒转待办或光标输入）", en: "Offline Voice Input powered by local SenseVoice model" },
+    { zh: "全新自动化演示引导与可扩展按需配置中心", en: "Live choreographed onboarding & extensible setup hub" },
+  ],
+  improvements: [
+    { zh: "AI Agent 会话列表新增 5 种可视化切换布局与极简用量条", en: "5 switchable AI Agent session layouts & compact usage strip" },
+    { zh: "液态玻璃与深浅色主题过渡更顺滑，遵循减少动画规范", en: "Smoother Liquid Glass transitions respecting reduced-motion" },
+  ],
+  fixes: [
+    { zh: "修复 macOS 引导页权限与练习顺序倒挂的问题", en: "Fixed macOS permission ordering before live practice" },
+    { zh: "优化切后台时定时器休眠与原生穿透区合帧上报，降低空闲功耗", en: "Reduced idle CPU with background timer pausing & rAF hit-rect batching" },
+  ],
+};
+
+const REGISTRY = {
+  firstRun: [
+    { id: "hello", title: "认识浮屿", titleEn: "Welcome", spotlight: "pulse", autoChoreo: true },
+    { id: "look", title: "外观与动效", titleEn: "Look & Motion", spotlight: "calm", autoChoreo: false },
+    { id: "features", title: "能力全景", titleEn: "Capabilities", spotlight: "calm", autoChoreo: false },
+    { id: "envCheck", title: "环境一键体检", titleEn: "Quick Check", spotlight: "off", autoChoreo: false },
+    { id: "practice", title: "上手试一下", titleEn: "Try It Live", spotlight: "pulse", autoChoreo: false },
+    { id: "ready", title: "专属就绪", titleEn: "Ready", spotlight: "calm", autoChoreo: false },
+  ],
+  whatsNew: [
+    { id: "wnRelease", title: "版本说明", titleEn: "Release Notes", spotlight: "calm", autoChoreo: false },
+    { id: "wnDock", title: "新能力：多形态停靠", titleEn: "New: Multi-Form", spotlight: "pulse", autoChoreo: false },
+    { id: "wnVoice", title: "新能力：离线语音", titleEn: "New: Voice Input", spotlight: "calm", autoChoreo: false },
+  ],
+  agentPush: [
+    { id: "pushWizard", title: "手机推送向导", titleEn: "Phone Push", spotlight: "off", autoChoreo: false },
+  ],
+};
+
+let directorTimer = 0;
+let bannerTimer = 0;
+let motionPreviewTimer = 0;
+let morphTimers = [];
+
+function zh(a, b) { return state.lang === "zh" ? a : b; }
+
+function clearDirectorTimer() {
+  clearTimeout(directorTimer);
+  directorTimer = 0;
+  morphTimers.forEach((t) => clearTimeout(t));
+  morphTimers = [];
+}
+
+function applyFormPreset(presetId, rerenderCard = true) {
+  const preset = ISLAND_FORMS.find((f) => f.id === presetId) || ISLAND_FORMS[0];
+  state.formPreset = preset.id;
+  state.edge = preset.edge;
+  state.islandForm = preset.form;
+  state.islandTucked = false;
+  syncDevRibbon();
+  if (rerenderCard) renderAll();
+  else {
+    renderIslandContent();
+    layoutIslandAndSpotlight();
+  }
+}
+
+function playAllFormsShowcase() {
+  clearDirectorTimer();
+  state.directorMode = "playing";
+  state.tourActive = false;
+  const order = ["top", "pill", "notch", "right", "bottom", "taskbar", "left", "top"];
+  order.forEach((fid, idx) => {
+    const t = setTimeout(() => {
+      if (state.directorMode !== "playing") return;
+      applyFormPreset(fid, true);
+      const info = ISLAND_FORMS.find((f) => f.id === fid);
+      state.directorCaption = zh(`形态巡礼：${info.name}`, `Form tour: ${info.nameEn}`);
+      renderDirectorHud();
+      if (idx === order.length - 1) {
+        state.directorMode = "paused";
+        renderDirectorHud();
+      }
+    }, idx * 950);
+    morphTimers.push(t);
+  });
+}
+
+function setIslandState(patch) {
+  if (patch.expanded !== undefined) state.islandExpanded = patch.expanded;
+  if (patch.tucked !== undefined) state.islandTucked = patch.tucked;
+  if (patch.collapsedMode !== undefined) state.islandCollapsedMode = patch.collapsedMode;
+  if (patch.volume !== undefined) state.islandVolume = patch.volume;
+  if (patch.panel !== undefined) state.islandPanel = patch.panel;
+  if (patch.approvalState !== undefined) state.approvalState = patch.approvalState;
+  renderIslandContent();
+  layoutIslandAndSpotlight();
+}
+
+function showBanner(icon, title, sub, duration = 2600) {
+  const el = document.getElementById("islandBanner");
+  el.innerHTML = `
+    <span class="island-banner__badge">${icon}</span>
+    <span class="island-banner__body">
+      <span class="island-banner__title">${title}</span>
+      <span class="island-banner__sub">${sub}</span>
+    </span>
+  `;
+  el.classList.add("show");
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => el.classList.remove("show"), duration);
+}
+
+function hideBanner() {
+  clearTimeout(bannerTimer);
+  document.getElementById("islandBanner").classList.remove("show");
+}
+
+function renderDirectorHud() {
+  const hud = document.getElementById("directorHud");
+  const mode = state.directorMode;
+  const dotClass = mode === "playing" ? "director-dot" : mode === "user" ? "director-dot user" : "director-dot paused";
+  const label = mode === "playing"
+    ? zh(`自动演示：${state.directorCaption}`, `Auto-demo: ${state.directorCaption}`)
+    : mode === "user"
+      ? zh("已交由你操控真岛", "You're in control")
+      : zh("自动演示已暂停", "Auto-demo paused");
+
+  hud.innerHTML = `
+    <span class="${dotClass}"></span>
+    <span class="director-caption">${label}</span>
+    <button class="director-hud__btn" id="hudToggleBtn">${mode === "playing" ? zh("暂停", "Pause") : zh("继续演示", "Resume")}</button>
+    <button class="director-hud__btn" id="hudNextBtn">${zh("下一幕动画", "Next scene")}</button>
+  `;
+  hud.querySelector("#hudToggleBtn").addEventListener("click", () => {
+    if (state.directorMode === "playing") pauseDirector("paused");
+    else startChoreo(state.directorSceneIdx);
+  });
+  hud.querySelector("#hudNextBtn").addEventListener("click", () => {
+    const next = (state.directorSceneIdx + 1) % CHOREO_SCENES.length;
+    startChoreo(next);
+  });
+}
+
+function pauseDirector(reason = "paused") {
+  clearDirectorTimer();
+  state.directorMode = reason;
+  state.tourActive = false;
+  renderDirectorHud();
+}
+
+function startChoreo(startIdx = 0) {
+  clearDirectorTimer();
+  if (state.reducedMotion) {
+    state.directorMode = "paused";
+    state.directorCaption = zh("减少动画模式已暂停轮播", "Paused for reduced motion");
+    renderDirectorHud();
+    return;
+  }
+  state.directorMode = "playing";
+  state.tourActive = false;
+  const runAt = (idx) => {
+    if (state.directorMode !== "playing" || document.hidden) return;
+    state.directorSceneIdx = idx % CHOREO_SCENES.length;
+    const scene = CHOREO_SCENES[state.directorSceneIdx];
+    state.directorCaption = zh(scene.label, scene.labelEn);
+    scene.run();
+    renderDirectorHud();
+    updateChoreoHighlight();
+    directorTimer = setTimeout(() => runAt(state.directorSceneIdx + 1), scene.duration);
+  };
+  runAt(startIdx);
+}
+
+function updateChoreoHighlight() {
+  document.querySelectorAll("[data-choreo]").forEach((el) => {
+    el.classList.toggle("active", Number(el.dataset.choreo) === state.directorSceneIdx);
+  });
+}
+
+function runCapabilityTour() {
+  clearDirectorTimer();
+  const enabled = FEATURES.filter((f) => state.modules.has(f.id));
+  if (enabled.length === 0) return;
+  state.directorMode = "playing";
+  state.tourActive = true;
+  let i = 0;
+  const tick = () => {
+    if (!state.tourActive || state.directorMode !== "playing") return;
+    const f = enabled[i % enabled.length];
+    state.focusedFeature = f.id;
+    state.directorCaption = zh(`能力巡礼：${f.name}`, `Tour: ${f.nameEn}`);
+    demonstrateFeatureOnIsland(f);
+    renderBody();
+    renderDirectorHud();
+    i += 1;
+    directorTimer = setTimeout(tick, 2400);
+  };
+  tick();
+}
+
+function demonstrateFeatureOnIsland(f) {
+  if (f.id === "messages") {
+    setIslandState({ expanded: false, tucked: false, collapsedMode: "default" });
+    showBanner("💬", zh("飞书 · 新消息提醒", "Feishu · Incoming"), zh("设计师：预览页的动画和布局真不错", "Designer: Love the new layout & motion"), 2300);
+    return;
+  }
+  if (f.id === "clipboard") {
+    setIslandState({ expanded: false, tucked: false, collapsedMode: "default" });
+    const popup = document.getElementById("clipboardPopup");
+    popup.classList.add("show");
+    setTimeout(() => popup.classList.remove("show"), 1800);
+    return;
+  }
+  if (f.id === "timer") {
+    hideBanner();
+    setIslandState({ expanded: false, tucked: false, collapsedMode: "timer" });
+    return;
+  }
+  hideBanner();
+  setIslandState({ expanded: true, tucked: false, panel: f.panel || "dashboard" });
+}
+
+function playMotionShowcase() {
+  clearTimeout(motionPreviewTimer);
+  pauseDirector("paused");
+  state.directorCaption = zh("开合与换页动效试播", "Motion & page-switch preview");
+  renderDirectorHud();
+  setIslandState({ expanded: true, tucked: false, panel: "dashboard" });
+  motionPreviewTimer = setTimeout(() => {
+    setIslandState({ expanded: true, tucked: false, panel: "agents" });
+    motionPreviewTimer = setTimeout(() => {
+      setIslandState({ expanded: false, tucked: false, collapsedMode: "default" });
+    }, 850);
+  }, 650);
+}
+
+function jellySvg(size = 24, pixel = state.jellyStyle === "pixel") {
+  if (pixel) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+      <rect x="4" y="2" width="8" height="2" fill="${state.accent}"/>
+      <rect x="2" y="4" width="12" height="6" fill="${state.accent}"/>
+      <rect x="5" y="6" width="2" height="2" fill="#09131c"/>
+      <rect x="9" y="6" width="2" height="2" fill="#09131c"/>
+      <rect x="3" y="10" width="2" height="3" fill="${state.accent}" opacity="0.85"/>
+      <rect x="7" y="10" width="2" height="4" fill="${state.accent}" opacity="0.85"/>
+      <rect x="11" y="10" width="2" height="3" fill="${state.accent}" opacity="0.85"/>
+    </svg>`;
+  }
+  return `<svg width="${size}" height="${Math.round(size * 0.76)}" viewBox="3 4 58 43" aria-hidden="true">
+    <circle cx="18" cy="39" r="6.2" fill="${state.accent}" opacity="0.82"/>
+    <circle cx="27.3" cy="39" r="6.2" fill="${state.accent}" opacity="0.9"/>
+    <circle cx="36.7" cy="39" r="6.2" fill="${state.accent}" opacity="0.9"/>
+    <circle cx="46" cy="39" r="6.2" fill="${state.accent}" opacity="0.82"/>
+    <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z" fill="${state.accent}"/>
+    <ellipse cx="24" cy="25" rx="2.9" ry="4" fill="#08131d"/>
+    <ellipse cx="40" cy="25" rx="2.9" ry="4" fill="#08131d"/>
+  </svg>`;
+}
+
+function applyThemeVars() {
+  const theme = THEMES.find((t) => t.id === state.themeId) || THEMES[0];
+  const motion = MOTIONS.find((m) => m.id === state.motionId) || MOTIONS[1];
+  const root = document.documentElement;
+  const stage = document.getElementById("desktopStage");
+  root.style.setProperty("--accent", state.accent);
+  root.style.setProperty("--island-bg", theme.bg);
+  root.style.setProperty("--island-text", theme.text);
+  root.style.setProperty("--island-muted", theme.tone === "light" ? "rgba(24, 26, 34, 0.64)" : "rgba(246, 246, 242, 0.66)");
+  root.style.setProperty("--island-border", theme.tone === "light" ? "rgba(20, 24, 34, 0.12)" : "rgba(255, 255, 255, 0.14)");
+  root.style.setProperty("--island-blur", theme.blur);
+  root.style.setProperty("--island-motion-ms", state.reducedMotion ? "120ms" : motion.ms);
+  root.style.setProperty("--island-motion-curve", state.reducedMotion ? "cubic-bezier(0.22, 1, 0.36, 1)" : motion.curve);
+  stage.classList.toggle("stage--light", theme.tone === "light");
+  stage.classList.toggle("wallpaper-day", theme.tone === "light");
+  document.body.classList.toggle("reduced-motion", state.reducedMotion);
+}
+
+function layoutIslandAndSpotlight() {
+  const stage = document.getElementById("desktopStage");
+  const island = document.getElementById("realIsland");
+  const spot = document.getElementById("spotlightRing");
+  const card = document.getElementById("cardShell");
+  const scrim = document.getElementById("scrim");
+  const rect = stage.getBoundingClientRect();
+  const steps = REGISTRY[state.track];
+  const step = steps[Math.min(state.stepIdx, steps.length - 1)];
+
+  const expanded = state.islandExpanded;
+  const tucked = state.islandTucked && !expanded;
+  const isNotch = state.edge === "top" && state.islandForm === "notch";
+  const isPill = state.edge === "top" && state.islandForm === "pill";
+  const isTaskbar = state.edge === "taskbar";
+
+  const collapsedW = tucked
+    ? 156
+    : isNotch
+      ? Math.min(440, rect.width - 36)
+      : isTaskbar
+        ? Math.min(300, rect.width - 120)
+        : Math.min(368, rect.width - 36);
+  const collapsedH = tucked ? 10 : isNotch ? 36 : isTaskbar ? 28 : 40;
+  const expandedW = Math.min(580, rect.width - 40);
+  const expandedH = 224;
+
+  let w = expanded ? expandedW : collapsedW;
+  let h = expanded ? expandedH : collapsedH;
+  let x = (rect.width - w) / 2;
+  let y = 0;
+
+  if (isTaskbar) {
+    y = expanded ? rect.height - 36 - h - 10 : rect.height - 32;
+  } else if (state.edge === "bottom") {
+    y = rect.height - 36 - h - (expanded ? 8 : 0);
+  } else if (state.edge === "left") {
+    if (!expanded) { w = tucked ? 10 : 44; h = 152; }
+    x = expanded ? 12 : 0;
+    y = Math.max(24, (rect.height - 36 - h) / 2);
+  } else if (state.edge === "right") {
+    if (!expanded) { w = tucked ? 10 : 44; h = 152; }
+    x = rect.width - w - (expanded ? 12 : 0);
+    y = Math.max(24, (rect.height - 36 - h) / 2);
+  } else if (isPill) {
+    y = 12;
+  } else if (isNotch) {
+    y = 0;
+  } else {
+    y = expanded ? 8 : 0;
+  }
+
+  island.className = [
+    "real-island",
+    `edge-${state.edge}`,
+    isPill ? "form-pill" : "",
+    isNotch ? "form-notch" : "",
+    isTaskbar && state.taskbarLook === "transparent" ? "taskbar-transparent" : "",
+    expanded ? "expanded" : "",
+    tucked ? "tucked" : "",
+  ].filter(Boolean).join(" ");
+  island.style.left = `${Math.round(x)}px`;
+  island.style.top = `${Math.round(y)}px`;
+  island.style.width = `${Math.round(w)}px`;
+  island.style.height = `${Math.round(h)}px`;
+
+  document.getElementById("taskbar").classList.toggle("has-island-slot", isTaskbar);
+
+  const pad = 8;
+  spot.style.left = `${Math.round(x - pad)}px`;
+  spot.style.top = `${Math.round(y - pad)}px`;
+  spot.style.width = `${Math.round(w + pad * 2)}px`;
+  spot.style.height = `${Math.round(h + pad * 2)}px`;
+  spot.className = `spotlight-ring mode-${step.spotlight}${y > 4 || expanded || isPill || isTaskbar ? " detached" : ""}`;
+
+  scrim.className = `scrim${step.spotlight === "off" ? " mode-off" : step.spotlight === "calm" ? " mode-soft" : ""}`;
+
+  let cardTop = isPill ? 96 : 86;
+  if (state.edge === "top" && expanded) cardTop = Math.min(248, Math.max(180, rect.height - 430));
+  if (state.edge === "bottom" || isTaskbar) cardTop = expanded ? 28 : 44;
+  card.style.top = `${Math.round(cardTop)}px`;
+  const bottomReserve = (state.edge === "bottom" || isTaskbar) && expanded ? 280 : (state.edge === "bottom" ? 90 : 48);
+  card.style.maxHeight = `${Math.max(260, Math.round(rect.height - cardTop - bottomReserve))}px`;
+
+  const files = document.getElementById("desktopFiles");
+  files.style.opacity = step.id === "practice" ? "1" : "0.4";
+  files.querySelectorAll(".desktop-file").forEach((f) => {
+    f.classList.toggle("pulse-hint", step.id === "practice" && !state.practice.drop);
+  });
+}
+
+function renderPanelBody() {
+  if (state.islandPanel === "agents") {
+    return `
+      <div class="island-panel-stage island-grid">
+        <div class="island-widget island-widget--accent">
+          <div class="island-widget__title">
+            <span>Claude Code · Fuyu</span>
+            <span style="color:${state.approvalState === "allowed" ? "var(--mint)" : "var(--warn)"}">
+              ${state.approvalState === "allowed" ? zh("● 已放行继续", "● Approved") : zh("● 等待审批", "● Needs approval")}
+            </span>
+          </div>
+          <div class="island-widget__main">${zh("执行命令：pnpm test:regression onboarding", "Run: pnpm test:regression onboarding")}</div>
+          <div class="island-mini-actions">
+            <button class="island-mini-btn island-mini-btn--allow" id="demoApproveBtn">${state.approvalState === "allowed" ? zh("已允许 ✓", "Allowed ✓") : zh("允许执行", "Allow")}</button>
+            <button class="island-mini-btn" id="demoDenyBtn">${zh("拒绝", "Deny")}</button>
+          </div>
+        </div>
+        <div class="island-widget">
+          <div class="island-widget__title"><span>${zh("会话与用量环", "Sessions & Usage")}</span><span>5h · 42%</span></div>
+          <div class="island-widget__main">${zh("Codex CLI · 后台重构完成", "Codex CLI · Finished")}</div>
+          <div class="island-widget__sub">${zh("支持多代理状态灯、远程 SSH 会话与卡片光效", "Multi-agent lights, SSH remotes & card glow")}</div>
+        </div>
+      </div>
+    `;
+  }
+  if (state.islandPanel === "music") {
+    return `
+      <div class="island-panel-stage island-grid">
+        <div class="island-widget island-widget--accent">
+          <div class="island-widget__title"><span>${zh("正在播放", "Now Playing")}</span><span class="island-eq"><i></i><i></i><i></i></span></div>
+          <div class="island-widget__main">${zh("海边的风 · 浮屿演示", "Sea Breeze · Fuyu Demo")}</div>
+          <div class="island-level-bar" style="width:100%;margin-top:4px"><i style="width:62%"></i></div>
+        </div>
+        <div class="island-widget">
+          <div class="island-widget__title"><span>${zh("实时同步歌词", "Synced Lyrics")}</span><span>LRC</span></div>
+          <div class="lyric-line">${zh("海风吹过屏幕顶端的云", "Sea breeze across the screen rim")}</div>
+          <div class="lyric-line now">${zh("轻轻一点，世界就在手边展开", "One quiet touch, everything unfolds")}</div>
+          <div class="lyric-line">${zh("专注的时刻不被喧嚣打扰", "Focus stays calm without noise")}</div>
+        </div>
+      </div>
+    `;
+  }
+  if (state.islandPanel === "todos") {
+    return `
+      <div class="island-panel-stage island-grid">
+        <div class="island-widget">
+          <div class="island-widget__title"><span>${zh("今日待办", "Today's Todos")}</span><span>2 / 3</span></div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+            <input type="checkbox" id="islandTodoCheck" ${state.todoChecked ? "checked" : ""}/>
+            <span style="${state.todoChecked ? "text-decoration:line-through;opacity:0.6" : ""}">${zh("确认新版引导页自动化演示", "Review onboarding auto-demo")}</span>
+          </label>
+          <div class="island-widget__sub">${zh("支持项目分组与 Markdown 自动归档", "Project groups & Markdown export")}</div>
+        </div>
+        <div class="island-widget island-widget--accent">
+          <div class="island-widget__title"><span>${zh("即将开始的日程", "Next Meeting")}</span><span style="color:var(--warn)">12m</span></div>
+          <div class="island-widget__main">${zh("15:00 产品交互评审", "15:00 Design Review")}</div>
+          <div class="island-widget__sub">${zh("到点可在收起条一键入会", "One-click join right from collapsed bar")}</div>
+        </div>
+      </div>
+    `;
+  }
+  if (state.islandPanel === "shelf") {
+    return `
+      <div class="island-panel-stage island-grid">
+        <div class="island-widget island-widget--accent">
+          <div class="island-widget__title"><span>${zh("文件中转槽", "File Shelf")}</span><span>${state.shelfFiles.length} ${zh("个文件", "files")}</span></div>
+          <div class="island-widget__main">${state.shelfFiles.join(" · ")}</div>
+          <div class="island-widget__sub">${zh("拖到岛上暂存，切去微信/邮件直接拖出", "Hold files here and drag out into any app")}</div>
+        </div>
+        <div class="island-widget">
+          <div class="island-widget__title"><span>${zh("快捷操作", "Quick Actions")}</span></div>
+          <div class="island-widget__main">${zh("复制路径 · 打开位置 · 拖出发送", "Copy path · Reveal · Drag out")}</div>
+          <div class="island-widget__sub">${zh("只记路径，零磁盘拷贝开销", "Reference only — zero disk duplication")}</div>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="island-panel-stage island-grid-3">
+      <div class="island-widget island-widget--accent">
+        <div class="island-widget__title"><span>${zh("专注番茄钟", "Pomodoro")}</span><span>24:18</span></div>
+        <div class="island-widget__main">${zh("深度专注中", "Deep Focus")}</div>
+        <div class="island-widget__sub">${zh("收起条安静计时", "Quiet bar timer")}</div>
+      </div>
+      <div class="island-widget">
+        <div class="island-widget__title"><span>${zh("系统状态", "System")}</span><span>CPU 18%</span></div>
+        <div class="island-widget__main">${zh("内存 46% · ↓ 4.2MB/s", "RAM 46% · ↓ 4.2MB/s")}</div>
+        <div class="island-widget__sub">${zh("小组件出场动效可定制", "Customizable widget motion")}</div>
+      </div>
+      <div class="island-widget">
+        <div class="island-widget__title"><span>${zh("AI 监工", "AI Agents")}</span><span style="color:var(--mint)">● 2</span></div>
+        <div class="island-widget__main">${zh("Claude Code 运行中", "Claude Code active")}</div>
+        <div class="island-widget__sub">${zh("5h 额度剩余 58%", "5h quota 58% left")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderIslandContent() {
+  const island = document.getElementById("realIsland");
+  if (state.islandTucked && !state.islandExpanded) {
+    island.innerHTML = `<div style="width:100%;height:100%;cursor:pointer" title="${zh("轻触弹出岛", "Touch to reveal")}"></div>`;
+    return;
+  }
+
+  const isSideCollapsed = (state.edge === "left" || state.edge === "right") && !state.islandExpanded;
+  if (isSideCollapsed) {
+    island.innerHTML = `<div style="height:100%;display:grid;place-items:center;align-content:center;gap:12px;cursor:pointer;padding:10px 0">
+      ${jellySvg(24)}
+      <span class="island-dot busy"></span>
+      <span class="island-eq"><i></i><i></i><i></i></span>
+    </div>`;
+    return;
+  }
+
+  let barHtml = "";
+  const isNotchCollapsed = state.edge === "top" && state.islandForm === "notch" && !state.islandExpanded;
+  if (isNotchCollapsed) {
+    barHtml = `
+      <div class="notch-bar">
+        <div class="notch-wing">
+          ${jellySvg(19)}
+          <span class="island-status-text" style="font-size:11.5px">${state.modules.has("agents") ? "Claude" : zh("浮屿", "Fuyu")}</span>
+        </div>
+        <div class="notch-cutout" aria-hidden="true"><span class="notch-camera"></span></div>
+        <div class="notch-wing notch-wing--right">
+          ${state.modules.has("music") ? `<span class="island-eq"><i></i><i></i><i></i></span>` : ""}
+          ${state.modules.has("agents") ? `<span class="island-pill-tag" style="padding:1px 6px"><span class="island-dot busy"></span>42%</span>` : `<span class="island-pill-tag">24:18</span>`}
+        </div>
+      </div>
+    `;
+  } else if (state.islandCollapsedMode === "volume" && !state.islandExpanded) {
+    barHtml = `
+      <div class="island-collapsed-bar">
+        <div class="island-collapsed-left">
+          <span>🔊</span>
+          <span class="island-status-text">${zh("系统音量", "Volume")}</span>
+        </div>
+        <div class="island-collapsed-right">
+          <span class="island-level-bar"><i style="width:${state.islandVolume}%"></i></span>
+          <span class="island-pill-tag">${state.islandVolume}%</span>
+        </div>
+      </div>
+    `;
+  } else if (state.islandCollapsedMode === "timer" && !state.islandExpanded) {
+    barHtml = `
+      <div class="island-collapsed-bar">
+        <div class="island-collapsed-left">
+          ${jellySvg(20)}
+          <span class="island-status-text">${zh("番茄专注 · 24:18", "Pomodoro · 24:18")}</span>
+        </div>
+        <div class="island-collapsed-right">
+          <span class="island-pill-tag" style="color:var(--accent)">⏱ ${zh("计时中", "Running")}</span>
+        </div>
+      </div>
+    `;
+  } else {
+    const statusText = state.modules.has("agents")
+      ? zh("Claude Code · 正在工作", "Claude Code · Working")
+      : state.modules.has("music")
+        ? zh("海边的风 · 浮屿演示", "Sea Breeze · Demo")
+        : zh("浮屿已就绪", "Fuyu Ready");
+    barHtml = `
+      <div class="island-collapsed-bar">
+        <div class="island-collapsed-left">
+          ${jellySvg(22)}
+          <span class="island-status-text">${statusText}</span>
+        </div>
+        <div class="island-collapsed-right">
+          ${state.modules.has("music") ? `<span class="island-eq"><i></i><i></i><i></i></span>` : ""}
+          ${state.modules.has("timer") ? `<span class="island-pill-tag">24:18</span>` : ""}
+          ${state.modules.has("agents") ? `<span class="island-pill-tag"><span class="island-dot ${state.approvalState === "pending" && state.islandPanel === "agents" ? "wait" : "busy"}"></span>42%</span>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  const tabs = [
+    { id: "dashboard", label: zh("Fuyu 面板", "Fuyu") },
+    { id: "agents", label: "Agent" },
+    { id: "music", label: zh("音乐", "Music") },
+    { id: "todos", label: zh("待办日历", "Todos") },
+    { id: "shelf", label: zh("文件中转", "Shelf") },
+  ];
+
+  island.innerHTML = `
+    ${barHtml}
+    <div class="island-expanded-body">
+      <div class="island-tabs">
+        <div class="island-tabs__list">
+          ${tabs.map((t) => `<button class="island-tab${state.islandPanel === t.id ? " active" : ""}" data-itab="${t.id}">${t.label}</button>`).join("")}
+        </div>
+        <button class="island-mini-btn" id="collapseIslandBtn">${zh("收起", "Collapse")}</button>
+      </div>
+      ${renderPanelBody()}
+    </div>
+  `;
+
+  island.querySelectorAll("[data-itab]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      pauseDirector("user");
+      state.islandPanel = btn.dataset.itab;
+      renderIslandContent();
+    });
+  });
+  const colBtn = island.querySelector("#collapseIslandBtn");
+  if (colBtn) {
+    colBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      pauseDirector("user");
+      setIslandState({ expanded: false, tucked: false });
+    });
+  }
+  const appBtn = island.querySelector("#demoApproveBtn");
+  if (appBtn) {
+    appBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      pauseDirector("user");
+      state.approvalState = "allowed";
+      renderIslandContent();
+      showBanner("✅", zh("已批准 Claude Code 继续执行", "Approved Claude Code"), zh("不用切回终端，在岛上就能直接审批", "Approve right on the island without leaving your window"), 2400);
+    });
+  }
+  const denyBtn = island.querySelector("#demoDenyBtn");
+  if (denyBtn) {
+    denyBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      pauseDirector("user");
+      state.approvalState = "pending";
+      showBanner("✋", zh("已拦截本次命令", "Command denied"), zh("代理会停下来等你下一步指示", "Agent pauses for your next instruction"), 2000);
+    });
+  }
+  const todoCheck = island.querySelector("#islandTodoCheck");
+  if (todoCheck) {
+    todoCheck.addEventListener("click", (e) => e.stopPropagation());
+    todoCheck.addEventListener("change", (e) => {
+      pauseDirector("user");
+      state.todoChecked = e.target.checked;
+      renderIslandContent();
+    });
+  }
+}
+
+function renderHeader() {
+  const header = document.getElementById("cardHeader");
+  const steps = REGISTRY[state.track];
+  const trackLabel = state.track === "firstRun"
+    ? zh("首次安装引导", "First-run Tour")
+    : state.track === "whatsNew"
+      ? `${UPDATE_RELEASE.version} · ${zh("版本更新引导", "What's New")}`
+      : zh("宽卡片独立配置", "Workspace Setup");
+
+  header.innerHTML = `
+    <div class="stepper">
+      ${steps.map((s, i) => `
+        <button class="step-chip${i === state.stepIdx ? " active" : i < state.stepIdx ? " done" : ""}" data-jump="${i}" ${i > state.stepIdx ? "disabled" : ""}>
+          <span class="step-chip__num">${i < state.stepIdx ? "✓" : i + 1}</span>
+          <span>${zh(s.title, s.titleEn)}</span>
+        </button>
+      `).join("")}
+    </div>
+    <div class="header-right">
+      <span class="track-pill">${trackLabel}</span>
+      <button class="icon-btn" id="closePreviewBtn" title="${zh("关闭引导", "Close")}">×</button>
+    </div>
+  `;
+
+  header.querySelectorAll("[data-jump]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.dataset.jump);
+      if (idx < state.stepIdx) goToStep(idx);
+    });
+  });
+  header.querySelector("#closePreviewBtn").addEventListener("click", () => {
+    pauseDirector("paused");
+    setIslandState({ expanded: false, tucked: false });
+    showBanner("👋", zh("引导已结束", "Guide closed"), zh("演示已立即清理，真岛留在屏幕顶部随时待命", "Demo cleared — Fuyu stays ready on screen"), 2500);
+  });
+}
+
+function goToStep(nextIdx) {
+  const steps = REGISTRY[state.track];
+  state.stepIdx = Math.max(0, Math.min(nextIdx, steps.length - 1));
+  const step = steps[state.stepIdx];
+  clearDirectorTimer();
+  hideBanner();
+  if (step.autoChoreo && !state.reducedMotion) {
+    renderAll();
+    startChoreo(0);
+  } else {
+    state.directorMode = "paused";
+    state.tourActive = false;
+    setIslandState({ expanded: false, tucked: false, collapsedMode: "default" });
+    if (step.id === "look") state.directorCaption = zh("点任意外观/动画即在真岛试播", "Click any look/motion to preview live");
+    else if (step.id === "features") state.directorCaption = zh("悬停能力卡联动真岛，或一键自动巡礼", "Hover features or start Auto-Tour");
+    else if (step.id === "practice") state.directorCaption = zh("交由你亲手操控真岛完成 3 项练习", "Hands-on practice — your turn");
+    else state.directorCaption = zh("当前幕静默，不打扰配置", "Calm mode for unobstructed setup");
+    renderAll();
+  }
+}
+
+function renderBody() {
+  const body = document.getElementById("cardBody");
+  const steps = REGISTRY[state.track];
+  const step = steps[Math.min(state.stepIdx, steps.length - 1)];
+
+  if (step.id === "hello") {
+    body.innerHTML = `
+      <div class="choreo-strip">
+        <div>
+          <strong>🎬 ${zh("顶部真岛与面板自动演示中", "Live Island & Panel Choreography")}</strong>
+          <span style="color:var(--text-muted);margin-left:6px">${zh("鼠标一碰真岛立即让权给你操作", "Touch island anytime to take control")}</span>
+        </div>
+        <div class="choreo-strip__scenes">
+          ${CHOREO_SCENES.map((sc, idx) => `<button class="scene-chip${state.directorSceneIdx === idx ? " active" : ""}" data-choreo="${idx}">${zh(sc.label, sc.labelEn)}</button>`).join("")}
+        </div>
+      </div>
+
+      <div class="split-stage">
+        <div class="hero-visual">
+          <div class="jelly-stage" id="pokeJelly" title="${zh("点一下切换矢量 / 像素水母", "Click to toggle Vector / Pixel")}">
+            ${jellySvg(54)}
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;margin-bottom:3px">${zh("浮屿 · 你的桌面悬浮效率岛", "Fuyu · Your Floating Desktop Island")}</div>
+            <div style="font-size:11.5px;color:var(--text-muted)">${zh("点水母可随时切矢量 / 像素画风", "Click the jellyfish to switch Vector / Pixel")}</div>
+          </div>
+          <div class="hero-tags">
+            <span class="hero-tag">${zh("收起条微提示", "Collapsed Micro-HUD")}</span>
+            <span class="hero-tag">${zh("展开多页仪表盘", "Multi-Tab Panel")}</span>
+            <span class="hero-tag">${zh("AI 代理直批", "Inline AI Approvals")}</span>
+            <span class="hero-tag">${zh("自动贴边隐身", "Smart Edge Tuck")}</span>
+          </div>
+        </div>
+        <div>
+          <h1 class="act-title">${zh("你好，这就是浮屿", "Hi, meet Fuyu")}</h1>
+          <p class="act-lead">${zh("看顶部正在自动演示的真岛：平时是一根灵动的悬浮条，有新消息、音量变化或 AI 需要审批时自动响应，展开就是你的桌面控制中心。", "Watch the live island above: a quiet floating strip that reacts to messages, volume and AI approvals, expanding into a full desktop command center.")}</p>
+          <div class="control-box" style="margin-bottom:10px">
+            <div class="section-label" style="margin:0"><span>${zh("界面语言", "Language")}</span></div>
+            <div class="chip-row">
+              <button class="pill-btn${state.lang === "zh" ? " active" : ""}" data-setlang="zh">简体中文</button>
+              <button class="pill-btn${state.lang === "en" ? " active" : ""}" data-setlang="en">English</button>
+            </div>
+          </div>
+          <div class="control-box">
+            <div class="section-label" style="margin:0"><span>${zh("自动化演示设计亮点", "Choreography Safeguards")}</span></div>
+            <div style="display:grid;gap:4px;font-size:11.5px;color:var(--text-muted)">
+              <div>• ${zh("用户优先：鼠标碰到真岛或点击面板按钮时自动让权，绝不抢焦点", "User first: pauses instantly the moment you touch the island")}</div>
+              <div>• ${zh("真组件驱动：正式版经跨窗口导演指令驱动真岛本体，100% 真实观感", "Real island driven: production uses lightweight cross-window commands")}</div>
+              <div>• ${zh("节能与无障碍：切后台自动暂停，减少动画模式自动切换为静帧预览", "Zero waste: pauses when hidden and respects prefers-reduced-motion")}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    body.querySelectorAll("[data-choreo]").forEach((b) => b.addEventListener("click", () => startChoreo(Number(b.dataset.choreo))));
+    body.querySelector("#pokeJelly").addEventListener("click", () => {
+      state.jellyStyle = state.jellyStyle === "vector" ? "pixel" : "vector";
+      renderAll();
+    });
+    body.querySelectorAll("[data-setlang]").forEach((b) => b.addEventListener("click", () => {
+      state.lang = b.dataset.setlang;
+      syncDevRibbon();
+      renderAll();
+    }));
+    return;
+  }
+
+  if (step.id === "look") {
+    const curForm = ISLAND_FORMS.find((f) => f.id === state.formPreset) || ISLAND_FORMS[0];
+    body.innerHTML = `
+      <h1 class="act-title">${zh("把它捏成你喜欢的形态与样子", "Shape its form, look & motion")}</h1>
+      <p class="act-lead">${zh("浮屿支持 7 种桌面形态（贴顶、悬空药丸、刘海双翼、底边、左右竖岛与任务栏嵌入）和实时主题动效，点选即可在真岛亲眼看见。", "Switch freely between 7 live forms — Top, Floating Pill, Notch Wings, Bottom, Left/Right Side, and Taskbar — plus themes and spring motion.")}</p>
+
+      <div class="section-label">
+        <span>${zh(`岛屿形态与停靠位置 · 当前：${curForm.name}（${curForm.hint}）`, `Island Form & Dock · Active: ${curForm.nameEn}`)}</span>
+        <button class="btn btn--sm" id="tourFormsBtn">▶ ${zh("轮播全部 7 种形态", "Tour all 7 forms")}</button>
+      </div>
+      <div class="form-grid">
+        ${ISLAND_FORMS.map((f) => `
+          <button class="form-btn${state.formPreset === f.id ? " active" : ""}" data-form="${f.id}">
+            <span class="form-mini form-mini--${f.id}"><b></b><i></i></span>
+            <span>${zh(f.name, f.nameEn)}</span>
+          </button>
+        `).join("")}
+      </div>
+
+      ${state.formPreset === "taskbar" ? `
+        <div class="choreo-strip" style="margin-bottom:10px;padding:7px 12px">
+          <span>🪟 ${zh("任务栏嵌入外观：", "Taskbar embedded look:")}</span>
+          <div class="chip-row">
+            <button class="pill-btn${state.taskbarLook === "transparent" ? " active" : ""}" data-tblook="transparent">${zh("透明融入任务栏", "Transparent")}</button>
+            <button class="pill-btn${state.taskbarLook === "theme" ? " active" : ""}" data-tblook="theme">${zh("跟随岛屿主题", "Island theme")}</button>
+          </div>
+        </div>
+      ` : ""}
+
+      <div class="section-label"><span>${zh("主题与质感预设", "Themes & Surface")}</span><span>${zh("即时换装", "Live preview")}</span></div>
+      <div class="theme-grid">
+        ${THEMES.map((t) => `
+          <button class="theme-card${state.themeId === t.id ? " active" : ""}" data-theme="${t.id}">
+            <span class="theme-art">
+              <span class="theme-art__pill" style="background:${t.bg};backdrop-filter:blur(${t.blur})">
+                <span class="theme-art__dot" style="background:${t.dot}"></span>
+                <span class="theme-art__dot" style="background:${state.accent}"></span>
+              </span>
+            </span>
+            <span class="theme-card__name">${zh(t.name, t.nameEn)}</span>
+          </button>
+        `).join("")}
+      </div>
+
+      <div class="control-grid-2">
+        <div class="control-box">
+          <div class="section-label" style="margin:0"><span>${zh("强调色 & 水母画风", "Accent & Jellyfish Style")}</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <div class="accent-swatches">
+              ${ACCENTS.map((c) => `<button class="swatch${state.accent === c ? " active" : ""}" style="background:${c}" data-accent="${c}" aria-label="${c}"></button>`).join("")}
+            </div>
+            <div class="chip-row">
+              <button class="pill-btn${state.jellyStyle === "vector" ? " active" : ""}" data-jelly="vector">${zh("矢量水母", "Vector")}</button>
+              <button class="pill-btn${state.jellyStyle === "pixel" ? " active" : ""}" data-jelly="pixel">${zh("像素水母", "Pixel")}</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-box">
+          <div class="section-label" style="margin:0">
+            <span>${zh("开合动画（点选即试播）", "Open/Close Motion")}</span>
+            <button class="btn btn--sm btn--primary" id="playMotionNow">▶ ${zh("试播开合", "Play")}</button>
+          </div>
+          <div class="chip-row">
+            ${MOTIONS.map((m) => `<button class="pill-btn${state.motionId === m.id ? " active" : ""}" data-motion="${m.id}">${zh(m.name, m.nameEn)}</button>`).join("")}
+          </div>
+        </div>
+      </div>
+    `;
+    body.querySelector("#tourFormsBtn").addEventListener("click", playAllFormsShowcase);
+    body.querySelectorAll("[data-form]").forEach((b) => b.addEventListener("click", () => {
+      pauseDirector("user");
+      applyFormPreset(b.dataset.form, true);
+    }));
+    body.querySelectorAll("[data-tblook]").forEach((b) => b.addEventListener("click", () => {
+      state.taskbarLook = b.dataset.tblook;
+      renderAll();
+    }));
+    body.querySelectorAll("[data-theme]").forEach((b) => b.addEventListener("click", () => { state.themeId = b.dataset.theme; applyThemeVars(); renderAll(); }));
+    body.querySelectorAll("[data-accent]").forEach((b) => b.addEventListener("click", () => { state.accent = b.dataset.accent; applyThemeVars(); renderAll(); }));
+    body.querySelectorAll("[data-jelly]").forEach((b) => b.addEventListener("click", () => { state.jellyStyle = b.dataset.jelly; renderAll(); }));
+    body.querySelectorAll("[data-motion]").forEach((b) => b.addEventListener("click", () => { state.motionId = b.dataset.motion; applyThemeVars(); renderAll(); playMotionShowcase(); }));
+    body.querySelector("#playMotionNow").addEventListener("click", playMotionShowcase);
+    return;
+  }
+
+  if (step.id === "features") {
+    const activeF = FEATURES.find((f) => f.id === state.focusedFeature) || FEATURES[0];
+    body.innerHTML = `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <h1 class="act-title">${zh("核心能力全景，悬停即在真岛演示", "Capabilities with live island demo")}</h1>
+          <p class="act-lead" style="margin-bottom:10px">${zh("悬停或点选任意能力卡，顶部真岛会立刻切出对应面板或微提示；也可一键自动巡礼你勾上的全部能力。", "Hover any capability to trigger it live on the top island, or launch an automated tour of all enabled tools.")}</p>
+        </div>
+        <button class="btn btn--sm ${state.tourActive ? "" : "btn--primary"}" id="toggleTourBtn">
+          ${state.tourActive ? zh("⏸ 停止巡礼", "⏸ Stop tour") : zh("▶ 自动巡礼已选能力", "▶ Auto-tour enabled")}
+        </button>
+      </div>
+
+      <div class="persona-bar">
+        ${Object.entries(PERSONAS).map(([id, p]) => `
+          <button class="persona-card${state.personas.includes(id) ? " active" : ""}" data-persona="${id}">
+            <span class="persona-card__title">${zh(p.name, p.nameEn)}</span>
+            <span class="persona-card__sub">${p.sub}</span>
+          </button>
+        `).join("")}
+      </div>
+
+      <div class="split-stage split-stage--wide-left">
+        <div>
+          <div class="section-label">
+            <span>${zh("10 项内置核心能力", "10 Built-in Capabilities")}</span>
+            <span>${zh(`已开启 ${state.modules.size} / ${FEATURES.length}`, `${state.modules.size} / ${FEATURES.length} on`)}</span>
+          </div>
+          <div class="feature-grid">
+            ${FEATURES.map((f) => `
+              <button class="feature-tile${state.modules.has(f.id) ? " on" : ""}${state.focusedFeature === f.id ? " focused" : ""}" data-mod="${f.id}">
+                <span class="feature-tile__text">
+                  <span class="feature-tile__name">${zh(f.name, f.nameEn)}</span>
+                  <span class="feature-tile__desc">${zh(f.desc, f.descEn)}</span>
+                </span>
+                <span class="mini-toggle" aria-hidden="true"></span>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+        <div class="preview-pane">
+          <div class="section-label" style="margin:0">
+            <span>${zh("当前演示能力", "Currently Demonstrating")}</span>
+            <span class="status-tag">${state.modules.has(activeF.id) ? zh("已启用", "Enabled") : zh("未启用", "Off")}</span>
+          </div>
+          <div class="preview-pane__screen">
+            <strong style="font-size:13.5px">${zh(activeF.name, activeF.nameEn)}</strong>
+            <div style="font-size:12px;color:var(--text-muted)">${zh(activeF.desc, activeF.descEn)}</div>
+            <div style="padding:9px 10px;border-radius:9px;background:var(--card-surface);border:1px solid var(--card-border-soft);font-size:12px">
+              ✨ ${zh(activeF.demo, activeF.descEn)}
+            </div>
+          </div>
+          <button class="btn btn--sm" id="demoThisBtn">🎬 ${zh("立即在顶部真岛演示此能力", "Demonstrate on top island")}</button>
+        </div>
+      </div>
+    `;
+    body.querySelector("#toggleTourBtn").addEventListener("click", () => {
+      if (state.tourActive) {
+        pauseDirector("paused");
+        renderBody();
+      } else {
+        runCapabilityTour();
+      }
+    });
+    body.querySelector("#demoThisBtn").addEventListener("click", () => {
+      pauseDirector("paused");
+      state.directorCaption = zh(`单步演示：${activeF.name}`, `Demo: ${activeF.nameEn}`);
+      demonstrateFeatureOnIsland(activeF);
+      renderDirectorHud();
+    });
+    body.querySelectorAll("[data-persona]").forEach((b) => b.addEventListener("click", () => {
+      const id = b.dataset.persona;
+      state.personas = state.personas.includes(id) ? state.personas.filter((p) => p !== id) : [...state.personas, id];
+      if (state.personas.length > 0) state.modules = new Set(state.personas.flatMap((p) => PERSONAS[p].mods));
+      renderAll();
+    }));
+    body.querySelectorAll("[data-mod]").forEach((b) => {
+      b.addEventListener("mouseenter", () => {
+        if (state.tourActive) return;
+        const f = FEATURES.find((item) => item.id === b.dataset.mod);
+        if (f && state.focusedFeature !== f.id) {
+          state.focusedFeature = f.id;
+          state.directorCaption = zh(`实时联动：${f.name}`, `Live link: ${f.nameEn}`);
+          demonstrateFeatureOnIsland(f);
+          renderDirectorHud();
+          renderBody();
+        }
+      });
+      b.addEventListener("click", () => {
+        const id = b.dataset.mod;
+        state.focusedFeature = id;
+        if (state.modules.has(id)) state.modules.delete(id);
+        else state.modules.add(id);
+        renderAll();
+      });
+    });
+    return;
+  }
+
+  if (step.id === "envCheck") {
+    const isMac = state.os === "mac";
+    const permsDone = !isMac || (state.macPerms.accessibility && state.macPerms.screenRecording);
+    body.innerHTML = `
+      <h1 class="act-title">${zh("本机环境一键体检", "Automatic environment check")}</h1>
+      <p class="act-lead">${zh("此时自动暂停轮播并撤掉全屏黑幕，方便切去系统设置或终端。点击一键连接即可完成初始化。", "Auto-demo pauses and the dark scrim clears here so external settings windows stay unobstructed.")}</p>
+
+      <div class="check-list">
+        ${state.modules.has("agents") ? `
+          <div class="check-card">
+            <div class="check-card__head">
+              <div class="check-card__title">
+                <span>${zh("1. 本机 AI 编程工具探测", "1. Local AI Agents Detected")}</span>
+                <span class="status-tag${state.hooksInstalled ? "" : " status-tag--warn"}">${state.hooksInstalled ? zh("钩子已就绪", "Hooks ready") : zh("发现 3 款工具待连接", "3 tools ready to hook")}</span>
+              </div>
+              <button class="btn btn--sm ${state.hooksInstalled ? "" : "btn--primary"}" id="installHooksBtn">
+                ${state.hooksInstalled ? zh("已连接 ✓", "Connected ✓") : zh("一键全部连接", "Connect all")}
+              </button>
+            </div>
+            <div class="agent-pills">
+              <span class="agent-pill"><span class="island-dot ${state.hooksInstalled ? "done" : "busy"}"></span>Claude Code</span>
+              <span class="agent-pill"><span class="island-dot ${state.hooksInstalled ? "done" : "busy"}"></span>Codex CLI</span>
+              <span class="agent-pill"><span class="island-dot ${state.hooksInstalled ? "done" : "busy"}"></span>Cursor</span>
+              <span class="agent-pill" style="opacity:0.75">${zh("+ 自动开启回复状态标记", "+ Reply status marker")}</span>
+            </div>
+          </div>
+        ` : ""}
+
+        <div class="check-card">
+          <div class="check-card__head">
+            <div class="check-card__title">
+              <span>${zh("2. 系统权限状态（自动前置在上手练习之前）", "2. System Permissions (before live practice)")}</span>
+              <span class="status-tag${permsDone ? "" : " status-tag--warn"}">${permsDone ? zh("全部就绪", "All granted") : zh("需开启 macOS 权限", "macOS permissions needed")}</span>
+            </div>
+            ${isMac && !permsDone ? `<button class="btn btn--sm btn--primary" id="grantPermsBtn">${zh("一键模拟允许", "Grant now")}</button>` : ""}
+          </div>
+          <div style="font-size:12px;color:var(--text-muted)">
+            ${isMac
+              ? `${zh("辅助功能：", "Accessibility: ")}<strong>${state.macPerms.accessibility ? zh("已允许", "Allowed") : zh("未允许", "Pending")}</strong> · ${zh("屏幕录制：", "Screen Recording: ")}<strong>${state.macPerms.screenRecording ? zh("已允许", "Allowed") : zh("未允许", "Pending")}</strong>`
+              : zh("Windows 环境无需额外隐私授权，剪贴板、截图和热键均已就绪。", "No extra OS privacy prompts required on Windows.")}
+          </div>
+        </div>
+
+        <div class="check-card">
+          <div class="check-card__head">
+            <div class="check-card__title">
+              <span>${zh("3. 全局快捷键冲突体检", "3. Global Shortcut Check")}</span>
+              <span class="status-tag">${zh("0 个冲突", "No conflicts")}</span>
+            </div>
+          </div>
+          <div class="agent-pills">
+            <span class="agent-pill">${zh("剪贴板", "Clipboard")} <span class="kbd">${isMac ? "⌘⇧V" : "Ctrl+Shift+W"}</span></span>
+            <span class="agent-pill">${zh("截图", "Capture")} <span class="kbd">${isMac ? "⌘⇧A" : "Alt+A"}</span></span>
+            <span class="agent-pill">${zh("翻译", "Translate")} <span class="kbd">${isMac ? "⌘⇧T" : "Alt+T"}</span></span>
+            <span class="agent-pill">${zh("语音输入", "Voice")} <span class="kbd">${isMac ? "⌥Space" : "Alt+Space"}</span></span>
+          </div>
+        </div>
+      </div>
+    `;
+    const hookBtn = body.querySelector("#installHooksBtn");
+    if (hookBtn) {
+      hookBtn.addEventListener("click", () => {
+        state.hooksInstalled = true;
+        showBanner("🤖", zh("AI 代理钩子已装好", "AI hooks installed"), zh("Claude Code、Codex、Cursor 已接入岛上状态灯", "All 3 local agents linked to the island"), 2400);
+        renderAll();
+      });
+    }
+    const permBtn = body.querySelector("#grantPermsBtn");
+    if (permBtn) {
+      permBtn.addEventListener("click", () => {
+        state.macPerms = { accessibility: true, screenRecording: true };
+        showBanner("🔓", zh("macOS 权限已全部就绪", "Permissions granted"), zh("下一步可直接体验真实快捷键与文件拖拽", "Ready for hands-on practice"), 2400);
+        renderAll();
+      });
+    }
+    return;
+  }
+
+  if (step.id === "practice") {
+    const doneCount = Object.values(state.practice).filter(Boolean).length;
+    const clipKey = state.os === "mac" ? "⌘⇧V" : "Ctrl+Shift+W";
+    body.innerHTML = `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div>
+          <h1 class="act-title">${zh("现在交给你，亲手试一下", "Now your turn — try it live")}</h1>
+          <p class="act-lead">${doneCount === 3
+            ? zh("全部 3 颗星已点亮！你已经完全掌握浮屿的核心手势。", "All 3 stars lit! You've mastered the core island gestures.")
+            : zh("自动演示已让权给你：碰一下顶部真岛、拖左侧桌面文件到岛上、按一次快捷键即可通关。", "Auto-demo has stepped back: interact with the top island, drag a desktop file onto it, and press the clipboard hotkey.")}</p>
+        </div>
+        <span class="status-tag${doneCount === 3 ? "" : " status-tag--warn"}" style="margin-top:4px">★ ${doneCount} / 3</span>
+      </div>
+
+      <div class="practice-list">
+        <div class="practice-row${state.practice.expand ? " done" : ""}">
+          <span class="practice-star">★</span>
+          <div class="practice-main">
+            <div class="practice-title">${state.expandTrigger === "hover" ? zh("把鼠标移到顶部真岛上，让它展开", "Hover over the top island to expand it") : zh("点一下顶部真岛，让它展开", "Click the top island to expand it")}</div>
+            <div class="practice-sub">${zh("展开后可以直接点里面的 Agent 审批或切页签试试。", "Try clicking the inline approval or tabs inside once opened.")}</div>
+          </div>
+          <div class="chip-row">
+            <button class="pill-btn${state.expandTrigger === "hover" ? " active" : ""}" data-trigger="hover">${zh("悬停", "Hover")}</button>
+            <button class="pill-btn${state.expandTrigger === "click" ? " active" : ""}" data-trigger="click">${zh("点击", "Click")}</button>
+          </div>
+        </div>
+
+        <div class="practice-row${state.practice.drop ? " done" : ""}">
+          <span class="practice-star">★</span>
+          <div class="practice-main">
+            <div class="practice-title">${zh("把左侧桌面上的「设计稿-v3.png」拖到顶部真岛上", "Drag '设计稿-v3.png' from the left desktop onto the island")}</div>
+            <div class="practice-sub">${zh("文件中转只记路径，绝不移动原文件。", "File shelf only stores references — original files stay untouched.")}</div>
+          </div>
+          <button class="btn btn--sm" id="simulateDropBtn">${state.practice.drop ? zh("已完成", "Done") : zh("点此模拟拖入", "Simulate drop")}</button>
+        </div>
+
+        <div class="practice-row${state.practice.shortcut ? " done" : ""}">
+          <span class="practice-star">★</span>
+          <div class="practice-main">
+            <div class="practice-title">${zh("按下", "Press")} <span class="kbd">${clipKey}</span> ${zh("呼出全局剪贴板", "to open global clipboard")}</div>
+            <div class="practice-sub">${zh("在任意软件里都可以秒开历史记录与图片预览。", "Works in any app with instant image & text preview.")}</div>
+          </div>
+          <button class="btn btn--sm" id="triggerClipBtn">${zh("点按体验", "Trigger")} ${clipKey}</button>
+        </div>
+      </div>
+    `;
+    body.querySelectorAll("[data-trigger]").forEach((b) => b.addEventListener("click", () => { state.expandTrigger = b.dataset.trigger; renderBody(); }));
+    body.querySelector("#simulateDropBtn").addEventListener("click", () => handleFileDrop("设计稿-v3.png"));
+    body.querySelector("#triggerClipBtn").addEventListener("click", triggerClipboardDemo);
+    return;
+  }
+
+  if (step.id === "ready") {
+    const theme = THEMES.find((t) => t.id === state.themeId) || THEMES[0];
+    const motion = MOTIONS.find((m) => m.id === state.motionId) || MOTIONS[1];
+    const curForm = ISLAND_FORMS.find((f) => f.id === state.formPreset) || ISLAND_FORMS[0];
+    body.innerHTML = `
+      <h1 class="act-title">${zh("你的专属浮屿已就绪", "Your Fuyu island is ready")}</h1>
+      <p class="act-lead">${zh("重型配置与新功能拓展全部收纳在下方可扩展中心；点击「开始使用浮屿」后，演示数据自动清零。", "Heavy setups and future ecosystem extensions live cleanly below. Demo data clears automatically on finish.")}</p>
+
+      <div class="summary-banner">
+        <span>🎨 ${zh("主题", "Theme")}：<strong>${zh(theme.name, theme.nameEn)}</strong></span>
+        <span>🏝️ ${zh("形态", "Form")}：<strong>${zh(curForm.name, curForm.nameEn)}</strong></span>
+        <span>✨ ${zh("动效", "Motion")}：<strong>${zh(motion.name, motion.nameEn)}</strong></span>
+        <span>🧩 ${zh("能力", "Modules")}：<strong>${state.modules.size} ${zh("项", "active")}</strong></span>
+        <label style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="startupCheck" ${state.launchAtStartup ? "checked" : ""}/>
+          <span>${state.os === "mac" ? zh("登录 Mac 时自启", "Open at Mac login") : zh("开机自启", "Start with Windows")}</span>
+        </label>
+      </div>
+
+      <div class="ext-grid">
+        <button class="ext-card" id="openPushExt">
+          <div class="ext-card__top">
+            <span>📱 ${zh("手机远程推送（cc-connect）", "Phone Push (cc-connect)")}</span>
+            ${state.pushConfigured ? `<span class="status-tag">${zh("已配置", "Configured")}</span>` : ""}
+          </div>
+          <div class="ext-card__desc">${zh("Agent 完成或等你审批时推到飞书 / Telegram，支持 SSH 远程主机与代理隧道。", "Forward Agent alerts to Feishu / Telegram with SSH remote host & proxy tunnel support.")}</div>
+          <div class="ext-card__foot"><span>${zh("进入宽卡片无黑幕向导", "Open workspace wizard")}</span><span>→</span></div>
+        </button>
+
+        <button class="ext-card" id="openBundleExt">
+          <div class="ext-card__top">
+            <span>📦 ${zh("推荐插件套装：开发者效率组", "Bundle: Developer Flow")}</span>
+            <span class="status-tag">${zh("市场推荐", "Curated")}</span>
+          </div>
+          <div class="ext-card__desc">${zh("番茄钟 · 待办进度环 · 系统监控 · 世界时钟 — 确认一次自动装齐。", "Pomodoro · Todo Ring · System Monitor · World Clock — one confirmation install.")}</div>
+          <div class="ext-card__foot"><span>${zh("前往插件市场查看", "Inspect in market")}</span><span>→</span></div>
+        </button>
+
+        <button class="ext-card" id="openSyncExt">
+          <div class="ext-card__top"><span>☁️ ${zh("跨设备端到端加密同步", "Encrypted Cross-Device Sync")}</span></div>
+          <div class="ext-card__desc">${zh("经 WebDAV 或云盘文件夹在 Windows 与 Mac 之间同步待办、剪贴板收藏与偏好。", "Sync todos, pinned clips and settings across Windows & Mac.")}</div>
+          <div class="ext-card__foot"><span>${zh("打开同步向导", "Open sync guide")}</span><span>→</span></div>
+        </button>
+
+        <button class="ext-card" id="openWhatsNewExt">
+          <div class="ext-card__top"><span>🚀 ${zh("体验：版本更新微引导", "Try: What's New Flow")}</span></div>
+          <div class="ext-card__desc">${zh("新版本新增功能时，复用同一套导演引擎只播 1–2 幕新特性高亮，不打扰老用户。", "Reuse the same choreography engine to spotlight 1–2 new features after app updates.")}</div>
+          <div class="ext-card__foot"><span>${zh("切换体验微引导", "Preview What's New")}</span><span>→</span></div>
+        </button>
+      </div>
+
+      <div class="arch-note">
+        <strong>${zh("正式落地协议：", "Production Architecture: ")}</strong>
+        ${zh("引导窗口与真岛经统一导演信道", "Guide and main island communicate via")} <code>onboarding-director</code> ${zh("联动真岛本体（<code>expand(page)</code> / <code>collapse()</code> / <code>tuck()</code> / <code>banner()</code> / <code>demoApproval()</code>），新功能通过", "driving the real island directly, and future features register via")} <code>registerOnboardingStep({ id, track, when, spotlight, demoScript, Component })</code> ${zh("零侵入接入。", "with zero core orchestration changes.")}
+      </div>
+    `;
+    body.querySelector("#startupCheck").addEventListener("change", (e) => { state.launchAtStartup = e.target.checked; });
+    body.querySelector("#openPushExt").addEventListener("click", () => { state.track = "agentPush"; syncDevRibbon(); goToStep(0); });
+    body.querySelector("#openBundleExt").addEventListener("click", () => showBanner("📦", zh("前往插件市场", "Opening Plugin Market"), zh("将关闭引导并定位到「开发者效率组」确认安装框", "Closes guide and focuses Developer Flow bundle"), 2400));
+    body.querySelector("#openSyncExt").addEventListener("click", () => showBanner("☁️", zh("前往跨设备同步", "Opening Sync Settings"), zh("将关闭引导并直达 设置 → 跨设备同步", "Closes guide and opens Settings → Sync"), 2400));
+    body.querySelector("#openWhatsNewExt").addEventListener("click", () => { state.track = "whatsNew"; syncDevRibbon(); goToStep(0); });
+    return;
+  }
+
+  if (step.id === "wnRelease") {
+    body.innerHTML = `
+      <div class="release-ver-bar">
+        <div class="release-ver-tag">
+          <span class="release-ver-pill">${UPDATE_RELEASE.version}</span>
+          <span>${zh(`已从 ${UPDATE_RELEASE.fromVersion} 升级到最新版本`, `Updated from ${UPDATE_RELEASE.fromVersion} to ${UPDATE_RELEASE.version}`)}</span>
+        </div>
+        <span style="font-size:11.5px;color:var(--text-muted)">${zh("发布日期：", "Released: ")}${UPDATE_RELEASE.date}</span>
+      </div>
+      <h1 class="act-title">${zh(`浮屿 ${UPDATE_RELEASE.version} 更新了什么`, `What's new in Fuyu ${UPDATE_RELEASE.version}`)}</h1>
+      <p class="act-lead">${zh("老用户升级后只看本次更新说明和 2 个新能力亮点，不会重走安装引导；新安装用户走完首次引导后也不会重复弹出本版本更新页。", "Returning users see only the new changelog and highlights; freshly installed users won't see this update guide right after first-run setup.")}</p>
+
+      <div class="changelog-grid">
+        <div class="changelog-col">
+          <div class="changelog-col__title">✨ ${zh("新增功能", "New Features")}</div>
+          <ul class="changelog-list">
+            ${UPDATE_RELEASE.highlights.map((item) => `<li>${zh(item.zh, item.en)}</li>`).join("")}
+          </ul>
+        </div>
+        <div class="changelog-col">
+          <div class="changelog-col__title">⚡ ${zh("体验优化", "Improvements")}</div>
+          <ul class="changelog-list">
+            ${UPDATE_RELEASE.improvements.map((item) => `<li>${zh(item.zh, item.en)}</li>`).join("")}
+          </ul>
+        </div>
+        <div class="changelog-col">
+          <div class="changelog-col__title">🐛 ${zh("问题修复", "Bug Fixes")}</div>
+          <ul class="changelog-list">
+            ${UPDATE_RELEASE.fixes.map((item) => `<li>${zh(item.zh, item.en)}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+
+      <div class="arch-note">
+        <strong>${zh("是否会出现在新安装引导？", "Does this appear in first-run onboarding?")}</strong>
+        ${zh("默认不会。新装用户在首次引导的第 2–3 幕里已经自然包含了这些能力，完成首次引导时会记下当前版本号（<code>lastSeenGuideVersion = ${UPDATE_RELEASE.version}</code>），只对从旧版本升级的老用户触发版本更新引导。", "No by default. Fresh installs already experience these features naturally in the main tour and stamp <code>lastSeenGuideVersion</code> on finish, so only upgraded users see What's New.")}
+      </div>
+    `;
+    return;
+  }
+
+  if (step.id === "wnDock") {
+    body.innerHTML = `
+      <div class="split-stage">
+        <div class="hero-visual">
+          <div class="edge-picker" style="width:100%;max-width:260px">
+            ${["top", "bottom", "left", "right"].map((edge) => `
+              <button class="edge-btn${state.edge === edge ? " active" : ""}" data-wn-edge="${edge}">
+                <span class="edge-mini edge-mini--${edge}"><i></i></span>
+                <span>${zh({ top: "顶部", bottom: "底部", left: "左侧", right: "右侧" }[edge], edge)}</span>
+              </button>
+            `).join("")}
+          </div>
+          <button class="btn btn--sm btn--primary" id="wnDemoDockBtn">▶ ${zh("自动演示四边停靠一圈", "Auto-demo all 4 edges")}</button>
+        </div>
+        <div>
+          <span class="dev-badge" style="margin-bottom:8px;display:inline-block">${UPDATE_RELEASE.version} · ${zh("亮点 1 / 2", "Highlight 1 / 2")}</span>
+          <h1 class="act-title">${zh("现在支持 7 种形态与四边停靠", "Now supports 7 forms & 4-edge docking")}</h1>
+          <p class="act-lead">${zh("新功能上线后，只需注册一个微引导模块并附上真岛自动演示脚本，老用户升级即可直观试玩新能力。", "New releases plug in a lightweight step + choreography script so returning users experience new features in seconds.")}</p>
+        </div>
+      </div>
+    `;
+    body.querySelectorAll("[data-wn-edge]").forEach((b) => b.addEventListener("click", () => { state.edge = b.dataset.wnEdge; renderAll(); }));
+    body.querySelector("#wnDemoDockBtn").addEventListener("click", () => {
+      const edges = ["right", "bottom", "left", "top"];
+      edges.forEach((edge, i) => setTimeout(() => { state.edge = edge; renderAll(); }, i * 800));
+    });
+    return;
+  }
+
+  if (step.id === "wnVoice") {
+    body.innerHTML = `
+      <span class="dev-badge" style="margin-bottom:8px;display:inline-block">${UPDATE_RELEASE.version} · ${zh("亮点 2 / 2", "Highlight 2 / 2")}</span>
+      <h1 class="act-title">${zh("新增：离线语音输入", "New: Offline Voice Input")}</h1>
+      <p class="act-lead">${zh("本地 SenseVoice 离线识别，按住快捷键说话，松手即可转写进待办或任意输入框。", "Local SenseVoice transcription — hold the hotkey, speak, and insert straight into todos or any cursor.")}</p>
+      <div class="check-card">
+        <div class="check-card__head">
+          <div class="check-card__title">🎙️ ${zh("启用离线语音输入", "Enable Offline Voice Input")}</div>
+          <button class="btn btn--sm btn--primary" id="enableVoiceNow">${state.modules.has("voice") ? zh("已启用 ✓", "Enabled ✓") : zh("立即开启", "Enable now")}</button>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)">${zh("默认快捷键：", "Default shortcut: ")}<span class="kbd">${state.os === "mac" ? "⌥Space" : "Alt+Space"}</span> · ${zh("完全离线运行，不上传录音", "100% offline — audio never leaves your device")}</div>
+      </div>
+    `;
+    body.querySelector("#enableVoiceNow").addEventListener("click", () => {
+      state.modules.add("voice");
+      showBanner("🎙️", zh("已开启离线语音输入", "Voice Input enabled"), zh("按住快捷键即可体验离线转写", "Hold hotkey to transcribe offline"), 2200);
+      renderAll();
+    });
+    return;
+  }
+
+  if (step.id === "pushWizard") {
+    const pushSteps = [zh("1. 安装 cc-connect", "1. Install"), zh("2. 选择项目", "2. Projects"), zh("3. 选平台", "3. Platform"), zh("4. 扫码接机器人", "4. Connect"), zh("5. 发送测试", "5. Test")];
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+        <h1 class="act-title" style="margin:0">${zh("手机推送配置工作区", "Phone Push Workspace")}</h1>
+        <button class="btn btn--sm" id="backToReadyBtn">← ${zh("返回收尾页", "Back to summary")}</button>
+      </div>
+      <p class="act-lead">${zh("全屏黑幕已撤掉、自动演示静默不干扰，方便切浏览器建机器人或用飞书扫码。", "Dark scrim cleared and auto-demo paused so browser switching and QR scanning stay effortless.")}</p>
+      <div class="chip-row" style="margin-bottom:12px">
+        ${pushSteps.map((label, i) => `<button class="pill-btn${state.pushStep === i ? " active" : ""}" data-pstep="${i}">${label}</button>`).join("")}
+      </div>
+      <div class="check-card">
+        <div class="check-card__head">
+          <div class="check-card__title">${pushSteps[state.pushStep]}</div>
+          <span class="status-tag">${zh("复用现有 PushAct", "Reuses PushAct")}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)">${zh("正式版直接挂载现有 5 步 PushAct、可视化 AgentCardsAct 与 AgentConnectAct。", "Production mounts verified PushAct, visual AgentCardsAct & AgentConnectAct.")}</div>
+        <div><button class="btn btn--sm btn--primary" id="finishPushBtn">${zh("模拟完成并返回收尾页", "Mark done & return")}</button></div>
+      </div>
+    `;
+    body.querySelector("#backToReadyBtn").addEventListener("click", () => { state.track = "firstRun"; syncDevRibbon(); goToStep(REGISTRY.firstRun.length - 1); });
+    body.querySelectorAll("[data-pstep]").forEach((b) => b.addEventListener("click", () => { state.pushStep = Number(b.dataset.pstep); renderBody(); }));
+    body.querySelector("#finishPushBtn").addEventListener("click", () => {
+      state.pushConfigured = true;
+      state.track = "firstRun";
+      syncDevRibbon();
+      goToStep(REGISTRY.firstRun.length - 1);
+      showBanner("📱", zh("手机推送已配置完成", "Phone push ready"), zh("Agent 完成后将自动推送到你的手机", "Agent updates will now push to your phone"), 2200);
+    });
+  }
+}
+
+function renderFooter() {
+  const footer = document.getElementById("cardFooter");
+  const steps = REGISTRY[state.track];
+  const isFirst = state.stepIdx === 0;
+  const isLast = state.stepIdx === steps.length - 1;
+  const step = steps[state.stepIdx];
+  const skippable = step.id === "envCheck" || step.id === "practice";
+
+  const primaryText = state.track === "agentPush"
+    ? zh("完成并返回", "Done")
+    : isLast
+      ? zh("开始使用浮屿", "Start using Fuyu")
+      : isFirst && state.track === "firstRun"
+        ? zh("开始定制我的浮屿", "Customize my Fuyu")
+        : zh("下一步", "Next");
+
+  footer.innerHTML = `
+    <div>
+      ${isLast && state.track === "firstRun"
+        ? `<span style="font-size:12px;color:var(--text-muted)">${zh("按 Esc 随时退出 · 以后可在设置 → 关于重开", "Press Esc anytime · Reopen in Settings → About")}</span>`
+        : `<button class="btn btn--quiet" id="exitGuideBtn">${zh("稍后再说", "Not now")}</button>`}
+    </div>
+    <div class="footer-nav">
+      ${!isFirst ? `<button class="btn" id="prevBtn">${zh("上一步", "Back")}</button>` : ""}
+      ${skippable ? `<button class="btn btn--quiet" id="skipStepBtn">${zh("跳过此步", "Skip step")}</button>` : ""}
+      <button class="btn btn--primary" id="nextBtn">${primaryText}</button>
+    </div>
+  `;
+
+  const exitBtn = footer.querySelector("#exitGuideBtn");
+  if (exitBtn) exitBtn.addEventListener("click", () => { pauseDirector("paused"); showBanner("👋", zh("已保存当前偏好并退出", "Saved & closed"), zh("随时可在 设置 → 关于 里重新打开引导", "Reopen anytime from Settings → About"), 2400); });
+  const prevBtn = footer.querySelector("#prevBtn");
+  if (prevBtn) prevBtn.addEventListener("click", () => goToStep(state.stepIdx - 1));
+  const skipBtn = footer.querySelector("#skipStepBtn");
+  if (skipBtn) skipBtn.addEventListener("click", () => goToStep(state.stepIdx + 1));
+  footer.querySelector("#nextBtn").addEventListener("click", () => {
+    if (state.track === "agentPush") {
+      state.pushConfigured = true;
+      state.track = "firstRun";
+      syncDevRibbon();
+      goToStep(REGISTRY.firstRun.length - 1);
+      return;
+    }
+    if (!isLast) goToStep(state.stepIdx + 1);
+    else {
+      pauseDirector("paused");
+      setIslandState({ expanded: false, tucked: false, collapsedMode: "default" });
+      showBanner("🎉", zh("浮屿已就绪", "Fuyu is ready"), zh("所有演示数据已清理，真岛已进入工作状态", "Demo cleared — Fuyu is ready for work"), 2600);
+    }
+  });
+}
+
+function handleFileDrop(filename) {
+  pauseDirector("user");
+  state.shelfFiles = [...state.shelfFiles, filename];
+  state.practice.drop = true;
+  setIslandState({ expanded: true, tucked: false, panel: "shelf" });
+  renderBody();
+  showBanner("📁", zh(`已接住「${filename}」`, `Caught ${filename}`), zh("已加入文件中转并点亮星星 ★", "Added to File Shelf — Star lit ★"), 2200);
+}
+
+function triggerClipboardDemo() {
+  state.practice.shortcut = true;
+  const popup = document.getElementById("clipboardPopup");
+  document.getElementById("clipKbdHint").textContent = state.os === "mac" ? "⌘⇧V" : "Ctrl+Shift+W";
+  popup.classList.add("show");
+  renderBody();
+  showBanner("📋", zh("剪贴板已弹出", "Clipboard opened"), zh("在任意程序里都能这样秒开历史记录 ★", "Works in any app ★"), 2200);
+  setTimeout(() => popup.classList.remove("show"), 2600);
+}
+
+function syncDevRibbon() {
+  document.querySelectorAll("#trackSeg .dev-btn").forEach((b) => b.classList.toggle("active", b.dataset.track === state.track));
+  document.querySelectorAll("#formSeg .dev-btn").forEach((b) => b.classList.toggle("active", b.dataset.qform === state.formPreset));
+  document.querySelectorAll("#osSeg .dev-btn").forEach((b) => b.classList.toggle("active", b.dataset.os === state.os));
+  document.querySelectorAll("#langSeg .dev-btn").forEach((b) => b.classList.toggle("active", b.dataset.lang === state.lang));
+  document.getElementById("reduceMotionBtn").textContent = state.reducedMotion ? "减少动画：开" : "减少动画：关";
+  document.getElementById("reduceMotionBtn").classList.toggle("active", state.reducedMotion);
+}
+
+function renderWechatCorner() {
+  const el = document.getElementById("wechatCorner");
+  const lightbox = document.getElementById("qrLightbox");
+  const visible = state.track === "firstRun" || state.track === "whatsNew";
+  el.className = [
+    "wechat-corner",
+    visible ? "" : "hidden",
+    state.qrCollapsed ? "collapsed" : "",
+  ].filter(Boolean).join(" ");
+
+  if (!visible) {
+    state.qrZoomed = false;
+    lightbox.classList.remove("open");
+    return;
+  }
+
+  if (state.qrCollapsed) {
+    el.innerHTML = `<span class="wechat-corner__dot"></span><span style="font-size:12px;font-weight:600">${zh("微信交流群二维码", "WeChat Group QR")}</span>`;
+    el.onclick = () => {
+      state.qrCollapsed = false;
+      renderWechatCorner();
+    };
+  } else {
+    el.innerHTML = `
+      <div class="wechat-corner__qr">
+        <img src="../assets/community/wechat-group.png" alt="${zh("浮屿微信交流群二维码", "Fuyu WeChat community QR")}" />
+      </div>
+      <div class="wechat-corner__meta">
+        <div class="wechat-corner__head">
+          <div class="wechat-corner__title"><span class="wechat-corner__dot"></span>${zh("浮屿微信交流群", "WeChat Community")}</div>
+          <button class="wechat-corner__hide" id="wechatHideBtn" type="button" title="${zh("收起", "Hide")}">${zh("收起", "Hide")}</button>
+        </div>
+        <div class="wechat-corner__sub">${zh("点击卡片居中放大扫码，欢迎进群交流与反馈", "Click anywhere on card to zoom & scan with WeChat")}</div>
+      </div>
+    `;
+    el.onclick = () => {
+      state.qrZoomed = true;
+      renderWechatCorner();
+    };
+    el.querySelector("#wechatHideBtn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.qrCollapsed = true;
+      state.qrZoomed = false;
+      renderWechatCorner();
+    });
+  }
+
+  lightbox.classList.toggle("open", state.qrZoomed);
+  if (state.qrZoomed) {
+    lightbox.innerHTML = `
+      <div class="qr-lightbox__card" id="qrLightboxCard">
+        <button class="qr-lightbox__close" id="qrLightboxClose" type="button" aria-label="${zh("关闭二维码", "Close")}">×</button>
+        <div class="wechat-corner__title" style="font-size:16px"><span class="wechat-corner__dot" style="width:9px;height:9px"></span>${zh("浮屿微信用户交流群", "Fuyu WeChat Community")}</div>
+        <div class="qr-lightbox__img">
+          <img src="../assets/community/wechat-group.png" alt="${zh("浮屿微信交流群二维码", "Fuyu WeChat community QR")}" />
+        </div>
+        <div style="font-size:12.5px;color:var(--text-muted);line-height:1.5">
+          ${zh("打开微信扫一扫加入交流群 · 点击空白处或按 Esc 关闭", "Scan with WeChat to join · Click backdrop or press Esc to close")}
+        </div>
+      </div>
+    `;
+    lightbox.onclick = (e) => {
+      if (e.target === lightbox) {
+        state.qrZoomed = false;
+        renderWechatCorner();
+      }
+    };
+    lightbox.querySelector("#qrLightboxClose").addEventListener("click", () => {
+      state.qrZoomed = false;
+      renderWechatCorner();
+    });
+  }
+}
+
+function renderAll() {
+  applyThemeVars();
+  renderIslandContent();
+  renderDirectorHud();
+  renderHeader();
+  renderBody();
+  renderFooter();
+  renderWechatCorner();
+  layoutIslandAndSpotlight();
+}
+
+const islandEl = document.getElementById("realIsland");
+islandEl.addEventListener("mouseenter", () => {
+  if (state.islandTucked) {
+    pauseDirector("user");
+    setIslandState({ tucked: false, expanded: false });
+    return;
+  }
+  if (state.directorMode === "playing") pauseDirector("user");
+  if (state.expandTrigger === "hover" && !state.islandExpanded) {
+    if (REGISTRY[state.track][state.stepIdx]?.id === "practice") state.practice.expand = true;
+    setIslandState({ expanded: true });
+    if (REGISTRY[state.track][state.stepIdx]?.id === "practice") renderBody();
+  }
+});
+islandEl.addEventListener("mouseleave", () => {
+  if (state.expandTrigger === "hover" && state.islandExpanded && state.directorMode !== "playing") {
+    setIslandState({ expanded: false });
+  }
+});
+islandEl.addEventListener("click", () => {
+  pauseDirector("user");
+  const nextOpen = !state.islandExpanded;
+  if (nextOpen && REGISTRY[state.track][state.stepIdx]?.id === "practice") state.practice.expand = true;
+  setIslandState({ expanded: nextOpen, tucked: false });
+  if (REGISTRY[state.track][state.stepIdx]?.id === "practice") renderBody();
+});
+islandEl.addEventListener("dragover", (e) => { e.preventDefault(); islandEl.classList.add("drag-over"); });
+islandEl.addEventListener("dragleave", () => islandEl.classList.remove("drag-over"));
+islandEl.addEventListener("drop", (e) => {
+  e.preventDefault();
+  islandEl.classList.remove("drag-over");
+  handleFileDrop(e.dataTransfer.getData("text/plain") || "设计稿-v3.png");
+});
+
+document.querySelectorAll(".desktop-file").forEach((el) => {
+  el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", el.dataset.file));
+});
+document.querySelectorAll("#trackSeg .dev-btn").forEach((b) => b.addEventListener("click", () => { state.track = b.dataset.track; syncDevRibbon(); goToStep(0); }));
+document.querySelectorAll("#formSeg .dev-btn").forEach((b) => b.addEventListener("click", () => { pauseDirector("user"); applyFormPreset(b.dataset.qform, true); }));
+document.querySelectorAll("#osSeg .dev-btn").forEach((b) => b.addEventListener("click", () => { state.os = b.dataset.os; syncDevRibbon(); renderAll(); }));
+document.querySelectorAll("#langSeg .dev-btn").forEach((b) => b.addEventListener("click", () => { state.lang = b.dataset.lang; syncDevRibbon(); renderAll(); }));
+document.getElementById("reduceMotionBtn").addEventListener("click", () => {
+  state.reducedMotion = !state.reducedMotion;
+  if (state.reducedMotion) pauseDirector("paused");
+  syncDevRibbon();
+  renderAll();
+});
+document.getElementById("resetPracticeBtn").addEventListener("click", () => {
+  state.track = "firstRun";
+  state.formPreset = "top";
+  state.edge = "top";
+  state.islandForm = "top";
+  state.taskbarLook = "transparent";
+  state.themeId = "default";
+  state.accent = "#74d6ff";
+  state.jellyStyle = "vector";
+  state.motionId = "lively";
+  state.practice = { expand: false, drop: false, shortcut: false };
+  state.hooksInstalled = false;
+  state.macPerms = { accessibility: false, screenRecording: false };
+  state.pushConfigured = false;
+  state.approvalState = "pending";
+  syncDevRibbon();
+  goToStep(0);
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && state.directorMode === "playing") pauseDirector("paused");
+});
+window.addEventListener("resize", layoutIslandAndSpotlight);
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && state.qrZoomed) {
+    e.preventDefault();
+    state.qrZoomed = false;
+    renderWechatCorner();
+    return;
+  }
+  if (e.altKey && e.key === "ArrowRight") { e.preventDefault(); goToStep(state.stepIdx + 1); }
+  else if (e.altKey && e.key === "ArrowLeft") { e.preventDefault(); goToStep(state.stepIdx - 1); }
+  else if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key.toLowerCase() === "v" || e.key.toLowerCase() === "w")) {
+    e.preventDefault();
+    triggerClipboardDemo();
+  }
+});
+
+renderAll();
+startChoreo(0);
+</script>
+</body>
+</html>

@@ -327,6 +327,17 @@ export type ErrorCode =
   | "soundPack.fileMissing"
   | "soundPack.readSound"
   | "soundPack.tooLarge"
+  | "customFont.noDataDir"
+  | "customFont.format"
+  | "customFont.sizeOrEmpty"
+  | "customFont.invalidData"
+  | "customFont.save"
+  | "customFont.badId"
+  | "customFont.notFound"
+  | "customFont.delete"
+  | "customFont.openFolder"
+  | "customFont.read"
+  | "customFont.tooLarge"
   | "toast.init"
   | "toast.unavailable"
   | "toast.checkAccess"
@@ -715,6 +726,17 @@ export const zhCN: ErrorsText = {
     "soundPack.fileMissing": "音效包里没有这个文件。",
     "soundPack.readSound": ({ name }) => `无法读取音效 ${name}。`,
     "soundPack.tooLarge": ({ name }) => `音效文件太大：${name}（最大 4 MB）`,
+    "customFont.noDataDir": "找不到应用数据目录。",
+    "customFont.format": ({ name }) => `不支持的字体格式：${name}（仅支持 TTF、OTF、WOFF、WOFF2）`,
+    "customFont.sizeOrEmpty": ({ name }) => `字体文件太大或是空的：${name}（最大 32 MB）`,
+    "customFont.invalidData": ({ name }) => `文件内容不是有效的字体：${name}`,
+    "customFont.save": "无法保存字体文件。",
+    "customFont.badId": "字体 id 无效。",
+    "customFont.notFound": "找不到这个字体。",
+    "customFont.delete": "无法删除字体。",
+    "customFont.openFolder": "无法打开字体文件夹。",
+    "customFont.read": ({ name }) => `无法读取字体 ${name}。`,
+    "customFont.tooLarge": ({ name }) => `字体文件太大：${name}（最大 32 MB）`,
     "toast.init": "无法初始化 Windows 通知。",
     "toast.unavailable": "Windows 通知监听不可用。",
     "toast.checkAccess": "无法检查通知权限。",
@@ -1100,6 +1122,17 @@ export const en: ErrorsText = {
     "soundPack.fileMissing": "This file is not in the sound pack.",
     "soundPack.readSound": ({ name }) => `Could not read sound ${name}.`,
     "soundPack.tooLarge": ({ name }) => `The sound file is too large: ${name} (at most 4 MB).`,
+    "customFont.noDataDir": "Could not find the app data folder.",
+    "customFont.format": ({ name }) => `Unsupported font format: ${name} (TTF, OTF, WOFF and WOFF2 only).`,
+    "customFont.sizeOrEmpty": ({ name }) => `The font file is empty or too large: ${name} (at most 32 MB).`,
+    "customFont.invalidData": ({ name }) => `The file is not a valid font: ${name}.`,
+    "customFont.save": "Could not save the font file.",
+    "customFont.badId": "The font id is not valid.",
+    "customFont.notFound": "This font was not found.",
+    "customFont.delete": "Could not delete the font.",
+    "customFont.openFolder": "Could not open the fonts folder.",
+    "customFont.read": ({ name }) => `Could not read font ${name}.`,
+    "customFont.tooLarge": ({ name }) => `The font file is too large: ${name} (at most 32 MB).`,
     "toast.init": "Could not initialize Windows notifications.",
     "toast.unavailable": "Windows notification listener is unavailable.",
     "toast.checkAccess": "Could not check notification permission.",

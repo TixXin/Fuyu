@@ -1,4 +1,9 @@
-import { orderIslandPages, type IslandPagesLayout } from "../../lib/settings/islandPages.ts";
+import {
+  effectivePageDockZone,
+  orderIslandPages,
+  type EnabledDockSides,
+  type IslandPagesLayout,
+} from "../../lib/settings/islandPages.ts";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { pageSlot } from "./slots/pageSlot.ts";
 import type { BuiltinPage, HeaderDotPage, IslandPage } from "./types";
@@ -10,6 +15,7 @@ type MessageSwitch = "qq" | "wechat" | "qqMail";
 export type IslandFeatures = Record<BuiltinPage | MessageSwitch, boolean> & {
   clipboardScreenshots?: boolean;
   pageLayout?: IslandPagesLayout;
+  enabledSides?: EnabledDockSides;
 };
 
 export function withoutUnsupported(features: IslandFeatures, unsupported: ReadonlySet<PlatformFeature>): IslandFeatures {
@@ -30,8 +36,28 @@ export function foldScreenshotsIntoClipboard(features: IslandFeatures): IslandFe
   return { ...features, screenshots: false, clipboardScreenshots: true };
 }
 
-export function withPageLayout(features: IslandFeatures, pageLayout: IslandPagesLayout): IslandFeatures {
-  return pageLayout.order.length === 0 && pageLayout.hidden.length === 0 && Object.keys(pageLayout.icons ?? {}).length === 0 ? features : { ...features, pageLayout };
+const NO_SIDES: EnabledDockSides = { left: false, right: false };
+
+const isTopDocked = (id: string, features: IslandFeatures) =>
+  effectivePageDockZone(features.pageLayout, id, features.enabledSides ?? NO_SIDES) === "top";
+
+export function withPageLayout(
+  features: IslandFeatures,
+  pageLayout: IslandPagesLayout,
+  enabledSides?: EnabledDockSides,
+): IslandFeatures {
+  const hasLayout =
+    pageLayout.order.length > 0 ||
+    pageLayout.hidden.length > 0 ||
+    Object.keys(pageLayout.icons ?? {}).length > 0 ||
+    Object.keys(pageLayout.placement ?? {}).length > 0;
+  const hasSides = enabledSides !== undefined && (enabledSides.left || enabledSides.right);
+  if (!hasLayout && !hasSides) return features;
+  return {
+    ...features,
+    ...(hasLayout ? { pageLayout } : {}),
+    ...(hasSides ? { enabledSides } : {}),
+  };
 }
 
 type Orderable = { shortcutOrder?: number; headerDot?: boolean; external?: boolean };
@@ -62,7 +88,10 @@ const itemEnabled = (item: PageSwitch, features: IslandFeatures) => {
 };
 
 export function headerDotPages<Item extends PageSwitch & Orderable & { id: string }>(items: readonly Item[], features: IslandFeatures): Item[] {
-  return orderIslandPages(byShortcut(items.filter((item) => isHeaderDot(item) && itemEnabled(item, features))), features.pageLayout);
+  return orderIslandPages(
+    byShortcut(items.filter((item) => isHeaderDot(item) && itemEnabled(item, features) && isTopDocked(item.id, features))),
+    features.pageLayout,
+  );
 }
 
 const pageItem = (page: IslandPage) => pageSlot.items().find((item) => item.id === page);
@@ -73,18 +102,23 @@ export function isPageEnabled(page: IslandPage, features: IslandFeatures): boole
 }
 
 export function isPageShown(page: IslandPage, features: IslandFeatures): boolean {
-  return isPageEnabled(page, features) && !(features.pageLayout?.hidden.includes(page) ?? false);
+  return isPageEnabled(page, features) && isTopDocked(page, features) && !(features.pageLayout?.hidden.includes(page) ?? false);
 }
 
 export function resolveIslandPage(page: IslandPage, features: IslandFeatures): IslandPage | null {
-  if (isPageEnabled(page, features)) return page;
+  if (isPageEnabled(page, features) && isTopDocked(page, features)) return page;
   const fallback = pageItem(page)?.fallback?.(features);
-  if (fallback) return fallback;
+  if (fallback && isTopDocked(fallback, features)) return fallback;
+  const topCandidate = pageSlot.items().map((item) => item.id as IslandPage).find((candidate) => isPageEnabled(candidate, features) && isTopDocked(candidate, features));
+  if (topCandidate) return topCandidate;
+  if (isPageEnabled(page, features)) return page;
   return pageSlot.items().map((item) => item.id as IslandPage).find((candidate) => isPageEnabled(candidate, features)) ?? null;
 }
 
 export function pageShortcutOrder(features: IslandFeatures): IslandPage[] {
-  return orderIslandPages(byShortcut(pageSlot.items()), features.pageLayout).map((item) => item.id as IslandPage).filter((page) => isPageEnabled(page, features));
+  return orderIslandPages(byShortcut(pageSlot.items()), features.pageLayout)
+    .map((item) => item.id as IslandPage)
+    .filter((page) => isPageEnabled(page, features) && isTopDocked(page, features));
 }
 
 export function pageForAltDigit(features: IslandFeatures, digit: number): IslandPage | null {

@@ -1,3 +1,238 @@
 <body style="background: linear-gradient(135deg, rgb(58, 63, 85), rgb(106, 90, 122) 50%, rgb(43, 74, 106))">
-  <div id="root"></div>
+  <div id="root">
+    <main class="onboarding stage--font-system island-light onboarding--light" data-act="whatsNewForms" data-mode="whatsNew" style="--safe-top: 0px; --safe-bottom: 0px; --safe-left: 0px; --safe-right: 0px">
+      <div aria-hidden="true" class="onboarding-spotlight" style="width: 276px; height: 54px; --spot-x: 502px; --spot-y: -8px; --spot-radius: 27px"></div>
+      <div aria-label="真岛实时演播台" class="director-hud" role="region">
+        <span aria-hidden="true" class="director-hud__dot director-hud__dot--paused"></span>
+        <span class="director-hud__caption">
+          自动演示已暂停
+        </span>
+        <button class="director-hud__btn" type="button">
+          <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+          继续演示
+        </button>
+        <button class="director-hud__btn" type="button">
+          <svg aria-hidden="true" class="lucide lucide-skip-forward" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+          下一段
+        </button>
+      </div>
+      <div aria-label="欢迎使用浮屿" class="onboarding__card" role="dialog" style="left: #px; width: 760px; top: #px; max-height: 708px">
+        <header class="onboarding__bar">
+          <div class="onboarding__stage">
+            <div aria-label="第 2 步，共 2 步" class="onboarding__progress" role="group">
+              <button aria-label="回到「版本说明」" class="onboarding__dot onboarding__dot--done" title="回到「版本说明」" type="button">
+                <span aria-hidden="true" class="onboarding__dot-num">
+                  <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                </span>
+                <span class="onboarding__dot-label">
+                  版本说明
+                </span>
+              </button>
+              <button aria-current="step" aria-label="多形态体验" class="onboarding__dot onboarding__dot--active" disabled="" title="多形态体验" type="button">
+                <span aria-hidden="true" class="onboarding__dot-num">
+                  2
+                </span>
+                <span class="onboarding__dot-label">
+                  多形态体验
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="onboarding__bar-right">
+            <span class="onboarding__track-pill">
+              版本更新引导
+            </span>
+            <button aria-label="关闭引导" class="onboarding__close" type="button">
+              <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+            </button>
+          </div>
+        </header>
+        <section class="onboarding__body">
+          <div class="onboarding__heading">
+            <h1 class="onboarding__title">
+              在真岛上试试新形态与左右侧翼
+            </h1>
+            <p class="onboarding__lead">
+              点下面任意形态或一键分流，真岛与左右侧翼会立刻实时响应，随时可以还原。
+            </p>
+          </div>
+          <div class="island-forms">
+            <div class="island-forms__head">
+              <span class="island-forms__label">
+                形态与停靠位置
+                <span class="island-forms__hint">
+                  ·
+                  贴合屏幕刘海，左右双翼显示状态
+                </span>
+              </span>
+              <button class="onboarding__chip-btn" type="button">
+                <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+                轮播形态
+              </button>
+            </div>
+            <div aria-label="形态与停靠位置" class="island-forms__grid" role="radiogroup">
+              <button aria-checked="false" class="island-forms__card" data-island-form="top" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--top">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  贴顶
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="pill" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--pill">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  悬空药丸
+                </span>
+              </button>
+              <button aria-checked="true" class="island-forms__card island-forms__card--active" data-island-form="notch" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--notch">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  刘海
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="bottom" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--bottom">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  底边
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="left" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--left">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  左侧
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="right" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--right">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  右侧
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="taskbar" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--taskbar">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  任务栏
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="side-dock-split" data-side-dock-split="off">
+            <div class="side-dock-split__top">
+              <div class="side-dock-split__title-wrap">
+                <span aria-hidden="true" class="side-dock-split__icon">
+                  <svg aria-hidden="true" class="lucide lucide-columns3 lucide-columns-3" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </span>
+                <div class="side-dock-split__copy">
+                  <div class="side-dock-split__title">
+                    <span>
+                      左右侧翼一键分流，给主岛减负
+                    </span>
+                    <span class="side-dock-split__badge">
+                      新功能
+                    </span>
+                  </div>
+                  <p class="side-dock-split__desc">
+                    开的功能多时，顶岛只留核心状态，把待办、剪贴板、文件中转、日历分流到左右侧翼抽屉，信息不再拥挤。
+                  </p>
+                </div>
+              </div>
+              <div class="side-dock-split__actions">
+                <button class="onboarding__chip-btn onboarding__chip-btn--active" data-action="side-dock-split" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-sparkles" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+                  一键分流并预览
+                </button>
+                <button class="onboarding__chip-btn" data-action="side-dock-preview" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-eye" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+                  预览侧翼
+                </button>
+                <button class="onboarding__chip-btn" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings2 lucide-settings-2" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+                  微调侧翼
+                </button>
+              </div>
+            </div>
+            <div aria-label="三区自动分流方案" class="side-dock-split__zones">
+              <div class="side-dock-split__zone">
+                <span class="side-dock-split__zone-name">
+                  左侧翼
+                </span>
+                <span class="side-dock-split__zone-items">
+                  日历 · 消息
+                </span>
+              </div>
+              <div class="side-dock-split__zone side-dock-split__zone--top">
+                <span class="side-dock-split__zone-name">
+                  顶部主岛（精简）
+                </span>
+                <span class="side-dock-split__zone-items">
+                  看板 · Agent · 音乐 · 计时
+                </span>
+              </div>
+              <div class="side-dock-split__zone">
+                <span class="side-dock-split__zone-name">
+                  右侧翼
+                </span>
+                <span class="side-dock-split__zone-items">
+                  待办 · 剪贴板 · 中转 · 截图 · 翻译
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <footer class="onboarding__footer">
+          <span class="onboarding__esc">
+            按 Esc 随时退出
+          </span>
+          <div class="onboarding__nav">
+            <button class="onboarding__button" type="button">
+              上一步
+            </button>
+            <button class="onboarding__button onboarding__button--quiet" type="button">
+              跳过此步
+            </button>
+            <button class="onboarding__button onboarding__button--primary" type="button">
+              我知道了，继续使用
+            </button>
+          </div>
+        </footer>
+      </div>
+      <div aria-label="浮屿用户交流群 · 点击卡片居中放大扫码，欢迎交流与反馈" class="wechat-corner" role="button" tabindex="0">
+        <span class="wechat-corner__head">
+          <span class="wechat-corner__title">
+            <span aria-hidden="true" class="wechat-corner__dot"></span>
+            浮屿用户交流群
+          </span>
+          <button class="wechat-corner__hide" type="button">
+            收起
+          </button>
+        </span>
+        <span class="wechat-corner__qr">
+          <img alt="浮屿微信交流群二维码" height="128" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" width="128">
+        </span>
+        <span class="wechat-corner__sub">
+          点击卡片居中放大扫码，欢迎交流与反馈
+        </span>
+      </div>
+    </main>
+  </div>
 </body>

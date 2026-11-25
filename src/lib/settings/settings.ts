@@ -28,6 +28,8 @@ export const THEME_SETTING_KEYS = [
   "inkColor",
   "appearanceMode",
   "fontFamily",
+  "fontScale",
+  "customFontId",
   "glassIntensity",
   ...GLASS_SETTING_KEYS,
   "opacity",

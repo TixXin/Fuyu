@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Blocks, Bot, ChevronRight, Plus, LayoutGrid, Search, Settings2, X, type LucideIcon } from "lucide-react";
+import { Blocks, Bot, Check, ChevronRight, Plus, LayoutGrid, Search, Settings2, X, type LucideIcon } from "lucide-react";
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
@@ -11,6 +11,7 @@ import { rememberedAboutPage } from "./storage";
 import { useMarketSuggestions } from "./useMarketSuggestions";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import { BUILTIN_CATEGORIES, categorySlot } from "./slots/categorySlot";
+import type { SettingsWhatsNewView } from "./useSettingsWhatsNew";
 import "./SettingsSidebar.css";
 
 export const CATEGORY_ICONS = Object.fromEntries(BUILTIN_CATEGORIES.map((item) => [item.id, item.icon])) as Record<SettingsCategory, LucideIcon>;
@@ -44,11 +45,13 @@ const NO_PAGES: ReadonlySet<SettingsCategory> = new Set();
 export function SettingsSidebar({
   category,
   hidden,
+  whatsNew,
   onCategoryChange,
   onRowOpen,
 }: {
   category: SettingsCategory;
   hidden?: ReadonlySet<SettingsCategory>;
+  whatsNew?: SettingsWhatsNewView;
   onCategoryChange: (category: SettingsCategory) => void;
   onRowOpen?: (page: SettingsCategory, title: string) => void;
 }) {
@@ -99,7 +102,7 @@ export function SettingsSidebar({
     void loadSearchEntries().then(setSearchEntries);
   };
   const matches = searchCategories(query, describe);
-  const hits = onRowOpen && searching ? searchSettingsRows(query, searchEntries, locale, LOCALE_CODES, describe) : [];
+  const hits = onRowOpen && searching ? searchSettingsRows(query, searchEntries, locale, LOCALE_CODES, describe, whatsNew?.searchSince, whatsNew?.searchPages) : [];
   const marketHits = useMarketSuggestions(query, matches.length + hits.length);
   const openMarketHit = (plugin: SearchablePlugin) => {
     requestMarketView({ detail: plugin.name });
@@ -108,6 +111,8 @@ export function SettingsSidebar({
   const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS);
   const pagesOf = (item: SettingsCategory) => entryPages(item).filter(available);
   const subsOf = (item: SettingsCategory) => subPagesOf(item).filter(available);
+  const hasUnread = (entry: SettingsCategory) =>
+    Boolean(whatsNew && whatsNew.unreadPages.size > 0 && [...pagesOf(entry), ...subsOf(entry)].some((page) => whatsNew.unreadPages.has(page)));
   const found = (page: SettingsCategory) => matches.includes(page) || hits.some((hit) => hit.page === page);
   const shown = (item: SettingsCategory) =>
     searching ? [...pagesOf(item), ...subsOf(item)].some(found) : pagesOf(item).some((page) => page === category || !hiddenSet.has(page));
@@ -146,6 +151,7 @@ export function SettingsSidebar({
             <li key={`${hit.page}/${hit.text.group}/${hit.text.title}`}>
               <button className="settings-sidebar__hit" type="button" title={path} data-page={hit.page} onClick={() => openHit(hit)}>
                 <span>{hit.text.title}</span>
+                {hit.isNew ? <em className="settings-sidebar__hit-tag">{text.whatsNew.badge}</em> : null}
               </button>
             </li>
           );
@@ -157,6 +163,7 @@ export function SettingsSidebar({
   const item = (entry: SettingsCategory, nested = false) => {
     const Icon = slotItems.find((other) => other.id === entry)?.icon ?? CATEGORY_ICONS[entry];
     const isActive = entry === current;
+    const unread = !searching && hasUnread(entry);
     return (
       <li key={entry}>
         <button
@@ -168,6 +175,7 @@ export function SettingsSidebar({
         >
           {Icon && <Icon size={16} strokeWidth={2} aria-hidden="true" />}
           <span>{itemLabel(entry)}</span>
+          {unread ? <span className="settings-sidebar__new">{text.whatsNew.badge}</span> : null}
         </button>
         {searching && itemHits(entry)}
       </li>
@@ -205,6 +213,7 @@ export function SettingsSidebar({
         >
           <GroupIcon size={16} strokeWidth={2} aria-hidden="true" />
           <span>{label}</span>
+          {!searching && !open && items.some(hasUnread) ? <span className="settings-sidebar__new">{text.whatsNew.badge}</span> : null}
           <ChevronRight className="settings-sidebar__chevron" size={14} strokeWidth={2} aria-hidden="true" />
         </button>
         {(children.length > 0 || (open && more)) && (
@@ -243,6 +252,31 @@ export function SettingsSidebar({
           </button>
         )}
       </div>
+      {whatsNew && whatsNew.unreadCount > 0 ? (
+        <div className="settings-sidebar__whats-new">
+          <button
+            className="settings-sidebar__whats-new-open"
+            type="button"
+            onClick={() => {
+              ensureSearchIndex();
+              setQuery(text.whatsNew.query);
+            }}
+          >
+            <span className="settings-sidebar__new">{text.whatsNew.badge}</span>
+            <span>{text.whatsNew.label}</span>
+            <span className="settings-sidebar__whats-new-count">{whatsNew.unreadCount}</span>
+          </button>
+          <button
+            className="settings-sidebar__whats-new-dismiss"
+            type="button"
+            title={text.whatsNew.markAllRead}
+            aria-label={text.whatsNew.markAllRead}
+            onClick={whatsNew.onDismissAll}
+          >
+            <Check size={13} strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
       <div className="settings-sidebar__list" ref={listRef}>
         {groups.map(({ label, categories }, index) => {
           if (label !== null) return group(label, categories);

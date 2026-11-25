@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { fontScaleCssPlugin } from "./scripts/vite/font-scale.mjs";
 import { releaseDatesPlugin } from "./scripts/vite/release-dates.mjs";
 import { createWatchIgnored } from "./scripts/vite/watch-ignored.mjs";
 
@@ -7,7 +8,7 @@ import { createWatchIgnored } from "./scripts/vite/watch-ignored.mjs";
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(async () => ({
-  plugins: [react(), releaseDatesPlugin()],
+  plugins: [fontScaleCssPlugin(), react(), releaseDatesPlugin()],
 
   clearScreen: false,
   server: {

@@ -13,7 +13,7 @@ export type AgentLightStyle = "mark" | "dot";
 export type JellyfishStyle = "vector" | "flat" | "sticker" | "mono" | "neon" | "chunky" | "fine";
 
 export type AppearanceMode = "classic" | "liquidGlass";
-export type IslandFont = "system" | "pixel";
+export type IslandFont = "system" | "pixel" | "rounded" | "serif" | "mono" | "custom";
 export type IslandCornerShape = "squircle" | "round";
 export type ThemeMode = "dark" | "light" | "system";
 export type AccentMode = "default" | "windows" | "pick";
@@ -48,6 +48,8 @@ export type IslandSettings = CalendarSettingValues &
   topEdgeLayoutVersion: 1;
   appearanceMode: AppearanceMode;
   fontFamily: IslandFont;
+  fontScale: number;
+  customFontId: string;
   glassIntensity: number;
   opacity: number;
   islandOpacity: number;

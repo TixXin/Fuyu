@@ -73,7 +73,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
   };
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Escape") return (event.stopPropagation(), onClose());
+    if (event.key === "Escape") return (event.preventDefault(), event.stopPropagation(), onClose());
     if (event.key !== "Tab") return;
     const items = [...(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].filter((el) => el.offsetParent !== null);
     if (items.length === 0) return;

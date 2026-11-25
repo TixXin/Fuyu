@@ -6,7 +6,15 @@ import { entryOf, entryTabs, isCategoryAvailable, type SettingsCategory, type Ta
 import { categorySlot } from "./slots/categorySlot";
 import "./SettingsTabs.css";
 
-export function SettingsTabs({ category, onCategoryChange }: { category: SettingsCategory; onCategoryChange: (category: SettingsCategory) => void }) {
+export function SettingsTabs({
+  category,
+  unreadPages,
+  onCategoryChange,
+}: {
+  category: SettingsCategory;
+  unreadPages?: ReadonlySet<SettingsCategory>;
+  onCategoryChange: (category: SettingsCategory) => void;
+}) {
   const text = useTranslation().settings.categories;
   const unsupported = useUnsupportedFeatures();
   useSlotEntries(categorySlot);
@@ -75,6 +83,7 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
             }}
           >
             {text.tabs[tab]}
+            {unreadPages?.has(tab) ? <span className="settings-tabs__new">{text.whatsNew.badge}</span> : null}
           </button>
         );
       })}

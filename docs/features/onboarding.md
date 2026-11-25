@@ -1,60 +1,45 @@
-# 新手引导
+# 新手引导与版本更新引导
 
-新装的浮屿第一次启动时，岛先出现，约 1.2 秒后打开新手引导：一个透明的遮罩（label `onboarding`，`?window=onboarding`），铺满岛所在屏幕的工作区，把屏幕压暗，只留真岛周围一圈亮着，岛下方是一张卡片。用户在卡片上做选择，效果直接出现在真岛上；练习也在真岛上做。设计来由和参考见 [调研](../research/onboarding-design.md)。
+新装的浮屿第一次启动时，岛先出现，约 1.2 秒后打开首次安装引导（label `onboarding`，`?window=onboarding`）；老用户从旧版本升级到新版本时（已有设置且 `fuyu-onboarding-guide-version` 小于当前版本），只打开精简的**版本更新引导（What's New）**，不重走安装引导。新装用户走完首次引导后会写入当前版本号，不会重复弹出本版本的更新引导。
 
-## 各幕
+## 三轨道可扩展架构（`src/windows/onboarding/flow.ts`）
 
-| 幕 | 卡片上 | 真岛上 | 改的设置 |
-|---|---|---|---|
-| 1 你好 | 「你好，这就是浮屿」，界面语言 | 亮圈套住岛，岛弹出消息面板：「你好啊，我在这儿 👋」 | `fuyu-locale` |
-| 2 捏岛 | 深色 / 浅色 / 跟随系统、强调色。只放这两项：圆角形状、圆角大小和展开动画留在设置里，这一幕多了就又成了设置表单 | 岛当场变样子 | `themeMode`、`accentMode`、`accentColor` |
-| 3 装岛 | 「你平时主要用电脑做什么」（写代码 / 办公 / 学习 / 娱乐，可多选）和 8 张功能贴纸。新装的岛除了截图都开着，所以选身份是「只留下这一组」：每张身份卡列出它留下的全部功能，选了以后卡片写出卸下了哪些 | 岛上对应的入口当场出现或消失 | `todoEnabled` 等 7 个开关；剪贴板历史写 `clipboard-history.json` 的 `enabled`。身份和功能的对应在 `windows/onboarding/personas.ts` |
-| 4 练习 | 三个小任务，每完成一个亮一颗星；卡片挪到屏幕底部，给展开的岛让位置。导语只提已经装上的演示内容（音乐、Agent） | 用户自己让岛展开（顺带选悬停还是点击）、拖一个真文件到岛上（文件中转开着时才有）、按一次剪贴板快捷键（剪贴板开着时才有，顺带问要不要 Win+V） | `expandTrigger`、剪贴板 `winV` |
-| Mac 权限（只在 macOS 上、且选的功能要用到时） | 「给浮屿开几个权限」：按第 3 幕留下的功能列出要开的权限（剪贴板、翻译 → 辅助功能；截图 → 屏幕录制），每项显示是否已允许，每 1.5 秒和切回窗口时重新检查。「去允许」先让 macOS 弹它自己的提示（这样浮屿会出现在系统设置的列表里），没允许就打开对应的隐私页；屏幕录制点过以后按钮变成「重开浮屿」，因为它要重开才生效。可以不开直接下一步 | — | 系统的隐私授权（用户自己在系统设置里打开） |
-| Agent 会话卡片（AI Agent 开着时才有，B61） | 显示方式、归档动画、卡片光效三项，推荐项后面标「（推荐）」：卡片、粒子消散、粒子流苏（用户要求 2026-11-15，这三个同时成了新装的默认值）。卡片光效只在卡片和紧凑下生效，选列表时不显示；归档动画三种显示方式都有效 | — | `agentSessionView`、`agentArchiveMotion`、`agentCardEffects` |
-| 连接 AI 代理（AI Agent 开着时才有，B61） | 三步，组件和设置页同一份：1. SSH 远程电脑（可跳过，`AgentRemoteHostsSettings`）；2. 显示哪些 Agent 的开关（`AgentProviderSwitches`）和状态灯的「安装/修复」（`AgentHooksSettingsSection`）；3. 回复状态标记（推荐打开，`AgentReplyMarkerSettings`，写进本机和打开的远程电脑上各家代理的提示词文件） | — | `agentHiddenProviders`、`agent-remote-hosts.json`、各家代理的钩子和提示词文件 |
-| 推荐套装（市场目录里有标了 `onboarding` 的套装、且还有成员没装时才有，E77.8.2） | 「装一组搭配好的插件」：套装的名字、一句说明和里面的插件名；「看看这个套装」结束引导并打开 设置 → 插件市场 里这个套装的确认框，装不装在那里定；不点就直接下一步 | — | 不改设置，也不装任何东西 |
-| 5 完成 | 开机启动；去设置连接 AI 编程工具、添加邮箱（点了就结束引导并打开设置）；一句话说明以后从托盘图标进设置 | 点「开始使用」，遮罩消失，岛弹出「浮屿已就绪」 | 注册表的开机自启 |
+引导由声明式注册表编排为三条轨道：
 
-- **演示模式**：引导开着的时候，岛上放一首演示歌曲「海边的风」，还有一个正在干活的演示 Claude Code 会话，这样刚装好的岛也能展示音乐和 Agent。真的有歌在放时用真的。引导关掉时演示马上消失；引导意外退出的话，最多 7 秒后也会消失。
-- 每一项改了就保存，和设置窗口用同一套存储，真岛通过 storage 事件马上跟着变。随时「跳过」、点 ×、按 Esc 都能退出，已经选的保留。
-- **身份能撤回**：第一次选身份时记下当时开着的功能；把选中的身份全部取消，功能回到回答之前的样子。选了哪些身份在各幕之间来回时保留。从「关于」重开引导的老用户点错了也能这样恢复。
-- **练习的判定**：进入第 4 幕时岛已经展开的不算，要看到它收起后再展开才亮星。拖文件看的是文件中转里最新一条的加入时间，不看条数，所以重复拖同一个文件、或者中转已经满了也算。拖进去的文件会留在文件中转里。
-- **第 5 幕的设置链接先结束引导**：遮罩始终置顶并压暗整屏，设置窗口开在它下面会像被禁用，所以点链接时先打开设置，再和「开始使用」一样结束引导。
-- **推荐套装靠岛代读**：引导窗口没有插件宿主的连接，读不到市场目录。岛上的更新插件每次拿到目录，把第一个标了 `onboarding`、还有成员没装的套装写进 `fuyu-onboarding-bundle`，没有或读不到目录就删掉；引导只读这个 key，所以断网、套装已装全、市场还没上架套装时没有这一幕，圆点也少一个。这一幕排在收尾之前，「看看这个套装」和第 5 幕的设置链接一样先结束引导。
-- 遮罩只在卡片上接住鼠标，别的地方鼠标直接穿过去，所以能碰到真岛、能从桌面拖文件。
-- 岛藏在托盘里时整屏压暗，卡片上提示点托盘图标让岛出来；岛一出来亮圈就跟过去。
-- 系统开了「减少动画」时，亮圈的脉冲、卡片和星星的动画都关掉。
-- **先露出桌面**（只在新装第一次启动时；从「关于」重开不动别的窗口）：打开引导前，任务栏先「最小化所有窗口」（Win+M 那个命令，不用 Win+D：它会来回切换，也可能把置顶的岛一起藏掉），等约 0.35 秒动画结束再盖上遮罩；引导关闭时「撤销最小化全部」，窗口回到原处；这时设置窗口开着的话（从第 5 幕的链接打开的），约 0.35 秒后再把它提到最前，免得被恢复的窗口盖住。见 `src-tauri/src/win32/desktop.rs`。
-- 只摆出设置里已有的选项，不新增设置；不要账号密码。Windows 上不弹系统权限对话框；macOS 上只有用户在权限那一幕点了「去允许」才弹系统自己的提示。
+1. **首次安装主线（`STEP_REGISTRY`，5 幕，macOS 需权限时自动在练习前插入权限幕）**
+   - **认识浮屿（`hello`）**：双栏宽舞台（`760px`），顶部真岛自动演示场景胶囊、可点击切换矢量/像素画风的水母徽标、界面语言切换。
+   - **形态与外观（`shape`）**：覆盖浮屿全部真实形态（贴顶 / 悬空药丸 / 刘海 / 底边 / 左侧 / 右侧，Windows 任务栏可用时含任务栏嵌入及透明/跟随主题外观）并支持「轮播形态」；内置主题预设（玄墨 / 灰白 / 通透磨砂 / 暖纸磨砂）+ 液态玻璃 + 强调色 + 水母画风 + 开合动画现场试播。
+   - **能力全景（`outfit`）**：4 组身份预设（可多选与无痛撤回）+ 11 项真实内置能力开关（待办、日历、音乐、AI Agent、剪贴板、文件中转、截图、翻译、计时器、语音输入、邮箱），右侧显示聚焦能力介绍并可「在真岛打开这一页」或「自动巡礼已选」；底部内嵌**左右侧翼一键分流卡片**（`SideDockSplitCard`），一键把待办/剪贴板/文件中转/日历分流到左右侧翼并实时展开预览，降低顶岛信息密度。
+   - **系统权限（`permissions`，仅 macOS 且需要时，前置在练习之前）**：自动撤掉压暗黑幕，方便切系统设置；可点「跳过此步」。
+   - **上手体验（`play`）**：在真岛上完成展开、拖文件、剪贴板快捷键三项任务，每完成一项点亮一颗星；可点「跳过此步」。
+   - **准备就绪（`release`）**：汇总当前形态、动效与已启能力数 + 开机启动 + **按需进阶配置中心（`EXTENSION_REGISTRY`）**（AI Agent 配置、推荐插件套装、邮箱、全部设置）。
+2. **版本更新引导（`WHATS_NEW_REGISTRY`）**
+   - **版本说明（`whatsNewNotes`）**：顶部为带水母徽标、版本号徽章、升级跨度与主题/条数统计的 Hero 舞台，下方通过 `releaseShowcase.ts` 自动按主题解析打包的本地中英文 Release Notes（`BUNDLED_RELEASES` + `historyNoteLines`），呈现可点击筛选的分类标签栏、双栏 Bento 特性卡片网格（按冒号拆出粗体标题与说明），并为匹配主题提供「真岛试看」一键联动真岛演示；底部可跳转设置查看完整版本历史。
+   - **多形态体验（`whatsNewForms`）**：复用的真实真岛形态选择器 + 左右侧翼一键分流体验卡，让升级用户直接试玩多形态停靠与侧翼分流。
+3. **进阶配置工作区（`AGENT_SETUP_REGISTRY`）**
+   - 从收尾页点「配置 AI Agent 与手机推送」进入宽卡片无黑幕工作区，串起可视化 5 布局 `AgentCardsAct`、`AgentConnectAct`（SSH / 钩子 / 回复标记）和 5 步 `PushAct`（cc-connect 手机推送）。
 
-## 什么时候打开
+## macOS 菜单栏与 Dock 安全区适配
 
-- `windows/island/useFirstRunGuide.ts` 在岛第一次渲染时读 `islandRanBefore()`（有没有 `fuyu-settings`），没有才打开。岛的第一次渲染之后就会保存设置，所以只打开一次，不另存「看过了」的标记。
-- 升级上来的用户已经有 `fuyu-settings`（改名前的设置会先被复制过来，见 [改名兼容](../architecture/contracts.md#改名兼容d17)），不会看到。
-- 设置 → 关于 →「新手引导」可以再打开。
-- 开发时看：主工作区 `pnpm tauri dev` 后用「关于」里的按钮打开；只看卡片的样子用回归页（见下）。
+- Rust 覆层线程（`src-tauri/src/onboarding_window/overlay.rs`）基于当前显示器的 `work_area()` 与覆层窗口边界实时计算 `SafeInsets { top, bottom, left, right }` 并经 `onboarding-insets` 事件推给前端（显示窗口瞬间及 Dock 位置/大小变动时均会同步）。
+- 前端将安全区注入 `cardPlacement()` 与 `--safe-top / --safe-bottom / --safe-left / --safe-right` CSS 变量，确保主卡片底栏、右上角 `DirectorHud` 控台与左下角微信二维码卡片均自动避让 macOS 菜单栏及底边/左右侧 Dock。
 
-## 代码
+## 真岛自动化演示导演系统
 
-- 前端：`src/windows/onboarding/`。`OnboardingWindow.tsx` 串起各幕，每幕一个 `*Act.tsx`；`Spotlight` 是压暗和亮圈；`placement.ts` 算卡片放哪（纯函数，`tests/unit/onboarding-placement.test.mjs`）；`useIslandSpot` 收真岛的位置，`useCardRect` 把卡片的矩形交给 Rust，`useDemoHeartbeat` 让演示模式续命；`personas.ts` 是身份和功能的对应，以及回答的记忆和撤回（`togglePersona`、`takenOff`；`tests/unit/onboarding-personas.test.mjs`）；`storage.ts` 是给真岛的两个跨窗口请求。文案在 `src/i18n/sections/onboarding.ts`。
-- 真岛那边：`windows/island/useFirstRunGuide.ts`（打开引导、在消息面板里打招呼，借用插件通知的显示方式）、`windows/island/useOnboardingDemo.ts`（演示歌曲和会话）。
-- Rust：`src-tauri/src/onboarding_window/`。`mod.rs` 按需创建遮罩，铺满岛所在屏幕的**工作区**（不是整个屏幕，免得被当成全屏程序触发游戏模式）；`overlay.rs` 每 30ms 算一次岛在遮罩上的位置（`island/passthrough.rs` 的 `island_on_screen`），变了就发 `onboarding-island`，并按鼠标在不在卡片上切换遮罩的鼠标穿透。剪贴板弹出时 `clipboard_history/popup.rs` 把 `clipboard-popup-opened` 也发给引导。
-- 回归页：`tests/regression/onboarding.html`（`?act=1-5`、`?locale=en`、`?light=1`、`?open=1` 用来看界面，`?test=1` 跑检查）。回归页里没有真岛，亮圈里只是背景。
+- 导演场景注册表（`src/windows/onboarding/directorScenes.ts`）与前端导演 hook（`useOnboardingDirector.ts`）将真实演示分为三组并在真岛上连播或按需点播：
+  1. **形态与吸附（`forms`）**：落岛问候 → 悬空胶囊（`pill`）→ 刘海双翼（`notch`）→ 右侧吸附 → 左侧吸附 → 底边吸附 → 任务栏嵌入（Windows 可用时）→ 贴边收起（`tuck`）→ 唤出回位（`collapse`）。
+  2. **Agent 通知（`agents`，启用 AI Agent 时出现）**：直接复用 `requestAgentTestNotice` + `previewSamples` 驱动真岛展示全部真实 Agent 通知形态——审批弹窗（`approval`）、提问卡片（`question`）、等待回复（`yourTurn`）、任务完成（`done`）、运行异常（`failed`）与多条堆叠（`stack`）。
+  3. **面板与侧翼（`panels`）**：经跨窗口键 `fuyu-onboarding-director` 驱动真岛依次展开 Fuyu 看板、Agent 页与音乐歌词页（**100% 真实的 `IslandShell` 和 `IslandPages`**），并紧接演示**左右侧翼一键分流（`sideSplit`）**、**右侧翼抽屉（`sideRight`）**与**左侧翼抽屉（`sideLeft`）**（通过 `applySideDockSplitPreset` + `previewSideDock` 实时在屏幕左右边缘展开真侧翼）。
+- **原始形态与侧翼自动保护**：首次切换形态、停靠边或演示一键分流前自动快照用户原本的 `islandForm`、停靠边、任务栏状态以及 `fuyu-side-docks` / `fuyu-island-pages`；切出首页、关闭引导（含 `pagehide` 兜底）或点「还原原形态」时自动还原并收起侧翼预览；用户在「形态与外观」「能力全景」或「多形态体验」中主动选择形态/开启分流时则释放快照、保留用户的新选择。
+- 右上角提供悬浮导演控台 `DirectorHud`（显示当前演出的片段与进度计数、暂停/继续、下一段）；遵循**用户优先原则**、切后台自动暂停（`visibilitychange`）与 `prefers-reduced-motion`（开启减少动画时停用自动轮播，但仍支持手动点击单段预览）。
 
-## 引导之后：岛上的「第一次」提示
+## 左下角微信交流群二维码
 
-引导只练三件事，其余的等用户第一次遇到时，在收起条上轻轻提一句（C50）：
+- 首次引导与版本更新引导左下角常驻 `WechatCommunityCorner`，直接复用 `src/features/updater/community/` 的线上拉取机制（读 `community.json`、自动镜像源切换与过期判断）。
+- 去掉独立放大按钮，默认展示 **`128 × 128px`** 清晰竖版二维码卡片（自动避让 macOS Dock），整个卡片任意位置点击即可弹出屏幕正中央的 `320 × 320px` 超大白底二维码灯箱，点击遮罩空白、关闭按钮或按 `Esc` 关闭；右上角提供「收起」折叠为小胶囊。
+- `useCardRect.ts` 通过 `requestAnimationFrame` 合帧并去重，将主卡片、右上角导演 HUD、左下角二维码卡片及打开时的居中灯箱矩形列表上报给 Rust 的 `set_onboarding_card_rects`，保证所有悬浮控件精准接鼠标、其余区域完全穿透到真岛和桌面。
 
-| 什么时候 | 提示 | 按钮 |
-|---|---|---|
-| 第一次有 Agent 会话（AI 代理状态开着） | Agent 会话显示在这里，点岛看全部 | 插头：打开 设置 → AI Agent → 连接；对勾：知道了 |
-| 第一次有新消息提醒（收起条预览、横幅或消息面板） | 新消息来了，点一下岛就能看（等这条消息的提醒结束后才出） | 对勾 |
-| 第一次贴边收起 | 岛藏在顶边，鼠标碰一下就回来（等岛下次出来时才出） | 对勾 |
+## 回归页与单测
 
-- 一天最多一条，按本地日期算；当天已经出过的，其余的留到第二天岛还开着、又遇到时再出。
-- 提示出现时收起条按文字加宽（不受平时 340px 的上限，最宽 460px，`layout.ts` 的 `getNoticeIslandWidth`），整句不截断。
-- 显示 8 秒，鼠标停在上面时不收；点对勾或插头以后这条不再出现，没点的最多出 3 次。
-- 和截图卡片共用收起条的提示位置，截图卡片优先；展开、贴边、有消息预览、快捷翻译或插件授权时不出，游戏免打扰和新手引导演示期间也不记。
-- 记录在 `fuyu-first-hints`（见 [contracts.md](../architecture/contracts.md)）。代码在 `src/features/first-hints/`（`hints.ts` 是纯函数，`tests/unit/first-hints.test.mjs`），接线在 `windows/island/useIslandFirstHints.ts`。
-- 方案里还有一条「用鼠标打开同一页三次后提示 Alt+数字」，没做。
+- 单元测试：`tests/unit/onboarding-flow.test.mjs`、`tests/unit/onboarding-placement.test.mjs`、`tests/unit/onboarding-personas.test.mjs`。
+- 回归页：`tests/regression/onboarding.html`（`?act=1-5`、`?locale=en`、`?light=1`、`?open=1`、`?test=1`）与 `tests/regression/onboarding-push.html`。

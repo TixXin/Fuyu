@@ -19,7 +19,7 @@ window.addEventListener("beforeunload", () => {
 });
 for (const key of Object.keys(localStorage).filter((key) => key.startsWith("fuyu-"))) localStorage.removeItem(key);
 localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
-localStorage.setItem("fuyu-settings", JSON.stringify(DEFAULT_SETTINGS));
+localStorage.setItem("fuyu-settings", JSON.stringify({ ...DEFAULT_SETTINGS, pageSwitchSettings: "wipe" }));
 
 const root = createRoot(document.getElementById("root")!);
 const results = document.getElementById("results")!;

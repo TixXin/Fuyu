@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 import { channelProblems, finishedIssues, parseTask, RELEASED_MARKER, releasedComment, shippedIssues } from "../../scripts/release/after-release.mjs";
 import { commandLine, quoteArg } from "../../scripts/release/command-line.mjs";
 import { baseTag, commitNotes, commitPlatform, downloadLinks, DRAFT_MARKER, draftNotes, userFacingCommits } from "../../scripts/release/notes-draft.mjs";
+import { expiredSinceVersions, pruneSinceText, stampNextSince, stampSinceJson, stampSinceText } from "../../scripts/release/since.mjs";
 import { bumpProblem, readVersion, VERSION_FILES, writeVersion } from "../../scripts/release/versions.mjs";
 
 test("the four version files of this repository agree and can be read", () => {
@@ -125,4 +128,73 @@ test("Release note and Manual check lines in commit bodies seed the draft", () =
   assert.match(notes, /## What's New\n\n- \*\*Widget page\*\*/);
   assert.match(notes, /Manual checks the commits asked for[^\n]*\n- aaa1111 drag a widget on Windows/);
   assert.match(draftNotes("0.3.4-beta.2", "v0.3.4-beta.1", [commits[1]]), /## 更新内容\n\n-\n/);
+});
+
+test("release bumping stamps since=\"next\" in source and settings indices and prunes expired since versions", () => {
+  assert.deepEqual(stampSinceText('<SettingsRow since="next" /><SettingsToggleRow since={"next"} /><SettingsRow since="0.3.13" />', "0.3.14"), {
+    text: '<SettingsRow since="0.3.14" /><SettingsToggleRow since="0.3.14" /><SettingsRow since="0.3.13" />',
+    count: 2,
+  });
+  assert.deepEqual(pruneSinceText('<SettingsRow title="Old" since="0.3.10" /><SettingsRow title="Keep" since="0.3.13" />', new Set(["0.3.10"])), {
+    text: '<SettingsRow title="Old" /><SettingsRow title="Keep" since="0.3.13" />',
+    count: 1,
+  });
+  assert.deepEqual(stampSinceJson('{"page":"general","since": "next","other":"next"}', "0.3.14"), {
+    text: '{"page":"general","since": "0.3.14","other":"next"}',
+    count: 1,
+  });
+  assert.deepEqual(expiredSinceVersions(["0.3.10", "0.3.11", "0.3.12", "0.3.13", "0.3.14-beta.1", "0.3.14"], "0.3.14", 3), ["0.3.10", "0.3.11"]);
+
+  const dir = mkdtempSync(path.join(tmpdir(), "fuyu-since-"));
+  try {
+    mkdirSync(path.join(dir, "src/windows/settings/sections"), { recursive: true });
+    writeFileSync(path.join(dir, "src/windows/settings/sections/Demo.tsx"), '<SettingsRow title="A" since="next" /><SettingsRow title="Old" since="0.3.10" />\n');
+    writeFileSync(
+      path.join(dir, "src/windows/settings/searchIndex.json"),
+      JSON.stringify({
+        version: 1,
+        entries: [
+          { page: "general", since: "next" },
+          { page: "themeStyle", since: "next" },
+          { page: "music", since: "0.3.13" },
+          { page: "clipboard", since: "0.3.12" },
+          { page: "shelf", since: "0.3.10" },
+        ],
+      }),
+    );
+    writeFileSync(
+      path.join(dir, "src/windows/settings/whatsNewIndex.json"),
+      JSON.stringify({
+        version: 1,
+        entries: [
+          { page: "general", since: "next" },
+          { page: "themeStyle", since: "next" },
+          { page: "music", since: "0.3.13" },
+          { page: "clipboard", since: "0.3.12" },
+          { page: "shelf", since: "0.3.10" },
+        ],
+      }),
+    );
+    const result = stampNextSince(dir, "0.3.14-beta.2");
+    assert.equal(result.count, 2);
+    assert.deepEqual(result.expired, ["0.3.10"]);
+    assert.equal(result.prunedCount, 2);
+    assert.deepEqual(result.files, ["src/windows/settings/sections/Demo.tsx", "src/windows/settings/searchIndex.json", "src/windows/settings/whatsNewIndex.json"]);
+    const demoText = readFileSync(path.join(dir, "src/windows/settings/sections/Demo.tsx"), "utf8");
+    assert.match(demoText, /since="0\.3\.14-beta\.2"/);
+    assert.doesNotMatch(demoText, /0\.3\.10/);
+    const searchAfter = JSON.parse(readFileSync(path.join(dir, "src/windows/settings/searchIndex.json"), "utf8"));
+    const whatsNewAfter = JSON.parse(readFileSync(path.join(dir, "src/windows/settings/whatsNewIndex.json"), "utf8"));
+    assert.equal(searchAfter.entries[0].since, "0.3.14-beta.2");
+    assert.equal(searchAfter.entries[1].since, "0.3.14-beta.2");
+    assert.equal(searchAfter.entries[4].since, undefined);
+    assert.deepEqual(whatsNewAfter.entries.map((entry) => [entry.page, entry.since]), [
+      ["general", "0.3.14-beta.2"],
+      ["themeStyle", "0.3.14-beta.2"],
+      ["music", "0.3.13"],
+      ["clipboard", "0.3.12"],
+    ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

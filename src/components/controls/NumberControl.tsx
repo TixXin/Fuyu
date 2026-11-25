@@ -49,7 +49,10 @@ export function NumberControl({
           onBlur={(event) => commit(event.currentTarget.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") commit(event.currentTarget.value);
-            else if (event.key === "Escape") setDraft(null);
+            else if (event.key === "Escape" && draft !== null) {
+              event.preventDefault();
+              setDraft(null);
+            }
             else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
               event.preventDefault();
               step(event.key === "ArrowUp" ? 1 : -1);

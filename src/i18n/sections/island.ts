@@ -70,6 +70,19 @@ export type IslandText = {
   };
   layerNotice: (shortcut: string | null) => string;
   pageArrow: { previous: (page: string) => string; next: (page: string) => string };
+  sideDock: {
+    title: string;
+    openAria: string;
+    pinAria: string;
+    closeAria: string;
+    openSettingsAria: string;
+    emptyHint: string;
+    pageNames: {
+      agents: string;
+      qq: string;
+      translation: string;
+    };
+  };
 };
 
 export const zhCN: IslandText = {
@@ -150,6 +163,19 @@ export const zhCN: IslandText = {
   },
   layerNotice: (shortcut) => (shortcut ? `岛退到窗口下面，再按 ${shortcut} 回来` : "岛退到窗口下面，点托盘图标可以叫回来"),
   pageArrow: { previous: (page) => `上一页：${page}`, next: (page) => `下一页：${page}` },
+  sideDock: {
+    title: "侧边翼",
+    openAria: "展开侧边翼",
+    pinAria: "钉住常驻",
+    closeAria: "收起侧边翼",
+    openSettingsAria: "配置侧边翼布局",
+    emptyHint: "这一侧还没有分配页面，可在设置 → 侧边翼里拖入任意页面。",
+    pageNames: {
+      agents: "AI Agent",
+      qq: "消息",
+      translation: "翻译",
+    },
+  },
 };
 
 export const en: IslandText = {
@@ -230,4 +256,17 @@ export const en: IslandText = {
   },
   layerNotice: (shortcut) => (shortcut ? `Going behind windows; press ${shortcut} to bring it back` : "Going behind windows; the tray icon brings it back"),
   pageArrow: { previous: (page) => `Previous: ${page}`, next: (page) => `Next: ${page}` },
+  sideDock: {
+    title: "Side dock",
+    openAria: "Open side dock",
+    pinAria: "Pin open",
+    closeAria: "Collapse side dock",
+    openSettingsAria: "Configure side docks",
+    emptyHint: "No pages assigned to this side yet. Drag any page here in Settings → Side docks.",
+    pageNames: {
+      agents: "AI Agent",
+      qq: "Messages",
+      translation: "Translate",
+    },
+  },
 };

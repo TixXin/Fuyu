@@ -15,6 +15,7 @@ export function SettingsFolderRow({
   ariaLabel,
   readOnly = false,
   searchable,
+  since,
   revealPath,
   revealLabel,
   browseTitle,
@@ -35,6 +36,7 @@ export function SettingsFolderRow({
   ariaLabel?: string;
   readOnly?: boolean;
   searchable?: boolean;
+  since?: string;
   revealPath?: string | null;
   revealLabel?: string;
   browseTitle?: string;
@@ -62,6 +64,7 @@ export function SettingsFolderRow({
       title={title}
       description={description}
       searchable={searchable}
+      since={since}
       control={
         <>
           {revealPath ? (

@@ -10,10 +10,10 @@ import {
   applyDraft,
   cleanKind,
   cleanTitle,
-  isValidDateKey,
   moveItem,
   normalizeSettings,
   normalizeStored,
+  resolveDateDraft,
   sanitizeBackground,
   toView,
   togglePin,
@@ -112,8 +112,8 @@ export function apply(ctx: Context) {
 
   ctx.clients.handle(METHODS.add, (params?: ItemDraft) => {
     const title = cleanTitle(params?.title);
-    const date = typeof params?.date === "string" ? params.date.trim() : "";
-    if (!title || !isValidDateKey(date)) throw new Error("Invalid title or date");
+    const resolved = resolveDateDraft(params ?? {});
+    if (!title || !resolved) throw new Error("Invalid title or date");
     if (stored.items.length >= MAX_ITEMS) throw new Error(`At most ${MAX_ITEMS} dates`);
     const id = randomUUID();
     stored.items = [
@@ -121,7 +121,8 @@ export function apply(ctx: Context) {
       {
         id,
         title,
-        date,
+        date: resolved.date,
+        ...(resolved.calendar === "lunar" && resolved.lunar ? { calendar: "lunar" as const, lunar: resolved.lunar } : {}),
         pinned: stored.items.length === 0,
         kind: cleanKind(params?.kind),
         repeat: params?.repeat === true,

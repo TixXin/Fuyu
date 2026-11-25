@@ -1,5 +1,17 @@
-import type { Reading } from "./days.ts";
+import { effectiveDate, resolveLunarRef, type Reading } from "./days.ts";
+import { formatLunarDate } from "./lunar.ts";
+import type { CountdownItem } from "./model.ts";
 import { text } from "./text.ts";
+
+export function formatItemDate(item: CountdownItem, at: number, includeSolar = true): string {
+  if (item.calendar !== "lunar") return item.date;
+  const lunar = resolveLunarRef(item);
+  if (!lunar) return item.date;
+  const lunarLabel = formatLunarDate(lunar, text.isZh, !item.repeat);
+  if (!includeSolar) return lunarLabel;
+  const solar = item.repeat ? effectiveDate(item, at) : item.date;
+  return `${lunarLabel} (${solar})`;
+}
 
 export function rowLabel(reading: Reading): string {
   if (reading.type === "today") return text.today;
