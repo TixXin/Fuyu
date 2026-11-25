@@ -5149,12 +5149,12 @@
     {
       "page": "generalApi",
       "zh-CN": {
-        "group": "本机接口",
+        "group": "连接与凭据",
         "title": "地址",
         "description": "http://127.0.0.1:39271/v1"
       },
       "en": {
-        "group": "Local API",
+        "group": "Connection & credentials",
         "title": "Address",
         "description": "http://127.0.0.1:39271/v1"
       }
@@ -5162,12 +5162,12 @@
     {
       "page": "generalApi",
       "zh-CN": {
-        "group": "本机接口",
+        "group": "连接与凭据",
         "title": "访问令牌",
         "description": "令牌不在这里显示，复制后粘贴到脚本里。"
       },
       "en": {
-        "group": "Local API",
+        "group": "Connection & credentials",
         "title": "Access token",
         "description": "The token is not shown here; copy it and paste it into your script."
       }
@@ -5175,12 +5175,12 @@
     {
       "page": "generalApi",
       "zh-CN": {
-        "group": "本机接口",
+        "group": "连接与凭据",
         "title": "重新生成令牌",
         "description": "换一个新令牌，用旧令牌的脚本立即失效。"
       },
       "en": {
-        "group": "Local API",
+        "group": "Connection & credentials",
         "title": "Regenerate token",
         "description": "Switches to a new token; scripts using the old one stop working at once."
       }

@@ -125,16 +125,25 @@ try {
   await openPage("sounds");
   check(!document.querySelector(".feature-off") && document.querySelector(".editor-panel .settings-group__card"), "A feature turned back on shows its settings again");
   await openPage("generalApi");
-  await click(".settings-group__header input[role='switch']");
+  await click(".settings-status-card input[role='switch']");
   await wait(40);
-  check(pluginOn("local-api") === false && active() === "generalApi" && tabs().length === 0 && Boolean(document.querySelector(".editor-panel input[role='switch']")), "Turning local-api off keeps its own page open, with an enable switch");
+  check(pluginOn("local-api") === false && active() === "generalApi" && tabs().length === 0 && Boolean(document.querySelector(".settings-status-card--off input[role='switch']")), "Turning local-api off keeps its own page open, with the top master switch off");
   await openPage("general");
   check(listed().includes("generalApi") && !tabs().includes("generalApi") && !document.querySelector(".settings-sidebar__more"), "Local API stays in the sidebar while it is off: the menu item does not follow the switch, and it is not a tab of General");
   await openPage("generalApi");
-  check([...document.querySelectorAll(".editor-panel .settings-group__title")].map((title) => title.textContent).join() === "本机接口" && !document.querySelector(".local-api-example"), "While it is off the page shows only the card with the switch");
-  await click(".editor-panel input[role='switch']");
+  const disabledArea = document.querySelector<HTMLElement>(".settings-disabled-area--disabled");
+  const disabledControls = [...(disabledArea?.querySelectorAll<HTMLButtonElement | HTMLInputElement>("button, input") ?? [])];
+  check(
+    Boolean(disabledArea)
+      && disabledArea?.getAttribute("aria-disabled") === "true"
+      && [...document.querySelectorAll(".editor-panel .settings-group__title")].map((title) => title.textContent).join("|") === "连接与凭据|权限|开放的能力|试一下"
+      && disabledControls.length > 0
+      && disabledControls.every((control) => control.disabled),
+    "While local-api is off, all options below remain visible in a grayed-out disabled area with every control disabled",
+  );
+  await click(".settings-status-card input[role='switch']");
   await wait(40);
-  check(pluginOn("local-api") === true && Boolean(document.querySelector(".settings-group__header input[role='switch']")), "Turning local-api back on there restores its full settings");
+  check(pluginOn("local-api") === true && !document.querySelector(".settings-disabled-area--disabled") && Boolean(document.querySelector(".settings-status-card--ok input[role='switch']")), "Turning local-api back on re-enables all options below");
   await openPage("todos");
   check(!document.querySelector(".feature-off") && document.querySelector(".feature-header") && !document.querySelector(".feature-header input"), "The todos page is back, still without a switch");
 

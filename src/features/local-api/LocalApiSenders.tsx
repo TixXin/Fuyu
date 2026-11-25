@@ -6,7 +6,7 @@ import { usePluginNoticeMutes } from "../../lib/plugin-notice-mutes/usePluginNot
 import { OWNER } from "./plugin/owner.ts";
 import { localApiSenders } from "./senders.ts";
 
-export function LocalApiSenders() {
+export function LocalApiSenders({ disabled = false }: { disabled?: boolean }) {
   const t = useTranslation().settings.localApi;
   const { mutes, senders, setMuted } = usePluginNoticeMutes();
   const sources = localApiSenders(OWNER, senders, mutes);
@@ -20,6 +20,7 @@ export function LocalApiSenders() {
           title={source}
           description={muted ? t.senderMuted : t.senderOn}
           checked={!muted}
+          disabled={disabled}
           searchable={false}
           onChange={(checked) => setMuted(id, !checked)}
         />
