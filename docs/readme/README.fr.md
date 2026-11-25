@@ -46,7 +46,7 @@
     <a href="README.pt-BR.md">Português</a>
   </p>
 
-  <p><sub>Traduit du <a href="../../README.md">README en chinois simplifié</a> dans sa version du 2026-11-15 ; il peut avoir du retard. Les corrections de locuteurs natifs sont les bienvenues.</sub></p>
+  <p><sub>Traduit du <a href="../../README.md">README en chinois simplifié</a> dans sa version du 2026-11-25 ; il peut avoir du retard. Les corrections de locuteurs natifs sont les bienvenues.</sub></p>
 
   <p>
     <a href="https://fuyu.ing/">Site web</a>
@@ -111,7 +111,7 @@ Fuyu (浮屿, « îlot flottant ») est une île flottante légère, sans bord
 
 <details>
 <summary><b>06 · Agents IA</b></summary>
-<p>L'état et la consommation de vos sessions Claude Code et Codex ; approuvez les demandes directement sur l'île, cliquez pour passer à la fenêtre correspondante et recevez des alertes sur Telegram, Discord, Feishu ou Bark quand vous n'êtes pas devant l'ordinateur, puis continuez à piloter l'agent depuis la conversation.</p>
+<p>Prend en charge 17 agents IA dont Claude Code, Codex, Cursor, WorkBuddy, Antigravity, TRAE, Qwen Code, Kimi Code et Copilot CLI : suivez l’état et le quota des sessions sur l’île, approuvez les demandes directement, basculez d’un clic vers la fenêtre, surveillez vos hôtes SSH et recevez des alertes sur Telegram, Discord, Feishu ou Bark.</p>
 <p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="Une demande d'approbation de Claude Code sur l'île : la commande qu'il veut exécuter et les boutons Refuser et Autoriser" width="800" height="450"></a></p>
 </details>
 
@@ -122,12 +122,22 @@ Fuyu (浮屿, « îlot flottant ») est une île flottante légère, sans bord
 
 <details>
 <summary><b>08 · Alertes système</b></summary>
-<p>Changements de volume et de luminosité, et l'app qui utilise la caméra ou le micro.</p>
+<p>Variations de volume et de luminosité, alertes de périphériques et batterie, indicateur Verr. Maj. et application utilisant la caméra ou le micro.</p>
 </details>
 
 <details>
-<summary><b>09 · Plugins et thèmes</b></summary>
-<p>Étendez l'île avec des plugins du marché (les données sensibles demandent votre autorisation séparée) et choisissez une apparence toute prête dans le marché de thèmes.</p>
+<summary><b>09 · Captures, enregistrement et épingles</b></summary>
+<p>Captures de zone, fenêtre (fond transparent et ombre), défilement et retardateur avec annotations, OCR, traduction, images épinglées à l’écran et enregistrement MP4 / GIF.</p>
+</details>
+
+<details>
+<summary><b>10 · Dictée vocale, minuteurs et pauses</b></summary>
+<p>Reconnaissance vocale locale hors ligne par raccourci pour créer des tâches ou notes, ainsi que minuteur, chronomètre et rappels de pause intégrés.</p>
+</details>
+
+<details>
+<summary><b>11 · Plugins, thèmes et synchronisation</b></summary>
+<p>Étendez l’île via le marché de plugins (construits depuis les sources avec revue par version), choisissez des thèmes et synchronisez vos données entre appareils avec chiffrement de bout en bout par dossier partagé ou WebDAV.</p>
 </details>
 
 L'apparence, la taille, la façon de se replier, les raccourcis et chaque fonction se règlent dans la fenêtre Paramètres, et l'app se met à jour toute seule. Toutes vos données restent sur votre ordinateur.
@@ -141,7 +151,6 @@ Repliée, au repos et sans musique (réglages par défaut, sans plugins) :
 | CPU | Environ **10 %** d'un cœur (environ 0,5 % du total sur une machine à 20 cœurs) |
 | Mémoire | Environ **16 Mo** pour Fuyu lui-même |
 | La page Agents qui actualise la liste des sessions chaque seconde | **0,1 %** d'un cœur |
-| Chaque plugin PowerShell installé | Environ **60 Mo** de plus |
 
 Méthode de mesure et données complètes : [idle-usage.md](../investigations/idle-usage.md) (en chinois).
 

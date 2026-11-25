@@ -46,7 +46,7 @@
     <a href="README.pt-BR.md">Português</a>
   </p>
 
-  <p><sub>Übersetzt aus dem <a href="../../README.md">README auf vereinfachtem Chinesisch</a>, Stand 2026-11-15; die Übersetzung kann hinterherhinken. Korrekturen von Muttersprachlern sind willkommen.</sub></p>
+  <p><sub>Übersetzt aus dem <a href="../../README.md">README auf vereinfachtem Chinesisch</a>, Stand 2026-11-25; die Übersetzung kann hinterherhinken. Korrekturen von Muttersprachlern sind willkommen.</sub></p>
 
   <p>
     <a href="https://fuyu.ing/">Website</a>
@@ -111,7 +111,7 @@ Fuyu (浮屿, „schwebende Insel“) ist eine leichte, rahmenlose Insel, die im
 
 <details>
 <summary><b>06 · KI-Agenten</b></summary>
-<p>Status und Verbrauch deiner Claude-Code- und Codex-Sitzungen; gib Anfragen direkt in der Insel frei, spring per Klick ins passende Fenster und lass dich über Telegram, Discord, Feishu oder Bark benachrichtigen, wenn du nicht am Rechner sitzt – und steuere den Agenten direkt aus dem Chat weiter.</p>
+<p>Unterstützt 17 KI-Agenten darunter Claude Code, Codex, Cursor, WorkBuddy, Antigravity, TRAE, Qwen Code, Kimi Code und Copilot CLI: Sitzungsstatus und Kontingent auf der Insel sehen, Freigaben direkt erteilen, per Klick zum Fenster wechseln, SSH-Hosts überwachen und unterwegs Benachrichtigungen über Telegram, Discord, Feishu oder Bark erhalten.</p>
 <p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="Eine Freigabeanfrage von Claude Code in der Insel: der Befehl, den es ausführen will, und die Knöpfe Ablehnen und Erlauben" width="800" height="450"></a></p>
 </details>
 
@@ -122,12 +122,22 @@ Fuyu (浮屿, „schwebende Insel“) ist eine leichte, rahmenlose Insel, die im
 
 <details>
 <summary><b>08 · Systemhinweise</b></summary>
-<p>Änderungen von Lautstärke und Helligkeit und welche App gerade Kamera oder Mikrofon nutzt.</p>
+<p>Lautstärke- und Helligkeitsänderungen, Peripherie- und Akku-Hinweise, Feststelltasten-Anzeige sowie welche App Kamera oder Mikrofon nutzt.</p>
 </details>
 
 <details>
-<summary><b>09 · Plugins und Themes</b></summary>
-<p>Erweitere die Insel mit Plugins aus dem Marktplatz (für sensible Daten brauchen sie deine gesonderte Erlaubnis) und such dir im Theme-Marktplatz ein fertiges Aussehen aus.</p>
+<summary><b>09 · Screenshots, Aufnahme und angepinnte Bilder</b></summary>
+<p>Bereichs-, Fenster- (mit transparentem Hintergrund und Schatten), Scroll- und zeitverzögerte Screenshots mit Markierungen, OCR, Übersetzung, angepinnten Bildern sowie MP4-/GIF-Bildschirmaufnahme.</p>
+</details>
+
+<details>
+<summary><b>10 · Spracheingabe, Timer und Pausenerinnerungen</b></summary>
+<p>Lokale Offline-Spracherkennung per Tastenkürzel für Aufgaben oder Notizen sowie integrierte Countdown-Timer, Stoppuhr und Pausenerinnerungen.</p>
+</details>
+
+<details>
+<summary><b>11 · Plugins, Themes und Geräte-Synchronisierung</b></summary>
+<p>Erweitere die Insel über den Plugin-Marktplatz (aus dem Quellcode gebaut mit Versionsprüfung), wähle fertige Themes und synchronisiere Daten Ende-zu-Ende-verschlüsselt per freigegebenem Ordner oder WebDAV.</p>
 </details>
 
 Aussehen, Größe, Einklappverhalten, Tastenkürzel und jede einzelne Funktion stellst du im Einstellungsfenster ein, und die App aktualisiert sich selbst. Alle deine Daten bleiben auf deinem Rechner.
@@ -141,7 +151,6 @@ Eingeklappt, im Leerlauf und ohne Musik (Standardeinstellungen, keine Plugins):
 | CPU | Etwa **10 %** eines Kerns (etwa 0,5 % insgesamt auf einem Rechner mit 20 Kernen) |
 | Arbeitsspeicher | Etwa **16 MB** für Fuyu selbst |
 | Agenten-Seite, die die Sitzungsliste jede Sekunde aktualisiert | **0,1 %** eines Kerns |
-| Jedes installierte PowerShell-Plugin | Etwa **60 MB** zusätzlich |
 
 Wie gemessen wurde und alle Daten: [idle-usage.md](../investigations/idle-usage.md) (auf Chinesisch).
 

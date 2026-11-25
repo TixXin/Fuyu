@@ -46,7 +46,7 @@
     <a href="README.pt-BR.md">Português</a>
   </p>
 
-  <p><sub>Traducido del <a href="../../README.md">README en chino simplificado</a> tal como estaba el 2026-11-15; puede quedarse atrás. Se agradecen las correcciones de hablantes nativos.</sub></p>
+  <p><sub>Traducido del <a href="../../README.md">README en chino simplificado</a> tal como estaba el 2026-11-25; puede quedarse atrás. Se agradecen las correcciones de hablantes nativos.</sub></p>
 
   <p>
     <a href="https://fuyu.ing/">Sitio web</a>
@@ -111,7 +111,7 @@ Fuyu (浮屿, «islote flotante») es una isla flotante ligera, sin bordes y sie
 
 <details>
 <summary><b>06 · Agentes de IA</b></summary>
-<p>El estado y el consumo de tus sesiones de Claude Code y Codex; aprueba solicitudes directamente en la isla, haz clic para saltar a la ventana correspondiente y recibe avisos en Telegram, Discord, Feishu o Bark cuando no estés en la computadora, y sigue dirigiendo al agente desde el chat.</p>
+<p>Compatible con 17 agentes de IA como Claude Code, Codex, Cursor, WorkBuddy, Antigravity, TRAE, Qwen Code, Kimi Code y Copilot CLI: consulta el estado y uso de sesiones en la isla, aprueba solicitudes al instante, salta a la ventana correspondiente con un clic, supervisa equipos por SSH y recibe alertas en Telegram, Discord, Feishu o Bark.</p>
 <p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="Una solicitud de aprobación de Claude Code en la isla: el comando que quiere ejecutar y los botones Rechazar y Permitir" width="800" height="450"></a></p>
 </details>
 
@@ -122,12 +122,22 @@ Fuyu (浮屿, «islote flotante») es una isla flotante ligera, sin bordes y sie
 
 <details>
 <summary><b>08 · Avisos del sistema</b></summary>
-<p>Cambios de volumen y brillo, y qué app está usando la cámara o el micrófono.</p>
+<p>Cambios de volumen y brillo, alertas de periféricos y batería, indicador de Bloq Mayús y qué aplicación usa la cámara o el micrófono.</p>
 </details>
 
 <details>
-<summary><b>09 · Plugins y temas</b></summary>
-<p>Amplía la isla con plugins del mercado (los datos sensibles requieren tu permiso aparte) y elige un aspecto listo para usar en el mercado de temas.</p>
+<summary><b>09 · Capturas, grabación y notas fijadas</b></summary>
+<p>Capturas de región, ventana (con fondo transparente y sombra), desplazamiento y temporizador, con anotaciones, OCR, traducción, imágenes fijadas en pantalla y grabación MP4 / GIF.</p>
+</details>
+
+<details>
+<summary><b>10 · Dictado por voz, temporizadores y descansos</b></summary>
+<p>Reconocimiento de voz local sin conexión mediante atajo para crear tareas o notas, además de temporizador, cronómetro y recordatorios de descanso.</p>
+</details>
+
+<details>
+<summary><b>11 · Plugins, temas y sincronización</b></summary>
+<p>Amplía la isla desde el mercado de plugins (compilados desde el código fuente con revisión por versión), elige temas visuales y sincroniza datos entre equipos con cifrado de extremo a extremo mediante carpeta compartida o WebDAV.</p>
 </details>
 
 El aspecto, el tamaño, la forma de recogerse, los atajos y cada función se ajustan en la ventana de Configuración, y la app se actualiza sola. Todos tus datos se quedan en tu computadora.
@@ -141,7 +151,6 @@ Recogida, en reposo y sin música (configuración predeterminada, sin plugins):
 | CPU | Cerca del **10%** de un núcleo (cerca del 0.5% del total en un equipo de 20 núcleos) |
 | Memoria | Cerca de **16 MB** para Fuyu en sí |
 | La página de Agentes actualizando la lista de sesiones cada segundo | **0.1%** de un núcleo |
-| Cada plugin de PowerShell instalado | Cerca de **60 MB** más |
 
 Cómo se midió y los datos completos: [idle-usage.md](../investigations/idle-usage.md) (en chino).
 

@@ -46,6 +46,8 @@
     <a href="README.pt-BR.md">Português</a>
   </p>
 
+  <p><sub>Translated from the <a href="../../README.md">Simplified Chinese README</a> as of 2026-11-25.</sub></p>
+
   <p>
     <a href="https://fuyu.ing">Website</a>
     ·
@@ -109,7 +111,7 @@ Fuyu (浮屿, "floating islet") is a lightweight, borderless, always-on-top floa
 
 <details>
 <summary><b>06 · AI agents</b></summary>
-<p>The state and usage of your Claude Code and Codex sessions; approve a request right on the island, click a session to jump to its window, and get alerts on Telegram, Discord, Feishu or Bark while you are away, then keep steering the agent from the chat.</p>
+<p>Supports 17 AI coding agents including Claude Code, Codex, Cursor, WorkBuddy, Antigravity, TRAE, Qwen Code, Kimi Code and Copilot CLI: see session status and plan usage on the island, approve tool requests directly on the island, jump to the terminal or editor in one click, monitor SSH remote hosts, and get alerts on Telegram, Discord, Feishu or Bark while you are away.</p>
 <p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="An approval request from Claude Code on the island: the command it wants to run, with Deny and Allow buttons" width="800" height="450"></a></p>
 </details>
 
@@ -120,26 +122,35 @@ Fuyu (浮屿, "floating islet") is a lightweight, borderless, always-on-top floa
 
 <details>
 <summary><b>08 · System hints</b></summary>
-<p>Volume and brightness changes, and which app is using your camera or microphone.</p>
+<p>Volume and brightness changes, peripheral and battery alerts, Caps Lock indicators, and which app is using your camera or microphone.</p>
 </details>
 
 <details>
-<summary><b>09 · Plugins and themes</b></summary>
-<p>Extend the island from the plugin market (sensitive data needs your permission), and pick a ready-made look from the theme market.</p>
+<summary><b>09 · Screenshot, recording and pins</b></summary>
+<p>Region, window (with transparent background and soft shadow), scrolling and delayed screenshots with annotations, OCR, translation and pinned floating images, plus MP4/GIF screen recording.</p>
 </details>
 
-The look, size, tucking, shortcuts and every feature can be adjusted in the Settings window, and the app updates itself. Your data stays on your computer.
+<details>
+<summary><b>10 · Voice input, timers and break reminders</b></summary>
+<p>Offline local speech recognition via a shortcut to capture tasks or daily notes, plus built-in countdown timers, stopwatch and break reminders.</p>
+</details>
+
+<details>
+<summary><b>11 · Plugins, themes and cross-device sync</b></summary>
+<p>Extend the island from the plugin market (built from source with per-version review and a cooling-off period), pick ready-made looks from the theme market, and sync your data across machines with end-to-end encryption via a shared folder or WebDAV.</p>
+</details>
+
+The look, size, tucking, shortcuts and every feature can be adjusted in the Settings window, and the app updates itself. Your data stays on your computer by default.
 
 ## Resource use
 
-Collapsed and idle with no music playing (default settings, no plugins):
+Collapsed and idle with no music playing (default settings, no third-party plugins):
 
 | | Measured |
 |---|---|
 | CPU | About **10%** of one core (about 0.5% of a 20-core machine in total) |
 | Memory | About **16 MB** for Fuyu itself |
 | The Agent page reading the session list once a second | **0.1%** of one core |
-| Each PowerShell plugin | About **60 MB** more |
 
 How it was measured, with the numbers: [idle-usage.md](../investigations/idle-usage.md) (in Chinese).
 
@@ -149,7 +160,7 @@ How it was measured, with the numbers: [idle-usage.md](../investigations/idle-us
    - **Windows**: get the `_x64-setup.exe`. The installers are not code-signed; if SmartScreen warns, choose "More info → Run anyway".
    - **macOS**: in the [release list](https://github.com/TixXin/fuyu/releases), get the `_aarch64.dmg` from the newest release that has one (a pre-release above the latest stable one, if the stable one has none) and drag Fuyu into Applications. The first time, open System Settings > Privacy & Security and click "Open Anyway"; see the [Mac install guide](https://fuyu.ing/#mac-install) for every step.
 2. **Open the island**: move the pointer onto the island at the top of the screen to expand it; the gear button or the tray icon (the menu bar icon on a Mac) opens Settings. On a Mac the welcome guide walks you through the system permissions Fuyu needs.
-3. **Set up once**: mail, translation and AI agents need a one-time setup in Settings. See [mail](../features/mail.md), [AI agents](../features/agent-status-hooks.md), [QQ](../features/qq-notifications.md), [WeChat](../features/wechat-reminders.md) and [phone alerts](../features/cc-connect.md) (in Chinese).
+3. **Feature docs**: see [mail](../features/mail.md), [AI agents](../features/agent-status-hooks.md), [clipboard](../features/clipboard.md), [music and lyrics](../features/music-and-lyrics.md), [screenshots](../features/screenshot.md), [cross-device sync](../features/sync.md), [system hints](../features/system-alerts.md), [voice input](../features/voice-input.md) and [phone alerts](../features/cc-connect.md) (in Chinese).
 
 > [!NOTE]
 > Fuyu runs on Windows 10 and 11 and on macOS 15 or later (Apple silicon). A few things differ on the Mac: QQ and WeChat show only unread counts, not message text, and media control and brightness use private system APIs. [platforms.md](../architecture/platforms.md) lists every feature on both systems (in Chinese).

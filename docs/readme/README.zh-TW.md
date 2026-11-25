@@ -45,7 +45,7 @@
     ·
     <a href="README.pt-BR.md">Português</a>
   </p>
-  <p><sub>本文譯自 2026-11-15 的<a href="../../README.md">簡體中文 README</a>，內容可能稍有落後，歡迎以繁體中文為母語的朋友協助修正。</sub></p>
+  <p><sub>本文譯自 2026-11-25 的<a href="../../README.md">簡體中文 README</a>，內容可能稍有落後，歡迎以繁體中文為母語的朋友協助修正。</sub></p>
 
   <p>
     <a href="https://fuyu.ing/zh/">官網</a>
@@ -110,7 +110,7 @@
 
 <details>
 <summary><b>06 · AI Agent</b></summary>
-<p>顯示 Claude Code 和 Codex 工作階段的執行狀態和用量，需要你確認時直接在島上核准，點一下就切到對應的視窗；離開電腦時推播到手機：Telegram、Discord、飛書機器人或 iPhone 上的 Bark，還能在聊天裡繼續指揮 Agent。</p>
+<p>支援 Claude Code、Codex、Cursor、WorkBuddy、Antigravity、TRAE、Qwen Code、Kimi Code、Copilot CLI 等 17 家主流 AI 代理：在島上檢視執行狀態、工作階段清單與額度用量，需要確認時直接在島上核准，點一下切到對應終端機或編輯器，支援 SSH 遠端主機監控；離開電腦時透過 Telegram、Discord、飛書機器人或 iPhone Bark 推播到手機。</p>
 <p><a href="https://fuyu.ing/zh/#agent"><img src="../assets/readme/agents-zh.webp" alt="島上跳出 Claude Code 的審核請求：要執行的指令，以及拒絕和允許兩個按鈕" width="800" height="450"></a></p>
 </details>
 
@@ -121,12 +121,22 @@
 
 <details>
 <summary><b>08 · 系統提示</b></summary>
-<p>音量、亮度變化，以及攝影機和麥克風正被哪個程式使用。</p>
+<p>音量與亮度變化、耳機外設與電池電量、大寫鎖定提示，以及攝影機和麥克風正被哪個程式使用。</p>
 </details>
 
 <details>
-<summary><b>09 · 外掛與佈景主題</b></summary>
-<p>從外掛市集安裝外掛來擴充島嶼，敏感資料需要你另外授權；佈景主題市集裡有現成的外觀可挑。</p>
+<summary><b>09 · 截圖、錄影與貼圖</b></summary>
+<p>區域 / 視窗（支援透明底與柔和陰影）/ 長截圖 / 延時截圖，內建標註、OCR 識字、翻譯與螢幕貼圖，並支援 MP4 / GIF 錄影。</p>
+</details>
+
+<details>
+<summary><b>10 · 語音輸入、計時器與休息提醒</b></summary>
+<p>按快速鍵離線本機語音辨識，一鍵存為待辦或追加到每日筆記；內建倒數計時、碼表與久坐 / 護眼休息提醒。</p>
+</details>
+
+<details>
+<summary><b>11 · 外掛、佈景主題與跨裝置同步</b></summary>
+<p>從外掛市集安裝外掛來擴充島嶼（原始碼建置、逐版審核與冷靜期），在佈景主題市集挑選外觀，並可透過共享資料夾或 WebDAV 端對端加密同步多台裝置的資料。</p>
 </details>
 
 島嶼的外觀、大小、收起方式、快速鍵和每項功能都可以在設定視窗裡調整，並支援應用程式內自動更新。資料全都儲存在本機。
@@ -140,7 +150,6 @@
 | CPU | 約佔單核心的 **10%**（20 核心電腦上約佔總量的 0.5%） |
 | 記憶體 | 浮嶼本身約 **16 MB** |
 | Agent 頁每秒重新整理一次工作階段清單 | 單核心的 **0.1%** |
-| 每安裝一個 PowerShell 外掛 | 約多 **60 MB** |
 
 量測方法和數據請見 [idle-usage.md](../investigations/idle-usage.md)。
 
