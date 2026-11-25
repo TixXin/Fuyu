@@ -33,6 +33,9 @@ const EDITORS: &[&str] = &[
     "antigravity",
     "antigravity ide",
     "antigravity-ide",
+    "workbuddy",
+    "workbuddy ai",
+    "workbuddyai",
 ];
 const TERMINALS: &[&str] = &[
     "terminal",
@@ -184,6 +187,94 @@ pub(super) fn window_of_process_chain(
         let subset: Vec<WindowCandidate> = owned.iter().map(|&index| candidates[index].clone()).collect();
         Some(best_window(&subset, hints).map_or(first, |index| owned[index]))
     })
+}
+
+pub(super) fn fallback_target_window(
+    candidates: &[WindowCandidate],
+    owners: &[u32],
+    visible: &[bool],
+    chain: &[u32],
+    prefer_apps: &[String],
+    hints: &SessionHints,
+) -> Option<usize> {
+    let pick = |indices: &[usize]| -> Option<usize> {
+        if indices.is_empty() {
+            return None;
+        }
+        let subset: Vec<WindowCandidate> = indices.iter().map(|&i| candidates[i].clone()).collect();
+        if let Some(best) = best_window(&subset, hints) {
+            return Some(indices[best]);
+        }
+        indices
+            .iter()
+            .copied()
+            .max_by_key(|&i| {
+                (
+                    u8::from(visible.get(i).copied().unwrap_or(false)),
+                    u8::from(!candidates[i].title.is_empty()),
+                )
+            })
+    };
+    for pid in chain {
+        let owned: Vec<usize> = (0..candidates.len())
+            .filter(|&i| owners.get(i) == Some(pid))
+            .filter(|&i| !NOT_SESSION_HOSTS.contains(&candidates[i].app.as_str()))
+            .collect();
+        if let Some(chosen) = pick(&owned) {
+            return Some(chosen);
+        }
+    }
+    prefer_apps.iter().find_map(|app| {
+        let matched: Vec<usize> = (0..candidates.len())
+            .filter(|&i| candidates[i].app == *app)
+            .filter(|&i| !NOT_SESSION_HOSTS.contains(&candidates[i].app.as_str()))
+            .collect();
+        pick(&matched)
+    })
+}
+
+pub(super) fn candidate_summary(candidates: &[WindowCandidate]) -> String {
+    let mut counts: std::collections::BTreeMap<&str, usize> = std::collections::BTreeMap::new();
+    for candidate in candidates {
+        if !candidate.app.is_empty() {
+            *counts.entry(candidate.app.as_str()).or_insert(0) += 1;
+        }
+    }
+    counts
+        .into_iter()
+        .take(8)
+        .map(|(app, count)| format!("{app}:{count}"))
+        .collect::<Vec<_>>()
+        .join("|")
+}
+
+#[cfg(target_os = "macos")]
+pub(super) fn visible_candidate_summary() -> String {
+    let own_pid = std::process::id();
+    let candidates: Vec<WindowCandidate> = crate::macos::apps::regular_apps()
+        .into_iter()
+        .filter(|(pid, path)| *pid != own_pid && !NOT_SESSION_HOSTS.contains(&app_name(path).as_str()))
+        .map(|(_, path)| WindowCandidate { title: String::new(), app: app_name(&path) })
+        .collect();
+    candidate_summary(&candidates)
+}
+
+#[cfg(windows)]
+pub(super) fn visible_candidate_summary() -> String {
+    let mut candidates = Vec::new();
+    let _ = win32::window::for_each_top_level_window(|window| {
+        if !win32::window::is_visible(window) || win32::window::has_owner(window) {
+            return;
+        }
+        let process_id = win32::process::window_process_id(window);
+        if let Some(path) = win32::process::image_path(process_id) {
+            let app = app_name(&path);
+            if !NOT_SESSION_HOSTS.contains(&app.as_str()) {
+                candidates.push(WindowCandidate { title: String::new(), app });
+            }
+        }
+    });
+    candidate_summary(&candidates)
 }
 
 #[cfg(target_os = "macos")]
@@ -345,33 +436,61 @@ pub(super) fn focus_session_window(
 ) -> Option<FocusedWindow> {
     let mut windows = Vec::new();
     let mut candidates = Vec::new();
+    let mut fallback_windows = Vec::new();
+    let mut fallback_candidates = Vec::new();
+    let mut fallback_visible = Vec::new();
     let enumerated = win32::window::for_each_top_level_window(|window| {
-        if !win32::window::is_visible(window) || win32::window::has_owner(window) {
+        if win32::window::has_owner(window) {
             return;
         }
+        let visible = win32::window::is_visible(window);
         let title = win32::window::window_text(window, WINDOW_TITLE_UNITS);
-        if title.is_empty() {
-            return;
-        }
         let process_id = win32::process::window_process_id(window);
         let Some(path) = win32::process::image_path(process_id) else {
             return;
         };
-        windows.push((window, process_id));
-        candidates.push(WindowCandidate {
-            title,
-            app: app_name(&path),
-        });
+        let app = app_name(&path);
+        if visible && !title.is_empty() {
+            windows.push((window, process_id));
+            candidates.push(WindowCandidate { title, app });
+            return;
+        }
+        let targeted = chain.contains(&process_id) || prefer_apps.iter().any(|wanted| wanted == &app);
+        if targeted
+            && !NOT_SESSION_HOSTS.contains(&app.as_str())
+            && !win32::window::is_tool_or_no_activate(window)
+        {
+            fallback_windows.push((window, process_id));
+            fallback_candidates.push(WindowCandidate { title, app });
+            fallback_visible.push(visible);
+        }
     });
     if enumerated.is_err() {
         return None;
     }
 
     let owners: Vec<u32> = windows.iter().map(|&(_, process_id)| process_id).collect();
-    let index = window_of_process_chain(&candidates, &owners, chain, hints)
+    let chosen = window_of_process_chain(&candidates, &owners, chain, hints)
         .or_else(|| preferred_window(&candidates, hints, prefer_apps))
-        .or_else(|| best_window(&candidates, hints))?;
-    let &(window, process_id) = windows.get(index)?;
+        .or_else(|| best_window(&candidates, hints))
+        .and_then(|index| windows.get(index).map(|&(window, pid)| (window, pid, candidates[index].app.clone(), true)))
+        .or_else(|| {
+            let fallback_owners: Vec<u32> = fallback_windows.iter().map(|&(_, pid)| pid).collect();
+            let index = fallback_target_window(
+                &fallback_candidates,
+                &fallback_owners,
+                &fallback_visible,
+                chain,
+                prefer_apps,
+                hints,
+            )?;
+            let &(window, pid) = fallback_windows.get(index)?;
+            Some((window, pid, fallback_candidates[index].app.clone(), fallback_visible[index]))
+        })?;
+    let (window, process_id, app, was_visible) = chosen;
+    if !was_visible {
+        win32::window::show_window(window);
+    }
     win32::window::allow_set_foreground_window(process_id);
     let in_front = win32::window::force_foreground(window);
     if !in_front {
@@ -380,7 +499,7 @@ pub(super) fn focus_session_window(
     Some(FocusedWindow {
         window,
         process_id,
-        app: candidates[index].app.clone(),
+        app,
         in_front,
     })
 }

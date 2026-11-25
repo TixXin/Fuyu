@@ -13,7 +13,7 @@ use windows::{
                 GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowPlacement,
                 GetWindowRect, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindowVisible, SendMessageTimeoutW,
                 SetForegroundWindow, SetWindowDisplayAffinity, SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, WDA_EXCLUDEFROMCAPTURE, WDA_NONE, GW_OWNER, SMTO_ABORTIFHUNG,
-                SMTO_BLOCK, SMTO_ERRORONEXIT, SW_HIDE, SW_RESTORE, SW_SHOWNOACTIVATE, WINDOWPLACEMENT, WM_NULL,
+                SMTO_BLOCK, SMTO_ERRORONEXIT, SW_HIDE, SW_RESTORE, SW_SHOW, SW_SHOWNOACTIVATE, WINDOWPLACEMENT, WM_NULL,
                 WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
             },
         },
@@ -213,6 +213,15 @@ pub(crate) fn activate_from_background(window: HWND) -> bool {
         }
     }
     foreground_window() == window
+}
+
+pub(crate) fn show_window(window: HWND) {
+    let _ = unsafe { ShowWindow(window, SW_SHOW) };
+}
+
+pub(crate) fn is_tool_or_no_activate(window: HWND) -> bool {
+    let style = unsafe { GetWindowLongPtrW(window, GWL_EXSTYLE) } as u32;
+    style & (WS_EX_NOACTIVATE.0 | WS_EX_TOOLWINDOW.0) != 0
 }
 
 pub(crate) fn show_without_activating(window: HWND) {

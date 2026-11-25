@@ -1,7 +1,12 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use serde_json::Value;
 
+use super::workbuddy;
 use crate::platform;
 
 const MAX_CHAIN: usize = 12;
@@ -25,7 +30,19 @@ pub(super) fn session_entry(entry: &str) -> Option<(String, SessionProcess)> {
 }
 
 pub(super) fn running_sessions(home_dir: &Path) -> HashMap<String, u32> {
-    running_sessions_in(&home_dir.join(".claude").join("sessions"))
+    let mut dirs = vec![home_dir.join(".claude").join("sessions")];
+    dirs.extend(workbuddy::session_dirs(home_dir));
+    running_sessions_in_dirs(&dirs)
+}
+
+pub(super) fn running_sessions_in_dirs(registries: &[PathBuf]) -> HashMap<String, u32> {
+    let mut running = HashMap::new();
+    for registry in registries {
+        for (id, pid) in running_sessions_in(registry) {
+            running.entry(id).or_insert(pid);
+        }
+    }
+    running
 }
 
 pub(super) fn running_sessions_in(registry: &Path) -> HashMap<String, u32> {

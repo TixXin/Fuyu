@@ -21,9 +21,13 @@ use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME, AGENT_RUNNING_NOTI
 pub(super) const PROVIDER: &str = "workbuddy";
 const DIRS: [&str; 2] = [".workbuddy", ".workbuddy-ai"];
 #[cfg(not(target_os = "macos"))]
-pub(super) const EXES: [&str; 2] = ["WorkBuddy.exe", "WorkBuddyAI.exe"];
+pub(super) const EXES: [&str; 3] = ["WorkBuddy.exe", "WorkBuddyAI.exe", "WorkBuddy AI.exe"];
 #[cfg(target_os = "macos")]
-const BUNDLES: [(&str, &str); 1] = [("com.workbuddy.workbuddy-ai", "workbuddy ai")];
+const BUNDLES: [(&str, &str); 3] = [
+    ("com.workbuddy.workbuddy-ai", "workbuddy ai"),
+    ("com.tencent.workbuddy", "workbuddy"),
+    ("com.workbuddy.workbuddy", "workbuddy"),
+];
 const INTERRUPTED: &str = "Interrupted by user";
 
 pub(super) const HARNESS: Harness = Harness {
@@ -132,6 +136,20 @@ fn output_text(content: &Value) -> Option<String> {
 
 pub(super) fn data_dirs(home_dir: &Path) -> Vec<PathBuf> {
     DIRS.iter().map(|dir| home_dir.join(dir)).collect()
+}
+
+pub(super) fn session_dirs(home_dir: &Path) -> Vec<PathBuf> {
+    let mut dirs = Vec::new();
+    if let Some(dir) = std::env::var_os("WORKBUDDY_CONFIG_DIR").map(PathBuf::from).filter(|dir| dir.is_absolute()) {
+        dirs.push(dir.join("sessions"));
+    }
+    for dir in data_dirs(home_dir) {
+        let sessions = dir.join("sessions");
+        if !dirs.contains(&sessions) {
+            dirs.push(sessions);
+        }
+    }
+    dirs
 }
 
 fn installed_dirs(home_dir: &Path) -> Vec<PathBuf> {
