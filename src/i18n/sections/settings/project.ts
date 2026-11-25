@@ -26,6 +26,7 @@ export type SettingsProjectText = {
   guide: string;
   guideHint: string;
   guideAction: string;
+  whatsNewGuideAction: string;
   resetAll: string;
   resetAllHint: string;
   resetAllConfirm: string;
@@ -171,8 +172,9 @@ export const zhCN: SettingsProjectText = {
     installError: "安装更新失败",
   },
   guide: "新手引导",
-  guideHint: "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。",
-  guideAction: "打开",
+  guideHint: "第一次启动时打开的那个窗口：语言、形态与外观、功能开关，或重看当前版本的更新引导。",
+  guideAction: "新手引导",
+  whatsNewGuideAction: "版本更新引导",
   resetAll: "重置所有设置",
   resetAllHint: "外观、行为和各功能的设置恢复默认。待办、笔记、邮箱、插件、密钥、样式预设和界面语言都保留。",
   resetAllConfirm: "确认重置",
@@ -319,8 +321,9 @@ export const en: SettingsProjectText = {
     installError: "Update install failed",
   },
   guide: "Welcome guide",
-  guideHint: "The window shown on first start: language, appearance, modules and a few common choices.",
-  guideAction: "Open",
+  guideHint: "The window shown on first start: language, island forms, appearance and modules, or replay the current What's New guide.",
+  guideAction: "Welcome guide",
+  whatsNewGuideAction: "What's New",
   resetAll: "Reset all settings",
   resetAllHint: "Appearance, behaviour and every feature's settings go back to their defaults. Todos, notes, mailboxes, plugins, keys, style presets and the interface language are kept.",
   resetAllConfirm: "Reset",

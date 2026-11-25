@@ -86,11 +86,19 @@ export function useFirstRunGuide(director?: IslandDirectorHandlers) {
       if (event.key === ONBOARDING_DIRECTOR_STORAGE_KEY && director) {
         const cmd = parseDirectorCommand(event.newValue);
         if (!cmd) return;
-        if (cmd.action === "expand") director.openIslandPage(cmd.page ?? "fuyu");
-        else if (cmd.action === "collapse") director.collapseIsland();
-        else if (cmd.action === "tuck") director.tuckIsland();
-        else if (cmd.action === "reveal") director.revealIsland();
-        else if (cmd.action === "notify") {
+        if (cmd.action === "expand") {
+          director.revealIsland();
+          director.openIslandPage(cmd.page ?? "fuyu");
+        } else if (cmd.action === "collapse") {
+          director.revealIsland();
+          director.collapseIsland();
+        } else if (cmd.action === "tuck") {
+          director.tuckIsland();
+        } else if (cmd.action === "reveal") {
+          director.revealIsland();
+        } else if (cmd.action === "notify") {
+          director.revealIsland();
+          director.collapseIsland();
           runIslandAction("notify", {
             pluginId: WELCOME_SOURCE,
             pluginName: { "zh-CN": name, en: name },

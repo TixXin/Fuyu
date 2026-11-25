@@ -43,6 +43,20 @@ function useShelfGotFile(watch: boolean, onFile: () => void) {
   }, [watch, onFile]);
 }
 
+function ShortcutBadge({ keys }: { keys: string }) {
+  const parts = keys.split("+").filter(Boolean);
+  return (
+    <span className="play-act__keys">
+      {parts.map((part, at) => (
+        <span key={`${at}:${part}`} className="play-act__key-group">
+          {at > 0 && <span className="play-act__key-plus">+</span>}
+          <kbd className="play-act__kbd">{part}</kbd>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsChange, onClipboardChange }: {
   settings: IslandSettings;
   modules: ReadonlySet<OnboardingModule>;
@@ -95,7 +109,16 @@ export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsCh
           <li key={task} className={done.has(task) ? "play-act__task play-act__task--done" : "play-act__task"}>
             <Star className="play-act__star" size={18} aria-hidden="true" />
             <span className="play-act__task-text">
-              {task === "expand" ? (hover ? text.hover : text.click) : task === "drop" ? (isMacOS ? text.dropMac : text.drop) : text.shortcut(openKeys ?? "")}
+              {task === "expand" ? (
+                hover ? text.hover : text.click
+              ) : task === "drop" ? (
+                isMacOS ? text.dropMac : text.drop
+              ) : (
+                <span className="play-act__shortcut-line">
+                  {text.shortcut(openKeys ?? "")}
+                  {openKeys && <ShortcutBadge keys={openKeys} />}
+                </span>
+              )}
               {task === "drop" && <small>{text.dropHint}</small>}
               {task === "shortcut" && <small>{text.shortcutHint}</small>}
             </span>

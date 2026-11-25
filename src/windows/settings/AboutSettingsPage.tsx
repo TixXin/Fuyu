@@ -9,7 +9,7 @@ import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRo
 import { WhatsNew } from "../../features/updater/WhatsNew";
 import { getUpdateState, subscribeToUpdate } from "../../features/updater/updaterController";
 import { useTranslation } from "../../i18n";
-import { openOnboardingWindow } from "../onboarding/api";
+import { openOnboardingWindow, openWhatsNewOnboardingWindow } from "../onboarding/api";
 import { AboutPluginSystem } from "./AboutPluginSystem";
 import type { SettingsCategory } from "./categories";
 import { QuitIslandRow } from "./QuitIslandRow";
@@ -29,7 +29,12 @@ function HelpSection() {
       <SettingsRow
         title={text.guide}
         description={text.guideHint}
-        control={<SettingsLinkButton onClick={openOnboardingWindow}>{text.guideAction}</SettingsLinkButton>}
+        control={
+          <>
+            <SettingsLinkButton onClick={openOnboardingWindow}>{text.guideAction}</SettingsLinkButton>
+            <SettingsLinkButton onClick={() => openWhatsNewOnboardingWindow()}>{text.whatsNewGuideAction}</SettingsLinkButton>
+          </>
+        }
       />
       <UpdateDiagnosticsRow />
     </SettingsGroup>

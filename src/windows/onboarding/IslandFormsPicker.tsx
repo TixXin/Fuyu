@@ -59,7 +59,9 @@ export function IslandFormsPicker({
     }
     setOptimistic(id);
     if (TOP_FORMS.includes(id as IslandForm)) {
-      if (edge && edge !== "top") requestIslandPositionReset();
+      if (!TOP_FORMS.includes(current as IslandForm) || (edge !== null && edge !== "top")) {
+        requestIslandPositionReset();
+      }
       onSettingsChange({ ...settings, islandForm: id as IslandForm });
       return;
     }
@@ -98,9 +100,13 @@ export function IslandFormsPicker({
           {text.formTitle}
           <span className="island-forms__hint"> · {text.formHints[current]}</span>
         </span>
-        <button className="onboarding__chip-btn" type="button" onClick={toggleTour}>
+        <button
+          className={touring ? "onboarding__chip-btn onboarding__chip-btn--active" : "onboarding__chip-btn"}
+          type="button"
+          onClick={toggleTour}
+        >
           {touring ? <Square size={11} aria-hidden="true" /> : <Play size={11} aria-hidden="true" />}
-          {text.tourForms}
+          {touring ? text.stopTourForms : text.tourForms}
         </button>
       </div>
       <div className="island-forms__grid" role="radiogroup" aria-label={text.formTitle}>

@@ -284,6 +284,14 @@
   border-color: var(--color-accent);
 }
 
+.onboarding__chip-btn--active,
+.onboarding__chip-btn--active:hover {
+  color: var(--color-on-accent);
+  font-weight: 600;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
 .onboarding__footer {
   display: flex;
   align-items: center;

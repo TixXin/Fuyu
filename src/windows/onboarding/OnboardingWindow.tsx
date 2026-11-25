@@ -98,6 +98,8 @@ export function OnboardingWindow() {
   const placement = cardPlacement(spot, viewport, currentStep.layout, activeSetup || currentStep.spotlight === "off");
   const director = useOnboardingDirector({
     autoPlay: Boolean(currentStep.autoDirector),
+    islandExpanded: spot ? spot.expanded : null,
+    stepId: currentStep.id,
     notifyTitle: text.director.notifyTitle,
     notifyBody: text.director.notifyBody,
   });

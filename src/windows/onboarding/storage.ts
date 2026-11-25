@@ -11,11 +11,13 @@ export type WelcomeKind = "hello" | "ready";
 export type OnboardingLaunchMode = "firstRun" | "whatsNew";
 
 export type DirectorCommand =
-  | { action: "expand"; page?: IslandPage; requestedAt: number }
-  | { action: "collapse"; requestedAt: number }
-  | { action: "tuck"; requestedAt: number }
-  | { action: "reveal"; requestedAt: number }
-  | { action: "notify"; title: string; body: string; requestedAt: number };
+  | { action: "expand"; page?: IslandPage; requestedAt: number; nonce: number }
+  | { action: "collapse"; requestedAt: number; nonce: number }
+  | { action: "tuck"; requestedAt: number; nonce: number }
+  | { action: "reveal"; requestedAt: number; nonce: number }
+  | { action: "notify"; title: string; body: string; requestedAt: number; nonce: number };
+
+let directorNonce = 0;
 
 const WELCOME_MAX_AGE_MS = 5_000;
 const DIRECTOR_MAX_AGE_MS = 5_000;
@@ -47,7 +49,8 @@ export function sendIslandDirectorCommand(
     | { action: "reveal" }
     | { action: "notify"; title: string; body: string },
 ) {
-  writeJson(ONBOARDING_DIRECTOR_STORAGE_KEY, { ...command, requestedAt: Date.now() });
+  directorNonce += 1;
+  writeJson(ONBOARDING_DIRECTOR_STORAGE_KEY, { ...command, requestedAt: Date.now(), nonce: directorNonce });
 }
 
 export function parseDirectorCommand(stored: string | null, now = Date.now()): DirectorCommand | null {
@@ -55,15 +58,16 @@ export function parseDirectorCommand(stored: string | null, now = Date.now()): D
   try {
     const raw = JSON.parse(stored) as Record<string, unknown>;
     if (typeof raw.requestedAt !== "number" || now - raw.requestedAt >= DIRECTOR_MAX_AGE_MS) return null;
+    const nonce = typeof raw.nonce === "number" ? raw.nonce : 0;
     if (raw.action === "collapse" || raw.action === "tuck" || raw.action === "reveal") {
-      return { action: raw.action, requestedAt: raw.requestedAt };
+      return { action: raw.action, requestedAt: raw.requestedAt, nonce };
     }
     if (raw.action === "expand") {
       const page = typeof raw.page === "string" && raw.page.length > 0 ? (raw.page as IslandPage) : undefined;
-      return { action: "expand", page, requestedAt: raw.requestedAt };
+      return { action: "expand", page, requestedAt: raw.requestedAt, nonce };
     }
     if (raw.action === "notify" && typeof raw.title === "string" && typeof raw.body === "string") {
-      return { action: "notify", title: raw.title, body: raw.body, requestedAt: raw.requestedAt };
+      return { action: "notify", title: raw.title, body: raw.body, requestedAt: raw.requestedAt, nonce };
     }
     return null;
   } catch {

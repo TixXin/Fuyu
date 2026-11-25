@@ -5,7 +5,6 @@ import { showOnboardingWindow } from "./api";
 import { endIslandDemo, sendIslandDirectorCommand, writeGuideSeenVersion } from "./storage";
 
 export function closeOnboardingGuide() {
-  sendIslandDirectorCommand({ action: "reveal" });
   sendIslandDirectorCommand({ action: "collapse" });
   endIslandDemo();
   void getAppVersion()

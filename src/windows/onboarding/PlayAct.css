@@ -74,6 +74,44 @@
   font-size: 11px;
 }
 
+.play-act__shortcut-line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.play-act__keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.play-act__key-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.play-act__key-plus {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.play-act__kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  color: var(--color-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--color-white-a08);
+  border: 1px solid var(--color-white-a16);
+  border-radius: 5px;
+}
+
 .play-act__star {
   flex: none;
   color: var(--color-white-a18);

@@ -44,6 +44,7 @@ export type OnboardingText = {
     hide: string;
     modalTitle: string;
     modalHint: string;
+    validUntil: (date: string) => string;
     close: string;
     qrAlt: string;
   };
@@ -61,6 +62,7 @@ export type OnboardingText = {
     lead: string;
     formTitle: string;
     tourForms: string;
+    stopTourForms: string;
     forms: Record<OnboardingFormId, string>;
     formHints: Record<OnboardingFormId, string>;
     taskbarLook: string;
@@ -254,6 +256,7 @@ export const zhCN: OnboardingText = {
     hide: "收起",
     modalTitle: "浮屿微信用户交流群",
     modalHint: "打开微信扫一扫加入交流群 · 点击空白处或按 Esc 关闭",
+    validUntil: (date) => `当前群码有效至 ${date}`,
     close: "关闭二维码",
     qrAlt: "浮屿微信交流群二维码",
   },
@@ -271,6 +274,7 @@ export const zhCN: OnboardingText = {
     lead: "每一次选择都会立刻作用于真正的岛；切换形态或开合动画时，真岛会现场演示给你看。",
     formTitle: "形态与停靠位置",
     tourForms: "轮播形态",
+    stopTourForms: "停止轮播",
     forms: {
       top: "贴顶",
       pill: "悬空药丸",
@@ -522,6 +526,7 @@ export const en: OnboardingText = {
     hide: "Hide",
     modalTitle: "Fuyu WeChat Community",
     modalHint: "Scan with WeChat to join · Click backdrop or press Esc to close",
+    validUntil: (date) => `QR valid through ${date}`,
     close: "Close QR code",
     qrAlt: "Fuyu WeChat community QR code",
   },
@@ -539,6 +544,7 @@ export const en: OnboardingText = {
     lead: "Every change applies live to the real island. Try switching forms or motion presets to watch it react.",
     formTitle: "Form & Docking",
     tourForms: "Tour forms",
+    stopTourForms: "Stop tour",
     forms: {
       top: "Top",
       pill: "Pill",

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { clampIndex, resolveExtensions, resolveMainSteps, resolveSetupSteps, resolveWhatsNewSteps } from "../../src/windows/onboarding/flow.ts";
-import { parseDirectorCommand } from "../../src/windows/onboarding/storage.ts";
+import { isNewerGuideVersion, parseDirectorCommand } from "../../src/windows/onboarding/storage.ts";
 
 const sampleBundle = {
   id: "pomodoro-flow",
@@ -78,18 +78,27 @@ test("optional extensions and agent setup track adapt to enabled modules and bun
   assert.deepEqual(resolveSetupSteps(minimal), []);
 });
 
-test("director command parser validates action payloads and expiry", () => {
+test("director command parser validates action payloads, nonce and expiry", () => {
   const now = 2_000_000;
   assert.deepEqual(
-    parseDirectorCommand(JSON.stringify({ action: "expand", page: "agents", requestedAt: now - 100 }), now),
-    { action: "expand", page: "agents", requestedAt: now - 100 },
+    parseDirectorCommand(JSON.stringify({ action: "expand", page: "agents", requestedAt: now - 100, nonce: 3 }), now),
+    { action: "expand", page: "agents", requestedAt: now - 100, nonce: 3 },
   );
   assert.deepEqual(
     parseDirectorCommand(JSON.stringify({ action: "tuck", requestedAt: now - 50 }), now),
-    { action: "tuck", requestedAt: now - 50 },
+    { action: "tuck", requestedAt: now - 50, nonce: 0 },
   );
   assert.equal(parseDirectorCommand(JSON.stringify({ action: "tuck", requestedAt: now - 8_000 }), now), null);
   assert.equal(parseDirectorCommand(JSON.stringify({ action: "unknown", requestedAt: now }), now), null);
+});
+
+test("isNewerGuideVersion compares stable and beta versions accurately", () => {
+  assert.equal(isNewerGuideVersion("0.3.15", "0.3.14"), true);
+  assert.equal(isNewerGuideVersion("0.3.14", "0.3.14-beta.2"), true);
+  assert.equal(isNewerGuideVersion("0.3.14-beta.3", "0.3.14-beta.2"), true);
+  assert.equal(isNewerGuideVersion("0.3.14", "0.3.14"), false);
+  assert.equal(isNewerGuideVersion("0.3.13", "0.3.14"), false);
+  assert.equal(isNewerGuideVersion("bad", "0.3.14"), false);
 });
 
 test("clampIndex stays in range for empty and non-empty step lists", () => {

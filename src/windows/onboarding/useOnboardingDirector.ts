@@ -10,23 +10,30 @@ export type DirectorStatus = "playing" | "paused" | "user";
 type SceneDef = {
   id: DirectorSceneId;
   durationMs: number;
+  expanded: boolean;
 };
 
 const SCENES: readonly SceneDef[] = [
-  { id: "greet", durationMs: 2600 },
-  { id: "dashboard", durationMs: 3200 },
-  { id: "agents", durationMs: 3200 },
-  { id: "music", durationMs: 3000 },
-  { id: "tuck", durationMs: 2400 },
-  { id: "collapse", durationMs: 2200 },
+  { id: "greet", durationMs: 2600, expanded: false },
+  { id: "dashboard", durationMs: 3200, expanded: true },
+  { id: "agents", durationMs: 3200, expanded: true },
+  { id: "music", durationMs: 3000, expanded: true },
+  { id: "tuck", durationMs: 2400, expanded: false },
+  { id: "collapse", durationMs: 2200, expanded: false },
 ];
+
+const USER_OVERRIDE_GRACE_MS = 750;
 
 export function useOnboardingDirector({
   autoPlay,
+  islandExpanded,
+  stepId,
   notifyTitle,
   notifyBody,
 }: {
   autoPlay: boolean;
+  islandExpanded: boolean | null;
+  stepId: string;
   notifyTitle: string;
   notifyBody: string;
 }) {
@@ -36,6 +43,9 @@ export function useOnboardingDirector({
   const timerRef = useRef<number>(0);
   const previewTimerRef = useRef<number>(0);
   const playingRef = useRef(false);
+  const expectedExpandedRef = useRef<boolean | null>(null);
+  const lastCommandAtRef = useRef(0);
+  const prevStepRef = useRef(stepId);
 
   const clearTimers = useCallback(() => {
     window.clearTimeout(timerRef.current);
@@ -45,21 +55,20 @@ export function useOnboardingDirector({
   }, []);
 
   const dispatchScene = useCallback(
-    (id: DirectorSceneId) => {
-      if (id === "greet") {
-        sendIslandDirectorCommand({ action: "reveal" });
-        sendIslandDirectorCommand({ action: "collapse" });
+    (scene: SceneDef) => {
+      expectedExpandedRef.current = scene.expanded;
+      lastCommandAtRef.current = Date.now();
+      if (scene.id === "greet") {
         sendIslandDirectorCommand({ action: "notify", title: notifyTitle, body: notifyBody });
-      } else if (id === "dashboard") {
+      } else if (scene.id === "dashboard") {
         sendIslandDirectorCommand({ action: "expand", page: "fuyu" });
-      } else if (id === "agents") {
+      } else if (scene.id === "agents") {
         sendIslandDirectorCommand({ action: "expand", page: "agents" });
-      } else if (id === "music") {
+      } else if (scene.id === "music") {
         sendIslandDirectorCommand({ action: "expand", page: "music" });
-      } else if (id === "tuck") {
+      } else if (scene.id === "tuck") {
         sendIslandDirectorCommand({ action: "tuck" });
       } else {
-        sendIslandDirectorCommand({ action: "reveal" });
         sendIslandDirectorCommand({ action: "collapse" });
       }
     },
@@ -81,7 +90,7 @@ export function useOnboardingDirector({
         const idx = at % SCENES.length;
         const scene = SCENES[idx];
         setSceneIndex(idx);
-        dispatchScene(scene.id);
+        dispatchScene(scene);
         timerRef.current = window.setTimeout(() => run(idx + 1), scene.durationMs);
       };
       run(startIndex);
@@ -93,6 +102,7 @@ export function useOnboardingDirector({
     (reason: "paused" | "user" = "paused") => {
       clearTimers();
       playingRef.current = false;
+      expectedExpandedRef.current = null;
       setStatus(reason);
     },
     [clearTimers],
@@ -104,7 +114,7 @@ export function useOnboardingDirector({
       if (idx === -1) return;
       if (reducedMotion) {
         setSceneIndex(idx);
-        dispatchScene(id);
+        dispatchScene(SCENES[idx]);
         return;
       }
       startFrom(idx);
@@ -116,7 +126,7 @@ export function useOnboardingDirector({
     const next = (sceneIndex + 1) % SCENES.length;
     if (reducedMotion) {
       setSceneIndex(next);
-      dispatchScene(SCENES[next].id);
+      dispatchScene(SCENES[next]);
       return;
     }
     startFrom(next);
@@ -145,6 +155,24 @@ export function useOnboardingDirector({
     },
     [pause],
   );
+
+  useEffect(() => {
+    if (prevStepRef.current !== stepId) {
+      const prev = prevStepRef.current;
+      prevStepRef.current = stepId;
+      if (prev === "hello" || stepId === "shape" || stepId === "play") {
+        sendIslandDirectorCommand({ action: "collapse" });
+      }
+    }
+  }, [stepId]);
+
+  useEffect(() => {
+    if (!playingRef.current || islandExpanded === null || expectedExpandedRef.current === null) return;
+    if (Date.now() - lastCommandAtRef.current < USER_OVERRIDE_GRACE_MS) return;
+    if (islandExpanded !== expectedExpandedRef.current) {
+      pause("user");
+    }
+  }, [islandExpanded, pause]);
 
   useEffect(() => {
     if (autoPlay && !reducedMotion) {

@@ -122,6 +122,7 @@
   display: grid;
   place-items: center;
   background: var(--onboarding-scrim, rgba(6, 8, 14, 0.68));
+  backdrop-filter: blur(8px);
   animation: wechatLightboxIn var(--motion-base) var(--motion-ease-out) backwards;
 }
 
@@ -197,6 +198,19 @@
 @keyframes wechatLightboxIn {
   from {
     opacity: 0;
+  }
+}
+
+@media (max-width: 1180px) {
+  .wechat-corner:not(.wechat-corner--collapsed) {
+    padding: 6px;
+  }
+  .wechat-corner:not(.wechat-corner--collapsed) .wechat-corner__meta {
+    display: none;
+  }
+  .wechat-corner:not(.wechat-corner--collapsed) .wechat-corner__qr {
+    width: 52px;
+    height: 52px;
   }
 }
 

@@ -5021,12 +5021,12 @@
       "zh-CN": {
         "group": "帮助",
         "title": "新手引导",
-        "description": "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。"
+        "description": "第一次启动时打开的那个窗口：语言、形态与外观、功能开关，或重看当前版本的更新引导。"
       },
       "en": {
         "group": "Help",
         "title": "Welcome guide",
-        "description": "The window shown on first start: language, appearance, modules and a few common choices."
+        "description": "The window shown on first start: language, island forms, appearance and modules, or replay the current What's New guide."
       }
     },
     {

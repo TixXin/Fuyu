@@ -110,7 +110,10 @@ export function WechatCommunityCorner({
             <div className="wechat-lightbox__img">
               <img src={qrUrl} alt={text.qrAlt} width={280} height={280} onError={() => setImageTry((value) => value + 1)} />
             </div>
-            <p className="wechat-lightbox__hint">{text.modalHint}</p>
+            <p className="wechat-lightbox__hint">
+              {text.modalHint}
+              {wechat.expiresAt ? ` · ${text.validUntil(wechat.expiresAt)}` : ""}
+            </p>
           </div>
         </div>
       )}
