@@ -85,7 +85,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
     if (host !== "open" || !snapshot || !requestedInstall) return;
     onConsumeInstall?.(requestedInstall);
     const target = requestedInstall.toLowerCase();
-    const matched = plugins.find((plugin) => plugin.name.toLowerCase() === target);
+    const matched = snapshot.plugins.find((plugin) => plugin.name.toLowerCase() === target);
     if (!matched) {
       setQuery(requestedInstall);
       return;
@@ -96,7 +96,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
       return;
     }
     setDetailName(matched.name);
-  }, [host, onConsumeInstall, plugins, requestedInstall, snapshot]);
+  }, [host, onConsumeInstall, requestedInstall, snapshot]);
 
   const categoryName = (id: string) => text.categories[id] ?? id;
   const nameOf = (id: string) => {
