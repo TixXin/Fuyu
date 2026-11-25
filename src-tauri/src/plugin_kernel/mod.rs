@@ -5,6 +5,7 @@ mod containment;
 #[cfg(debug_assertions)]
 pub(crate) mod diagnostics;
 pub(crate) mod keybindings;
+pub(crate) mod market_link;
 mod methods;
 mod node_status;
 pub(crate) mod package_open;
@@ -633,6 +634,7 @@ macro_rules! tauri_commands {
             crate::plugin_kernel::v2_migration::get_v2_plugin_migration,
             crate::plugin_kernel::v2_migration::dismiss_v2_plugin_migration,
             crate::plugin_kernel::package_open::take_pending_plugin_package,
+            crate::plugin_kernel::market_link::take_pending_market_install,
         ] $($rest)*)
     };
 }

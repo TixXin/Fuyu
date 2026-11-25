@@ -21,6 +21,7 @@ export const ipc = {
   calls: [] as string[],
   migrationPending: false,
   pendingPackage: null as { fileName: string; base64: string } | null,
+  pendingMarketInstall: null as string | null,
   node: null as HostNodeStatus | null,
 };
 
@@ -52,6 +53,11 @@ mockIPC((command, payload) => {
   if (command === "take_pending_plugin_package") {
     const taken = ipc.pendingPackage;
     ipc.pendingPackage = null;
+    return taken;
+  }
+  if (command === "take_pending_market_install") {
+    const taken = ipc.pendingMarketInstall;
+    ipc.pendingMarketInstall = null;
     return taken;
   }
   if (command === "plugin:opener|open_url") return (ipc.calls.push(`open:${String(args.url)}`), null);
