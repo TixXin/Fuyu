@@ -3,7 +3,7 @@
   "entries": [
     {
       "page": "general",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "网络代理",
         "title": "代理模式"
@@ -15,7 +15,7 @@
     },
     {
       "page": "generalData",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "",
         "title": "兼容软渲染模式（WARP）"
@@ -27,7 +27,7 @@
     },
     {
       "page": "generalData",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "",
         "title": "清理 WebView 图形缓存"
@@ -39,7 +39,7 @@
     },
     {
       "page": "themeStyle",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "字体",
         "title": "字体样式"
@@ -51,7 +51,7 @@
     },
     {
       "page": "themeStyle",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "字体",
         "title": "字体大小"
@@ -63,7 +63,7 @@
     },
     {
       "page": "themeStyle",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "字体",
         "title": "本地字体"
@@ -75,7 +75,7 @@
     },
     {
       "page": "sideDocks",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "屏幕左右侧边翼",
         "title": "右侧翼"
@@ -87,7 +87,7 @@
     },
     {
       "page": "sideDocks",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "屏幕左右侧边翼",
         "title": "左侧翼"
@@ -99,7 +99,7 @@
     },
     {
       "page": "calendar",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "已添加的日历",
         "title": "国家/地区节假日订阅"
@@ -111,7 +111,7 @@
     },
     {
       "page": "calendar",
-      "since": "next",
+      "since": "0.3.14-beta.2",
       "zh-CN": {
         "group": "日历面板",
         "title": "显示国际节日"
