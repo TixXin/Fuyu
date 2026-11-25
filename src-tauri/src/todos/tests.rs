@@ -863,4 +863,66 @@ mod host_tests {
         assert_eq!(error_code(503), "inactive");
         assert_eq!(error_code(500), "failed");
     }
+
+    #[test]
+    fn deadline_and_carried_from_validate_and_round_trip_through_calls() {
+        let mut data: super::super::model::TodosData = serde_json::from_value(serde_json::json!({
+            "date": "2026-11-25",
+            "todos": [{
+                "id": "t1",
+                "title": "Finish report",
+                "completed": false,
+                "createdAt": 1000,
+                "deadline": "2026-11-27",
+                "carriedFrom": "2026-11-22"
+            }],
+            "scheduled": [{
+                "id": "s1",
+                "title": "Submit form",
+                "date": "2026-11-26",
+                "createdAt": 1000,
+                "deadline": "2026-11-28"
+            }],
+            "archives": [],
+            "dailyNote": "",
+            "activeTodoId": null
+        }))
+        .expect("decode");
+        assert!(super::super::model::validate(&data).is_ok());
+
+        let added = super::super::calls::run(
+            "todos.add",
+            &serde_json::json!({ "title": "Ship release", "deadline": "2026-11-30" }),
+            &data,
+            "t2",
+            2000,
+        )
+        .expect("add with deadline");
+        assert_eq!(added.result["deadline"], "2026-11-30");
+        let after_add = added.next.expect("next");
+        assert_eq!(after_add.todos[0].deadline.as_deref(), Some("2026-11-30"));
+
+        let cleared = super::super::calls::run(
+            "todos.update",
+            &serde_json::json!({ "id": "t2", "deadline": null }),
+            &after_add,
+            "",
+            3000,
+        )
+        .expect("clear deadline");
+        assert!(cleared.result.get("deadline").is_none());
+        assert_eq!(cleared.next.expect("next").todos[0].deadline, None);
+
+        let bad_add = super::super::calls::run(
+            "todos.add",
+            &serde_json::json!({ "title": "Oops", "deadline": "2026-13-40" }),
+            &data,
+            "t3",
+            4000,
+        );
+        assert!(bad_add.is_err());
+
+        data.todos[0].carried_from = Some("not-a-date".into());
+        assert!(super::super::model::validate(&data).is_err());
+    }
 }

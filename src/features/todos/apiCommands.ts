@@ -1,5 +1,6 @@
 import { readProject } from "../../lib/todo-projects/prefix.ts";
 import { MAX_FOCUS_CREDIT_MINUTES, addTodoFocusMinutes } from "./normalize.ts";
+import { isDateString } from "./schedule.ts";
 import { daysBetween, listDay, noteOfDay } from "./todoHistory.ts";
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 
@@ -19,7 +20,7 @@ export type TodoApiState = {
 export type TodoApiChange = {
   todos?: TodoItem[];
   dailyNote?: string;
-  schedule?: { title: string; date: string; project?: string };
+  schedule?: { title: string; date: string; project?: string; deadline?: string };
 };
 
 export type TodoApiOutcome = { result: TodoApiResult; change?: TodoApiChange };
@@ -96,6 +97,10 @@ export function runTodoApiCall(
         return fail(400, `"note" must be a string of at most ${MAX_NOTE_LENGTH} characters.`);
       }
       const note = typeof input.note === "string" && input.note.trim() ? input.note : null;
+      if (input.deadline !== undefined && input.deadline !== null && input.deadline !== "" && !isDateString(input.deadline)) {
+        return fail(400, `"deadline" must look like YYYY-MM-DD.`);
+      }
+      const deadline = isDateString(input.deadline) ? input.deadline : null;
       const date = input.date;
       if (date !== undefined && (typeof date !== "string" || !DATE_PATTERN.test(date))) {
         return fail(400, `"date" must look like YYYY-MM-DD.`);
@@ -104,9 +109,20 @@ export function runTodoApiCall(
         return fail(400, `"date" cannot be before the list's day (${state.date}).`);
       }
       if (typeof date === "string" && date > state.date) {
-        return { result: ok({ title, date, scheduled: true }), change: { schedule: { title, date, ...(project ? { project } : {}) } } };
+        return {
+          result: ok({ title, date, ...(deadline ? { deadline } : {}), scheduled: true }),
+          change: { schedule: { title, date, ...(project ? { project } : {}), ...(deadline ? { deadline } : {}) } },
+        };
       }
-      const todo: TodoItem = { id: create.id, title, completed: false, createdAt: create.now, ...(project ? { project } : {}), ...(note ? { note } : {}) };
+      const todo: TodoItem = {
+        id: create.id,
+        title,
+        completed: false,
+        createdAt: create.now,
+        ...(project ? { project } : {}),
+        ...(note ? { note } : {}),
+        ...(deadline ? { deadline } : {}),
+      };
       return { result: ok(todo), change: { todos: [todo, ...state.todos] } };
     }
 
@@ -122,6 +138,15 @@ export function runTodoApiCall(
           return fail(400, `"title" must be a non-empty string of at most ${MAX_TITLE_LENGTH} characters.`);
         }
         next.title = title;
+      }
+      if ("deadline" in input) {
+        if (input.deadline === null || input.deadline === "") {
+          delete next.deadline;
+        } else if (isDateString(input.deadline)) {
+          next.deadline = input.deadline;
+        } else {
+          return fail(400, `"deadline" must look like YYYY-MM-DD.`);
+        }
       }
       if (input.completed !== undefined) {
         if (typeof input.completed !== "boolean") {

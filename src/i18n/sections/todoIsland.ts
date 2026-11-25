@@ -50,12 +50,22 @@ export type TodoIslandText = {
     noColor: string;
     recurrence: Record<TodoRecurrenceKind, string>;
     noRecurrence: string;
+    deadline: string;
+    changeDeadline: (date: string) => string;
+    clearDeadline: string;
+    dueToday: string;
+    dueTomorrow: string;
+    dueOn: (dateText: string) => string;
+    overdue: (days: number) => string;
+    carriedDays: (days: number) => string;
     dueTitle: string;
     dueTitleAny: string;
   };
   reminders: {
     ahead: (minutes: number) => string;
     wrapUp: (openCount: number) => string;
+    deadlineToday: string;
+    deadlineTomorrow: string;
   };
   weekSummary: {
     label: string;
@@ -125,12 +135,22 @@ export const zhCN: TodoIslandText = {
     noColor: "不设颜色",
     recurrence: { daily: "每天重复", workdays: "法定工作日重复", weekly: "每周重复", monthly: "每月重复", yearly: "每年重复", lunarYearly: "每年重复（农历）" },
     noRecurrence: "取消重复",
+    deadline: "截止日…",
+    changeDeadline: (date) => `更改截止日（${date}）`,
+    clearDeadline: "清除截止日",
+    dueToday: "今天截止",
+    dueTomorrow: "明天截止",
+    dueOn: (dateText) => `${dateText}截止`,
+    overdue: (days) => `逾期 ${days} 天`,
+    carriedDays: (days) => `已顺延 ${days} 天`,
     dueTitle: "高优先级待办今天到期",
     dueTitleAny: "已安排的待办今天到期",
   },
   reminders: {
     ahead: (minutes) => `${minutes} 分钟后`,
     wrapUp: (openCount) => `今天还有 ${openCount} 件没做完`,
+    deadlineToday: "待办今天截止",
+    deadlineTomorrow: "待办明天截止",
   },
   weekSummary: {
     label: "本周小结",
@@ -198,12 +218,22 @@ export const en: TodoIslandText = {
     noColor: "No color",
     recurrence: { daily: "Repeat daily", workdays: "Repeat on workdays", weekly: "Repeat weekly", monthly: "Repeat monthly", yearly: "Repeat yearly", lunarYearly: "Repeat yearly (lunar)" },
     noRecurrence: "Do not repeat",
+    deadline: "Deadline…",
+    changeDeadline: (date) => `Change deadline (${date})`,
+    clearDeadline: "Clear deadline",
+    dueToday: "Due today",
+    dueTomorrow: "Due tomorrow",
+    dueOn: (dateText) => `Due ${dateText}`,
+    overdue: (days) => `${days}d overdue`,
+    carriedDays: (days) => `Carried ${days}d`,
     dueTitle: "High-priority task due today",
     dueTitleAny: "Scheduled task due today",
   },
   reminders: {
     ahead: (minutes) => `In ${minutes} min`,
     wrapUp: (openCount) => (openCount === 1 ? "1 task still open today" : `${openCount} tasks still open today`),
+    deadlineToday: "Task due today",
+    deadlineTomorrow: "Task due tomorrow",
   },
   weekSummary: {
     label: "This week",

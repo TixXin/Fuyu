@@ -1,6 +1,7 @@
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { Check, FileText, GripVertical, ListChecks, Play, Square, Trash2 } from "lucide-react";
 import { useTranslation } from "../../../i18n";
+import { carriedDaysCount, formatDeadlineBadge } from "../deadline.ts";
 import type { TodoTags } from "../tags";
 import { todoElapsedLabel } from "../todoPrefs.ts";
 import type { TodoItem } from "../types";
@@ -57,8 +58,10 @@ function TodoRowBadges({
 
 export function TodoIslandRow({
   todo,
+  currentDate,
   showProject = false,
   showElapsed = true,
+  showCarriedDays = true,
   editable,
   isActive,
   canReorder,
@@ -86,6 +89,7 @@ export function TodoIslandRow({
   onDragCancel,
 }: {
   todo: TodoItem;
+  currentDate: string;
   editable: boolean;
   isActive: boolean;
   canReorder: boolean;
@@ -93,6 +97,7 @@ export function TodoIslandRow({
   isDragOver: boolean;
   showProject?: boolean;
   showElapsed?: boolean;
+  showCarriedDays?: boolean;
   isEditing: boolean;
   isExpanded?: boolean;
   titleDraft: string;
@@ -126,6 +131,11 @@ export function TodoIslandRow({
   const canExpand = Boolean(onToggleExpand) && (canEditDetails || hasDetails);
   const showDetails = isExpanded && canExpand;
   const expandLabel = showDetails ? t.todo.collapseDetails(todo.title) : t.todo.expandDetails(todo.title);
+  const deadlineBadge = !todo.completed
+    ? formatDeadlineBadge(todo.deadline, currentDate, t.localeTag, t.todoIsland.tags)
+    : null;
+  const carriedDays = !todo.completed && showCarriedDays ? carriedDaysCount(todo.carriedFrom, currentDate) : 0;
+  const carriedLabel = carriedDays > 1 ? t.todoIsland.tags.carriedDays(carriedDays) : null;
 
   const className = [
     "todo-island-row",
@@ -208,7 +218,21 @@ export function TodoIslandRow({
           titleNode
         )}
       </span>
-      {editable && !isEditing ? <TodoTagMenu todo={todo} onTag={(tags) => onTag(todo.id, tags)} /> : !editable && <TodoTagMarks todo={todo} />}
+      {(deadlineBadge || carriedLabel) && !isEditing && (
+        <span className="todo-island-row__tail">
+          {deadlineBadge && (
+            <span className="todo-island-row__tail-badge todo-island-row__deadline" data-tone={deadlineBadge.tone} title={todo.deadline}>
+              {deadlineBadge.label}
+            </span>
+          )}
+          {carriedLabel && (
+            <span className="todo-island-row__tail-badge todo-island-row__carried" title={todo.carriedFrom}>
+              {carriedLabel}
+            </span>
+          )}
+        </span>
+      )}
+      {editable && !isEditing ? <TodoTagMenu todo={todo} today={currentDate} onTag={(tags) => onTag(todo.id, tags)} /> : !editable && <TodoTagMarks todo={todo} />}
       {editable && (
         <span className="todo-island-row__actions">
           {isActive ? (

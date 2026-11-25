@@ -134,6 +134,30 @@
       }
     },
     {
+      "page": "todos",
+      "since": "next",
+      "zh-CN": {
+        "group": "小岛显示与排序",
+        "title": "显示已顺延天数"
+      },
+      "en": {
+        "group": "Island display & sorting",
+        "title": "Show carried-over days"
+      }
+    },
+    {
+      "page": "todosReminders",
+      "since": "next",
+      "zh-CN": {
+        "group": "到点和到期",
+        "title": "截止日提醒"
+      },
+      "en": {
+        "group": "Timed and due",
+        "title": "Deadline reminder"
+      }
+    },
+    {
       "page": "calendar",
       "since": "0.3.14-beta.2",
       "zh-CN": {

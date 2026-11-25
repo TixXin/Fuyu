@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
 import "./RowMenu.css";
@@ -27,11 +27,12 @@ function menuArea(anchor: HTMLElement) {
   return { top, bottom: Math.max(top, bottom), left, right };
 }
 
-export function RowMenu({ label, items, onOpenChange, buttonClassName, children }: {
+export function RowMenu({ label, items, onOpenChange, buttonClassName, triggerRef, children }: {
   label: string;
   items: RowMenuItem[];
   onOpenChange?: (open: boolean) => void;
   buttonClassName?: string;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
   children?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -96,7 +97,10 @@ export function RowMenu({ label, items, onOpenChange, buttonClassName, children 
   return (
     <>
       <button
-        ref={buttonRef}
+        ref={(node) => {
+          buttonRef.current = node;
+          if (triggerRef) triggerRef.current = node;
+        }}
         className={children ? buttonClassName : `island-list-icon-button${open ? " island-list-icon-button--open" : ""}`}
         type="button"
         aria-label={label}

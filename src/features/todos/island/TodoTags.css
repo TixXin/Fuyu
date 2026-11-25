@@ -74,6 +74,32 @@
   color: var(--info-text, #64b5f6);
 }
 
+.todo-island-row__tail {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+}
+
+.todo-island-row__tail-badge {
+  flex: none;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.todo-island-row__deadline[data-tone="soon"] {
+  color: var(--warning-text);
+}
+
+.todo-island-row__deadline[data-tone="overdue"] {
+  color: var(--error-text);
+  font-weight: 600;
+}
+
 .island-light {
   --todo-tag-red: #e03131;
   --todo-tag-orange: #e8590c;

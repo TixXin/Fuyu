@@ -30,6 +30,8 @@ export type TodoItem = {
   priority?: TodoPriority;
   color?: TodoColor;
   recurrence?: TodoRecurrence;
+  deadline?: string;
+  carriedFrom?: string;
   subtasks?: TodoSubtask[];
   note?: string;
   focusMinutes?: number;
@@ -47,6 +49,7 @@ export type ScheduledTodo = {
   priority?: TodoPriority;
   color?: TodoColor;
   recurrence?: TodoRecurrence;
+  deadline?: string;
   updatedAt?: string;
   deviceId?: string;
 };

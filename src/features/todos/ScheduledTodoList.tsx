@@ -1,5 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { getLocalDateString } from "../../utils/date";
+import { formatDeadlineBadge } from "./deadline.ts";
 import { TodoTagMenu } from "./island/TodoTagMenu";
 import type { TodoTags } from "./tags";
 import type { ScheduledTodo } from "./types";
@@ -20,6 +22,7 @@ export function ScheduledTodoList({
     return <div className="todo-empty">{t.notebook.noScheduled}</div>;
   }
 
+  const today = getLocalDateString();
   const format = new Intl.DateTimeFormat(t.localeTag, { month: "long", day: "numeric", weekday: "short" });
   const groups = new Map<string, ScheduledTodo[]>();
   for (const todo of todos) {
@@ -33,19 +36,27 @@ export function ScheduledTodoList({
         return (
           <div key={date} className="scheduled-list__group" role="group" aria-label={label}>
             <div className="scheduled-list__date">{label}</div>
-            {items.map((todo) => (
-              <div key={todo.id} className="scheduled-list__item" role="listitem">
-                <span>{todo.project && <span className="todo-project-tag">{todo.project}</span>}{todo.title}</span>
-                <TodoTagMenu todo={todo} onTag={(tags) => onTag(todo.id, tags)} />
-                <button
-                  type="button"
-                  aria-label={t.notebook.deleteScheduled(todo.title)}
-                  onClick={() => onDelete(todo.id)}
-                >
-                  <Trash2 size={13} strokeWidth={2.2} />
-                </button>
-              </div>
-            ))}
+            {items.map((todo) => {
+              const deadlineBadge = formatDeadlineBadge(todo.deadline, today, t.localeTag, t.todoIsland.tags);
+              return (
+                <div key={todo.id} className="scheduled-list__item" role="listitem">
+                  <span>{todo.project && <span className="todo-project-tag">{todo.project}</span>}{todo.title}</span>
+                  {deadlineBadge && (
+                    <span className="todo-island-row__tail-badge todo-island-row__deadline" data-tone={deadlineBadge.tone} title={todo.deadline}>
+                      {deadlineBadge.label}
+                    </span>
+                  )}
+                  <TodoTagMenu todo={todo} today={today} onTag={(tags) => onTag(todo.id, tags)} />
+                  <button
+                    type="button"
+                    aria-label={t.notebook.deleteScheduled(todo.title)}
+                    onClick={() => onDelete(todo.id)}
+                  >
+                    <Trash2 size={13} strokeWidth={2.2} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         );
       })}

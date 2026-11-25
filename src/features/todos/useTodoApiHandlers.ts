@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, type Dispatch, type SetStateAction } from "react";
 import { runTodoApiCall, TODO_API_METHODS, type TodoApiResult, type TodoApiState } from "./apiCommands";
 import { createTodoId } from "./storage";
+import type { TodoTags } from "./tags";
 import type { ScheduledTodo, TodoItem } from "./types";
 
 export type TodoApiHandlers = Record<string, (params: unknown) => TodoApiResult>;
@@ -18,7 +19,7 @@ export function useTodoApiHandlers({
 }: TodoApiState & {
   setTodos: Dispatch<SetStateAction<TodoItem[]>>;
   setDailyNote: Dispatch<SetStateAction<string>>;
-  scheduleTodo: (title: string, date: string, project?: string) => ScheduledTodo;
+  scheduleTodo: (title: string, date: string, project?: string, tags?: TodoTags) => ScheduledTodo;
 }): TodoApiHandlers {
   const state = useMemo(
     () => ({ date, todos, scheduledTodos, activeTodoId, dailyNote, archives }),
@@ -49,7 +50,8 @@ export function useTodoApiHandlers({
               stateRef.current = { ...stateRef.current, dailyNote: change.dailyNote };
             }
             if (change?.schedule) {
-              const todo = scheduleTodo(change.schedule.title, change.schedule.date, change.schedule.project);
+              const tags = change.schedule.deadline ? { deadline: change.schedule.deadline } : undefined;
+              const todo = scheduleTodo(change.schedule.title, change.schedule.date, change.schedule.project, tags);
               stateRef.current = {
                 ...stateRef.current,
                 scheduledTodos: [...stateRef.current.scheduledTodos, todo],

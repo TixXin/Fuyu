@@ -1,4 +1,5 @@
 import { readRecurrence } from "./recurrence.ts";
+import { isDateString } from "./schedule.ts";
 import type { TodoColor, TodoPriority, TodoRecurrence } from "./types.ts";
 
 export const TODO_PRIORITIES: readonly TodoPriority[] = ["high", "medium", "low"];
@@ -8,6 +9,7 @@ export type TodoTags = {
   priority?: TodoPriority;
   color?: TodoColor;
   recurrence?: TodoRecurrence;
+  deadline?: string;
 };
 
 export function readPriority(value: unknown): TodoPriority | undefined {
@@ -18,14 +20,20 @@ export function readColor(value: unknown): TodoColor | undefined {
   return TODO_COLORS.find((color) => color === value);
 }
 
-export function readTags(value: { priority?: unknown; color?: unknown; recurrence?: unknown }): TodoTags {
+export function readDeadline(value: unknown): string | undefined {
+  return isDateString(value) ? value : undefined;
+}
+
+export function readTags(value: { priority?: unknown; color?: unknown; recurrence?: unknown; deadline?: unknown }): TodoTags {
   const priority = readPriority(value.priority);
   const color = readColor(value.color);
   const recurrence = readRecurrence(value.recurrence);
+  const deadline = readDeadline(value.deadline);
   return {
     ...(priority ? { priority } : {}),
     ...(color ? { color } : {}),
     ...(recurrence ? { recurrence } : {}),
+    ...(deadline ? { deadline } : {}),
   };
 }
 
@@ -36,5 +44,8 @@ export function withTags<T extends TodoTags>(todo: T, tags: TodoTags): T {
   const recurrence = readRecurrence(next.recurrence);
   if (recurrence) next.recurrence = recurrence;
   else delete next.recurrence;
+  const deadline = readDeadline(next.deadline);
+  if (deadline) next.deadline = deadline;
+  else delete next.deadline;
   return next;
 }

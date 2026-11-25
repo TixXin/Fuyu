@@ -1,10 +1,12 @@
-import type { TodoDefaultPriority, TodoDoneDisplay, TodoDueReminderScope, TodoInsertPosition, TodoSortBy } from "../../../features/todos/todoPrefs";
+import type { TodoDeadlineReminder, TodoDefaultPriority, TodoDoneDisplay, TodoDueReminderScope, TodoInsertPosition, TodoSortBy } from "../../../features/todos/todoPrefs";
 
 export type SettingsTodoText = {
   title: string;
   displayGroup: string;
   showElapsed: string;
   showElapsedHint: string;
+  showCarriedDays: string;
+  showCarriedDaysHint: string;
   sortBy: string;
   sortOptions: Record<TodoSortBy, string>;
   inputGroup: string;
@@ -36,6 +38,9 @@ export type SettingsTodoText = {
   dueReminderScope: string;
   dueReminderScopeHint: string;
   dueReminderScopeOptions: Record<TodoDueReminderScope, string>;
+  deadlineReminder: string;
+  deadlineReminderHint: string;
+  deadlineReminderOptions: Record<TodoDeadlineReminder, string>;
   wrapUpReminder: string;
   wrapUpReminderHint: string;
   wrapUpReminderTime: string;
@@ -82,6 +87,8 @@ export const zhCN: SettingsTodoText = {
   displayGroup: "小岛显示与排序",
   showElapsed: "显示进行中已用时长",
   showElapsedHint: "在待办列表和收起的小岛上显示已开始时长，例如 18m。",
+  showCarriedDays: "显示已顺延天数",
+  showCarriedDaysHint: "顺延超过 1 天的待办在行尾标出来，例如「已顺延 3 天」。",
   sortBy: "列表排序方式",
   sortOptions: {
     manual: "手动顺序",
@@ -129,6 +136,13 @@ export const zhCN: SettingsTodoText = {
     high: "只高优先级",
     highMedium: "高和中优先级",
     all: "全部",
+  },
+  deadlineReminder: "截止日提醒",
+  deadlineReminderHint: "设了截止日的未完成待办快到时在岛上提醒一次。",
+  deadlineReminderOptions: {
+    off: "不提醒",
+    sameDay: "当天",
+    dayBefore: "前一天",
   },
   wrapUpReminder: "每天收尾提醒",
   wrapUpReminderHint: "到点还有没做完的待办时，在岛上提醒一次。都做完了不提醒。",
@@ -191,6 +205,8 @@ export const en: SettingsTodoText = {
   displayGroup: "Island display & sorting",
   showElapsed: "Show elapsed time while in progress",
   showElapsedHint: "Displays how long an active task has been running on its row and the collapsed bar.",
+  showCarriedDays: "Show carried-over days",
+  showCarriedDaysHint: "Shows a subtle badge (for example, Carried 3d) on tasks carried over for more than one day.",
   sortBy: "Task sort order",
   sortOptions: {
     manual: "Manual order",
@@ -238,6 +254,13 @@ export const en: SettingsTodoText = {
     high: "High priority only",
     highMedium: "High and medium",
     all: "All",
+  },
+  deadlineReminder: "Deadline reminder",
+  deadlineReminderHint: "Shows one island reminder when an unfinished task with a deadline is coming due.",
+  deadlineReminderOptions: {
+    off: "Never",
+    sameDay: "On the day",
+    dayBefore: "Day before",
   },
   wrapUpReminder: "End-of-day reminder",
   wrapUpReminderHint: "Shows one island reminder at the set time if tasks are still open. Stays quiet when everything is done.",

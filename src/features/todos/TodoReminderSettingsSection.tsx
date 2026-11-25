@@ -9,10 +9,12 @@ import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import {
+  TODO_DEADLINE_REMINDERS,
   TODO_DUE_REMINDER_SCOPES,
   TODO_REMINDER_LEAD_MINUTES,
   parseClockTime,
   playTodoCompleteSound,
+  type TodoDeadlineReminder,
   type TodoDueReminderScope,
   type TodoReminderLeadMinutes,
 } from "./todoPrefs.ts";
@@ -35,6 +37,11 @@ export function TodoReminderSettingsSection() {
   const scopeOptions: readonly { value: TodoDueReminderScope; label: string }[] = TODO_DUE_REMINDER_SCOPES.map((scope) => ({
     value: scope,
     label: text.dueReminderScopeOptions[scope],
+  }));
+
+  const deadlineOptions: readonly { value: TodoDeadlineReminder; label: string }[] = TODO_DEADLINE_REMINDERS.map((mode) => ({
+    value: mode,
+    label: text.deadlineReminderOptions[mode],
   }));
 
   return (
@@ -71,6 +78,18 @@ export function TodoReminderSettingsSection() {
             options={scopeOptions}
             ariaLabel={text.dueReminderScope}
             onChange={(dueReminderScope) => setPrefs((current) => ({ ...current, dueReminderScope }))}
+          />
+        }
+      />
+      <SettingsRow
+        title={text.deadlineReminder}
+        description={text.deadlineReminderHint}
+        control={
+          <SettingsSelect
+            value={prefs.deadlineReminder}
+            options={deadlineOptions}
+            ariaLabel={text.deadlineReminder}
+            onChange={(deadlineReminder) => setPrefs((current) => ({ ...current, deadlineReminder }))}
           />
         }
       />

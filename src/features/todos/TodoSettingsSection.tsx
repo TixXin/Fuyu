@@ -47,6 +47,12 @@ export function TodoSettingsSection({ settings, onSettingsChange }: {
           onChange={(showElapsed) => setPrefs((current) => ({ ...current, showElapsed }))}
         />
         <SettingsToggleRow
+          title={text.showCarriedDays}
+          description={text.showCarriedDaysHint}
+          checked={prefs.showCarriedDays}
+          onChange={(showCarriedDays) => setPrefs((current) => ({ ...current, showCarriedDays }))}
+        />
+        <SettingsToggleRow
           title={text.rotateTodos}
           checked={settings.rotateTodos}
           onChange={(rotateTodos) => onSettingsChange({ ...settings, rotateTodos })}
