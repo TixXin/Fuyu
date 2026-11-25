@@ -1,3 +1,4 @@
+import { RotateCcw } from "lucide-react";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { useTranslation } from "../../i18n";
 import { isMacOS, useDevBuild } from "../../lib/platform";
@@ -11,7 +12,7 @@ function statusOf(state: DevPriorityState): "alone" | "yielding" | "releaseYield
   return state.releaseYields ? "releaseYields" : "both";
 }
 
-export function DevBar() {
+export function DevBar({ onReplayWhatsNew }: { onReplayWhatsNew?: () => void } = {}) {
   const text = useTranslation().settings.devBuild;
   const devBuild = useDevBuild();
   const [state, choose] = useDevPriority(devBuild && !isMacOS);
@@ -19,6 +20,17 @@ export function DevBar() {
   return (
     <div className="dev-bar">
       <span className="dev-bar__mark" aria-hidden="true">{text.mark}</span>
+      {onReplayWhatsNew && (
+        <button
+          className="dev-bar__action"
+          type="button"
+          title={text.replayWhatsNewHint}
+          onClick={onReplayWhatsNew}
+        >
+          <RotateCcw size={11} strokeWidth={2.2} aria-hidden="true" />
+          <span>{text.replayWhatsNew}</span>
+        </button>
+      )}
       {state && (
         <>
           <SettingsChoice

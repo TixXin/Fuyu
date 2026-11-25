@@ -4,8 +4,8 @@ import "./settingsCategorySlot.mjs";
 import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, entryOf, entryPages, isCategoryAvailable, pagesOfFeaturesOff, searchCategories, settingsCategories, settingsCategoryFor, settingsGroups, sidebarItemOf, parentOf, subPagesOf } from "../../src/windows/settings/categories.ts";
 import { categorySlot } from "../../src/windows/settings/slots/categorySlot.ts";
 import { shortcutLabel } from "../../src/lib/shortcut/shortcut.ts";
-import { isTitleHit, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
-import { mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
+import { isTitleHit, isWhatsNewQuery, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
+import { buildWhatsNewIndex, mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
 
 const SETTINGS_CATEGORIES = settingsCategories();
 const SETTINGS_GROUPS = settingsGroups();
@@ -55,13 +55,39 @@ test("pages match words written together or apart", () => {
 });
 
 test("the index keeps each row once and pairs the languages row by row", () => {
-  const on = [{ page: "agents", group: "g", title: "a" }, { page: "agents", group: "g", title: "b" }];
+  const on = [{ page: "agents", group: "g", title: "a", since: "0.3.14" }, { page: "agents", group: "g", title: "b" }];
   const defaults = [{ page: "agents", group: "g", title: "a" }, { page: "agents", group: "g", title: "c" }];
-  assert.deepEqual(mergeStates([on, defaults]).map((entry) => entry.title), ["a", "b", "c"]);
-  const paired = pairLocales({ "zh-CN": [{ page: "agents", group: "组", title: "甲" }], en: [{ page: "agents", group: "G", title: "A" }] });
-  assert.deepEqual(paired, [{ page: "agents", "zh-CN": { group: "组", title: "甲" }, en: { group: "G", title: "A" } }]);
+  const merged = mergeStates([on, defaults]);
+  assert.deepEqual(merged.map((entry) => entry.title), ["a", "b", "c"]);
+  assert.equal(merged[0].since, "0.3.14");
+  const paired = pairLocales({
+    "zh-CN": [{ page: "agents", group: "组", title: "甲", since: "0.3.14" }, { page: "agents", group: "组", title: "乙" }],
+    en: [{ page: "agents", group: "G", title: "A", since: "0.3.14" }, { page: "agents", group: "G", title: "B" }],
+  });
+  assert.deepEqual(paired, [
+    { page: "agents", since: "0.3.14", "zh-CN": { group: "组", title: "甲" }, en: { group: "G", title: "A" } },
+    { page: "agents", "zh-CN": { group: "组", title: "乙" }, en: { group: "G", title: "B" } },
+  ]);
+  assert.deepEqual(buildWhatsNewIndex(paired), [
+    { page: "agents", since: "0.3.14", "zh-CN": { group: "组", title: "甲" }, en: { group: "G", title: "A" } },
+  ]);
   assert.throws(() => pairLocales({ "zh-CN": [{ page: "agents", group: "", title: "x" }], en: [] }));
   assert.throws(() => pairLocales({ "zh-CN": [{ page: "agents", group: "", title: "x" }], en: [{ page: "about", group: "", title: "x" }] }));
+  assert.throws(() => pairLocales({ "zh-CN": [{ page: "agents", group: "", title: "x", since: "0.3.14" }], en: [{ page: "agents", group: "", title: "x" }] }));
+});
+
+test("searching new or 本版新增 surfaces active since entries on top", () => {
+  assert.ok(isWhatsNewQuery("new") && isWhatsNewQuery("本版新增") && isWhatsNewQuery("新功能") && !isWhatsNewQuery("外观"));
+  const withSince = [
+    { ...ENTRIES[0], since: "0.3.14" },
+    ENTRIES[1],
+    { ...ENTRIES[2], since: "0.3.12" },
+  ];
+  const hits = searchSettingsRows("new", withSince, "zh-CN", LOCALES, (page) => PAGES[page], new Set(["0.3.14"]));
+  assert.deepEqual(hits.map((hit) => [hit.text.title, hit.isNew]), [["隐藏已退出的会话", true]]);
+  assert.ok(isTitleHit(hits[0], "new"));
+  assert.deepEqual(searchSettingsRows("new", withSince, "zh-CN", LOCALES, (page) => PAGES[page], new Set(["0.3.14"]), new Set(["agentAlerts"])), []);
+  assert.deepEqual(searchSettingsRows("本版新增", withSince, "zh-CN", LOCALES, (page) => PAGES[page], new Set()), []);
 });
 
 test("a page whose feature the system lacks is not offered", () => {

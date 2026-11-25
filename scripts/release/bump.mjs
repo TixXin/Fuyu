@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { betaTags, mergeBetaNotes } from "./beta-notes.mjs";
 import { baseTag, draftNotes } from "./notes-draft.mjs";
 import { isPrerelease } from "./channel.mjs";
+import { stampNextSince } from "./since.mjs";
 import { bumpProblem, VERSION_FILES, writeVersion } from "./versions.mjs";
 
 function git(args) {
@@ -31,6 +32,14 @@ for (const [kind, path] of Object.entries(VERSION_FILES)) {
     fail(error.message);
   }
   console.log(`✓ ${path} → ${version}`);
+}
+
+const stamped = stampNextSince(process.cwd(), version);
+if (stamped.count > 0) {
+  console.log(`✓ stamped ${stamped.count} since="next" setting(s) → ${version} (${stamped.files.join(", ")})`);
+}
+if (stamped.expired.length > 0) {
+  console.log(`  note: old since versions can be pruned when convenient: ${stamped.expired.join(", ")}`);
 }
 
 const notes = `docs/releases/v${version}.md`;

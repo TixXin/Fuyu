@@ -22,6 +22,7 @@ export function SettingsSecretRow({
   deleteConfirmLabel,
   testLabel,
   searchable,
+  since,
   onChange,
   onSave,
   onDelete,
@@ -41,6 +42,7 @@ export function SettingsSecretRow({
   deleteConfirmLabel?: string;
   testLabel?: string;
   searchable?: boolean;
+  since?: string;
   onChange: (value: string) => void;
   onSave: () => void;
   onDelete?: () => void;
@@ -55,6 +57,7 @@ export function SettingsSecretRow({
       title={title}
       description={description ?? (hasSecret ? common.saved : undefined)}
       searchable={searchable}
+      since={since}
       control={
         <>
           <SettingsLinkButton disabled={!value.trim() || saving} onClick={onSave}>

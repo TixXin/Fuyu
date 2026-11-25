@@ -38,3 +38,26 @@
 .settings-advanced[open] > .settings-advanced__toggle .settings-advanced__chevron {
   transform: rotate(90deg);
 }
+
+.settings-advanced:not([open]):has(.settings-row__new) > .settings-advanced__toggle::after {
+  content: "NEW";
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 32%, transparent);
+  color: color-mix(in srgb, var(--color-accent) 85%, var(--color-text));
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.island-light .settings-advanced:not([open]):has(.settings-row__new) > .settings-advanced__toggle::after {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  color: color-mix(in srgb, var(--color-accent) 72%, var(--color-text));
+}

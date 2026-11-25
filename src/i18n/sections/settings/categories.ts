@@ -5,6 +5,12 @@ export type SettingsCategoriesText = {
     clear: string;
     empty: string;
   };
+  whatsNew: {
+    badge: string;
+    label: string;
+    query: string;
+    markAllRead: string;
+  };
   expand: (group: string) => string;
   collapse: (group: string) => string;
   backTo: (page: string) => string;
@@ -85,6 +91,12 @@ export const zhCN: SettingsCategoriesText = {
     placeholder: "搜索设置",
     clear: "清除搜索",
     empty: "没有匹配的设置",
+  },
+  whatsNew: {
+    badge: "NEW",
+    label: "本版新增",
+    query: "本版新增",
+    markAllRead: "全部标为已读",
   },
   expand: (group) => `展开「${group}」`,
   collapse: (group) => `折叠「${group}」`,
@@ -279,6 +291,12 @@ export const en: SettingsCategoriesText = {
     placeholder: "Search settings",
     clear: "Clear search",
     empty: "No matching settings",
+  },
+  whatsNew: {
+    badge: "NEW",
+    label: "What's new",
+    query: "new",
+    markAllRead: "Mark all as read",
   },
   expand: (group) => `Expand ${group}`,
   collapse: (group) => `Collapse ${group}`,

@@ -42,6 +42,7 @@
   }
 
   .settings-sidebar-card:not(:hover, :has(:focus-visible)) :is(.settings-sidebar__item, .settings-sidebar__folder) > span,
+  .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__whats-new,
   .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__chevron,
   .settings-sidebar-card:not(:hover, :has(:focus-visible)) .settings-sidebar__hits {
     display: none;

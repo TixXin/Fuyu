@@ -14,6 +14,7 @@ export function SettingsSliderRow({
   defaultValue,
   resetLabel,
   indent,
+  since,
   className,
   children,
   onChange,
@@ -28,6 +29,7 @@ export function SettingsSliderRow({
   defaultValue?: number;
   resetLabel?: string;
   indent?: boolean;
+  since?: string;
   className?: string;
   children?: ReactNode;
   onChange: (value: number) => void;
@@ -42,6 +44,7 @@ export function SettingsSliderRow({
       title={title}
       description={description}
       indent={indent}
+      since={since}
       labelFor={id}
       control={
         <>

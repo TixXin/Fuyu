@@ -81,7 +81,7 @@ export const CAPTURE = `(async () => {
       if (a.name === "style" && measured(node)) value = measuredStyle(value);
       if (a.name === "class") value = value.split(/\\s+/).filter(Boolean).join(" ");
       return [a.name, value];
-    }).filter(([name, value]) => !(name === "style" && value === "")).sort((a, b) => a[0] < b[0] ? -1 : 1);
+    }).filter(([name, value]) => name !== "data-since" && !(name === "style" && value === "")).sort((a, b) => a[0] < b[0] ? -1 : 1);
     const open = "<" + tag + attrs.map(([n, v]) => " " + n + '="' + escapeAttr(v) + '"').join("") + ">";
     const children = tag === "svg" && node.classList.contains("lucide") ? [] : [...node.childNodes];
     if (VOID.has(tag)) { lines.push(pad + open); return; }

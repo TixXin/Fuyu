@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "page": "general",
+      "since": "next",
+      "zh-CN": {
+        "group": "网络代理",
+        "title": "代理模式"
+      },
+      "en": {
+        "group": "Network proxy",
+        "title": "Proxy mode"
+      }
+    }
+  ]
+}
