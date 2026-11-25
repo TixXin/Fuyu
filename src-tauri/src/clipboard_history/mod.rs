@@ -497,7 +497,7 @@ pub fn set_clipboard_history_settings(
 pub async fn copy_clipboard_history_item(id: String) -> Result<ClipboardHistorySnapshot, String> {
     workers::run_blocking(move || {
         let snapshot = service()?.copy_item(&id)?;
-        copy_notice::notify_copied(&id, false);
+        copy_notice::notify_copied(&id);
         Ok(snapshot)
     })
     .await
@@ -507,7 +507,7 @@ pub async fn copy_clipboard_history_item(id: String) -> Result<ClipboardHistoryS
 pub async fn copy_clipboard_history_item_as(id: String, copy_as: CopyAs) -> Result<ClipboardHistorySnapshot, String> {
     workers::run_blocking(move || {
         let snapshot = service()?.copy_item_as(&id, copy_as)?;
-        copy_notice::notify_copied(&id, false);
+        copy_notice::notify_copied(&id);
         Ok(snapshot)
     })
     .await
@@ -524,7 +524,6 @@ pub async fn paste_clipboard_history_item(
     let options = popup::PasteOptions { plain: plain.unwrap_or(false), enter: enter.unwrap_or(false), copy_as };
     workers::run_blocking(move || {
         popup::paste(&app, &id, options)?;
-        copy_notice::notify_copied(&id, true);
         Ok(())
     })
     .await

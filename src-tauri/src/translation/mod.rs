@@ -92,14 +92,15 @@ fn hide(app: &AppHandle, window: &tauri::WebviewWindow) -> Result<(), String> {
 }
 
 #[cfg(target_os = "macos")]
-fn focus_translation_window(app: &AppHandle, _: &tauri::WebviewWindow) -> Result<(), String> {
+fn focus_translation_window(app: &AppHandle, window: &tauri::WebviewWindow) -> Result<(), String> {
     let handle = app.clone();
+    let target = window.clone();
     app.run_on_main_thread(move || {
         if !crate::macos::island_panel::make_panel_key(&handle, WINDOW_LABEL) {
-            if let Some(window) = handle.get_webview_window(WINDOW_LABEL) {
-                let _ = window.set_focus();
-            }
+            let _ = target.set_focus();
         }
+        let webview: &tauri::Webview = target.as_ref();
+        let _ = webview.set_focus();
     })
     .map_err(|error| error.to_string())
 }

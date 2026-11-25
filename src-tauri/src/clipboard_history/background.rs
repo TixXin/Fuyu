@@ -240,6 +240,7 @@ fn build(app: &AppHandle, label: &'static str) -> Result<WebviewWindow, String> 
     let window = WebviewWindowBuilder::from_config(app, &config)
         .map_err(|error| error.to_string())?
         .visible(false)
+        .focused(false)
         .build()
         .map_err(|error| format!("Could not create the {label} window: {error}"))?;
     as_panel(app, label, window.clone());

@@ -66,6 +66,15 @@ pub(super) struct PasteOptions {
     pub(super) copy_as: Option<CopyAs>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum PasteOutcome {
+    Sent,
+    Off,
+    NoTarget,
+    #[cfg(target_os = "macos")]
+    NoAccess,
+}
+
 #[cfg(test)]
 mod tests {
     use super::{is_terminal_process, place_by_pointer};

@@ -70,6 +70,7 @@ pub(super) fn ensure_window(app: &AppHandle) -> Result<WebviewWindow, String> {
     let window = WebviewWindowBuilder::from_config(app, &config)
         .map_err(|error| error.to_string())?
         .visible(false)
+        .focused(false)
         .build()
         .map_err(|error| format!("Could not create the translation window: {error}"))?;
     let handle = app.clone();

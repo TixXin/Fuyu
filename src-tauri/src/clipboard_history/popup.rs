@@ -7,7 +7,7 @@ use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Positio
 use windows::Win32::Foundation::HWND;
 
 use super::open_trace::Trace;
-use super::popup_place::{is_terminal_process, place_by_pointer, popup_size, OPENED_EVENT, POINTER_GAP};
+use super::popup_place::{is_terminal_process, place_by_pointer, popup_size, PasteOutcome, OPENED_EVENT, POINTER_GAP};
 pub(crate) use super::popup_place::WINDOW_LABEL;
 pub(super) use super::popup_place::PasteOptions;
 use super::{command_text, service, ClipboardHistoryItemKind, ClipboardHistorySettings, CopyAs, PopupPosition};
@@ -213,8 +213,9 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
     if !settings.popup_pinned {
         hide(app)?;
     }
-    paste_into(target, settings.auto_paste, options.enter);
-    Ok(settings.auto_paste)
+    let outcome = paste_into(target, settings.auto_paste, options.enter);
+    super::copy_notice::notify_paste(id, outcome);
+    Ok(outcome == PasteOutcome::Sent)
 }
 
 pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(), String> {
@@ -224,13 +225,16 @@ pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(),
     if !settings.popup_pinned {
         hide(app)?;
     }
-    paste_into(target_for_paste(settings.popup_pinned), settings.auto_paste, enter);
+    let _ = paste_into(target_for_paste(settings.popup_pinned), settings.auto_paste, enter);
     Ok(())
 }
 
-fn paste_into(target: Option<HWND>, auto_paste: bool, enter: bool) {
-    let (Some(target), true) = (target, auto_paste) else {
-        return;
+fn paste_into(target: Option<HWND>, auto_paste: bool, enter: bool) -> PasteOutcome {
+    if !auto_paste {
+        return PasteOutcome::Off;
+    }
+    let Some(target) = target else {
+        return PasteOutcome::NoTarget;
     };
     let target = target.0 as isize;
     thread::spawn(move || {
@@ -243,4 +247,5 @@ fn paste_into(target: Option<HWND>, auto_paste: bool, enter: bool) {
             }
         }
     });
+    PasteOutcome::Sent
 }
