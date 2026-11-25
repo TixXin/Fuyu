@@ -261,7 +261,7 @@ export function OnboardingWindow() {
         data-mode={activeSetup ? "setup" : activeWhatsNew ? "whatsNew" : "main"}
       >
         <IconButtonTooltip scope=".onboarding" />
-        <Spotlight spot={spot} mode={currentStep.spotlight} />
+        <Spotlight spot={spot} mode={director.showingSideWings ? "off" : currentStep.spotlight} />
         {showDirectorHud && (
           <DirectorHud
             hudRef={hudRef}
@@ -319,15 +319,7 @@ export function OnboardingWindow() {
               />
             )}
             {currentStep.id === "outfit" && (
-              <OutfitAct
-                modules={modules}
-                answer={answer}
-                onAnswerChange={setAnswer}
-                onModulesChange={changeModules}
-                onPreviewPage={director.previewPage}
-                onCollapsePreview={director.collapsePreview}
-                onUserInteract={director.claimUserControl}
-              />
+              <OutfitAct modules={modules} answer={answer} onAnswerChange={setAnswer} onModulesChange={changeModules} onPreviewPage={director.previewPage} onCollapsePreview={director.collapsePreview} onUserInteract={director.claimUserControl} onWingsPreview={director.setWingsPreview} />
             )}
             {currentStep.id === "permissions" && <PermissionsAct kinds={permissionKinds} />}
             {currentStep.id === "play" && (
@@ -357,12 +349,7 @@ export function OnboardingWindow() {
               <WhatsNewNotesAct fromVersion={launch.fromVersion} onLeaveForSettings={leaveForSettings} />
             )}
             {currentStep.id === "whatsNewForms" && (
-              <WhatsNewFormsAct
-                settings={settings}
-                onSettingsChange={setSettings}
-                onUserInteract={director.claimUserControl}
-                onLeaveForSettings={leaveForSettings}
-              />
+              <WhatsNewFormsAct settings={settings} onSettingsChange={setSettings} onUserInteract={director.claimUserControl} onLeaveForSettings={leaveForSettings} onWingsPreview={director.setWingsPreview} />
             )}
             {currentStep.id === "agentCards" && <AgentCardsAct settings={settings} onSettingsChange={setSettings} />}
             {currentStep.id === "agentConnect" && <AgentConnectAct settings={settings} onSettingsChange={setSettings} />}

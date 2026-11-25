@@ -74,11 +74,13 @@ export function WhatsNewFormsAct({
   onSettingsChange,
   onUserInteract,
   onLeaveForSettings,
+  onWingsPreview,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onUserInteract?: () => void;
   onLeaveForSettings?: (section?: SettingsFocusSection) => void;
+  onWingsPreview?: (open: boolean) => void;
 }) {
   const text = useTranslation().onboarding.whatsNew;
   return (
@@ -88,6 +90,7 @@ export function WhatsNewFormsAct({
       <SideDockSplitCard
         onUserInteract={onUserInteract}
         onOpenSettings={onLeaveForSettings ? () => onLeaveForSettings("sideDocks") : undefined}
+        onWingsPreview={onWingsPreview}
       />
     </>
   );

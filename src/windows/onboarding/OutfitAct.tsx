@@ -55,6 +55,7 @@ export function OutfitAct({
   onPreviewPage,
   onCollapsePreview,
   onUserInteract,
+  onWingsPreview,
 }: {
   modules: ReadonlySet<OnboardingModule>;
   answer: PersonaAnswer;
@@ -63,6 +64,7 @@ export function OutfitAct({
   onPreviewPage: (page: IslandPage) => void;
   onCollapsePreview: () => void;
   onUserInteract: () => void;
+  onWingsPreview?: (open: boolean) => void;
 }) {
   const text = useTranslation().onboarding.outfit;
   const [focused, setFocused] = useState<OnboardingModule>("agents");
@@ -224,7 +226,7 @@ export function OutfitAct({
         </aside>
       </div>
       {removed.length > 0 && <p className="outfit-act__removed" role="status">{text.takenOff(names(removed))}</p>}
-      <SideDockSplitCard onUserInteract={onUserInteract} />
+      <SideDockSplitCard onUserInteract={onUserInteract} onWingsPreview={onWingsPreview} />
     </>
   );
 }

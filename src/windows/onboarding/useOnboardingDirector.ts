@@ -63,6 +63,7 @@ export function useOnboardingDirector({
   const [sceneIndex, setSceneIndex] = useState<number>(0);
   const [runToken, setRunToken] = useState<number>(0);
   const [anchorDirty, setAnchorDirty] = useState<boolean>(false);
+  const [wingsPreview, setWingsPreview] = useState<boolean>(false);
 
   const timerRef = useRef<number>(0);
   const previewTimerRef = useRef<number>(0);
@@ -229,6 +230,7 @@ export function useOnboardingDirector({
     if (prevStepRef.current !== stepId) {
       const prev = prevStepRef.current;
       prevStepRef.current = stepId;
+      setWingsPreview(false);
       if (prev === "hello") {
         restoreAnchor(false);
         dispatchRef.current.lastKind = "collapsed";
@@ -263,6 +265,7 @@ export function useOnboardingDirector({
 
   const safeIndex = Math.min(sceneIndex, Math.max(0, scenes.length - 1));
   const current = scenes[safeIndex] ?? scenes[0];
+  const showingSideWings = wingsPreview || Boolean(current.mutatesSideDocks && status === "playing");
 
   return {
     status,
@@ -271,6 +274,8 @@ export function useOnboardingDirector({
     sceneCount: scenes.length,
     runToken,
     anchorDirty,
+    showingSideWings,
+    setWingsPreview,
     activeScene: status === "playing" ? current.id : null,
     currentScene: current.id,
     currentDurationMs: current.durationMs,

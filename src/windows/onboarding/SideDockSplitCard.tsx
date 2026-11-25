@@ -19,15 +19,19 @@ const SPAWN_DELAY_MS = 400;
 export function SideDockSplitCard({
   onUserInteract,
   onOpenSettings,
+  onWingsPreview,
 }: {
   onUserInteract?: () => void;
   onOpenSettings?: () => void;
+  onWingsPreview?: (open: boolean) => void;
 }) {
   const text = useTranslation().onboarding.sideDockSplit;
   const { settings: sideDocks, save: saveSideDocks } = useSideDocks();
   const [previewing, setPreviewing] = useState(false);
   const timerRef = useRef<number>(0);
   const foldTimerRef = useRef<number>(0);
+  const onWingsPreviewRef = useRef(onWingsPreview);
+  onWingsPreviewRef.current = onWingsPreview;
 
   const splitActive = sideDocks.left.enabled || sideDocks.right.enabled;
 
@@ -37,6 +41,7 @@ export function SideDockSplitCard({
     timerRef.current = 0;
     foldTimerRef.current = 0;
     setPreviewing(false);
+    onWingsPreviewRef.current?.(false);
     void previewSideDock("left", false).catch(() => undefined);
     void previewSideDock("right", false).catch(() => undefined);
   };
@@ -44,12 +49,14 @@ export function SideDockSplitCard({
   useEffect(() => () => {
     window.clearTimeout(timerRef.current);
     window.clearTimeout(foldTimerRef.current);
+    onWingsPreviewRef.current?.(false);
     void previewSideDock("left", false).catch(() => undefined);
     void previewSideDock("right", false).catch(() => undefined);
   }, []);
 
   const openBothWings = (autoFold: boolean) => {
     setPreviewing(true);
+    onWingsPreviewRef.current?.(true);
     void previewSideDock("left", true).catch(() => undefined);
     void previewSideDock("right", true).catch(() => undefined);
     if (autoFold) {
@@ -72,6 +79,7 @@ export function SideDockSplitCard({
       openBothWings(true);
     } else {
       setPreviewing(true);
+      onWingsPreviewRef.current?.(true);
       timerRef.current = window.setTimeout(() => openBothWings(true), SPAWN_DELAY_MS);
     }
   };

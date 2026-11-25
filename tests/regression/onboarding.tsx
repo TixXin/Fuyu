@@ -210,7 +210,7 @@ if (!automated) {
     await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="sideSplit"]')!.click(); });
     await until(() => commands.some(({ command, args }) => command === "preview_side_dock" && args.edge === "right" && args.open === true));
     const sideSplitSaved = JSON.parse(localStorage.getItem("fuyu-side-docks") ?? "{}") as { left?: { enabled?: boolean }; right?: { enabled?: boolean } };
-    check(sideSplitSaved.left?.enabled === true && sideSplitSaved.right?.enabled === true, "Clicking One-click Split in the live showcase enables both side-dock wings and previews them");
+    check(sideSplitSaved.left?.enabled === true && sideSplitSaved.right?.enabled === true && Boolean(document.querySelector(".onboarding-spotlight--off")), "Clicking One-click Split in the live showcase enables both side-dock wings, previews them, and lifts the dark scrim");
 
     await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="agents"]')!.click(); });
     await until(() => director().action === "expand" && director().page === "agents");
