@@ -9,16 +9,16 @@ const box = { width: 560, height: 300 };
 const request = (effect, extra = {}) => ({ effect, direction: 1, axis: "x", box, origin: null, speed: 1, random: () => 0.5, ...extra });
 const kinds = PAGE_SWITCH_EFFECTS.filter((effect) => effect !== "carousel");
 
-test("page switch settings default to the curtain and a stretching highlight, and fall back on unknown values", () => {
+test("page switch settings default to fade and a stretching highlight, and fall back on unknown values", () => {
   const fresh = normalizeSettings({});
-  assert.equal(fresh.pageSwitchPanel, "wipe");
-  assert.equal(fresh.pageSwitchSettings, "wipe");
+  assert.equal(fresh.pageSwitchPanel, "fade");
+  assert.equal(fresh.pageSwitchSettings, "fade");
   assert.equal(fresh.pageSwitchIndicator, "stretch");
   assert.equal(fresh.pageSwitchSpeed, "normal");
   assert.equal(fresh.pageSwitchDirectional, true);
   const odd = normalizeSettings({ pageSwitchPanel: "flip", pageSwitchSettings: "slide", pageSwitchIndicator: "pill", pageSwitchSpeed: 3, pageSwitchDirectional: false });
-  assert.equal(odd.pageSwitchPanel, "wipe");
-  assert.equal(odd.pageSwitchSettings, "wipe");
+  assert.equal(odd.pageSwitchPanel, "fade");
+  assert.equal(odd.pageSwitchSettings, "fade");
   assert.equal(odd.pageSwitchIndicator, "stretch");
   assert.equal(odd.pageSwitchSpeed, "normal");
   assert.equal(odd.pageSwitchDirectional, false);
