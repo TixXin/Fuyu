@@ -161,9 +161,10 @@ async fn fetch_ics(link: &str) -> Result<String, UserError> {
 }
 
 async fn download(url: reqwest::Url) -> Result<String, UserError> {
-    let client = reqwest::Client::builder()
+    let builder = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
-        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
+    let client = crate::system::proxy::apply_reqwest(builder)?
         .build()
         .map_err(|error| http_error(UserError::new("http.client", "Could not set up the connection."), error))?;
     let response = client.get(url).send().await.map_err(|error| http_error(UserError::new("calendar.unreachable", "Could not reach the calendar."), error))?;

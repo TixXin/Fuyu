@@ -74,9 +74,10 @@ pub fn delete_bark_key() -> Result<(), UserError> {
 pub async fn send_bark_push(server: String, title: String, body: String, group: String) -> Result<(), UserError> {
     let key = read_key()?.ok_or_else(|| UserError::new("bark.noKey", "No Bark device key yet."))?;
     let url = push_url(&server)?;
-    let client = reqwest::Client::builder()
+    let builder = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
-        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
+    let client = crate::system::proxy::apply_reqwest(builder)?
         .build()
         .map_err(|error| UserError::new("http.client", "Could not set up the connection.").detail(error))?;
     let response = client

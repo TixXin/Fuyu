@@ -105,9 +105,11 @@ async fn request(token: &str) -> Result<String, UsageError> {
     let mut bearer = HeaderValue::from_str(&format!("Bearer {token}"))
         .map_err(|_| error(UsageErrorKind::LoginRequired, "The saved Cursor login is not a usable token."))?;
     bearer.set_sensitive(true);
-    let client = reqwest::Client::builder()
+    let builder = reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
-        .redirect(reqwest::redirect::Policy::none())
+        .redirect(reqwest::redirect::Policy::none());
+    let client = crate::system::proxy::apply_reqwest(builder)
+        .map_err(|failure| network(failure.to_string()))?
         .build()
         .map_err(|failure| network(format!("Could not create the HTTP client: {failure}")))?;
     let response = client

@@ -24,6 +24,9 @@ export type ErrorCode =
   | "file.undo"
   | "http.client"
   | "net.proxy"
+  | "net.proxyHostRequired"
+  | "net.proxyPort"
+  | "net.proxyTestFailed"
   | "net.unreachable"
   | "net.unreadable"
   | "net.status"
@@ -408,7 +411,10 @@ export const zhCN: ErrorsText = {
     "updateBackup.notFound": "这份备份已经不在了。",
     "file.undo": ({ path }) => `无法撤回 ${path}。`,
     "http.client": "无法建立网络连接。",
-    "net.proxy": "代理地址无效，检查 HTTPS_PROXY 环境变量或系统代理设置。",
+    "net.proxy": "代理地址无效，请检查网络代理设置、环境变量或系统代理配置。",
+    "net.proxyHostRequired": "请填写代理服务器地址。",
+    "net.proxyPort": "请填写 1 到 65535 之间的有效端口号。",
+    "net.proxyTestFailed": "无法通过当前代理访问网络，请检查代理地址、端口、认证或网络策略。",
     "net.unreachable": ({ service }) => `连不上 ${service}。`,
     "net.unreadable": ({ service }) => `${service} 的回答读不懂。`,
     "net.status": ({ service, status }) => `${service} 返回 ${status}。`,
@@ -790,7 +796,10 @@ export const en: ErrorsText = {
     "updateBackup.notFound": "This backup no longer exists.",
     "file.undo": ({ path }) => `Could not undo ${path}.`,
     "http.client": "Could not set up the connection.",
-    "net.proxy": "The proxy address is not valid. Check the HTTPS_PROXY variable or the system proxy setting.",
+    "net.proxy": "The proxy address is not valid. Check the network proxy setting, environment variables or system proxy.",
+    "net.proxyHostRequired": "Enter a proxy server address.",
+    "net.proxyPort": "Enter a proxy port from 1 to 65535.",
+    "net.proxyTestFailed": "Could not reach the network through this proxy. Check the host, port, credentials or network policy.",
     "net.unreachable": ({ service }) => `Could not reach ${service}.`,
     "net.unreadable": ({ service }) => `Could not read ${service}'s answer.`,
     "net.status": ({ service, status }) => `${service} answered ${status}.`,

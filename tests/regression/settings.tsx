@@ -153,7 +153,14 @@ if (!automated) {
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
     await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound and break reminders");
     await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && /^音量与亮度\|耳机与充电\|大写锁定(\|提示方式\|关掉大写时也提示\|点角标关掉大写)?\|摄像头和麦克风使用提示$/.test(texts(".settings-row__title")), "Volume, headphones, Caps Lock and camera alerts are one group on the System alerts tab, Caps Lock's options right under its switch");
-    await openPage("general"); check(texts(".settings-group__title") === "启动与语言" && !texts(".settings-row__title").includes("最小化按钮") && !texts(".settings-tabs__tab").includes("本机接口"), "General opens on startup and language, without a Local API tab");
+    await openPage("general"); check(texts(".settings-group__title") === "启动与语言|网络代理" && !texts(".settings-row__title").includes("最小化按钮") && !texts(".settings-tabs__tab").includes("本机接口"), "General opens on startup, language and network proxy, without a Local API tab");
+    const proxyModeRow = settingRow("代理模式");
+    const proxyManualButton = [...(proxyModeRow?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === "手动代理");
+    check(Boolean(proxyModeRow?.textContent?.includes("http://127.0.0.1:7890")) && !settingRow("代理地址"), "Network proxy defaults to system mode, showing detected proxy without manual fields");
+    await act(async () => { proxyManualButton?.click(); });
+    check(Boolean(settingRow("代理地址")) && Boolean(document.querySelector(".settings-advanced")), "Switching network proxy to manual shows server address row and advanced auth/bypass drawer");
+    const proxySystemButton = [...(proxyModeRow?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === "跟随系统");
+    await act(async () => { proxySystemButton?.click(); });
     await openPage("generalData"); check(texts(".settings-group__title") === "数据|升级前的备份" && texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"), "Data and backup tab shows data folder, backup and pre-update backups");
     await openPage("generalApi");
     const localApi = [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.startsWith("本机接口")); await act(async () => { [...(localApi?.querySelectorAll<HTMLButtonElement>(".settings-row") ?? [])].find((row) => row.textContent?.startsWith("访问令牌"))?.querySelector("button")?.click(); });

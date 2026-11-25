@@ -1,87 +1,35 @@
 use crate::user_error::UserError;
 use tauri::{AppHandle, Url};
-#[cfg(windows)]
-use windows::Win32::System::Registry::HKEY_CURRENT_USER;
-
-#[cfg(windows)]
-const INTERNET_SETTINGS_SUBKEY: &str =
-    r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
-
-pub(super) fn normalize_proxy(raw: &str) -> String {
-    let entries: Vec<&str> = raw
-        .split(';')
-        .map(str::trim)
-        .filter(|entry| !entry.is_empty())
-        .collect();
-    let server = ["https=", "http="]
-        .iter()
-        .find_map(|prefix| entries.iter().find_map(|entry| entry.strip_prefix(prefix)))
-        .unwrap_or_else(|| entries.first().copied().unwrap_or(""));
-
-    if server.contains("://") {
-        server.to_string()
-    } else {
-        format!("http://{server}")
-    }
-}
 
 pub(crate) fn get_updater_proxy() -> Option<String> {
-    for key in ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"] {
-        if let Ok(value) = std::env::var(key) {
-            let value = value.trim();
-            if !value.is_empty() {
-                return Some(normalize_proxy(value));
-            }
-        }
-    }
-
-    system_proxy()
+    super::proxy::effective_proxy_url()
 }
 
 pub(crate) fn proxy_url() -> Result<Option<Url>, UserError> {
-    proxy_url_from(get_updater_proxy())
+    super::proxy::proxy_url()
 }
 
 pub(crate) fn reqwest_proxy() -> Result<Option<reqwest::Proxy>, UserError> {
-    reqwest_proxy_from(get_updater_proxy())
+    super::proxy::reqwest_proxy()
 }
 
+#[cfg(test)]
 fn proxy_url_from(proxy: Option<String>) -> Result<Option<Url>, UserError> {
     proxy
         .map(|proxy| Url::parse(&proxy).map_err(invalid_proxy))
         .transpose()
 }
 
+#[cfg(test)]
 fn reqwest_proxy_from(proxy: Option<String>) -> Result<Option<reqwest::Proxy>, UserError> {
     proxy
         .map(|proxy| reqwest::Proxy::all(&proxy).map_err(|error| invalid_proxy(error.without_url())))
         .transpose()
 }
 
+#[cfg(test)]
 fn invalid_proxy(error: impl std::fmt::Display) -> UserError {
     UserError::new("net.proxy", "The proxy address is not valid.").detail(error)
-}
-
-#[cfg(windows)]
-fn system_proxy() -> Option<String> {
-    if crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyEnable")?
-        == 0
-    {
-        return None;
-    }
-
-    let server =
-        crate::win32::registry::read_string(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyServer")?;
-    if server.trim().is_empty() {
-        return None;
-    }
-
-    Some(normalize_proxy(&server))
-}
-
-#[cfg(not(windows))]
-fn system_proxy() -> Option<String> {
-    None
 }
 
 #[tauri::command]

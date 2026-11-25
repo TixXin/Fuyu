@@ -5,8 +5,6 @@ use chrono::{DateTime, Utc};
 use quick_xml::{events::Event, Reader};
 use reqwest::{Method, Url};
 
-use crate::system::updater::reqwest_proxy;
-
 const MAX_RESPONSE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_CALENDARS: usize = 20;
 const MAX_REDIRECTS: usize = 5;
@@ -112,14 +110,13 @@ pub(super) fn parse_multistatus(xml: &str) -> Vec<DavResponse> {
 }
 
 fn client() -> Result<reqwest::Client, UserError> {
-    let mut builder = reqwest::Client::builder()
+    let builder = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::none())
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));
-    if let Some(proxy) = reqwest_proxy()? {
-        builder = builder.proxy(proxy);
-    }
-    builder.build().map_err(|error| super::http_error(UserError::new("http.client", "Could not set up the connection."), error))
+    crate::system::proxy::apply_reqwest(builder)?
+        .build()
+        .map_err(|error| super::http_error(UserError::new("http.client", "Could not set up the connection."), error))
 }
 
 pub(super) struct Account<'a> {

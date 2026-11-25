@@ -43,7 +43,7 @@ mimalloc = { version = "0.1", default-features = false }
 native-tls = "0.2"
 quick-xml = "0.39"
 rrule = "0.14"
-reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "socks"] }
 rgb = "0.8"
 semver = "1"
 serde = { version = "1", features = ["derive"] }

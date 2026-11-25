@@ -9,7 +9,7 @@ use mailparse::MailHeaderMap;
 use std::{
     fmt,
     io::{Read, Write},
-    net::{Shutdown, TcpStream, ToSocketAddrs},
+    net::{Shutdown, TcpStream},
     sync::{mpsc, Arc, Mutex},
     time::Duration,
 };
@@ -262,21 +262,8 @@ fn connect(
     secret: &str,
 ) -> Result<(MailSession, TcpStream), MailFailure> {
     let (host, port) = super::credentials::server_address(host);
-    let mut stream = None;
-    let mut refused = String::from("no address");
-    let addresses = (host, port)
-        .to_socket_addrs()
-        .map_err(failed_at("DNS"))?;
-    for address in addresses {
-        match TcpStream::connect_timeout(&address, Duration::from_secs(10)) {
-            Ok(connected) => {
-                stream = Some(connected);
-                break;
-            }
-            Err(error) => refused = error.to_string(),
-        }
-    }
-    let stream = stream.ok_or_else(|| MailFailure::sync("TCP", refused))?;
+    let stream = crate::system::proxy::connect_tcp(host, port, Duration::from_secs(10))
+        .map_err(failed_at("TCP"))?;
     stream
         .set_read_timeout(Some(IO_TIMEOUT))
         .map_err(failed_at("TCP"))?;

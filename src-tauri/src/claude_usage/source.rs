@@ -102,10 +102,18 @@ pub(super) fn parse_access_token(text: &str, now_ms: u64) -> Result<String, Fetc
 }
 
 pub(super) fn resolve_proxy(configured: Option<&str>) -> Option<String> {
+    if let Some(configured) = configured.map(str::trim).filter(|proxy| !proxy.is_empty()) {
+        return Some(configured.to_string());
+    }
+    if let Some(global) = crate::system::proxy::effective_proxy_url() {
+        if proxy_url(&global).is_ok() {
+            return Some(global);
+        }
+    }
     let env = ["HTTPS_PROXY", "https_proxy"]
         .iter()
         .find_map(|key| std::env::var(key).ok());
-    pick_proxy(configured, env.as_deref(), system_proxy().as_deref())
+    pick_proxy(None, env.as_deref(), system_proxy().as_deref())
 }
 
 pub(super) fn pick_proxy(configured: Option<&str>, env: Option<&str>, system: Option<&str>) -> Option<String> {

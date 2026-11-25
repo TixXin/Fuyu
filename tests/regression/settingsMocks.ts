@@ -250,6 +250,23 @@ mockIPC((command, payload) => {
     case "get_v2_plugin_migration":
     case "dismiss_v2_plugin_migration":
       return { official: [], other: [], islandPending: false, settingsPending: false };
+    case "get_network_proxy":
+      return { mode: "system", scheme: "http", host: "", port: null, username: "", hasPassword: false, bypass: "", systemProxy: "http://127.0.0.1:7890" };
+    case "save_network_proxy": {
+      const input = (args.input ?? {}) as Record<string, unknown>;
+      return {
+        mode: String(input.mode ?? "system"),
+        scheme: String(input.scheme ?? "http"),
+        host: String(input.host ?? ""),
+        port: typeof input.port === "number" ? input.port : null,
+        username: String(input.username ?? ""),
+        hasPassword: Boolean(input.password),
+        bypass: String(input.bypass ?? ""),
+        systemProxy: "http://127.0.0.1:7890",
+      };
+    }
+    case "test_network_proxy":
+      return { ok: true, latencyMs: 42, target: "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.v3.json", via: "http://127.0.0.1:7890" };
     default: return null;
   }
 }, { shouldMockEvents: true });

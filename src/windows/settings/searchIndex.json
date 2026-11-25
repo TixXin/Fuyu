@@ -50,6 +50,29 @@
       }
     },
     {
+      "page": "general",
+      "zh-CN": {
+        "group": "网络代理",
+        "title": "代理模式",
+        "description": "已检测到系统或环境变量代理：http://127.0.0.1:7890",
+        "options": [
+          "跟随系统",
+          "手动代理",
+          "不使用代理"
+        ]
+      },
+      "en": {
+        "group": "Network proxy",
+        "title": "Proxy mode",
+        "description": "Detected system or environment proxy: http://127.0.0.1:7890",
+        "options": [
+          "Follow system",
+          "Manual",
+          "Direct"
+        ]
+      }
+    },
+    {
       "page": "generalData",
       "zh-CN": {
         "group": "数据",
