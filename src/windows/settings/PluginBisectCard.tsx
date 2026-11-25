@@ -8,7 +8,7 @@ export function PluginBisectCard({ plugins, onBisect, onOpenPlugin }: {
   onBisect?: (off: readonly string[]) => Promise<unknown>;
   onOpenPlugin: (id: string) => void;
 }) {
-  const t = useTranslation().settings.pluginsV3;
+  const t = useTranslation().settings.pluginHost;
   const text = t.page.diagnostics;
   const bisect = t.bisect;
   const [step, setStep] = useState<BisectStep>({ phase: "idle" });

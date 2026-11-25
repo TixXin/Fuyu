@@ -1,7 +1,7 @@
 import { en as enPage, zhCN as zhPage, type SettingsPluginPageText } from "./pluginPage.ts";
 import { en as enMarket, zhCN as zhMarket, type SettingsPluginMarketText } from "./pluginMarket.ts";
 
-export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "bisect" | "loading" | "stopped" | "unloading";
+export type PluginHostState = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "bisect" | "loading" | "stopped" | "unloading";
 
 export type HostMemoryMeasureText = "private-working-set" | "phys-footprint" | "rss";
 
@@ -30,7 +30,7 @@ export type BuiltinPluginName =
   | "theme-market"
   | "updater";
 
-export type SettingsPluginsV3Text = {
+export type SettingsPluginHostText = {
   page: SettingsPluginPageText;
   marketPage: SettingsPluginMarketText;
   searchPlaceholder: string;
@@ -46,7 +46,7 @@ export type SettingsPluginsV3Text = {
   uptime: string;
   safeModes: { "third-party": string; minimal: string };
   devMode: string;
-  states: Record<PluginV3State, string>;
+  states: Record<PluginHostState, string>;
   waitingFor: (services: string) => string;
   waitingReasons?: {
     noProvider: (service: string) => string;
@@ -92,7 +92,7 @@ export type SettingsPluginsV3Text = {
   };
 };
 
-export const zhCN: SettingsPluginsV3Text = {
+export const zhCN: SettingsPluginHostText = {
   page: zhPage,
   marketPage: zhMarket,
   searchPlaceholder: "搜索插件名称、ID 或说明…",
@@ -217,7 +217,7 @@ export const zhCN: SettingsPluginsV3Text = {
   },
 };
 
-export const en: SettingsPluginsV3Text = {
+export const en: SettingsPluginHostText = {
   page: enPage,
   marketPage: enMarket,
   searchPlaceholder: "Search plugin name, ID or notes…",

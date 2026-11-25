@@ -8,7 +8,7 @@ import { iconSources } from "./pluginIconSources";
 import { PluginLogo } from "./PluginLogo";
 
 export function PluginMarketCover({ plugin, title }: { plugin: MarketCatalogPlugin; title: string }) {
-  const text = useTranslation().settings.pluginsV3.marketPage.card;
+  const text = useTranslation().settings.pluginHost.marketPage.card;
   const shots = plugin.screenshots ?? [];
   const [failed, setFailed] = useState(false);
   const [strip, setStrip] = useState(false);

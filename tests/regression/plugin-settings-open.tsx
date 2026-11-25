@@ -13,7 +13,7 @@ const { openPluginSettings, setPluginSettingsOpener } = await import("../../src/
 const { openPluginSettingsWindow } = await import("../../src/windows/settings/api");
 const { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } = await import("../../src/windows/settings/storage");
 const { requestPluginDetail } = await import("../../src/windows/settings/pluginPageHandoff");
-const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
+const { PluginsSettingsPage } = await import("../../src/windows/settings/PluginsSettingsPage");
 
 const internals = (window as unknown as { __TAURI_INTERNALS__: { invoke: (command: string, ...rest: unknown[]) => Promise<unknown> } }).__TAURI_INTERNALS__;
 const invoked: string[] = [];
@@ -81,7 +81,7 @@ try {
     createRoot(stage).render(
       <StrictMode>
         <I18nProvider>
-          <PluginsV3SettingsPage connect={connect} onOpenPage={() => undefined} />
+          <PluginsSettingsPage connect={connect} onOpenPage={() => undefined} />
         </I18nProvider>
       </StrictMode>,
     );

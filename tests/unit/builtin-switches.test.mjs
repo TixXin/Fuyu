@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
-import { zhCN, en } from "../../src/i18n/sections/settings/pluginsV3.ts";
+import { zhCN, en } from "../../src/i18n/sections/settings/pluginHost.ts";
 import { disabledBuiltinIds, normalizeBuiltinPlugins } from "../../src/features/plugin-kernel/builtinSwitches.ts";
 
 const BUILTINS = fileURLToPath(new URL("../../src/features/", import.meta.url));

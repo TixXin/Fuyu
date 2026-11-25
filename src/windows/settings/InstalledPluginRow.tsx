@@ -34,7 +34,7 @@ function revokedReasons(failure: unknown): (MarketLocalizedText | string)[] | nu
 }
 
 export function useNoteParts(note: RowNote): { text: string; icon: ReactNode; details?: string[]; actions: [RowAction, string, boolean][] } {
-  const t = useTranslation().settings.pluginsV3;
+  const t = useTranslation().settings.pluginHost;
   const { locale } = useLocale();
   const page = t.page;
   const providerName = note.kind === "waiting" && note.provider ? t.builtinNames[note.provider] : null;
@@ -103,7 +103,7 @@ export function PluginRowNote({ note, onAction, full = false }: { note: RowNote;
 }
 
 export function PluginSetupNote({ setup, onOpenSettings, full = false }: { setup: PluginSetupNeed; onOpenSettings: () => void; full?: boolean }) {
-  const text = useTranslation().settings.pluginsV3.page.setup;
+  const text = useTranslation().settings.pluginHost.page.setup;
   return (
     <div className={`plugin-note plugin-note--info${full ? " plugin-note--full" : ""}`} data-note="setup">
       <span className="plugin-note__text">
@@ -118,7 +118,7 @@ export function PluginSetupNote({ setup, onOpenSettings, full = false }: { setup
 }
 
 export function PluginEnableSwitch({ entry, stale }: { entry: InstalledEntry; stale: boolean }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const { locale } = useLocale();
   const errorText = useErrorText();
   const id = useId();
@@ -158,14 +158,14 @@ function rowMenu(entry: InstalledEntry, stale: boolean, text: SettingsPluginPage
 }
 
 export function useVersionText(entry: InstalledEntry): { text: string; strong: boolean } | null {
-  const versions = useTranslation().settings.pluginsV3.page.versions;
+  const versions = useTranslation().settings.pluginHost.page.versions;
   if (!entry.version) return null;
   if (entry.source === "manual" && versionStanding(entry.version, entry.marketVersion) === "newer") return { text: versions.localNewer(entry.version), strong: true };
   return { text: `v${entry.version}`, strong: false };
 }
 
 export function useOriginText(entry: InstalledEntry): { text: string; warn: boolean } | null {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   if (entry.source === "manual") return { text: text.sources.manual, warn: true };
   if (entry.source === "local") return { text: text.sources.local, warn: false };
   return entry.publisher ? { text: entry.publisher, warn: false } : null;
@@ -177,7 +177,7 @@ export function InstalledPluginRow({ entry, stale, onOpen, onAction }: {
   onOpen: (tab?: "overview" | "settings") => void;
   onAction: (action: RowAction) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const { status } = entry;
   const version = useVersionText(entry);
   const origin = useOriginText(entry);

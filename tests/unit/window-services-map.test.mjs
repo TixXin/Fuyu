@@ -20,7 +20,7 @@ test("preloadI18n loads only core copy for lightweight windows and layers settin
   const pinEn = await preloadI18n("en", "pin");
   assert.equal(pinEn.trayMenu.quit, "Quit");
   assert.equal(pinEn.settings.project.appName, "Fuyu");
-  assert.equal("pluginsV3" in pinEn.settings, false);
+  assert.equal("pluginHost" in pinEn.settings, false);
   assert.equal("hello" in pinEn.onboarding, false);
   assert.equal(hasLoadedI18n("en", "pin"), true);
   assert.equal(hasLoadedI18n("en", "settings"), false);
@@ -30,7 +30,7 @@ test("preloadI18n loads only core copy for lightweight windows and layers settin
   assert.equal(typeof mainEn.onboarding.islandName, "string");
   assert.equal(typeof mainEn.island.v2Migration.notice(1), "string");
   assert.equal("pluginViews" in mainEn, false);
-  assert.equal("pluginsV3" in mainEn.settings, false);
+  assert.equal("pluginHost" in mainEn.settings, false);
   assert.equal("plugins" in mainEn.settings, false);
   assert.equal(hasLoadedI18n("en", null), true);
   assert.equal(hasLoadedI18n("zh-CN", null), false);

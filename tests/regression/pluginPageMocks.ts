@@ -2,7 +2,7 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type InstalledPluginReach, type MarketAutoUpdated, type MarketBundleInstallResult, type MarketCatalogPlugin, type MarketInspectedPackage, type MarketPluginDetails, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
 import { LOCALE_STORAGE_KEY } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
-import type { HostInfoV3, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
+import type { HostInfo, PluginStatus } from "../../src/windows/settings/usePluginHostStatus";
 import { ICON_SVG } from "./pluginMarketFixtures";
 
 export const locale = location.pathname.includes("-en") ? "en" : "zh-CN";
@@ -213,7 +213,7 @@ windowServices.provide(commandsV1, {
   setKeybinding: () => ({ items: commands }),
 });
 
-const usage = (more: Partial<NonNullable<PluginStatusV3["usage"]>> = {}) => ({ cpuMs: 4.2, calls: 12, applyMs: 0.4, timers: 1, listeners: 2, services: 0, clients: 1, errors: 0, ...more });
+const usage = (more: Partial<NonNullable<PluginStatus["usage"]>> = {}) => ({ cpuMs: 4.2, calls: 12, applyMs: 0.4, timers: 1, listeners: 2, services: 0, clients: 1, errors: 0, ...more });
 export const PLUGIN = {
   weather: { id: "@fuyu/weather", name: "Weather", state: "running", kind: "third-party", source: "market", usage: usage({ cpuMs: 12.5, calls: 40 }) },
   clock: { id: "@someone/clock", name: "Clock", state: "running", kind: "third-party", source: "market", usage: usage() },
@@ -229,7 +229,7 @@ export const PLUGIN = {
   sketchy: { id: "@someone/sketchy", name: "Clipboard sync", state: "running", kind: "third-party", source: "market", usage: usage() },
   translator: { id: "@someone/translator", name: "Translator", state: "running", kind: "third-party", source: "market", usage: usage() },
   linked: { id: "@me/linked", name: "Linked", state: "running", kind: "third-party", source: "manual", unreachableClients: ["island", "settings"], usage: usage() },
-} satisfies Record<string, PluginStatusV3>;
-export const NORMAL: PluginStatusV3[] = [PLUGIN.weather, PLUGIN.clock, PLUGIN.gadget, PLUGIN.local, PLUGIN.counter];
-export const HOST: HostInfoV3 = { pid: 4242, node: "22.15.0", startedAt: Date.now() - 65_000, safe: null, dev: false, rssBytes: 42 * MB, heapUsedBytes: 9 * MB, cpuMs: 830 };
-export const held = (plugin: PluginStatusV3): PluginStatusV3 => ({ ...plugin, state: plugin.state === "disabled" ? "disabled" : "safe-mode", blocked: { by: "safe-mode", mode: "third-party" } });
+} satisfies Record<string, PluginStatus>;
+export const NORMAL: PluginStatus[] = [PLUGIN.weather, PLUGIN.clock, PLUGIN.gadget, PLUGIN.local, PLUGIN.counter];
+export const HOST: HostInfo = { pid: 4242, node: "22.15.0", startedAt: Date.now() - 65_000, safe: null, dev: false, rssBytes: 42 * MB, heapUsedBytes: 9 * MB, cpuMs: 830 };
+export const held = (plugin: PluginStatus): PluginStatus => ({ ...plugin, state: plugin.state === "disabled" ? "disabled" : "safe-mode", blocked: { by: "safe-mode", mode: "third-party" } });

@@ -45,7 +45,7 @@ export interface PluginMarketViewProps {
 }
 
 export function PluginMarketView({ host, snapshot, failure = null, refreshing = false, onRefresh, onReload, onOpenPage, initialQuery = "", initialDetail = null, initialBundle = null, followRequests = true, openedPackage, openedError, onConsumePackage, requestedInstall = null, onConsumeInstall }: PluginMarketViewProps) {
-  const text = useTranslation().settings.pluginsV3.marketPage;
+  const text = useTranslation().settings.pluginHost.marketPage;
   const { locale } = useLocale();
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState<string | null>(null);

@@ -20,7 +20,7 @@ export interface MarketCardHandlers {
 
 export function PluginMarketCardAction({ plugin, compact = false, onInstall, onManage, onGoUpdate, canOpenOnIsland, onOpenOnIsland }: Omit<MarketCardHandlers, "onOpen"> & { plugin: MarketCatalogPlugin; compact?: boolean }) {
   const { locale } = useLocale();
-  const text = useTranslation().settings.pluginsV3.marketPage.card;
+  const text = useTranslation().settings.pluginHost.marketPage.card;
   const stop = (event: MouseEvent, run: () => void) => {
     event.stopPropagation();
     run();
@@ -59,7 +59,7 @@ export function PluginMarketCardAction({ plugin, compact = false, onInstall, onM
 
 export function PluginMarketCard({ plugin, categoryName, isNew = false, ...handlers }: MarketCardHandlers & { plugin: MarketCatalogPlugin; categoryName: (id: string) => string; isNew?: boolean }) {
   const { locale } = useLocale();
-  const text = useTranslation().settings.pluginsV3.marketPage.card;
+  const text = useTranslation().settings.pluginHost.marketPage.card;
   const title = localized(plugin.displayName, locale, plugin.name);
   const description = localized(plugin.description, locale, "");
   const candidate = offeredCandidate(plugin);

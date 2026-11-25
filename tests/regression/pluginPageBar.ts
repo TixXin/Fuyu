@@ -1,9 +1,9 @@
 import type { SettingsPluginPageText } from "../../src/i18n/sections/settings/pluginPage";
 import type { BarUsageView } from "../../src/windows/settings/usePluginBarUsage";
-import type { PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
+import type { PluginStatus } from "../../src/windows/settings/usePluginHostStatus";
 import { PLUGIN } from "./pluginPageMocks";
 
-export const ON_BAR: PluginStatusV3[] = [PLUGIN.weather, PLUGIN.clock, { ...PLUGIN.pomodoro, state: "disabled" }, PLUGIN.local, PLUGIN.gadget];
+export const ON_BAR: PluginStatus[] = [PLUGIN.weather, PLUGIN.clock, { ...PLUGIN.pomodoro, state: "disabled" }, PLUGIN.local, PLUGIN.gadget];
 const BAR_ITEMS = [
   { id: "weather", owner: "@fuyu/weather", hideable: true, box: { left: 300, width: 64, wanted: 64, clipped: false } },
   { id: "clock", owner: "@someone/clock", hideable: true, box: { left: 372, width: 30, wanted: 58, clipped: true } },

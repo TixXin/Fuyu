@@ -14,7 +14,7 @@ export function PluginMarketBundles({ bundles, plugins, onOpen }: {
   plugins: readonly MarketCatalogPlugin[];
   onOpen: (id: string) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.marketPage.bundles;
+  const text = useTranslation().settings.pluginHost.marketPage.bundles;
   const { locale } = useLocale();
   if (bundles.length === 0) return null;
   const byName = new Map(plugins.map((plugin) => [plugin.name, plugin]));

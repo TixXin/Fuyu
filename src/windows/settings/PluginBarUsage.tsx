@@ -17,7 +17,7 @@ export function PluginBarUsage({ entries, usage, onOpenSettings }: {
   usage: BarUsageView | undefined;
   onOpenSettings: (plugin: string) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.page.bar;
+  const text = useTranslation().settings.pluginHost.page.bar;
   const { placements: saved } = useCollapsedPlacements();
   const away = useCollapsedOverflowIds();
   const [open, setOpen] = useState<string | null>(null);

@@ -3,15 +3,15 @@ import { pluginWindowsV1, type PluginWindowRules } from "@fuyu/plugin-services";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { windowServices } from "../../features/plugin-kernel/services";
 import { useErrorText, useTranslation } from "../../i18n";
-import type { PluginStatusV3 } from "./usePluginHostStatus";
-import "./PluginsV3SettingsPage.css";
+import type { PluginStatus } from "./usePluginHostStatus";
+import "./PluginsSettingsPage.css";
 
 const pluginWindowsClient = windowServices.get(pluginWindowsV1);
 
 type RuleKey = keyof PluginWindowRules;
 
-export function PluginWindowRulesGroup({ plugin }: { plugin: PluginStatusV3 }) {
-  const copy = useTranslation().settings.pluginsV3.windowRules;
+export function PluginWindowRulesGroup({ plugin }: { plugin: PluginStatus }) {
+  const copy = useTranslation().settings.pluginHost.windowRules;
   const errorText = useErrorText();
   const baseId = useId();
 
@@ -80,26 +80,26 @@ export function PluginWindowRulesGroup({ plugin }: { plugin: PluginStatusV3 }) {
   ];
 
   return (
-    <section className="plugins-v3__rules-group" data-plugin-window-rules={plugin.id}>
-      <div className="plugins-v3__subhead">
-        <h4 className="plugins-v3__subheading">{copy.heading}</h4>
-        {openCount > 0 ? <span className="plugins-v3__pill">{copy.openCount(openCount)}</span> : null}
+    <section className="plugin-panel__rules-group" data-plugin-window-rules={plugin.id}>
+      <div className="plugin-panel__subhead">
+        <h4 className="plugin-panel__subheading">{copy.heading}</h4>
+        {openCount > 0 ? <span className="plugin-panel__pill">{copy.openCount(openCount)}</span> : null}
       </div>
 
-      {error ? <p className="plugins-v3__error-banner">{error}</p> : null}
+      {error ? <p className="plugin-panel__error-banner">{error}</p> : null}
 
-      <div className="plugins-v3__schema-list">
+      <div className="plugin-panel__schema-list">
         {rows.map(({ key, label, hint }) => {
           const switchId = `${baseId}-${key}`;
           return (
-            <div key={key} className="plugins-v3__schema-row" data-window-rule={key}>
-              <div className="plugins-v3__schema-copy">
-                <label className="plugins-v3__schema-label" htmlFor={switchId}>
+            <div key={key} className="plugin-panel__schema-row" data-window-rule={key}>
+              <div className="plugin-panel__schema-copy">
+                <label className="plugin-panel__schema-label" htmlFor={switchId}>
                   {label}
                 </label>
-                <span className="plugins-v3__schema-desc">{hint}</span>
+                <span className="plugin-panel__schema-desc">{hint}</span>
               </div>
-              <div className="plugins-v3__schema-control">
+              <div className="plugin-panel__schema-control">
                 <SettingsSwitch
                   id={switchId}
                   checked={rules[key]}

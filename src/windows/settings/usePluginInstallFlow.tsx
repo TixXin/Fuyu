@@ -10,14 +10,14 @@ import { marketClient } from "./pluginMarketActions";
 import { isFirstFromPublisher, localized } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 import { latestPluginStatuses, pluginSetupNeed, subscribePluginStatuses } from "./pluginSetupStore";
-import type { PluginStatusV3 } from "./usePluginHostStatus";
+import type { PluginStatus } from "./usePluginHostStatus";
 
 type PendingAction =
   | { kind: "market"; name: string; title: string; modal: PendingPluginInstall }
   | { kind: "file"; base64: string; title: string; modal: PendingPluginInstall };
 
 export interface PluginInstallFlowOptions {
-  plugins?: readonly PluginStatusV3[] | null;
+  plugins?: readonly PluginStatus[] | null;
   onOpenSettings?: (id: string) => void;
 }
 

@@ -13,12 +13,12 @@ import type { PluginMarketViewProps } from "../../src/windows/settings/PluginMar
 const { PluginMarketPage } = await import("../../src/windows/settings/PluginMarketPage");
 const { PluginMarketView } = await import("../../src/windows/settings/PluginMarketView");
 const { PluginMarketHeaderActions } = await import("../../src/windows/settings/PluginMarketHeaderActions");
-const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
+const { PluginsSettingsPage } = await import("../../src/windows/settings/PluginsSettingsPage");
 const { requestMarketView, requestPluginDetail } = await import("../../src/windows/settings/pluginPageHandoff");
 const { SettingsSidebar } = await import("../../src/windows/settings/SettingsSidebar");
 await import("../../src/windows/settings/slots/categories");
 
-const text = TRANSLATIONS[locale].settings.pluginsV3.marketPage;
+const text = TRANSLATIONS[locale].settings.pluginHost.marketPage;
 const zh = locale === "zh-CN";
 const connect: PluginHostConnector = (handlers) => {
   handlers.onState("open");
@@ -248,7 +248,7 @@ try {
   check(local.querySelector("[data-callout='unreviewed']") && local.querySelector(`.market-mono[title='${TOOLBOX_PACKAGE.sha256}']`) && local.querySelector("[data-callout='manual']"), "A local file is flagged unreviewed, shows its SHA-256 and says installing turns on manual installs");
 
   requestPluginDetail("@fuyu/weather");
-  const manage = await mount("manage", "manage", <PluginsV3SettingsPage connect={connect} />);
+  const manage = await mount("manage", "manage", <PluginsSettingsPage connect={connect} />);
   check(await modal("[data-plugin-detail='@fuyu/weather']"), "Manage opens the plugin's detail on the plugin page");
   await manage.unmount();
 
@@ -269,7 +269,7 @@ try {
   check(off.stage.querySelector("[data-market-empty='offline']"), "With the plugin host off, the market says so");
 
   ipc.pendingPackage = { fileName: "gadget.fuyu", base64: "AAAA" };
-  const redirect = await mount("redirect", "redirect", <PluginsV3SettingsPage connect={connect} onOpenPage={(page) => opened.push(`plugins:${page}`)} />);
+  const redirect = await mount("redirect", "redirect", <PluginsSettingsPage connect={connect} onOpenPage={(page) => opened.push(`plugins:${page}`)} />);
   check(opened.includes("plugins:pluginMarket"), "A .fuyu file sent to the plugin page moves on to the market page");
   await redirect.unmount();
 

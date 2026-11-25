@@ -1,11 +1,11 @@
 import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
-import type { BuiltinPluginName, PluginV3State, SettingsPluginsV3Text } from "../../i18n/sections/settings/pluginsV3";
-import type { PluginStatusV3 } from "./usePluginHostStatus";
+import type { BuiltinPluginName, PluginHostState, SettingsPluginHostText } from "../../i18n/sections/settings/pluginHost";
+import type { PluginStatus } from "./usePluginHostStatus";
 
-const STATES: readonly PluginV3State[] = ["running", "waiting", "failed", "disabled", "auto-disabled", "safe-mode", "bisect", "loading", "stopped", "unloading"];
+const STATES: readonly PluginHostState[] = ["running", "waiting", "failed", "disabled", "auto-disabled", "safe-mode", "bisect", "loading", "stopped", "unloading"];
 
-export function stateOf(plugin: PluginStatusV3): PluginV3State {
-  return (STATES as readonly string[]).includes(plugin.state) ? (plugin.state as PluginV3State) : "loading";
+export function stateOf(plugin: PluginStatus): PluginHostState {
+  return (STATES as readonly string[]).includes(plugin.state) ? (plugin.state as PluginHostState) : "loading";
 }
 
 export const BUILTIN_PROVIDES: Readonly<Partial<Record<BuiltinPluginName, readonly string[]>>> = Object.freeze({
@@ -22,18 +22,18 @@ export const BUILTIN_PROVIDES: Readonly<Partial<Record<BuiltinPluginName, readon
   messages: ["messages/v1", "island-notices/v1"],
 });
 
-const INACTIVE_STATES = new Set<PluginV3State>(["disabled", "failed", "auto-disabled", "safe-mode", "stopped", "unloading"]);
+const INACTIVE_STATES = new Set<PluginHostState>(["disabled", "failed", "auto-disabled", "safe-mode", "stopped", "unloading"]);
 
-function pluginLabel(id: string, text: SettingsPluginsV3Text): string {
+function pluginLabel(id: string, text: SettingsPluginHostText): string {
   return (text.builtinNames as Record<string, string | undefined>)[id] ?? id;
 }
 
 export function explainWaitingFor(
   waitingFor: readonly string[] | undefined,
-  hostPlugins: readonly PluginStatusV3[] | null | undefined,
+  hostPlugins: readonly PluginStatus[] | null | undefined,
   builtins: readonly BuiltinPlugin[] | null | undefined,
-  text: SettingsPluginsV3Text,
-  stateOf: (plugin: PluginStatusV3) => PluginV3State,
+  text: SettingsPluginHostText,
+  stateOf: (plugin: PluginStatus) => PluginHostState,
 ): string[] {
   if (!waitingFor || waitingFor.length === 0) return [];
   const reasons = text.waitingReasons;
@@ -59,7 +59,7 @@ export function explainWaitingFor(
     const label = pluginLabel(providerId, text);
     const hostPlugin = hostById.get(providerId);
     const builtin = builtinById.get(providerId);
-    const state: PluginV3State = hostPlugin
+    const state: PluginHostState = hostPlugin
       ? stateOf(hostPlugin)
       : builtin
         ? builtin.enabled
@@ -76,8 +76,8 @@ export function explainWaitingFor(
 
 export function explainReplacedServices(
   pluginId: string,
-  hostPlugin: PluginStatusV3 | undefined,
-  text: SettingsPluginsV3Text,
+  hostPlugin: PluginStatus | undefined,
+  text: SettingsPluginHostText,
 ): string[] {
   const lines: string[] = [];
   const replaced = hostPlugin?.replacedServices ?? [];
@@ -107,7 +107,7 @@ export function detectServiceConflicts(
   candidateId: string,
   candidateProvides: readonly string[],
   builtins: readonly BuiltinPlugin[] | null | undefined,
-  hostPlugins: readonly PluginStatusV3[] | null | undefined,
+  hostPlugins: readonly PluginStatus[] | null | undefined,
 ): ServiceConflict[] {
   const conflicts: ServiceConflict[] = [];
   const builtinById = new Map((builtins ?? []).map((b) => [b.id, b]));
@@ -131,9 +131,9 @@ export function detectServiceConflicts(
 }
 
 export function detailText(
-  plugin: PluginStatusV3,
-  text: SettingsPluginsV3Text,
-  hostPlugins?: readonly PluginStatusV3[] | null,
+  plugin: PluginStatus,
+  text: SettingsPluginHostText,
+  hostPlugins?: readonly PluginStatus[] | null,
   builtins?: readonly BuiltinPlugin[] | null,
 ): string | null {
   const state = stateOf(plugin);

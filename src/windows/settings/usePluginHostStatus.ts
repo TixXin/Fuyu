@@ -6,9 +6,9 @@ import { windowServices } from "../../features/plugin-kernel/services";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { publishPluginStatuses } from "./pluginSetupStore";
 
-export type PluginKindV3 = "essential" | "builtin" | "third-party";
+export type PluginKind = "essential" | "builtin" | "third-party";
 
-export interface PluginUsageV3 {
+export interface PluginUsage {
   cpuMs: number;
   calls: number;
   applyMs: number | null;
@@ -19,11 +19,11 @@ export interface PluginUsageV3 {
   errors: number;
 }
 
-export interface PluginStatusV3 {
+export interface PluginStatus {
   id: string;
   name: string;
   state: string;
-  kind?: PluginKindV3;
+  kind?: PluginKind;
   source?: string;
   undeclared?: { provides?: string[]; client?: string[] };
   unreachableClients?: string[];
@@ -35,11 +35,11 @@ export interface PluginStatusV3 {
   reason?: string;
   blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: "third-party" | "minimal" };
   lastError?: { at: number; text: string };
-  usage?: PluginUsageV3;
+  usage?: PluginUsage;
   setup?: { hint?: string | { "zh-CN"?: string; en?: string } | null };
 }
 
-export interface HostInfoV3 {
+export interface HostInfo {
   pid: number;
   node: string;
   startedAt: number;
@@ -51,8 +51,8 @@ export interface HostInfoV3 {
 }
 
 export interface PluginHostSnapshot {
-  plugins?: PluginStatusV3[];
-  host?: HostInfoV3;
+  plugins?: PluginStatus[];
+  host?: HostInfo;
   services?: ServiceEntry[];
 }
 
@@ -62,7 +62,7 @@ export interface PluginHostHandlers {
   onState: (state: ConnectionState) => void;
 }
 
-export type PluginV3StateWithBisect = "bisect";
+export type PluginHostStateWithBisect = "bisect";
 
 export type PluginHostConnector = (handlers: PluginHostHandlers) => {
   close(): void;
@@ -71,8 +71,8 @@ export type PluginHostConnector = (handlers: PluginHostHandlers) => {
 
 export interface PluginHostView {
   connection: ConnectionState;
-  plugins: PluginStatusV3[] | null;
-  host: HostInfoV3 | null;
+  plugins: PluginStatus[] | null;
+  host: HostInfo | null;
   memory: HostMemory | null;
   safeMode: HostSafeMode | null;
   bisect?: (off: readonly string[]) => Promise<{ off: string[]; unknown: string[] }>;
@@ -131,10 +131,10 @@ export function usePluginHostStatus(connect: PluginHostConnector = connectSettin
       },
       onEvent: (name, data) => {
         if (name === "plugins") {
-          setView((current) => ({ ...current, plugins: data as PluginStatusV3[] }));
-          publishPluginStatuses(data as PluginStatusV3[]);
+          setView((current) => ({ ...current, plugins: data as PluginStatus[] }));
+          publishPluginStatuses(data as PluginStatus[]);
         }
-        if (name === "host") setView((current) => ({ ...current, host: data as HostInfoV3 }));
+        if (name === "host") setView((current) => ({ ...current, host: data as HostInfo }));
         if (name === "service") proxy.deliver(data as ServiceEventMessage);
         if (name === "services") proxy.update(data as ServiceEntry[]);
       },

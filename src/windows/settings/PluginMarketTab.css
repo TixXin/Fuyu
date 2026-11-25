@@ -1,4 +1,4 @@
-.plugins-v3__btn {
+.plugin-panel__btn {
   height: 28px;
   padding: 0 11px;
   display: inline-flex;
@@ -15,21 +15,21 @@
   cursor: pointer;
 }
 
-.plugins-v3__btn:hover:not(:disabled) {
+.plugin-panel__btn:hover:not(:disabled) {
   background: var(--color-white-a12, rgba(var(--overlay-rgb, 255, 255, 255), 0.12));
 }
 
-.plugins-v3__btn:disabled {
+.plugin-panel__btn:disabled {
   cursor: default;
   opacity: 0.55;
 }
 
-.plugins-v3__btn:focus-visible {
+.plugin-panel__btn:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 
-.plugins-v3__pill {
+.plugin-panel__pill {
   flex: none;
   padding: 1px 7px;
   border-radius: var(--radius-pill);
@@ -40,7 +40,7 @@
   background: var(--color-white-a08);
 }
 
-.plugins-v3__error-banner {
+.plugin-panel__error-banner {
   margin: 0;
   padding: 9px 12px;
   color: var(--error-text, #ff9aa9);

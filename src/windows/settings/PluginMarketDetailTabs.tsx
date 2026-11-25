@@ -11,7 +11,7 @@ export function PluginMarketDetailTabBody({ tab, details, fallback }: {
   details: MarketPluginDetails;
   fallback: string;
 }) {
-  const text = useTranslation().settings.pluginsV3.marketPage;
+  const text = useTranslation().settings.pluginHost.marketPage;
   const copy = text.detail;
   const { locale } = useLocale();
 

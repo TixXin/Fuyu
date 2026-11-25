@@ -39,7 +39,7 @@ function megabytes(bytes: number) {
 }
 
 export function RuntimeBanner({ node, onRetry }: { node: HostNodeStatus | null; onRetry: () => void }) {
-  const text = useTranslation().settings.pluginsV3.page.banners;
+  const text = useTranslation().settings.pluginHost.page.banners;
   if (node?.state === "downloading") {
     const percent = node.total ? Math.min(100, Math.round((node.downloaded / node.total) * 100)) : null;
     return (
@@ -88,7 +88,7 @@ export function RuntimeBanner({ node, onRetry }: { node: HostNodeStatus | null; 
 }
 
 export function SafeBanner({ view, onFindCulprit }: { view: PluginHostView; onFindCulprit: () => void }) {
-  const text = useTranslation().settings.pluginsV3.page.banners;
+  const text = useTranslation().settings.pluginHost.page.banners;
   const [leaving, setLeaving] = useState(false);
   const mode = view.host?.safe;
   if (!mode) return null;
@@ -126,7 +126,7 @@ export function SafeBanner({ view, onFindCulprit }: { view: PluginHostView; onFi
 }
 
 function AutoUpdatedChanges({ item, title }: { item: MarketAutoUpdatedPlugin; title: string }) {
-  const text = useTranslation().settings.pluginsV3.page.banners;
+  const text = useTranslation().settings.pluginHost.page.banners;
   const { locale } = useLocale();
   const [changes, setChanges] = useState<{ body: string | null } | null>(null);
   useEffect(() => {
@@ -157,7 +157,7 @@ function AutoUpdatedChanges({ item, title }: { item: MarketAutoUpdatedPlugin; ti
 }
 
 export function AutoUpdatedBanner() {
-  const text = useTranslation().settings.pluginsV3.page.banners;
+  const text = useTranslation().settings.pluginHost.page.banners;
   const { locale } = useLocale();
   const { snapshot } = usePluginMarketCatalog(true);
   const [open, setOpen] = useState(false);
@@ -201,7 +201,7 @@ export function PluginPageBanners({ view, hostOff, node, onRetryNode, entries, o
   onOnlyAttention: () => void;
   onOpenMarket?: (name: string) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.page.banners;
+  const text = useTranslation().settings.pluginHost.page.banners;
   const { locale } = useLocale();
   const diagnostics = (
     <button className="plugin-btn" type="button" data-action="open-diagnostics" onClick={onOpenDiagnostics}>

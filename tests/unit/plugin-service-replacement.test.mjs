@@ -8,7 +8,7 @@ import { startHost } from "@fuyu/plugin-base/host";
 import { createServiceProxy } from "@fuyu/plugin-base/client";
 import { createWindowServices } from "@fuyu/plugin-base/client/window-services";
 import { defineService, lyricsV1, mediaV1 } from "@fuyu/plugin-services";
-import { zhCN as pluginsV3Text } from "../../src/i18n/sections/settings/pluginsV3.ts";
+import { zhCN as pluginHostText } from "../../src/i18n/sections/settings/pluginHost.ts";
 import {
   BUILTIN_PROVIDES,
   detectServiceConflicts,
@@ -106,13 +106,13 @@ test("explainWaitingFor, explainReplacedServices and detectServiceConflicts cove
       replacedServices: [{ service: "lyrics/v1", by: "custom-lyrics" }],
     },
   ];
-  const reasons = explainWaitingFor(["unknown/v1", "timers/v1", "agents/v1"], hostPlugins, null, pluginsV3Text, stateOf);
+  const reasons = explainWaitingFor(["unknown/v1", "timers/v1", "agents/v1"], hostPlugins, null, pluginHostText, stateOf);
   assert.equal(reasons.length, 3);
   assert.ok(reasons[0].includes("unknown/v1"));
   assert.ok(reasons[1].includes("计时器") && reasons[1].includes("已停用"));
   assert.ok(reasons[2].includes("AI 代理") && reasons[2].includes("正在启动"));
 
-  const replaced = explainReplacedServices("music", hostPlugins[2], pluginsV3Text);
+  const replaced = explainReplacedServices("music", hostPlugins[2], pluginHostText);
   assert.deepEqual(replaced, [
     "服务 lyrics/v1 已由插件 custom-lyrics 接管",
     "已让出服务 media/v1",

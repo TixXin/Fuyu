@@ -19,7 +19,7 @@ export function PluginInstalledToast({ notice, setup, onOpenSettings, onDismiss 
   onOpenSettings: () => void;
   onDismiss: () => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const waiting = setup !== null;
   useEffect(() => {
     if (waiting) return;

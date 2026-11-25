@@ -11,7 +11,7 @@ import type { PluginHostView } from "../../src/windows/settings/usePluginHostSta
 const { PluginDiagnosticsView } = await import("../../src/windows/settings/PluginDiagnosticsPage");
 const { takePluginDetailRequest } = await import("../../src/windows/settings/pluginPageHandoff");
 
-const t = TRANSLATIONS[locale].settings.pluginsV3;
+const t = TRANSLATIONS[locale].settings.pluginHost;
 const NOW = HOST.startedAt + 65_000;
 const bisectCalls: string[] = [];
 const bisect = (off: readonly string[]) => (bisectCalls.push(off.join(",")), Promise.resolve({ off: [...off], unknown: [] }));

@@ -14,7 +14,7 @@ import "../../components/controls/ShortcutControl.css";
 const commandsClient = windowServices.get(commandsV1);
 
 function rowKey(item: CommandItem): string {
-  return `pluginV3:${item.pluginId}/${item.id}`;
+  return `plugin:${item.pluginId}/${item.id}`;
 }
 
 function pickText(map: Record<string, string> | null | undefined, locale: string, fallback: string): string {
@@ -22,7 +22,7 @@ function pickText(map: Record<string, string> | null | undefined, locale: string
   return map[locale] ?? map["zh-CN"] ?? map.en ?? fallback;
 }
 
-export function PluginV3ShortcutSection({
+export function PluginShortcutSection({
   takenBy,
   onChanged,
   action,
@@ -109,7 +109,7 @@ export function PluginV3ShortcutSection({
   };
 
   return (
-    <SettingsGroup title={text.pluginV3Title} action={action} footer={rows.length === 0 ? undefined : text.pluginHint}>
+    <SettingsGroup title={text.pluginTitle} action={action} footer={rows.length === 0 ? undefined : text.pluginHint}>
       {rows.length === 0 && <SettingsRow searchable={false} title={<span className="shortcut-empty">{text.pluginNone}</span>} />}
       {rows.map((item) => {
         const key = rowKey(item);

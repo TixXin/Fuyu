@@ -10,7 +10,7 @@ import "../../src/windows/settings/PluginPage.css";
 import { I18nProvider, LOCALE_STORAGE_KEY, TRANSLATIONS } from "../../src/i18n";
 import type { InstalledEntry } from "../../src/windows/settings/pluginEntries";
 import type { PluginDetailTab } from "../../src/windows/settings/pluginPageHandoff";
-import type { PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
+import type { PluginStatus } from "../../src/windows/settings/usePluginHostStatus";
 
 const locale = "zh-CN";
 const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
@@ -29,7 +29,7 @@ const { windowServices } = await import("../../src/features/plugin-kernel/servic
 const { windowSlots } = await import("../../src/features/plugin-kernel/slots");
 const { PluginDetailModal } = await import("../../src/windows/settings/PluginDetailModal");
 
-const t = TRANSLATIONS[locale].settings.pluginsV3.page.detail;
+const t = TRANSLATIONS[locale].settings.pluginHost.page.detail;
 const loc = (zh: string, en: string) => ({ "zh-CN": zh, en });
 const CLOCK = "@someone/clock";
 
@@ -86,7 +86,7 @@ registry.add("settings.section/v1", { id: "world-clock.zones", category: "todos"
 registry.add("settings.section/v1", { id: "notes", category: "pluginsV3", component: OtherSection }, "@someone/notes", { external: true });
 registry.add("settings.section/v1", { id: "world-clock.builtin", category: "pluginsV3", component: BuiltinSection }, CLOCK, { external: false });
 
-const plugin = (id: string, state: string): PluginStatusV3 => ({ id, name: id, state, kind: "third-party", source: "market" });
+const plugin = (id: string, state: string): PluginStatus => ({ id, name: id, state, kind: "third-party", source: "market" });
 const entry = (id: string, title: string, state: string): InstalledEntry => ({
   id, title, icons: [], plugin: plugin(id, state), description: null, version: "1.0.0", publisher: "someone", source: "market", managed: true, removable: true,
   enabled: state !== "disabled", status: { dot: state === "running" ? "ok" : state === "disabled" ? "off" : "wait", label: state === "running" ? null : state === "disabled" ? "off" : "waiting", note: null, attention: false },

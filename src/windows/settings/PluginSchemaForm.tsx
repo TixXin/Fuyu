@@ -9,8 +9,8 @@ import {
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { windowServices } from "../../features/plugin-kernel/services";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
-import "./PluginsV3SettingsPage.css";
-import "./PluginMarketV3Tab.css";
+import "./PluginsSettingsPage.css";
+import "./PluginMarketTab.css";
 
 const pluginConfigClient = windowServices.get(pluginConfigV1);
 
@@ -40,7 +40,7 @@ function buildDrafts(
 
 export function PluginSchemaForm({ pluginId }: { pluginId: string }) {
   const { locale } = useLocale();
-  const copy = useTranslation().settings.pluginsV3.schemaForm;
+  const copy = useTranslation().settings.pluginHost.schemaForm;
   const errorText = useErrorText();
   const baseId = useId();
 
@@ -151,11 +151,11 @@ export function PluginSchemaForm({ pluginId }: { pluginId: string }) {
   };
 
   return (
-    <section className="plugins-v3__schema-form" data-plugin-schema-form={pluginId}>
-      <div className="plugins-v3__subhead">
-        <h4 className="plugins-v3__subheading">{copy.heading}</h4>
+    <section className="plugin-panel__schema-form" data-plugin-schema-form={pluginId}>
+      <div className="plugin-panel__subhead">
+        <h4 className="plugin-panel__subheading">{copy.heading}</h4>
         <button
-          className="plugins-v3__btn"
+          className="plugin-panel__btn"
           type="button"
           disabled={busy}
           data-action="reset-plugin-config"
@@ -167,12 +167,12 @@ export function PluginSchemaForm({ pluginId }: { pluginId: string }) {
       </div>
 
       {validationError ? (
-        <p className="plugins-v3__error-banner" data-schema-error="">
+        <p className="plugin-panel__error-banner" data-schema-error="">
           {validationError}
         </p>
       ) : null}
 
-      <div className="plugins-v3__schema-list">
+      <div className="plugin-panel__schema-list">
         {entries.map(([key, prop]) => {
           const fieldId = `${baseId}-${key}`;
           const label = resolveSchemaText(prop.title, locale, key);
@@ -180,14 +180,14 @@ export function PluginSchemaForm({ pluginId }: { pluginId: string }) {
           const effective = entry.values[key] ?? entry.defaults[key] ?? prop.default;
 
           return (
-            <div key={key} className="plugins-v3__schema-row" data-schema-field={key}>
-              <div className="plugins-v3__schema-copy">
-                <label className="plugins-v3__schema-label" htmlFor={fieldId}>
+            <div key={key} className="plugin-panel__schema-row" data-schema-field={key}>
+              <div className="plugin-panel__schema-copy">
+                <label className="plugin-panel__schema-label" htmlFor={fieldId}>
                   {label}
                 </label>
-                {desc ? <span className="plugins-v3__schema-desc">{desc}</span> : null}
+                {desc ? <span className="plugin-panel__schema-desc">{desc}</span> : null}
               </div>
-              <div className="plugins-v3__schema-control">
+              <div className="plugin-panel__schema-control">
                 {prop.type === "boolean" ? (
                   <SettingsSwitch
                     id={fieldId}
@@ -198,7 +198,7 @@ export function PluginSchemaForm({ pluginId }: { pluginId: string }) {
                 ) : Array.isArray(prop.enum) ? (
                   <select
                     id={fieldId}
-                    className="plugins-v3__schema-select"
+                    className="plugin-panel__schema-select"
                     value={effective === undefined || effective === null ? "" : String(effective)}
                     disabled={busy}
                     onChange={(e) => {
@@ -216,7 +216,7 @@ export function PluginSchemaForm({ pluginId }: { pluginId: string }) {
                 ) : prop.type === "number" || prop.type === "integer" ? (
                   <input
                     id={fieldId}
-                    className="plugins-v3__schema-input"
+                    className="plugin-panel__schema-input"
                     type="number"
                     min={prop.minimum}
                     max={prop.maximum}
@@ -233,7 +233,7 @@ export function PluginSchemaForm({ pluginId }: { pluginId: string }) {
                 ) : (
                   <input
                     id={fieldId}
-                    className="plugins-v3__schema-input"
+                    className="plugin-panel__schema-input"
                     type="text"
                     value={drafts[key] ?? ""}
                     disabled={busy}

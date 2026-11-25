@@ -23,7 +23,7 @@ export function usePluginFilePicker(onPicked: () => void) {
 }
 
 export function PluginPageActions({ onOpenPage }: { onOpenPage: (page: SettingsCategory) => void }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const [manualAllowed, setManualAllowed] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
   const file = usePluginFilePicker(() => onOpenPage("pluginMarket"));
