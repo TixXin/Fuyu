@@ -7,6 +7,7 @@ import type { CapsLockMode } from "../../i18n/sections/settings/capsLock";
 import { isMacOS } from "../../lib/platform";
 import { isBuiltinEnabled, setBuiltinConfig, switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
 import { useBuiltinConfig, useBuiltinPlugins } from "../plugin-kernel/useBuiltinPlugins";
+import { triggerCapsLockDemo } from "./api";
 import { CAPS_LOCK_MODES, readCapsLockConfig } from "./capsLockConfig.ts";
 import { CapsLockIcon } from "./CapsLockIcon";
 import { OWNER } from "./plugin/owner.ts";
@@ -28,7 +29,11 @@ export function CapsLockSettings() {
         description={isMacOS ? text.hintMac : text.hint}
         checked={enabled}
         onChange={(on) => {
-          void switchBuiltinPlugin(OWNER, on).catch((error: unknown) => console.error("Could not switch the caps-lock plugin", error));
+          void switchBuiltinPlugin(OWNER, on)
+            .then(() => {
+              if (on) void triggerCapsLockDemo().catch(() => undefined);
+            })
+            .catch((error: unknown) => console.error("Could not switch the caps-lock plugin", error));
         }}
       />
       {enabled && (
@@ -40,6 +45,12 @@ export function CapsLockSettings() {
           />
           <SettingsToggleRow title={text.offAlert} description={text.offAlertHint} indent checked={config.offAlert} disabled={config.mode === "badge"} onChange={(on) => save("offAlert", on)} />
           <SettingsToggleRow title={text.badgeClick} description={text.badgeClickHint} indent checked={config.badgeClick} disabled={config.mode === "flash"} onChange={(on) => save("badgeClick", on)} />
+          {!isMacOS && (
+            <>
+              <SettingsToggleRow title={text.passwordWarn} description={text.passwordWarnHint} indent checked={config.passwordWarn} onChange={(on) => save("passwordWarn", on)} />
+              <SettingsToggleRow title={text.numLock} description={text.numLockHint} indent checked={config.numLock} onChange={(on) => save("numLock", on)} />
+            </>
+          )}
         </>
       )}
     </>

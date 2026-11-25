@@ -3998,6 +3998,32 @@
       "page": "behaviorAlerts",
       "zh-CN": {
         "group": "在小岛上提示",
+        "title": "输密码时一直提醒",
+        "description": "别的程序的密码框有焦点、大写又开着时，提示不自动消失"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Keep alerting in password fields",
+        "description": "Stay visible while another app's password box is focused and Caps Lock is on"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "数字锁定也提示",
+        "description": "Num Lock 开关时同样提示"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Also alert for Num Lock",
+        "description": "Show the same brief flash when Num Lock is toggled"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
         "title": "摄像头和麦克风使用提示",
         "description": "有程序在用摄像头或麦克风时，在小岛上显示绿色摄像头或橙色麦克风图标，点击打开系统的隐私设置。"
       },

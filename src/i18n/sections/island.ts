@@ -53,7 +53,21 @@ export type IslandText = {
     unplugged: string;
     battery: (percent: number) => string;
   };
-  capsLock: { name: string; on: string; off: string; short: string; shortOff: string; badge: string; badgeClick: string };
+  capsLock: {
+    name: string;
+    on: string;
+    off: string;
+    short: string;
+    shortOff: string;
+    password: string;
+    passwordShort: string;
+    numOn: string;
+    numOff: string;
+    numShort: string;
+    numShortOff: string;
+    badge: string;
+    badgeClick: string;
+  };
   layoutEditor: string;
   firstHint: {
     agent: string;
@@ -143,7 +157,21 @@ export const zhCN: IslandText = {
     unplugged: "已拔下电源",
     battery: (percent) => `电量 ${percent}%`,
   },
-  capsLock: { name: "大写锁定", on: "大写锁定已开启", off: "大写锁定已关闭", short: "大写", shortOff: "小写", badge: "大写锁定开着", badgeClick: "大写锁定开着，点一下关掉" },
+  capsLock: {
+    name: "大写锁定",
+    on: "大写锁定已开启",
+    off: "大写锁定已关闭",
+    short: "大写",
+    shortOff: "小写",
+    password: "大写开着 · 正在输密码",
+    passwordShort: "密码",
+    numOn: "数字锁定已开启",
+    numOff: "数字锁定已关闭",
+    numShort: "数字",
+    numShortOff: "数字关",
+    badge: "大写锁定开着",
+    badgeClick: "大写锁定开着，点一下关掉",
+  },
   layoutEditor: "布局编辑",
   firstHint: {
     agent: "Agent 会话显示在这里，点岛看全部",
@@ -236,7 +264,21 @@ export const en: IslandText = {
     unplugged: "On battery",
     battery: (percent) => `Battery ${percent}%`,
   },
-  capsLock: { name: "Caps Lock", on: "Caps Lock On", off: "Caps Lock Off", short: "CAPS", shortOff: "caps", badge: "Caps Lock is on", badgeClick: "Caps Lock is on, click to turn it off" },
+  capsLock: {
+    name: "Caps Lock",
+    on: "Caps Lock On",
+    off: "Caps Lock Off",
+    short: "CAPS",
+    shortOff: "caps",
+    password: "Caps Lock on · password",
+    passwordShort: "PW",
+    numOn: "Num Lock On",
+    numOff: "Num Lock Off",
+    numShort: "NUM",
+    numShortOff: "num",
+    badge: "Caps Lock is on",
+    badgeClick: "Caps Lock is on, click to turn it off",
+  },
   layoutEditor: "Layout editor",
   firstHint: {
     agent: "Agent sessions show here; open to see all",

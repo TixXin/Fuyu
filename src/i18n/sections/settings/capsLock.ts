@@ -10,6 +10,10 @@ export type SettingsCapsLockText = {
   offAlertHint: string;
   badgeClick: string;
   badgeClickHint: string;
+  passwordWarn: string;
+  passwordWarnHint: string;
+  numLock: string;
+  numLockHint: string;
 };
 
 export const zhCN: SettingsCapsLockText = {
@@ -22,6 +26,10 @@ export const zhCN: SettingsCapsLockText = {
   offAlertHint: "灰色的「大写锁定已关闭」",
   badgeClick: "点角标关掉大写",
   badgeClickHint: "角标的位置在「岛屿布局」里摆",
+  passwordWarn: "输密码时一直提醒",
+  passwordWarnHint: "别的程序的密码框有焦点、大写又开着时，提示不自动消失",
+  numLock: "数字锁定也提示",
+  numLockHint: "Num Lock 开关时同样提示",
 };
 
 export const en: SettingsCapsLockText = {
@@ -34,4 +42,8 @@ export const en: SettingsCapsLockText = {
   offAlertHint: "A grey “Caps Lock Off”",
   badgeClick: "Click the badge to turn it off",
   badgeClickHint: "Place the badge in Island layout",
+  passwordWarn: "Keep alerting in password fields",
+  passwordWarnHint: "Stay visible while another app's password box is focused and Caps Lock is on",
+  numLock: "Also alert for Num Lock",
+  numLockHint: "Show the same brief flash when Num Lock is toggled",
 };

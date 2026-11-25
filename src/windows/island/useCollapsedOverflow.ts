@@ -4,7 +4,7 @@ import { balancedLanes, fitCollapsedZones, isUnbalanced, leastWing, NOTCH_SIDE_L
 import { NOTCH_WING, reportNotchWing } from "./notch";
 import { MAX_NOTCH_WING_MAX } from "../../lib/settings/settingsLimits";
 
-export type OverflowUnit = { key: string; ids: readonly string[]; movable?: boolean };
+export type OverflowUnit = { key: string; ids: readonly string[]; movable?: boolean; keep?: boolean };
 export type CollapsedOverflowState = { fitting: boolean; shelved: ReadonlySet<string>; moved: ReadonlySet<string>; chip: OverflowSide | null; wing: number | null };
 export type UnitWidthTracker = { hydrated: WeakSet<Element>; mountedAt: WeakMap<Element, number> };
 
@@ -206,6 +206,7 @@ export function useCollapsedOverflow(
         widths: sized[side],
         capacity: wing - reserved[side],
         movable: units[side].map((unit) => unit.movable === true),
+        keep: units[side].map((unit) => unit.keep === true),
       });
       const fit = fitCollapsedZones(zone("left"), zone("right"), measured.left.gap, MORE_CHIP_WIDTH, { auto, forceChip, least: NOTCH_SIDE_LEAST });
       const shelved = new Set<string>();

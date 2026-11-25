@@ -1,5 +1,5 @@
 export type OverflowSide = "left" | "right";
-export type OverflowZone = { widths: readonly number[]; capacity: number; movable?: readonly boolean[] };
+export type OverflowZone = { widths: readonly number[]; capacity: number; movable?: readonly boolean[]; keep?: readonly boolean[] };
 export type OverflowFit = {
   left: boolean[];
   right: boolean[];
@@ -65,8 +65,12 @@ function pack(zones: Record<OverflowSide, OverflowZone>, lanes: Lanes, capacity:
     shown[entry.from][entry.index] = true;
     moved[entry.from][entry.index] = entry.from !== side;
   };
+  const isKept = (entry: Entry) => zones[entry.from].keep?.[entry.index] === true;
   for (const side of SIDES) for (const entry of lanes[side]) {
-    if (entry.width > 0 && put(side, entry.width)) place(entry, side);
+    if (entry.width > 0 && isKept(entry) && put(side, entry.width)) place(entry, side);
+  }
+  for (const side of SIDES) for (const entry of lanes[side]) {
+    if (entry.width > 0 && !shown[entry.from][entry.index] && put(side, entry.width)) place(entry, side);
   }
   if (!everything) for (const side of SIDES) for (const entry of lanes[side]) {
     if (shown[entry.from][entry.index]) continue;
