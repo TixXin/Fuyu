@@ -19,9 +19,9 @@ pub(super) const WINDOWS: &str = "windows";
 
 const LABELS: [&str; 2] = [popup::WINDOW_LABEL, preview_window::WINDOW_LABEL];
 const PREWARM_DELAY: Duration = Duration::from_secs(2);
-const PREVIEW_IDLE_DELAY: Duration = Duration::from_secs(5 * 60);
+const PREVIEW_IDLE_DELAY: Duration = Duration::from_secs(2 * 60);
 const PREVIEW_POPUP_CLOSED_DELAY: Duration = Duration::from_secs(5);
-const POPUP_IDLE_DELAY: Duration = Duration::from_secs(10 * 60);
+const POPUP_IDLE_DELAY: Duration = Duration::from_secs(3 * 60);
 
 static WINDOWS_ACTIVE: AtomicBool = AtomicBool::new(false);
 static WINDOWS_GENERATION: AtomicU64 = AtomicU64::new(0);

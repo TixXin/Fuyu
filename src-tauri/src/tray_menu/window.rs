@@ -17,7 +17,7 @@ const OPEN_EVENT: &str = "tray-menu-open";
 const DEFAULT_SIZE: (f64, f64) = (320.0, 420.0);
 const SHOW_FALLBACK: Duration = Duration::from_millis(700);
 const REOPEN_GUARD: Duration = Duration::from_millis(400);
-const IDLE_DESTROY_DELAY: Duration = Duration::from_secs(10 * 60);
+const IDLE_DESTROY_DELAY: Duration = Duration::from_secs(2 * 60);
 
 #[derive(Clone, Copy)]
 struct Anchor {
