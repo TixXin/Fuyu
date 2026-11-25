@@ -17,6 +17,7 @@ export type ScreenshotText = {
   quickHints: Record<"copy" | "text" | "translate" | "long" | "record", string>;
   longShot: string;
   recordArea: string;
+  windowShadow: string;
   showKeys: string;
   long: {
     title: string;
@@ -173,6 +174,7 @@ export const zhCN: ScreenshotText = {
   shelfOff: "文件中转已关闭",
   longShot: "长截图（自动往下滚动拼接，也可以自己滚）",
   recordArea: "录屏（3 秒后开始录这个区域，标注不会录进去）",
+  windowShadow: "导出透明背景与窗口阴影（PNG）",
   showKeys: "快捷键（?）",
   long: {
     title: "长截图",
@@ -351,6 +353,7 @@ export const en: ScreenshotText = {
   shelfOff: "The file shelf is off",
   longShot: "Long screenshot (scrolls and stitches; you can scroll yourself too)",
   recordArea: "Record this area (starts in 3 seconds; marks are not recorded)",
+  windowShadow: "Export with transparent background & window shadow (PNG)",
   showKeys: "Shortcuts (?)",
   long: {
     title: "Long screenshot",

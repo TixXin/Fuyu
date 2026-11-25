@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { layersAt, layersKey, stepLayer } from "../../src/features/screenshot/targets.ts";
+import { fullWindowAt, layersAt, layersKey, stepLayer } from "../../src/features/screenshot/targets.ts";
 
 const BOUNDS = { width: 1920, height: 1080 };
 const window = (z, x, y, width, height) => ({ window: z, element: false, x, y, width, height });
@@ -40,4 +40,11 @@ test("the wheel steps outward and inward within the layers", () => {
   assert.equal(stepLayer(0, -100, 0), 0);
   assert.notEqual(layersKey(layersAt(TARGETS, { x: 120, y: 110 }, BOUNDS)), layersKey(layersAt(TARGETS, { x: 500, y: 400 }, BOUNDS)));
   assert.equal(layersKey([]), "");
+});
+
+test("fullWindowAt matches only exact top-level window targets", () => {
+  assert.equal(fullWindowAt(TARGETS, { x: 100, y: 100, width: 800, height: 600 }), 0);
+  assert.equal(fullWindowAt(TARGETS, { x: 0, y: 0, width: 1920, height: 1040 }), 1);
+  assert.equal(fullWindowAt(TARGETS, { x: 100, y: 100, width: 800, height: 40 }), null);
+  assert.equal(fullWindowAt(TARGETS, { x: 100, y: 100, width: 799, height: 600 }), null);
 });

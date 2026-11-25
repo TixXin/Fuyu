@@ -34,7 +34,10 @@ pub(crate) struct LocalTarget {
     height: u32,
 }
 
-pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<(u32, i32, Area)>) {
+pub(super) type ControlWindow = (u32, i32, Area);
+pub(super) type NativeWindows = Vec<(u32, u64)>;
+
+pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<ControlWindow>, NativeWindows) {
     let mut targets: Vec<Target> = app
         .webview_windows()
         .into_iter()
@@ -55,12 +58,17 @@ pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<(u32, i32,
     for (index, target) in targets.iter_mut().enumerate() {
         target.window = index as u32;
     }
+    let native: Vec<(u32, u64)> = shown
+        .iter()
+        .enumerate()
+        .map(|(index, window)| ((own + index) as u32, u64::from(window.number)))
+        .collect();
     let windows = if control_frames::can_read() {
         shown.into_iter().enumerate().map(|(index, window)| ((own + index) as u32, window.pid, window.area)).collect()
     } else {
         Vec::new()
     };
-    (targets, windows)
+    (targets, windows, native)
 }
 
 fn rounded(area: Area) -> Rect {

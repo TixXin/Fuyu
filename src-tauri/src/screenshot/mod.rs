@@ -26,6 +26,7 @@ mod source;
 mod stitch;
 #[cfg_attr(target_os = "macos", path = "targets_macos.rs")]
 mod targets;
+pub(crate) mod window_shadow;
 #[cfg(test)]
 mod tests;
 
@@ -230,6 +231,28 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
     wait_for_capture().await;
     let (width, height, rgba) = session::selection(window.label(), PixelRect { x: left, y: top, width, height }).ok_or_else(|| "Nothing is selected.".to_string())?;
     let mut picture = Picture { width, height, rgba };
+    let window_shadow = header("x-window-shadow") == Some("true") && matches!(action, Action::Copy | Action::Save | Action::Pin);
+    let native_handle = if window_shadow { number("x-window-id").and_then(session::native_window) } else { None };
+    let scale = session::scale(window.label()).unwrap_or_else(|| window.scale_factor().unwrap_or(1.0));
+    let mut used_native_shadow = false;
+    if window_shadow {
+        if body.is_empty() {
+            if let Some(handle) = native_handle {
+                if let Some((w, h, rgba)) = tauri::async_runtime::spawn_blocking(move || capture::window_with_native_shadow(handle, scale)).await.ok().flatten() {
+                    picture = Picture { width: w, height: h, rgba };
+                    used_native_shadow = true;
+                } else if let Some((w, h, rgba)) = tauri::async_runtime::spawn_blocking(move || capture::window_image(handle, scale)).await.ok().flatten() {
+                    picture = Picture { width: w, height: h, rgba };
+                }
+            }
+        } else if let Some(handle) = native_handle {
+            if let Some((w, h, rgba)) = tauri::async_runtime::spawn_blocking(move || capture::window_image(handle, scale)).await.ok().flatten() {
+                if (w, h) == (picture.width, picture.height) {
+                    picture = Picture { width: w, height: h, rgba };
+                }
+            }
+        }
+    }
     if !body.is_empty() {
         let patch = PixelRect {
             x: number("x-patch-left").unwrap_or(0),
@@ -240,6 +263,9 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
         if !output::lay_over(&mut picture, patch, body) {
             return Err("The annotated pixels do not fit the selection.".to_string());
         }
+    }
+    if window_shadow && !used_native_shadow {
+        picture = window_shadow::add_shadow(&picture, scale);
     }
     match action {
         Action::Long => {

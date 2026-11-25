@@ -39,6 +39,15 @@ pub(super) fn area((x, y, width, height): (i32, i32, u32, u32), _scale: f64) -> 
     win32::screen_capture::capture(x, y, width, height).map(|rgba| (width, height, rgba))
 }
 
+pub(super) fn window_image(handle: u64, _scale: f64) -> Option<(u32, u32, Vec<u8>)> {
+    let hwnd = windows::Win32::Foundation::HWND(handle as usize as *mut core::ffi::c_void);
+    win32::graphics_capture::grab_window(hwnd, WGC_WAIT)
+}
+
+pub(super) fn window_with_native_shadow(_handle: u64, _scale: f64) -> Option<(u32, u32, Vec<u8>)> {
+    None
+}
+
 pub(super) fn units_per_css(scale: f64) -> f64 {
     scale
 }

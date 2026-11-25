@@ -19,7 +19,7 @@ import {
   type Point,
   type Size,
 } from "../../features/screenshot/selection";
-import { layersAt, layersKey, stepLayer } from "../../features/screenshot/targets";
+import { fullWindowAt, layersAt, layersKey, stepLayer } from "../../features/screenshot/targets";
 import { loadSettings } from "../../lib/settings/storage";
 import { saveFolderOf } from "../../features/screenshot/settings";
 import { loadScreenshotSettings } from "../../features/screenshot/storage";
@@ -61,10 +61,11 @@ export function ScreenshotOverlay() {
   const view = useViewSize();
   const bounds = session && ready ? { width: session.width, height: session.height } : null;
   const scale = bounds ? pixelScale(bounds, view) : 1;
-  const { selection, setSelection, pointer, dragging, hovered, onPointerDown, onPointerMove, onPointerUp, onPointerLeave } = useSelection(session, bounds, scale);
+  const { selection, setSelection, fromTarget, pointer, dragging, hovered, onPointerDown, onPointerMove, onPointerUp, onPointerLeave } = useSelection(session, bounds, scale);
   const [notice, setNotice] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [gif, setGif] = useState(false);
+  const [windowShadow, setWindowShadow] = useState(false);
   const targets = useTargets(ready ? session?.id ?? null : null);
   const [level, setLevel] = useState({ key: "", value: 0 });
   const sessionId = session?.id;
@@ -78,6 +79,7 @@ export function ScreenshotOverlay() {
   const color = pixel && picture ? colorAt(picture, pixel) : null;
   const measure = useMeasure(picture, pixel, ready && !leaving && !long.active && !annotations.editing && !dragging && !annotations.drafting);
   const chosen = selection && isSelection(selection) ? selection : null;
+  const selectedWindow = chosen && fromTarget ? fullWindowAt(targets, chosen) : null;
   const choosing = chosen === null;
   const layers = choosing && pixel && bounds ? layersAt(targets, pixel, bounds) : [];
   const key = layersKey(layers);
@@ -99,14 +101,16 @@ export function ScreenshotOverlay() {
     const area = annotationArea(items, chosen);
     const image = area ? composeArea(picture, area, chosen, items) : null;
     const patch = area && image ? { at: area, image } : null;
-    const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName }
-      : action === "record" ? { folderName: t.recordFolderName, record: { ...loadScreenshotSettings().record, format: gif ? "gif" as const : "mp4" as const } } : undefined;
+    const shadowId = selectedWindow !== null && windowShadow && (action === "copy" || action === "save" || action === "pin") ? selectedWindow : undefined;
+    const save = action === "save" ? { folder: saveFolderOf(loadScreenshotSettings()), folderName: t.saveFolderName, windowShadow: shadowId }
+      : action === "record" ? { folderName: t.recordFolderName, record: { ...loadScreenshotSettings().record, format: gif ? "gif" as const : "mp4" as const } }
+      : shadowId !== undefined ? { windowShadow: shadowId } : undefined;
     if (action === "pin") setLeaving(true);
     finishScreenshot(chosen, patch, action, save).catch((error: unknown) => {
       setLeaving(false);
       setNotice(errorText(error));
     });
-  }, [chosen, items, drawn, canvasRef, errorText, gif, t]);
+  }, [chosen, items, drawn, canvasRef, errorText, gif, selectedWindow, windowShadow, t]);
   const copy = useCallback(() => finish("copy"), [finish]);
   const { addMany } = annotations;
   const redact = useCallback(() => {
@@ -177,6 +181,7 @@ export function ScreenshotOverlay() {
   useEffect(() => {
     setNotice(null);
     setLeaving(false);
+    setWindowShadow(false);
     setGif(loadScreenshotSettings().record.format === "gif");
   }, [sessionId]);
 
@@ -353,6 +358,7 @@ export function ScreenshotOverlay() {
       {select.selected && !leaving && !long.active && select.selected !== editingItem && <AnnotationSelectionBox item={select.selected} scale={scale} showHandles={!select.dragging} />}
       {area && chosen && !dragging && !annotations.drafting && !select.dragging && !quick && !leaving && !long.active && (
         <ScreenshotToolbar area={area} view={view} annotations={annotations} select={select} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} qrCodes={qrCodes} sheetOpen={sheet.state === "open"} onSheet={sheet.toggle}
+          canWindowShadow={selectedWindow !== null} windowShadow={windowShadow} onToggleWindowShadow={() => setWindowShadow((value) => !value)}
           onCopyText={(text) => void navigator.clipboard.writeText(text).then(() => setNotice(t.qr.copied))}
           onOpenLink={(url) => void openScreenshotLink(url).then(() => cancelScreenshot()).catch((error: unknown) => setNotice(errorText(error)))} />
       )}

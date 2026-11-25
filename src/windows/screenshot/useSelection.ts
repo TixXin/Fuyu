@@ -34,18 +34,25 @@ function sameRect(a: PixelRect | null, b: PixelRect): boolean {
 }
 
 export function useSelection(session: ScreenshotSession | null, bounds: Size | null, scale: number) {
-  const [selection, setSelection] = useState<PixelRect | null>(null);
+  const [selection, setRawSelection] = useState<PixelRect | null>(null);
+  const [fromTarget, setFromTarget] = useState(false);
   const [pointer, setPointer] = useState<Point | null>(null);
   const [dragging, setDragging] = useState<Drag["kind"] | null>(null);
   const drag = useRef<Drag | null>(null);
   const hovered = useRef<PixelRect | null>(null);
+
+  const setSelection = (next: PixelRect | null) => {
+    setFromTarget(false);
+    setRawSelection(next);
+  };
 
   const id = session?.id ?? null;
   const whole = session?.mode === "fullscreen" && session.underPointer && bounds ? bounds : null;
   const wholeWidth = whole?.width ?? 0;
   const wholeHeight = whole?.height ?? 0;
   useEffect(() => {
-    setSelection(wholeWidth > 0 ? { x: 0, y: 0, width: wholeWidth, height: wholeHeight } : null);
+    setFromTarget(false);
+    setRawSelection(wholeWidth > 0 ? { x: 0, y: 0, width: wholeWidth, height: wholeHeight } : null);
     setPointer(null);
     setDragging(null);
     drag.current = null;
@@ -56,7 +63,10 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
     let stop: (() => void) | null = null;
     const mine = overlayLabel();
     void listenSelecting((event) => {
-      if (event.payload !== mine) setSelection(null);
+      if (event.payload !== mine) {
+        setFromTarget(false);
+        setRawSelection(null);
+      }
     }).then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)));
     return () => {
       cancelled = true;
@@ -76,11 +86,16 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
     capturePointer(event);
     const point = at(event);
     const grabbed = selection ? hitTest(selection, point, GRAB * scale) : null;
-    if (selection && grabbed === "inside") start({ kind: "move", origin: point, start: selection });
-    else if (selection && grabbed && grabbed !== "inside") start({ kind: "resize", handle: grabbed, start: selection });
-    else {
+    if (selection && grabbed === "inside") {
+      setFromTarget(false);
+      start({ kind: "move", origin: point, start: selection });
+    } else if (selection && grabbed && grabbed !== "inside") {
+      setFromTarget(false);
+      start({ kind: "resize", handle: grabbed, start: selection });
+    } else {
+      setFromTarget(false);
       start({ kind: "draw", origin: point });
-      setSelection(null);
+      setRawSelection(null);
       void announceSelecting(overlayLabel());
     }
   };
@@ -96,13 +111,17 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
       : current.kind === "move"
         ? moveRect(current.start, point.x - current.origin.x, point.y - current.origin.y, bounds)
         : resizeRect(current.start, current.handle, point, bounds);
-    setSelection((prev) => (sameRect(prev, next) ? prev : next));
+    setRawSelection((prev) => (sameRect(prev, next) ? prev : next));
   };
 
   const onPointerUp = () => {
     if (drag.current?.kind === "draw") {
       const picked = hovered.current;
-      setSelection((rect) => (rect && isSelection(rect) ? rect : picked));
+      setRawSelection((rect) => {
+        if (rect && isSelection(rect)) return rect;
+        if (picked) setFromTarget(true);
+        return picked;
+      });
     }
     drag.current = null;
     setDragging(null);
@@ -112,5 +131,5 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
     if (!drag.current) setPointer(null);
   };
 
-  return { selection, setSelection, pointer, dragging, hovered, onPointerDown, onPointerMove, onPointerUp, onPointerLeave };
+  return { selection, setSelection, fromTarget, pointer, dragging, hovered, onPointerDown, onPointerMove, onPointerUp, onPointerLeave };
 }

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Download, EyeOff, Keyboard, Pin, QrCode, Redo2, ScanText, SquareBottomDashedScissors, Trash2, Undo2, Video, X } from "lucide-react";
+import { AppWindow, Check, Download, EyeOff, Keyboard, Pin, QrCode, Redo2, ScanText, SquareBottomDashedScissors, Trash2, Undo2, Video, X } from "lucide-react";
 import type { ScreenshotAction, ScreenshotQrCode } from "../../features/screenshot/api";
 import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, TOOL_KEYS, toolStyles } from "../../features/screenshot/annotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
@@ -45,6 +45,9 @@ export function ScreenshotToolbar({
   onOpenLink,
   sheetOpen,
   onSheet,
+  canWindowShadow,
+  windowShadow,
+  onToggleWindowShadow,
 }: {
   area: PixelRect;
   view: Size;
@@ -59,6 +62,9 @@ export function ScreenshotToolbar({
   onOpenLink: (url: string) => void;
   sheetOpen: boolean;
   onSheet: () => void;
+  canWindowShadow: boolean;
+  windowShadow: boolean;
+  onToggleWindowShadow: () => void;
 }) {
   const t = useTranslation().screenshot;
   const box = useRef<HTMLDivElement>(null);
@@ -130,6 +136,11 @@ export function ScreenshotToolbar({
         {qrCodes.length > 0 && (
           <ToolButton label={t.qr.button(qrCodes.length)} active={qrOpen} onClick={() => setQrOpen((open) => !open)}>
             <QrCode size={18} />
+          </ToolButton>
+        )}
+        {canWindowShadow && (
+          <ToolButton label={t.windowShadow} active={windowShadow} extra="screenshot-overlay__shadow-toggle" onClick={onToggleWindowShadow}>
+            <AppWindow size={18} />
           </ToolButton>
         )}
         <ToolButton label={t.pin} onClick={() => onFinish("pin")}>
