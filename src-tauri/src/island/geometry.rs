@@ -263,15 +263,7 @@ pub(super) fn stage_geometry_synced() -> bool {
 }
 
 pub(super) fn stage_height_for(state: IslandWindowState) -> f64 {
-    let side_column = if state.side().is_some() {
-        (state.side_column_height * state.collapsed_scale).ceil() + STAGE_WINDOW_PADDING_Y
-    } else {
-        0.0
-    };
-    STAGE_WINDOW_HEIGHT
-        .max((state.expanded_height.max(state.resize_reach.1) * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y)
-        .max(side_column)
-        + super::taskbar::panel_room(state)
+    super::stage_height::stage_height_for(state)
 }
 
 fn side_stage_height_key(state: IslandWindowState) -> Option<(Edge, u64)> {
@@ -507,6 +499,8 @@ fn shrink_stage(window: &WebviewWindow, stage_size: LogicalSize<f64>, generation
         eprintln!("Failed to shrink island stage: {error}");
         return;
     }
+    #[cfg(target_os = "macos")]
+    super::glass::refresh_glass(window);
     let shifted = commit_stage_width(window, stage_size.width) != 0;
     let state = read_window_state();
     if !shifted || state.is_dragging {

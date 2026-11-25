@@ -38,6 +38,7 @@ pub(crate) mod passthrough;
 pub(crate) mod screen;
 #[cfg(target_os = "macos")]
 mod screen_watch;
+mod stage_height;
 mod state;
 #[cfg_attr(not(windows), path = "taskbar_unsupported.rs")]
 pub(crate) mod taskbar;

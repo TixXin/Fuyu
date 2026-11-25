@@ -283,7 +283,7 @@ fn the_island_follows_only_when_asked_and_only_while_collapsed() {
 
 #[test]
 fn banner_rect_takes_its_own_area_only() {
-    use super::banner_hit::{banner_rect, set_island_banner_rect, set_island_overflow_rect, BannerRect};
+    use super::banner_hit::{banner_rect, set_banner_rect_for_test, set_overflow_rect_for_test, BannerRect};
 
     let rect = BannerRect { x: 250.0, y: 42.0, width: 320.0, height: 72.0 };
     assert!(rect.contains(250.0, 42.0));
@@ -292,25 +292,25 @@ fn banner_rect_takes_its_own_area_only() {
     assert!(!rect.contains(249.0, 80.0));
     assert!(!rect.contains(410.0, 115.0));
 
-    set_island_banner_rect(Some(rect));
+    set_banner_rect_for_test(Some(rect));
     assert_eq!(banner_rect(), Some(rect));
-    set_island_banner_rect(Some(BannerRect { width: 0.0, ..rect }));
+    set_banner_rect_for_test(Some(BannerRect { width: 0.0, ..rect }));
     assert_eq!(banner_rect(), None);
-    set_island_banner_rect(Some(BannerRect { x: f64::NAN, ..rect }));
+    set_banner_rect_for_test(Some(BannerRect { x: f64::NAN, ..rect }));
     assert_eq!(banner_rect(), None);
-    set_island_banner_rect(Some(rect));
-    set_island_banner_rect(None);
+    set_banner_rect_for_test(Some(rect));
+    set_banner_rect_for_test(None);
     assert_eq!(banner_rect(), None);
 
     let panel = BannerRect { x: 300.0, y: 40.0, width: 140.0, height: 90.0 };
-    set_island_overflow_rect(Some(panel));
+    set_overflow_rect_for_test(Some(panel));
     assert_eq!(banner_rect(), Some(panel));
-    set_island_banner_rect(Some(rect));
+    set_banner_rect_for_test(Some(rect));
     assert_eq!(banner_rect(), Some(panel));
-    set_island_overflow_rect(Some(BannerRect { height: 0.0, ..panel }));
+    set_overflow_rect_for_test(Some(BannerRect { height: 0.0, ..panel }));
     assert_eq!(banner_rect(), Some(rect));
-    set_island_banner_rect(None);
-    set_island_overflow_rect(None);
+    set_banner_rect_for_test(None);
+    set_overflow_rect_for_test(None);
     assert_eq!(banner_rect(), None);
 }
 
@@ -680,7 +680,7 @@ fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
     let mut taller = expanded;
     taller.expanded_height = 490.0;
     assert!(stage_geometry_inputs_changed(&collapsed, &taller));
-    assert!(!stage_geometry_inputs_changed(
+    assert!(stage_geometry_inputs_changed(
         &state(IslandMode::Collapsed, 1.0, 490.0),
         &taller,
     ));
@@ -788,4 +788,35 @@ fn resize_reach_grows_the_stage_until_it_is_cleared() {
     assert!(stage_geometry_inputs_changed(&IslandWindowState { resize_reach: (0.0, 0.0), ..panel }, &panel));
     panel.resize_reach = (0.0, 0.0);
     assert_eq!((stage_width_for(panel), stage_height_for(panel)), normal, "clearing the reach gives the stage back its own size");
+}
+
+#[test]
+fn collapsed_stage_height_shrinks_safely_and_expands_for_popups() {
+    use super::stage_height::stage_height_for_with_popup;
+
+    let collapsed = IslandWindowState {
+        mode: IslandMode::Collapsed,
+        expanded_height: 680.0,
+        expanded_scale: 1.0,
+        collapsed_height: COLLAPSED_ISLAND_HEIGHT,
+        collapsed_scale: 1.0,
+        ..IslandWindowState::default()
+    };
+    assert_eq!(stage_height_for_with_popup(collapsed, false), STAGE_WINDOW_HEIGHT);
+
+    let tucked = IslandWindowState { is_tucked: true, ..collapsed };
+    assert_eq!(stage_height_for_with_popup(tucked, false), 120.0);
+    assert_eq!(stage_height_for_with_popup(tucked, true), STAGE_WINDOW_HEIGHT);
+
+    let tucked_grown = IslandWindowState { collapsed_height: 120.0, ..tucked };
+    assert_eq!(stage_height_for_with_popup(tucked_grown, false), 168.0);
+
+    let expanded = IslandWindowState { mode: IslandMode::Expanded, ..collapsed };
+    assert_eq!(stage_height_for_with_popup(expanded, false), 704.0);
+
+    let bottom = IslandWindowState { attached_edge: Some(Edge::Bottom), ..tucked };
+    assert_eq!(stage_height_for_with_popup(bottom, false), STAGE_WINDOW_HEIGHT);
+
+    let dragging = IslandWindowState { is_dragging: true, ..tucked };
+    assert_eq!(stage_height_for_with_popup(dragging, false), STAGE_WINDOW_HEIGHT);
 }
