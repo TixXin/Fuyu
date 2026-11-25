@@ -5,7 +5,7 @@
 ## 版本号
 
 - 先看已发布的：`gh release list --repo TixXin/fuyu --limit 5` 和 `package.json` 的 `version`。
-- 当前是正式版 `0.3.6`，下一个测试版是 `0.3.7-beta.1`；当前是 `0.3.7-beta.N`，下一个测试版是 `beta.N+1`，正式版是 `0.3.7`。
+- 当前是正式版 `X.Y.Z`，下一个测试版是 `X.Y.(Z+1)-beta.1`；当前是 `X.Y.Z-beta.N`，下一个测试版是 `X.Y.Z-beta.(N+1)`，正式版是 `X.Y.Z`。
 - 用户没说就发测试版；正式版要用户明说。
 - 用 `pnpm release:version <版本号>` 改，它会检查比已发布的都新，并写出草稿。
 
@@ -17,7 +17,7 @@
 
 - 读正文：`git log <上一个 tag>..HEAD --no-merges --format="=== %h %s%n%b" -E --grep="^(feat|fix|perf)"`。
 - 草稿只收 feat / fix / perf。`test(...)`、`refactor(...)`、`build(...)` 里也可能带了用户能看到的修复，扫一眼 `git log <上一个 tag>..HEAD --oneline`。
-- 开发工具（`feat(dev)`、lane、合并队列、发布脚本）不写。
+- 开发工具（`feat(dev)`、合并队列、发布脚本）不写。
 
 ## 怎么写
 

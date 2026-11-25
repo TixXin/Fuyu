@@ -216,5 +216,5 @@
   - `E36.5.8`（#768）：`packages/plugin-cli/src/installer.mjs` 提供 `inspectPackage`、`installPackage`、`uninstallPackage`、`applyRevocationsToDir`（支持解包到 `packages/<scope>/<name>`、写入 `plugins.yml`、手动安装默认拦截与 `allowManual` 放行、撤销名单 `disable` 停用保留数据）；设置窗口卡片与详情弹窗展示 `source === "manual"` 的「未经过市场审核」标记与 `undeclared` 未声明能力提示。
   - `E36.5.9`（#769）：宿主窗口 WebSocket 暴露 `bisect` 方法，设置窗口 `PluginsV3SettingsPage` 接入 `PluginBisectBar` 折半排查向导（`src/windows/settings/pluginBisect.ts`、`PluginBisectBar.tsx`）。
   - `E36.5.10`（#770）：`fuyu-plugin dev`（`packages/plugin-cli/src/dev.mjs`）支持把当前插件以 `source: dev` 登记进 `plugins.yml` 并监听构建、退出时还原。
-  - `E36.5.11`（#771）：新增 [services-and-slots.md](../../plugins/v3/services-and-slots.md) 全量服务与插槽参考文档；脚手架模板所用服务与插槽转正（`EXPERIMENTAL = []`，`fuyu-plugin check --market` 零错误通过）。
+  - `E36.5.11`（#771）：新增 [services-and-slots.md](../../plugins/services-and-slots.md) 全量服务与插槽参考文档；脚手架模板所用服务与插槽转正（`EXPERIMENTAL = []`，`fuyu-plugin check --market` 零错误通过）。
   - `E36.5.12`（#772）：新增 `tests/unit/phase5-lifecycle-e2e.test.mjs` 走通脚手架生成 → 市场检查 → 打包签名 → 审核分析（含恶意更新拦截）→ 市场索引与冷静期选择 → 安装进宿主运行 → 撤销停用全链路。

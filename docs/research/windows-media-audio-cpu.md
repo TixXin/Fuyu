@@ -1,6 +1,6 @@
 # Windows 媒体控制与音频峰值轮询高 CPU / 线程膨胀调研与修复计划
 
-> 日期：2026-11-17。问题：`flyl1u/fly-island#75`（播放音乐时持续占用整机 ~25% CPU / 约 4 核、10 分钟线程数从 204 涨到 653）是否也是浮屿（`TixXin/fuyu`）的问题？同类开源项目和 Windows 官方文档是怎么处理 WASAPI 峰值表与 GSMTC 媒体会话的？我们的修复计划是什么？范围：上游 `flyl1u/fly-island`（#65、#75、提交 `98fcde91`）、本仓库当前 `HEAD` 源码逐行对照、Microsoft Learn（Core Audio `IMMNotificationClient` / `IAudioMeterInformation` / `CLSCTX`、`Windows.Media.Control`）、GitHub 同类开源桌面壳与音频工具（Seelen-UI、Zebar、Rainmeter、EarTrumpet、Yasb、FluentFlyout、Komorebi）。相关任务：[D98](/docs/tasks/0-archive/D/D98.md)（[#804](https://github.com/TixXin/Fuyu/issues/804)）、[D102](/docs/tasks/D/D102.md)（[#821](https://github.com/TixXin/Fuyu/issues/821)）、[D52](/docs/tasks/0-archive/D/D52.md)、[D86](/docs/tasks/D/D86.md)、[D97](/docs/tasks/D/D97.md)（特别是 [D97.4](/docs/tasks/D/D97.4.md)）
+> 日期：2026-11-17。问题：`flyl1u/fly-island#75`（播放音乐时持续占用整机 ~25% CPU / 约 4 核、10 分钟线程数从 204 涨到 653）是否也是浮屿（`TixXin/fuyu`）的问题？同类开源项目和 Windows 官方文档是怎么处理 WASAPI 峰值表与 GSMTC 媒体会话的？我们的修复计划是什么？范围：上游 `flyl1u/fly-island`（#65、#75、提交 `98fcde91`）、本仓库当前 `HEAD` 源码逐行对照、Microsoft Learn（Core Audio `IMMNotificationClient` / `IAudioMeterInformation` / `CLSCTX`、`Windows.Media.Control`）、GitHub 同类开源桌面壳与音频工具（Seelen-UI、Zebar、Rainmeter、EarTrumpet、Yasb、FluentFlyout、Komorebi）。相关任务：[D98](/docs/tasks/0-archive/D/D98.md)（[#804](https://github.com/TixXin/Fuyu/issues/804)）、[D102](/docs/tasks/D/D102.md)（[#821](https://github.com/TixXin/Fuyu/issues/821)）、[D52](/docs/tasks/0-archive/D/D52.md)、[D86](/docs/tasks/D/D86.md)、[D97](/docs/tasks/0-archive/D/D97.md)（特别是 [D97.4](/docs/tasks/0-archive/D/D97.4.md)）
 
 ## 结论
 
@@ -14,7 +14,7 @@
 2. **开源项目的通行做法高度一致**（查了 7 个项目，无一在轮询里调 `CoCreateInstance` / `Activate` / `RequestAsync`）：
    - **WASAPI 峰值与设备监听**（EarTrumpet [12]、Rainmeter [11]、Seelen-UI [8]、Zebar [9]、FluentFlyout [13]）：进程生命周期内只创建 1 个 `IMMDeviceEnumerator`（用 `CLSCTX_INPROC_SERVER` [5]），注册 `IMMNotificationClient` 监听 `OnDefaultDeviceChanged`；只在默认输出设备（仅 `eMultimedia` 角色）切换或报 `AUDCLNT_E_DEVICE_INVALIDATED` 时重新 `Activate` 一次 `IAudioMeterInformation`，平时轮询只调零跨进程开销的 `GetPeakValue()`（直接读已映射的共享内存浮点数 [6]）。且 `IMMNotificationClient` 回调里绝不加锁或调 COM，只向工作线程发信号，避免微软文档警告的重入死锁 [7]。
    - **GSMTC 会话管理与事件拆分**（Seelen-UI [8]、Zebar [9]、Yasb [10]、Rainmeter [11]）：`GlobalSystemMediaTransportControlsSessionManager::RequestAsync()` 全局只调一次并常驻缓存；把三类会话事件严格拆开——`TimelinePropertiesChanged` 只做本地同步 `GetTimelineProperties()`（微秒级，不跨进程查封面/标题、不扫音频会话），只有 `MediaPropertiesChanged` 才调 `TryGetMediaPropertiesAsync()`。
-3. **建议分 3 步修复（均集中在 Rust 侧，与正在进行的 [D97.4](/docs/tasks/D/D97.4.md) 前端范围零冲突，对外契约零变更）**：
+3. **建议分 3 步修复（均集中在 Rust 侧，与正在进行的 [D97.4](/docs/tasks/0-archive/D/D97.4.md) 前端范围零冲突，对外契约零变更）**：
    - **第 1 步（止血核心，消除 95%+ 音频 COM 重建）**：在 `win32::audio` 实现无锁唤醒的 `IMMNotificationClient` + 常驻缓存的默认 `eMultimedia` 端点句柄（缓存 `IAudioMeterInformation` 与 `IAudioEndpointVolume`，改用 `CLSCTX_INPROC_SERVER`）；供 `media_control`、`system_levels`（去掉 5 秒强制重开）和 `device_events`（去掉 1 秒盲扫端点）共用。同时修掉切歌 `sound_onset` 66 Hz 重建枚举器的逻辑。
    - **第 2 步（GSMTC 缓存与事件分级瘦身）**：`media-com-worker` 常驻缓存 `MediaSessionManager`；`events.rs` 区分 `timeline` 与 `playback` / `track` 并对 `TimelinePropertiesChanged` 做 1 秒合并节流；`read_media_state_from_manager` 在已有活跃 SMTC 会话时跳过 `read_system_audio_peak()`，在已有 SMTC 会话正在播放时短路跳过 `discover_fallback_sessions()`（非 SMTC 兜底降频到慢速缓存快照），并按会话缓存 `Metadata` 避免进度刷新重复调 `TryGetMediaPropertiesAsync()`。
    - **第 3 步（波形采样按需化与前端收口，等 D97.4 合入后衔接）**：折叠态正在滚动歌词、音乐波形按钮未显示时停掉 `getAudioLevel` 轮询；并在 Windows 多端点真机上复测播放期 CPU、线程数及 D86 闲置期线程池占用。
@@ -115,7 +115,7 @@ flowchart LR
 
 ### 分阶段实施步骤与文件边界
 
-> **多会话协作冲突检查**：当前进行中的 [D97.4](/docs/tasks/D/D97.4.md) 锁定了前端 `src/features/media/*`，未触碰任何 `src-tauri/` 文件；[D86](/docs/tasks/D/D86.md) 锁定了 `session_scan.rs` 与 `passthrough.rs`。因此 **阶段一、阶段二纯改 Rust 侧（`src-tauri/`），现在即可零冲突独立实施**；阶段三涉及前端 1 行条件收窄，等 D97.4 合入后再做。
+> **多会话协作冲突检查**：当前进行中的 [D97.4](/docs/tasks/0-archive/D/D97.4.md) 锁定了前端 `src/features/media/*`，未触碰任何 `src-tauri/` 文件；[D86](/docs/tasks/D/D86.md) 锁定了 `session_scan.rs` 与 `passthrough.rs`。因此 **阶段一、阶段二纯改 Rust 侧（`src-tauri/`），现在即可零冲突独立实施**；阶段三涉及前端 1 行条件收窄，等 D97.4 合入后再做。
 >
 > **对外契约核查**：Tauri 命令名（`get_media_state`、`get_audio_level` 等）、返回字段结构、事件名（`media-session-changed`、`system-level-changed`、`device-alert`）和 `localStorage` key **全部保持不变**。
 

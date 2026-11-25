@@ -41,7 +41,7 @@
 | `fuyu-research`：调研。README 的规则，加上先查同主题的旧文档、数字带查询日期、截图放本机、和任务挂钩、写完用 `doc-preview` 打开给用户 | skill，先测基线 | 20 个调研会话，用户 13 次提出；规则已在 [docs/research/README.md](README.md)。先让代理直接做，做得成就不需要 skill（[PostHog 手册](https://posthog.com/handbook/engineering/ai/writing-skills)） | 8（第三批） |
 | `fuyu-mac-port`：把功能适配到 Mac。平台层放哪、权限说明和授权文件、快捷键文案、刘海和菜单栏和全屏空间、`platforms.md` 和适配计划、交叉检查 Windows 构建、真机实测清单 | skill，先测基线；适配收尾后退役 | Mac 适配 20 个会话，G 组任务 26 个。上游升级这类 playbook 是真实仓库里常见的一类（[Electron](https://github.com/electron/electron/tree/HEAD/.claude/skills)）；不带 skill 也能通过评估时可以退役（[Anthropic](https://claude.com/blog/improving-skill-creator-test-measure-and-refine-agent-skills)） | 9（第三批） |
 | `fuyu-investigate`：排查。开发版和正式版怎么分辨、数据和日志在哪、实验台、先讲原因和看法再改、补回归、什么写进 `docs/investigations/` | skill，先测基线；数据和日志在哪留在文档里 | 排查类 18 个会话。Runbook 是 Anthropic 内部九类 skill 之一（[Claude blog](https://claude.com/blog/lessons-from-building-claude-code-how-we-use-skills)）；系统怎么工作属于文档，skill 只链过去（[PostHog 手册](https://posthog.com/handbook/engineering/ai/writing-skills)） | 10（第三批） |
-| 总会话：分诊 issue（`pnpm issue --untracked` → 核实、回复、建任务 → 归组 → 开哪个主 agent）、交接提示词（不超过 5 行，指向任务文件的「交接」） | 触发条件和 [fuyu-lead](../../.claude/skills/fuyu-lead/SKILL.md) 相同的并进去，不同的（分诊）单独一个 | 两天里 4 个分诊会话，交接提示词至少 3 次。新的触发条件才配新 skill，更多细节进已有的（[PostHog](https://github.com/PostHog/posthog/blob/HEAD/.agents/skills/writing-skills/SKILL.md)） | 11 |
+| 总会话：分诊 issue（`pnpm issue --untracked` → 核实、回复、建任务 → 归组 → 开哪个主 agent）、交接提示词（不超过 5 行，指向任务文件的「交接」） | 触发条件和 `.claude/skills/fuyu-lead/SKILL.md`（后已移除） 相同的并进去，不同的（分诊）单独一个 | 两天里 4 个分诊会话，交接提示词至少 3 次。新的触发条件才配新 skill，更多细节进已有的（[PostHog](https://github.com/PostHog/posthog/blob/HEAD/.agents/skills/writing-skills/SKILL.md)） | 11 |
 | 官网 / 网页设计 | 官网仓库（fuyu-site）里的 skill | 官网不在本仓库。落地页要辨识度，应用内界面要一致和熟悉，两类界面分开处理（[impeccable](https://github.com/pbakaus/impeccable/blob/main/skill/SKILL.src.md)） | 12 |
 | `doc-preview` 搬进仓库 | 现有用户级 skill 挪进 `.claude/skills/` | 现在只在这台 Mac 上，主会话的简报里已经在提它。云端会话不读用户级目录，签入仓库的才可用（[Claude Code](https://code.claude.com/docs/en/skills)） | 13（随时可做） |
 
@@ -274,7 +274,7 @@ AGENTS.md 末尾新加的规则是：「自生成的 skill 只保留关键步骤
 | skill | 行数 | 两天里的加载 | 对照「Skill 编写规范」 | 建议 |
 |---|---|---|---|---|
 | [fuyu-agent-harness](../../.claude/skills/fuyu-agent-harness/SKILL.md) | 55 | 19 次、18 个会话 | 符合：只排顺序、列判断，现状和细节指向 `docs/` | 不动 |
-| [fuyu-lead](../../.claude/skills/fuyu-lead/SKILL.md) | 42 | 10 次 | 第 13 行末尾一句是历史记录（哪天在哪个 issue 上第一次用）；第 2 节第 4 条是一长段子会话约束 | 删掉历史句；`fuyu-task` 做出来后把第 4 条缩成一句指过去 |
+| `.claude/skills/fuyu-lead/SKILL.md`（后已移除） | 42 | 10 次 | 第 13 行末尾一句是历史记录（哪天在哪个 issue 上第一次用）；第 2 节第 4 条是一长段子会话约束 | 删掉历史句；`fuyu-task` 做出来后把第 4 条缩成一句指过去 |
 | [fuyu-release](../../.claude/skills/fuyu-release/SKILL.md) | 41 | 2 次、1 个会话 | 符合：步骤和命令指向 `docs/features/updater.md` 和 `docs/releases/README.md` | 不动 |
 | [fuyu-video](../../.claude/skills/fuyu-video/SKILL.md) | 95，带 `scripts/` | 0 次（只在 Windows 上做视频） | 「重装环境」一条和模型下载的细节属于环境搭建；「踩过的坑」13 条是陷阱，符合规范，但已经占了全文四分之一 | 环境搭建搬到 [video/README.md](../../video/README.md)；以后再加坑先看能不能合并 |
 

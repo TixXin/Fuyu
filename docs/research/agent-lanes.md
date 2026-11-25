@@ -1,6 +1,8 @@
 # 多代理并行开发：worktree / lane 方案
 
-> 日期：2026-11-12。问题：对照外部的前沿做法和开源项目，本项目的 lane 方案（[docs/architecture/lanes.md](../architecture/lanes.md)）还有哪些要优化。范围：Claude Code 官方 hooks 文档；GitHub 上做“多个 AI 代理并行 + git worktree”的项目（worktrunk、vibe-kanban、claude-squad、ccmanager、crystal、container-use）；本项目用的 claude-code-merge-queue；Cargo 构建缓存文档和 sccache。搜索接口当天不可用，以上都是直接抓取的项目主页和官方文档。相关任务：F27、F28、F29。
+> 历史调研：lane 工作树模式已于 2026-11 下线，现行协作流程见 [workflow.md](../architecture/workflow.md)（原 `docs/architecture/lanes.md` 已删除）。
+>
+> 日期：2026-11-12。问题：对照外部的前沿做法和开源项目，本项目的 lane 方案（原 `docs/architecture/lanes.md`）还有哪些要优化。范围：Claude Code 官方 hooks 文档；GitHub 上做“多个 AI 代理并行 + git worktree”的项目（worktrunk、vibe-kanban、claude-squad、ccmanager、crystal、container-use）；本项目用的 claude-code-merge-queue；Cargo 构建缓存文档和 sccache。搜索接口当天不可用，以上都是直接抓取的项目主页和官方文档。相关任务：F27、F28、F29。
 
 ## 结论
 

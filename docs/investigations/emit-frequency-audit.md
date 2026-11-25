@@ -77,4 +77,4 @@
    - `system/fullscreen.rs` 由全局 `app.emit` 收窄为 `app.emit_to("main", ...)`。
 4. **前端高频事件节流（M7）**：
    - 新增纯函数 [throttle.ts](/src/utils/throttle.ts) 与单测 [throttle.test.mjs](/tests/unit/throttle.test.mjs)（支持首帧立即响应、尾帧合并、`flush` 与 `cancel`）；
-   - 接入 [useIslandResize.ts](/src/windows/island/useIslandResize.ts)（Alt 拖拽尺寸中间帧 16ms 合并，`done: true` 立即落盘）、[IslandDragHint.tsx](/src/windows/island/IslandDragHint.tsx) 与 [PatternEyes.tsx](/src/features/center-pattern/PatternEyes.tsx)（高回报率鼠标 `mousemove` 16ms 节流）。
+   - 接入 `src/windows/island/useIslandResize.ts`（后拆分重构，Alt 拖拽尺寸中间帧 16ms 合并，`done: true` 立即落盘）、[IslandDragHint.tsx](/src/windows/island/IslandDragHint.tsx) 与 [PatternEyes.tsx](/src/features/center-pattern/PatternEyes.tsx)（高回报率鼠标 `mousemove` 16ms 节流）。

@@ -1,6 +1,8 @@
 # 岛的外壳只认贡献：E36.3.51 的方案
 
-任务 [E36.3.51](../tasks/E/E36.3.51.md)（#619），计划 [v3-phase3-plan.md](../architecture/history/v3-phase3-plan.md)「2026-11-15 调整」。2026-11-15 摸底，e36-3-51 写，等组长看过再动代码。
+> 状态：已完成（历史摸底记录）。
+
+任务 [E36.3.51](../tasks/0-archive/E/E36.3.51.md)（#619），计划 [v3-phase3-plan.md](../architecture/history/v3-phase3-plan.md)「2026-11-15 调整」。2026-11-15 摸底，e36-3-51 写，等组长看过再动代码。
 
 ## 现在是什么样
 

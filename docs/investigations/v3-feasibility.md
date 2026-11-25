@@ -1,6 +1,6 @@
 # 插件平台第 3 版：第 0 阶段可行性实测
 
-2026-11-14，会话「插件平台第 3 版基线和可行性验证」（macOS），任务 [E36.0](/docs/tasks/E/E36.0.md)（#290）。Windows 上的补测是 2026-11-15，会话「插件平台 v3 第 0 阶段 Windows 补测」（tixxin-computer），见各节的「Windows」和下面「和 macOS 不一样的地方」。方案见 [v3-everything-plugin.md](../architecture/plugins/v3-everything-plugin.md)。
+2026-11-14，会话「插件平台第 3 版基线和可行性验证」（macOS），任务 [E36.0](/docs/tasks/0-archive/E/E36.0.md)（#290）。Windows 上的补测是 2026-11-15，会话「插件平台 v3 第 0 阶段 Windows 补测」（tixxin-computer），见各节的「Windows」和下面「和 macOS 不一样的地方」。方案见 [v3-everything-plugin.md](../architecture/plugins/v3-everything-plugin.md)。
 
 ## 结论
 

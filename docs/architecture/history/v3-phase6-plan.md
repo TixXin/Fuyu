@@ -1,6 +1,6 @@
 # 插件平台第 6 阶段计划：官方插件 v3 重写与第 2 版下线（E36.6）
 
-对应父任务 [E36.6](/docs/tasks/E/E36.6.md)（#296），承接第 4 阶段（[v3-phase4-plan.md](v3-phase4-plan.md)）与第 5 阶段（[v3-phase5-foundation-plan.md](v3-phase5-foundation-plan.md)）。
+对应父任务 [E36.6](/docs/tasks/0-archive/E/E36.6.md)（#296），承接第 4 阶段（[v3-phase4-plan.md](v3-phase4-plan.md)）与第 5 阶段（[v3-phase5-foundation-plan.md](v3-phase5-foundation-plan.md)）。
 
 ## 一、两步走策略（先行重写 vs. 满一周期后删旧版）
 

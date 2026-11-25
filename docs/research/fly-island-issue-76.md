@@ -1,6 +1,6 @@
 # 上游 fly-island#76 逐项核查与开源方案调研
 
-> 日期：2026-11-17。问题：[flyl1u/fly-island#76](https://github.com/flyl1u/fly-island/issues/76) 里用户反馈的 6 大类（共 11 个具体问题与建议）是否也是浮屿（Fuyu）的问题？全网开源项目怎么处理同类需求与故障？我们该怎么取舍？范围：上游仓库 `flyl1u/fly-island` 默认分支源码、本仓库当前 `main` 源码与历史任务、GitHub 同类开源项目（Pot、STranslate、Easydict、ECDICT、MTranServer、EcoPaste、QuickClipboard、TieZ、Maccy、CopyQ、BoringNotch、FluentFlyout）源码与文档、Microsoft Learn Win32 / WebView2 技术文档。相关任务：新建跟进任务 [D99](../tasks/D/D99.md)（#814）、[C110](../tasks/C/C110.md)（#815）、[E42](../tasks/E/E42.md)（#816）、[D100](../tasks/D/D100.md)（#817）、[D101](../tasks/D/D101.md)（#818）、[C111](../tasks/C/C111.md)（#819）；关联已完成任务 B29、B72.3、C29、C37、C69、C106、D30、D66、D78、D79、E36.4.2。
+> 日期：2026-11-17。问题：[flyl1u/fly-island#76](https://github.com/flyl1u/fly-island/issues/76) 里用户反馈的 6 大类（共 11 个具体问题与建议）是否也是浮屿（Fuyu）的问题？全网开源项目怎么处理同类需求与故障？我们该怎么取舍？范围：上游仓库 `flyl1u/fly-island` 默认分支源码、本仓库当前 `main` 源码与历史任务、GitHub 同类开源项目（Pot、STranslate、Easydict、ECDICT、MTranServer、EcoPaste、QuickClipboard、TieZ、Maccy、CopyQ、BoringNotch、FluentFlyout）源码与文档、Microsoft Learn Win32 / WebView2 技术文档。相关任务：新建跟进任务 [D99](../tasks/0-archive/D/D99.md)（#814）、[C110](../tasks/0-archive/C/C110.md)（#815）、[E42](../tasks/0-archive/E/E42.md)（#816）、[D100](../tasks/0-archive/D/D100.md)（#817）、[D101](../tasks/0-archive/D/D101.md)（#818）、[C111](../tasks/0-archive/C/C111.md)（#819）；关联已完成任务 B29、B72.3、C29、C37、C69、C106、D30、D66、D78、D79、E36.4.2。
 
 ## 结论与全局对照
 
@@ -293,7 +293,7 @@ flowchart LR
    - 位置：[/src-tauri/src/win32/webview_crash.rs](/src-tauri/src/win32/webview_crash.rs#L55-L59)。
    - `D66` 目前只监听了 `RENDER_PROCESS_EXITED` 和 `RENDER_PROCESS_UNRESPONSIVE`，没有处理 `COREWEBVIEW2_PROCESS_FAILED_KIND_GPU_PROCESS_EXITED`。Windows 睡眠唤醒驱动重置导致 GPU 进程挂掉时，透明窗口会出现画面冻结无响应或合成异常。
 3. **隐患三：未把剪贴板与窗口状态接入 `WM_POWERBROADCAST` 睡眠唤醒恢复**
-   - [/src-tauri/src/win32/session_notifications.rs](/src-tauri/src/win32/session_notifications.rs#L79-L91) 已有现成的 `PBT_APMSUSPEND` / `PBT_APMRESUMEAUTOMATIC` 监听，但目前只给旧 v2 插件宿主发通知（无启用 v2 插件时甚至不启动）。
+   - `src-tauri/src/win32/session_notifications.rs`（旧路径，已随 v2 插件宿主下线拆分重组）已有现成的 `PBT_APMSUSPEND` / `PBT_APMRESUMEAUTOMATIC` 监听，但目前只给旧 v2 插件宿主发通知（无启用 v2 插件时甚至不启动）。
 
 #### 3. 开源项目对标与修复建议
 

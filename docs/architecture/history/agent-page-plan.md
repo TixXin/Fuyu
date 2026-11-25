@@ -1,6 +1,6 @@
 # Agent 页优化计划（2026-11-15，主 agent 起草，用户确认按推荐方案做）
 
-用户原话：「优化岛屿面板的 agent 页面，列表变动动效，子 agent UI 适配，排版，用户交互逻辑，icon 等」。现行设计见 [agent.md](agent.md)，这份是改动计划；做完后把定下来的写回 agent.md，这份移到 `docs/architecture/history/`。
+用户原话：「优化岛屿面板的 agent 页面，列表变动动效，子 agent UI 适配，排版，用户交互逻辑，icon 等」。现行设计见 [agent.md](../../design/agent.md)，这份是改动计划；做完后把定下来的写回 agent.md，这份移到 `docs/architecture/history/`。
 
 ## 现状（读代码和截图得到的）
 

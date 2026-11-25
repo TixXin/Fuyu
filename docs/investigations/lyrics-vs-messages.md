@@ -1,5 +1,7 @@
 # 放音乐时来了消息，收起岛上的歌词不恢复或恢复很慢
 
+> 状态：已完成（历史排查记录）。
+
 日期：2026-11-15。任务 D60，issue #394。只读代码排查，修改全在前端。
 
 ## 现象
@@ -33,7 +35,7 @@
 - `useAgentInterjection` 不再让 `waiting` 常驻：进入等待时和其他插话一样 4 秒；`remindingSession` 用 `alerts.ts` 的 `trackWaiting` / `takeDueReminders`，到「Agent → 提醒」的时间还在等就再插一次（设置为「不提醒」时不再插）。等待状态仍在状态灯、会话数和 Agent 页。
 - 新增 `features/calendar/meetingBeats.ts` 和 `useMeetingBeat.ts`：收起条在放歌词时，会议提醒只在三个时刻各显示 8 秒——第一次进入提醒（含岛屿启动时已在提醒期）、开始前 1 分钟、开始时（离上一拍不足 8 秒的拍合并）；其余时间回到歌词。没在放歌词时照旧整段显示。加入会议按钮整个提醒期间都在。
 - `useCurrentLyric` 把空白行和「最后一句之后」也标成 `intro`，`useIslandLyrics` 按「前奏时显示」给出歌名或音符；选「待办」时返回一个没有文字的歌词行，所以 `IslandApp.tsx` 仍判断为「正在放歌词」，Agent 只插话、不退回常驻标题，岛宽也按最长一句不跳。`IslandApp.tsx` 没有改。
-- 动效统一见 [collapsed-message-animation.md](../features/collapsed-message-animation.md)。
+- 动效统一见 [collapsed-bar.md](../design/collapsed-bar.md)。
 
 ## 验证
 

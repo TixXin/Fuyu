@@ -93,4 +93,4 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 
 - [data-storage.md](data-storage.md)：每项数据存在哪里、由哪个模块负责
 - [contracts.md](contracts.md)：对外契约清单（localStorage key、事件、命令与文件格式）
-- [migration-map.md](migration-map.md)：结构重构时旧文件到新位置的对照
+- [migration-map.md](history/migration-map.md)：结构重构时旧文件到新位置的对照

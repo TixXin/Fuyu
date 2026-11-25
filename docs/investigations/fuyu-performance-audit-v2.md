@@ -1,7 +1,7 @@
 # 浮屿（Fuyu）第二轮全栈性能、内存与架构深度审查报告
 
 > **审查基线**：2026-11-17 `HEAD`（已在第一轮完成 H1–H5、D88–D96、D49.1、D50–D52 等 15+ 项优化的基础上，对剩余深水区瓶颈进行全量代码与构建产物审计）
-> **关联文档**：[第一轮性能审查](fuyu-performance-audit.md) · [截图内存泄漏分析](screenshot-memory-leak.md) · [内存与性能长期调研](memory-and-performance.md) · [总任务 D97](/docs/tasks/D/D97.md)（[#794](https://github.com/TixXin/Fuyu/issues/794)）
+> **关联文档**：[第一轮性能审查](fuyu-performance-audit.md) · [截图内存泄漏分析](screenshot-memory-leak.md) · [内存与性能长期调研](../research/memory-and-performance.md) · [总任务 D97](/docs/tasks/0-archive/D/D97.md)（[#794](https://github.com/TixXin/Fuyu/issues/794)）
 
 ---
 
@@ -50,7 +50,7 @@ flowchart TD
   2. 紧接着 `lib.rs:168` 调用 `clipboard_history::init`：
      - 第 662 行在主线程同步读取并反序列化整个 `clipboard-history.json`（含最多 500 条历史、Base64 缩略图、HTML，文件可达 **2–15 MB**），第 665 行又 `persisted.items.clone()` 深拷贝一份传给清理线程；
      - 第 688 行 `background::register` 因 `ready == true` 在主线程同步调用 `Windows::start()`，**当场在主线程同步构建 `clipboard` 和 `clipboard-preview` 两个隐藏 WebView 窗口**！
-  3. 主岛窗口 `main` 的几何定位与初始化（已由 [D96](/docs/tasks/D/D96.md) 提前）此前还排在靠后顺位，被同步磁盘 I/O 和 2 个 WebView 子进程创建阻塞 **100ms–330ms**。
+  3. 主岛窗口 `main` 的几何定位与初始化（已由 [D96](/docs/tasks/0-archive/D/D96.md) 提前）此前还排在靠后顺位，被同步磁盘 I/O 和 2 个 WebView 子进程创建阻塞 **100ms–330ms**。
 - **改造方案**：
   1. **剪贴板预览窗口 `clipboard-preview` 改为按需懒创建**（仅在用户在剪贴板窗口按空格预览时创建，关闭剪贴板窗口或空闲后销毁），立省 **1 个常驻 WebView 渲染进程（~40–70 MB 内存）**；`clipboard` 主弹窗延后到首帧就绪后再在后台预热或按需创建。
   2. **异步加载 `clipboard-history.json`**：将反序列化移入后台线程，清理孤儿图片只传文件名 `HashSet<String>`，消除全量 `items.clone()`。
@@ -76,7 +76,7 @@ flowchart TD
   - [IslandGlass.css](/src/windows/island/IslandGlass.css#L58-L76)
   - [TodoIslandPage.css](/src/features/todos/island/TodoIslandPage.css#L103-L109) · [TodoIslandHeader.tsx](/src/features/todos/island/TodoIslandHeader.tsx#L14)
   - [UpdatePanel.css](/src/features/updater/UpdatePanel.css#L145-L151) · [UpdatePanel.tsx](/src/features/updater/UpdatePanel.tsx#L135)
-  - [PluginStatusChip.css](/src/features/plugin-views/PluginStatusChip.css#L112-L118) · [PluginStatusChip.tsx](/src/features/plugin-views/PluginStatusChip.tsx#L65)
+  - `src/features/plugin-views/PluginStatusChip.css#L112-L118` · `src/features/plugin-views/PluginStatusChip.tsx#L65`（第 2 版插件模块，已于 E36.6.5 删除）
 - **根因分析**：
   - `.island__glass::before` 带有 `filter: blur(20px)`，却配置了 `transition: left var(--motion-medium), top var(--motion-medium)`。鼠标在岛上移动时，每帧都在主线程触发 Layout + 20px 高斯模糊重绘（Paint）。
   - 待办完成进度条、自动更新下载进度条、折叠栏插件电池电量条仍在对 `width` / `height` 做过渡。
@@ -136,7 +136,7 @@ flowchart TD
 
 ### P1-3. 精简常驻 OS 线程（从 ~35 个降至 ~15 个）与高频音频 COM 重建
 - **位置**：
-  - [plugin_host/mod.rs](/src-tauri/src/plugin_host/mod.rs#L135-L141)
+  - `src-tauri/src/plugin_host/mod.rs#L135-L141`（第 2 版插件宿主，已于 E36.6.5 删除）
   - [system_levels/mod.rs](/src-tauri/src/system_levels/mod.rs#L67-L93) · [device_events/readers.rs](/src-tauri/src/device_events/readers.rs#L14-L25)
   - Windows 各模块 `hotkey.rs`（8 个独立 `GetMessageW` 线程）
 - **问题量化**：
@@ -146,7 +146,7 @@ flowchart TD
 - **改造方案**：
   1. v2 `plugin_host` 在未启用第三方插件时懒启动那 5 个线程，且 `events::publish` 在无订阅者时直接返回；
   2. `system_levels` 与 `device_events` 注册 `IMMDeviceNotificationClient` 监听默认设备与设备状态变化，变轮询重建为事件驱动；
-  3. 逐步将慢速周期巡检线程与 Win32 消息循环合并（主岛 4 条看护线程已由 [D96](/docs/tasks/D/D96.md) 合并为单条 `island-watch`）。
+  3. 逐步将慢速周期巡检线程与 Win32 消息循环合并（主岛 4 条看护线程已由 [D96](/docs/tasks/0-archive/D/D96.md) 合并为单条 `island-watch`）。
 
 ---
 
@@ -167,20 +167,20 @@ flowchart TD
 | **P2-1** | [useAudioLevel.ts](/src/features/media/useAudioLevel.ts#L36-L91)<br>[media/plugin/runners.tsx](/src/features/media/plugin/runners.tsx#L32-L44) | 播放音乐时 `audioPeak` 每 500ms 变化，因混在 `MediaState` 顶层，每 0.5s 触发 `MediaRunner`、歌词计算与整个 `MusicPlayerPanel` 重渲染；且展开音乐页显示歌词时仍在轮询音频峰值。 | 将 `audioPeak` 拆为独立小 store 仅由波形组件订阅；展开页有歌词时不轮询 `getAudioLevel`。 |
 | **P2-2** | [islandContributions.ts](/src/features/plugin-kernel/islandContributions.ts#L102-L154) | `aggregateContributions` 每次重新生成 `style.vars` 等新引用，导致 18 处 `useIslandContributed()` 订阅者在无关字段更新时全量重渲染。 | 复用未变化的子对象引用，并支持 `useIslandContributed(selector)`。 |
 | **P2-3** | [ScreenshotOverlay.tsx](/src/windows/screenshot/ScreenshotOverlay.tsx#L191)<br>[ClipboardImageEditor.tsx](/src/windows/clipboard/ClipboardImageEditor.tsx#L100)<br>[useVirtualRows.ts](/src/features/clipboard/useVirtualRows.ts#L12) 等 8 处 | 高频 `pointermove` / `scroll` 回调中直接同步 `getBoundingClientRect()` 并连续 `setState`，缺少 `requestAnimationFrame` 合帧。 | 拖拽开始时缓存容器 `getBoundingClientRect()`，用 `rAF` 合帧指针移动更新；虚拟列表仅在 `(start, end)` 行区间变化时更新 state。 |
-| **P2-4** | [timeline_clock.rs](/src-tauri/src/media_control/timeline_clock.rs#L60)<br>[audio_fallback.rs](/src-tauri/src/media_control/audio_fallback.rs#L45)<br>[opencode.rs](/src-tauri/src/agent_status/opencode.rs#L55)<br>[plugin_host/lifecycle.rs](/src-tauri/src/plugin_host/lifecycle.rs#L62) | 5 处全局 `static Mutex<HashMap/Vec>`（U2–U6）缺少容量上限或过期清理。 | 分别补齐 `retain` 过期清理与容量上限（如 32/64 条）。 |
+| **P2-4** | [timeline_clock.rs](/src-tauri/src/media_control/timeline_clock.rs#L60)<br>[audio_fallback.rs](/src-tauri/src/media_control/audio_fallback.rs#L45)<br>[opencode.rs](/src-tauri/src/agent_status/opencode.rs#L55)<br>`src-tauri/src/plugin_host/lifecycle.rs#L62`（第 2 版已删） | 5 处全局 `static Mutex<HashMap/Vec>`（U2–U6）缺少容量上限或过期清理。 | 分别补齐 `retain` 过期清理与容量上限（如 32/64 条）。 |
 | **P2-5** | [sound_packs.rs](/src-tauri/src/agent_status/sound_packs.rs#L63)<br>[pets/mod.rs](/src-tauri/src/pets/mod.rs#L59)<br>[file_shelf/availability.rs](/src-tauri/src/file_shelf/availability.rs#L60) | `import_sound_pack` / `pets` 在 `async fn` 中未用 `spawn_blocking` 直接做数 MB 文件 I/O；`file_shelf` 每次操作都为每个盘符 `thread::spawn` 探测线程且无正缓存。 | 补齐 `spawn_blocking`；为 `file_shelf` 盘符可达性增加 15s 正缓存 TTL。 |
 
 ---
 
 ## 五、任务拆分与落地看板（D97，#794）
 
-全部优化项已按**文件范围零重叠**拆分为父任务 [D97](/docs/tasks/D/D97.md)（[#794](https://github.com/TixXin/Fuyu/issues/794)）下的 6 个独立子任务：
+全部优化项已按**文件范围零重叠**拆分为父任务 [D97](/docs/tasks/0-archive/D/D97.md)（[#794](https://github.com/TixXin/Fuyu/issues/794)）下的 6 个独立子任务：
 
 | 任务编号 | Issue | 覆盖审查项 | 核心目标 |
 |---|---|---|---|
-| [D97.1](/docs/tasks/D/D97.1.md) | [#795](https://github.com/TixXin/Fuyu/issues/795) | P0-3、P0-4、P1-1 局部 | 液态玻璃高光与 3 处进度条改 `transform`、`pinyin-pro` 字母词懒加载、`searchIndex.json` 动态加载、`useIslandNotices` 解耦 `dompurify` |
-| [D97.2](/docs/tasks/D/D97.2.md) | [#796](https://github.com/TixXin/Fuyu/issues/796) | P0-2、P1-2 | 主岛折叠态卸载/休眠展开面板定时器、`ClipboardHistoryPanel` 虚拟滚动 + `React.memo` + FLIP 限流 |
-| [D97.3](/docs/tasks/D/D97.3.md) | [#797](https://github.com/TixXin/Fuyu/issues/797) | P1-1 | `i18n` 双语字典按激活语言与窗口拆分、`main.tsx` 按 `windowKind` 按需注册 `plugin/services.ts` |
-| [D97.4](/docs/tasks/D/D97.4.md) | [#798](https://github.com/TixXin/Fuyu/issues/798) | P2-1、P2-2、P2-3 | `audioPeak` 拆出 `MediaState`、`islandContributions` 子引用复用与 selector、8 处 `pointermove`/`scroll` `rAF` 合帧 |
-| [D97.5](/docs/tasks/D/D97.5.md) | [#799](https://github.com/TixXin/Fuyu/issues/799) | P0-5、P2-4、P2-5 | `SESSION_CACHE` 淘汰修复、U2–U6 全局缓存上限、`sound_packs`/`pets` `spawn_blocking`、`file_shelf` 盘符正缓存 |
-| [D97.6](/docs/tasks/D/D97.6.md) | [#800](https://github.com/TixXin/Fuyu/issues/800) | P0-1 局部、P1-3 局部、P1-4 | `clipboard-preview` 窗口懒创建、`clipboard-history.json` 异步加载、v2 `plugin_host` 5 线程懒启动、`fuyu-clip://` 缩略图协议 |
+| [D97.1](/docs/tasks/0-archive/D/D97.1.md) | [#795](https://github.com/TixXin/Fuyu/issues/795) | P0-3、P0-4、P1-1 局部 | 液态玻璃高光与 3 处进度条改 `transform`、`pinyin-pro` 字母词懒加载、`searchIndex.json` 动态加载、`useIslandNotices` 解耦 `dompurify` |
+| [D97.2](/docs/tasks/0-archive/D/D97.2.md) | [#796](https://github.com/TixXin/Fuyu/issues/796) | P0-2、P1-2 | 主岛折叠态卸载/休眠展开面板定时器、`ClipboardHistoryPanel` 虚拟滚动 + `React.memo` + FLIP 限流 |
+| [D97.3](/docs/tasks/0-archive/D/D97.3.md) | [#797](https://github.com/TixXin/Fuyu/issues/797) | P1-1 | `i18n` 双语字典按激活语言与窗口拆分、`main.tsx` 按 `windowKind` 按需注册 `plugin/services.ts` |
+| [D97.4](/docs/tasks/0-archive/D/D97.4.md) | [#798](https://github.com/TixXin/Fuyu/issues/798) | P2-1、P2-2、P2-3 | `audioPeak` 拆出 `MediaState`、`islandContributions` 子引用复用与 selector、8 处 `pointermove`/`scroll` `rAF` 合帧 |
+| [D97.5](/docs/tasks/0-archive/D/D97.5.md) | [#799](https://github.com/TixXin/Fuyu/issues/799) | P0-5、P2-4、P2-5 | `SESSION_CACHE` 淘汰修复、U2–U6 全局缓存上限、`sound_packs`/`pets` `spawn_blocking`、`file_shelf` 盘符正缓存 |
+| [D97.6](/docs/tasks/0-archive/D/D97.6.md) | [#800](https://github.com/TixXin/Fuyu/issues/800) | P0-1 局部、P1-3 局部、P1-4 | `clipboard-preview` 窗口懒创建、`clipboard-history.json` 异步加载、v2 `plugin_host` 5 线程懒启动、`fuyu-clip://` 缩略图协议 |

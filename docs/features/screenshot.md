@@ -1,6 +1,6 @@
 # 截图
 
-浮屿内置的区域截图：冻结屏幕、选区或选中窗口、标注，然后复制、保存、贴到屏幕上、识别文字、翻译，或者从岛上发给 Agent。默认关着，在「设置 → 功能 → 截图」打开。分步计划和设计取舍见 [screenshot-plan.md](../architecture/screenshot-plan.md)，任务是 [C41](../tasks/C/C41.md)。
+浮屿内置的区域截图：冻结屏幕、选区或选中窗口、标注，然后复制、保存、贴到屏幕上、识别文字、翻译，或者从岛上发给 Agent。默认关着，在「设置 → 功能 → 截图」打开。分步计划和设计取舍见 [screenshot-plan.md](../architecture/history/screenshot-plan.md)，任务是 [C41](../tasks/0-archive/C/C41.md)。
 
 ## 怎么打开
 

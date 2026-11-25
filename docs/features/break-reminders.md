@@ -1,6 +1,6 @@
 # 休息提醒
 
-> 任务：[C78](/docs/tasks/C/C78.md)，issue #333。和计时器（[timer.md](timer.md)）放在同一个模块 `src/features/timer/`，但不依赖计时器插件是否打开。
+> 任务：[C78](/docs/tasks/0-archive/C/C78.md)，issue #333。和计时器（[timer.md](timer.md)）放在同一个模块 `src/features/timer/`，但不依赖计时器插件是否打开。
 
 按间隔在岛上提醒起身、远眺。默认关，在 **设置 → 行为 → 提醒** 的「休息提醒」里打开。
 

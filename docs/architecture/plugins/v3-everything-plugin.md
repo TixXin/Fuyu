@@ -197,7 +197,7 @@ flowchart LR
 | **宿主 ↔ Rust** | 标准输入输出上的 JSON-RPC | 宿主里的提供者插件调 Rust 的能力；Rust 把系统事件（媒体变化、通知、热键）推给宿主 |
 | **窗口 ↔ Rust** | `invoke` | 窗口自己要的系统操作（拖动、调整大小、穿透）照旧 |
 
-- **不用 `emit` 和 `Channel` 往窗口发消息**：它们把消息拼进一段脚本交给 WebView 执行，每条内容不同的消息留下约 0.75 KB 收不回的内存（tauri#12724、wry#1489、WebView2Feedback#5780 都还开着）。插件相关的消息全走 WebSocket；现有代码里的 `emit` 由任务 [D49](/docs/tasks/D/D49.md) 处理，可以改成「Rust → 宿主 → WebSocket → 窗口」。
+- **不用 `emit` 和 `Channel` 往窗口发消息**：它们把消息拼进一段脚本交给 WebView 执行，每条内容不同的消息留下约 0.75 KB 收不回的内存（tauri#12724、wry#1489、WebView2Feedback#5780 都还开着）。插件相关的消息全走 WebSocket；现有代码里的 `emit` 由任务 [D49](/docs/tasks/0-archive/D/D49.md) 处理，可以改成「Rust → 宿主 → WebSocket → 窗口」。
 - **后备**：经 Rust 中转（窗口用 `invoke` 发、用 `invoke` 长轮询收）。第 0 阶段在 macOS 27（`tauri://localhost`）和 Windows（WebView2 157，`http://tauri.localhost`）上实测 WebSocket 都直接可用，后备用不上；只剩 macOS 15 没测，测过再决定要不要实现。
 - 通信协议自带握手、序号和快照：窗口打开、重载，或宿主重启后，先取一份当前状态，再接增量。发给窗口的事件在它准备好之前先存着（MyGo 的做法）。
 - 应用的 CSP 要放行 `ipc:` 和这个本机 WebSocket 地址。
