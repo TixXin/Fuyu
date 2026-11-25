@@ -1,4 +1,5 @@
 use std::{
+    path::PathBuf,
     sync::{mpsc, Mutex},
     time::{Duration, Instant},
 };
@@ -6,7 +7,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{bisect, containment, node_status::{FailureCause, NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, on_by_default, host_env, host_files, host_origins, host_script, memory_of, window_origins, without_verbatim_prefix, HostFiles, HostMode, MEMORY_MEASURE};
+use super::{bisect, containment, node_status::{FailureCause, NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, on_by_default, host_env, host_files, host_origins, host_script, memory_of, resolve_max_old_space_mb, window_origins, without_verbatim_prefix, HostFiles, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn node_gets_the_installed_host_path_without_the_verbatim_prefix_it_cannot_resolve() {
@@ -154,8 +155,51 @@ fn a_development_host_hot_reloads_and_a_release_host_never_does() {
     let release = args_for(&mode(false, None));
     assert!(!release.iter().any(|arg| arg == "--dev" || arg == "--expose-internals"), "{release:?}");
     let development = args_for(&mode(true, None));
-    assert_eq!(&development[..2], ["--disallow-code-generation-from-strings", "--expose-internals"], "Node flags come before the script");
-    assert!(development.iter().position(|arg| arg == "--dev") > development.iter().position(|arg| arg.ends_with("main.mjs")), "--dev is the host's own flag, after the script");
+    let script_at = development.iter().position(|arg| arg.ends_with("main.mjs")).expect("script");
+    assert_eq!(
+        &development[..script_at],
+        [
+            "--disallow-code-generation-from-strings",
+            "--max-semi-space-size=2",
+            "--max-old-space-size=192",
+            "--expose-internals",
+        ],
+        "Node flags come before the script"
+    );
+    assert!(development.iter().position(|arg| arg == "--dev") > Some(script_at), "--dev is the host's own flag, after the script");
+}
+
+#[test]
+fn host_v8_memory_flags_clamp_overrides_and_disable_type_stripping_for_bundled_release() {
+    assert_eq!(resolve_max_old_space_mb(None), 192);
+    assert_eq!(resolve_max_old_space_mb(Some("invalid")), 192);
+    assert_eq!(resolve_max_old_space_mb(Some("16")), 64);
+    assert_eq!(resolve_max_old_space_mb(Some("512")), 512);
+    assert_eq!(resolve_max_old_space_mb(Some("9999")), 2048);
+
+    let bundled = HostFiles { script: PathBuf::from("/res/plugins-v3/host/main.mjs"), builtins: PathBuf::from("/res/plugins-v3/builtins"), bundled: true };
+    let release: Vec<String> = host_args(
+        "/data".into(),
+        &bundled,
+        &[],
+        &HostMode { max_old_space_mb: Some(256), ..HostMode::default() },
+    )
+    .iter()
+    .map(|arg| arg.to_string_lossy().into_owned())
+    .collect();
+    let script_at = release.iter().position(|arg| arg.ends_with("main.mjs")).expect("script");
+    assert_eq!(
+        &release[..script_at],
+        [
+            "--disallow-code-generation-from-strings",
+            "--max-semi-space-size=2",
+            "--max-old-space-size=256",
+            "--no-experimental-strip-types",
+        ]
+    );
+
+    let dev_source = args_for(&mode(true, None));
+    assert!(!dev_source.iter().any(|arg| arg == "--no-experimental-strip-types"));
 }
 
 #[test]
@@ -288,7 +332,7 @@ fn the_real_host_takes_the_bisect_list_from_its_flags_then_from_rust() {
     std::fs::write(dir.join("plugins.yml"), "- id: one\n  name: ./plain.mjs\n- id: two\n  name: ./plain.mjs\n").unwrap();
     let step = |off: &[&str]| bisect::Bisect { suspects: vec!["one".into(), "two".into()], off: off.iter().map(|id| (*id).to_owned()).collect(), step: 1, started_at: 1 };
     bisect::write(&dir, &step(&["one", "inside"])).unwrap();
-    let files = HostFiles { script: host_script(), builtins: dir.join("builtins") };
+    let files = HostFiles { script: host_script(), builtins: dir.join("builtins"), bundled: false };
     let args = host_args(dir.clone(), &files, &[], &HostMode { bisect: bisect::off(&dir), ..HostMode::default() });
     let spec = HostSpec { program: node.path, args, env: Vec::new(), current_dir: None };
     let (tx, states) = mpsc::channel();
