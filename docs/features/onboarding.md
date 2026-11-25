@@ -14,10 +14,15 @@
    - **上手体验（`play`）**：在真岛上完成展开、拖文件、剪贴板快捷键三项任务，每完成一项点亮一颗星；可点「跳过此步」。
    - **准备就绪（`release`）**：汇总当前形态、动效与已启能力数 + 开机启动 + **按需进阶配置中心（`EXTENSION_REGISTRY`）**（AI Agent 配置、推荐插件套装、邮箱、全部设置）。
 2. **版本更新引导（`WHATS_NEW_REGISTRY`）**
-   - **版本说明（`whatsNewNotes`）**：自动读取当前真实版本号、升级跨度与打包的本地中英文 Release Notes（`BUNDLED_RELEASES` + `historyNoteLines`），可跳转设置查看完整版本历史。
-   - **多形态体验（`whatsNewForms`）**：复用的真实真岛形态选择器，让升级用户直接试玩多形态停靠。
+   - **版本说明（`whatsNewNotes`）**：顶部为带水母徽标、版本号徽章、升级跨度与主题/条数统计的 Hero 舞台，下方通过 `releaseShowcase.ts` 自动按主题解析打包的本地中英文 Release Notes（`BUNDLED_RELEASES` + `historyNoteLines`），呈现可点击筛选的分类标签栏、双栏 Bento 特性卡片网格（按冒号拆出粗体标题与说明），并为匹配主题提供「真岛试看」一键联动真岛演示；底部可跳转设置查看完整版本历史。
+   - **多形态体验（`whatsNewForms`）**：复用的真实真岛形态选择器 + 左右侧翼一键分流体验卡，让升级用户直接试玩多形态停靠与侧翼分流。
 3. **进阶配置工作区（`AGENT_SETUP_REGISTRY`）**
    - 从收尾页点「配置 AI Agent 与手机推送」进入宽卡片无黑幕工作区，串起可视化 5 布局 `AgentCardsAct`、`AgentConnectAct`（SSH / 钩子 / 回复标记）和 5 步 `PushAct`（cc-connect 手机推送）。
+
+## macOS 菜单栏与 Dock 安全区适配
+
+- Rust 覆层线程（`src-tauri/src/onboarding_window/overlay.rs`）基于当前显示器的 `work_area()` 与覆层窗口边界实时计算 `SafeInsets { top, bottom, left, right }` 并经 `onboarding-insets` 事件推给前端（显示窗口瞬间及 Dock 位置/大小变动时均会同步）。
+- 前端将安全区注入 `cardPlacement()` 与 `--safe-top / --safe-bottom / --safe-left / --safe-right` CSS 变量，确保主卡片底栏、右上角 `DirectorHud` 控台与左下角微信二维码卡片均自动避让 macOS 菜单栏及底边/左右侧 Dock。
 
 ## 真岛自动化演示导演系统
 
@@ -31,7 +36,7 @@
 ## 左下角微信交流群二维码
 
 - 首次引导与版本更新引导左下角常驻 `WechatCommunityCorner`，直接复用 `src/features/updater/community/` 的线上拉取机制（读 `community.json`、自动镜像源切换与过期判断）。
-- 去掉独立放大按钮，整个卡片任意位置点击即可弹出屏幕正中央的 `280 × 280px` 超大白底二维码灯箱，点击遮罩空白、关闭按钮或按 `Esc` 关闭；右上角提供「收起」折叠为小胶囊。
+- 去掉独立放大按钮，默认展示 **`128 × 128px`** 清晰竖版二维码卡片（自动避让 macOS Dock），整个卡片任意位置点击即可弹出屏幕正中央的 `320 × 320px` 超大白底二维码灯箱，点击遮罩空白、关闭按钮或按 `Esc` 关闭；右上角提供「收起」折叠为小胶囊。
 - `useCardRect.ts` 通过 `requestAnimationFrame` 合帧并去重，将主卡片、右上角导演 HUD、左下角二维码卡片及打开时的居中灯箱矩形列表上报给 Rust 的 `set_onboarding_card_rects`，保证所有悬浮控件精准接鼠标、其余区域完全穿透到真岛和桌面。
 
 ## 回归页与单测

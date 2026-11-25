@@ -66,29 +66,27 @@ export function WechatCommunityCorner({
           </>
         ) : (
           <>
-            <span className="wechat-corner__qr">
-              <img src={qrUrl} alt={text.qrAlt} width={64} height={64} onError={() => setImageTry((value) => value + 1)} />
-            </span>
-            <span className="wechat-corner__meta">
-              <span className="wechat-corner__head">
-                <span className="wechat-corner__title">
-                  <span className="wechat-corner__dot" aria-hidden="true" />
-                  {groupName}
-                </span>
-                <button
-                  type="button"
-                  className="wechat-corner__hide"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setCollapsed(true);
-                    onZoomChange(false);
-                  }}
-                >
-                  {text.hide}
-                </button>
+            <span className="wechat-corner__head">
+              <span className="wechat-corner__title">
+                <span className="wechat-corner__dot" aria-hidden="true" />
+                {groupName}
               </span>
-              <span className="wechat-corner__sub">{text.sub}</span>
+              <button
+                type="button"
+                className="wechat-corner__hide"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setCollapsed(true);
+                  onZoomChange(false);
+                }}
+              >
+                {text.hide}
+              </button>
             </span>
+            <span className="wechat-corner__qr">
+              <img src={qrUrl} alt={text.qrAlt} width={128} height={128} onError={() => setImageTry((value) => value + 1)} />
+            </span>
+            <span className="wechat-corner__sub">{text.sub}</span>
           </>
         )}
       </div>
@@ -112,7 +110,7 @@ export function WechatCommunityCorner({
               {text.modalTitle}
             </div>
             <div className="wechat-lightbox__img">
-              <img src={qrUrl} alt={text.qrAlt} width={280} height={280} onError={() => setImageTry((value) => value + 1)} />
+              <img src={qrUrl} alt={text.qrAlt} width={320} height={320} onError={() => setImageTry((value) => value + 1)} />
             </div>
             <p className="wechat-lightbox__hint">
               {text.modalHint}

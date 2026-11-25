@@ -115,6 +115,7 @@ pub async fn show_onboarding_window(app: AppHandle) -> Result<(), String> {
     let window = app
         .get_webview_window(WINDOW_LABEL)
         .ok_or_else(|| "Onboarding window was not found.".to_string())?;
+    overlay::emit_safe_insets(&window);
     reveal(&window)
 }
 

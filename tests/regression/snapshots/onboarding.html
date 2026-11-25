@@ -1,6 +1,6 @@
 <body style="background: linear-gradient(135deg, rgb(58, 63, 85), rgb(106, 90, 122) 50%, rgb(43, 74, 106))">
   <div id="root">
-    <main class="onboarding stage--font-system island-light onboarding--light" data-act="whatsNewForms" data-mode="whatsNew">
+    <main class="onboarding stage--font-system island-light onboarding--light" data-act="whatsNewForms" data-mode="whatsNew" style="--safe-top: 0px; --safe-bottom: 0px; --safe-left: 0px; --safe-right: 0px">
       <div aria-hidden="true" class="onboarding-spotlight" style="width: 276px; height: 54px; --spot-x: 502px; --spot-y: -8px; --spot-radius: 27px"></div>
       <div aria-label="真岛实时演播台" class="director-hud" role="region">
         <span aria-hidden="true" class="director-hud__dot director-hud__dot--paused"></span>
@@ -50,10 +50,10 @@
         <section class="onboarding__body">
           <div class="onboarding__heading">
             <h1 class="onboarding__title">
-              在真岛上试试多种形态
+              在真岛上试试新形态与左右侧翼
             </h1>
             <p class="onboarding__lead">
-              点下面任意形态，顶部真岛会立刻切换，随时可以还原回原来的位置。
+              点下面任意形态或一键分流，真岛与左右侧翼会立刻实时响应，随时可以还原。
             </p>
           </div>
           <div class="island-forms">
@@ -217,22 +217,20 @@
         </footer>
       </div>
       <div aria-label="浮屿用户交流群 · 点击卡片居中放大扫码，欢迎交流与反馈" class="wechat-corner" role="button" tabindex="0">
-        <span class="wechat-corner__qr">
-          <img alt="浮屿微信交流群二维码" height="64" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" width="64">
+        <span class="wechat-corner__head">
+          <span class="wechat-corner__title">
+            <span aria-hidden="true" class="wechat-corner__dot"></span>
+            浮屿用户交流群
+          </span>
+          <button class="wechat-corner__hide" type="button">
+            收起
+          </button>
         </span>
-        <span class="wechat-corner__meta">
-          <span class="wechat-corner__head">
-            <span class="wechat-corner__title">
-              <span aria-hidden="true" class="wechat-corner__dot"></span>
-              浮屿用户交流群
-            </span>
-            <button class="wechat-corner__hide" type="button">
-              收起
-            </button>
-          </span>
-          <span class="wechat-corner__sub">
-            点击卡片居中放大扫码，欢迎交流与反馈
-          </span>
+        <span class="wechat-corner__qr">
+          <img alt="浮屿微信交流群二维码" height="128" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" width="128">
+        </span>
+        <span class="wechat-corner__sub">
+          点击卡片居中放大扫码，欢迎交流与反馈
         </span>
       </div>
     </main>

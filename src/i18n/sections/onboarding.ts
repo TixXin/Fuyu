@@ -146,7 +146,20 @@ export type OnboardingText = {
     title: (version: string) => string;
     upgradedFrom: (from: string, to: string) => string;
     releasedAt: (date: string) => string;
+    stats: (sections: number, items: number) => string;
     lead: string;
+    tabsLabel: string;
+    allHighlights: string;
+    autoGroups: {
+      general: string;
+      agent: string;
+      panel: string;
+      appearance: string;
+      wing: string;
+      fix: string;
+    };
+    tryLive: string;
+    nextFormsHint: string;
     loading: string;
     empty: string;
     openHistory: string;
@@ -450,15 +463,28 @@ export const zhCN: OnboardingText = {
     later: "现在不开也可以点「跳过此步」，以后在「设置 → 通用 → 系统权限」里随时能补开。",
   },
   whatsNew: {
-    title: (version) => (version ? `浮屿 v${version.replace(/^v/i, "")} 更新了什么` : "这个版本更新了什么"),
+    title: (version) => (version ? `浮屿 v${version.replace(/^v/i, "")} 更新亮点` : "这个版本的新变化"),
     upgradedFrom: (from, to) => `已从 v${from.replace(/^v/i, "")} 升级至 v${to.replace(/^v/i, "")}`,
     releasedAt: (date) => `发布于 ${date}`,
-    lead: "这里汇总了本次版本的主要更新内容，接下来也可以在真岛上直接试一下新形态。",
+    stats: (sections, items) => `${sections} 大主题 · ${items} 项升级`,
+    lead: "按主题整理了本次版本的核心变化，点标签可快速筛选，带按钮的主题支持直接在顶部真岛试看。",
+    tabsLabel: "更新亮点分类",
+    allHighlights: "全部亮点",
+    autoGroups: {
+      general: "更多升级",
+      agent: "AI Agent",
+      panel: "岛屿与面板",
+      appearance: "形态与外观",
+      wing: "左右侧翼",
+      fix: "问题修复",
+    },
+    tryLive: "真岛试看",
+    nextFormsHint: "下一步可直接在真岛试玩新形态与左右侧翼",
     loading: "正在读取版本说明…",
     empty: "当前版本已更新就绪，可以在设置 → 关于 → 版本历史中查看完整记录。",
     openHistory: "查看完整版本历史",
-    formsTitle: "在真岛上试试多种形态",
-    formsLead: "点下面任意形态，顶部真岛会立刻切换，随时可以还原回原来的位置。",
+    formsTitle: "在真岛上试试新形态与左右侧翼",
+    formsLead: "点下面任意形态或一键分流，真岛与左右侧翼会立刻实时响应，随时可以还原。",
     finish: "我知道了，继续使用",
   },
   push: pushZhCN,
@@ -763,12 +789,25 @@ export const en: OnboardingText = {
     title: (version) => (version ? `What's new in Fuyu v${version.replace(/^v/i, "")}` : "What's new in this update"),
     upgradedFrom: (from, to) => `Updated from v${from.replace(/^v/i, "")} to v${to.replace(/^v/i, "")}`,
     releasedAt: (date) => `Released ${date}`,
-    lead: "Here are the highlights of this release, followed by a quick live preview of island forms.",
+    stats: (sections, items) => `${sections} areas · ${items} upgrades`,
+    lead: "Highlights grouped by feature area. Filter by topic or click Try live to see matching features on the real island.",
+    tabsLabel: "Release highlight categories",
+    allHighlights: "All highlights",
+    autoGroups: {
+      general: "More updates",
+      agent: "AI Agent",
+      panel: "Island & panels",
+      appearance: "Forms & look",
+      wing: "Side wings",
+      fix: "Fixes",
+    },
+    tryLive: "Try live",
+    nextFormsHint: "Next: try island forms & side-dock wings live",
     loading: "Loading release notes…",
     empty: "You're up to date. Full notes are always available in Settings → About → Version history.",
     openHistory: "View full version history",
-    formsTitle: "Try Fuyu's island forms live",
-    formsLead: "Click any form below to see the real island transform immediately.",
+    formsTitle: "Try island forms & side-dock wings live",
+    formsLead: "Click any form or one-click split below to see the real island and wings respond immediately.",
     finish: "Got it, continue",
   },
   push: pushEn,

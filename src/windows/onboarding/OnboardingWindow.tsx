@@ -45,7 +45,7 @@ import { Spotlight } from "./Spotlight";
 import { consumeOnboardingLaunchMode, requestIslandWelcome } from "./storage";
 import { useCardRect } from "./useCardRect";
 import { useDemoHeartbeat } from "./useDemoHeartbeat";
-import { useIslandSpot } from "./useIslandSpot";
+import { useIslandSpot, useSafeInsets } from "./useIslandSpot";
 import { useOnboardingDirector } from "./useOnboardingDirector";
 import { closeOnboardingGuide, useOnboardingCleanup, useOnboardingKeyboard, useShowWhenPainted, useViewport } from "./useOnboardingShell";
 import { useRecommendedBundle } from "./useRecommendedBundle";
@@ -95,6 +95,7 @@ export function OnboardingWindow() {
   const lastSetup = activeSetup && currentSetupIndex === setupSteps.length - 1 && (currentStep.id !== "push" || pushStep >= PUSH_STEPS - 1);
 
   const spot = useIslandSpot();
+  const safeInsets = useSafeInsets();
   const edge = useIslandDockEdge();
   const taskbar = useIslandTaskbar();
   const viewport = useViewport();
@@ -102,7 +103,7 @@ export function OnboardingWindow() {
   const hudRef = useRef<HTMLDivElement | null>(null);
   const cornerRef = useRef<HTMLDivElement | null>(null);
   const hitTargets = useMemo(() => [card, hudRef, cornerRef], []);
-  const placement = cardPlacement(spot, viewport, currentStep.layout, activeSetup || currentStep.spotlight === "off");
+  const placement = cardPlacement(spot, viewport, currentStep.layout, activeSetup || currentStep.spotlight === "off", safeInsets);
   const agentSamples = useMemo(() => previewSamples(t.settings.agentNotice.preview.sample), [t.settings.agentNotice.preview.sample]);
   const setIslandForm = useCallback((form: IslandForm) => setSettings((cur) => (cur.islandForm === form ? cur : { ...cur, islandForm: form })), [setSettings]);
   const director = useOnboardingDirector({
@@ -121,7 +122,11 @@ export function OnboardingWindow() {
     agentSamples,
   });
 
-  useCardRect(hitTargets, `${currentStep.id}:${placement.left}:${placement.top}:${placement.width}:${track}:${qrZoomed}:${cornerRev}`, qrZoomed);
+  useCardRect(
+    hitTargets,
+    `${currentStep.id}:${placement.left}:${placement.top}:${placement.width}:${track}:${qrZoomed}:${cornerRev}:${safeInsets.top}:${safeInsets.bottom}:${safeInsets.left}:${safeInsets.right}`,
+    qrZoomed,
+  );
   useOnboardingCleanup(director.restoreAnchor);
   useWindowAccent(settings);
   useShowWhenPainted();
@@ -240,6 +245,12 @@ export function OnboardingWindow() {
   };
 
   const leaveForSettings = (section?: SettingsFocusSection, bundleId?: string) => void settingsWindowOpening(section, bundleId).then(finish);
+  const mainStyle = {
+    "--safe-top": `${safeInsets.top}px`,
+    "--safe-bottom": `${safeInsets.bottom}px`,
+    "--safe-left": `${safeInsets.left}px`,
+    "--safe-right": `${safeInsets.right}px`,
+  } as CSSProperties;
   const cardStyle: CSSProperties = { left: placement.left, width: placement.width, top: placement.top, maxHeight: placement.maxHeight };
   const primaryLabel = lastMain
     ? text.release.finish
@@ -257,6 +268,7 @@ export function OnboardingWindow() {
     <JellyfishStyleContext.Provider value={settings.jellyfishStyle}>
       <main
         className={`onboarding stage--font-${settings.fontFamily}${light ? " island-light onboarding--light" : ""}`}
+        style={mainStyle}
         data-act={currentStep.id}
         data-mode={activeSetup ? "setup" : activeWhatsNew ? "whatsNew" : "main"}
       >
@@ -346,7 +358,7 @@ export function OnboardingWindow() {
               />
             )}
             {currentStep.id === "whatsNewNotes" && (
-              <WhatsNewNotesAct fromVersion={launch.fromVersion} onLeaveForSettings={leaveForSettings} />
+              <WhatsNewNotesAct fromVersion={launch.fromVersion} onLeaveForSettings={leaveForSettings} onDemoScene={director.selectScene} />
             )}
             {currentStep.id === "whatsNewForms" && (
               <WhatsNewFormsAct settings={settings} onSettingsChange={setSettings} onUserInteract={director.claimUserControl} onLeaveForSettings={leaveForSettings} onWingsPreview={director.setWingsPreview} />

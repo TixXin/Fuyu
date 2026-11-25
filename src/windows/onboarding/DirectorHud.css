@@ -1,7 +1,7 @@
 .director-hud {
   position: fixed;
-  top: 14px;
-  right: 18px;
+  top: calc(var(--safe-top, 0px) + 12px);
+  right: calc(var(--safe-right, 0px) + 18px);
   z-index: 40;
   display: flex;
   align-items: center;

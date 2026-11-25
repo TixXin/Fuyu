@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { anchorRestoreTarget, groupDirectorScenes, resolveDirectorScenes } from "../../src/windows/onboarding/directorScenes.ts";
 import { clampIndex, resolveExtensions, resolveMainSteps, resolveSetupSteps, resolveWhatsNewSteps } from "../../src/windows/onboarding/flow.ts";
+import { parseReleaseShowcase, splitHighlightItem } from "../../src/windows/onboarding/releaseShowcase.ts";
 import { isNewerGuideVersion, parseDirectorCommand } from "../../src/windows/onboarding/storage.ts";
 
 const sampleBundle = {
@@ -131,4 +132,45 @@ test("anchorRestoreTarget maps saved island form and edge back to top or dock ta
   assert.deepEqual(anchorRestoreTarget({ islandForm: "top", edge: "right", taskbarDocked: false }), { kind: "dock", target: "right" });
   assert.deepEqual(anchorRestoreTarget({ islandForm: "top", edge: "bottom", taskbarDocked: true }), { kind: "dock", target: "taskbar" });
   assert.deepEqual(anchorRestoreTarget({ islandForm: "top", edge: "bottom", taskbarDocked: false }), { kind: "dock", target: "bottom" });
+});
+
+test("parseReleaseShowcase splits headings, colon titles, themes and live demo scenes", () => {
+  assert.deepEqual(splitHighlightItem("六种像素画风：扁平、描边、单色"), {
+    title: "六种像素画风",
+    detail: "扁平、描边、单色",
+    raw: "六种像素画风：扁平、描边、单色",
+  });
+  const labels = { general: "更多升级", agent: "AI Agent", panel: "岛屿与面板", appearance: "形态与外观", wing: "左右侧翼", fix: "问题修复" };
+  const sections = parseReleaseShowcase(
+    [
+      { kind: "heading", text: "浮屿水母" },
+      { kind: "item", text: "水母会互动了：点一下会有反应" },
+      { kind: "heading", text: "AI Agent" },
+      { kind: "item", text: "Claude Code 额度更准：改读官方数字" },
+      { kind: "heading", text: "修复与细节" },
+      { kind: "item", text: "修复边缘抖动" },
+    ],
+    labels,
+  );
+  assert.deepEqual(sections.map((sec) => [sec.heading, sec.theme, sec.demoScene]), [
+    ["浮屿水母", "jellyfish", "dashboard"],
+    ["AI Agent", "agent", "agentApproval"],
+    ["修复与细节", "fix", null],
+  ]);
+  assert.equal(sections[0].items[0].title, "水母会互动了");
+  assert.equal(sections[2].items[0].title, "");
+
+  const flat = parseReleaseShowcase(
+    [
+      { kind: "item", text: "Agent 会话页焕新：新增五套布局" },
+      { kind: "item", text: "刘海模式顶栏收纳：不再横滚" },
+      { kind: "item", text: "默认展开面板尺寸：800 x 320" },
+      { kind: "item", text: "天气插件 1.4.0：新增 5 个源" },
+      { kind: "item", text: "修复：" },
+      { kind: "item", text: "修复圆角背景块" },
+    ],
+    labels,
+  );
+  assert.ok(flat.length >= 3);
+  assert.equal(flat[flat.length - 1].theme, "fix");
 });

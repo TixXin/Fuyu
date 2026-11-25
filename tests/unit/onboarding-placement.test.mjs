@@ -65,6 +65,17 @@ test("without an island the card centres safely on screen", () => {
   assert.ok(placement.top > 0);
 });
 
+test("safe insets keep the card clear of macOS menu bar and bottom or side Dock", () => {
+  const macScreen = { width: 1512, height: 982 };
+  const macIsland = { x: 626, y: 0, width: 260, height: 38, expanded: false };
+  const withBottomDock = cardPlacement(macIsland, macScreen, "stage", false, { top: 37, bottom: 88, left: 0, right: 0 });
+  assert.ok(withBottomDock.top + withBottomDock.maxHeight <= macScreen.height - 88 - 16);
+
+  const withLeftDock = cardPlacement(null, macScreen, "stage", true, { top: 37, bottom: 0, left: 80, right: 0 });
+  assert.ok(withLeftDock.left >= 80 + 16);
+  assert.ok(withLeftDock.top >= 37 + 16);
+});
+
 test("welcome requests: fresh ones carry their kind, old or broken ones are ignored", () => {
   const now = 1_000_000;
   assert.equal(parseWelcome(JSON.stringify({ kind: "hello", requestedAt: now - 100 }), now), "hello");

@@ -335,14 +335,21 @@ if (!automated) {
     const whatsNewRoot = createRoot(document.getElementById("root")!);
     await act(async () => { whatsNewRoot.render(<StrictMode><I18nProvider><OnboardingWindow /></I18nProvider></StrictMode>); });
     await placeIsland(closed);
-    await until(() => Boolean(document.querySelector(".whats-new-act__pill")));
+    await until(() => Boolean(document.querySelector(".whats-new__pill")));
     check(document.querySelector("main")?.getAttribute("data-mode") === "whatsNew", "What's New mode launches independently for upgraded users");
-    check(Boolean(document.querySelector(".whats-new-act__pill")?.textContent?.includes("0.3.14")), "What's New displays the current version badge and release notes");
+    check(Boolean(document.querySelector(".whats-new__pill")?.textContent?.includes("0.3.14")), "What's New displays the current version badge in the visual hero header");
+    check(document.querySelectorAll(".whats-new__card").length >= 3 && document.querySelectorAll(".whats-new__tab").length >= 2, "What's New renders categorized Bento highlight cards and interactive topic filter tabs");
+    const beforeDockMaxH = parseFloat(card().style.maxHeight);
+    await act(async () => { await emit("onboarding-insets", { top: 38, bottom: 90, left: 0, right: 0 }); });
+    await wait(10);
+    check(parseFloat(card().style.maxHeight) <= beforeDockMaxH - 80, "Safe insets from macOS Dock shrink card maxHeight so the footer stays clear of the Dock");
+    await act(async () => { await emit("onboarding-insets", { top: 0, bottom: 0, left: 0, right: 0 }); });
+    await wait(10);
     check(Boolean(document.querySelector(".wechat-corner")), "Bottom-left WeChat community card is also available in What's New mode");
     const whatsNewImg = document.querySelector<HTMLImageElement>(".wechat-corner__qr img");
     if (whatsNewImg) whatsNewImg.src = SAMPLE_QR;
     await press("下一步");
-    check(title() === "在真岛上试试多种形态" && document.querySelectorAll("[data-island-form]").length === 7, "Second What's New act lets upgraded users try live island forms");
+    check(title() === "在真岛上试试新形态与左右侧翼" && document.querySelectorAll("[data-island-form]").length === 7, "Second What's New act lets upgraded users try live island forms and side-dock split");
 
     document.documentElement.dataset.testResult = "passed";
   } catch (error) {
