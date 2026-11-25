@@ -14,23 +14,28 @@
 .outfit-act__persona {
   position: relative;
   display: grid;
-  gap: 2px;
+  gap: 3px;
   padding: 10px 12px;
   color: var(--color-text);
   font: inherit;
   text-align: left;
   background: var(--color-white-a04);
-  border: 1px solid var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
   border-radius: var(--radius-lg);
   cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
 }
 
 .outfit-act__persona:hover {
+  background: var(--color-white-a06);
   border-color: var(--color-white-a16);
 }
 
 .outfit-act__persona--chosen,
 .outfit-act__persona--chosen:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-white-a04));
   border-color: var(--color-accent);
   box-shadow: inset 0 0 0 1px var(--color-accent);
 }
@@ -43,13 +48,32 @@
 .outfit-act__persona-hint {
   color: var(--color-text-muted);
   font-size: 11px;
+  line-height: 1.45;
 }
 
 .outfit-act__persona-check {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 9px;
+  right: 9px;
   color: var(--color-accent);
+}
+
+.outfit-act__sticker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.outfit-act__sticker-head .outfit-act__question {
+  margin: 0;
+}
+
+.outfit-act__count {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .outfit-act__stickers {
@@ -71,9 +95,19 @@
   border: 1px dashed var(--color-white-a16);
   border-radius: var(--radius-pill);
   cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
 }
 
-.outfit-act__sticker--on {
+.outfit-act__sticker:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+
+.outfit-act__sticker--on,
+.outfit-act__sticker--on:hover {
   color: var(--color-on-accent);
   font-weight: 600;
   background: var(--color-accent);

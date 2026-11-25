@@ -59,7 +59,10 @@ export function OutfitAct({ modules, answer, onAnswerChange, onModulesChange }: 
           );
         })}
       </div>
-      <p className="outfit-act__question">{text.stickersHint}</p>
+      <div className="outfit-act__sticker-head">
+        <p className="outfit-act__question">{text.stickersHint}</p>
+        <span className="outfit-act__count">{text.selectedCount(modules.size, MODULES.length)}</span>
+      </div>
       <div className="outfit-act__stickers" role="group" aria-label={text.stickers}>
         {MODULES.map((module) => {
           const Icon = MODULE_ICONS[module];

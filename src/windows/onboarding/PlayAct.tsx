@@ -63,6 +63,7 @@ export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsCh
   const openKeys = openShortcutLabel(clipboard);
   if (modules.has("clipboard") && openKeys) tasks.push("shortcut");
   const doneCount = tasks.filter((task) => done.has(task)).length;
+  const completed = doneCount === tasks.length;
 
   if (!islandOpen && !sawClosed) setSawClosed(true);
   if (islandOpen && sawClosed && !done.has("expand")) finish("expand");
@@ -82,7 +83,13 @@ export function PlayAct({ settings, modules, clipboard, islandOpen, onSettingsCh
 
   return (
     <>
-      <ActHeading title={text.title} lead={doneCount === tasks.length ? text.allDone : text.lead(modules.has("music"), modules.has("agents"))} />
+      <div className="play-act__head">
+        <ActHeading title={text.title} lead={completed ? text.allDone : text.lead(modules.has("music"), modules.has("agents"))} />
+        <span className={completed ? "play-act__score play-act__score--done" : "play-act__score"}>
+          <Star size={13} aria-hidden="true" />
+          {text.stars(doneCount, tasks.length)}
+        </span>
+      </div>
       <ol className="play-act__tasks" aria-label={text.stars(doneCount, tasks.length)}>
         {tasks.map((task) => (
           <li key={task} className={done.has(task) ? "play-act__task play-act__task--done" : "play-act__task"}>

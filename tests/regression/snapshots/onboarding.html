@@ -1,3 +1,121 @@
 <body style="background: linear-gradient(135deg, rgb(58, 63, 85), rgb(106, 90, 122) 50%, rgb(43, 74, 106))">
-  <div id="root"></div>
+  <div id="root">
+    <main class="onboarding stage--font-system island-light onboarding--light" data-act="release" data-mode="main">
+      <div aria-hidden="true" class="onboarding-spotlight onboarding-spotlight--calm" style="width: 276px; height: 54px; --spot-x: 502px; --spot-y: -8px; --spot-radius: 27px"></div>
+      <div aria-label="欢迎使用浮屿" class="onboarding__card" role="dialog" style="left: #px; width: 480px; top: #px; max-height: 691px">
+        <header class="onboarding__bar">
+          <div class="onboarding__stage">
+            <div aria-label="第 5 步，共 5 步" class="onboarding__progress" role="group">
+              <button aria-label="回到「认识浮屿」" class="onboarding__dot onboarding__dot--done" title="回到「认识浮屿」" type="button"></button>
+              <button aria-label="回到「外观风格」" class="onboarding__dot onboarding__dot--done" title="回到「外观风格」" type="button"></button>
+              <button aria-label="回到「功能搭配」" class="onboarding__dot onboarding__dot--done" title="回到「功能搭配」" type="button"></button>
+              <button aria-label="回到「上手体验」" class="onboarding__dot onboarding__dot--done" title="回到「上手体验」" type="button"></button>
+              <button aria-current="step" aria-label="准备就绪" class="onboarding__dot onboarding__dot--active" disabled="" title="准备就绪" type="button"></button>
+            </div>
+            <span class="onboarding__stage-meta">
+              <span>
+                5 / 5
+              </span>
+              <span aria-hidden="true" class="onboarding__stage-sep">
+                ·
+              </span>
+              <span>
+                准备就绪
+              </span>
+            </span>
+          </div>
+          <button aria-label="关闭引导" class="onboarding__close" type="button">
+            <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+          </button>
+        </header>
+        <section class="onboarding__body">
+          <div class="onboarding__heading">
+            <h1 class="onboarding__title">
+              浮屿已就绪
+            </h1>
+            <p class="onboarding__lead">
+              点「开始使用」后演示内容会收起，真正的岛会安静留在屏幕顶部。
+            </p>
+          </div>
+          <section class="settings-group">
+            <div class="settings-group__card">
+              <div class="settings-row">
+                <div class="settings-row__main">
+                  <div class="settings-row__text">
+                    <label class="settings-row__title" for="_id1_">
+                      开机时启动
+                    </label>
+                    <span class="settings-row__description">
+                      登录 Windows 后岛自动出现
+                    </span>
+                  </div>
+                  <div class="settings-row__control">
+                    <span class="settings-switch">
+                      <input id="_id1_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section aria-label="按需进阶配置" class="release-act__section">
+            <div class="release-act__section-head">
+              <h2 class="release-act__section-title">
+                按需进阶配置
+              </h2>
+              <span class="release-act__section-hint">
+                以下为可选项，随时可以在设置里再弄。
+              </span>
+            </div>
+            <div class="release-act__cards">
+              <button class="release-act__card" data-extension="agentSetup" type="button">
+                <span aria-hidden="true" class="release-act__card-icon">
+                  <svg aria-hidden="true" class="lucide lucide-bot" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                </span>
+                <span class="release-act__card-body">
+                  <span class="release-act__card-title">
+                    配置 AI Agent 与手机推送
+                    <span class="release-act__done-badge">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+                      已配置
+                    </span>
+                  </span>
+                  <span class="release-act__card-desc">
+                    选会话布局、装状态钩子、可选接入飞书 / Telegram 推送
+                  </span>
+                </span>
+                <span class="release-act__card-action">
+                  再次查看
+                  <svg aria-hidden="true" class="lucide lucide-chevron-right" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                </span>
+              </button>
+            </div>
+          </section>
+          <div class="release-act__bottom">
+            <button class="onboarding-release__link" type="button">
+              <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+              打开全部设置
+            </button>
+            <p class="release-act__find-later">
+              以后想改什么：右键托盘里的浮屿图标，选「设置」。
+            </p>
+          </div>
+        </section>
+        <footer class="onboarding__footer">
+          <span class="onboarding__esc">
+            按 Esc 随时退出
+          </span>
+          <div class="onboarding__nav">
+            <button class="onboarding__button" type="button">
+              上一步
+            </button>
+            <button class="onboarding__button onboarding__button--primary" type="button">
+              开始使用
+            </button>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
 </body>

@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { X } from "lucide-react";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { activeTone } from "../../lib/theme/themeMode";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
@@ -17,8 +16,9 @@ import { useLaunchAtStartup } from "../settings/useLaunchAtStartup";
 import { AgentCardsAct } from "./AgentCardsAct";
 import { AgentConnectAct } from "./AgentConnectAct";
 import { showOnboardingWindow } from "./api";
-import { BundleAct } from "./BundleAct";
+import { clampIndex, resolveExtensions, resolveMainSteps, resolveSetupSteps, type OnboardingFlowContext } from "./flow";
 import { HelloAct } from "./HelloAct";
+import { OnboardingHeader } from "./OnboardingHeader";
 import { OutfitAct } from "./OutfitAct";
 import { NO_ANSWER, enabledModules, moduleSwitchChanges, withModules, type OnboardingModule } from "./personas";
 import { cardPlacement } from "./placement";
@@ -36,10 +36,6 @@ import { useIslandSpot } from "./useIslandSpot";
 import { useRecommendedBundle } from "./useRecommendedBundle";
 import "./OnboardingWindow.css";
 import { isMacOS } from "../../lib/platform";
-
-const ACTS = ["hello", "shape", "outfit", "play", "permissions", "agentCards", "agentConnect", "push", "bundle", "release"] as const;
-const AGENT_ACTS: readonly string[] = ["agentCards", "agentConnect", "push"];
-type Act = (typeof ACTS)[number];
 
 let greeted = false;
 
@@ -85,20 +81,32 @@ export function OnboardingWindow() {
   const [clipboard, updateClipboard] = useClipboardSettings();
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [index, setIndex] = useState(0);
+  const [inSetup, setInSetup] = useState(false);
+  const [setupIndex, setSetupIndex] = useState(0);
   const [pushStep, setPushStep] = useState(0);
+  const [agentSetupDone, setAgentSetupDone] = useState(false);
   const [answer, setAnswer] = useState(NO_ANSWER);
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
-  const modules = enabledModules(settings, clipboard.enabled, plugins);
-  const permissionKinds = isMacOS ? neededPermissions(modules) : [];
+  const modules = useMemo(() => enabledModules(settings, clipboard.enabled, plugins), [settings, clipboard.enabled, plugins]);
+  const permissionKinds = useMemo(() => (isMacOS ? neededPermissions(modules) : []), [modules]);
   const bundle = useRecommendedBundle();
-  const acts: readonly Act[] = ACTS.filter((name) => (name !== "permissions" || permissionKinds.length > 0) && (!AGENT_ACTS.includes(name) || modules.has("agents")) && (name !== "bundle" || bundle !== null));
-  const act = acts[Math.min(index, acts.length - 1)];
-  const last = act === "release";
+  const flowCtx: OnboardingFlowContext = useMemo(() => ({ isMacOS, modules, permissionKinds, bundle }), [modules, permissionKinds, bundle]);
+  const mainSteps = useMemo(() => resolveMainSteps(flowCtx), [flowCtx]);
+  const setupSteps = useMemo(() => resolveSetupSteps(flowCtx), [flowCtx]);
+  const extensions = useMemo(() => resolveExtensions(flowCtx), [flowCtx]);
+  const activeSetup = inSetup && setupSteps.length > 0;
+  const mainIndex = clampIndex(index, mainSteps.length);
+  const currentMain = mainSteps[mainIndex];
+  const currentSetupIndex = clampIndex(setupIndex, setupSteps.length);
+  const currentSetup = activeSetup ? setupSteps[currentSetupIndex] : null;
+  const currentStep = currentSetup ?? currentMain;
+  const lastMain = !activeSetup && currentMain.id === "release";
+  const lastSetup = activeSetup && currentSetupIndex === setupSteps.length - 1 && (currentSetup?.id !== "push" || pushStep >= PUSH_STEPS - 1);
   const spot = useIslandSpot();
   const viewport = useViewport();
   const card = useRef<HTMLDivElement | null>(null);
-  const placement = cardPlacement(spot, viewport);
-  useCardRect(card, `${act}:${placement.left}:${placement.top}:${placement.bottom}`);
+  const placement = cardPlacement(spot, viewport, currentStep.layout, activeSetup || currentStep.spotlight === "off");
+  useCardRect(card, `${currentStep.id}:${placement.left}:${placement.top}:${placement.width}:${activeSetup ? "setup" : "main"}`);
   useWindowAccent(settings);
   useShowWhenPainted();
   useDemoHeartbeat();
@@ -113,13 +121,84 @@ export function OnboardingWindow() {
     requestIslandWelcome("hello");
   }, []);
 
+  const finish = () => {
+    requestIslandWelcome("ready");
+    closeGuide();
+  };
+
+  const exitSetup = (markDone: boolean) => {
+    if (markDone) setAgentSetupDone(true);
+    setInSetup(false);
+    setPushStep(0);
+    setIndex(Math.max(0, mainSteps.length - 1));
+  };
+
+  const forward = () => {
+    if (activeSetup) {
+      if (currentSetup?.id === "push" && pushStep < PUSH_STEPS - 1) {
+        setPushStep(pushStep + 1);
+        return;
+      }
+      if (currentSetupIndex < setupSteps.length - 1) {
+        setSetupIndex(currentSetupIndex + 1);
+        setPushStep(0);
+        return;
+      }
+      exitSetup(true);
+      return;
+    }
+    if (lastMain) finish();
+    else setIndex(Math.min(mainSteps.length - 1, mainIndex + 1));
+  };
+
+  const backward = () => {
+    if (activeSetup) {
+      if (currentSetup?.id === "push" && pushStep > 0) {
+        setPushStep(pushStep - 1);
+        return;
+      }
+      if (currentSetupIndex > 0) {
+        setSetupIndex(currentSetupIndex - 1);
+        setPushStep(0);
+        return;
+      }
+      exitSetup(false);
+      return;
+    }
+    setIndex(Math.max(0, mainIndex - 1));
+  };
+
+  const skipCurrentStep = () => {
+    if (activeSetup) {
+      if (currentSetupIndex < setupSteps.length - 1) {
+        setSetupIndex(currentSetupIndex + 1);
+        setPushStep(0);
+      } else {
+        exitSetup(true);
+      }
+      return;
+    }
+    setIndex(Math.min(mainSteps.length - 1, mainIndex + 1));
+  };
+
   useEffect(() => {
-    const leave = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeGuide();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeGuide();
+        return;
+      }
+      if (!event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        forward();
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        backward();
+      }
     };
-    window.addEventListener("keydown", leave);
-    return () => window.removeEventListener("keydown", leave);
-  }, []);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   const changeModules = (next: ReadonlySet<OnboardingModule>) => {
     if (!plugins) {
@@ -135,36 +214,45 @@ export function OnboardingWindow() {
     }
     if (next.has("clipboard") !== clipboard.enabled) void updateClipboard({ ...clipboard, enabled: next.has("clipboard") });
   };
-  const finish = () => {
-    requestIslandWelcome("ready");
-    closeGuide();
+
+  const openAgentSetup = () => {
+    if (setupSteps.length === 0) return;
+    setSetupIndex(0);
+    setPushStep(0);
+    setInSetup(true);
   };
-  const forward = () => (act === "push" && pushStep < PUSH_STEPS - 1 ? setPushStep(pushStep + 1) : setIndex(index + 1));
-  const backward = () => (act === "push" && pushStep > 0 ? setPushStep(pushStep - 1) : setIndex(index - 1));
+
   const leaveForSettings = (section?: SettingsFocusSection, bundleId?: string) => void settingsWindowOpening(section, bundleId).then(finish);
-  const cardStyle: CSSProperties = { left: placement.left, width: placement.width, top: placement.top, bottom: placement.bottom, maxHeight: placement.maxHeight };
+  const cardStyle: CSSProperties = { left: placement.left, width: placement.width, top: placement.top, maxHeight: placement.maxHeight };
+  const primaryLabel = lastMain ? text.release.finish : lastSetup ? text.doneSetup : !activeSetup && currentMain.id === "hello" ? text.startTour : text.next;
 
   return (
-    <main className={`onboarding stage--font-${settings.fontFamily}${light ? " island-light onboarding--light" : ""}`} data-act={act}>
+    <main className={`onboarding stage--font-${settings.fontFamily}${light ? " island-light onboarding--light" : ""}`} data-act={currentStep.id} data-mode={activeSetup ? "setup" : "main"}>
       <IconButtonTooltip scope=".onboarding" />
-      <Spotlight spot={spot} />
-      <div className="onboarding__card" ref={card} style={cardStyle} role="dialog" aria-label={text.windowTitle}>
-        <header className="onboarding__bar">
-          <span className="onboarding__progress" role="img" aria-label={text.stepOf(index + 1, acts.length)}>
-            {acts.map((name, at) => (
-              <span key={name} className={at === index ? "onboarding__dot onboarding__dot--active" : at < index ? "onboarding__dot onboarding__dot--done" : "onboarding__dot"} />
-            ))}
-          </span>
-          <button className="onboarding__close" type="button" aria-label={text.close} onClick={closeGuide}>
-            <X size={15} strokeWidth={1.6} aria-hidden="true" />
-          </button>
-        </header>
-        <section className="onboarding__body" key={act}>
-          {!spot && <p className="onboarding__notice">{isMacOS ? text.noIslandMac : text.noIsland}</p>}
-          {act === "hello" && <HelloAct />}
-          {act === "shape" && <ShapeAct settings={settings} onSettingsChange={setSettings} />}
-          {act === "outfit" && <OutfitAct modules={modules} answer={answer} onAnswerChange={setAnswer} onModulesChange={changeModules} />}
-          {act === "play" && (
+      <Spotlight spot={spot} mode={currentStep.spotlight} />
+      <div className={currentStep.layout === "wide" ? "onboarding__card onboarding__card--wide" : "onboarding__card"} ref={card} style={cardStyle} role="dialog" aria-label={text.windowTitle}>
+        {activeSetup ? (
+          <OnboardingHeader
+            mode="setup"
+            steps={setupSteps}
+            index={currentSetupIndex}
+            onJump={(at) => {
+              setSetupIndex(at);
+              setPushStep(0);
+            }}
+            onBackToSummary={() => exitSetup(false)}
+            onClose={closeGuide}
+          />
+        ) : (
+          <OnboardingHeader mode="main" steps={mainSteps} index={mainIndex} onJump={setIndex} onClose={closeGuide} />
+        )}
+        <section className="onboarding__body" key={currentStep.id}>
+          {!spot && !activeSetup && <p className="onboarding__notice">{isMacOS ? text.noIslandMac : text.noIsland}</p>}
+          {currentStep.id === "hello" && <HelloAct />}
+          {currentStep.id === "shape" && <ShapeAct settings={settings} onSettingsChange={setSettings} />}
+          {currentStep.id === "outfit" && <OutfitAct modules={modules} answer={answer} onAnswerChange={setAnswer} onModulesChange={changeModules} />}
+          {currentStep.id === "permissions" && <PermissionsAct kinds={permissionKinds} />}
+          {currentStep.id === "play" && (
             <PlayAct
               settings={settings}
               modules={modules}
@@ -174,26 +262,32 @@ export function OnboardingWindow() {
               onClipboardChange={(next) => void updateClipboard(next)}
             />
           )}
-          {act === "permissions" && <PermissionsAct kinds={permissionKinds} />}
-          {act === "agentCards" && <AgentCardsAct settings={settings} onSettingsChange={setSettings} />}
-          {act === "agentConnect" && <AgentConnectAct settings={settings} onSettingsChange={setSettings} />}
-          {act === "push" && <PushAct step={pushStep} onSkip={() => setIndex(index + 1)} />}
-          {act === "bundle" && bundle && <BundleAct bundle={bundle} onOpen={(id) => leaveForSettings("pluginMarket", id)} />}
-          {act === "release" && (
+          {currentStep.id === "release" && (
             <ReleaseAct
-              modules={modules}
+              extensions={extensions}
+              bundle={bundle}
+              agentSetupDone={agentSetupDone}
               launchAtStartup={launchAtStartup}
               onLaunchAtStartupChange={(enabled) => void updateLaunchAtStartup(enabled)}
+              onOpenAgentSetup={openAgentSetup}
               onLeaveForSettings={leaveForSettings}
             />
           )}
+          {currentStep.id === "agentCards" && <AgentCardsAct settings={settings} onSettingsChange={setSettings} />}
+          {currentStep.id === "agentConnect" && <AgentConnectAct settings={settings} onSettingsChange={setSettings} />}
+          {currentStep.id === "push" && <PushAct step={pushStep} onSkip={() => exitSetup(true)} />}
         </section>
         <footer className="onboarding__footer">
-          {last ? <span className="onboarding__esc">{text.escHint}</span> : <button className="onboarding__button onboarding__button--quiet" type="button" onClick={closeGuide}>{text.skip}</button>}
+          {lastMain ? <span className="onboarding__esc">{text.escHint}</span> : <button className="onboarding__button onboarding__button--quiet" type="button" onClick={closeGuide}>{text.exit}</button>}
           <div className="onboarding__nav">
-            {index > 0 && <button className="onboarding__button" type="button" onClick={backward}>{text.back}</button>}
-            <button className="onboarding__button onboarding__button--primary" type="button" onClick={() => (last ? finish() : forward())}>
-              {last ? text.release.finish : text.next}
+            {(activeSetup || mainIndex > 0) && <button className="onboarding__button" type="button" onClick={backward}>{text.back}</button>}
+            {currentStep.skippable && !(currentStep.id === "push" && pushStep >= PUSH_STEPS - 1) && (
+              <button className="onboarding__button onboarding__button--quiet" type="button" onClick={skipCurrentStep}>
+                {text.skipStep}
+              </button>
+            )}
+            <button className="onboarding__button onboarding__button--primary" type="button" onClick={forward}>
+              {primaryLabel}
             </button>
           </div>
         </footer>

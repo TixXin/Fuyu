@@ -1,0 +1,46 @@
+.hello-act__hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.hello-act__hero .onboarding__heading {
+  margin: 0;
+}
+
+.hello-act__emblem {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-white-a04));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 26%, var(--color-white-a08));
+}
+
+.hello-act__roadmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin: 0 0 14px;
+}
+
+.hello-act__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-pill);
+}
+
+.hello-act__pill svg {
+  color: var(--color-accent);
+  flex: none;
+}

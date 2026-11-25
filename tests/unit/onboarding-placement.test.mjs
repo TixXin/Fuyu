@@ -6,15 +6,17 @@ import { islandDemoUntil, parseWelcome } from "../../src/windows/onboarding/stor
 const screen = { width: 1920, height: 1040 };
 const island = { x: 830, y: 0, width: 260, height: 38, expanded: false };
 
-const overlaps = (placement, spot, viewport) => {
-  const top = placement.top ?? viewport.height - placement.bottom - placement.maxHeight;
-  return placement.left < spot.x + spot.width && placement.left + placement.width > spot.x && top < spot.y + spot.height;
-};
+const overlaps = (placement, spot) =>
+  placement.left < spot.x + spot.width &&
+  placement.left + placement.width > spot.x &&
+  placement.top < spot.y + spot.height;
 
-test("the card sits below the closed island, centred on it", () => {
+test("the compact card sits comfortably below the closed island, centred on it", () => {
   const placement = cardPlacement(island, screen);
-  assert.equal(placement.top, 66);
+  assert.equal(placement.width, 480);
+  assert.equal(placement.top, 128);
   assert.equal(placement.left + placement.width / 2, 960);
+  assert.equal(placement.centered, false);
 });
 
 test("the card stays on screen when the island is near an edge", () => {
@@ -24,20 +26,33 @@ test("the card stays on screen when the island is near an edge", () => {
   assert.equal(cardPlacement(island, { width: 400, height: 900 }).width, 368);
 });
 
-test("the open island never covers the card", () => {
+test("the open island never covers the card and always transitions via top", () => {
   const shortOpen = { x: 680, y: 0, width: 560, height: 300, expanded: true };
-  const tallOpen = { x: 680, y: 0, width: 560, height: 640, expanded: true };
+  const tallOpen = { x: 680, y: 0, width: 560, height: 740, expanded: true };
   assert.equal(cardPlacement(shortOpen, screen).top, 328);
   assert.equal(cardPlacement(tallOpen, screen).left, 1268);
-  for (const spot of [shortOpen, tallOpen]) assert.ok(!overlaps(cardPlacement(spot, screen), spot, screen));
+  for (const spot of [shortOpen, tallOpen]) {
+    const place = cardPlacement(spot, screen);
+    assert.ok(typeof place.top === "number");
+    assert.ok(!overlaps(place, spot));
+  }
   const leftSide = cardPlacement({ ...tallOpen, x: 1300 }, screen);
   assert.equal(leftSide.left + leftSide.width, 1272);
 });
 
-test("without an island the card docks at the bottom", () => {
+test("workspace and wide layout centre a wider card safely below the top island", () => {
+  const wide = cardPlacement(island, screen, "wide", true);
+  assert.equal(wide.width, 640);
+  assert.equal(wide.centered, true);
+  assert.equal(wide.left + wide.width / 2, 960);
+  assert.ok(wide.top >= island.height + 28);
+});
+
+test("without an island the card centres safely on screen", () => {
   const placement = cardPlacement(null, screen);
-  assert.equal(placement.top, undefined);
-  assert.equal(placement.bottom, 40);
+  assert.equal(placement.centered, true);
+  assert.equal(placement.left + placement.width / 2, 960);
+  assert.ok(placement.top > 0);
 });
 
 test("welcome requests: fresh ones carry their kind, old or broken ones are ignored", () => {

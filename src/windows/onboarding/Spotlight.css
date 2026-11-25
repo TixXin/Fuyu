@@ -3,11 +3,21 @@
   top: 0;
   left: 0;
   border-radius: 0 0 var(--spot-radius) var(--spot-radius);
-  box-shadow: 0 0 0 200vmax rgba(6, 8, 14, 0.5);
+  box-shadow: 0 0 0 200vmax rgba(6, 8, 14, 0.46);
   pointer-events: none;
   transform: translate3d(var(--spot-x, 0px), var(--spot-y, 0px), 0);
-  transition: transform var(--motion-medium) var(--motion-ease), width var(--motion-medium) var(--motion-ease), height var(--motion-medium) var(--motion-ease), border-radius var(--motion-medium) var(--motion-ease);
-  animation: spotlightIn var(--motion-slow) var(--motion-ease) backwards;
+  transition:
+    transform var(--motion-medium) var(--motion-ease),
+    width var(--motion-medium) var(--motion-ease),
+    height var(--motion-medium) var(--motion-ease),
+    border-radius var(--motion-medium) var(--motion-ease),
+    box-shadow var(--motion-medium) var(--motion-ease),
+    opacity var(--motion-medium) var(--motion-ease);
+  animation: spotlightIn var(--motion-slow) var(--motion-ease-out) backwards;
+}
+
+.onboarding-spotlight--detached {
+  border-radius: var(--spot-radius);
 }
 
 .onboarding-spotlight::after {
@@ -17,37 +27,60 @@
   border: 2px solid var(--color-accent);
   border-top: 0;
   border-radius: inherit;
-  animation: spotlightCall 1.8s var(--motion-ease) infinite;
+  animation: spotlightCall 2s var(--motion-ease) infinite;
 }
 
+.onboarding-spotlight--detached::after {
+  border-top: 2px solid var(--color-accent);
+}
+
+.onboarding-spotlight--calm::after,
 .onboarding-spotlight--open::after {
   animation: none;
-  opacity: 0.6;
+  opacity: 0.48;
 }
 
 .onboarding-spotlight--none {
   inset: 0;
   border-radius: 0;
   box-shadow: none;
-  background: rgba(6, 8, 14, 0.5);
+  background: var(--onboarding-scrim, rgba(6, 8, 14, 0.46));
 }
 
-.onboarding-spotlight--none::after {
+.onboarding-spotlight--off {
+  inset: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  animation: none;
+}
+
+.onboarding-spotlight--none::after,
+.onboarding-spotlight--off::after {
   display: none;
 }
 
 @keyframes spotlightIn {
-  from { box-shadow: 0 0 0 200vmax rgba(6, 8, 14, 0); }
+  from {
+    box-shadow: 0 0 0 200vmax rgba(6, 8, 14, 0);
+  }
 }
 
 @keyframes spotlightCall {
-  from { opacity: 0.9; transform: scale(1); }
-  to { opacity: 0; transform: scale(1.06, 1.25); }
+  from {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.06, 1.24);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .onboarding-spotlight,
   .onboarding-spotlight::after,
+  .onboarding-spotlight--calm::after,
   .onboarding-spotlight--open::after {
     animation: none;
   }
