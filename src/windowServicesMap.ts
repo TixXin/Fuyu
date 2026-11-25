@@ -43,6 +43,7 @@ const NO_SERVICE_FEATURES: readonly ServiceFeature[] = [];
 export function serviceFeaturesForWindow(windowKind: string | null): readonly ServiceFeature[] {
   switch (windowKind) {
     case null:
+    case "side":
       return ALL_SERVICE_FEATURES;
     case "settings":
       return SETTINGS_SERVICE_FEATURES;

@@ -109,6 +109,110 @@ export type SettingsIslandPagesText = {
     qq: string;
     translation: string;
   };
+  sideDocks: {
+    title: string;
+    hint: string;
+    openAria: string;
+    pinAria: string;
+    closeAria: string;
+    openSettingsAria: string;
+    emptyHint: string;
+    autoSplit: string;
+    allToTop: string;
+    reset: string;
+    zones: {
+      left: string;
+      top: string;
+      right: string;
+      hidden: string;
+      enabled: string;
+      disabled: string;
+      dropHint: string;
+      hiddenHint: string;
+      centerTitle: string;
+      centerHint: string;
+    };
+    monitor: {
+      title: string;
+      hint: string;
+      single: string;
+      dual: string;
+      secondary: string;
+      seamBlocked: string;
+      primaryHint: string;
+      compact: string;
+      standard: string;
+      wide: string;
+      readout: (edge: string, percent: number, width: number, height: number) => string;
+    };
+    mode: {
+      title: string;
+      hint: string;
+      threeAuto: string;
+      threeAutoDesc: string;
+      threeHover: string;
+      threeHoverDesc: string;
+      twoDirect: string;
+      twoDirectDesc: string;
+      recommended: string;
+    };
+    nav: {
+      title: string;
+      full: string;
+      fullDesc: string;
+      minimal: string;
+      minimalDesc: string;
+      icons: string;
+      iconsDesc: string;
+    };
+    radius: {
+      title: string;
+      summary: (outer: number, inner: number, handle: number) => string;
+      sharp: string;
+      balanced: string;
+      soft: string;
+      custom: string;
+    };
+    appearance: {
+      title: string;
+      hint: string;
+      follow: string;
+      custom: string;
+      followSummary: (tone: string, material: string, opacity: number) => string;
+      glassOpacity: string;
+    };
+    fine: {
+      title: string;
+      trigger: string;
+      hover: string;
+      click: string;
+      hoverDelay: string;
+      leaveDelay: string;
+      drawerWidth: string;
+      drawerHeight: string;
+      gap: string;
+      handleWidth: string;
+      handleHeight: string;
+      handleOpacity: string;
+      handleDot: string;
+      theme: string;
+      material: string;
+      follow: string;
+      dark: string;
+      light: string;
+      glass: string;
+      solid: string;
+      surfaceOpacity: string;
+      density: string;
+      cozy: string;
+      compact: string;
+      stripStyle: string;
+      stripLabel: string;
+      stripIcon: string;
+      dragDropShelf: string;
+      hideInFullscreen: string;
+    };
+  };
 };
 
 export const zhCN: SettingsIslandPagesText = {
@@ -248,6 +352,110 @@ export const zhCN: SettingsIslandPagesText = {
     qq: "消息",
     translation: "翻译",
   },
+  sideDocks: {
+    title: "屏幕左右侧边翼",
+    hint: "把待办、剪贴板、文件中转等纵长列表拖到屏幕左侧或右侧独立展开，顶部主岛只留轻感知项。拖进未开启的一侧会自动启用它。",
+    openAria: "展开侧边翼",
+    pinAria: "钉住常驻",
+    closeAria: "收起侧边翼",
+    openSettingsAria: "配置侧边翼布局",
+    emptyHint: "这一侧还没有分配页面，可在设置里拖入任意页面。",
+    autoSplit: "一键清爽分流",
+    allToTop: "全部回顶岛",
+    reset: "恢复默认",
+    zones: {
+      left: "左侧翼",
+      top: "顶部主岛",
+      right: "右侧翼",
+      hidden: "暂不显示",
+      enabled: "已开启",
+      disabled: "未开启",
+      dropHint: "拖页面卡片到这里",
+      hiddenHint: "拖到这里隐藏，功能仍在后台运行",
+      centerTitle: "跨区拖拽页面卡片",
+      centerHint: "支持同区拖动排序，拖入左侧翼或右侧翼时自动开启对应侧边翼",
+    },
+    monitor: {
+      title: "位置、尺寸与多屏边缘",
+      hint: "直接拖动显示器上的边缘把手调垂直位置，拖动微缩抽屉的内边和底边改宽高；双屏拼接边自动禁触。",
+      single: "单屏",
+      dual: "双屏拼接",
+      secondary: "副屏",
+      seamBlocked: "拼接边禁触",
+      primaryHint: "拖把手上下移 · 拖虚框调宽高",
+      compact: "紧凑",
+      standard: "标准",
+      wide: "宽大",
+      readout: (edge, percent, width, height) => `${edge} · 沿边 ${percent}% · 抽屉 ${width} × ${height}px · 仅贴物理外侧边`,
+    },
+    mode: {
+      title: "展开形态与二层策略",
+      hint: "默认触发即同步展开快捷条与二层抽屉，无需二次点击。",
+      threeAuto: "三态 · 二层自动展开",
+      threeAutoDesc: "触碰把手同时滑出快捷条与抽屉，一步到位",
+      threeHover: "三态 · 悬停图标再开",
+      threeHoverDesc: "先出窄快捷条，光标停到图标再展开抽屉",
+      twoDirect: "两态 · 把手直达抽屉",
+      twoDirectDesc: "无快捷条，直接贴着屏幕边展开大抽屉",
+      recommended: "推荐",
+    },
+    nav: {
+      title: "快捷条与抽屉导航风格",
+      full: "完整双导航",
+      fullDesc: "快捷条带短字，抽屉顶部保留完整 Tab 栏",
+      minimal: "极简窄条 · 去重顶栏",
+      minimalDesc: "纯图标快捷条切页，隐藏抽屉重复 Tab 栏",
+      icons: "紧凑纯图标 Tab",
+      iconsDesc: "抽屉顶栏折叠为纯图标，放得下更多页",
+    },
+    radius: {
+      title: "圆角手感",
+      summary: (outer, inner, handle) => `外框 ${outer}px · 内层 ${inner}px · 把手 ${handle}px`,
+      sharp: "利落 8px",
+      balanced: "均衡 14px",
+      soft: "柔和 18px",
+      custom: "自定义",
+    },
+    appearance: {
+      title: "外观与材质",
+      hint: "默认直接继承主岛的配色、材质与透明度，保持视觉统一；需要独立区分时再切换自定义。",
+      follow: "跟随主岛",
+      custom: "独立自定义",
+      followSummary: (tone, material, opacity) => `当前已同步主岛外观：${tone} · ${material} · 不透明度 ${opacity}%（在「外观」中统一调整）`,
+      glassOpacity: "玻璃背景不透明度",
+    },
+    fine: {
+      title: "交互与精细参数",
+      trigger: "触发方式",
+      hover: "悬停展开",
+      click: "仅点击把手",
+      hoverDelay: "悬停延迟",
+      leaveDelay: "移开收起延迟",
+      drawerWidth: "抽屉宽度",
+      drawerHeight: "抽屉高度",
+      gap: "抽屉与条间距",
+      handleWidth: "把手厚度",
+      handleHeight: "把手长度",
+      handleOpacity: "休眠把手可见度",
+      handleDot: "把手状态微点",
+      theme: "配色主题",
+      material: "面板材质",
+      follow: "跟随主岛",
+      dark: "深色",
+      light: "浅色",
+      glass: "液态玻璃",
+      solid: "纯色",
+      surfaceOpacity: "背景不透明度",
+      density: "列表密度",
+      cozy: "舒适",
+      compact: "紧凑",
+      stripStyle: "快捷条样式",
+      stripLabel: "图标+文字",
+      stripIcon: "纯图标",
+      dragDropShelf: "拖文件到边缘展开中转",
+      hideInFullscreen: "全屏与游戏模式隐藏",
+    },
+  },
 };
 
 export const en: SettingsIslandPagesText = {
@@ -386,5 +594,109 @@ export const en: SettingsIslandPagesText = {
     timer: "Timer",
     qq: "Messages",
     translation: "Translate",
+  },
+  sideDocks: {
+    title: "Screen side docks",
+    hint: "Drag tall list pages such as Todos, Clipboard, and File shelf to the left or right screen edge so the top island stays clean. Dropping onto a disabled side enables it automatically.",
+    openAria: "Open side dock",
+    pinAria: "Pin open",
+    closeAria: "Collapse side dock",
+    openSettingsAria: "Configure side docks",
+    emptyHint: "No pages assigned to this side yet. Drag any page here in Settings.",
+    autoSplit: "Recommended split",
+    allToTop: "Move all to top",
+    reset: "Reset defaults",
+    zones: {
+      left: "Left dock",
+      top: "Top island",
+      right: "Right dock",
+      hidden: "Hidden",
+      enabled: "On",
+      disabled: "Off",
+      dropHint: "Drop pages here",
+      hiddenHint: "Drop here to hide while keeping background features running",
+      centerTitle: "Drag pages across zones",
+      centerHint: "Drag inside a zone to reorder, or drop onto a side dock to enable it automatically",
+    },
+    monitor: {
+      title: "Edge position, size, and displays",
+      hint: "Drag the edge handle vertically to position it, or drag the drawer borders to resize. Shared seams between displays are never triggered.",
+      single: "Single display",
+      dual: "Dual displays",
+      secondary: "Secondary",
+      seamBlocked: "Seam blocked",
+      primaryHint: "Drag handle or drawer edges",
+      compact: "Compact",
+      standard: "Standard",
+      wide: "Wide",
+      readout: (edge, percent, width, height) => `${edge} · ${percent}% along edge · ${width} × ${height}px · Outer edges only`,
+    },
+    mode: {
+      title: "Expand style & drawer behavior",
+      hint: "By default, both the quick strip and drawer open together on trigger.",
+      threeAuto: "3-stage · Auto drawer",
+      threeAutoDesc: "Open quick strip and drawer together in one step",
+      threeHover: "3-stage · Hover icon",
+      threeHoverDesc: "Open quick strip first, expand drawer on icon hover",
+      twoDirect: "2-stage · Direct drawer",
+      twoDirectDesc: "Skip quick strip and open the drawer directly from the edge",
+      recommended: "Recommended",
+    },
+    nav: {
+      title: "Quick strip & drawer header",
+      full: "Full dual navigation",
+      fullDesc: "Labeled quick strip plus full tabs in drawer header",
+      minimal: "Slim strip · Minimal header",
+      minimalDesc: "Icon-only strip switches pages; hide duplicate drawer tabs",
+      icons: "Compact icon tabs",
+      iconsDesc: "Icon-only drawer tabs to fit more pages",
+    },
+    radius: {
+      title: "Corner radius",
+      summary: (outer, inner, handle) => `Outer ${outer}px · Inner ${inner}px · Handle ${handle}px`,
+      sharp: "Crisp 8px",
+      balanced: "Balanced 14px",
+      soft: "Soft 18px",
+      custom: "Custom",
+    },
+    appearance: {
+      title: "Appearance & material",
+      hint: "Inherits the main island's colors, material, and opacity by default. Switch to Custom only if you want a separate look.",
+      follow: "Follow island",
+      custom: "Custom",
+      followSummary: (tone, material, opacity) => `Synced with island: ${tone} · ${material} · ${opacity}% opacity (adjust under Appearance)`,
+      glassOpacity: "Glass surface opacity",
+    },
+    fine: {
+      title: "Interaction & fine tuning",
+      trigger: "Trigger",
+      hover: "Hover",
+      click: "Click only",
+      hoverDelay: "Hover delay",
+      leaveDelay: "Auto-collapse delay",
+      drawerWidth: "Drawer width",
+      drawerHeight: "Drawer height",
+      gap: "Strip gap",
+      handleWidth: "Handle width",
+      handleHeight: "Handle height",
+      handleOpacity: "Idle handle opacity",
+      handleDot: "Handle status dot",
+      theme: "Theme",
+      material: "Material",
+      follow: "Follow island",
+      dark: "Dark",
+      light: "Light",
+      glass: "Liquid glass",
+      solid: "Solid",
+      surfaceOpacity: "Surface opacity",
+      density: "List density",
+      cozy: "Cozy",
+      compact: "Compact",
+      stripStyle: "Quick strip style",
+      stripLabel: "Icon + label",
+      stripIcon: "Icon only",
+      dragDropShelf: "Open file shelf on edge drag",
+      hideInFullscreen: "Hide in fullscreen / game mode",
+    },
   },
 };

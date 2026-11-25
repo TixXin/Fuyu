@@ -1,0 +1,1713 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>浮屿 Fuyu · 侧边翼交互 + 可视化拖拽设置预览 v3</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-fast: 120ms;
+    --motion-base: 160ms;
+    --motion-medium: 240ms;
+    --motion-slow: 420ms;
+    --font-ui: "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 18px 26px 80px;
+    background: #0d0e12;
+    color: #ececf0;
+    font: 13.5px/1.55 var(--font-ui);
+  }
+  .page { max-width: 1260px; margin: 0 auto; }
+
+  .top-bar { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+  h1 { font-size: 20px; margin: 0 0 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  h1 .pill {
+    font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px;
+    background: rgba(116, 214, 255, 0.14); color: #74d6ff; border: 1px solid rgba(116, 214, 255, 0.32);
+  }
+  p.lead { color: #9698a6; margin: 0; font-size: 12.5px; max-width: 820px; }
+
+  .presets-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .preset-btn {
+    background: #191b22; color: #d4d6e0; border: 1px solid #2d303c;
+    border-radius: 7px; padding: 5px 11px; font: inherit; font-size: 12px; cursor: pointer;
+    transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+  }
+  .preset-btn:hover { background: #232632; border-color: #454a5c; color: #fff; }
+  .preset-btn.on { background: rgba(116, 214, 255, 0.16); border-color: rgba(116, 214, 255, 0.65); color: #74d6ff; font-weight: 600; }
+
+  .desk-wrap { overflow-x: auto; padding-bottom: 4px; margin-bottom: 18px; }
+  .desk {
+    --surface-rgb: 12, 13, 18;
+    --surface-alpha: 0.78;
+    --surface: rgba(var(--surface-rgb), var(--surface-alpha));
+    --surface-card: rgba(255, 255, 255, 0.055);
+    --ink: 248, 246, 240;
+    --accent: #74d6ff;
+    --accent-rgb: 116, 214, 255;
+    --on-accent: #06202c;
+    --border: rgba(255, 255, 255, 0.14);
+    --shadow-panel: 0 18px 46px rgba(0, 0, 0, 0.50);
+    --blur: 24px;
+    --r-outer: 14px;
+    --r-inner: 8px;
+    --r-handle: 7px;
+    --drawer-w: 380px;
+    --drawer-h: 520px;
+    --dock-gap: 6px;
+    --strip-w: 64px;
+    --handle-w: 9px;
+    --handle-h: 84px;
+    --handle-alpha: 0.78;
+    --item-pad: 8px 11px;
+    --item-gap: 7px;
+    position: relative;
+    width: 1260px;
+    height: 600px;
+    border-radius: 12px;
+    overflow: hidden;
+    user-select: none;
+    border: 1px solid #2b2d36;
+    background:
+      radial-gradient(62% 82% at 15% 12%, rgba(76, 124, 214, 0.36), transparent 62%),
+      radial-gradient(54% 72% at 88% 82%, rgba(114, 82, 206, 0.32), transparent 64%),
+      radial-gradient(45% 55% at 62% 24%, rgba(40, 162, 194, 0.20), transparent 60%),
+      linear-gradient(150deg, #121726 0%, #0d1019 52%, #0a0b10 100%);
+  }
+  .desk.light {
+    --surface-rgb: 246, 248, 253;
+    --surface-card: rgba(255, 255, 255, 0.76);
+    --ink: 24, 24, 30;
+    --on-accent: #ffffff;
+    --border: rgba(20, 24, 36, 0.12);
+    --shadow-panel: 0 16px 40px rgba(18, 26, 44, 0.16);
+    border-color: #d4d8e2;
+    background:
+      radial-gradient(66% 85% at 18% 12%, rgba(140, 196, 255, 0.50), transparent 64%),
+      radial-gradient(56% 72% at 86% 86%, rgba(196, 174, 255, 0.40), transparent 64%),
+      linear-gradient(150deg, #eff3fa 0%, #e1e8f5 55%, #d6dfee 100%);
+  }
+  .desk.solid {
+    --blur: 0px;
+    --surface-rgb: 8, 9, 12;
+    --surface-card: #16171d;
+    --border: rgba(255, 255, 255, 0.10);
+  }
+  .desk.light.solid {
+    --surface-rgb: 245, 246, 249;
+    --surface-card: #ffffff;
+    --border: rgba(20, 24, 36, 0.10);
+  }
+  .desk.compact { --item-pad: 6px 9px; --item-gap: 5px; }
+
+  .mock-app {
+    position: absolute; left: 96px; top: 72px; width: 690px; height: 452px;
+    border-radius: 10px; background: rgba(22, 23, 29, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 22px 54px rgba(0, 0, 0, 0.42);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .desk.light .mock-app { background: rgba(255, 255, 255, 0.88); border-color: rgba(20, 24, 36, 0.09); box-shadow: 0 18px 44px rgba(24, 34, 58, 0.12); }
+  .mock-app-bar {
+    height: 32px; padding: 0 12px; display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid rgba(var(--ink), 0.07); font-size: 11.5px; color: rgba(var(--ink), 0.56);
+  }
+  .mac-dots { display: flex; gap: 6px; margin-right: 4px; }
+  .mac-dots span { width: 9px; height: 9px; border-radius: 50%; display: block; opacity: 0.85; }
+  .mac-dots span:nth-child(1) { background: #ff5f57; }
+  .mac-dots span:nth-child(2) { background: #febc2e; }
+  .mac-dots span:nth-child(3) { background: #28c840; }
+  .mock-app-body { display: grid; grid-template-columns: 146px 1fr; flex: 1; min-height: 0; }
+  .mock-sidebar { padding: 12px; border-right: 1px solid rgba(var(--ink), 0.07); display: flex; flex-direction: column; gap: 8px; }
+  .mock-code { padding: 14px 18px; display: flex; flex-direction: column; gap: 9px; }
+  .skel { height: 8px; border-radius: 4px; background: rgba(var(--ink), 0.09); }
+  .skel.hi { background: rgba(var(--accent-rgb), 0.28); }
+
+  .drag-files {
+    margin-top: auto; padding: 10px 12px; border-radius: 8px;
+    background: rgba(var(--ink), 0.04); border: 1px dashed rgba(var(--ink), 0.16);
+  }
+  .drag-files-title { font-size: 11.5px; color: rgba(var(--ink), 0.62); margin-bottom: 6px; }
+  .drag-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .drag-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 8px; border-radius: 6px;
+    background: rgba(var(--ink), 0.08); border: 1px solid rgba(var(--ink), 0.12);
+    color: rgba(var(--ink), 0.92); font-size: 11.5px; cursor: grab;
+  }
+  .drag-chip:hover { background: rgba(var(--accent-rgb), 0.16); border-color: var(--accent); }
+  .drag-ghost {
+    position: fixed; z-index: 9999; pointer-events: none;
+    padding: 5px 11px; border-radius: 7px;
+    background: #141720ee; color: #f8f6f0; border: 1px solid #74d6ff;
+    font-size: 12px; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+    display: none; align-items: center; gap: 6px;
+  }
+
+  .top-island-stage { position: absolute; left: 50%; top: 0; transform: translateX(-50%); z-index: 20; display: flex; flex-direction: column; align-items: center; }
+  .top-island {
+    position: relative; background: var(--surface); color: rgba(var(--ink), 0.95);
+    border: 1px solid var(--border); border-top: 0; border-radius: 0 0 16px 16px;
+    width: 344px; height: 35px; overflow: hidden; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.30);
+    backdrop-filter: blur(var(--blur)) saturate(175%); -webkit-backdrop-filter: blur(var(--blur)) saturate(175%);
+    transition: width var(--motion-slow) var(--motion-ease-out), height var(--motion-slow) var(--motion-ease-out), border-radius var(--motion-medium) var(--motion-ease-out);
+  }
+  .top-island.open { width: 530px; height: 206px; border-radius: 0 0 18px 18px; box-shadow: var(--shadow-panel); }
+  .top-island.crowded.open { width: 630px; }
+  .top-collapsed {
+    position: absolute; inset: 0 0 auto 0; height: 35px;
+    display: flex; align-items: center; gap: 9px; padding: 0 14px; cursor: pointer; font-size: 12px;
+    transition: opacity var(--motion-base) var(--motion-ease);
+  }
+  .top-island.open .top-collapsed { opacity: 0; pointer-events: none; }
+  .agent-dot { width: 7px; height: 7px; border-radius: 50%; background: #35e985; box-shadow: 0 0 7px rgba(53, 233, 133, 0.7); flex: none; }
+  .top-collapsed .summary { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(var(--ink), 0.86); }
+  .top-collapsed .badge-pill { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: rgba(var(--ink), 0.08); color: rgba(var(--ink), 0.72); }
+  .top-panel { position: absolute; inset: 0; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity var(--motion-base) var(--motion-ease); }
+  .top-island.open .top-panel { opacity: 1; pointer-events: auto; transition: opacity var(--motion-medium) var(--motion-ease-out) 80ms; }
+  .top-head { display: flex; align-items: center; gap: 3px; padding: 7px 11px; border-bottom: 1px solid rgba(var(--ink), 0.07); overflow-x: auto; scrollbar-width: none; }
+  .top-head::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    border: 0; background: transparent; color: rgba(var(--ink), 0.62); border-radius: 6px; padding: 4px 8px;
+    font: inherit; font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; flex: none;
+  }
+  .tab-btn:hover { background: rgba(var(--ink), 0.08); color: rgba(var(--ink), 0.92); }
+  .tab-btn.on { background: rgba(var(--accent-rgb), 0.16); color: var(--accent); font-weight: 600; }
+  .top-head .close-mini { margin-left: auto; width: 22px; height: 22px; border-radius: 6px; border: 0; background: rgba(var(--ink), 0.08); color: rgba(var(--ink), 0.65); cursor: pointer; flex: none; display: grid; place-items: center; }
+  .top-body { flex: 1; padding: 11px 14px; display: flex; align-items: center; }
+  .top-card { width: 100%; background: var(--surface-card); border: 1px solid rgba(var(--ink), 0.08); border-radius: var(--r-inner); padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .top-card-icon { width: 32px; height: 32px; border-radius: 7px; flex: none; display: grid; place-items: center; background: rgba(var(--accent-rgb), 0.14); color: var(--accent); }
+  .top-card h4 { margin: 0 0 2px; font-size: 12.5px; color: rgba(var(--ink), 0.95); }
+  .top-card p { margin: 0; font-size: 11.5px; color: rgba(var(--ink), 0.58); }
+
+  .side-dock { position: absolute; top: 0; bottom: 0; z-index: 30; pointer-events: none; }
+  .side-dock.right { right: 0; }
+  .side-dock.left { left: 0; }
+  .side-dock.hidden { display: none; }
+  .dock-anchor { position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .side-dock.right .dock-anchor { right: 0; }
+  .side-dock.left .dock-anchor { left: 0; }
+
+  .edge-handle {
+    position: relative; pointer-events: auto;
+    width: var(--handle-w); height: var(--handle-h);
+    background: var(--surface); border: 1px solid var(--border); opacity: var(--handle-alpha);
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(var(--blur)) saturate(175%); -webkit-backdrop-filter: blur(var(--blur)) saturate(175%);
+    transition: width var(--motion-base) var(--motion-ease), opacity var(--motion-base) var(--motion-ease);
+  }
+  .side-dock.right .edge-handle { border-right: 0; border-radius: var(--r-handle) 0 0 var(--r-handle); }
+  .side-dock.left .edge-handle { border-left: 0; border-radius: 0 var(--r-handle) var(--r-handle) 0; }
+  .edge-handle:hover { width: calc(var(--handle-w) + 4px); opacity: 1; }
+  .edge-handle .bar-pill { width: 3px; height: 24px; border-radius: 999px; background: rgba(var(--ink), 0.36); transition: background-color var(--motion-fast) var(--motion-ease), height var(--motion-base) var(--motion-ease); }
+  .edge-handle:hover .bar-pill { background: var(--accent); height: 32px; }
+  .edge-handle .handle-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .edge-handle .handle-dot.off { display: none; }
+  .side-dock[data-state="strip"] .edge-handle,
+  .side-dock[data-state="drawer"] .edge-handle,
+  .side-dock[data-state="drop"] .edge-handle { opacity: 0; pointer-events: none; }
+
+  .quick-strip {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 0; overflow: hidden; pointer-events: none; opacity: 0;
+    background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-panel);
+    backdrop-filter: blur(var(--blur)) saturate(180%); -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+    transition: width var(--motion-medium) var(--motion-ease-out), opacity var(--motion-base) var(--motion-ease);
+  }
+  .side-dock.right .quick-strip { right: 0; border-right: 0; border-radius: var(--r-outer) 0 0 var(--r-outer); }
+  .side-dock.left .quick-strip { left: 0; border-left: 0; border-radius: 0 var(--r-outer) var(--r-outer) 0; }
+  .side-dock[data-state="strip"] .quick-strip,
+  .side-dock[data-state="drawer"][data-stages="3"] .quick-strip,
+  .side-dock[data-state="drop"] .quick-strip { width: var(--strip-w); opacity: 1; pointer-events: auto; }
+  .quick-strip-inner { width: var(--strip-w); padding: 8px 5px; display: flex; flex-direction: column; align-items: center; gap: 5px; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .side-dock[data-state="strip"] .quick-strip-inner,
+  .side-dock[data-state="drawer"][data-stages="3"] .quick-strip-inner,
+  .side-dock[data-state="drop"] .quick-strip-inner { opacity: 1; transition-delay: 50ms; }
+  .qs-btn {
+    width: calc(var(--strip-w) - 10px); padding: 4px 2px; border: 0; background: transparent;
+    color: rgba(var(--ink), 0.72); border-radius: var(--r-inner); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; font: inherit; font-size: 10px; line-height: 1.2;
+  }
+  .qs-btn:hover { background: rgba(var(--ink), 0.08); color: rgba(var(--ink), 0.96); }
+  .qs-btn.on .qs-circle { background: var(--accent); color: var(--on-accent); }
+  .qs-circle { width: 30px; height: 30px; border-radius: var(--r-inner); background: rgba(var(--ink), 0.08); display: grid; place-items: center; }
+  .qs-label.hide { display: none; }
+  .qs-drop-zone {
+    display: none; width: calc(var(--strip-w) - 10px); min-height: 136px; border-radius: var(--r-inner);
+    border: 1.5px dashed var(--accent); background: rgba(var(--accent-rgb), 0.14); color: var(--accent);
+    flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 600;
+  }
+  .side-dock[data-state="drop"] .qs-btn { display: none; }
+  .side-dock[data-state="drop"] .qs-drop-zone { display: flex; }
+
+  .drawer-shell {
+    position: absolute; width: 0; height: var(--drawer-h);
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-outer);
+    box-shadow: var(--shadow-panel); overflow: hidden; opacity: 0; pointer-events: none;
+    backdrop-filter: blur(var(--blur)) saturate(185%); -webkit-backdrop-filter: blur(var(--blur)) saturate(185%);
+    transition: width var(--motion-medium) var(--motion-ease-out), opacity var(--motion-base) var(--motion-ease), right var(--motion-medium) var(--motion-ease-out), left var(--motion-medium) var(--motion-ease-out);
+  }
+  .side-dock.right[data-stages="3"] .drawer-shell { right: calc(var(--strip-w) + var(--dock-gap)); }
+  .side-dock.left[data-stages="3"] .drawer-shell { left: calc(var(--strip-w) + var(--dock-gap)); }
+  .side-dock[data-state="drawer"] .drawer-shell { width: var(--drawer-w); opacity: 1; pointer-events: auto; }
+  .side-dock.right[data-stages="2"] .drawer-shell { right: 0; border-right: 0; border-radius: var(--r-outer) 0 0 var(--r-outer); }
+  .side-dock.left[data-stages="2"] .drawer-shell { left: 0; border-left: 0; border-radius: 0 var(--r-outer) var(--r-outer) 0; }
+
+  .drawer-inner { width: var(--drawer-w); height: 100%; display: flex; flex-direction: column; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .side-dock[data-state="drawer"] .drawer-inner { opacity: 1; transition: opacity var(--motion-medium) var(--motion-ease-out) 60ms; }
+  .drawer-tabs { display: flex; align-items: center; gap: 3px; padding: 8px 10px 7px; border-bottom: 1px solid rgba(var(--ink), 0.08); overflow-x: auto; scrollbar-width: none; }
+  .drawer-tabs::-webkit-scrollbar { display: none; }
+  .drawer-tabs.minimal { justify-content: space-between; padding: 7px 11px; }
+  .drawer-tabs .min-title { font-size: 12.5px; font-weight: 600; color: rgba(var(--ink), 0.92); display: inline-flex; align-items: center; gap: 6px; }
+  .d-tab { border: 0; background: transparent; color: rgba(var(--ink), 0.60); padding: 4px 8px; border-radius: var(--r-inner); font: inherit; font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; flex: none; }
+  .d-tab:hover { background: rgba(var(--ink), 0.07); color: rgba(var(--ink), 0.92); }
+  .d-tab.on { background: rgba(var(--accent-rgb), 0.16); color: var(--accent); font-weight: 600; }
+  .d-tab .d-tab-txt.hide { display: none; }
+  .d-actions { margin-left: auto; display: flex; align-items: center; gap: 2px; flex: none; }
+  .d-icon-btn { width: 24px; height: 24px; border-radius: 6px; border: 0; background: transparent; color: rgba(var(--ink), 0.56); cursor: pointer; display: grid; place-items: center; }
+  .d-icon-btn:hover { background: rgba(var(--ink), 0.09); color: rgba(var(--ink), 0.95); }
+  .d-icon-btn.pinned { background: rgba(var(--accent-rgb), 0.18); color: var(--accent); }
+  .drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 12px 13px; display: flex; flex-direction: column; gap: var(--item-gap); }
+  .drawer-body::-webkit-scrollbar { width: 4px; }
+  .drawer-body::-webkit-scrollbar-thumb { background: rgba(var(--ink), 0.18); border-radius: 999px; }
+
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sec-title { font-size: 14px; font-weight: 600; color: rgba(var(--ink), 0.96); display: flex; align-items: center; gap: 6px; }
+  .sec-count { font-size: 11px; padding: 0 6px; border-radius: 999px; background: rgba(var(--ink), 0.09); color: rgba(var(--ink), 0.65); }
+  .btn-primary { border: 0; border-radius: var(--r-inner); padding: 4px 10px; background: var(--accent); color: var(--on-accent); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .search-box { width: 100%; height: 30px; border-radius: var(--r-inner); border: 1px solid rgba(var(--ink), 0.12); background: var(--surface-card); color: rgba(var(--ink), 0.94); padding: 0 9px; font: inherit; font-size: 12px; outline: none; }
+  .item-card { background: var(--surface-card); border: 1px solid rgba(var(--ink), 0.08); border-radius: var(--r-inner); padding: var(--item-pad); display: flex; flex-direction: column; gap: 4px; }
+  .todo-row { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .todo-ck { margin-top: 2px; width: 14px; height: 14px; border-radius: 4px; flex: none; border: 1.5px solid rgba(var(--ink), 0.36); display: grid; place-items: center; font-size: 10px; }
+  .todo-ck.done { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .todo-text { font-size: 12.5px; color: rgba(var(--ink), 0.92); flex: 1; }
+  .todo-text.done { text-decoration: line-through; color: rgba(var(--ink), 0.44); }
+  .todo-meta { font-size: 11px; color: rgba(var(--ink), 0.50); display: flex; gap: 7px; padding-left: 22px; }
+  .tag-pill { font-size: 10.5px; padding: 0 6px; border-radius: 4px; background: rgba(var(--ink), 0.08); color: rgba(var(--ink), 0.72); }
+  .tag-pill.high { background: rgba(255, 159, 67, 0.18); color: #ff9f43; }
+  .clip-meta { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: rgba(var(--ink), 0.50); }
+  .clip-body { font-size: 12px; color: rgba(var(--ink), 0.88); word-break: break-word; }
+  .clip-code { font-family: Consolas, "SF Mono", monospace; font-size: 11.5px; color: var(--accent); }
+  .shelf-item { display: flex; align-items: center; gap: 9px; }
+  .shelf-ic { width: 30px; height: 30px; border-radius: 6px; flex: none; background: rgba(var(--accent-rgb), 0.14); color: var(--accent); display: grid; place-items: center; font-size: 10px; font-weight: 700; }
+  .shot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .shot-card { background: var(--surface-card); border: 1px solid rgba(var(--ink), 0.08); border-radius: var(--r-inner); overflow: hidden; }
+  .shot-thumb { height: 70px; padding: 6px; display: flex; align-items: flex-end; font-size: 10.5px; color: rgba(255, 255, 255, 0.9); }
+  .shot-cap { padding: 5px 8px; font-size: 11px; color: rgba(var(--ink), 0.74); }
+  .cal-item { display: grid; grid-template-columns: 44px 1fr; gap: 7px; align-items: start; }
+  .cal-time { font-size: 11px; color: rgba(var(--ink), 0.52); font-variant-numeric: tabular-nums; }
+  .cal-box { border-left: 3px solid var(--accent); padding: 5px 9px; border-radius: var(--r-inner); background: var(--surface-card); }
+  .cal-box strong { display: block; font-size: 12px; color: rgba(var(--ink), 0.94); }
+  .cal-box span { font-size: 11px; color: rgba(var(--ink), 0.54); }
+  .empty-tip { margin: auto 0; text-align: center; padding: 22px 14px; color: rgba(var(--ink), 0.54); font-size: 12px; border: 1px dashed rgba(var(--ink), 0.14); border-radius: var(--r-inner); }
+
+  .toast {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 60;
+    padding: 6px 14px; border-radius: 8px; background: #141720ee; color: #f8f6f0;
+    border: 1px solid rgba(var(--accent-rgb), 0.5); font-size: 12px; opacity: 0; pointer-events: none;
+    transition: opacity var(--motion-base) var(--motion-ease);
+  }
+  .toast.show { opacity: 1; }
+
+  /* ======== Fuyu 真实风格：可视化拖拽设置窗口模拟 ======== */
+  .settings-win {
+    background: #14151a;
+    border: 1px solid #282b36;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    display: grid;
+    grid-template-columns: 184px 1fr;
+    min-height: 600px;
+  }
+  .s-sidebar {
+    background: #101116;
+    border-right: 1px solid #23252f;
+    padding: 14px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .s-win-title { font-size: 12px; font-weight: 600; color: #8c90a0; padding: 4px 10px 10px; display: flex; align-items: center; gap: 6px; }
+  .s-nav-group { font-size: 11px; color: #676b7a; padding: 10px 10px 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .s-nav-item {
+    border: 0; background: transparent; color: #aeb1bf; text-align: left;
+    padding: 7px 10px; border-radius: 8px; font: inherit; font-size: 12.5px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; position: relative;
+    transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+  }
+  .s-nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #ececf4; }
+  .s-nav-item.on { background: rgba(116, 214, 255, 0.13); color: #74d6ff; font-weight: 600; }
+  .s-nav-item.on::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 99px; background: #74d6ff; }
+  .s-nav-badge { margin-left: auto; font-size: 10.5px; padding: 0 6px; border-radius: 99px; background: rgba(116, 214, 255, 0.16); color: #74d6ff; }
+
+  .s-main { padding: 18px 22px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .s-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #23252f; padding-bottom: 12px; flex-wrap: wrap; }
+  .s-header h2 { margin: 0; font-size: 17px; color: #f4f4f8; }
+  .s-header p { margin: 2px 0 0; font-size: 12px; color: #8c90a0; }
+  .s-pane { display: none; flex-direction: column; gap: 16px; }
+  .s-pane.on { display: flex; }
+
+  .s-card {
+    background: #1a1c22; border: 1px solid #282b36; border-radius: 11px; padding: 14px 16px;
+  }
+  .s-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .s-card-title { font-size: 13.5px; font-weight: 600; color: #f0f1f6; }
+  .s-card-sub { font-size: 12px; color: #8b8e9c; }
+
+  /* 1. 空间可视化拖拽台（上顶岛 + 左右侧翼 + 底部隐藏池） */
+  .spatial-board {
+    background: #121319;
+    border: 1px solid #262934;
+    border-radius: 10px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 204px 1fr 204px;
+    grid-template-rows: auto 1fr auto;
+    gap: 10px;
+    min-height: 310px;
+  }
+  .drop-zone {
+    background: #181a22;
+    border: 1.5px dashed #313545;
+    border-radius: 9px;
+    padding: 9px;
+    display: flex; flex-direction: column; gap: 7px;
+    transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
+  }
+  .drop-zone.over {
+    border-color: #74d6ff;
+    background: rgba(116, 214, 255, 0.08);
+    border-style: solid;
+  }
+  .drop-zone.inactive { opacity: 0.62; }
+  .drop-zone.inactive.over { opacity: 1; }
+  .dz-top { grid-column: 2; grid-row: 1; }
+  .dz-left { grid-column: 1; grid-row: 1 / span 2; }
+  .dz-right { grid-column: 3; grid-row: 1 / span 2; }
+  .dz-center-desk {
+    grid-column: 2; grid-row: 2;
+    border-radius: 8px; background: radial-gradient(80% 90% at 50% 40%, #1d2233, #13151d);
+    border: 1px solid #242836;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    color: #787d90; font-size: 12px; text-align: center; padding: 14px;
+  }
+  .dz-hidden { grid-column: 1 / span 3; grid-row: 3; }
+
+  .dz-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; font-weight: 600; color: #d6d8e4; }
+  .dz-switch {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500;
+    color: #9aa0b2; cursor: pointer; background: #232632; border: 1px solid #353949;
+    border-radius: 99px; padding: 2px 8px;
+  }
+  .dz-switch.on { background: rgba(116, 214, 255, 0.16); border-color: rgba(116, 214, 255, 0.55); color: #74d6ff; }
+  .dz-list { display: flex; gap: 6px; flex-wrap: wrap; min-height: 36px; align-content: flex-start; }
+  .dz-left .dz-list, .dz-right .dz-list { flex-direction: column; flex-wrap: nowrap; }
+
+  .page-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 9px; border-radius: 7px;
+    background: #232632; border: 1px solid #353948; color: #e8eaf2;
+    font-size: 12px; cursor: grab; user-select: none;
+    transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), opacity var(--motion-fast) var(--motion-ease);
+  }
+  .page-chip:hover { border-color: #74d6ff; background: #292d3c; }
+  .page-chip.dragging { opacity: 0.42; }
+  .page-chip .grip { color: #676c80; font-size: 11px; letter-spacing: -1px; margin-right: 1px; }
+  .page-chip .p-tag { margin-left: auto; font-size: 10px; color: #8c91a4; background: rgba(255, 255, 255, 0.06); padding: 0 5px; border-radius: 4px; }
+  .dz-empty-hint { font-size: 11.5px; color: #676c7e; padding: 8px 4px; text-align: center; width: 100%; }
+
+  /* 2. 可交互显示器位置与直接拖拽改尺寸 */
+  .monitor-studio { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; align-items: stretch; }
+  @media (max-width: 960px) { .monitor-studio { grid-template-columns: 1fr; } }
+  .mon-stage {
+    background: #111319; border: 1px solid #262934; border-radius: 10px; padding: 14px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .mon-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .mon-screens { display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; min-height: 220px; }
+  .mon-box {
+    position: relative; width: 290px; height: 196px; border-radius: 9px;
+    background: radial-gradient(70% 80% at 30% 20%, #242d46, #141722);
+    border: 1.5px solid #3c4256; overflow: hidden;
+  }
+  .mon-box.secondary { width: 170px; height: 150px; opacity: 0.85; }
+  .mon-box-label { position: absolute; left: 10px; top: 8px; font-size: 11px; color: #8e95ad; pointer-events: none; }
+  .mon-center-line {
+    position: absolute; left: 0; right: 0; top: 50%; height: 1px;
+    background: rgba(116, 214, 255, 0.42); opacity: 0; pointer-events: none;
+    transition: opacity var(--motion-fast) var(--motion-ease);
+  }
+  .mon-center-line.snap { opacity: 1; }
+  .mon-ban-seam {
+    position: absolute; top: 12px; bottom: 12px; right: 0; width: 3px;
+    background: repeating-linear-gradient(180deg, #ff6b7a 0 6px, transparent 6px 11px);
+  }
+  .mon-ban-tip {
+    position: absolute; right: 8px; bottom: 8px; font-size: 10px; color: #ff808e;
+    background: rgba(255, 107, 122, 0.14); padding: 1px 6px; border-radius: 4px;
+  }
+  .mon-top-island {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 72px; height: 10px; border-radius: 0 0 6px 6px; background: #07080c; border: 1px solid #484f66; border-top: 0;
+  }
+
+  .mon-mini-handle {
+    position: absolute; width: 8px; height: 34px; background: #74d6ff;
+    cursor: ns-resize; box-shadow: 0 0 10px rgba(116, 214, 255, 0.6);
+    transform: translateY(-50%);
+  }
+  .mon-mini-handle.right { right: 0; border-radius: 4px 0 0 4px; }
+  .mon-mini-handle.left { left: 0; border-radius: 0 4px 4px 0; }
+
+  .mon-mini-drawer {
+    position: absolute; background: rgba(116, 214, 255, 0.14);
+    border: 1.5px solid rgba(116, 214, 255, 0.72); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; color: #c8f0ff; font-variant-numeric: tabular-nums;
+  }
+  .mon-resize-w {
+    position: absolute; top: 16%; bottom: 16%; width: 6px; cursor: ew-resize;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mon-resize-w::after { content: ""; width: 2px; height: 22px; border-radius: 99px; background: #74d6ff; }
+  .mon-mini-drawer.right .mon-resize-w { left: -3px; }
+  .mon-mini-drawer.left .mon-resize-w { right: -3px; }
+  .mon-resize-h {
+    position: absolute; left: 22%; right: 22%; bottom: -3px; height: 6px; cursor: ns-resize;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mon-resize-h::after { content: ""; height: 2px; width: 22px; border-radius: 99px; background: #74d6ff; }
+
+  /* 3. 可视化缩略图选择卡 */
+  .vcard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .vcard-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 820px) { .vcard-grid, .vcard-grid.cols-4 { grid-template-columns: repeat(2, 1fr); } }
+  .vcard {
+    background: #14161c; border: 1.5px solid #2b2e3a; border-radius: 10px;
+    padding: 10px; cursor: pointer; text-align: left; color: inherit; font: inherit;
+    display: flex; flex-direction: column; gap: 7px;
+    transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease);
+  }
+  .vcard:hover { border-color: #4a5168; background: #191c25; }
+  .vcard.on { border-color: #74d6ff; background: rgba(116, 214, 255, 0.08); }
+  .vcard-art {
+    height: 62px; border-radius: 7px; background: #0e1016; border: 1px solid #252834;
+    position: relative; overflow: hidden; display: flex; align-items: center; justify-content: flex-end; padding: 6px; gap: 4px;
+  }
+  .vcard-title { font-size: 12.5px; font-weight: 600; color: #eceef6; display: flex; align-items: center; gap: 5px; }
+  .vcard-desc { font-size: 11px; color: #8c90a0; line-height: 1.4; }
+  .rec-badge { font-size: 10px; padding: 0 5px; border-radius: 4px; background: rgba(116, 214, 255, 0.18); color: #74d6ff; }
+
+  .art-drawer { width: 52px; height: 46px; background: #232736; border: 1px solid #454d66; border-radius: 5px; padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+  .art-drawer i { display: block; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.18); }
+  .art-strip { width: 16px; height: 42px; background: #2b3248; border: 1px solid #74d6ff; border-radius: 4px 0 0 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+  .art-strip i { width: 7px; height: 7px; border-radius: 2px; background: #74d6ff; display: block; opacity: 0.75; }
+  .art-corner {
+    width: 44px; height: 44px; border-top: 2px solid #74d6ff; border-left: 2px solid #74d6ff;
+    background: rgba(116, 214, 255, 0.12); margin: auto;
+  }
+
+  /* 4. 快捷条动作拖拽编排 */
+  .strip-builder { display: grid; grid-template-columns: 140px 1fr; gap: 14px; align-items: start; }
+  .sb-preview {
+    background: #111319; border: 1px solid #282b36; border-radius: 10px; padding: 12px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .sb-slot {
+    width: 100%; padding: 6px 8px; border-radius: 7px;
+    background: #1f222d; border: 1px solid #35394a;
+    display: flex; align-items: center; gap: 6px; font-size: 12px; color: #e8eaf2; cursor: grab;
+  }
+  .sb-slot:hover { border-color: #74d6ff; }
+  .sb-slot .rm { margin-left: auto; border: 0; background: transparent; color: #7e8396; cursor: pointer; font-size: 11px; }
+  .sb-slot .rm:hover { color: #ff6b7a; }
+  .sb-pool { display: flex; flex-wrap: wrap; gap: 7px; }
+  .sb-add {
+    border: 1px solid #343848; background: #20232e; color: #cfd2df;
+    border-radius: 7px; padding: 5px 10px; font: inherit; font-size: 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .sb-add:hover { border-color: #74d6ff; color: #fff; }
+  .sb-add.used { opacity: 0.45; cursor: default; }
+
+  .row-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px 18px; }
+  .ctrl-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctrl-row > label { color: #9698a6; font-size: 12px; min-width: 82px; }
+  button.seg {
+    background: #23252e; color: #d2d4de; border: 1px solid #343744;
+    border-radius: 6px; padding: 3px 9px; font: inherit; font-size: 12px; cursor: pointer;
+  }
+  button.seg.on { background: rgba(116, 214, 255, 0.17); border-color: rgba(116, 214, 255, 0.65); color: #fff; }
+  .range-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 140px; }
+  .range-wrap input[type=range] { flex: 1; accent-color: #74d6ff; cursor: pointer; }
+  .range-val { font-size: 11.5px; color: #b4b7c4; font-variant-numeric: tabular-nums; min-width: 40px; text-align: right; }
+  .swatch-row { display: flex; gap: 6px; }
+  .swatch { width: 19px; height: 19px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .swatch.on { border-color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.24); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-bar">
+    <div>
+      <h1>
+        浮屿 Fuyu · 侧边翼交互与可视化拖拽设置预览
+        <span class="pill">v3 · 所见即所得设置台</span>
+      </h1>
+      <p class="lead">
+        上半区是<b>实时模拟桌面</b>，下半区是按 Fuyu 设置窗口风格重做的<b>可视化拖拽设置界面</b>：直接拖页面卡片分配顶/左/右、在显示器图上拖动把手与抽屉边框改尺寸、用缩略图选择卡切形态与圆角、拖拽排布快捷条动作——每一步改动都会立刻同步到上方桌面。
+      </p>
+    </div>
+    <div class="presets-bar">
+      <button class="preset-btn on" data-preset="default">默认利落</button>
+      <button class="preset-btn" data-preset="minimal">极简窄栏</button>
+      <button class="preset-btn" data-preset="mag">MagIsland 融合</button>
+      <button class="preset-btn" data-preset="dual">双侧工作台</button>
+    </div>
+  </div>
+
+  <!-- 上半区：实时模拟桌面 -->
+  <div class="desk-wrap">
+    <div class="desk dark" id="desk">
+      <div class="mock-app">
+        <div class="mock-app-bar">
+          <div class="mac-dots"><span></span><span></span><span></span></div>
+          <span>Fuyu — workspace / 实时效果舞台（随下方设置即时联动）</span>
+        </div>
+        <div class="mock-app-body">
+          <div class="mock-sidebar">
+            <div class="skel" style="width:76%"></div>
+            <div class="skel hi" style="width:92%"></div>
+            <div class="skel" style="width:68%"></div>
+            <div class="skel" style="width:84%"></div>
+          </div>
+          <div class="mock-code">
+            <div class="skel hi" style="width:48%"></div>
+            <div class="skel" style="width:86%"></div>
+            <div class="skel" style="width:72%"></div>
+            <div class="skel" style="width:90%"></div>
+            <div class="skel hi" style="width:52%"></div>
+            <div class="drag-files">
+              <div class="drag-files-title">拖文件靠近屏幕侧边把手，自动弹开文件暂存投放区：</div>
+              <div class="drag-chips">
+                <div class="drag-chip" data-file="侧边翼交互稿_v3.fig" data-size="4.8 MB" data-ext="FIG">📄 侧边翼交互稿_v3.fig</div>
+                <div class="drag-chip" data-file="release-notes.md" data-size="18 KB" data-ext="MD">📝 release-notes.md</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-island-stage">
+        <div class="top-island" id="topIsland">
+          <div class="top-collapsed" id="topCollapsed">
+            <span class="agent-dot"></span>
+            <span class="summary">Claude Code · 运行中 · 播放中：夏天的风</span>
+            <span class="badge-pill" id="topCountBadge">5 页</span>
+          </div>
+          <div class="top-panel">
+            <div class="top-head" id="topTabs"></div>
+            <div class="top-body" id="topBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-dock left hidden" id="dockLeft" data-edge="left" data-state="handle" data-stages="3"></div>
+      <div class="side-dock right" id="dockRight" data-edge="right" data-state="drawer" data-stages="3"></div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+  <div class="drag-ghost" id="dragGhost"></div>
+
+  <!-- 下半区：Fuyu 风格可视化拖拽设置窗口 -->
+  <div class="settings-win">
+    <aside class="s-sidebar">
+      <div class="s-win-title">浮屿设置 · 岛屿布局与侧边翼</div>
+      <div class="s-nav-group">可视化配置</div>
+      <button class="s-nav-item on" data-stab="spatial">
+        <span>布局与拖拽分流</span><span class="s-nav-badge" id="badgePages">11</span>
+      </button>
+      <button class="s-nav-item" data-stab="monitor">
+        <span>位置、尺寸与多屏</span>
+      </button>
+      <button class="s-nav-item" data-stab="behavior">
+        <span>展开形态与快捷条</span>
+      </button>
+      <button class="s-nav-item" data-stab="style">
+        <span>圆角、材质与细调</span>
+      </button>
+    </aside>
+
+    <main class="s-main">
+      <!-- Tab 1: 空间可视化拖拽台 -->
+      <section class="s-pane on" data-spane="spatial">
+        <div class="s-header">
+          <div>
+            <h2>空间布局与拖拽分流</h2>
+            <p>像整理桌面一样直接拖动页面卡片到顶部主岛、左侧翼或右侧翼；拖进未开启的一侧会自动激活它。</p>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="preset-btn" id="btnAutoSplit">一键清爽分流</button>
+            <button class="preset-btn" id="btnAllTop">全部放回顶岛</button>
+          </div>
+        </div>
+
+        <div class="spatial-board" id="spatialBoard">
+          <div class="drop-zone dz-left" data-drop-zone="left">
+            <div class="dz-head">
+              <span>左侧翼</span>
+              <button class="dz-switch" data-toggle-edge="left">未开启</button>
+            </div>
+            <div class="dz-list" data-zone-list="left"></div>
+          </div>
+
+          <div class="drop-zone dz-top" data-drop-zone="top">
+            <div class="dz-head">
+              <span>顶部主岛（感知与提醒）</span>
+              <span style="font-size:11px;color:#8c91a4;" id="topZoneCount"></span>
+            </div>
+            <div class="dz-list" data-zone-list="top"></div>
+          </div>
+
+          <div class="dz-center-desk">
+            <div style="font-size:13px;color:#b8bdd0;font-weight:600;">屏幕工作区（直接跨区拖拽任意卡片）</div>
+            <div>提示：按住卡片上的 ⋮⋮ 可在同区内拖拽排序，或跨区拖到左/右/顶/隐藏池</div>
+          </div>
+
+          <div class="drop-zone dz-right" data-drop-zone="right">
+            <div class="dz-head">
+              <span>右侧翼</span>
+              <button class="dz-switch on" data-toggle-edge="right">已开启</button>
+            </div>
+            <div class="dz-list" data-zone-list="right"></div>
+          </div>
+
+          <div class="drop-zone dz-hidden" data-drop-zone="hidden">
+            <div class="dz-head">
+              <span>暂不显示（隐藏池 · 拖入即可收纳，功能后台照常运行）</span>
+              <span style="font-size:11px;color:#8c91a4;" id="hiddenZoneCount"></span>
+            </div>
+            <div class="dz-list" data-zone-list="hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: 可交互显示器位置与直接拖拽改尺寸 -->
+      <section class="s-pane" data-spane="monitor">
+        <div class="s-header">
+          <div>
+            <h2>位置、尺寸与多屏边缘</h2>
+            <p>在下方显示器示意图里直接上下拖动发光把手调垂直位置，或拖微缩抽屉的内边/底边直观改宽高。</p>
+          </div>
+        </div>
+
+        <div class="monitor-studio">
+          <div class="mon-stage">
+            <div class="mon-toolbar">
+              <span style="font-size:12px;color:#c8cce0;font-weight:600;">屏幕边缘交互示意图</span>
+              <div style="display:flex;gap:5px;">
+                <button class="seg on" data-mon-mode="single">单屏</button>
+                <button class="seg" data-mon-mode="dual">双屏拼接（看禁触保护）</button>
+              </div>
+            </div>
+            <div class="mon-screens" id="monScreens"></div>
+            <div style="font-size:11.5px;color:#888da0;" id="monReadout">
+              右侧翼 · 沿边 50%（居中磁吸） · 抽屉 380 × 520px · 仅贴物理外侧边
+            </div>
+          </div>
+
+          <div class="s-card" style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <div class="s-card-title" style="margin-bottom:6px;">快捷尺寸档位</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="seg" data-size-preset="330,470">紧凑 330×470</button>
+                <button class="seg on" data-size-preset="380,520">标准 380×520</button>
+                <button class="seg" data-size-preset="440,560">宽大 440×560</button>
+              </div>
+            </div>
+            <div class="ctrl-row">
+              <label>抽屉宽度</label>
+              <div class="range-wrap"><input id="rngW" type="range" min="300" max="480" step="10" value="380" /><span class="range-val" id="valW">380px</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>抽屉高度</label>
+              <div class="range-wrap"><input id="rngH" type="range" min="400" max="560" step="10" value="520" /><span class="range-val" id="valH">520px</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>把手厚度</label>
+              <div class="range-wrap"><input id="rngHandleW" type="range" min="6" max="15" step="1" value="9" /><span class="range-val" id="valHandleW">9px</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>把手长度</label>
+              <div class="range-wrap"><input id="rngHandleH" type="range" min="56" max="150" step="4" value="84" /><span class="range-val" id="valHandleH">84px</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>多屏防误触</label>
+              <span style="font-size:11.5px;color:#74d6ff;">拼接边自动禁触 · 同侧主岛吸附自动互斥</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: 展开形态视觉卡 + 快捷条拖拽编排 -->
+      <section class="s-pane" data-spane="behavior">
+        <div class="s-header">
+          <div>
+            <h2>展开形态与快捷条编排</h2>
+            <p>用可视化结构图直接选展开体验；下面可拖拽排序侧边快捷条里的按钮。</p>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">展开形态与二层抽屉策略</span>
+            <span class="s-card-sub">默认触发即自动同步展开快捷条 + 二层抽屉，零多余点击</span>
+          </div>
+          <div class="vcard-grid" id="modeCards">
+            <button class="vcard on" data-mode-card="3-auto">
+              <div class="vcard-art">
+                <div class="art-drawer"><i></i><i style="width:70%"></i><i style="width:85%"></i></div>
+                <div class="art-strip"><i></i><i></i><i></i></div>
+              </div>
+              <div class="vcard-title">三态 · 二层自动展开 <span class="rec-badge">推荐</span></div>
+              <div class="vcard-desc">触碰把手后快捷条与抽屉同步展开，一步直达内容，快捷条随时切页。</div>
+            </button>
+            <button class="vcard" data-mode-card="3-hover">
+              <div class="vcard-art">
+                <div class="art-drawer" style="opacity:.42;border-style:dashed;"><i></i><i style="width:60%"></i></div>
+                <div class="art-strip"><i></i><i></i><i></i></div>
+              </div>
+              <div class="vcard-title">三态 · 悬停图标再开</div>
+              <div class="vcard-desc">先仅滑出窄快捷条，鼠标停到图标上再展开二层抽屉，更省视野。</div>
+            </button>
+            <button class="vcard" data-mode-card="2-auto">
+              <div class="vcard-art" style="padding-right:0;">
+                <div class="art-drawer" style="width:64px;border-radius:5px 0 0 5px;border-right:0;border-color:#74d6ff;"><i></i><i style="width:76%"></i><i style="width:65%"></i></div>
+              </div>
+              <div class="vcard-title">两态 · 把手直达抽屉</div>
+              <div class="vcard-desc">无快捷条，直接贴着屏幕边展开抽屉卡片，最简洁（Phase 1 起步形态）。</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">快捷条与抽屉导航风格</span>
+            <span class="s-card-sub">可隐藏抽屉顶部重复 Tab 栏，靠快捷条切页多腾出 40px 列表空间</span>
+          </div>
+          <div class="vcard-grid">
+            <button class="vcard on" data-nav-card="label-full">
+              <div class="vcard-title">完整双导航</div>
+              <div class="vcard-desc">快捷条显示图标+短字，抽屉顶部保留完整 Tab 栏与图钉。</div>
+            </button>
+            <button class="vcard" data-nav-card="icon-minimal">
+              <div class="vcard-title">极简窄条 · 去重顶栏 <span class="rec-badge">高效</span></div>
+              <div class="vcard-desc">50px 纯图标快捷条直接充当切页栏，抽屉顶部只留当前标题与图钉。</div>
+            </button>
+            <button class="vcard" data-nav-card="label-icons">
+              <div class="vcard-title">紧凑纯图标 Tab</div>
+              <div class="vcard-desc">快捷条带短字提示，抽屉顶栏折叠为纯图标，适配更多页面。</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">快捷条动作拖拽排序（最多 5 项）</span>
+            <span class="s-card-sub">上下拖动左侧按钮调顺序，右侧点击即可添加进快捷条</span>
+          </div>
+          <div class="strip-builder">
+            <div class="sb-preview" id="sbPreview"></div>
+            <div>
+              <div style="font-size:12px;color:#8e93a6;margin-bottom:8px;">可选页面与速办动作：</div>
+              <div class="sb-pool" id="sbPool"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: 圆角视觉卡、材质与进阶细调 -->
+      <section class="s-pane" data-spane="style">
+        <div class="s-header">
+          <div>
+            <h2>圆角、材质与进阶细调</h2>
+            <p>默认外框圆角降至 14px，内层卡片按同心原则自动跟随；所有细节都支持高度自定义。</p>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-head">
+            <span class="s-card-title">圆角手感（同心联动内层圆角）</span>
+            <span class="s-card-sub" id="radiusSummary">当前：外框 14px · 内层卡片 8px · 把手 7px</span>
+          </div>
+          <div class="vcard-grid cols-4" id="radiusCards">
+            <button class="vcard" data-radius-card="8">
+              <div class="vcard-art"><div class="art-corner" style="border-top-left-radius:8px;"></div></div>
+              <div class="vcard-title">利落 8px</div>
+              <div class="vcard-desc">偏锐利工具感</div>
+            </button>
+            <button class="vcard on" data-radius-card="14">
+              <div class="vcard-art"><div class="art-corner" style="border-top-left-radius:14px;"></div></div>
+              <div class="vcard-title">均衡 14px <span class="rec-badge">推荐</span></div>
+              <div class="vcard-desc">克制柔和兼顾</div>
+            </button>
+            <button class="vcard" data-radius-card="18">
+              <div class="vcard-art"><div class="art-corner" style="border-top-left-radius:18px;"></div></div>
+              <div class="vcard-title">柔和 18px</div>
+              <div class="vcard-desc">更贴近灵动岛</div>
+            </button>
+            <div class="vcard" style="cursor:default;">
+              <div class="vcard-title">自定义精调</div>
+              <div class="range-wrap" style="margin:auto 0;"><input id="rngRadius" type="range" min="6" max="22" step="1" value="14" /><span class="range-val" id="valRadius">14px</span></div>
+              <div class="vcard-desc">6–22px 逐像素</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-head"><span class="s-card-title">材质、配色与触发延迟</span></div>
+          <div class="row-grid">
+            <div class="ctrl-row">
+              <label>主题与材质</label>
+              <button class="seg on" data-set="theme" data-val="dark">深色</button>
+              <button class="seg" data-set="theme" data-val="light">浅色</button>
+              <button class="seg on" data-set="glass" data-val="1">液态玻璃</button>
+              <button class="seg" data-set="glass" data-val="0">纯色</button>
+            </div>
+            <div class="ctrl-row">
+              <label>强调色</label>
+              <div class="swatch-row">
+                <button class="swatch on" data-accent="#74d6ff" data-rgb="116, 214, 255" data-on="#06202c" style="background:#74d6ff"></button>
+                <button class="swatch" data-accent="#6c8cff" data-rgb="108, 140, 255" data-on="#ffffff" style="background:#6c8cff"></button>
+                <button class="swatch" data-accent="#9d84ff" data-rgb="157, 132, 255" data-on="#ffffff" style="background:#9d84ff"></button>
+                <button class="swatch" data-accent="#35d99a" data-rgb="53, 217, 154" data-on="#05261a" style="background:#35d99a"></button>
+                <button class="swatch" data-accent="#ff9f43" data-rgb="255, 159, 67" data-on="#291502" style="background:#ff9f43"></button>
+              </div>
+            </div>
+            <div class="ctrl-row">
+              <label>触发方式</label>
+              <button class="seg on" data-set="trigger" data-val="hover">悬停触发</button>
+              <button class="seg" data-set="trigger" data-val="click">仅点击把手</button>
+            </div>
+            <div class="ctrl-row">
+              <label>列表密度</label>
+              <button class="seg on" data-set="density" data-val="cozy">舒适</button>
+              <button class="seg" data-set="density" data-val="compact">紧凑</button>
+            </div>
+            <div class="ctrl-row">
+              <label>悬停展开延迟</label>
+              <div class="range-wrap"><input id="rngHoverMs" type="range" min="0" max="500" step="20" value="200" /><span class="range-val" id="valHoverMs">200ms</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>移开收起延迟</label>
+              <div class="range-wrap"><input id="rngLeaveMs" type="range" min="160" max="1200" step="40" value="360" /><span class="range-val" id="valLeaveMs">360ms</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>抽屉与条间距</label>
+              <div class="range-wrap"><input id="rngGap" type="range" min="0" max="14" step="2" value="6" /><span class="range-val" id="valGap">6px</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>背景不透明度</label>
+              <div class="range-wrap"><input id="rngAlpha" type="range" min="45" max="100" step="5" value="78" /><span class="range-val" id="valAlpha">78%</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>休眠把手可见</label>
+              <div class="range-wrap"><input id="rngHandleAlpha" type="range" min="20" max="100" step="5" value="78" /><span class="range-val" id="valHandleAlpha">78%</span></div>
+            </div>
+            <div class="ctrl-row">
+              <label>把手状态微点</label>
+              <button class="seg on" data-set="handleDot" data-val="1">显示</button>
+              <button class="seg" data-set="handleDot" data-val="0">隐藏</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const PAGES = [
+  { id: "agents",      name: "AI Agent", kind: "感知", defaultZone: "top",   icon: "bot",   desc: "2 个会话运行中，1 个待确认审批" },
+  { id: "music",       name: "音乐歌词", kind: "感知", defaultZone: "top",   icon: "music", desc: "正在播放 · 桌面歌词已同步" },
+  { id: "timer",       name: "计时器",   kind: "感知", defaultZone: "top",   icon: "timer", desc: "番茄钟 18:42 剩余" },
+  { id: "qq",          name: "消息提醒", kind: "感知", defaultZone: "top",   icon: "mail",  desc: "QQ / 微信 / 邮件汇总预览" },
+  { id: "fuyu",        name: "Fuyu 面板", kind: "组件", defaultZone: "top",   icon: "grid",  desc: "自定义小组件面板" },
+  { id: "todo",        name: "待办",     kind: "列表", defaultZone: "right", icon: "todo",  desc: "今日待办、子任务与随手记" },
+  { id: "clipboard",   name: "剪贴板",   kind: "列表", defaultZone: "right", icon: "clip",  desc: "历史文本、代码与图片检索" },
+  { id: "shelf",       name: "文件暂存", kind: "投放", defaultZone: "right", icon: "shelf", desc: "拖入边缘即暂存，随时拖出" },
+  { id: "screenshots", name: "截图历史", kind: "网格", defaultZone: "right", icon: "shot",  desc: "最近截图与 OCR 识字检索" },
+  { id: "calendar",    name: "日历日程", kind: "列表", defaultZone: "right", icon: "cal",   desc: "今日日程与会议倒计时" },
+  { id: "gh-issues",   name: "GitHub Issues", kind: "插件", defaultZone: "right", icon: "plug", desc: "v3 插件页面无缝迁入侧边翼" }
+];
+
+const QUICK_ACTIONS_POOL = [
+  { id: "page:todo", label: "待办", icon: "todo", page: "todo" },
+  { id: "page:clipboard", label: "剪贴板", icon: "clip", page: "clipboard" },
+  { id: "page:shelf", label: "暂存", icon: "shelf", page: "shelf" },
+  { id: "page:screenshots", label: "截图", icon: "shot", page: "screenshots" },
+  { id: "page:calendar", label: "日历", icon: "cal", page: "calendar" },
+  { id: "act:new-todo", label: "速记", icon: "plus", action: "new-todo" },
+  { id: "act:translate", label: "翻译", icon: "plug", action: "translate" }
+];
+
+const ICONS = {
+  bot:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>',
+  music: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+  timer: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg>',
+  mail:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  grid:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>',
+  todo:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  clip:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>',
+  shelf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+  shot:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>',
+  cal:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  plug:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>',
+  plus:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  pin:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>',
+  close: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+};
+
+const state = {
+  enabledEdges: { left: false, right: true },
+  stages: "3",
+  autoDrawer: "auto",
+  trigger: "hover",
+  hoverMs: 200,
+  leaveMs: 360,
+  radius: 14,
+  drawerW: 380,
+  drawerH: 520,
+  gap: 6,
+  handleW: 9,
+  handleH: 84,
+  theme: "dark",
+  glass: "1",
+  alpha: 78,
+  handleAlpha: 78,
+  handleDot: "1",
+  accent: "#74d6ff",
+  accentRgb: "116, 214, 255",
+  onAccent: "#06202c",
+  stripStyle: "label",
+  drawerHeader: "full",
+  density: "cozy",
+  monMode: "single",
+  topOpen: false,
+  topPage: "agents",
+  zones: {
+    top: ["agents", "music", "timer", "qq", "fuyu"],
+    left: [],
+    right: ["todo", "clipboard", "shelf", "screenshots", "calendar", "gh-issues"],
+    hidden: []
+  },
+  quickStripIds: ["page:todo", "page:clipboard", "page:shelf", "act:new-todo"],
+  docks: {
+    left:  { state: "handle", page: "shelf", along: 0.50, pinned: false },
+    right: { state: "drawer", page: "todo",  along: 0.50, pinned: false }
+  },
+  todos: [
+    { id: 1, text: "在下方设置画布里把卡片拖到左/右/顶试试看", tag: "可视化", pri: "high", done: false, time: "今天" },
+    { id: 2, text: "在「位置与尺寸」拖动显示器上的把手和抽屉边", tag: "拖拽", pri: "med", done: false, time: "今天" },
+    { id: 3, text: "确认外框 14px 低圆角与二层自动展开手感", tag: "设计", pri: "low", done: false, time: "明天" }
+  ],
+  clips: [
+    { id: 1, kind: "代码", text: 'export type DockZone = "top" | "left" | "right";', time: "2 分钟前" },
+    { id: 2, kind: "命令", text: "pnpm mq:verify --only check && pnpm test:changed", time: "28 分钟前" },
+    { id: 3, kind: "文本", text: "拖进未开启的一侧时，系统自动激活该侧边翼。", time: "1 小时前" }
+  ],
+  shelf: [
+    { id: 1, name: "Fuyu-logo-outline.svg", size: "24 KB", ext: "SVG", time: "10:18" },
+    { id: 2, name: "liquid-glass-notes.pdf", size: "2.3 MB", ext: "PDF", time: "09:42" }
+  ],
+  shots: [
+    { id: 1, title: "灵动岛一条轮廓", ocr: "clip-path: shape()", bg: "linear-gradient(135deg,#274060,#1b2845)" },
+    { id: 2, title: "Agent 审批通知", ocr: "等你确认 · Bash", bg: "linear-gradient(135deg,#5a3a22,#261b14)" },
+    { id: 3, title: "设置页插件视图", ocr: "14 个官方插件", bg: "linear-gradient(135deg,#3b2d5c,#1f1b33)" },
+    { id: 4, title: "剪贴板空格预览", ocr: "不抢前台焦点", bg: "linear-gradient(135deg,#1d4e4f,#10262b)" }
+  ],
+  calendar: [
+    { time: "10:30", title: "Fuyu v0.4.0 视觉走查", sub: "腾讯会议 · 进行中" },
+    { time: "14:00", title: "侧边翼设置界面评审", sub: "会议室 B · 2 小时后" },
+    { time: "16:30", title: "v3 插件生态例会", sub: "线上 · 30 分钟" }
+  ],
+  todoAddOpen: false
+};
+
+const desk = document.getElementById("desk");
+const topIsland = document.getElementById("topIsland");
+const topCollapsed = document.getElementById("topCollapsed");
+const topTabs = document.getElementById("topTabs");
+const topBody = document.getElementById("topBody");
+const topCountBadge = document.getElementById("topCountBadge");
+const toastEl = document.getElementById("toast");
+const dockEls = { left: document.getElementById("dockLeft"), right: document.getElementById("dockRight") };
+const hoverTimers = { left: null, right: null };
+const leaveTimers = { left: null, right: null };
+let toastTimer = null;
+let dragPageId = null;
+let dragStripId = null;
+
+function pageById(id) { return PAGES.find(p => p.id === id); }
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1900);
+}
+
+function effectivePagesIn(zone) {
+  if (zone === "top") {
+    const extra = [
+      ...(state.enabledEdges.left ? [] : state.zones.left),
+      ...(state.enabledEdges.right ? [] : state.zones.right)
+    ];
+    return [...state.zones.top, ...extra].map(pageById).filter(Boolean);
+  }
+  if (!state.enabledEdges[zone]) return [];
+  return state.zones[zone].map(pageById).filter(Boolean);
+}
+
+function applyCssVars() {
+  const rInner = Math.max(5, state.radius - 6);
+  const rHandle = Math.max(4, Math.round(state.radius * 0.5));
+  desk.classList.toggle("light", state.theme === "light");
+  desk.classList.toggle("dark", state.theme !== "light");
+  desk.classList.toggle("solid", state.glass === "0");
+  desk.classList.toggle("compact", state.density === "compact");
+  desk.style.setProperty("--r-outer", `${state.radius}px`);
+  desk.style.setProperty("--r-inner", `${rInner}px`);
+  desk.style.setProperty("--r-handle", `${rHandle}px`);
+  desk.style.setProperty("--drawer-w", `${state.drawerW}px`);
+  desk.style.setProperty("--drawer-h", `${state.drawerH}px`);
+  desk.style.setProperty("--dock-gap", `${state.gap}px`);
+  desk.style.setProperty("--strip-w", state.stripStyle === "icon" ? "50px" : "64px");
+  desk.style.setProperty("--handle-w", `${state.handleW}px`);
+  desk.style.setProperty("--handle-h", `${state.handleH}px`);
+  desk.style.setProperty("--surface-alpha", String(state.glass === "0" ? 0.98 : state.alpha / 100));
+  desk.style.setProperty("--blur", state.glass === "0" ? "0px" : "24px");
+  desk.style.setProperty("--handle-alpha", String(state.handleAlpha / 100));
+  desk.style.setProperty("--accent", state.accent);
+  desk.style.setProperty("--accent-rgb", state.accentRgb);
+  desk.style.setProperty("--on-accent", state.onAccent);
+  document.getElementById("radiusSummary").textContent = `当前：外框 ${state.radius}px · 内层卡片 ${rInner}px · 把手 ${rHandle}px`;
+}
+
+function renderTopIsland() {
+  const list = effectivePagesIn("top");
+  if (!list.some(p => p.id === state.topPage) && list.length) state.topPage = list[0].id;
+  topCountBadge.textContent = `${list.length} 页`;
+  topIsland.classList.toggle("crowded", list.length >= 9);
+  topTabs.innerHTML = list.map(p => `
+    <button class="tab-btn ${p.id === state.topPage ? "on" : ""}" data-top-tab="${p.id}">${ICONS[p.icon]}<span>${p.name}</span></button>
+  `).join("") + `<button class="close-mini" id="closeTopBtn">${ICONS.close}</button>`;
+  const cur = pageById(state.topPage) || list[0];
+  topBody.innerHTML = cur ? `<div class="top-card"><div class="top-card-icon">${ICONS[cur.icon]}</div><div><h4>${cur.name}</h4><p>${cur.desc}</p></div></div>` : "";
+  topTabs.querySelectorAll("[data-top-tab]").forEach(btn => btn.addEventListener("click", () => { state.topPage = btn.dataset.topTab; renderTopIsland(); }));
+  const cb = document.getElementById("closeTopBtn");
+  if (cb) cb.addEventListener("click", () => { state.topOpen = false; topIsland.classList.remove("open"); });
+}
+
+function clampDrawerTop(along) {
+  const deskH = 600, pad = 14;
+  return Math.max(pad, Math.min(deskH - state.drawerH - pad, Math.round(along * deskH - state.drawerH / 2)));
+}
+
+function renderDockContent(edge, pageId) {
+  if (pageId === "todo") {
+    return `
+      <div class="sec-head">
+        <div class="sec-title">待办 <span class="sec-count">${state.todos.filter(t => !t.done).length}</span></div>
+        <button class="btn-primary" data-act="toggle-add-todo">${ICONS.plus} 新建</button>
+      </div>
+      ${state.todoAddOpen ? `<div style="display:flex;gap:6px;"><input class="search-box" id="newTodo-${edge}" placeholder="回车添加待办…" /><button class="btn-primary" data-act="submit-todo">添加</button></div>` : ""}
+      ${state.todos.map(t => `
+        <div class="item-card">
+          <div class="todo-row" data-act="toggle-todo" data-id="${t.id}">
+            <span class="todo-ck ${t.done ? "done" : ""}">${t.done ? "✓" : ""}</span>
+            <span class="todo-text ${t.done ? "done" : ""}">${t.text}</span>
+          </div>
+          <div class="todo-meta"><span class="tag-pill ${t.pri === "high" ? "high" : ""}">${t.tag}</span><span>${t.time}</span></div>
+        </div>
+      `).join("")}
+    `;
+  }
+  if (pageId === "clipboard") {
+    return `
+      <div class="sec-head"><div class="sec-title">剪贴板历史 <span class="sec-count">${state.clips.length}</span></div></div>
+      ${state.clips.map(c => `<div class="item-card"><div class="clip-meta"><span class="tag-pill">${c.kind}</span><span>${c.time}</span></div><div class="clip-body ${c.kind === "代码" || c.kind === "命令" ? "clip-code" : ""}">${c.text}</div></div>`).join("")}
+    `;
+  }
+  if (pageId === "shelf") {
+    return `
+      <div class="sec-head"><div class="sec-title">文件暂存架 <span class="sec-count">${state.shelf.length}</span></div></div>
+      ${state.shelf.map(f => `<div class="item-card"><div class="shelf-item"><div class="shelf-ic">${f.ext}</div><div style="min-width:0;flex:1;"><div style="font-size:12.5px;color:rgba(var(--ink),.92);">${f.name}</div><div style="font-size:11px;color:rgba(var(--ink),.5);">${f.size} · ${f.time}</div></div></div></div>`).join("")}
+    `;
+  }
+  if (pageId === "screenshots") {
+    return `<div class="sec-head"><div class="sec-title">截图历史</div></div><div class="shot-grid">${state.shots.map(s => `<div class="shot-card"><div class="shot-thumb" style="background:${s.bg}">${s.ocr}</div><div class="shot-cap">${s.title}</div></div>`).join("")}</div>`;
+  }
+  if (pageId === "calendar") {
+    return `<div class="sec-head"><div class="sec-title">今日日程</div></div>${state.calendar.map(c => `<div class="cal-item"><div class="cal-time">${c.time}</div><div class="cal-box"><strong>${c.title}</strong><span>${c.sub}</span></div></div>`).join("")}`;
+  }
+  const pg = pageById(pageId);
+  return `<div class="sec-head"><div class="sec-title">${pg ? pg.name : pageId}</div></div><div class="item-card"><div style="font-size:12.5px;color:rgba(var(--ink),.85);">${pg ? pg.desc : ""}</div></div>`;
+}
+
+function renderDock(edge) {
+  const el = dockEls[edge];
+  const enabled = state.enabledEdges[edge];
+  el.classList.toggle("hidden", !enabled);
+  if (!enabled) return;
+
+  const dock = state.docks[edge];
+  const list = effectivePagesIn(edge);
+  if (list.length && !list.some(p => p.id === dock.page)) dock.page = list[0].id;
+
+  el.dataset.state = dock.state;
+  el.dataset.stages = state.stages;
+
+  const handleTop = Math.round(dock.along * 600);
+  const drawerTop = clampDrawerTop(dock.along);
+  const hideStripText = state.stripStyle === "icon";
+  const curPageObj = list.find(p => p.id === dock.page) || list[0];
+
+  const stripItems = state.quickStripIds.map(id => QUICK_ACTIONS_POOL.find(a => a.id === id)).filter(Boolean);
+
+  const headerHtml = state.drawerHeader === "minimal" && state.stages === "3"
+    ? `<div class="drawer-tabs minimal"><span class="min-title">${curPageObj ? ICONS[curPageObj.icon] + curPageObj.name : "侧边翼"}</span><div class="d-actions"><button class="d-icon-btn ${dock.pinned ? "pinned" : ""}" data-dpin="${edge}">${ICONS.pin}</button><button class="d-icon-btn" data-dclose="${edge}">${ICONS.close}</button></div></div>`
+    : `<div class="drawer-tabs">${list.map(p => `<button class="d-tab ${p.id === dock.page ? "on" : ""}" data-dtab="${p.id}">${ICONS[p.icon]}<span class="d-tab-txt ${state.drawerHeader === "icons" ? "hide" : ""}">${p.name}</span></button>`).join("")}<div class="d-actions"><button class="d-icon-btn ${dock.pinned ? "pinned" : ""}" data-dpin="${edge}">${ICONS.pin}</button><button class="d-icon-btn" data-dclose="${edge}">${ICONS.close}</button></div></div>`;
+
+  el.innerHTML = `
+    <div class="dock-anchor" style="top:${handleTop}px;">
+      <div class="edge-handle" data-handle="${edge}">
+        <span class="handle-dot ${state.handleDot === "0" ? "off" : ""}"></span>
+        <span class="bar-pill"></span>
+      </div>
+      <div class="quick-strip" data-strip="${edge}">
+        <div class="quick-strip-inner">
+          ${stripItems.map(item => `
+            <button class="qs-btn ${item.page && dock.state === "drawer" && dock.page === item.page ? "on" : ""}" data-qs-id="${item.id}" title="${item.label}">
+              <span class="qs-circle">${ICONS[item.icon]}</span>
+              <span class="qs-label ${hideStripText ? "hide" : ""}">${item.label}</span>
+            </button>
+          `).join("")}
+          <div class="qs-drop-zone">${ICONS.shelf}<span>松手存入<br/>暂存</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-shell" style="top:${drawerTop}px;" data-drawer="${edge}">
+      <div class="drawer-inner">
+        ${headerHtml}
+        <div class="drawer-body">${list.length ? renderDockContent(edge, dock.page) : '<div class="empty-tip">请在下方的空间布局画布里把任意页面拖到这一侧。</div>'}</div>
+      </div>
+    </div>
+  `;
+
+  bindDockEvents(edge, el);
+}
+
+function setDockState(edge, nextState) {
+  if (state.docks[edge].state === nextState) return;
+  state.docks[edge].state = nextState;
+  renderDock(edge);
+}
+
+function targetOnTrigger() {
+  if (state.stages === "2") return "drawer";
+  return state.autoDrawer === "auto" ? "drawer" : "strip";
+}
+
+function bindDockEvents(edge, el) {
+  const handle = el.querySelector(`[data-handle="${edge}"]`);
+  const strip = el.querySelector(`[data-strip="${edge}"]`);
+  const drawer = el.querySelector(`[data-drawer="${edge}"]`);
+  const cancelLeave = () => clearTimeout(leaveTimers[edge]);
+  const scheduleLeave = () => {
+    if (state.trigger !== "hover" || state.docks[edge].pinned) return;
+    clearTimeout(leaveTimers[edge]);
+    leaveTimers[edge] = setTimeout(() => {
+      if (state.docks[edge].state !== "handle" && !state.docks[edge].pinned && !el.querySelector("input:focus")) {
+        setDockState(edge, "handle");
+      }
+    }, state.leaveMs);
+  };
+
+  if (handle) {
+    handle.addEventListener("pointerenter", () => {
+      cancelLeave();
+      if (state.trigger === "hover") {
+        clearTimeout(hoverTimers[edge]);
+        hoverTimers[edge] = setTimeout(() => setDockState(edge, targetOnTrigger()), state.hoverMs);
+      }
+    });
+    handle.addEventListener("pointerleave", () => clearTimeout(hoverTimers[edge]));
+    handle.addEventListener("click", () => setDockState(edge, targetOnTrigger()));
+  }
+
+  [strip, drawer].forEach(part => {
+    if (!part) return;
+    part.addEventListener("pointerenter", cancelLeave);
+    part.addEventListener("pointerleave", scheduleLeave);
+  });
+
+  el.querySelectorAll("[data-qs-id]").forEach(btn => {
+    const item = QUICK_ACTIONS_POOL.find(a => a.id === btn.dataset.qsId);
+    if (!item) return;
+    btn.addEventListener("pointerenter", () => {
+      if (state.autoDrawer === "hover-item" && state.docks[edge].state === "strip" && item.page) {
+        state.docks[edge].page = item.page;
+        setDockState(edge, "drawer");
+      }
+    });
+    btn.addEventListener("click", () => {
+      if (item.page) {
+        state.docks[edge].page = item.page;
+        setDockState(edge, "drawer");
+      } else if (item.action === "new-todo") {
+        state.docks[edge].page = "todo";
+        state.todoAddOpen = true;
+        setDockState(edge, "drawer");
+        const inp = document.getElementById(`newTodo-${edge}`);
+        if (inp) inp.focus();
+      } else {
+        showToast("已触发快捷翻译");
+      }
+    });
+  });
+
+  el.querySelectorAll("[data-dtab]").forEach(btn => btn.addEventListener("click", () => { state.docks[edge].page = btn.dataset.dtab; renderDock(edge); }));
+  const pinBtn = el.querySelector(`[data-dpin="${edge}"]`);
+  if (pinBtn) pinBtn.addEventListener("click", () => { state.docks[edge].pinned = !state.docks[edge].pinned; renderDock(edge); });
+  const closeBtn = el.querySelector(`[data-dclose="${edge}"]`);
+  if (closeBtn) closeBtn.addEventListener("click", () => { state.docks[edge].pinned = false; setDockState(edge, "handle"); });
+
+  const addToggle = el.querySelector('[data-act="toggle-add-todo"]');
+  if (addToggle) addToggle.addEventListener("click", () => { state.todoAddOpen = !state.todoAddOpen; renderDock(edge); });
+  const submitTodo = () => {
+    const inp = document.getElementById(`newTodo-${edge}`);
+    if (!inp || !inp.value.trim()) return;
+    state.todos.unshift({ id: Date.now(), text: inp.value.trim(), tag: "随手记", pri: "med", done: false, time: "刚刚" });
+    state.todoAddOpen = false;
+    renderDock(edge);
+  };
+  const submitBtn = el.querySelector('[data-act="submit-todo"]');
+  if (submitBtn) submitBtn.addEventListener("click", submitTodo);
+  const newInp = document.getElementById(`newTodo-${edge}`);
+  if (newInp) newInp.addEventListener("keydown", e => { if (e.key === "Enter") submitTodo(); });
+  el.querySelectorAll('[data-act="toggle-todo"]').forEach(r => r.addEventListener("click", () => {
+    const t = state.todos.find(x => String(x.id) === r.dataset.id);
+    if (t) { t.done = !t.done; renderDock(edge); }
+  }));
+}
+
+/* ======== 1. 渲染空间可视化拖拽台 ======== */
+function renderSpatialBoard() {
+  ["left", "top", "right", "hidden"].forEach(zone => {
+    const container = document.querySelector(`[data-zone-list="${zone}"]`);
+    const zoneEl = document.querySelector(`[data-drop-zone="${zone}"]`);
+    if (zone === "left" || zone === "right") {
+      const on = state.enabledEdges[zone];
+      zoneEl.classList.toggle("inactive", !on);
+      const sw = zoneEl.querySelector(`[data-toggle-edge="${zone}"]`);
+      sw.classList.toggle("on", on);
+      sw.textContent = on ? "已开启" : "未开启（拖入自动开）";
+    }
+    const ids = state.zones[zone];
+    if (!ids.length) {
+      container.innerHTML = `<div class="dz-empty-hint">${zone === "hidden" ? "把不需要展示的卡片拖到这里" : "拖页面卡片到这里"}</div>`;
+    } else {
+      container.innerHTML = ids.map(id => {
+        const p = pageById(id);
+        return `
+          <div class="page-chip" draggable="true" data-page-id="${id}" data-from-zone="${zone}">
+            <span class="grip">⋮⋮</span>${ICONS[p.icon]}<span>${p.name}</span><span class="p-tag">${p.kind}</span>
+          </div>
+        `;
+      }).join("");
+    }
+  });
+  document.getElementById("topZoneCount").textContent = `${state.zones.top.length} 页`;
+  document.getElementById("hiddenZoneCount").textContent = `${state.zones.hidden.length} 页`;
+  document.getElementById("badgePages").textContent = String(PAGES.length - state.zones.hidden.length);
+
+  document.querySelectorAll(".page-chip").forEach(chip => {
+    chip.addEventListener("dragstart", (e) => {
+      dragPageId = chip.dataset.pageId;
+      chip.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    chip.addEventListener("dragend", () => {
+      dragPageId = null;
+      chip.classList.remove("dragging");
+      document.querySelectorAll(".drop-zone").forEach(z => z.classList.remove("over"));
+    });
+    chip.addEventListener("dragover", (e) => {
+      if (!dragPageId || dragPageId === chip.dataset.pageId) return;
+      e.preventDefault();
+    });
+    chip.addEventListener("drop", (e) => {
+      if (!dragPageId || dragPageId === chip.dataset.pageId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      movePageToZone(dragPageId, chip.dataset.fromZone, chip.dataset.pageId);
+    });
+  });
+}
+
+function movePageToZone(pageId, targetZone, beforeId = null) {
+  ["top", "left", "right", "hidden"].forEach(z => {
+    state.zones[z] = state.zones[z].filter(id => id !== pageId);
+  });
+  const list = state.zones[targetZone];
+  if (beforeId && list.includes(beforeId)) {
+    list.splice(list.indexOf(beforeId), 0, pageId);
+  } else {
+    list.push(pageId);
+  }
+  if ((targetZone === "left" || targetZone === "right") && !state.enabledEdges[targetZone]) {
+    state.enabledEdges[targetZone] = true;
+    state.docks[targetZone].state = "drawer";
+    state.docks[targetZone].page = pageId;
+    showToast(`已自动开启${targetZone === "left" ? "左侧翼" : "右侧翼"}并移入「${pageById(pageId).name}」`);
+  } else if (targetZone === "left" || targetZone === "right") {
+    state.docks[targetZone].page = pageId;
+  }
+  renderAll();
+}
+
+document.querySelectorAll(".drop-zone").forEach(zoneEl => {
+  zoneEl.addEventListener("dragover", (e) => {
+    if (!dragPageId) return;
+    e.preventDefault();
+    zoneEl.classList.add("over");
+  });
+  zoneEl.addEventListener("dragleave", () => zoneEl.classList.remove("over"));
+  zoneEl.addEventListener("drop", (e) => {
+    if (!dragPageId) return;
+    e.preventDefault();
+    zoneEl.classList.remove("over");
+    movePageToZone(dragPageId, zoneEl.dataset.dropZone);
+  });
+});
+
+document.querySelectorAll("[data-toggle-edge]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const edge = btn.dataset.toggleEdge;
+    state.enabledEdges[edge] = !state.enabledEdges[edge];
+    if (state.enabledEdges[edge]) state.docks[edge].state = "drawer";
+    renderAll();
+  });
+});
+
+/* ======== 2. 渲染可交互显示器定位与直接拖尺寸 ======== */
+function renderMonitorStage() {
+  const wrap = document.getElementById("monScreens");
+  const primaryEdge = state.enabledEdges.right ? "right" : "left";
+  const dock = state.docks[primaryEdge];
+  const scaleW = Math.round((state.drawerW / 1260) * 290);
+  const scaleH = Math.round((state.drawerH / 600) * 196);
+  const topPx = Math.max(10, Math.min(196 - scaleH - 10, Math.round(dock.along * 196 - scaleH / 2)));
+
+  const leftMon = state.monMode === "dual" ? `
+    <div class="mon-box secondary">
+      <div class="mon-box-label">副屏（左）</div>
+      ${state.enabledEdges.left ? `<div class="mon-mini-handle left" style="top:${Math.round(state.docks.left.along * 150)}px;"></div>` : ""}
+      <div class="mon-ban-seam"></div>
+      <div class="mon-ban-tip">拼接边禁触</div>
+    </div>
+  ` : "";
+
+  wrap.innerHTML = `
+    ${leftMon}
+    <div class="mon-box" id="primaryMonBox">
+      <div class="mon-box-label">主显示器（拖蓝色把手上下移 · 拖虚框边调宽高）</div>
+      <div class="mon-top-island"></div>
+      <div class="mon-center-line" id="monCenterLine"></div>
+      <div class="mon-mini-handle ${primaryEdge}" id="monHandle" style="top:${Math.round(dock.along * 196)}px;" title="上下拖动调整沿边位置"></div>
+      <div class="mon-mini-drawer ${primaryEdge}" id="monDrawer" style="top:${topPx}px;${primaryEdge}:14px;width:${scaleW}px;height:${scaleH}px;">
+        <span>${state.drawerW}×${state.drawerH}</span>
+        <div class="mon-resize-w" id="monResizeW" title="左右拖动改抽屉宽度"></div>
+        <div class="mon-resize-h" id="monResizeH" title="上下拖动改抽屉高度"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("monReadout").textContent =
+    `${primaryEdge === "right" ? "右侧翼" : "左侧翼"} · 沿边 ${Math.round(dock.along * 100)}%${Math.abs(dock.along - 0.5) < 0.02 ? "（居中磁吸）" : ""} · 抽屉 ${state.drawerW} × ${state.drawerH}px · 仅贴物理外侧边`;
+
+  const monHandle = document.getElementById("monHandle");
+  const centerLine = document.getElementById("monCenterLine");
+  monHandle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    const boxRect = document.getElementById("primaryMonBox").getBoundingClientRect();
+    const onMove = (me) => {
+      let along = (me.clientY - boxRect.top) / boxRect.height;
+      along = Math.max(0.14, Math.min(0.86, along));
+      if (Math.abs(along - 0.5) < 0.035) { along = 0.5; centerLine.classList.add("snap"); }
+      else centerLine.classList.remove("snap");
+      dock.along = along;
+      renderDock(primaryEdge);
+      renderMonitorStage();
+    };
+    const onUp = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  });
+
+  const resizeW = document.getElementById("monResizeW");
+  resizeW.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    const startX = e.clientX, startW = state.drawerW;
+    const dir = primaryEdge === "right" ? -1 : 1;
+    const onMove = (me) => {
+      const next = Math.round((startW + (me.clientX - startX) * dir * 3.5) / 10) * 10;
+      state.drawerW = Math.max(300, Math.min(480, next));
+      renderAll();
+    };
+    const onUp = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  });
+
+  const resizeH = document.getElementById("monResizeH");
+  resizeH.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    const startY = e.clientY, startH = state.drawerH;
+    const onMove = (me) => {
+      const next = Math.round((startH + (me.clientY - startY) * 2.8) / 10) * 10;
+      state.drawerH = Math.max(400, Math.min(560, next));
+      renderAll();
+    };
+    const onUp = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  });
+}
+
+/* ======== 3. 快捷条动作拖拽排序 ======== */
+function renderStripBuilder() {
+  const prev = document.getElementById("sbPreview");
+  const pool = document.getElementById("sbPool");
+  prev.innerHTML = state.quickStripIds.map(id => {
+    const a = QUICK_ACTIONS_POOL.find(x => x.id === id);
+    return `<div class="sb-slot" draggable="true" data-sb-id="${id}"><span style="color:#6c7286;">⋮⋮</span>${ICONS[a.icon]}<span>${a.label}</span><button class="rm" data-sb-rm="${id}">✕</button></div>`;
+  }).join("");
+
+  pool.innerHTML = QUICK_ACTIONS_POOL.map(a => {
+    const used = state.quickStripIds.includes(a.id);
+    return `<button class="sb-add ${used ? "used" : ""}" data-sb-add="${a.id}">${ICONS[a.icon]}<span>${a.label}</span></button>`;
+  }).join("");
+
+  prev.querySelectorAll(".sb-slot").forEach(slot => {
+    slot.addEventListener("dragstart", () => { dragStripId = slot.dataset.sbId; });
+    slot.addEventListener("dragover", e => { if (dragStripId && dragStripId !== slot.dataset.sbId) e.preventDefault(); });
+    slot.addEventListener("drop", e => {
+      if (!dragStripId || dragStripId === slot.dataset.sbId) return;
+      e.preventDefault();
+      const arr = state.quickStripIds.filter(x => x !== dragStripId);
+      arr.splice(arr.indexOf(slot.dataset.sbId), 0, dragStripId);
+      state.quickStripIds = arr;
+      dragStripId = null;
+      renderAll();
+    });
+  });
+  prev.querySelectorAll("[data-sb-rm]").forEach(btn => btn.addEventListener("click", () => {
+    if (state.quickStripIds.length <= 1) return showToast("快捷条至少保留 1 项");
+    state.quickStripIds = state.quickStripIds.filter(x => x !== btn.dataset.sbRm);
+    renderAll();
+  }));
+  pool.querySelectorAll("[data-sb-add]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.sbAdd;
+    if (state.quickStripIds.includes(id)) return;
+    if (state.quickStripIds.length >= 5) return showToast("快捷条最多放 5 项，先移除一项再添加");
+    state.quickStripIds.push(id);
+    renderAll();
+  }));
+}
+
+function syncRangeInputs() {
+  const map = [
+    ["rngW", state.drawerW, "px"], ["rngH", state.drawerH, "px"],
+    ["rngHandleW", state.handleW, "px"], ["rngHandleH", state.handleH, "px"],
+    ["rngRadius", state.radius, "px"], ["rngHoverMs", state.hoverMs, "ms"],
+    ["rngLeaveMs", state.leaveMs, "ms"], ["rngGap", state.gap, "px"],
+    ["rngAlpha", state.alpha, "%"], ["rngHandleAlpha", state.handleAlpha, "%"]
+  ];
+  map.forEach(([id, v, u]) => {
+    const el = document.getElementById(id);
+    if (el) { el.value = v; document.getElementById(id.replace("rng", "val")).textContent = `${v}${u}`; }
+  });
+  document.querySelectorAll("button.seg[data-set]").forEach(b => b.classList.toggle("on", String(state[b.dataset.set]) === b.dataset.val));
+  document.querySelectorAll("[data-radius-card]").forEach(c => c.classList.toggle("on", Number(c.dataset.radiusCard) === state.radius));
+}
+
+function renderAll() {
+  applyCssVars();
+  syncRangeInputs();
+  renderTopIsland();
+  renderDock("left");
+  renderDock("right");
+  renderSpatialBoard();
+  renderMonitorStage();
+  renderStripBuilder();
+}
+
+document.querySelectorAll(".s-nav-item").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".s-nav-item").forEach(b => b.classList.toggle("on", b === btn));
+    document.querySelectorAll(".s-pane").forEach(p => p.classList.toggle("on", p.dataset.spane === btn.dataset.stab));
+  });
+});
+
+document.querySelectorAll("[data-mon-mode]").forEach(b => b.addEventListener("click", () => {
+  state.monMode = b.dataset.monMode;
+  document.querySelectorAll("[data-mon-mode]").forEach(x => x.classList.toggle("on", x === b));
+  renderMonitorStage();
+}));
+
+document.querySelectorAll("[data-size-preset]").forEach(b => b.addEventListener("click", () => {
+  const [w, h] = b.dataset.sizePreset.split(",").map(Number);
+  state.drawerW = w; state.drawerH = h;
+  document.querySelectorAll("[data-size-preset]").forEach(x => x.classList.toggle("on", x === b));
+  renderAll();
+}));
+
+document.querySelectorAll("[data-mode-card]").forEach(c => c.addEventListener("click", () => {
+  const [st, mode] = c.dataset.modeCard.split("-");
+  state.stages = st;
+  state.autoDrawer = mode === "hover" ? "hover-item" : "auto";
+  document.querySelectorAll("[data-mode-card]").forEach(x => x.classList.toggle("on", x === c));
+  renderAll();
+}));
+
+document.querySelectorAll("[data-nav-card]").forEach(c => c.addEventListener("click", () => {
+  const [strip, head] = c.dataset.navCard.split("-");
+  state.stripStyle = strip; state.drawerHeader = head;
+  document.querySelectorAll("[data-nav-card]").forEach(x => x.classList.toggle("on", x === c));
+  renderAll();
+}));
+
+document.querySelectorAll("[data-radius-card]").forEach(c => c.addEventListener("click", () => {
+  state.radius = Number(c.dataset.radiusCard);
+  renderAll();
+}));
+
+[["rngW","drawerW"],["rngH","drawerH"],["rngHandleW","handleW"],["rngHandleH","handleH"],["rngRadius","radius"],["rngHoverMs","hoverMs"],["rngLeaveMs","leaveMs"],["rngGap","gap"],["rngAlpha","alpha"],["rngHandleAlpha","handleAlpha"]]
+  .forEach(([id, key]) => document.getElementById(id).addEventListener("input", e => { state[key] = Number(e.target.value); renderAll(); }));
+
+document.querySelectorAll("button.seg[data-set]").forEach(b => b.addEventListener("click", () => { state[b.dataset.set] = b.dataset.val; renderAll(); }));
+
+document.querySelectorAll(".swatch").forEach(sw => sw.addEventListener("click", () => {
+  document.querySelectorAll(".swatch").forEach(s => s.classList.toggle("on", s === sw));
+  state.accent = sw.dataset.accent; state.accentRgb = sw.dataset.rgb; state.onAccent = sw.dataset.on;
+  renderAll();
+}));
+
+document.getElementById("btnAutoSplit").addEventListener("click", () => {
+  state.enabledEdges = { left: false, right: true };
+  state.zones = { top: ["agents", "music", "timer", "qq", "fuyu"], left: [], right: ["todo", "clipboard", "shelf", "screenshots", "calendar", "gh-issues"], hidden: [] };
+  state.docks.right.state = "drawer";
+  renderAll();
+  showToast("已应用清爽分流：长列表已归入右侧翼");
+});
+
+document.getElementById("btnAllTop").addEventListener("click", () => {
+  state.zones = { top: PAGES.map(p => p.id), left: [], right: [], hidden: [] };
+  state.topOpen = true;
+  topIsland.classList.add("open");
+  renderAll();
+});
+
+const PRESETS = {
+  default: () => {
+    Object.assign(state, { stages: "3", autoDrawer: "auto", radius: 14, drawerW: 380, drawerH: 520, gap: 6, theme: "dark", glass: "1", stripStyle: "label", drawerHeader: "full", density: "cozy" });
+    state.enabledEdges = { left: false, right: true };
+    state.docks.right.state = "drawer";
+  },
+  minimal: () => {
+    Object.assign(state, { stages: "3", autoDrawer: "auto", radius: 10, drawerW: 340, drawerH: 540, gap: 4, theme: "dark", glass: "1", stripStyle: "icon", drawerHeader: "minimal", density: "compact" });
+    state.enabledEdges = { left: false, right: true };
+    state.docks.right.state = "drawer";
+  },
+  mag: () => {
+    Object.assign(state, { stages: "3", autoDrawer: "auto", radius: 16, drawerW: 390, drawerH: 540, gap: 8, theme: "light", glass: "0", stripStyle: "label", drawerHeader: "full", density: "cozy" });
+    state.enabledEdges = { left: false, right: true };
+    state.docks.right.state = "drawer";
+  },
+  dual: () => {
+    Object.assign(state, { stages: "3", autoDrawer: "auto", radius: 12, drawerW: 340, drawerH: 520, gap: 6, theme: "dark", glass: "1", stripStyle: "icon", drawerHeader: "minimal", density: "cozy" });
+    state.enabledEdges = { left: true, right: true };
+    state.zones = { top: ["agents", "music", "timer", "qq", "fuyu"], left: ["shelf", "clipboard"], right: ["todo", "screenshots", "calendar", "gh-issues"], hidden: [] };
+    state.docks.left.state = "drawer";
+    state.docks.right.state = "drawer";
+  }
+};
+
+document.querySelectorAll(".preset-btn[data-preset]").forEach(btn => btn.addEventListener("click", () => {
+  document.querySelectorAll(".preset-btn[data-preset]").forEach(b => b.classList.toggle("on", b === btn));
+  PRESETS[btn.dataset.preset]();
+  renderAll();
+}));
+
+topCollapsed.addEventListener("click", () => { state.topOpen = true; topIsland.classList.add("open"); });
+desk.addEventListener("pointerdown", e => {
+  if (!e.target.closest(".top-island")) { state.topOpen = false; topIsland.classList.remove("open"); }
+  ["left", "right"].forEach(edge => {
+    if (!e.target.closest(`#dock${edge[0].toUpperCase() + edge.slice(1)}`) && state.docks[edge].state !== "handle" && !state.docks[edge].pinned) {
+      setDockState(edge, "handle");
+    }
+  });
+});
+
+const dragGhost = document.getElementById("dragGhost");
+document.querySelectorAll(".drag-chip").forEach(chip => {
+  chip.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    const file = { name: chip.dataset.file, size: chip.dataset.size, ext: chip.dataset.ext };
+    dragGhost.textContent = chip.textContent;
+    dragGhost.style.display = "flex";
+    let hotEdge = null;
+    const moveGhost = (me) => {
+      dragGhost.style.left = `${me.clientX + 12}px`;
+      dragGhost.style.top = `${me.clientY - 14}px`;
+      const rect = desk.getBoundingClientRect();
+      const nearRight = state.enabledEdges.right && rect.right - me.clientX < 92 && me.clientY > rect.top && me.clientY < rect.bottom;
+      const nearLeft = state.enabledEdges.left && me.clientX - rect.left < 92 && me.clientY > rect.top && me.clientY < rect.bottom;
+      const nextHot = nearRight ? "right" : nearLeft ? "left" : null;
+      if (nextHot !== hotEdge) {
+        if (hotEdge && state.docks[hotEdge].state === "drop") setDockState(hotEdge, "handle");
+        hotEdge = nextHot;
+        if (hotEdge) setDockState(hotEdge, "drop");
+      }
+    };
+    const endDrag = () => {
+      window.removeEventListener("pointermove", moveGhost);
+      window.removeEventListener("pointerup", endDrag);
+      dragGhost.style.display = "none";
+      if (hotEdge) {
+        state.shelf.unshift({ id: Date.now(), name: file.name, size: file.size, ext: file.ext, time: "刚刚" });
+        showToast(`已存入文件暂存：${file.name}`);
+        setDockState(hotEdge, "handle");
+      }
+    };
+    moveGhost(e);
+    window.addEventListener("pointermove", moveGhost);
+    window.addEventListener("pointerup", endDrag);
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>

@@ -12,6 +12,7 @@ import { PluginMarketPage } from "../PluginMarketPage";
 import { PluginDiagnosticsPage } from "../PluginDiagnosticsPage";
 import { IslandLayoutPage } from "../island-layout/IslandLayoutPage";
 import { IslandPanelPage } from "../island-layout/IslandPanelPage";
+import { SideDocksSettingsPage } from "../SideDocksSettingsPage";
 import { DisplaySettingsSection } from "../sections/DisplaySettingsSection";
 import { SlotView } from "../../../features/plugin-kernel/SlotView";
 import { addSettingsCategory, type SettingsCategory, type SettingsLink, type SettingsPageProps } from "./categorySlot";
@@ -88,6 +89,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   islandLayout: ({ settings, onSettingsChange }) => <IslandLayoutPage settings={settings} onSettingsChange={onSettingsChange} />,
   islandPanel: ({ settings }) => <IslandPanelPage settings={settings} />,
   islandDisplay: ({ settings, onSettingsChange }) => <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />,
+  sideDocks: ({ settings }) => <SideDocksSettingsPage settings={settings} />,
   theme: theme("theme"),
   themeStyle: theme("themeStyle"),
   shortcuts: shortcuts("shortcuts"),

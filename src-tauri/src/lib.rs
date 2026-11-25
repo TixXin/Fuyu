@@ -41,6 +41,7 @@ mod rename_migration;
 mod screenshot;
 mod settings_file;
 mod settings_window;
+mod side_dock;
 mod shortcut_capture;
 #[cfg_attr(not(any(windows, target_os = "macos")), path = "ssh_tunnel/unsupported.rs")]
 mod ssh_tunnel;
@@ -310,6 +311,7 @@ pub fn run() {
             timer;
             settings_window;
             settings_file;
+            side_dock;
             sync;
             shortcut_capture;
             home_dir;

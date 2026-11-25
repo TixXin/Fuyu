@@ -105,6 +105,17 @@ async function loadWindow(): Promise<ReactNode> {
       const { PluginWindowApp } = await import("./windows/plugin-window/PluginWindowApp");
       return <PluginWindowApp />;
     }
+    case "side": {
+      const [{ TodosGate }, { SideDockWindow }] = await Promise.all([
+        import("./features/todos/TodosGate"),
+        import("./windows/side-dock/SideDockWindow"),
+      ]);
+      return (
+        <TodosGate>
+          <SideDockWindow />
+        </TodosGate>
+      );
+    }
     default: {
       const [{ TodosGate }, { IslandApp }] = await Promise.all([
         import("./features/todos/TodosGate"),

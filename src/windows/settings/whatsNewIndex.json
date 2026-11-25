@@ -12,6 +12,30 @@
         "group": "Network proxy",
         "title": "Proxy mode"
       }
+    },
+    {
+      "page": "sideDocks",
+      "since": "next",
+      "zh-CN": {
+        "group": "屏幕左右侧边翼",
+        "title": "右侧翼"
+      },
+      "en": {
+        "group": "Screen side docks",
+        "title": "Right dock"
+      }
+    },
+    {
+      "page": "sideDocks",
+      "since": "next",
+      "zh-CN": {
+        "group": "屏幕左右侧边翼",
+        "title": "左侧翼"
+      },
+      "en": {
+        "group": "Screen side docks",
+        "title": "Left dock"
+      }
     }
   ]
 }

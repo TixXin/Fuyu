@@ -1376,6 +1376,32 @@
       }
     },
     {
+      "page": "sideDocks",
+      "since": "next",
+      "zh-CN": {
+        "group": "屏幕左右侧边翼",
+        "title": "右侧翼",
+        "description": "把待办、剪贴板、文件中转等纵长列表拖到屏幕左侧或右侧独立展开，顶部主岛只留轻感知项。拖进未开启的一侧会自动启用它。"
+      },
+      "en": {
+        "group": "Screen side docks",
+        "title": "Right dock",
+        "description": "Drag tall list pages such as Todos, Clipboard, and File shelf to the left or right screen edge so the top island stays clean. Dropping onto a disabled side enables it automatically."
+      }
+    },
+    {
+      "page": "sideDocks",
+      "since": "next",
+      "zh-CN": {
+        "group": "屏幕左右侧边翼",
+        "title": "左侧翼"
+      },
+      "en": {
+        "group": "Screen side docks",
+        "title": "Left dock"
+      }
+    },
+    {
       "page": "behavior",
       "zh-CN": {
         "group": "展开",
