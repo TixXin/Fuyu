@@ -47,10 +47,31 @@ export type AgentText = {
     noProject: string;
     arrange: {
       label: string;
+      view: string;
       sort: string;
       group: string;
       sortOptions: { status: string; recent: string; firstSeen: string };
       groupOptions: { computer: string; project: string; none: string };
+    };
+    views: {
+      filterAll: string;
+      filterNeed: string;
+      filterRun: string;
+      filterDone: string;
+      filterEmpty: string;
+      activeSection: (count: number) => string;
+      recentDone: (count: number) => string;
+      expand: string;
+      collapse: string;
+      backToList: string;
+      latestReply: string;
+      folderShort: string;
+      projectsAll: string;
+      projectsActive: string;
+      projectCount: (total: number, active: number) => string;
+      openFolder: string;
+      keyFocus: string;
+      keyArchive: string;
     };
     removed: string;
     undo: string;
@@ -92,7 +113,7 @@ export type AgentText = {
     creditsToday: (today: string) => string;
     balanceUnit: string;
     windowNames: Readonly<Record<string, string>>;
-    layouts: Record<"chips" | "tiles" | "lead" | "ruler" | "table", string>;
+    layouts: Record<"strip" | "chips" | "tiles" | "lead" | "ruler" | "table", string>;
     lead: (name: string) => string;
     showAll: string;
     collapse: string;
@@ -100,6 +121,8 @@ export type AgentText = {
     moreWindows: (count: number) => string;
     stale: string;
     expired: (ago: string) => string;
+    expiredShort: string;
+    unavailable: string;
     expiredDetail: (ago: string, source: string) => string;
     expiredFix: string;
     fix: string;
@@ -223,11 +246,32 @@ export const zhCN: AgentText = {
     thisComputer: "本机",
     noProject: "未知项目",
     arrange: {
-      label: "排列会话",
+      label: "排列与布局",
+      view: "布局",
       sort: "排序",
       group: "分组",
       sortOptions: { status: "状态优先", recent: "最近活动", firstSeen: "首次出现" },
       groupOptions: { computer: "按电脑", project: "按项目", none: "不分组" },
+    },
+    views: {
+      filterAll: "全部",
+      filterNeed: "需处理",
+      filterRun: "运行中",
+      filterDone: "已完成",
+      filterEmpty: "当前筛选下没有会话",
+      activeSection: (count) => `进行中 · ${count}`,
+      recentDone: (count) => `最近完成 · ${count}`,
+      expand: "展开",
+      collapse: "收起",
+      backToList: "返回列表",
+      latestReply: "最新回复",
+      folderShort: "目录",
+      projectsAll: "全部项目",
+      projectsActive: "只看活跃",
+      projectCount: (total, active) => (active > 0 ? `${total} 个会话 · ${active} 活跃` : `${total} 个会话`),
+      openFolder: "打开目录",
+      keyFocus: "跳转",
+      keyArchive: "归档",
     },
     removed: "已归档",
     undo: "撤销",
@@ -269,7 +313,7 @@ export const zhCN: AgentText = {
     creditsToday: (today) => `今日 ${today}`,
     balanceUnit: "余额",
     windowNames: { month: "本月", cursorAuto: "Auto", cursorApi: "指定模型", mcpMonth: "MCP 本月", "3p5h": "Claude / GPT 5 小时", "3p7d": "Claude / GPT 7 天" },
-    layouts: { chips: "一行胶囊", tiles: "小方块", lead: "最紧的领头", ruler: "水位刻度", table: "表格" },
+    layouts: { strip: "极简细条", chips: "一行胶囊", tiles: "小方块", lead: "最紧的领头", ruler: "水位刻度", table: "表格" },
     lead: (name) => `最紧 · ${name}`,
     showAll: "全部额度",
     collapse: "收起",
@@ -277,11 +321,13 @@ export const zhCN: AgentText = {
     moreWindows: (count) => `还有 ${count} 项`,
     stale: "可能已过时",
     expired: (ago) => `已过期 · ${ago}`,
+    expiredShort: "已过期",
+    unavailable: "暂不可用",
     expiredDetail: (ago, source) => `额度已过重置时间，${ago}更新 · ${source}`,
-    expiredFix: "点「修复」重新安装 Claude Code 的钩子，再用一下 Claude Code 就会更新",
+    expiredFix: "点「修复」重装钩子；终端里的 Claude Code 回复一次就更新，桌面端不跑状态栏，靠联网补查",
     fix: "修复",
     fixing: "修复中…",
-    fixed: "已修复，用一下 Claude Code 就会更新",
+    fixed: "已修复，终端里的 Claude Code 回复一次就更新",
     fixFailed: "没修好，到设置 → Agent 里重新安装钩子",
     fiveHour: "5 小时",
     sevenDay: "7 天",
@@ -406,11 +452,32 @@ export const en: AgentText = {
     thisComputer: "This computer",
     noProject: "No project",
     arrange: {
-      label: "Arrange sessions",
+      label: "Layout and arrange",
+      view: "Layout",
       sort: "Sort",
       group: "Group",
       sortOptions: { status: "Status", recent: "Recent", firstSeen: "First seen" },
       groupOptions: { computer: "Computer", project: "Project", none: "None" },
+    },
+    views: {
+      filterAll: "All",
+      filterNeed: "Needs you",
+      filterRun: "Running",
+      filterDone: "Done",
+      filterEmpty: "No sessions in this filter",
+      activeSection: (count) => `Active · ${count}`,
+      recentDone: (count) => `Completed · ${count}`,
+      expand: "Show",
+      collapse: "Hide",
+      backToList: "Back to list",
+      latestReply: "Latest reply",
+      folderShort: "Folder",
+      projectsAll: "All projects",
+      projectsActive: "Active only",
+      projectCount: (total, active) => (active > 0 ? `${total} · ${active} active` : `${total}`),
+      openFolder: "Open folder",
+      keyFocus: "Focus",
+      keyArchive: "Archive",
     },
     removed: "Archived",
     undo: "Undo",
@@ -452,7 +519,7 @@ export const en: AgentText = {
     creditsToday: (today) => `${today} today`,
     balanceUnit: "balance",
     windowNames: { month: "This month", cursorAuto: "Auto", cursorApi: "Named models", mcpMonth: "MCP this month", "3p5h": "Claude / GPT 5h", "3p7d": "Claude / GPT 7d" },
-    layouts: { chips: "Chips", tiles: "Tiles", lead: "Tightest first", ruler: "Ruler", table: "Table" },
+    layouts: { strip: "Minimal strip", chips: "Chips", tiles: "Tiles", lead: "Tightest first", ruler: "Ruler", table: "Table" },
     lead: (name) => `Tightest · ${name}`,
     showAll: "All usage",
     collapse: "Less",
@@ -460,11 +527,13 @@ export const en: AgentText = {
     moreWindows: (count) => `${count} more`,
     stale: "May be out of date",
     expired: (ago) => `Expired · ${ago}`,
+    expiredShort: "Expired",
+    unavailable: "Unavailable",
     expiredDetail: (ago, source) => `Past its reset time; updated ${ago} · ${source}`,
-    expiredFix: "Click Fix to reinstall the Claude Code hooks, then use Claude Code once",
+    expiredFix: "Click Fix to reinstall the hooks; Claude Code in a terminal updates it on its next reply, the desktop app has no status line and relies on the online check",
     fix: "Fix",
     fixing: "Fixing…",
-    fixed: "Fixed; use Claude Code once to update",
+    fixed: "Fixed; updates on the next reply of Claude Code in a terminal",
     fixFailed: "Could not fix; reinstall the hooks under Settings → Agent",
     fiveHour: "5h",
     sevenDay: "7d",

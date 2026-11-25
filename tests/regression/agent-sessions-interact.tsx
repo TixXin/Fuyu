@@ -62,7 +62,7 @@ const render = (view: AgentSessionView, extra: { reveal?: AlertedSession; withRe
 ));
 
 const ROW = ".agent-session, .agent-card";
-const items = () => [...document.querySelectorAll<HTMLElement>(".agent-sessions__list > li[data-session-key]")];
+const items = () => [...document.querySelectorAll<HTMLElement>(".agent-sessions__list > li[data-session-key]")].filter((item) => item.querySelector(ROW));
 const rowButtons = () => items().map((item) => item.querySelector<HTMLElement>(ROW)!);
 const menu = () => document.querySelector<HTMLElement>(".row-menu");
 const menuLabels = () => [...document.querySelectorAll<HTMLButtonElement>(".row-menu [role=menuitem]")].map((item) => item.textContent);
@@ -107,7 +107,7 @@ async function menuChecks(view: AgentSessionView) {
 
 async function runChecks() {
   try {
-    await menuChecks("list");
+    await menuChecks("focused");
 
     await openMenu(rowButtons()[0]);
     await act(async () => menuItem("复制会话 id").click());
@@ -141,7 +141,7 @@ async function runChecks() {
     await act(async () => menuItem("归档").click());
     check(archived[archived.length - 1] === "b", "菜单里的「归档」归档这一行");
 
-    await render("list");
+    await render("focused");
     const rows = rowButtons();
     check(rows.every((row) => row.tagName === "BUTTON"), "每行是按钮，Enter 跳转");
     rows[0].focus();
@@ -172,14 +172,14 @@ async function runChecks() {
     const moreShown = () => getComputedStyle(items()[2].querySelector(".agent-session__more")!).opacity === "1";
     check(await until(moreShown), "键盘选中时「⋯」出现");
 
-    await render("list", { withRemoval: false });
+    await render("focused", { withRemoval: false });
     rowButtons()[0].focus();
     await press(rowButtons()[0], "Delete");
     await openMenu(rowButtons()[0]);
     check(archived.length === 3 && menu() && !menuLabels().includes("归档"), "不能归档时 Delete 不动，菜单里也没有「归档」");
     await closeMenu();
 
-    await render("list");
+    await render("focused");
     const anchor = items()[0].querySelector<HTMLElement>(".agent-session__hover")!;
     const hoveredAt = performance.now();
     await act(async () => { anchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, clientX: 200 })); });
@@ -201,32 +201,23 @@ async function runChecks() {
     await act(async () => { remoteAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true })); });
 
     const alert: AlertedSession = { key: "claudeCode:a", kind: "completed", session: SESSIONS[0], rowHeight: 78, measure: () => undefined };
-    await render("list", { reveal: alert });
+    await render("focused", { reveal: alert });
     check(!document.querySelector(".agent-session__hover") && !document.querySelector(".agent-session__more"), "弹出提醒里没有悬停卡片和行菜单");
 
-    for (const view of ["cards", "compact"] as const) {
+    for (const view of ["bento", "projects", "minimal"] as const) {
       await menuChecks(view);
       const cards = rowButtons();
       cards[0].focus();
       await press(cards[0], "ArrowDown");
-      check(document.activeElement === cards[1], `${view}：↓ 选下一张`);
+      check(document.activeElement === cards[1], `${view}：↓ 选下一项`);
       check(items()[0].querySelector(".agent-session__hover"), `${view}：也有悬停卡片`);
-      const more = items()[0].querySelector<HTMLElement>(".agent-session__more")!.getBoundingClientRect();
-      const archive = items()[0].querySelector<HTMLElement>(".agent-session__archive")!.getBoundingClientRect();
-      const meta = items()[0].querySelector<HTMLElement>(".agent-card__heading .agent-provider-icon")!.getBoundingClientRect();
-      check(more.right <= archive.left && meta.right <= more.left + 1, `${view}：「⋯」在归档左边，不压住图标`);
     }
 
     fixture.style.width = "400px";
-    await render("list");
-    const narrow = items()[0];
-    const more = narrow.querySelector<HTMLElement>(".agent-session__more button")!.getBoundingClientRect();
-    const archive = narrow.querySelector<HTMLElement>(".agent-session__archive")!.getBoundingClientRect();
-    const agent = narrow.querySelector<HTMLElement>(".agent-session__agent")!;
-    const icon = agent.getBoundingClientRect();
-    check(more.right <= archive.left && Math.abs((icon.left + icon.right) / 2 - (more.left + more.right) / 2) < 1.5 && archive.right <= narrow.getBoundingClientRect().right,
-      "400 宽：「⋯」在归档左边，正好在 Agent 图标的位置");
+    await render("focused");
     rowButtons()[0].focus();
+    const narrow = items()[0];
+    const agent = narrow.querySelector<HTMLElement>(".agent-session__agent")!;
     check(await until(() => getComputedStyle(agent).opacity === "0" && getComputedStyle(narrow.querySelector(".agent-session__more")!).opacity === "1"), "选中这一行时 Agent 图标换成「⋯」，不叠在一起");
     await openMenu(rowButtons()[0]);
     const box = menu()!.getBoundingClientRect();

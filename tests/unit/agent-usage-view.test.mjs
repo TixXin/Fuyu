@@ -21,6 +21,7 @@ test("settings saved before the usage options keep showing every window and the 
   assert.equal(normalizeSettings({ agentEmptyStyle: "rainbow" }).agentEmptyStyle, "sleep");
   assert.equal(normalizeSettings({ agentUsageStyle: "ring" }).agentUsageStyle, "ring");
   assert.equal(old.agentUsageLayout, "chips", "settings saved before the layouts open on the one-row chips");
+  assert.equal(normalizeSettings({ agentUsageLayout: "strip" }).agentUsageLayout, "strip");
   assert.equal(normalizeSettings({ agentUsageLayout: "ruler" }).agentUsageLayout, "ruler");
   assert.equal(normalizeSettings({ agentUsageLayout: "grid" }).agentUsageLayout, "chips");
 });
@@ -45,6 +46,13 @@ test("an agent whose every window is past its reset shows as expired instead of 
   assert.deepEqual(expiredLines(usages, { hidden: [] }).map((line) => [line.source, line.updatedAt]), [["claudeCode", 1_000]]);
   assert.deepEqual(expiredLines(usages, { hidden: ["claudeCode"] }), [], "a hidden agent stays hidden");
   assert.deepEqual(expiredLines(usages, { hidden: [], agentsOff: ["claudeCode"] }), [], "an agent turned off stays off");
+
+  const agOffline = { ...EMPTY_USAGES, readAt, others: { antigravity: { updatedAt: null, fiveHour: null, sevenDay: null, models: [], plan: null, source: "antigravity", error: { kind: "tokenExpired", message: "expired" } } } };
+  assert.deepEqual(expiredLines(agOffline, { hidden: [] }).map((line) => [line.source, line.updatedAt]), [["antigravity", null]]);
+  assert.deepEqual(expiredLines(agOffline, { hidden: ["antigravity"] }), []);
+  assert.deepEqual(expiredLines(agOffline, { hidden: [], agentsOff: ["antigravity"] }), []);
+  const agNotInstalled = { ...EMPTY_USAGES, readAt, others: { antigravity: { updatedAt: null, fiveHour: null, sevenDay: null, models: [], plan: null, source: "antigravity", error: { kind: "noCredentials", message: "none" } } } };
+  assert.deepEqual(expiredLines(agNotInstalled, { hidden: [] }), [], "noCredentials stays hidden for users without Antigravity");
 });
 
 test("credits read without long decimals and raw window names get readable labels", () => {

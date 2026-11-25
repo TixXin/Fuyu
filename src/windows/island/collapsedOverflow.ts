@@ -134,3 +134,26 @@ export function fitPill(widths: readonly number[], capacity: number, gap: number
   const second = options.auto === false || first.used + chipCost <= capacity ? first : pack(capacity - chipCost);
   return { away: second.away, chip: true, used: second.used + chipCost };
 }
+
+export const HYDRATE_GRACE_MS = 350;
+
+export type HydrateCheck = {
+  width: number;
+  hydrating: boolean;
+  retryIn: number | null;
+};
+
+export function resolveUnitWidth(
+  measured: number,
+  previous: number,
+  hydrated: boolean,
+  mountedAt: number,
+  now: number,
+  graceMs = HYDRATE_GRACE_MS,
+): HydrateCheck {
+  if (measured > 0) return { width: measured, hydrating: false, retryIn: null };
+  if (hydrated || !(previous > 0)) return { width: 0, hydrating: false, retryIn: null };
+  const remaining = mountedAt + graceMs - now;
+  if (remaining > 0) return { width: previous, hydrating: true, retryIn: remaining };
+  return { width: 0, hydrating: false, retryIn: null };
+}

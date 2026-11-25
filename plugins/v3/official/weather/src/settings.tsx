@@ -1,6 +1,7 @@
 import type { Context } from "@fuyu/plugin-base";
-import { useEffect, useState, type ReactNode } from "react";
-import { HOUR_CHOICES, LEAD_CHOICES, REFRESH_CHOICES, type WeatherConfig } from "./config.ts";
+import type { ReactNode } from "react";
+import { HOUR_CHOICES, LEAD_CHOICES, REFRESH_CHOICES, WEATHER_SOURCES, type WeatherConfig, type WeatherSourceId } from "./config.ts";
+import { CityManager } from "./settingsCities.tsx";
 import { problemText, textFor } from "./text.ts";
 import { useWeather } from "./useWeather.ts";
 import "./styles.css";
@@ -54,7 +55,19 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Choice({ name, label, config, patch, copy }: { name: ChoiceKey; label: string; config: WeatherConfig; patch: Patch; copy: Copy }) {
+function Choice({
+  name,
+  label,
+  config,
+  patch,
+  copy,
+}: {
+  name: ChoiceKey;
+  label: string;
+  config: WeatherConfig;
+  patch: Patch;
+  copy: Copy;
+}) {
   return (
     <Row label={label}>
       <div className="fuyu-weather-set__seg" role="radiogroup" aria-label={label}>
@@ -75,11 +88,28 @@ function Choice({ name, label, config, patch, copy }: { name: ChoiceKey; label: 
   );
 }
 
-function NumberSelect({ label, value, choices, caption, onPick }: { label: string; value: number; choices: readonly number[]; caption: (n: number) => string; onPick: (n: number) => void }) {
+function NumberSelect({
+  label,
+  value,
+  choices,
+  caption,
+  onPick,
+}: {
+  label: string;
+  value: number;
+  choices: readonly number[];
+  caption: (n: number) => string;
+  onPick: (n: number) => void;
+}) {
   const list = choices.includes(value) ? choices : [...choices, value].sort((a, b) => a - b);
   return (
     <Row label={label}>
-      <select className="fuyu-weather-set__input" aria-label={label} value={value} onChange={(e) => onPick(Number(e.target.value))}>
+      <select
+        className="fuyu-weather-set__input"
+        aria-label={label}
+        value={value}
+        onChange={(e) => onPick(Number(e.target.value))}
+      >
         {list.map((n) => (
           <option key={n} value={n}>
             {caption(n)}
@@ -90,7 +120,17 @@ function NumberSelect({ label, value, choices, caption, onPick }: { label: strin
   );
 }
 
-function Flag({ label, checked, disabled, onChange }: { label: string; checked: boolean; disabled?: boolean; onChange: (value: boolean) => void }) {
+function Flag({
+  label,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (value: boolean) => void;
+}) {
   return (
     <label className={disabled ? "fuyu-weather-set__check is-off" : "fuyu-weather-set__check"}>
       <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
@@ -99,51 +139,73 @@ function Flag({ label, checked, disabled, onChange }: { label: string; checked: 
   );
 }
 
-function CityField({ value, copy, onCommit }: { value: string; copy: Copy; onCommit: (city: string) => void }) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-  const commit = () => {
-    if (draft.trim() !== value) onCommit(draft.trim());
-  };
-  return (
-    <Row label={copy.cityLabel}>
-      <input
-        type="text"
-        className="fuyu-weather-set__input fuyu-weather-set__city"
-        aria-label={copy.cityLabel}
-        value={draft}
-        placeholder={copy.cityPlaceholder}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") commit();
-        }}
-      />
-    </Row>
-  );
-}
-
 export default function apply(ctx: Context) {
   function WeatherSection() {
-    const { state, error, saveConfig } = useWeather(ctx);
+    const { state, error, saveConfig, searchCities, addCity, removeCity, setPrimaryCity } = useWeather(ctx);
     const { config } = state;
     const copy = textFor();
     const patch: Patch = saveConfig;
+    const anyAlert = config.rainAlert || config.extremeAlert;
     return (
       <section className="fuyu-weather-set">
         <Group title={copy.placeTitle} hint={copy.placeHint}>
-          <CityField value={config.city} copy={copy} onCommit={(city) => patch({ city })} />
+          <CityManager
+            cities={config.cities}
+            copy={copy}
+            searchCities={searchCities}
+            addCity={addCity}
+            removeCity={removeCity}
+            setPrimaryCity={setPrimaryCity}
+          />
+          <Row label={copy.sourceLabel}>
+            <select
+              className="fuyu-weather-set__input"
+              aria-label={copy.sourceLabel}
+              value={config.weatherSource}
+              onChange={(e) => patch({ weatherSource: e.target.value as WeatherSourceId })}
+            >
+              {WEATHER_SOURCES.map((id) => (
+                <option key={id} value={id}>
+                  {copy.sourceNames[id]}
+                </option>
+              ))}
+            </select>
+          </Row>
+          <Flag
+            label={copy.autoFallback}
+            checked={config.autoFallback}
+            onChange={(autoFallback) => patch({ autoFallback })}
+          />
           <Choice name="units" label={copy.unitsLabel} config={config} patch={patch} copy={copy} />
           <Choice name="windUnit" label={copy.windLabel} config={config} patch={patch} copy={copy} />
           <Choice name="timeFormat" label={copy.timeFormat} config={config} patch={patch} copy={copy} />
-          <NumberSelect label={copy.refreshLabel} value={config.refreshMinutes} choices={REFRESH_CHOICES} caption={copy.minutes} onPick={(refreshMinutes) => patch({ refreshMinutes })} />
+          <NumberSelect
+            label={copy.refreshLabel}
+            value={config.refreshMinutes}
+            choices={REFRESH_CHOICES}
+            caption={copy.minutes}
+            onPick={(refreshMinutes) => patch({ refreshMinutes })}
+          />
         </Group>
         <Group title={copy.pageTitle}>
           <Flag label={copy.showFeels} checked={config.showFeels} onChange={(showFeels) => patch({ showFeels })} />
           <Flag label={copy.showPop} checked={config.showPop} onChange={(showPop) => patch({ showPop })} />
-          <Flag label={copy.showHumidity} checked={config.showHumidity} onChange={(showHumidity) => patch({ showHumidity })} />
+          <Flag
+            label={copy.showHumidity}
+            checked={config.showHumidity}
+            onChange={(showHumidity) => patch({ showHumidity })}
+          />
           <Flag label={copy.showWind} checked={config.showWind} onChange={(showWind) => patch({ showWind })} />
-          <NumberSelect label={copy.hoursLabel} value={config.hours} choices={HOUR_CHOICES} caption={copy.hoursCaption} onPick={(hours) => patch({ hours })} />
+          <Flag label={copy.showSunUv} checked={config.showSunUv} onChange={(showSunUv) => patch({ showSunUv })} />
+          <Flag label={copy.showAqi} checked={config.showAqi} onChange={(showAqi) => patch({ showAqi })} />
+          <p className="fuyu-weather-set__hint fuyu-weather-set__indent">{copy.aqiHint}</p>
+          <NumberSelect
+            label={copy.hoursLabel}
+            value={config.hours}
+            choices={HOUR_CHOICES}
+            caption={copy.hoursCaption}
+            onPick={(hours) => patch({ hours })}
+          />
         </Group>
         <Group title={copy.barTitle}>
           <Flag label={copy.showOnBar} checked={config.showOnBar} onChange={(showOnBar) => patch({ showOnBar })} />
@@ -152,9 +214,27 @@ export default function apply(ctx: Context) {
         <Group title={copy.rainSection} hint={copy.refreshHint}>
           <Flag label={copy.rainAlert} checked={config.rainAlert} onChange={(rainAlert) => patch({ rainAlert })} />
           {config.rainAlert && (
+            <NumberSelect
+              label={copy.rainLead}
+              value={config.rainLeadMinutes}
+              choices={LEAD_CHOICES}
+              caption={copy.leadCaption}
+              onPick={(rainLeadMinutes) => patch({ rainLeadMinutes })}
+            />
+          )}
+          <Flag
+            label={copy.extremeAlert}
+            checked={config.extremeAlert}
+            onChange={(extremeAlert) => patch({ extremeAlert })}
+          />
+          <p className="fuyu-weather-set__hint fuyu-weather-set__indent">{copy.extremeHint}</p>
+          {anyAlert && (
             <>
-              <NumberSelect label={copy.rainLead} value={config.rainLeadMinutes} choices={LEAD_CHOICES} caption={copy.leadCaption} onPick={(rainLeadMinutes) => patch({ rainLeadMinutes })} />
-              <Flag label={copy.quietHours} checked={config.quietHours} onChange={(quietHours) => patch({ quietHours })} />
+              <Flag
+                label={copy.quietHours}
+                checked={config.quietHours}
+                onChange={(quietHours) => patch({ quietHours })}
+              />
               {config.quietHours && (
                 <div className="fuyu-weather-set__quiet">
                   <span>{copy.quietFrom}</span>
@@ -178,7 +258,9 @@ export default function apply(ctx: Context) {
             </>
           )}
         </Group>
-        {(state.problem || error) && <p className="fuyu-weather-set__hint">{problemText(state.problem, copy) ?? error}</p>}
+        {(state.problem || error) && (
+          <p className="fuyu-weather-set__hint">{problemText(state.problem, copy) ?? error}</p>
+        )}
       </section>
     );
   }

@@ -65,7 +65,7 @@ function workspace(skills = []) {
 }
 
 test("the table has the eight rows and each one names when it applies, what it needs and a hint", () => {
-  assert.deepEqual(RULES.map((entry) => entry.id), ["fuyu-agent-harness", "src-rules", "src-tauri-rules", "fuyu-release", "fuyu-video", "fuyu-task", "fuyu-skill-writing"]);
+  assert.deepEqual(RULES.map((entry) => entry.id), ["fuyu-agent-harness", "src-rules", "src-tauri-rules", "fuyu-release", "fuyu-video", "fuyu-task", "fuyu-skill-writing", "fuyu-official-plugin"]);
   for (const entry of RULES) {
     assert.ok(entry.when.paths || entry.when.commands || entry.when.tool, entry.id);
     assert.ok(Boolean(entry.require.skill) !== Boolean(entry.require.read), entry.id);
@@ -87,6 +87,8 @@ test("writes under src/ and src-tauri/ hit their rows; build output and files ou
   assert.equal(touches(rule("src-rules"), { ...shell("sed -i '' 's/a/b/' api.ts"), cwd: join(ROOT, "src", "features") }, ROOT), "src/features/api.ts");
   assert.equal(touches(rule("fuyu-video"), edit("video/src/cut.ts"), ROOT), "video/src/cut.ts");
   assert.equal(touches(rule("fuyu-skill-writing"), edit(".claude/skills/fuyu-task/SKILL.md", "Write"), ROOT), ".claude/skills/fuyu-task/SKILL.md");
+  assert.equal(touches(rule("fuyu-official-plugin"), edit("plugins/v3/official/weather/src/host.ts"), ROOT), "plugins/v3/official/weather/src/host.ts");
+  assert.equal(touches(rule("fuyu-official-plugin"), edit("plugins/packages/dev.focusd.weather-1.0.0.zip"), ROOT), null);
 });
 
 test("the harness row sees inline writes to a wiring file and ignores commands that only name one", () => {

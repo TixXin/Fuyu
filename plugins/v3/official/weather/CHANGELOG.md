@@ -1,5 +1,39 @@
 # 更新记录 · Changelog
 
+## 1.4.0
+
+多免费数据源切换与自动故障切换，补齐中国县区地名搜索并修复设置页输入卡死。
+
+- **双源地名搜索**：新增 OpenStreetMap Photon（`photon.komoot.io`）与 Open-Meteo Geocoding 并行合并去重，解决「镇远」等中国县区在单源里搜不到或错匹配到同名小地名的问题。
+- **5 个免费免 Key 天气源，支持手动切换与自动切换**：接入中央气象台（中国官方地面实况）、Open-Meteo（全球）、Open-Meteo（中国气象局模式）、MET Norway（挪威气象局）和 wttr.in；默认「自动选择」（国内优先中央气象台实况并融合逐小时预报，海外优先 Open-Meteo），开启「失败时自动切换备用源」（默认开）后单源异常自动降级，并在天气页底部标注实际生效的数据源。
+- **修复设置页输入卡死**：不再把 Cordis `ctx` 作为 React prop 传递，窗口侧防抖与重试改用受控清理的浏览器定时器并支持中文输入法组合态。
+
+Multiple free no-key weather sources with manual and automatic failover, dual geocoding for Chinese counties, and a settings input freeze fix.
+
+- **Dual geocoding**: queries OpenStreetMap Photon (`photon.komoot.io`) and Open-Meteo together, fixing missing Chinese counties and same-name mismatches.
+- **5 free no-key weather sources**: adds NMC China (official ground stations), Open-Meteo (global), Open-Meteo (CMA model), MET Norway, and wttr.in, with Auto mode (NMC in China with merged hourly data, Open-Meteo globally), automatic fallback on failure (on by default), and active-source display in the page footer.
+- **Fix settings freeze**: stop passing Cordis `ctx` as a React prop, replace host-only `ctx.setTimeout` in window hooks, and guard IME composition during city search.
+
+## 1.3.0
+
+补齐城市搜索候选、多城市切换、极端天气提醒、可选空气质量与日出日落/紫外线，并打磨页面、面板组件和刘海表现。
+
+- **城市候选选择与核对**：设置里搜索城市后列出「城市 · 省/州 · 国家」候选列表，点选即记住精确坐标，避免同名城市选错；已保存城市显示位置核对行。
+- **多城市收藏与切换**：最多保存 8 个城市，可在设置里用星标指定主城市（用于收起条、面板组件和提醒），在岛上天气页顶部一键切换查看。
+- **极端天气提醒**：新增极端天气开关（默认关），覆盖当前及未来 6 小时内的雷暴/冰雹、冻雨、暴雪、强降雨和 8 级以上大风，共用静默时段且同类型 6 小时内不重复提醒。
+- **可选日出日落 / 紫外线与空气质量（AQI）**：岛页设置新增「日出日落与紫外线」和「空气质量（AQI）」（均默认关，关闭空气质量时不请求空气质量接口）。
+- **页面、小组件与刘海打磨**：主卡片补充今日最高/最低温，未来 7 天加入温度区间条，天气图标增加适配深浅主题的语义点缀色；面板小组件新增 4×1 宽条布局、支持点击打开天气页或去设置、宽/大尺寸展示更完整；刘海两翼里「天气 + 温度」自动收敛为「图标 + 温度」。
+- **底层与文档**：改走受控 `ctx.http.fetch` 并加入 12 秒请求超时；离线切换 °C / °F 就地换算不丢缓存；补齐 README 的面板小组件与新设置说明。老版本配置无损迁移。
+
+City search candidates, multi-city switching, severe weather alerts, optional AQI and sunrise/sunset/UV, plus page, widget and notch polish.
+
+- **City candidate search and verification**: search results list "City · Region · Country" candidates and save exact coordinates so same-name cities aren't mixed up; saved cities show a verification line.
+- **Multi-city list and switching**: save up to 8 cities, star a primary city for the collapsed bar, panel widget and alerts, and switch cities from the top of the Weather page.
+- **Severe weather alerts**: new opt-in alert (off by default) for thunderstorms/hail, freezing rain, heavy snow, heavy rain and Force 8+ winds now or in the next 6 hours, sharing quiet hours with a 6-hour per-hazard cool-down.
+- **Optional sunrise/sunset, UV and AQI**: new toggles (off by default) for sunrise, sunset & UV index and US AQI; the air-quality endpoint is not called while AQI is off.
+- **Page, widget and notch polish**: today's high/low in the hero, 7-day temperature range bars, theme-aware weather icon tints; panel widget adds 4×1 wide strip layout, click-to-open page or settings, and richer medium/large layouts; notch wings compact "Conditions + temperature" to icon + temperature.
+- **Reliability and docs**: uses controlled `ctx.http.fetch` with a 12-second timeout; switching °C / °F converts cached temperatures locally even offline; README updated with panel widget and new settings. Existing configs migrate cleanly.
+
 ## 1.2.0
 
 - 天气能放进岛上的自定义面板了：小、中、大三种尺寸，大尺寸带未来几天；也会出现在「娱乐」面板模板里。需要支持面板组件的浮屿，旧版本照常只有页面和收起条。

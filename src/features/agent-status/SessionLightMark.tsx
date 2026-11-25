@@ -6,6 +6,7 @@ import { useInView } from "./useInView";
 import "./SessionLightMark.css";
 
 export const SessionLightStyleContext = createContext<AgentLightStyle>("dot");
+export const SessionLightAlwaysActiveContext = createContext(false);
 
 const MOODS: Record<SessionLight, JellyMood> = { needs: "waiting", yourTurn: "waiting", working: "running", stale: "stale", failed: "failed", done: "idle" };
 
@@ -24,7 +25,8 @@ export function SessionLightMark({ light, quiet, fresh, compacting = false, labe
 
 export function SessionJelly({ mood, label, className = "agent-session__jelly", height = 12 }: { mood: JellyMood; label?: string; className?: string; height?: number }) {
   const box = useRef<HTMLSpanElement>(null);
-  const inView = useInView(box);
+  const alwaysActive = useContext(SessionLightAlwaysActiveContext);
+  const inView = useInView(box, !alwaysActive);
   const named = label ? { role: "img", "aria-label": label, title: label } : { "aria-hidden": true };
   return (
     <span ref={box} className={className} {...named}>

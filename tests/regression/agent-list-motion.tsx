@@ -38,7 +38,7 @@ function check(condition: unknown, label: string) {
 type Props = { view?: AgentSessionView; group?: AgentSessionGroup; removal?: SessionRemoval; reveal?: AlertedSession | null };
 const draw = (sessions: AgentSessionSummary[], props: Props = {}) => root.render(
   <StrictMode><I18nProvider>
-    <AgentSessionsPanel sort="recent" group={props.group ?? "none"} view={props.view ?? "list"} sessions={sessions} hostDisplay="off" removal={props.removal} reveal={props.reveal} />
+    <AgentSessionsPanel sort="recent" group={props.group ?? "none"} view={props.view ?? "minimal"} sessions={sessions} hostDisplay="off" removal={props.removal} reveal={props.reveal} />
   </I18nProvider></StrictMode>,
 );
 const render = (sessions: AgentSessionSummary[], props: Props = {}) => act(async () => draw(sessions, props));
@@ -71,7 +71,16 @@ async function reorderIn(view: AgentSessionView) {
 
 async function runChecks() {
   try {
-    for (const view of ["list", "cards", "compact"] as const) await reorderIn(view);
+    await reorderIn("minimal");
+
+    const allDoneFirst = [session("a", 1), session("b", 2), session("c", 3)];
+    const allDoneReordered = [session("a", 4), session("b", 2), session("c", 1)];
+    await render(allDoneFirst, { view: "focused" });
+    await until(settled);
+    const beforeFocused = row("claudeCode:c").getBoundingClientRect().top;
+    await render(allDoneReordered, { view: "focused" });
+    check(moving(row("claudeCode:c")) && transformed(row("claudeCode:c")) && Math.abs(row("claudeCode:c").getBoundingClientRect().top - beforeFocused) < 4, "focused：重排时平滑平移到新位置");
+    await until(settled);
 
     await render(REORDERED);
     await until(settled);
@@ -100,12 +109,12 @@ async function runChecks() {
     check(!pulsing.classList.contains("agent-motion-pulse"), "脉冲结束后去掉标记，不反复闪");
 
     const remote = session("r", 0, "completed", { remoteHost: "devbox" });
-    await render([session("a", 1), remote], { group: "computer" });
+    await render([session("a", 1), remote], { view: "projects" });
     await until(settled);
-    const heading = row('group:["devbox",null]');
-    check(heading?.classList.contains("agent-sessions__computer"), "分组标题也带行的 key");
-    await render([session("a", 1), session("n", 0), remote], { group: "computer" });
-    check(moving(heading) && transformed(heading), "本机多了一个会话时，远程分组标题往下平移");
+    const heading = row("proj:devbox::r");
+    check(heading?.classList.contains("agent-projects__head"), "项目指挥台分组头也带行的 key");
+    await render([session("a", 1), session("n", 0), remote], { view: "projects" });
+    check(moving(heading) && transformed(heading), "上方多了一个会话时，下面的项目分组头往下平移");
     await until(settled);
 
     let listed = [...REORDERED];

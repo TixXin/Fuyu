@@ -1,6 +1,6 @@
 use super::source::{
     fetch_api, https_entry, iso_from_unix_seconds, parse_access_token, parse_api_usage,
-    parse_retry_after, pick_proxy, proxy_label, proxy_url, resolve_proxy, status_error, unix_ms,
+    parse_retry_after, pick_proxy, proxy_label, proxy_url, resolve_proxy, scutil_https_proxy, status_error, unix_ms,
     Limits,
 };
 use super::*;
@@ -152,6 +152,27 @@ fn windows_proxy_server_values_give_the_https_entry() {
     assert_eq!(https_entry("socks=c:3"), None);
     assert_eq!(https_entry("https=;http=a:1").as_deref(), Some("a:1"));
     assert_eq!(https_entry("  "), None);
+}
+
+#[test]
+fn macos_system_proxy_prefers_the_enabled_https_entry() {
+    let both = "<dictionary> {\n  HTTPEnable : 1\n  HTTPPort : 7890\n  HTTPProxy : 127.0.0.1\n  HTTPSEnable : 1\n  HTTPSPort : 7891\n  HTTPSProxy : 127.0.0.2\n}";
+    assert_eq!(scutil_https_proxy(both).as_deref(), Some("http://127.0.0.2:7891"));
+    let http_only = "  HTTPEnable : 1\n  HTTPPort : 8080\n  HTTPProxy : proxy.lan\n  HTTPSEnable : 0\n  HTTPSPort : 7891\n  HTTPSProxy : 127.0.0.2";
+    assert_eq!(scutil_https_proxy(http_only).as_deref(), Some("http://proxy.lan:8080"));
+    assert_eq!(scutil_https_proxy("  HTTPSEnable : 1\n  HTTPSPort : 7891"), None);
+    assert_eq!(scutil_https_proxy("<dictionary> {\n  HTTPEnable : 0\n  HTTPSEnable : 0\n}"), None);
+    assert_eq!(scutil_https_proxy(""), None);
+}
+
+#[test]
+fn stale_fallback_reports_its_last_failure() {
+    let error = UsageError { kind: UsageErrorKind::NoProxy, message: "no proxy".into() };
+    let old = ClaudeUsage { updated_at: Some(1), ..ClaudeUsage::default() };
+    assert_eq!(super::fallback::answer(None, Some(error.clone()), true), Some(ClaudeUsage { error: Some(error.clone()), ..ClaudeUsage::default() }));
+    assert_eq!(super::fallback::answer(Some(old.clone()), Some(error.clone()), true), Some(ClaudeUsage { error: Some(error.clone()), ..old.clone() }));
+    assert_eq!(super::fallback::answer(Some(old.clone()), Some(error), false), Some(old));
+    assert_eq!(super::fallback::answer(None, None, true), None);
 }
 
 #[test]

@@ -253,7 +253,7 @@ try {
   const card = (id: string, alerted: AgentSessionSummary): AlertedSession => ({
     key: `claudeCode:${id}`, kind: "completed", session: alerted, rowHeight: 78, measure: (height) => { measured = height; },
   });
-  const rows = () => [...document.querySelectorAll("#panel .agent-sessions__list > li")].map((row) => (row as HTMLElement).dataset.sessionKey);
+  const rows = () => [...document.querySelectorAll("#panel .agent-sessions__list > li:not(.agent-focused__section)")].map((row) => (row as HTMLElement).dataset.sessionKey);
   await act(async () => panel.render(<AgentSessionsPanel sessions={listed} hostDisplay="off" showUsage />));
   check(rows().length === 3, "平时 Agent 页列出全部会话");
   await act(async () => panel.render(<AgentSessionsPanel sessions={listed} hostDisplay="off" showUsage reveal={card("c", listed[2])} />));

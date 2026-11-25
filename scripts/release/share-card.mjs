@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { latestNotesVersion, parseReleaseNotes } from "./share-card-notes.mjs";
-import { BOT_INBOX_ENV, pushToBot } from "./share-push.mjs";
+import { BOT_INBOX_ENV, FUXI_ENV, pushToBot, pushToWechat } from "./share-push.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const NOTES_DIR = join(ROOT, "docs/releases");
@@ -35,7 +35,7 @@ function usage() {
     "  --out       output folder (default src-tauri/target/release-share/v<version>)",
     "  --no-copy   do not copy the image to the clipboard (only the Chinese image is copied)",
     "  --no-open   do not open the folder afterwards",
-    `  --push      upload the Chinese image to the QQ bot inbox in ${BOT_INBOX_ENV} (bot/astrbot/astrbot_plugin_fuyu_release)`,
+    `  --push      send the Chinese image to the QQ bot inbox in ${BOT_INBOX_ENV} and/or to WeChat through Fuxi in ${FUXI_ENV} (previewed in 文件传输助手 first)`,
   ].join("\n");
 }
 
@@ -179,9 +179,32 @@ async function main() {
   if (options.open) openFolder(outDir);
   if (options.push) {
     if (!chinese) throw new Error("No Chinese image to push.");
-    pushToBot(chinese, version);
-    console.log(`Uploaded to the QQ bot inbox: ${chinese}`);
+    pushEverywhere(chinese, version);
   }
+}
+
+function pushEverywhere(pngPath, version) {
+  const targets = [
+    [BOT_INBOX_ENV, () => {
+      pushToBot(pngPath, version);
+      console.log(`Uploaded to the QQ bot inbox: ${pngPath}`);
+    }],
+    [FUXI_ENV, () => {
+      const item = pushToWechat(pngPath, version);
+      if (item.created) console.log(`Sent a WeChat preview to 文件传输助手; reply /发布 ${item.code} there to post it to ${item.to}.`);
+      else console.log(`The WeChat announcement ${item.key} already exists (${item.status_zh}); not sent again.`);
+    }],
+  ].filter(([env]) => process.env[env]);
+  if (!targets.length) throw new Error(`Set ${BOT_INBOX_ENV} (QQ bot) or ${FUXI_ENV} (WeChat through Fuxi) to push.`);
+  const failures = [];
+  for (const [, push] of targets) {
+    try {
+      push();
+    } catch (error) {
+      failures.push(error.message);
+    }
+  }
+  if (failures.length) throw new Error(failures.join("\n"));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

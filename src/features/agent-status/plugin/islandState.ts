@@ -30,6 +30,7 @@ export type AgentShell = {
 };
 
 export type AgentArrange = {
+  view: AgentSettingValues["agentSessionView"];
   sort: AgentSettingValues["agentSessionSort"];
   group: AgentSettingValues["agentSessionGroup"];
   onChange: (patch: Partial<AgentSettingValues>) => void;

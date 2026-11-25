@@ -46,6 +46,9 @@ export async function checkUsageLayouts({ root, sessions, usages, check }: Conte
   await act(async () => { toggle.click(); await wait(20); });
   check(toggle.getAttribute("aria-expanded") === "true" && document.querySelectorAll(".agent-usage-lead__all .agent-usage").length === 4 && toggle.textContent === "收起", "点「全部额度」展开成表格，按钮变成收起");
 
+  await show(panel({ layout: "strip" }));
+  check(document.querySelector(".agent-usage-box")?.getAttribute("data-layout") === "strip" && document.querySelectorAll(".agent-usage-strip__item").length === 4, "极简细条：无胶囊一行列出四家额度");
+
   await show(panel({ layout: "ruler" }));
   const pins = [...document.querySelectorAll<HTMLElement>(".agent-usage-ruler__pin")];
   const spots = pins.map((pin) => Number.parseFloat(pin.style.left));
@@ -67,8 +70,8 @@ export async function checkUsageLayouts({ root, sessions, usages, check }: Conte
     await wait(20);
   });
   const items = [...document.querySelectorAll<HTMLButtonElement>(".row-menu [role=menuitem]")].map((item) => item.textContent);
-  check(items.slice(0, 5).join() === "一行胶囊,小方块,最紧的领头,水位刻度,表格" && items.includes("重置时间") && !items.includes("只看最紧的一项"), `右键菜单先换布局，只列这个布局用得上的选项：${items}`);
-  await act(async () => { document.querySelectorAll<HTMLButtonElement>(".row-menu [role=menuitem]")[3].click(); });
+  check(items.slice(0, 6).join() === "极简细条,一行胶囊,小方块,最紧的领头,水位刻度,表格" && items.includes("重置时间") && !items.includes("只看最紧的一项"), `右键菜单先换布局，只列这个布局用得上的选项：${items}`);
+  await act(async () => { document.querySelectorAll<HTMLButtonElement>(".row-menu [role=menuitem]")[4].click(); });
   check(JSON.stringify(patches[patches.length - 1]) === JSON.stringify({ agentUsageLayout: "ruler" }), "在菜单里点水位刻度改布局设置");
   await act(async () => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });
 }

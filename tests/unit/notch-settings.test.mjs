@@ -80,14 +80,18 @@ test("a newly picked style is drawn in the colour the swatches show, even where 
   assert.equal(look.intensity, notchShared(defaults).intensity);
 });
 
-test("camera and mic light only the ring; messages and agents light the ring and recolour the border", () => {
+test("camera and mic light only the open panel ring; messages and agents light both rings and recolour the border", () => {
   assert.deepEqual(notchLights(defaults), { device: true, status: false });
+  assert.equal(notchRingLook(defaults, "Island").device, false);
+  assert.equal(notchRingLook(defaults, "Panel").device, true);
   const noDevice = withNotchLights(defaults, { device: false });
   assert.equal(notchRingLook(noDevice, "Island").device, false);
   assert.equal(notchRingLook(noDevice, "Panel").device, false);
   const status = withNotchLights(defaults, { status: true });
   for (const look of looks(status)) assert.equal(look.status, true);
-  assert.equal(notchRingLook(status, "Island").device, true, "turning messages on leaves the camera light alone");
+  assert.equal(notchRingLook(status, "Panel").device, true, "turning messages on leaves the camera light alone");
+  const unlinked = withNotchLinked(withNotchLinked(defaults, true), false);
+  assert.equal(notchRingLook(unlinked, "Panel").device, true, "linking and unlinking keeps the panel camera light");
 });
 
 test("the gap moves the ring on both sides", () => {

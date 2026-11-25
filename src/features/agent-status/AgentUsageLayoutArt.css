@@ -29,6 +29,13 @@
   --usage-art-color: var(--usage-art-high);
 }
 
+.usage-art__strip {
+  width: 22%;
+  height: 11px;
+  border-radius: 2px;
+  background: linear-gradient(0deg, var(--usage-art-color) 0 2px, transparent 2px 4px, var(--color-white-a16) 4px);
+}
+
 .usage-art__pill {
   width: 22%;
   height: 10px;

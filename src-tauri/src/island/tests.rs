@@ -651,7 +651,7 @@ fn cursor_near_island_and_dim_wake_tracker_handle_approach_and_parked_cursor() {
 
 #[test]
 fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
-    assert_eq!(DEFAULT_EXPANDED_ISLAND_HEIGHT, 360.0);
+    assert_eq!(DEFAULT_EXPANDED_ISLAND_HEIGHT, 320.0);
 
     let collapsed = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
     assert!(should_apply_stage_geometry(&collapsed, &collapsed, false));

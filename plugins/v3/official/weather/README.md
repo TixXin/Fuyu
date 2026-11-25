@@ -6,16 +6,17 @@
 
 ## 装好后在哪里
 
-- **岛的展开页**：多出「天气」一页，显示现在的天气、逐小时预报和未来 7 天（带周几），页头写着「更新于 14:30」。
-- **收起条**：默认不显示；在设置里打开后显示天气图标和温度，点一下打开天气页。
-- **设置 → 插件 → 天气**：城市和全部设置。
+- **岛的展开页**：多出「天气」一页，显示现在的天气、今日最高/最低温、逐小时预报和带温度范围条的未来 7 天（带周几），页头写着「更新于 14:30」；收藏多个城市时顶部可以一键切换。
+- **自定义面板小组件**：支持小（1×1）、中（2×1）、大（2×2）、宽条（4×1）和收起条五种形态，展示主城市天气；点组件直接打开天气页，还没选城市时点一下直接去设置。
+- **收起条**：默认不显示；在设置里打开后显示主城市的天气图标和温度，点一下打开天气页。在 Mac 刘海两翼里，「天气 + 温度」会自动收敛为「图标 + 温度」以便放进两翼。
+- **设置 → 插件 → 天气**：搜索添加城市和全部设置。
 
 ## 怎么用
 
-1. 打开「设置 → 插件 → 天气」，填城市（如「杭州」或 `London, UK`），按回车或点别处就生效。没填城市时，天气页上有「去设置」按钮直接跳过去。
-2. 展开岛切到「天气」页；想马上更新点右上角的刷新按钮。
-3. 找不到城市时，加上省、州或国家名，例如「Springfield, Illinois」。
-4. 联网失败时，页头写「显示的是上次的结果」，下面写原因，内容保留上一次查到的。
+1. 打开「设置 → 插件 → 天气」，输入城市名（如「杭州」或 `Springfield, Illinois`）搜索，从候选列表里点选对应的城市即可添加；不用怕同名城市选错。没选城市时，天气页上有「去设置」按钮直接跳过去。
+2. 最多可以保存 8 个城市；点星标可以把某个城市设为主城市（用于收起条、面板组件和天气提醒）。
+3. 展开岛切到「天气」页；保存了多个城市时在顶部标签栏一键切换，想马上更新点右上角的刷新按钮。
+4. 联网失败时，页头写「显示的是上次的结果」，下面写原因，内容保留上一次查到的；离线时切换 °C / °F 也会就地换算保留已有预报。
 
 插件带一个命令「立即刷新天气」，可以在「设置 → 插件」的插件详情里给它设快捷键。
 
@@ -25,15 +26,17 @@
 
 **城市和单位**
 
-- **城市**：留空时插件不联网；还没填时，浮屿「设置 → 插件」里这个插件会标出「待设置」（需要较新的浮屿）。
+- **添加城市**：没有城市时不联网；还没选时，浮屿「设置 → 插件」里这个插件会标出「待设置」（需要较新的浮屿）。搜索并行查询 OpenStreetMap Photon 与 Open-Meteo 地名库（覆盖中国县区与全球城市），从「城市 · 省/州 · 国家」候选里点选并记住精确坐标，已保存列表会显示核对位置。
+- **天气数据源**：自动选择（默认，中国城市优先中央气象台实况并融合逐小时预报，海外优先 Open-Meteo）、中央气象台（中国官方实况）、Open-Meteo（全球）、Open-Meteo（中国气象局模式）、MET Norway（挪威气象局）、wttr.in（全球备用）；天气页底部会显示当前实际生效的来源。
+- **失败时自动切换备用源**：默认开；选定的源超时、出错或不支持该地区时，自动按序切换到其他可用免费源。
 - **温度单位**：°C（默认）/ °F。
 - **风速单位**：km/h（默认）/ m/s / mph / 级（蒲福风级）。
-- **时间格式**：跟随系统（默认）/ 24 小时 / 12 小时；用在逐小时预报、「更新于」和下雨提醒里。
-- **刷新间隔**：30 分钟（默认）/ 60 / 90 / 120 / 180 分钟。打开下雨提醒时至少每 30 分钟刷新一次。
+- **时间格式**：跟随系统（默认）/ 24 小时 / 12 小时；用在逐小时预报、日出日落、「更新于」和天气提醒里。
+- **刷新间隔**：30 分钟（默认）/ 60 / 90 / 120 / 180 分钟。打开下雨或极端天气提醒时，主城市至少每 30 分钟刷新一次。
 
 **岛上页面**
 
-- **显示项**：体感温度（开）、降水概率（开）、湿度（关）、风速（关）。降水概率打开时，逐小时和 7 天里概率到 30% 的也标出来。
+- **显示项**：体感温度（开）、降水概率（开）、湿度（关）、风速（关）、日出日落与紫外线（关）、空气质量 AQI（关）。降水概率打开时，逐小时和 7 天里概率到 30% 的也标出来；空气质量使用美标 US AQI，关闭时不请求空气质量接口。
 - **逐小时显示**：6 小时（默认）/ 12 / 24 小时；多于 6 小时时左右滑动。
 
 **收起条**
@@ -41,23 +44,23 @@
 - **在收起条显示天气**：新装默认关。
 - **样式**：图标 + 温度（默认）/ 天气 + 温度 / 只显示温度。
 
-**下雨提醒**
+**天气提醒**
 
 - **快下雨时在岛上提醒**：新装默认关。
-- **提前多久**：30 分钟内 / 1 小时内（默认）/ 2 小时内。
-- **静默时段不提醒**：默认关；打开后默认 22:00 到 07:00 不提醒，时间可以改。
-- 提醒过一次后 3 小时内不再提醒；正在下雨时不提醒。
+- **下雨提前多久**：30 分钟内 / 1 小时内（默认）/ 2 小时内。提醒过一次后 3 小时内不再提醒；正在下雨时不提醒。
+- **极端天气时在岛上提醒**：新装默认关。覆盖当前及未来 6 小时内的雷暴/冰雹、冻雨、暴雪、强降雨和 8 级以上大风，同类型 6 小时内不重复提醒。
+- **静默时段不提醒**：默认关；打开任一提醒后可见，默认 22:00 到 07:00 不提醒，时间可以改。
 
-从 1.0.0 升级的：填过城市的，原来收起条和下雨提醒是开是关都照旧；没填过城市的按新装处理（两项都关）。新加的设置取默认值。
+从旧版本升级的：已有城市会自动迁入城市列表并保留原设置；新增的日出日落/紫外线、空气质量和极端天气提醒默认关。从 1.0.0 升级且填过城市的，原来收起条和下雨提醒是开是关都照旧；没填过城市的按新装处理（两项都关）。
 
 ## 开销和数据来源
 
-- **联网**：只访问 Open-Meteo 的两个地址：`geocoding-api.open-meteo.com`（把城市名换成经纬度，换一次就记下来）和 `api.open-meteo.com`（查天气）。发出去的只有城市名和经纬度。没填城市时不发任何请求。
-- 按刷新间隔每次查一次天气；打开岛上的天气页不会额外联网，点刷新才会。
+- **联网**：全部使用免费免 API Key 的 HTTPS 公开源：地名搜索访问 `photon.komoot.io` 与 `geocoding-api.open-meteo.com`；天气预报按所选数据源与自动切换顺序访问 `www.nmc.cn`（中央气象台）、`api.open-meteo.com`（Open-Meteo / 中国气象局模式）、`api.met.no`（MET Norway）或 `wttr.in`；空气质量仅在用户显式打开「空气质量（AQI）」时访问 `air-quality-api.open-meteo.com`。发出去的只有城市搜索词和经纬度。没有城市时不发任何请求。
+- 按刷新间隔只定时刷新主城市；其他收藏城市在切换查看或点刷新时按需更新。
 - 设置和最近一次的天气只保存在本机的插件数据目录里。
-- 下雨提醒在岛上弹出，并记入提醒列表。
+- 下雨与极端天气提醒在岛上弹出，并记入提醒列表。
 
-天气数据来自 [Open-Meteo](https://open-meteo.com/)。
+天气与地名数据来自 [中央气象台](https://www.nmc.cn/)、[Open-Meteo](https://open-meteo.com/)、[MET Norway](https://api.met.no/)、[wttr.in](https://wttr.in/) 与 [Photon (OpenStreetMap)](https://photon.komoot.io/)。
 
 ---
 
@@ -69,16 +72,17 @@ Current weather and the next few days' forecast on the island, with a heads-up b
 
 ### Where it shows up
 
-- **Island page**: a new "Weather" page with the current conditions, an hourly forecast and the next 7 days by weekday; the header says "Updated 14:30".
-- **Collapsed bar**: off by default; turn it on in the settings to show a weather icon and the temperature. Clicking it opens the Weather page.
-- **Settings → Plugins → Weather**: the city and every setting.
+- **Island page**: a "Weather" page with current conditions, today's high/low, an hourly forecast and a 7-day forecast with temperature range bars and weekdays; the header says "Updated 14:30". With multiple saved cities, a compact bar at the top lets you switch between them.
+- **Custom panel widget**: supports small (1×1), medium (2×1), large (2×2), wide (4×1) and collapsed-bar sizes for your primary city. Clicking it opens the Weather page (or opens Settings when no city is set yet).
+- **Collapsed bar**: off by default; turn it on in settings to show your primary city's weather icon and temperature. Clicking it opens the Weather page. Inside a Mac notch wing, "Conditions + temperature" automatically compacts to icon + temperature so it fits cleanly.
+- **Settings → Plugins → Weather**: city search, saved cities and every setting.
 
 ### How to use it
 
-1. Open Settings → Plugins → Weather and enter a city (for example `London, UK`); it takes effect when you press Enter or click elsewhere. Without a city, the Weather page has an "Open settings" button that takes you there.
-2. Expand the island and open the "Weather" page; click the refresh button in the top right to update right away.
-3. If the city isn't found, add the state, province or country, like "Springfield, Illinois".
-4. When the network fails, the header says "Showing the last result" with the reason below, and the last forecast stays on the page.
+1. Open Settings → Plugins → Weather, search for a city (for example `London` or `Springfield, Illinois`), and pick the exact match from the candidate list so same-name cities aren't mixed up. Without a city, the Weather page has an "Open settings" button that takes you there.
+2. You can save up to 8 cities; click the star on any city to make it the primary city (used for the collapsed bar, panel widget and weather alerts).
+3. Expand the island and open the "Weather" page; switch cities at the top or click the refresh button in the top right to update right away.
+4. When the network fails, the header says "Showing the last result" with the reason below, and the last forecast stays on the page. Switching between °C and °F converts cached temperatures locally even offline.
 
 The plugin has a "Refresh weather now" command; give it a shortcut in the plugin's details under Settings → Plugins.
 
@@ -86,17 +90,19 @@ The plugin has a "Refresh weather now" command; give it a shortcut in the plugin
 
 Changes apply right away; there is no Save button.
 
-**City and units**
+**Cities and units**
 
-- **City**: while empty, the plugin stays offline. Until you set one, Fuyu marks the plugin as "Needs setup" under Settings → Plugins (needs a newer Fuyu).
+- **Add city**: stays offline until you pick a city. Until then, Fuyu marks the plugin as "Needs setup" under Settings → Plugins (needs a newer Fuyu). Search queries OpenStreetMap Photon and Open-Meteo together (covering Chinese counties as well as global cities); picking a candidate saves its exact coordinates and shows a verification line.
+- **Weather source**: Auto (default — NMC China stations in China with merged hourly data, Open-Meteo globally), NMC China, Open-Meteo (global), Open-Meteo (CMA model), MET Norway, or wttr.in. The Weather page footer shows the active source.
+- **Auto-switch on failure**: on by default; falls back to the next working free source if the chosen source fails or does not cover that region.
 - **Temperature**: °C (default) / °F.
 - **Wind speed**: km/h (default) / m/s / mph / Beaufort.
-- **Time format**: System (default) / 24-hour / 12-hour; used for the hourly forecast, "Updated" and rain alerts.
-- **Refresh every**: 30 min (default) / 60 / 90 / 120 / 180 min. With rain alerts on, it refreshes at least every 30 minutes.
+- **Time format**: System (default) / 24-hour / 12-hour; used for the hourly forecast, sunrise/sunset, "Updated" and weather alerts.
+- **Refresh every**: 30 min (default) / 60 / 90 / 120 / 180 min. With rain or severe weather alerts on, the primary city refreshes at least every 30 minutes.
 
 **Island page**
 
-- **What to show**: feels like (on), chance of rain (on), humidity (off), wind speed (off). With chance of rain on, hours and days at 30% or more are marked too.
+- **What to show**: feels like (on), chance of rain (on), humidity (off), wind speed (off), sunrise/sunset and UV (off), air quality / US AQI (off). With chance of rain on, hours and days at 30% or more are marked too. Air quality is fetched only when turned on.
 - **Hourly forecast**: 6 hours (default) / 12 / 24 hours; more than 6 scrolls sideways.
 
 **Collapsed bar**
@@ -104,30 +110,30 @@ Changes apply right away; there is no Save button.
 - **Show the weather on the collapsed bar**: off on new installs.
 - **Style**: icon + temperature (default) / conditions + temperature / temperature only.
 
-**Rain alerts**
+**Weather alerts**
 
 - **Alert on the island before it rains**: off on new installs.
-- **How far ahead**: within 30 min / within 1 h (default) / within 2 h.
-- **No alerts during quiet hours**: off by default; when on, no alerts from 22:00 to 07:00, and you can change the times.
-- After an alert it stays quiet for 3 hours, and it doesn't alert while it is already raining.
+- **Rain alert lead time**: within 30 min / within 1 h (default) / within 2 h. After an alert it stays quiet for 3 hours, and it doesn't alert while it is already raining.
+- **Alert on the island for severe weather**: off on new installs. Covers thunderstorms/hail, freezing rain, heavy snow, heavy rain and Force 8+ winds now or in the next 6 hours, with a 6-hour cool-down per hazard.
+- **No alerts during quiet hours**: off by default; available when any alert is on, defaults to 22:00–07:00 and can be customized.
 
-Upgrading from 1.0.0: if you had entered a city, the collapsed bar and rain alerts stay as they were; if not, they are treated like a new install (both off). New settings start at their defaults.
+Upgrading from older versions: your saved city is migrated into the city list with existing settings kept; new options (sunrise/sunset & UV, AQI, severe weather alerts) start off. Upgrading from 1.0.0 with a city set keeps the collapsed bar and rain alerts as they were; without a city it is treated like a new install (both off).
 
 ### Cost and data source
 
-- **Network**: only Open-Meteo's two addresses, `geocoding-api.open-meteo.com` (to turn the city name into coordinates, looked up once and remembered) and `api.open-meteo.com` (for the weather). Only the city name and coordinates are sent. Nothing is requested until you enter a city.
-- It checks the weather once per refresh interval; opening the Weather page doesn't add requests, the refresh button does.
-- Settings and the latest weather are stored only in the plugin's data folder on your computer.
-- Rain alerts show on the island and go into the notification list.
+- **Network**: all free, no-API-key HTTPS endpoints — `photon.komoot.io` and `geocoding-api.open-meteo.com` for city search; `www.nmc.cn` (NMC China), `api.open-meteo.com` (Open-Meteo / CMA model), `api.met.no` (MET Norway) or `wttr.in` per your source choice and fallback order; and `air-quality-api.open-meteo.com` only when "Air quality (AQI)" is turned on. Only city queries and coordinates are sent. Nothing is requested when no city is saved.
+- Scheduled refreshes run only for the primary city; other saved cities update on demand when viewed or refreshed.
+- Settings and cached weather are stored only in the plugin's data folder on your computer.
+- Rain and severe weather alerts show on the island and go into the notification list.
 
-Weather data by [Open-Meteo](https://open-meteo.com/).
+Weather and geocoding data by [NMC China](https://www.nmc.cn/), [Open-Meteo](https://open-meteo.com/), [MET Norway](https://api.met.no/), [wttr.in](https://wttr.in/) and [Photon (OpenStreetMap)](https://photon.komoot.io/).
 
 ---
 
 ## 给开发者 · For developers
 
-- 服务：`commands`、`messages/v1`（必需）、`settings`（可选）
-- 插槽：`island.page/v1`、`island.collapsed/v1`、`settings.section/v1`
+- 服务：`commands`、`messages/v1`（必需），`http`、`settings`（可选）
+- 插槽：`island.page/v1`、`island.collapsed/v1`、`island.widget/v1`、`settings.section/v1`
 - 命令：`refresh`
-- 联网清单：`api.open-meteo.com`、`geocoding-api.open-meteo.com`
+- 联网清单：`api.open-meteo.com`、`geocoding-api.open-meteo.com`、`air-quality-api.open-meteo.com`、`photon.komoot.io`、`www.nmc.cn`、`api.met.no`、`wttr.in`
 - 在本目录 `pnpm build` 构建、`pnpm dev` 调试；写插件看[插件文档](https://github.com/TixXin/fuyu/blob/main/docs/plugins/README.md)。

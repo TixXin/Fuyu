@@ -108,11 +108,14 @@ try {
   await click(option("什么时候亮", "新消息和 Agent"));
   check(current.notchRingIslandStatus && current.notchRingPanelStatus && current.notchRimIslandStatus && current.notchRimPanelStatus, "打开「新消息和 Agent」，外框和内圈都跟着状态亮");
   await click(option("什么时候亮", "摄像头和麦克风"));
-  check(current.notchRingIslandDevice === !START.notchRingIslandDevice && current.notchRingPanelDevice === !START.notchRingPanelDevice, "摄像头和麦克风一个开关管收起展开两边");
+  check(!current.notchRingIslandDevice && current.notchRingPanelDevice === !START.notchRingPanelDevice, "摄像头和麦克风开关只管展开面板，收起态不亮内圈");
 
   await click(option("试一下", "摄像头"));
   await until(() => preview().querySelector(".notch-mock__lens[data-lit]"), "镜头旁亮绿灯");
-  check(preview().querySelector(".notch-ring[data-lit]") || !current.notchRingPanelDevice, "试一下摄像头，预览里的内圈亮起来");
+  check(preview().querySelector(".notch-ring[data-lit]") || !current.notchRingPanelDevice, "试一下摄像头，展开预览里的内圈按开关亮起来");
+  await click(option("预览和修改哪一边", "收起时"));
+  check(!preview().querySelector(".notch-ring[data-lit]"), "切到收起时，摄像头和麦克风不点亮收起态岛屿的内圈");
+  await click(option("预览和修改哪一边", "展开时"));
   await click(option("试一下", "摄像头"));
   check(!preview().querySelector(".notch-mock__lens[data-lit]"), "再点一次就停");
 

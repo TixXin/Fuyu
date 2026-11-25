@@ -29,8 +29,12 @@ export function readIslandGlassFrame(activeTransition = false): IslandGlassFrame
   const tr = parseFloat(style.borderTopRightRadius) || 0;
   const bl = parseFloat(style.borderBottomLeftRadius) || 0;
   const br = parseFloat(style.borderBottomRightRadius) || 0;
+  const filletPx = parseFloat(style.getPropertyValue("--island-top-fillet"));
   const filletSize = parseFloat(style.getPropertyValue("--island-top-fillet-size")) || 0;
   const scale = parseFloat(style.getPropertyValue("--island-scale")) || 1;
+  const filletRadius = Number.isFinite(filletPx)
+    ? Math.max(0, filletPx)
+    : Math.round(Math.max(0, filletSize * scale));
   return {
     left: rect.left,
     top: rect.top,
@@ -38,7 +42,7 @@ export function readIslandGlassFrame(activeTransition = false): IslandGlassFrame
     height: rect.height,
     topRadius: Math.min(tl, tr),
     bottomRadius: Math.max(tl, tr, bl, br),
-    filletRadius: Math.round(Math.max(0, filletSize * scale)),
+    filletRadius,
     activeTransition,
   };
 }
@@ -52,7 +56,7 @@ function sameFrame(a: IslandGlassFrame | null, b: IslandGlassFrame): boolean {
     Math.abs(a.height - b.height) < 0.1 &&
     Math.abs(a.topRadius - b.topRadius) < 0.1 &&
     Math.abs(a.bottomRadius - b.bottomRadius) < 0.1 &&
-    a.filletRadius === b.filletRadius
+    Math.abs(a.filletRadius - b.filletRadius) < 0.1
   );
 }
 
@@ -115,11 +119,16 @@ export function useNativeGlassSync(enabled: boolean) {
       }
     };
 
+    const onWindowResize = () => {
+      pushFrame(activeProps.size > 0);
+    };
+
     const observer = new ResizeObserver(() => {
       pushFrame(activeProps.size > 0);
     });
     observer.observe(island);
 
+    window.addEventListener("resize", onWindowResize);
     island.addEventListener("transitionrun", onStart);
     island.addEventListener("transitionstart", onStart);
     island.addEventListener("transitionend", onEnd);
@@ -129,6 +138,7 @@ export function useNativeGlassSync(enabled: boolean) {
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
       observer.disconnect();
+      window.removeEventListener("resize", onWindowResize);
       island.removeEventListener("transitionrun", onStart);
       island.removeEventListener("transitionstart", onStart);
       island.removeEventListener("transitionend", onEnd);

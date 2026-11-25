@@ -2,7 +2,7 @@
   "name": "fuyu",
   "private": true,
   "license": "AGPL-3.0-only",
-  "version": "0.3.13",
+  "version": "0.3.14-beta.1",
   "type": "module",
   "scripts": {
     "prepare": "node scripts/install-git-hooks.mjs",
@@ -20,6 +20,7 @@
     "release:share": "node scripts/release/share-card.mjs",
     "plugins:resign": "node scripts/plugins/resign-market.mjs",
     "plugins:keygen": "node scripts/plugins/plugin-signing.mjs keygen",
+    "plugin:dev": "node scripts/plugins-v3/dev-official.mjs",
     "tauri": "tauri",
     "test": "node --test \"tests/**/*.test.mjs\" \"packages/*/test/**/*.test.mjs\"",
     "check:size": "node scripts/check-file-size.mjs",

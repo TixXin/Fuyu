@@ -9,7 +9,6 @@ pub enum Agent {
     ClaudeCode,
     Codex,
     Workbuddy,
-    Antigravity,
     Dsh,
     Opencode,
     Qoder,
@@ -35,11 +34,10 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 17] = [
+const AGENTS: [Agent; 16] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
-    Agent::Antigravity,
     Agent::Dsh,
     Agent::Opencode,
     Agent::Qoder,
@@ -74,7 +72,6 @@ impl Agent {
             Self::ClaudeCode => "/claude/permission-request",
             Self::Codex => "/codex/permission-request",
             Self::Workbuddy => "/workbuddy/permission-request",
-            Self::Antigravity => "/antigravity/pre-tool-use",
             Self::Dsh => "/dsh/permission",
             Self::Opencode => "/opencode/permission",
             Self::Mimo => "/mimo/permission",
@@ -96,7 +93,6 @@ impl Agent {
             Self::ClaudeCode => "claudeCode",
             Self::Codex => "codex",
             Self::Workbuddy => "workbuddy",
-            Self::Antigravity => "antigravity",
             Self::Dsh => "dsh",
             Self::Opencode => "opencode",
             Self::Mimo => "mimo",
@@ -114,7 +110,7 @@ impl Agent {
     }
 
     pub(super) fn lacks_waiting_event(self) -> bool {
-        matches!(self, Self::Antigravity | Self::Dsh | Self::Trae | Self::TraeCn | Self::Droid | Self::Cursor)
+        matches!(self, Self::Dsh | Self::Trae | Self::TraeCn | Self::Droid | Self::Cursor)
     }
 }
 
@@ -150,35 +146,21 @@ impl HookInput {
 
     pub(super) fn parse_for(agent: Agent, body: &[u8]) -> Result<Self, &'static str> {
         match agent {
-            Agent::Antigravity => {}
-            Agent::Opencode | Agent::Mimo | Agent::Pi => return super::opencode::plugin_input(body),
-            Agent::Cursor => return cursor_input(body),
+            Agent::Opencode | Agent::Mimo | Agent::Pi => super::opencode::plugin_input(body),
+            Agent::Cursor => cursor_input(body),
             Agent::Trae | Agent::TraeCn => {
                 let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
                 if let Some(fields) = input.as_object_mut() {
                     fields.remove("agent_id");
                 }
-                return Self::from_value(&input);
+                Self::from_value(&input)
             }
             _ => {
                 let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
                 compat_input(agent.id(), &mut input);
-                return Self::from_value(&input);
+                Self::from_value(&input)
             }
         }
-        let input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
-        let cwd = text_field(&input, "cwd").or_else(|| {
-            input["workspacePaths"].as_array().and_then(|paths| paths.iter().find_map(|path| path.as_str().map(str::to_string)))
-        });
-        Ok(Self {
-            session_id: text_field(&input, "conversationId").ok_or("No conversationId.")?,
-            cwd,
-            tool_name: text_field(&input["toolCall"], "name").ok_or("No toolCall.name.")?,
-            tool_input: input["toolCall"]["args"].clone(),
-            permission_suggestions: None,
-            agent_id: None,
-            remote_host: None,
-        })
     }
 
     pub(super) fn is_question(&self) -> bool {
@@ -279,12 +261,6 @@ pub(super) fn permission_response(
         Agent::ClaudeCode | Agent::Codex | Agent::Workbuddy | Agent::Qoder | Agent::Codebuddy | Agent::Qwen | Agent::Zcode => {
             hook_response(decision, message, suggestions)
         }
-        Agent::Antigravity => match decision {
-            None | Some(Decision::Answer) => "{}".to_string(),
-            Some(Decision::Allow | Decision::AllowAlways) => json!({ "decision": "allow" }).to_string(),
-            Some(Decision::Deny) => json!({ "decision": "deny", "reason": reason() }).to_string(),
-            Some(Decision::Terminal) => json!({ "decision": "ask" }).to_string(),
-        },
         Agent::Dsh => match decision {
             Some(Decision::Allow | Decision::AllowAlways) => json!({
                 "outcome": "allowed-once",

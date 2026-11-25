@@ -66,26 +66,34 @@ export function withNotchStyle<S extends NotchSettings>(settings: S, layer: Notc
 export function withNotchLinked<S extends NotchSettings>(settings: S, linked: boolean, from: NotchState = "collapsed"): S {
   if (linked) {
     const source = from === "expanded" && !notchLinked(settings)
-      ? writeRing(writeRim(settings, "Island", notchRimLook(settings, "Panel")), "Island", notchRingLook(settings, "Panel"))
+      ? writeRing(writeRim(settings, "Island", notchRimLook(settings, "Panel")), "Island", { ...notchRingLook(settings, "Panel"), device: false })
       : settings;
     return { ...source, notchRimPanelSame: true, notchRingPanelSame: true };
   }
   const rim = notchRimLook(settings, "Island");
   const ring = notchRingLook(settings, "Island");
-  const copied = writeRing(writeRim(settings, "Panel", rim), "Panel", ring);
+  const copied = writeRing(writeRim(settings, "Panel", rim), "Panel", { ...ring, device: settings.notchRingPanelDevice });
   return { ...copied, notchRimPanelSame: false, notchRingPanelSame: false };
 }
 
 export function notchLights(settings: NotchSettings): NotchLights {
-  const ring = notchRingLook(settings, "Island");
-  return { device: ring.device, status: ring.status };
+  return {
+    device: notchRingLook(settings, "Panel").device,
+    status: notchRingLook(settings, "Island").status,
+  };
 }
 
 export function withNotchLights<S extends NotchSettings>(settings: S, patch: Partial<NotchLights>): S {
   let next = settings;
-  for (const target of TARGETS) {
-    next = writeRing(next, target, patch);
-    if (patch.status !== undefined) next = writeRim(next, target, { status: patch.status });
+  if (patch.device !== undefined) {
+    next = writeRing(next, "Island", { device: false });
+    next = writeRing(next, "Panel", { device: patch.device });
+  }
+  if (patch.status !== undefined) {
+    for (const target of TARGETS) {
+      next = writeRing(next, target, { status: patch.status });
+      next = writeRim(next, target, { status: patch.status });
+    }
   }
   return next;
 }

@@ -27,6 +27,7 @@ const CLOUD_BASES: [&str; 2] = [
     "https://daily-cloudcode-pa.googleapis.com",
     "https://cloudcode-pa.googleapis.com",
 ];
+const DAEMON_DIRS: [&str; 3] = ["antigravity", "antigravity-ide", "antigravity-cli"];
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct LanguageServer {
@@ -149,8 +150,14 @@ async fn fetch(now: i64) -> Result<(UsageSource, QuotaWindows), (UsageSource, Us
 }
 
 fn discover_servers() -> Vec<LanguageServer> {
-    let mut found = Vec::new();
-    for pid in crate::platform::process::pids_matching_name("language_server") {
+    let live_pids = crate::platform::process::pids_matching_name("language_server");
+    let mut found = gemini_dir()
+        .map(|dir| discover_daemon_servers(&dir, &live_pids))
+        .unwrap_or_default();
+    for pid in live_pids {
+        if found.iter().any(|server| server.pid == pid) {
+            continue;
+        }
         let Some(args) = crate::platform::process_env::command_line_args(pid) else {
             continue;
         };
@@ -158,6 +165,66 @@ fn discover_servers() -> Vec<LanguageServer> {
         if let Some(server) = parse_server_args(pid, &args, &listening) {
             found.push(server);
         }
+    }
+    found
+}
+
+pub(super) fn parse_daemon_entry(text: &str) -> Option<LanguageServer> {
+    let root = serde_json::from_str::<Value>(text.trim_start_matches('\u{feff}').trim()).ok()?;
+    let pid = root["pid"]
+        .as_u64()
+        .and_then(|value| u32::try_from(value).ok())
+        .filter(|&pid| pid > 0)?;
+    let port = root["httpPort"]
+        .as_u64()
+        .or_else(|| root["http_port"].as_u64())
+        .or_else(|| root["port"].as_u64())
+        .and_then(|value| u16::try_from(value).ok())
+        .filter(|&port| port > 0)?;
+    let csrf = root["csrfToken"]
+        .as_str()
+        .or_else(|| root["csrf_token"].as_str())
+        .map(str::trim)
+        .filter(|token| !token.is_empty() && token.bytes().all(|byte| (0x21..=0x7e).contains(&byte)))?
+        .to_string();
+    Some(LanguageServer { pid, ports: vec![port], csrf })
+}
+
+pub(super) fn discover_daemon_servers(gemini_dir: &Path, live_pids: &[u32]) -> Vec<LanguageServer> {
+    if live_pids.is_empty() {
+        return Vec::new();
+    }
+    let mut files = Vec::new();
+    for name in DAEMON_DIRS {
+        let Ok(entries) = fs::read_dir(gemini_dir.join(name).join("daemon")) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|ext| ext.to_str()) != Some("json") {
+                continue;
+            }
+            let modified = entry
+                .metadata()
+                .ok()
+                .and_then(|meta| meta.modified().ok())
+                .unwrap_or(UNIX_EPOCH);
+            files.push((modified, path));
+        }
+    }
+    files.sort_by_key(|entry| std::cmp::Reverse(entry.0));
+    let mut found = Vec::new();
+    for (_, path) in files {
+        let Some(text) = read_bounded(&path) else {
+            continue;
+        };
+        let Some(server) = parse_daemon_entry(&text) else {
+            continue;
+        };
+        if !live_pids.contains(&server.pid) || found.iter().any(|known: &LanguageServer| known.pid == server.pid) {
+            continue;
+        }
+        found.push(server);
     }
     found
 }

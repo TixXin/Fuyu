@@ -177,95 +177,595 @@
                         显示方式
                       </span>
                       <span class="settings-row__description">
-                        卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。
+                        在下面挑一种列表布局，改了马上在岛屿预览里看到；在 Agent 页右上角的「排列与布局」里也能随时切换。
                       </span>
                     </div>
                   </div>
-                  <div aria-label="显示方式" class="settings-cards" role="group" style="--cards-columns: 3">
-                    <button aria-pressed="false" class="settings-cards__card" type="button">
-                      <span aria-hidden="true" class="settings-cards__art">
-                        <span class="agent-glyph agent-glyph--view agent-glyph--stack">
-                          <span class="agent-glyph__list-row">
-                            <i class="agent-glyph__list-dot agent-glyph__list-dot--work"></i>
-                            <span class="agent-glyph__list-lines">
-                              <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
-                              <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                  <div class="agent-stage">
+                    <div aria-label="显示方式" class="settings-cards" role="group" style="--cards-columns: 3">
+                      <button aria-pressed="true" class="settings-cards__card settings-cards__card--active" type="button">
+                        <span aria-hidden="true" class="settings-cards__art">
+                          <span class="agent-glyph agent-glyph--stack">
+                            <span class="agent-glyph__focused-card">
+                              <i class="agent-glyph__stripe agent-glyph__stripe--work"></i>
+                              <span class="agent-glyph__list-lines">
+                                <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                                <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                              </span>
                             </span>
-                            <s class="agent-glyph__time"></s>
-                          </span>
-                          <span class="agent-glyph__list-row">
-                            <i class="agent-glyph__list-dot agent-glyph__list-dot--turn"></i>
-                            <span class="agent-glyph__list-lines">
+                            <span class="agent-glyph__compact-row">
+                              <i class="agent-glyph__list-dot"></i>
                               <b class="agent-glyph__bar agent-glyph__bar--mid"></b>
-                              <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                              <s class="agent-glyph__time"></s>
                             </span>
-                            <s class="agent-glyph__time"></s>
                           </span>
                         </span>
-                      </span>
-                      <span class="settings-cards__text">
-                        <span class="settings-cards__label">
-                          列表
+                        <span class="settings-cards__text">
+                          <span class="settings-cards__label">
+                            分层聚焦
+                          </span>
+                          <span class="settings-cards__hint">
+                            活跃轻卡 + 已完成静默单行
+                          </span>
                         </span>
-                        <span class="settings-cards__hint">
-                          状态点、标题与最多两行回复
-                        </span>
-                      </span>
-                    </button>
-                    <button aria-pressed="true" class="settings-cards__card settings-cards__card--active" type="button">
-                      <span aria-hidden="true" class="settings-cards__art">
-                        <span class="agent-glyph agent-glyph--view">
-                          <span class="agent-glyph__card">
-                            <span class="agent-glyph__card-top">
+                        <svg aria-hidden="true" class="lucide lucide-check settings-cards__check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </button>
+                      <button aria-pressed="false" class="settings-cards__card" type="button">
+                        <span aria-hidden="true" class="settings-cards__art">
+                          <span class="agent-glyph agent-glyph--split">
+                            <span class="agent-glyph__split-left">
+                              <span class="agent-glyph__split-row agent-glyph__split-row--on">
+                                <i class="agent-glyph__list-dot agent-glyph__list-dot--work"></i>
+                                <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                              </span>
+                              <span class="agent-glyph__split-row">
+                                <i class="agent-glyph__list-dot agent-glyph__list-dot--turn"></i>
+                                <b class="agent-glyph__bar"></b>
+                              </span>
+                              <span class="agent-glyph__split-row">
+                                <i class="agent-glyph__list-dot"></i>
+                                <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                              </span>
+                            </span>
+                            <span class="agent-glyph__split-right">
                               <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
-                              <em class="agent-glyph__pill"></em>
-                            </span>
-                            <span class="agent-glyph__card-bottom">
-                              <i class="agent-glyph__state-chip"></i>
-                              <b class="agent-glyph__bar agent-glyph__bar--short"></b>
+                              <span class="agent-glyph__split-box"></span>
+                              <span class="agent-glyph__split-cta"></span>
                             </span>
                           </span>
                         </span>
-                      </span>
-                      <span class="settings-cards__text">
-                        <span class="settings-cards__label">
-                          卡片
-                        </span>
-                        <span class="settings-cards__hint">
-                          状态描边卡片，附工具与上下文
-                        </span>
-                      </span>
-                      <svg aria-hidden="true" class="lucide lucide-check settings-cards__check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
-                    </button>
-                    <button aria-pressed="false" class="settings-cards__card" type="button">
-                      <span aria-hidden="true" class="settings-cards__art">
-                        <span class="agent-glyph agent-glyph--view agent-glyph--stack">
-                          <span class="agent-glyph__compact-row">
-                            <i class="agent-glyph__stripe agent-glyph__stripe--needs"></i>
-                            <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
-                            <s class="agent-glyph__time"></s>
+                        <span class="settings-cards__text">
+                          <span class="settings-cards__label">
+                            双栏工作台
                           </span>
-                          <span class="agent-glyph__compact-row">
-                            <i class="agent-glyph__stripe agent-glyph__stripe--turn"></i>
-                            <b class="agent-glyph__bar"></b>
-                            <s class="agent-glyph__time"></s>
-                          </span>
-                          <span class="agent-glyph__compact-row">
-                            <i class="agent-glyph__stripe agent-glyph__stripe--work"></i>
-                            <b class="agent-glyph__bar agent-glyph__bar--mid"></b>
-                            <s class="agent-glyph__time"></s>
+                          <span class="settings-cards__hint">
+                            左栏极简索引，右栏实时详情
                           </span>
                         </span>
-                      </span>
-                      <span class="settings-cards__text">
-                        <span class="settings-cards__label">
-                          紧凑
+                      </button>
+                      <button aria-pressed="false" class="settings-cards__card" type="button">
+                        <span aria-hidden="true" class="settings-cards__art">
+                          <span class="agent-glyph agent-glyph--bento">
+                            <span class="agent-glyph__bento-spot">
+                              <i class="agent-glyph__stripe agent-glyph__stripe--needs"></i>
+                              <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                            </span>
+                            <span class="agent-glyph__bento-grid">
+                              <span class="agent-glyph__bento-cell">
+                                <i class="agent-glyph__list-dot agent-glyph__list-dot--work"></i>
+                                <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                                <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                              </span>
+                              <span class="agent-glyph__bento-cell">
+                                <i class="agent-glyph__list-dot agent-glyph__list-dot--turn"></i>
+                                <b class="agent-glyph__bar"></b>
+                                <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                              </span>
+                            </span>
+                          </span>
                         </span>
-                        <span class="settings-cards__hint">
-                          单行状态色条，同屏容纳更多
+                        <span class="settings-cards__text">
+                          <span class="settings-cards__label">
+                            双列卡片
+                          </span>
+                          <span class="settings-cards__hint">
+                            紧急项置顶，双列同屏看全
+                          </span>
                         </span>
-                      </span>
-                    </button>
+                      </button>
+                      <button aria-pressed="false" class="settings-cards__card" type="button">
+                        <span aria-hidden="true" class="settings-cards__art">
+                          <span class="agent-glyph agent-glyph--projects">
+                            <span class="agent-glyph__proj-box">
+                              <span class="agent-glyph__proj-head">
+                                <b class="agent-glyph__bar agent-glyph__bar--short"></b>
+                              </span>
+                              <span class="agent-glyph__proj-row">
+                                <i class="agent-glyph__list-dot agent-glyph__list-dot--work"></i>
+                                <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                              </span>
+                              <span class="agent-glyph__proj-row">
+                                <i class="agent-glyph__list-dot"></i>
+                                <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                              </span>
+                            </span>
+                          </span>
+                        </span>
+                        <span class="settings-cards__text">
+                          <span class="settings-cards__label">
+                            项目指挥台
+                          </span>
+                          <span class="settings-cards__hint">
+                            按项目收纳，去掉重复前缀
+                          </span>
+                        </span>
+                      </button>
+                      <button aria-pressed="false" class="settings-cards__card" type="button">
+                        <span aria-hidden="true" class="settings-cards__art">
+                          <span class="agent-glyph agent-glyph--stack">
+                            <span class="agent-glyph__compact-row agent-glyph__compact-row--on">
+                              <i class="agent-glyph__list-dot agent-glyph__list-dot--work"></i>
+                              <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                              <s class="agent-glyph__time"></s>
+                            </span>
+                            <span class="agent-glyph__compact-row">
+                              <i class="agent-glyph__list-dot agent-glyph__list-dot--turn"></i>
+                              <b class="agent-glyph__bar"></b>
+                              <s class="agent-glyph__time"></s>
+                            </span>
+                            <span class="agent-glyph__compact-row">
+                              <i class="agent-glyph__list-dot"></i>
+                              <b class="agent-glyph__bar agent-glyph__bar--mid"></b>
+                              <s class="agent-glyph__time"></s>
+                            </span>
+                          </span>
+                        </span>
+                        <span class="settings-cards__text">
+                          <span class="settings-cards__label">
+                            极简清单
+                          </span>
+                          <span class="settings-cards__hint">
+                            去边框胶囊，纯排版键盘流
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+                    <div aria-label="会话列表预览" class="agent-stage-island agent-stage-island--dark" role="group" style="background: rgb(3, 3, 3); --overlay-rgb: 241, 240, 246; --text-1: rgba(241, 240, 246, 0.95); --text-2: rgba(241, 240, 246, 0.7); --text-3: rgba(241, 240, 246, 0.55)">
+                      <div class="agent-stage-island__sessions">
+                        <section aria-label="Agent 会话" class="agent-sessions" data-view="focused">
+                          <div class="agent-sessions__usage">
+                            <div class="agent-usage-box agent-usage-box--chips" data-layout="chips">
+                              <div class="agent-usage-layout">
+                                <div class="agent-usage-chips agent-usage-chips--number">
+                                  <span class="island-hover-card__anchor agent-usage-chip__hover">
+                                    <span aria-label="Claude Code 用量 Opus 63%" class="agent-usage-chip" role="status">
+                                      <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
+                                      <strong class="agent-usage__value agent-usage__value--medium">
+                                        63
+                                        %
+                                      </strong>
+                                      <span class="agent-usage-chip__label">
+                                        Opus
+                                      </span>
+                                      <span aria-hidden="true" class="agent-usage-chip__more">
+                                        +
+                                        2
+                                      </span>
+                                    </span>
+                                  </span>
+                                  <span class="island-hover-card__anchor agent-usage-chip__hover">
+                                    <span aria-label="Codex 用量 7 天 16%" class="agent-usage-chip" role="status">
+                                      <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
+                                      <strong class="agent-usage__value agent-usage__value--low">
+                                        16
+                                        %
+                                      </strong>
+                                      <span class="agent-usage-chip__label">
+                                        7 天
+                                      </span>
+                                      <span aria-hidden="true" class="agent-usage-chip__more">
+                                        +
+                                        1
+                                      </span>
+                                    </span>
+                                  </span>
+                                  <span class="island-hover-card__anchor agent-usage-chip__hover">
+                                    <span aria-label="Antigravity 用量 Gemini 3 Pro 30%" class="agent-usage-chip" role="status">
+                                      <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--antigravity" draggable="false" height="14" src="/src/assets/brands/antigravity.png" width="14">
+                                      <strong class="agent-usage__value agent-usage__value--low">
+                                        30
+                                        %
+                                      </strong>
+                                      <span class="agent-usage-chip__label">
+                                        Gemini 3 Pro
+                                      </span>
+                                    </span>
+                                  </span>
+                                  <span class="island-hover-card__anchor agent-usage-chip__hover">
+                                    <span aria-label="WorkBuddy 用量 今日 1,240 · 7 天 8,930 积分" class="agent-usage-chip" role="status">
+                                      <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--workbuddy" draggable="false" height="14" src="/src/assets/brands/workbuddy.svg" width="14">
+                                      <strong class="agent-usage-chip__money">
+                                        8,930
+                                      </strong>
+                                      <span class="agent-usage-chip__label">
+                                        积分 · 7 天
+                                      </span>
+                                    </span>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="agent-sessions__stage">
+                            <div class="agent-view agent-view--focused">
+                              <div aria-label="Agent 会话" class="agent-v__bar" role="tablist">
+                                <button aria-selected="true" class="agent-v__tab agent-v__tab--on" role="tab" type="button">
+                                  <span>
+                                    全部
+                                  </span>
+                                  <span class="agent-v__count">
+                                    3
+                                  </span>
+                                </button>
+                                <button aria-selected="false" class="agent-v__tab" role="tab" type="button">
+                                  <span>
+                                    需处理
+                                  </span>
+                                  <span class="agent-v__count agent-v__count--alert">
+                                    1
+                                  </span>
+                                </button>
+                                <button aria-selected="false" class="agent-v__tab" role="tab" type="button">
+                                  <span>
+                                    运行中
+                                  </span>
+                                  <span class="agent-v__count">
+                                    1
+                                  </span>
+                                </button>
+                                <button aria-selected="false" class="agent-v__tab" role="tab" type="button">
+                                  <span>
+                                    已完成
+                                  </span>
+                                  <span class="agent-v__count">
+                                    1
+                                  </span>
+                                </button>
+                              </div>
+                              <ul class="agent-sessions__list agent-sessions__list--focused agent-sessions__list--menu" data-fade-bottom="true">
+                                <li data-session-key="antigravity:preview-wait">
+                                  <span class="island-hover-card__anchor agent-session__hover">
+                                    <button class="agent-session agent-focused__row agent-focused__row--active agent-session--waiting agent-v--light-needs agent-session--light-needs agent-card--lively agent-card--sparkle" type="button">
+                                      <span aria-hidden="true" class="agent-card__band"></span>
+                                      <span class="agent-v__mark">
+                                        <span aria-label="等你确认" class="agent-session__jelly" role="img" title="等你确认">
+                                          <span aria-hidden="true" class="center-jelly" data-mood="waiting" style="--center-jelly-height: 12px">
+                                            <svg viewBox="3 4 58 43">
+                                              <defs>
+                                                <linearGradient gradientUnits="userSpaceOnUse" id="center-jelly-shade-_id1_" x1="0" x2="0" y1="6" y2="48">
+                                                  <stop offset="0" stop-color="#fff" stop-opacity="0.5"></stop>
+                                                  <stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop>
+                                                  <stop offset="1" stop-color="#000" stop-opacity="0.14"></stop>
+                                                </linearGradient>
+                                              </defs>
+                                              <g class="center-jelly-pose">
+                                                <g class="center-jelly-body">
+                                                  <g class="center-jelly-outline">
+                                                    <circle cx="18" cy="39" r="6.6"></circle>
+                                                    <circle cx="27.3" cy="39" r="6.6"></circle>
+                                                    <circle cx="36.7" cy="39" r="6.6"></circle>
+                                                    <circle cx="46" cy="39" r="6.6"></circle>
+                                                    <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"></path>
+                                                  </g>
+                                                  <g class="center-jelly-lobes">
+                                                    <g class="center-jelly-lobe" style="transform-origin: 18px 33px">
+                                                      <circle class="center-jelly-fill" cx="18" cy="39" r="6.6"></circle>
+                                                      <circle cx="18" cy="39" fill="url(#center-jelly-shade-_id1_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 27.3px 33px">
+                                                      <circle class="center-jelly-fill" cx="27.3" cy="39" r="6.6"></circle>
+                                                      <circle cx="27.3" cy="39" fill="url(#center-jelly-shade-_id1_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 36.7px 33px">
+                                                      <circle class="center-jelly-fill" cx="36.7" cy="39" r="6.6"></circle>
+                                                      <circle cx="36.7" cy="39" fill="url(#center-jelly-shade-_id1_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 46px 33px">
+                                                      <circle class="center-jelly-fill" cx="46" cy="39" r="6.6"></circle>
+                                                      <circle cx="46" cy="39" fill="url(#center-jelly-shade-_id1_)" r="6.6"></circle>
+                                                    </g>
+                                                  </g>
+                                                  <g class="center-jelly-head">
+                                                    <path class="center-jelly-fill" d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"></path>
+                                                    <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z" fill="url(#center-jelly-shade-_id1_)"></path>
+                                                    <ellipse class="center-jelly-highlight" cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)"></ellipse>
+                                                    <ellipse class="center-jelly-cheek" cx="17.6" cy="31.5" rx="3.6" ry="2.2"></ellipse>
+                                                    <ellipse class="center-jelly-cheek" cx="46.4" cy="31.5" rx="3.6" ry="2.2"></ellipse>
+                                                    <g transform="translate(0 -1)">
+                                                      <g class="center-jelly-lids">
+                                                        <ellipse class="center-jelly-eye" cx="24" cy="25" rx="2.9" ry="4.1"></ellipse>
+                                                        <ellipse class="center-jelly-eye" cx="40" cy="25" rx="2.9" ry="4.1"></ellipse>
+                                                      </g>
+                                                    </g>
+                                                    <path class="center-jelly-eye" d="M28.2 30.4h7.6a3.8 3.8 0 0 1-7.6 0Z"></path>
+                                                    <ellipse class="center-jelly-tongue" cx="32" cy="33.1" rx="2" ry="1.1"></ellipse>
+                                                  </g>
+                                                </g>
+                                              </g>
+                                              <path class="center-jelly-fx center-jelly-tick" d="M55 6l1.4-5M59 9.5l4.2-3.4M61 15l5-1"></path>
+                                            </svg>
+                                          </span>
+                                        </span>
+                                      </span>
+                                      <span class="agent-focused__main">
+                                        <span class="agent-focused__heading">
+                                          <span class="agent-v__proj">
+                                            Fuyu
+                                          </span>
+                                          <span class="agent-v__title">
+                                            运行审批排查
+                                          </span>
+                                          <span class="agent-v__model" title="gemini-4-neon · High">
+                                            <span class="agent-v__model-name">
+                                              gemini-4-neon
+                                            </span>
+                                            <span class="agent-v__model-effort">
+                                              H
+                                            </span>
+                                          </span>
+                                          <span class="agent-v__trailing">
+                                            <span class="agent-session__agent">
+                                              <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--antigravity" draggable="false" height="14" src="/src/assets/brands/antigravity.png" width="14">
+                                            </span>
+                                            <span class="agent-session__time">
+                                              <span class="agent-session__age">
+                                                1m
+                                              </span>
+                                            </span>
+                                          </span>
+                                        </span>
+                                        <span class="agent-focused__sub">
+                                          <span class="agent-v__activity agent-v__activity--needs" title="正在调用 run_command: git grep -n &quot;AGENTS.md&quot; scripts/ tests/">
+                                            <span class="agent-v__verb">
+                                              等待确认
+                                            </span>
+                                            <span class="agent-v__tool-inline">
+                                              run_command
+                                            </span>
+                                            <span class="agent-session__tool-detail">
+                                              <span class="agent-session__tool-head">
+                                                git grep -n "AGENTS.md" scripts/ tests/
+                                              </span>
+                                            </span>
+                                          </span>
+                                        </span>
+                                      </span>
+                                    </button>
+                                  </span>
+                                  <span class="agent-session__more">
+                                    <button aria-expanded="false" aria-haspopup="menu" aria-label="「运行审批排查」的更多操作" class="island-list-icon-button" title="「运行审批排查」的更多操作" type="button">
+                                      <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                                    </button>
+                                  </span>
+                                </li>
+                                <li data-session-key="claudeCode:preview-run">
+                                  <span class="island-hover-card__anchor agent-session__hover">
+                                    <button class="agent-session agent-focused__row agent-focused__row--active agent-session--running agent-v--light-working agent-session--light-working agent-card--lively agent-card--sparkle" type="button">
+                                      <span aria-hidden="true" class="agent-card__band"></span>
+                                      <span class="agent-v__mark">
+                                        <span aria-label="运行中" class="agent-session__jelly" role="img" title="运行中">
+                                          <span aria-hidden="true" class="center-jelly" data-mood="running" style="--center-jelly-height: 12px">
+                                            <svg viewBox="3 4 58 43">
+                                              <defs>
+                                                <linearGradient gradientUnits="userSpaceOnUse" id="center-jelly-shade-_id2_" x1="0" x2="0" y1="6" y2="48">
+                                                  <stop offset="0" stop-color="#fff" stop-opacity="0.5"></stop>
+                                                  <stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop>
+                                                  <stop offset="1" stop-color="#000" stop-opacity="0.14"></stop>
+                                                </linearGradient>
+                                              </defs>
+                                              <g class="center-jelly-pose">
+                                                <g class="center-jelly-body">
+                                                  <g class="center-jelly-outline">
+                                                    <circle cx="18" cy="39" r="6.6"></circle>
+                                                    <circle cx="27.3" cy="39" r="6.6"></circle>
+                                                    <circle cx="36.7" cy="39" r="6.6"></circle>
+                                                    <circle cx="46" cy="39" r="6.6"></circle>
+                                                    <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"></path>
+                                                  </g>
+                                                  <g class="center-jelly-lobes">
+                                                    <g class="center-jelly-lobe" style="transform-origin: 18px 33px">
+                                                      <circle class="center-jelly-fill" cx="18" cy="39" r="6.6"></circle>
+                                                      <circle cx="18" cy="39" fill="url(#center-jelly-shade-_id2_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 27.3px 33px">
+                                                      <circle class="center-jelly-fill" cx="27.3" cy="39" r="6.6"></circle>
+                                                      <circle cx="27.3" cy="39" fill="url(#center-jelly-shade-_id2_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 36.7px 33px">
+                                                      <circle class="center-jelly-fill" cx="36.7" cy="39" r="6.6"></circle>
+                                                      <circle cx="36.7" cy="39" fill="url(#center-jelly-shade-_id2_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 46px 33px">
+                                                      <circle class="center-jelly-fill" cx="46" cy="39" r="6.6"></circle>
+                                                      <circle cx="46" cy="39" fill="url(#center-jelly-shade-_id2_)" r="6.6"></circle>
+                                                    </g>
+                                                  </g>
+                                                  <g class="center-jelly-head">
+                                                    <path class="center-jelly-fill" d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"></path>
+                                                    <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z" fill="url(#center-jelly-shade-_id2_)"></path>
+                                                    <ellipse class="center-jelly-highlight" cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)"></ellipse>
+                                                    <ellipse class="center-jelly-cheek" cx="17.6" cy="31.5" rx="3.6" ry="2.2"></ellipse>
+                                                    <ellipse class="center-jelly-cheek" cx="46.4" cy="31.5" rx="3.6" ry="2.2"></ellipse>
+                                                    <g class="center-jelly-lids" transform="translate(-2.2 .6)">
+                                                      <ellipse class="center-jelly-eye" cx="24" cy="25" rx="2.9" ry="4.1"></ellipse>
+                                                      <ellipse class="center-jelly-eye" cx="40" cy="25" rx="2.9" ry="4.1"></ellipse>
+                                                    </g>
+                                                    <path class="center-jelly-line center-jelly-mouth" d="M27.4 31.8h4"></path>
+                                                  </g>
+                                                </g>
+                                              </g>
+                                            </svg>
+                                          </span>
+                                        </span>
+                                      </span>
+                                      <span class="agent-focused__main">
+                                        <span class="agent-focused__heading">
+                                          <span class="agent-v__proj">
+                                            Fuyu
+                                          </span>
+                                          <span class="agent-v__title">
+                                            Mac 刘海面板优化
+                                          </span>
+                                          <span class="agent-v__model" title="Opus 4.6 · High · 自动">
+                                            <span class="agent-v__model-name">
+                                              Opus 4.6
+                                            </span>
+                                            <span class="agent-v__model-effort">
+                                              H
+                                            </span>
+                                            <span class="agent-v__model-mode agent-v__model-mode--auto">
+                                              自动
+                                            </span>
+                                          </span>
+                                          <span class="agent-v__trailing">
+                                            <span class="agent-session__agent">
+                                              <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
+                                            </span>
+                                            <span class="agent-session__time">
+                                              <span class="agent-session__age">
+                                                1m
+                                              </span>
+                                            </span>
+                                          </span>
+                                        </span>
+                                        <span class="agent-focused__sub">
+                                          <span class="agent-v__activity" title="正在调用 Edit: src/features/agent-status/AgentSessionsPanel.tsx">
+                                            <span class="agent-v__verb">
+                                              Edit
+                                            </span>
+                                            <span class="agent-session__tool-detail">
+                                              <span class="agent-session__tool-head">
+                                                src/features/agent-status
+                                              </span>
+                                              <span class="agent-session__tool-tail">
+                                                /AgentSessionsPanel.tsx
+                                              </span>
+                                            </span>
+                                          </span>
+                                          <span class="agent-focused__status">
+                                            <span class="agent-session__todos">
+                                              3/5 步
+                                            </span>
+                                          </span>
+                                        </span>
+                                      </span>
+                                    </button>
+                                  </span>
+                                  <span class="agent-session__more">
+                                    <button aria-expanded="false" aria-haspopup="menu" aria-label="「Mac 刘海面板优化」的更多操作" class="island-list-icon-button" title="「Mac 刘海面板优化」的更多操作" type="button">
+                                      <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                                    </button>
+                                  </span>
+                                </li>
+                                <li class="agent-focused__section" data-session-key="section:done">
+                                  <span>
+                                    最近完成 · 1
+                                  </span>
+                                  <button aria-expanded="true" class="agent-focused__toggle" type="button">
+                                    <svg aria-hidden="true" class="lucide lucide-chevron-down" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                                    <span>
+                                      收起
+                                    </span>
+                                  </button>
+                                </li>
+                                <li data-session-key="claudeCode:preview-done">
+                                  <span class="island-hover-card__anchor agent-session__hover">
+                                    <button class="agent-session agent-focused__row agent-focused__row--done agent-session--completed agent-v--light-done agent-session--light-done" type="button">
+                                      <span class="agent-v__mark">
+                                        <span aria-label="已完成" class="agent-session__jelly" role="img" title="已完成">
+                                          <span aria-hidden="true" class="center-jelly" data-mood="idle" style="--center-jelly-height: 12px">
+                                            <svg viewBox="3 4 58 43">
+                                              <defs>
+                                                <linearGradient gradientUnits="userSpaceOnUse" id="center-jelly-shade-_id3_" x1="0" x2="0" y1="6" y2="48">
+                                                  <stop offset="0" stop-color="#fff" stop-opacity="0.5"></stop>
+                                                  <stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop>
+                                                  <stop offset="1" stop-color="#000" stop-opacity="0.14"></stop>
+                                                </linearGradient>
+                                              </defs>
+                                              <g class="center-jelly-pose">
+                                                <g class="center-jelly-body">
+                                                  <g class="center-jelly-outline">
+                                                    <circle cx="18" cy="39" r="6.6"></circle>
+                                                    <circle cx="27.3" cy="39" r="6.6"></circle>
+                                                    <circle cx="36.7" cy="39" r="6.6"></circle>
+                                                    <circle cx="46" cy="39" r="6.6"></circle>
+                                                    <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"></path>
+                                                  </g>
+                                                  <g class="center-jelly-lobes">
+                                                    <g class="center-jelly-lobe" style="transform-origin: 18px 33px">
+                                                      <circle class="center-jelly-fill" cx="18" cy="39" r="6.6"></circle>
+                                                      <circle cx="18" cy="39" fill="url(#center-jelly-shade-_id3_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 27.3px 33px">
+                                                      <circle class="center-jelly-fill" cx="27.3" cy="39" r="6.6"></circle>
+                                                      <circle cx="27.3" cy="39" fill="url(#center-jelly-shade-_id3_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 36.7px 33px">
+                                                      <circle class="center-jelly-fill" cx="36.7" cy="39" r="6.6"></circle>
+                                                      <circle cx="36.7" cy="39" fill="url(#center-jelly-shade-_id3_)" r="6.6"></circle>
+                                                    </g>
+                                                    <g class="center-jelly-lobe" style="transform-origin: 46px 33px">
+                                                      <circle class="center-jelly-fill" cx="46" cy="39" r="6.6"></circle>
+                                                      <circle cx="46" cy="39" fill="url(#center-jelly-shade-_id3_)" r="6.6"></circle>
+                                                    </g>
+                                                  </g>
+                                                  <g class="center-jelly-head">
+                                                    <path class="center-jelly-fill" d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"></path>
+                                                    <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z" fill="url(#center-jelly-shade-_id3_)"></path>
+                                                    <ellipse class="center-jelly-highlight" cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)"></ellipse>
+                                                    <ellipse class="center-jelly-cheek" cx="17.6" cy="31.5" rx="3.6" ry="2.2"></ellipse>
+                                                    <ellipse class="center-jelly-cheek" cx="46.4" cy="31.5" rx="3.6" ry="2.2"></ellipse>
+                                                    <g class="center-jelly-lids">
+                                                      <ellipse class="center-jelly-eye" cx="24" cy="25" rx="2.9" ry="4.1"></ellipse>
+                                                      <ellipse class="center-jelly-eye" cx="40" cy="25" rx="2.9" ry="4.1"></ellipse>
+                                                    </g>
+                                                  </g>
+                                                </g>
+                                              </g>
+                                            </svg>
+                                          </span>
+                                        </span>
+                                      </span>
+                                      <span class="agent-v__proj agent-v__proj--quiet">
+                                        Fuxi
+                                      </span>
+                                      <span class="agent-v__title">
+                                        全面分析与后续规划
+                                      </span>
+                                      <span class="agent-v__trailing">
+                                        <span class="agent-session__agent">
+                                          <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="13" src="/src/assets/brands/claude-code.png" width="13">
+                                        </span>
+                                        <span class="agent-session__time">
+                                          <span class="agent-session__age">
+                                            23m
+                                          </span>
+                                        </span>
+                                      </span>
+                                    </button>
+                                  </span>
+                                  <span class="agent-session__more">
+                                    <button aria-expanded="false" aria-haspopup="menu" aria-label="「全面分析与后续规划」的更多操作" class="island-list-icon-button" title="「全面分析与后续规划」的更多操作" type="button">
+                                      <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                                    </button>
+                                  </span>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </section>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="settings-row">
@@ -281,7 +781,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id1_" aria-expanded="false" aria-haspopup="listbox" aria-label="卡片光效" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id4_" aria-expanded="false" aria-haspopup="listbox" aria-label="卡片光效" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               粒子流苏
                             </span>
@@ -327,7 +827,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id2_" aria-expanded="false" aria-haspopup="listbox" aria-label="会话来源" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="会话来源" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               只显示图标
                             </span>
@@ -341,13 +841,13 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id3_">
+                      <label class="settings-row__title" for="_id6_">
                         显示模型和推理强度
                       </label>
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input checked="" id="_id3_" role="switch" type="checkbox">
+                        <input checked="" id="_id6_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -356,7 +856,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id4_">
+                      <label class="settings-row__title" for="_id7_">
                         显示最近提问和正在用的工具
                       </label>
                       <span class="settings-row__description">
@@ -365,7 +865,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input checked="" id="_id4_" role="switch" type="checkbox">
+                        <input checked="" id="_id7_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -374,7 +874,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id5_">
+                      <label class="settings-row__title" for="_id8_">
                         显示运行时长
                       </label>
                       <span class="settings-row__description">
@@ -383,7 +883,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id5_" role="switch" type="checkbox">
+                        <input id="_id8_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -411,7 +911,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="列出多久内的会话" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="列出多久内的会话" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               最近 24 小时
                             </span>
@@ -425,7 +925,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id7_">
+                      <label class="settings-row__title" for="_id10_">
                         子 Agent / 子会话默认展开
                       </label>
                       <span class="settings-row__description">
@@ -434,7 +934,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id7_" role="switch" type="checkbox">
+                        <input id="_id10_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -443,7 +943,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id8_">
+                      <label class="settings-row__title" for="_id11_">
                         只显示进行中的会话
                       </label>
                       <span class="settings-row__description">
@@ -452,7 +952,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id8_" role="switch" type="checkbox">
+                        <input id="_id11_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -461,7 +961,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id9_">
+                      <label class="settings-row__title" for="_id12_">
                         隐藏已退出的会话
                       </label>
                       <span class="settings-row__description">
@@ -470,7 +970,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input checked="" id="_id9_" role="switch" type="checkbox">
+                        <input checked="" id="_id12_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -575,7 +1075,7 @@
                               <span aria-hidden="true" class="center-jelly center-jelly--lively" data-mood="sleep" style="--center-jelly-height: 46px">
                                 <svg viewBox="3 4 58 43">
                                   <defs>
-                                    <linearGradient gradientUnits="userSpaceOnUse" id="center-jelly-shade-_id10_" x1="0" x2="0" y1="6" y2="48">
+                                    <linearGradient gradientUnits="userSpaceOnUse" id="center-jelly-shade-_id13_" x1="0" x2="0" y1="6" y2="48">
                                       <stop offset="0" stop-color="#fff" stop-opacity="0.5"></stop>
                                       <stop offset="0.5" stop-color="#fff" stop-opacity="0"></stop>
                                       <stop offset="1" stop-color="#000" stop-opacity="0.14"></stop>
@@ -593,24 +1093,24 @@
                                       <g class="center-jelly-lobes">
                                         <g class="center-jelly-lobe" style="transform-origin: 18px 33px">
                                           <circle class="center-jelly-fill" cx="18" cy="39" r="6.6"></circle>
-                                          <circle cx="18" cy="39" fill="url(#center-jelly-shade-_id10_)" r="6.6"></circle>
+                                          <circle cx="18" cy="39" fill="url(#center-jelly-shade-_id13_)" r="6.6"></circle>
                                         </g>
                                         <g class="center-jelly-lobe" style="transform-origin: 27.3px 33px">
                                           <circle class="center-jelly-fill" cx="27.3" cy="39" r="6.6"></circle>
-                                          <circle cx="27.3" cy="39" fill="url(#center-jelly-shade-_id10_)" r="6.6"></circle>
+                                          <circle cx="27.3" cy="39" fill="url(#center-jelly-shade-_id13_)" r="6.6"></circle>
                                         </g>
                                         <g class="center-jelly-lobe" style="transform-origin: 36.7px 33px">
                                           <circle class="center-jelly-fill" cx="36.7" cy="39" r="6.6"></circle>
-                                          <circle cx="36.7" cy="39" fill="url(#center-jelly-shade-_id10_)" r="6.6"></circle>
+                                          <circle cx="36.7" cy="39" fill="url(#center-jelly-shade-_id13_)" r="6.6"></circle>
                                         </g>
                                         <g class="center-jelly-lobe" style="transform-origin: 46px 33px">
                                           <circle class="center-jelly-fill" cx="46" cy="39" r="6.6"></circle>
-                                          <circle cx="46" cy="39" fill="url(#center-jelly-shade-_id10_)" r="6.6"></circle>
+                                          <circle cx="46" cy="39" fill="url(#center-jelly-shade-_id13_)" r="6.6"></circle>
                                         </g>
                                       </g>
                                       <g class="center-jelly-head">
                                         <path class="center-jelly-fill" d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z"></path>
-                                        <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z" fill="url(#center-jelly-shade-_id10_)"></path>
+                                        <path d="M5 30.5C5 16 17 7 32 7S59 16 59 30.5c0 3-2.4 5.5-5.4 5.5H10.4C7.4 36 5 33.5 5 30.5Z" fill="url(#center-jelly-shade-_id13_)"></path>
                                         <ellipse class="center-jelly-highlight" cx="19" cy="14" rx="7.5" ry="3.4" transform="rotate(-26 19 14)"></ellipse>
                                         <ellipse class="center-jelly-cheek" cx="17.6" cy="31.5" rx="3.6" ry="2.2"></ellipse>
                                         <ellipse class="center-jelly-cheek" cx="46.4" cy="31.5" rx="3.6" ry="2.2"></ellipse>

@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/weather",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "type": "module",
   "description": "Current weather and the next few days' forecast on the island, with a heads-up before it rains.",
   "keywords": [
@@ -10,10 +10,16 @@
     "温度",
     "下雨",
     "降水",
+    "空气质量",
+    "AQI",
+    "紫外线",
+    "极端天气",
     "weather",
     "forecast",
     "temperature",
-    "rain"
+    "rain",
+    "air quality",
+    "uv"
   ],
   "license": "MIT",
   "author": "TixXin",
@@ -74,6 +80,7 @@
         "messages/v1"
       ],
       "optional": [
+        "http",
         "settings"
       ]
     },
@@ -94,7 +101,12 @@
     ],
     "network": [
       "api.open-meteo.com",
-      "geocoding-api.open-meteo.com"
+      "geocoding-api.open-meteo.com",
+      "air-quality-api.open-meteo.com",
+      "photon.komoot.io",
+      "www.nmc.cn",
+      "api.met.no",
+      "wttr.in"
     ]
   }
 }

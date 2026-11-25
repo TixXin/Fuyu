@@ -92,7 +92,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   ));
   quotaAlertState.useProvide(quotaAlert);
   const arrangeChange = useCallback<AgentArrange["onChange"]>((patch) => setSettings((current) => ({ ...current, ...patch })), [setSettings]);
-  agentArrange.useProvide(useMemo(() => ({ sort: settings.agentSessionSort, group: settings.agentSessionGroup, onChange: arrangeChange }), [settings.agentSessionSort, settings.agentSessionGroup, arrangeChange]));
+  agentArrange.useProvide(useMemo(() => ({ view: settings.agentSessionView, sort: settings.agentSessionSort, group: settings.agentSessionGroup, onChange: arrangeChange }), [settings.agentSessionView, settings.agentSessionSort, settings.agentSessionGroup, arrangeChange]));
   agentShell.useProvide(useMemo(
     () => ({ sessions: agentSessions, listed: listedAgentSessions, unseenKeys: unseenAgentSessions.keys, activeCount: activeAgentSessionCount, named: agentSession, interjection: agentInterjection, activity: agentActivity }),
     [agentSessions, listedAgentSessions, unseenAgentSessions.keys, activeAgentSessionCount, agentSession, agentInterjection, agentActivity],
@@ -112,7 +112,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   const glow = useAgentGlow(agentSessions, features.agents && settings.agentStatusEnabled && !demo.active);
   const list: IslandContribution[] = [
     { kind: "status", state: agentVisualState, label: agentStatusLabel },
-    { kind: "popup", page: "agents", height: agentCardHeight !== undefined ? getAgentAlertExpandedHeight(agentCardHeight) : undefined, saving: AGENT_POPUP_LIST_SAVING, open: alertPopup, wide: alertWide },
+    { kind: "popup", page: "agents", height: agentCardHeight !== undefined ? getAgentAlertExpandedHeight(agentCardHeight) : undefined, saving: AGENT_POPUP_LIST_SAVING, open: alertPopup, wide: alertWide, urgent: approvals.current !== null },
   ];
   list.push({ kind: "side", item: "agent", height: ISLAND_SIDE_ROW_HEIGHT });
   if (line) list.push(line);

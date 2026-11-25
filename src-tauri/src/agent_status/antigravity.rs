@@ -7,7 +7,6 @@ use std::{
 
 use serde_json::{json, Value};
 
-use super::claude_hooks::APPROVAL_HOOK_TIMEOUT_SECONDS;
 use super::codex_hooks::{agent_running_command_with, agent_status_command};
 use super::harness::{Harness, HookEnv, Hooks, StatusLight};
 use super::hooks_state::HookInstallState;
@@ -18,13 +17,12 @@ use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::snapshot::system_time_to_unix_millis;
 use super::title::{display_title, folder_title, prompt_title, tag_content};
 use super::tool_call::{antigravity_tool_call, ToolCall};
-use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME};
+use super::write_text_file;
 
 pub(super) const PROVIDER: &str = "antigravity";
 const SAVED_DIR: &str = "agent-antigravity";
 const DATA_DIRS: [&str; 3] = ["antigravity", "antigravity-ide", "antigravity-cli"];
 const HOOK_NAME: &str = "fuyu";
-pub(super) const APPROVED_TOOLS: &str = "run_command";
 const MAX_AGE_MS: i64 = 24 * 60 * 60 * 1000;
 const HEAD_READ_BYTES: u64 = 512 * 1024;
 const HEAD_READ_LINES: usize = 16;
@@ -459,15 +457,10 @@ fn lives_here(home_dir: &Path) -> bool {
 fn hook_group(env: &HookEnv) -> Value {
     let handler = |command: String, timeout: i64| json!({ "type": "command", "command": command, "timeout": timeout });
     let running = |phase: &str| handler(agent_running_command_with(env.running_script, PROVIDER, phase), 5);
-    let approval_script = env.status_script.with_file_name(AGENT_APPROVAL_SCRIPT_FILE_NAME);
     json!({
         "enabled": true,
         "SessionStart": [running("start")],
         "PreInvocation": [running("running")],
-        "PreToolUse": [{
-            "matcher": APPROVED_TOOLS,
-            "hooks": [handler(agent_status_command(&approval_script, PROVIDER, "permission"), APPROVAL_HOOK_TIMEOUT_SECONDS)],
-        }],
         "Stop": [running("stop"), handler(agent_status_command(env.status_script, PROVIDER, "completed"), 10)],
     })
 }

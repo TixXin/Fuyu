@@ -51,8 +51,8 @@ export async function checkUsageViewAndEmpty({ root, sessions, check }: Context)
     await wait(20);
   });
   const items = [...document.querySelectorAll<HTMLButtonElement>(".row-menu [role=menuitem]")];
-  check(items.map((item) => item.textContent).join() === "一行胶囊,小方块,最紧的领头,水位刻度,表格,Claude Code,Codex,5 小时,7 天,其他额度,只看最紧的一项,重置时间", `右键额度行弹出菜单：${items.map((item) => item.textContent)}`);
-  await act(async () => { items[6].click(); });
+  check(items.map((item) => item.textContent).join() === "极简细条,一行胶囊,小方块,最紧的领头,水位刻度,表格,Claude Code,Codex,5 小时,7 天,其他额度,只看最紧的一项,重置时间", `右键额度行弹出菜单：${items.map((item) => item.textContent)}`);
+  await act(async () => { items[7].click(); });
   check(JSON.stringify(patches[patches.length - 1]) === JSON.stringify({ agentUsageHidden: ["codex"] }) && document.querySelector(".row-menu"), "勾掉 Codex 改设置，菜单不关");
   await act(async () => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });
   await show(panel({}));
