@@ -256,6 +256,7 @@ export function createMarketService(options = {}) {
       writeInstalledToYml(join(pluginsDir, "plugins.yml"), {
         id: found.id,
         source: found.source,
+        official: found.official === true,
         disabled: !params.enabled,
         replaces: found.replaces,
       });

@@ -63,7 +63,7 @@ export function readYmlEntries(ymlFile) {
   for (const line of lines) {
     if (line.startsWith("- ")) {
       const idMatch = /^-\s+id:\s*(.+)$/.exec(line.trim());
-      current = idMatch ? { id: unquoteYamlScalar(idMatch[1]), source: null, name: null, disabled: false, replaces: [] } : null;
+      current = idMatch ? { id: unquoteYamlScalar(idMatch[1]), source: null, name: null, official: false, disabled: false, replaces: [] } : null;
       inReplaces = false;
       if (current?.id) entries.set(current.id, current);
       continue;
@@ -93,7 +93,12 @@ export function readYmlEntries(ymlFile) {
       continue;
     }
     const disabledMatch = /^\s{2}disabled:\s*(true|false)\s*$/.exec(line);
-    if (disabledMatch) current.disabled = disabledMatch[1] === "true";
+    if (disabledMatch) {
+      current.disabled = disabledMatch[1] === "true";
+      continue;
+    }
+    const officialMatch = /^\s{2}official:\s*(true|false)\s*$/.exec(line);
+    if (officialMatch) current.official = officialMatch[1] === "true";
   }
   return entries;
 }
@@ -119,6 +124,7 @@ export function readInstalledPackages(pluginsDir) {
           id: parsed.name,
           version: parsed.version,
           source: yml?.source === "manual" ? "manual" : "market",
+          official: yml?.official === true,
           enabled: yml ? !yml.disabled : false,
           displayName: fuyu.displayName,
           description: fuyu.description,

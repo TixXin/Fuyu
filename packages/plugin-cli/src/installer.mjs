@@ -41,7 +41,7 @@ export function stripEntryBlock(lines, id) {
   return result;
 }
 
-export function writeInstalledToYml(ymlFile, { id, source, disabled = false, replaces = [] }) {
+export function writeInstalledToYml(ymlFile, { id, source, disabled = false, official = false, replaces = [] }) {
   mkdirSync(dirname(ymlFile), { recursive: true });
   const raw = existsSync(ymlFile) ? readFileSync(ymlFile, "utf8").replace(/\r\n/g, "\n") : "";
   const trimmed = raw.trim();
@@ -52,6 +52,7 @@ export function writeInstalledToYml(ymlFile, { id, source, disabled = false, rep
     `- id: ${JSON.stringify(id)}`,
     `  source: ${source}`,
   ];
+  if (source === "market" && official === true) entry.push(`  official: true`);
   if (disabled) entry.push(`  disabled: true`);
   if (Array.isArray(replaces) && replaces.length > 0) {
     entry.push(`  replaces:`);
@@ -144,6 +145,7 @@ export function stagePackage(zipBuffer, options = {}) {
     digest: inspected.digest,
     sha256: inspected.sha256,
     confirmation: inspected.confirmation,
+    official: inspected.source === "market" && options.official === true,
     disabled: options.disabled === true,
     target,
     dir,
@@ -160,6 +162,7 @@ export function commitStaged(dir, staged, { configFile = "plugins.yml" } = {}) {
     writeConfig: (item) => writeInstalledToYml(ymlFile, {
       id: item.id,
       source: item.source,
+      official: item.official === true,
       disabled: item.disabled,
       replaces: item.confirmation.replaces,
     }),
@@ -226,7 +229,7 @@ export function applyRevocationsToDir(dir, revocations, { installed, configFile 
     const rev = revocationOf(revocations, item.id, item.version);
     if (!rev) continue;
     if (rev.level === "disable") {
-      writeInstalledToYml(ymlFile, { id: item.id, source: item.source ?? "market", disabled: true });
+      writeInstalledToYml(ymlFile, { id: item.id, source: item.source ?? "market", official: item.official === true, disabled: true, replaces: item.replaces ?? [] });
       disabled.push(item.id);
     } else if (rev.level === "warn") {
       warned.push({ id: item.id, version: item.version, reasons: rev.entries.map((e) => e.reason) });
