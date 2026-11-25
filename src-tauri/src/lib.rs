@@ -282,6 +282,7 @@ pub fn run() {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
             system::fullscreen::start(app.handle());
+            system::agent_notifications::init(app.handle());
             media_control::init(app.handle());
             system_levels::init(app.handle());
             caps_lock::init(app.handle());

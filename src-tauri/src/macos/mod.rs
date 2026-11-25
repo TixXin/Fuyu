@@ -30,6 +30,7 @@ pub(crate) mod login_item;
 pub(crate) mod microphone;
 pub(crate) mod network;
 pub(crate) mod notch;
+pub(crate) mod notifications;
 pub(crate) mod ocr;
 pub(crate) mod ocr_worker;
 pub(crate) mod pasteboard;
