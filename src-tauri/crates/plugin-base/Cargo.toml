@@ -10,7 +10,7 @@ publish = false
 inventory = "0.3"
 plugin-base-macros = { path = "../plugin-base-macros" }
 pollster = "0.4"
-reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls", "socks"] }
 serde = "1"
 serde_json = "1"
 sha2 = "0.10"

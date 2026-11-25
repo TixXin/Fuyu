@@ -60,6 +60,8 @@ pub(super) async fn request(
     let mut client = reqwest::Client::builder().timeout(Duration::from_secs(30));
     if is_loopback_url(&endpoint) {
         client = client.no_proxy();
+    } else {
+        client = crate::system::proxy::apply_reqwest(client)?;
     }
     let client = client
         .build()

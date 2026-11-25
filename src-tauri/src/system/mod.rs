@@ -7,6 +7,7 @@ pub(crate) mod msix;
 #[cfg_attr(target_os = "macos", path = "network_cost_macos.rs")]
 pub(crate) mod network_cost;
 pub(crate) mod permissions;
+pub(crate) mod proxy;
 pub(crate) mod settings_backup;
 #[cfg_attr(target_os = "macos", path = "startup_macos.rs")]
 pub(crate) mod startup;
@@ -96,6 +97,9 @@ macro_rules! tauri_commands {
             crate::system::permissions::get_system_permissions,
             crate::system::permissions::open_system_permission,
             crate::system::permissions::request_system_permission,
+            crate::system::proxy::get_network_proxy,
+            crate::system::proxy::save_network_proxy,
+            crate::system::proxy::test_network_proxy,
             crate::system::update_runtime::updater_state,
             crate::system::update_notifications::updater_notify,
             crate::system::agent_notifications::agent_notify,

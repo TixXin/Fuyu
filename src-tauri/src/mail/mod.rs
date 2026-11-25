@@ -1,6 +1,7 @@
 mod accounts;
 mod attachments;
 mod send;
+mod smtp_proxy;
 mod client_id;
 mod content;
 mod credentials;

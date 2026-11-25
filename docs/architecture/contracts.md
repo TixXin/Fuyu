@@ -423,6 +423,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 - 刘海设置并组（C168，2026-11-22）：不改存储格式，`notchRim*` / `notchRing*` 的键和取值照旧。新界面把颜色、自定义颜色、粗细、亮度、动效写进外框和内圈、岛屿和面板四份，间距写进内圈两份，读的时候以内圈岛屿那份为准；「两边一样」同时写 `notchRimPanelSame` 和 `notchRingPanelSame`。外框的 `…Status` 只在外框样式不是 `off` 时起作用（原来 `off` 也会临时亮）。
 - 任务栏透明样子下暂停玻璃采集（2026-11-23）：`set_island_interaction` 新增可选参数 `glassHidden`（布尔，缺省 `false`，老前端不传照旧）。为 `true` 且岛收起时，Windows 的实时透出（DXGI 桌面复制）和刘海模式收起时一样暂停：释放复制会话、不再发帧，页面上的画布留着最后一帧；岛展开时马上恢复。前端在岛吸附在任务栏、「任务栏上的样子」是「透明」且收起时传 `true`（`windows/island/glassStatus.ts` 的 `taskbarHidesGlass`）。Mac 和其他平台只存不用。
 - 舞台窗口按最宽的页面定宽（2026-11-23）：`set_island_interaction` 新增可选参数 `widestWidth`（未缩放的 px，Rust 夹在 0 到屏幕放得下的最大面板宽，缺省或不是数时按 0，老前端不传照旧）。岛不在侧边时，原生的舞台窗口宽度除了盖住当前的 `expandedWidth`，也盖住它，所以在宽度不同的页面之间切换、打开窄的弹出卡片时窗口宽度不变；点击区域仍按 `expandedWidth` 算。前端传的是「面板宽度」和各页在岛上拖出的宽度（`pageSizes`）里最大的那个（`windows/island/pageSize.ts` 的 `widestPageWidth`）。
+- 网络代理设置（C181，2026-11-25，#1245）：数据目录新增本机配置 `network-proxy.json`（`{ mode: "system" | "manual" | "direct", scheme: "http" | "socks5", host, port, username, bypass }`，不进备份和跨设备同步，卸载清理自动删除）；代理密码存系统凭据库 `com.tixxin.fuyu.network-proxy`（account `proxy`），绝不落明文、不经命令返回。新命令 `get_network_proxy`（返回 `{ mode, scheme, host, port, username, hasPassword, bypass, systemProxy }`）、`save_network_proxy(input)`（校验保存并经 JSON-RPC `proxy` 热同步给第 3 版插件宿主）、`test_network_proxy(input)`（返回 `{ ok, latencyMs, target, via }`）。新错误码 `net.proxyHostRequired`、`net.proxyPort`、`net.proxyTestFailed`。
 
 ## 改名兼容（D17）
 

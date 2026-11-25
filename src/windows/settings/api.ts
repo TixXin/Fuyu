@@ -91,3 +91,46 @@ export function listenIslandGlassStatus(onStatus: (status: IslandGlassStatus) =>
 export function requestIslandGlassStatus() {
   return emit(ISLAND_GLASS_STATUS_REQUEST_EVENT);
 }
+
+export type NetworkProxyMode = "system" | "manual" | "direct";
+export type NetworkProxyScheme = "http" | "socks5";
+
+export type NetworkProxyView = {
+  mode: NetworkProxyMode;
+  scheme: NetworkProxyScheme;
+  host: string;
+  port: number | null;
+  username: string;
+  hasPassword: boolean;
+  bypass: string;
+  systemProxy: string | null;
+};
+
+export type SaveNetworkProxyInput = {
+  mode: NetworkProxyMode;
+  scheme: NetworkProxyScheme;
+  host: string;
+  port: number | null;
+  username: string;
+  password: string | null;
+  bypass: string;
+};
+
+export type NetworkProxyTestResult = {
+  ok: boolean;
+  latencyMs: number;
+  target: string;
+  via: string | null;
+};
+
+export function readNetworkProxy() {
+  return invoke<NetworkProxyView>("get_network_proxy");
+}
+
+export function saveNetworkProxy(input: SaveNetworkProxyInput) {
+  return invoke<NetworkProxyView>("save_network_proxy", { input });
+}
+
+export function testNetworkProxy(input: SaveNetworkProxyInput) {
+  return invoke<NetworkProxyTestResult>("test_network_proxy", { input });
+}

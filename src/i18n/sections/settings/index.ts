@@ -27,6 +27,7 @@ import type { SettingsCalendarText } from "./calendar";
 import type { SettingsBackupText } from "./backup";
 import type { SettingsDataHomeText } from "./dataHome";
 import type { SettingsGeneralLogsText } from "./general";
+import type { SettingsNetworkProxyText } from "./networkProxy";
 import type { SettingsPermissionsText } from "./permissions";
 import type { SettingsShortcutsText } from "./shortcuts";
 import type { SettingsPageShortcutsText } from "./pageShortcuts";
@@ -76,6 +77,7 @@ import * as calendar from "./calendar.ts";
 import * as backup from "./backup.ts";
 import * as dataHome from "./dataHome.ts";
 import * as generalLogs from "./general.ts";
+import * as networkProxy from "./networkProxy.ts";
 import * as permissions from "./permissions.ts";
 import * as shortcuts from "./shortcuts.ts";
 import * as pageShortcuts from "./pageShortcuts.ts";
@@ -133,6 +135,7 @@ export type SettingsText = {
   backup: SettingsBackupText;
   dataHome: SettingsDataHomeText;
   generalLogs: SettingsGeneralLogsText;
+  networkProxy: SettingsNetworkProxyText;
   permissions: SettingsPermissionsText;
 
   shortcuts: SettingsShortcutsText;
@@ -205,6 +208,7 @@ export const zhCN: SettingsText = {
   backup: backup.zhCN,
   dataHome: dataHome.zhCN,
   generalLogs: generalLogs.zhCN,
+  networkProxy: networkProxy.zhCN,
   permissions: permissions.zhCN,
 
   shortcuts: shortcuts.zhCN,
@@ -277,6 +281,7 @@ export const en: SettingsText = {
   backup: backup.en,
   dataHome: dataHome.en,
   generalLogs: generalLogs.en,
+  networkProxy: networkProxy.en,
   permissions: permissions.en,
 
   shortcuts: shortcuts.en,

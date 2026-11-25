@@ -96,6 +96,9 @@ pub(super) fn deliver(server: &str, email: &str, secret: &str, message: &Message
         Some((host, port)) => (host, port.parse().unwrap_or(SMTPS_PORT)),
         None => (server, SMTPS_PORT),
     };
+    if crate::system::proxy::should_use_proxy_for(host) {
+        return super::smtp_proxy::deliver(host, port, email, secret, message);
+    }
     let tls = TlsParameters::new(host.to_string()).map_err(|error| UserError::new("mail.tls", "Could not set up an encrypted connection.").detail(error))?;
     let transport = SmtpTransport::builder_dangerous(host)
         .port(port)

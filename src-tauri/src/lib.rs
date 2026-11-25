@@ -191,6 +191,7 @@ pub fn run() {
             #[cfg(debug_assertions)]
             emit_diagnostics::start(app.handle());
             system::update_backup::apply_pending_restore();
+            system::proxy::init(app.handle());
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             #[cfg(target_os = "macos")]

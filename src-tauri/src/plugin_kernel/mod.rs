@@ -244,6 +244,7 @@ fn track(event: &Event) {
         Event::State(HostState::Ready { generation, .. }) => {
             let generation = *generation;
             let _ = std::thread::Builder::new().name("plugin-host-bisect".into()).spawn(move || resend_bisect(generation));
+            let _ = std::thread::Builder::new().name("plugin-host-proxy".into()).spawn(move || resend_proxy(generation));
             let _ = std::thread::Builder::new().name("plugin-host-healthy".into()).spawn(move || {
                 std::thread::sleep(safe_mode::HEALTHY_AFTER);
                 if let Some(mut tracker) = tracker() {
@@ -327,6 +328,29 @@ fn resend_bisect(generation: u32) {
     if let Err(error) = supervisor.call(bisect::METHOD, bisect::params(&bisect::off(dir)), BISECT_TIMEOUT) {
         eprintln!("[plugins-v3] could not hand the bisect list to the plugin host (#{generation}): {error}");
     }
+}
+
+fn resend_proxy(generation: u32) {
+    let Some(supervisor) = wait_for_supervisor() else { return };
+    if ready_generation(&supervisor) != Some(generation) {
+        return;
+    }
+    let payload = crate::system::proxy::host_payload();
+    if let Err(error) = supervisor.call("proxy", payload, BISECT_TIMEOUT) {
+        eprintln!("[plugins-v3] could not hand the proxy setting to the plugin host (#{generation}): {error}");
+    }
+}
+
+pub(crate) fn notify_proxy_changed() {
+    let payload = crate::system::proxy::host_payload();
+    let _ = std::thread::Builder::new().name("plugin-host-proxy-update".into()).spawn(move || {
+        let Some(supervisor) = supervisor().filter(|supervisor| ready_generation(supervisor).is_some()) else {
+            return;
+        };
+        if let Err(error) = supervisor.call("proxy", payload, BISECT_TIMEOUT) {
+            eprintln!("[plugins-v3] could not update proxy setting in the plugin host: {error}");
+        }
+    });
 }
 
 fn send_bisect(params: serde_json::Value) -> Result<Option<serde_json::Value>, plugin_base::RpcError> {

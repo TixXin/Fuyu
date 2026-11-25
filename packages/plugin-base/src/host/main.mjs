@@ -3,6 +3,7 @@ import { HOST_PROTOCOL, SERVICE_CALLS, WINDOW_ORIGINS } from "../protocol.mjs";
 import { blame } from "./blame.mjs";
 import { SAFE_MODES } from "./gate.mjs";
 import { startHost } from "./kernel.mjs";
+import { createProxyFetch } from "./proxy.mjs";
 import { connect, RpcError } from "./rpc.mjs";
 import { openWindowSocket } from "./sockets.mjs";
 
@@ -12,6 +13,9 @@ const HOST_TICK_MS = 5000;
 
 const write = process.stdout.write.bind(process.stdout);
 process.stdout.write = process.stderr.write.bind(process.stderr);
+
+const proxyFetch = createProxyFetch(globalThis.fetch);
+globalThis.fetch = proxyFetch.fetch;
 
 const { values } = parseArgs({
   options: {
@@ -66,6 +70,10 @@ rpc.handle("bisect", (params) => {
   if (!host) throw new RpcError("not-ready", "the plugin host has not loaded its plugins yet");
   return host.bisect(params?.off);
 });
+rpc.handle("proxy", (params) => {
+  proxyFetch.setConfig(params ?? null);
+  return true;
+});
 rpc.handle("stop", () => {
   setImmediate(() => stop(0));
   return true;
@@ -83,6 +91,7 @@ try {
     bisect: values.bisect.filter(Boolean),
     apiNames: values.api,
     rpc,
+    fetchImpl: proxyFetch.fetch,
     onLog: (entry) => {
       if (FORWARDED_LOGS.has(entry.type)) rpc.notify("log", entry);
     },
