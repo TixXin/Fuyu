@@ -129,8 +129,15 @@ pub(crate) fn toggle(app: &AppHandle, icon: Option<&tauri::Rect>) {
     cancel_idle_destroy();
     super::island_menu::forget();
     let icon = icon_rect_copy(icon);
-    let trace = WindowTrace::begin(WINDOW_LABEL, if card_window(app).is_some() { "reuse" } else { "create" });
     let handle = app.clone();
+    if crate::webview_recovery::gpu_unstable() {
+        let queued = app.run_on_main_thread(move || crate::tray::pop_up_native_menu(&handle));
+        if let Err(error) = queued {
+            eprintln!("failed to open the native tray menu: {error}");
+        }
+        return;
+    }
+    let trace = WindowTrace::begin(WINDOW_LABEL, if card_window(app).is_some() { "reuse" } else { "create" });
     let queued = app.run_on_main_thread(move || {
         if let Err(error) = open(&handle, icon_anchor(&handle, icon.as_ref()), trace) {
             eprintln!("failed to open the tray card: {error}");
@@ -156,8 +163,15 @@ pub(super) fn open_beside_island(app: &AppHandle, island: Rect) {
     cancel_idle_destroy();
     let cursor = screen::cursor_position().unwrap_or(((island.left + island.right) / 2.0, island.top));
     let anchor = Anchor { icon: None, island: Some(island), cursor };
-    let trace = WindowTrace::begin(WINDOW_LABEL, if card_window(app).is_some() { "reuse" } else { "create" });
     let handle = app.clone();
+    if crate::webview_recovery::gpu_unstable() {
+        let queued = app.run_on_main_thread(move || crate::tray::pop_up_native_menu(&handle));
+        if let Err(error) = queued {
+            eprintln!("failed to open the native tray menu: {error}");
+        }
+        return;
+    }
+    let trace = WindowTrace::begin(WINDOW_LABEL, if card_window(app).is_some() { "reuse" } else { "create" });
     let queued = app.run_on_main_thread(move || {
         if let Err(error) = open(&handle, anchor, trace) {
             eprintln!("failed to open the island menu: {error}");

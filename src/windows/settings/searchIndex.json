@@ -118,6 +118,34 @@
       }
     },
     {
+      "page": "generalData",
+      "zh-CN": {
+        "group": "",
+        "title": "兼容软渲染模式（WARP）",
+        "description": "绕过显卡硬件加速改用系统 WARP 软渲染（保持透明窗口），可缓解显卡驱动或虚拟显示软件导致的岛屿不显示、设置黑屏。"
+      },
+      "en": {
+        "group": "",
+        "title": "Compatibility software rendering (WARP)",
+        "description": "Uses Windows WARP software rendering instead of hardware GPU acceleration while keeping window transparency. Helps recover from blank islands or black screens caused by GPU drivers or virtual display software."
+      },
+      "since": "next"
+    },
+    {
+      "page": "generalData",
+      "zh-CN": {
+        "group": "",
+        "title": "清理 WebView 图形缓存",
+        "description": "仅删除着色器与 GPU 缓存并重启，不清除本地设置和待办数据。"
+      },
+      "en": {
+        "group": "",
+        "title": "Clear WebView graphics cache",
+        "description": "Removes only GPU shader caches and restarts; keeps settings, todos, and local data intact."
+      },
+      "since": "next"
+    },
+    {
       "page": "generalSync",
       "zh-CN": {
         "group": "设置跨设备同步",

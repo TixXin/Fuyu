@@ -13,6 +13,7 @@ const MANAGED_HOME_ITEMS: &[&str] = &[
     "network-proxy.json",
     "tray-mark.bin",
     "webview-crashes.log",
+    "webview-gpu.json",
     "panic.log",
     "crash.log",
     "frontend-errors.log",

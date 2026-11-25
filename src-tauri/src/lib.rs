@@ -68,6 +68,7 @@ mod user_error;
 mod voice_input;
 #[cfg_attr(not(windows), path = "wallpaper/unsupported.rs")]
 mod wallpaper;
+mod webview_gpu;
 #[cfg_attr(not(windows), path = "webview_recovery_unsupported.rs")]
 mod webview_recovery;
 #[cfg_attr(not(windows), path = "webview_visibility_unsupported.rs")]
@@ -121,6 +122,7 @@ pub fn run() {
         rename_migration::before_start();
     }
     home_dir::init(&context.config().identifier);
+    webview_gpu::apply_startup_args(&context.config().identifier);
     if let Some(dir) = home_dir::app_data_dir(&context.config().identifier) {
         sync::device::init(dir);
     }
@@ -149,6 +151,7 @@ pub fn run() {
             webview_memory::page_loaded(webview);
             webview_visibility::attach(webview);
             webview_scale::attach(webview);
+            island::apply_initial_file_drop(webview);
             if let Some(window) = webview.app_handle().get_webview_window(webview.label()) {
                 recording::apply_to_window(&window);
             }
@@ -324,6 +327,7 @@ pub fn run() {
             pets;
             platform_support;
             webview_frame_rate;
+            webview_gpu;
             tray;
             tray_menu;
             tray_visibility;

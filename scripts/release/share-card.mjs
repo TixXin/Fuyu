@@ -35,7 +35,7 @@ function usage() {
     "  --out       output folder (default src-tauri/target/release-share/v<version>)",
     "  --no-copy   do not copy the image to the clipboard (only the Chinese image is copied)",
     "  --no-open   do not open the folder afterwards",
-    `  --push      send the Chinese image to the QQ bot inbox in ${BOT_INBOX_ENV} and/or to WeChat through Fuxi in ${FUXI_ENV} (previewed in 文件传输助手 first)`,
+    `  --push      send the Chinese image to the QQ bot inbox in ${BOT_INBOX_ENV} and/or to the WeChat release group through Fuxi in ${FUXI_ENV}`,
   ].join("\n");
 }
 
@@ -191,8 +191,10 @@ function pushEverywhere(pngPath, version) {
     }],
     [FUXI_ENV, () => {
       const item = pushToWechat(pngPath, version);
-      if (item.created) console.log(`Sent a WeChat preview to 文件传输助手; reply /发布 ${item.code} there to post it to ${item.to}.`);
-      else console.log(`The WeChat announcement ${item.key} already exists (${item.status_zh}); not sent again.`);
+      if (item.status === "failed") throw new Error(`Fuxi could not post ${item.key} to ${item.to}: ${item.error || "send failed"}`);
+      if (!item.created) console.log(`The WeChat announcement ${item.key} already exists (${item.status_zh}); not sent again.`);
+      else if (item.status === "pending") console.log(`Sent a WeChat preview to 文件传输助手; reply /发布 ${item.code} there to post it to ${item.to}.`);
+      else console.log(`Posted to the WeChat group ${item.to}.`);
     }],
   ].filter(([env]) => process.env[env]);
   if (!targets.length) throw new Error(`Set ${BOT_INBOX_ENV} (QQ bot) or ${FUXI_ENV} (WeChat through Fuxi) to push.`);

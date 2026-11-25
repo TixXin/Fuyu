@@ -14,6 +14,30 @@
       }
     },
     {
+      "page": "generalData",
+      "since": "next",
+      "zh-CN": {
+        "group": "",
+        "title": "兼容软渲染模式（WARP）"
+      },
+      "en": {
+        "group": "",
+        "title": "Compatibility software rendering (WARP)"
+      }
+    },
+    {
+      "page": "generalData",
+      "since": "next",
+      "zh-CN": {
+        "group": "",
+        "title": "清理 WebView 图形缓存"
+      },
+      "en": {
+        "group": "",
+        "title": "Clear WebView graphics cache"
+      }
+    },
+    {
       "page": "themeStyle",
       "since": "next",
       "zh-CN": {

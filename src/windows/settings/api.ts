@@ -84,6 +84,30 @@ export function revealCrashLogPath(path: string) {
   return revealItemInDir(path);
 }
 
+export type WebviewGpuMode = "auto" | "warp";
+
+export type WebviewGpuState = {
+  supported: boolean;
+  configuredMode: WebviewGpuMode;
+  activeMode: WebviewGpuMode;
+  autoEnabled: boolean;
+  autoReason: string | null;
+  restartRequired: boolean;
+  gpuUnstable: boolean;
+};
+
+export function readWebviewGpuState() {
+  return invoke<WebviewGpuState>("get_webview_gpu_state");
+}
+
+export function setWebviewGpuMode(mode: WebviewGpuMode) {
+  return invoke<WebviewGpuState>("set_webview_gpu_mode", { mode });
+}
+
+export function clearWebviewGpuCacheAndRestart() {
+  return invoke<void>("clear_webview_gpu_cache_and_restart");
+}
+
 export function listenIslandGlassStatus(onStatus: (status: IslandGlassStatus) => void) {
   return listen<IslandGlassStatus>(ISLAND_GLASS_STATUS_EVENT, ({ payload }) => onStatus(payload));
 }
