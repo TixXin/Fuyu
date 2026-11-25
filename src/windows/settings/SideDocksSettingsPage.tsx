@@ -19,13 +19,11 @@ export function SideDocksSettingsPage({ settings }: { settings: IslandSettings }
         <SettingsToggleRow
           title={text.zones.right}
           description={text.hint}
-          since="next"
           checked={sideDocks.right.enabled}
           onChange={(enabled) => saveSideDocks({ ...sideDocks, right: { ...sideDocks.right, enabled } })}
         />
         <SettingsToggleRow
           title={text.zones.left}
-          since="next"
           checked={sideDocks.left.enabled}
           onChange={(enabled) => saveSideDocks({ ...sideDocks, left: { ...sideDocks.left, enabled } })}
         />

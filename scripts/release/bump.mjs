@@ -38,8 +38,8 @@ const stamped = stampNextSince(process.cwd(), version);
 if (stamped.count > 0) {
   console.log(`✓ stamped ${stamped.count} since="next" setting(s) → ${version} (${stamped.files.join(", ")})`);
 }
-if (stamped.expired.length > 0) {
-  console.log(`  note: old since versions can be pruned when convenient: ${stamped.expired.join(", ")}`);
+if (stamped.prunedCount > 0) {
+  console.log(`✓ pruned ${stamped.prunedCount} expired since entry(s): ${stamped.expired.join(", ")}`);
 }
 
 const notes = `docs/releases/v${version}.md`;

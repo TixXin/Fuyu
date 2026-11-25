@@ -1,7 +1,12 @@
 import { createContext, useContext } from "react";
 
+export type SettingsRowIdentity = {
+  group?: string;
+  title?: string;
+};
+
 export type SettingsWhatsNewContextValue = {
-  isNew: (since?: string) => boolean;
+  isNew: (since?: string, row?: SettingsRowIdentity) => boolean;
 };
 
 const INACTIVE: SettingsWhatsNewContextValue = {

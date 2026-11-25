@@ -121,3 +121,26 @@ test("dev builds surface since=\"next\" incrementally per page and replay resets
   assert.deepEqual(replayed, { seenVersion: "0.0.0", visitedPages: [] });
   assert.deepEqual([...unreadWhatsNewPages(devItems, active, replayed.visitedPages, () => true, replayed.seenNextPages)].sort(), ["appearance", "general"]);
 });
+
+test("per-item next keys light up newly added settings on an already-visited page and reset after a version bump", () => {
+  const firstItem = { page: "themeStyle", since: NEXT_SINCE, key: "themeStyle\0字体\0字体大小" };
+  const secondItem = { page: "themeStyle", since: NEXT_SINCE, key: "themeStyle\0字体\0本地字体" };
+  const active = activeSinceVersions([firstItem, secondItem], "0.3.14-beta.1", "0.3.14-beta.1", { includeNext: true });
+
+  let state = { seenVersion: "0.3.14-beta.1", visitedPages: [] };
+  const visible = activeWhatsNewPages([firstItem], active, () => true);
+  state = markWhatsNewPageVisited(state, "themeStyle", visible, "0.3.14-beta.1", {
+    hasNextOnPage: true,
+    nextKeysOnPage: [firstItem.key],
+    visibleSemverPages: new Set(),
+  });
+  assert.deepEqual(state.seenNextKeys, [firstItem.key]);
+  assert.deepEqual([...unreadWhatsNewPages([firstItem], active, state.visitedPages, () => true, state.seenNextPages, state.seenNextKeys)], []);
+  assert.deepEqual([...unreadWhatsNewPages([firstItem, secondItem], active, state.visitedPages, () => true, state.seenNextPages, state.seenNextKeys)], ["themeStyle"]);
+
+  const upgraded = reconcileWhatsNewState(state, "0.3.14-beta.2", true);
+  assert.deepEqual(upgraded, {
+    state: { seenVersion: "0.3.14-beta.1", visitedPages: [] },
+    changed: true,
+  });
+});

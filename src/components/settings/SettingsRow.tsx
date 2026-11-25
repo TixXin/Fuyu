@@ -1,7 +1,15 @@
-import type { ReactNode } from "react";
+import { isValidElement, useContext, type ReactNode } from "react";
 import { useTranslation } from "../../i18n";
+import { SettingsGroupTitleContext } from "./SettingsGroup";
 import { useSettingsWhatsNew } from "./whatsNewContext";
 import "./SettingsRow.css";
+
+function textOf(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement<{ children?: ReactNode }>(node)) return textOf(node.props.children);
+  return "";
+}
 
 export function SettingsRow({
   title,
@@ -25,8 +33,10 @@ export function SettingsRow({
   children?: ReactNode;
 }) {
   const { isNew } = useSettingsWhatsNew();
+  const group = useContext(SettingsGroupTitleContext);
   const badge = useTranslation().settings.categories.whatsNew.badge;
-  const showNew = isNew(since);
+  const titleText = textOf(title).replace(/\s+/g, " ").trim();
+  const showNew = isNew(since, { group, title: titleText });
   const titleNode = labelFor ? (
     <label className="settings-row__title" htmlFor={labelFor}>{title}</label>
   ) : (

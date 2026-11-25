@@ -51,7 +51,6 @@
     },
     {
       "page": "general",
-      "since": "next",
       "zh-CN": {
         "group": "网络代理",
         "title": "代理模式",
@@ -71,7 +70,8 @@
           "Manual",
           "Direct"
         ]
-      }
+      },
+      "since": "next"
     },
     {
       "page": "generalData",
@@ -418,7 +418,8 @@
           "Serif",
           "Mono"
         ]
-      }
+      },
+      "since": "next"
     },
     {
       "page": "themeStyle",
@@ -431,7 +432,8 @@
         "group": "Font",
         "title": "Font size",
         "description": "Scales text across the island and settings."
-      }
+      },
+      "since": "next"
     },
     {
       "page": "themeStyle",
@@ -444,7 +446,8 @@
         "group": "Font",
         "title": "Local fonts",
         "description": "Import a local font file to switch right away; falls back to System if unavailable."
-      }
+      },
+      "since": "next"
     },
     {
       "page": "themeStyle",
@@ -1409,7 +1412,6 @@
     },
     {
       "page": "sideDocks",
-      "since": "next",
       "zh-CN": {
         "group": "屏幕左右侧边翼",
         "title": "右侧翼",
@@ -1419,11 +1421,11 @@
         "group": "Screen side docks",
         "title": "Right dock",
         "description": "Drag tall list pages such as Todos, Clipboard, and File shelf to the left or right screen edge so the top island stays clean. Dropping onto a disabled side enables it automatically."
-      }
+      },
+      "since": "next"
     },
     {
       "page": "sideDocks",
-      "since": "next",
       "zh-CN": {
         "group": "屏幕左右侧边翼",
         "title": "左侧翼"
@@ -1431,7 +1433,8 @@
       "en": {
         "group": "Screen side docks",
         "title": "Left dock"
-      }
+      },
+      "since": "next"
     },
     {
       "page": "behavior",

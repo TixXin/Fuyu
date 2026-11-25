@@ -12,12 +12,14 @@ export type ParsedSemver = {
 export type WhatsNewItem = {
   page: string;
   since: string;
+  key?: string;
 };
 
 export type SettingsWhatsNewState = {
   seenVersion: string;
   visitedPages: string[];
   seenNextPages?: string[];
+  seenNextKeys?: string[];
 };
 
 const SEMVER = /^v?(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?$/;
@@ -46,23 +48,34 @@ export function baseSemver(version: ParsedSemver): string {
   return `${version.major}.${version.minor}.${version.patch}`;
 }
 
-function cleanPages(value: unknown): string[] {
+function cleanStrings(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return [...new Set(value.filter((page): page is string => typeof page === "string" && page.length > 0))];
+  return [...new Set(value.filter((item): item is string => typeof item === "string" && item.length > 0))];
 }
 
-function withSeenNext(base: SettingsWhatsNewState, seenNextPages?: readonly string[]): SettingsWhatsNewState {
-  const next = seenNextPages ? [...new Set(seenNextPages.filter((page) => page.length > 0))] : [];
-  return next.length > 0 ? { seenVersion: base.seenVersion, visitedPages: base.visitedPages, seenNextPages: next } : { seenVersion: base.seenVersion, visitedPages: base.visitedPages };
+function withSeenNext(
+  base: SettingsWhatsNewState,
+  seenNextPages?: readonly string[],
+  seenNextKeys?: readonly string[],
+): SettingsWhatsNewState {
+  const pages = seenNextPages ? [...new Set(seenNextPages.filter((page) => page.length > 0))] : [];
+  const keys = seenNextKeys ? [...new Set(seenNextKeys.filter((key) => key.length > 0))] : [];
+  return {
+    seenVersion: base.seenVersion,
+    visitedPages: base.visitedPages,
+    ...(pages.length > 0 ? { seenNextPages: pages } : {}),
+    ...(keys.length > 0 ? { seenNextKeys: keys } : {}),
+  };
 }
 
 export function normalizeWhatsNewState(raw: unknown): SettingsWhatsNewState | null {
   if (!raw || typeof raw !== "object") return null;
-  const record = raw as { seenVersion?: unknown; visitedPages?: unknown; seenNextPages?: unknown };
+  const record = raw as { seenVersion?: unknown; visitedPages?: unknown; seenNextPages?: unknown; seenNextKeys?: unknown };
   if (typeof record.seenVersion !== "string" || !parseSemver(record.seenVersion)) return null;
-  const visitedPages = cleanPages(record.visitedPages);
-  const seenNextPages = cleanPages(record.seenNextPages);
-  return withSeenNext({ seenVersion: record.seenVersion.replace(/^v/, ""), visitedPages }, seenNextPages);
+  const visitedPages = cleanStrings(record.visitedPages);
+  const seenNextPages = cleanStrings(record.seenNextPages);
+  const seenNextKeys = cleanStrings(record.seenNextKeys);
+  return withSeenNext({ seenVersion: record.seenVersion.replace(/^v/, ""), visitedPages }, seenNextPages, seenNextKeys);
 }
 
 export function reconcileWhatsNewState(
@@ -81,13 +94,22 @@ export function reconcileWhatsNewState(
   }
   const seen = parseSemver(stored.seenVersion);
   if (!seen || compareSemver(seen, current) > 0) {
-    return { state: withSeenNext({ seenVersion: cleanCurrent, visitedPages: [] }, stored.seenNextPages), changed: true };
+    return { state: { seenVersion: cleanCurrent, visitedPages: [] }, changed: true };
   }
   if (compareSemver(seen, current) === 0) {
     if (stored.visitedPages.length > 0 || stored.seenVersion !== cleanCurrent) {
-      return { state: withSeenNext({ seenVersion: cleanCurrent, visitedPages: [] }, stored.seenNextPages), changed: true };
+      return {
+        state: withSeenNext({ seenVersion: cleanCurrent, visitedPages: [] }, stored.seenNextPages, stored.seenNextKeys),
+        changed: true,
+      };
     }
     return { state: stored, changed: false };
+  }
+  if ((stored.seenNextPages && stored.seenNextPages.length > 0) || (stored.seenNextKeys && stored.seenNextKeys.length > 0)) {
+    return {
+      state: { seenVersion: stored.seenVersion, visitedPages: stored.visitedPages },
+      changed: true,
+    };
   }
   return { state: stored, changed: false };
 }
@@ -150,21 +172,36 @@ export function activeWhatsNewPages(
   return pages;
 }
 
+export function isNextItemSeen(
+  item: WhatsNewItem,
+  seenNextPages: ReadonlySet<string>,
+  seenNextKeys: ReadonlySet<string>,
+): boolean {
+  if (item.key) {
+    if (seenNextKeys.has(item.key)) return true;
+    if (seenNextKeys.size === 0 && seenNextPages.has(item.page)) return true;
+    return false;
+  }
+  return seenNextPages.has(item.page);
+}
+
 export function unreadWhatsNewPages(
   items: readonly WhatsNewItem[],
   activeSince: ReadonlySet<string>,
   visitedPages: readonly string[],
   isPageVisible: (page: string) => boolean,
   seenNextPages: readonly string[] = [],
+  seenNextKeys: readonly string[] = [],
 ): ReadonlySet<string> {
   if (activeSince.size === 0) return new Set();
   const visited = new Set(visitedPages);
-  const seenNext = new Set(seenNextPages);
+  const nextPages = new Set(seenNextPages);
+  const nextKeys = new Set(seenNextKeys);
   const unread = new Set<string>();
   for (const item of items) {
     if (!activeSince.has(item.since) || !isPageVisible(item.page)) continue;
     if (item.since === NEXT_SINCE) {
-      if (!seenNext.has(item.page)) unread.add(item.page);
+      if (!isNextItemSeen(item, nextPages, nextKeys)) unread.add(item.page);
     } else if (!visited.has(item.page)) {
       unread.add(item.page);
     }
@@ -177,13 +214,14 @@ export function markWhatsNewPageVisited(
   page: string,
   visibleActivePages: ReadonlySet<string>,
   currentVersion: string,
-  options?: { hasNextOnPage?: boolean; visibleSemverPages?: ReadonlySet<string> },
+  options?: { hasNextOnPage?: boolean; nextKeysOnPage?: readonly string[]; visibleSemverPages?: ReadonlySet<string> },
 ): SettingsWhatsNewState {
   if (!visibleActivePages.has(page)) return state;
   const cleanCurrent = currentVersion.trim().replace(/^v/, "");
   const semverPages = options?.visibleSemverPages ?? visibleActivePages;
   const hasSemverOnPage = semverPages.has(page);
   const hasNextOnPage = options?.hasNextOnPage === true;
+  const keysOnPage = options?.nextKeysOnPage ?? [];
 
   let nextSeenVersion = state.seenVersion;
   let nextVisited = state.visitedPages;
@@ -199,20 +237,36 @@ export function markWhatsNewPageVisited(
     }
   }
 
-  let nextSeenNext = state.seenNextPages;
-  if (hasNextOnPage) {
+  let nextSeenNextPages = state.seenNextPages;
+  if (hasNextOnPage && keysOnPage.length === 0) {
     const existing = state.seenNextPages ?? [];
-    if (!existing.includes(page)) nextSeenNext = [...existing, page];
+    if (!existing.includes(page)) nextSeenNextPages = [...existing, page];
   }
 
-  if (nextSeenVersion === state.seenVersion && nextVisited === state.visitedPages && nextSeenNext === state.seenNextPages) {
+  let nextSeenNextKeys = state.seenNextKeys;
+  if (keysOnPage.length > 0) {
+    const existing = new Set(state.seenNextKeys ?? []);
+    const missing = keysOnPage.filter((key) => key.length > 0 && !existing.has(key));
+    if (missing.length > 0) nextSeenNextKeys = [...existing, ...missing];
+  }
+
+  if (
+    nextSeenVersion === state.seenVersion
+    && nextVisited === state.visitedPages
+    && nextSeenNextPages === state.seenNextPages
+    && nextSeenNextKeys === state.seenNextKeys
+  ) {
     return state;
   }
-  return withSeenNext({ seenVersion: nextSeenVersion, visitedPages: nextVisited }, nextSeenNext);
+  return withSeenNext({ seenVersion: nextSeenVersion, visitedPages: nextVisited }, nextSeenNextPages, nextSeenNextKeys);
 }
 
-export function dismissAllWhatsNew(currentVersion: string, nextPages: readonly string[] = []): SettingsWhatsNewState {
-  return withSeenNext({ seenVersion: currentVersion.trim().replace(/^v/, ""), visitedPages: [] }, nextPages);
+export function dismissAllWhatsNew(
+  currentVersion: string,
+  nextPages: readonly string[] = [],
+  nextKeys: readonly string[] = [],
+): SettingsWhatsNewState {
+  return withSeenNext({ seenVersion: currentVersion.trim().replace(/^v/, ""), visitedPages: [] }, nextPages, nextKeys);
 }
 
 export function replayWhatsNew(): SettingsWhatsNewState {

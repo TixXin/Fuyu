@@ -215,7 +215,6 @@ export function NetworkProxySection() {
       <SettingsRow
         title={text.modeLabel}
         description={modeDescription}
-        since="next"
         control={
           <SettingsChoice
             value={draft.mode}

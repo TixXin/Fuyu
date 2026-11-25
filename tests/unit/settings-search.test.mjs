@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import test from "node:test";
 import "./settingsCategorySlot.mjs";
@@ -5,7 +6,7 @@ import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, entryOf, entryPages, isCatego
 import { categorySlot } from "../../src/windows/settings/slots/categorySlot.ts";
 import { shortcutLabel } from "../../src/lib/shortcut/shortcut.ts";
 import { isTitleHit, isWhatsNewQuery, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
-import { buildWhatsNewIndex, mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
+import { applyAutoSince, buildWhatsNewIndex, latestReleaseTag, mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
 
 const SETTINGS_CATEGORIES = settingsCategories();
 const SETTINGS_GROUPS = settingsGroups();
@@ -173,4 +174,54 @@ test("a category added to settings.category/v1 brings its own group, tabs, switc
   assert.ok(!settingsCategories().includes("demoTools"));
   assert.equal(isCategoryAvailable("demoToolsMore", new Set(), false), false);
   assert.equal(settingsCategoryFor("demo-old"), null);
+});
+
+test("applyAutoSince tags new top-level settings as next, skips indented and opted-out rows, preserves history and prunes expired versions", () => {
+  const baseEntries = [
+    { page: "general", "zh-CN": { group: "基础", title: "语言" }, en: { group: "Basic", title: "Language" } },
+    { page: "themeStyle", since: "0.3.14-beta.1", "zh-CN": { group: "外观", title: "外观模式" }, en: { group: "Look", title: "Appearance" } },
+    { page: "music", since: "0.3.10", "zh-CN": { group: "歌词", title: "歌词偏移" }, en: { group: "Lyrics", title: "Lyric offset" } },
+  ];
+  const currentEntries = [
+    ...baseEntries,
+    { page: "general", since: "0.3.13", "zh-CN": { group: "基础", title: "开机自启" }, en: { group: "Basic", title: "Startup" } },
+  ];
+  const collected = [
+    { page: "general", "zh-CN": { group: "基础", title: "界面语言" }, en: { group: "Basic", title: "Language" } },
+    { page: "themeStyle", "zh-CN": { group: "外观", title: "外观模式" }, en: { group: "Look", title: "Appearance" } },
+    { page: "music", "zh-CN": { group: "歌词", title: "歌词偏移" }, en: { group: "Lyrics", title: "Lyric offset" } },
+    { page: "themeStyle", "zh-CN": { group: "字体", title: "字体大小" }, en: { group: "Font", title: "Font size" } },
+    { page: "themeStyle", indent: true, "zh-CN": { group: "字体", title: "字重细节" }, en: { group: "Font", title: "Weight details" } },
+    { page: "themeStyle", since: "off", "zh-CN": { group: "字体", title: "改名测试" }, en: { group: "Font", title: "Renamed item" } },
+    { page: "themeStyle", indent: true, since: "next", "zh-CN": { group: "字体", title: "重点子项" }, en: { group: "Font", title: "Key sub-item" } },
+  ];
+
+  const { entries, autoTagged, expired } = applyAutoSince(collected, {
+    baseEntries,
+    currentEntries,
+    currentVersion: "0.3.14",
+    keepBases: 2,
+  });
+  assert.deepEqual(expired, ["0.3.10"]);
+  assert.deepEqual(autoTagged.map((item) => item["zh-CN"].title), ["字体大小"]);
+  assert.equal(entries[0].since, undefined, "renaming only one locale does not trigger a false NEW");
+  assert.equal(entries[1].since, "0.3.14-beta.1", "recent historical version is preserved");
+  assert.equal(entries[2].since, undefined, "expired version beyond keepBases is pruned");
+  assert.equal(entries[3].since, "next", "new top-level row is auto-tagged as next");
+  assert.equal(entries[4].since, undefined, "indented child row is skipped by auto-tagging");
+  assert.equal(entries[5].since, undefined, "explicit since=\"off\" opts out of auto-tagging");
+  assert.equal(entries[6].since, "next", "explicit since=\"next\" still works on indented rows");
+  assert.ok(entries.every((entry) => !("indent" in entry)));
+  assert.equal(latestReleaseTag(["v0.3.13", "v0.3.14-beta.1", "sdk-v0.5.0", "v0.3.14-beta.2"]), "v0.3.14-beta.2");
+});
+
+test("committed searchIndex.json and whatsNewIndex.json stay in sync with valid since values", () => {
+  const search = JSON.parse(readFileSync("src/windows/settings/searchIndex.json", "utf8"));
+  const whatsNew = JSON.parse(readFileSync("src/windows/settings/whatsNewIndex.json", "utf8"));
+  const expected = buildWhatsNewIndex(search.entries);
+  assert.deepEqual(whatsNew.entries, expected);
+  const validSince = /^(?:next|\d+\.\d+\.\d+(?:-beta\.\d+)?)$/;
+  for (const entry of whatsNew.entries) {
+    assert.match(entry.since, validSince, `${entry.page}:${entry["zh-CN"].title}`);
+  }
 });
