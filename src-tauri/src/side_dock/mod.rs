@@ -24,6 +24,7 @@ pub(crate) const PREVIEW_EVENT: &str = "side-dock-preview";
 
 const IDLE_POLL_MS: u64 = 36;
 const ACTIVE_POLL_MS: u64 = 20;
+const MONITOR_CHECK_INTERVAL_TICKS: u32 = 55;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,9 +47,18 @@ struct PreviewPayload {
     open: bool,
 }
 
+#[derive(Clone, Copy, PartialEq)]
+struct EdgeGeometry {
+    width: f64,
+    height: f64,
+    along: f64,
+}
+
 #[derive(Clone, Copy)]
 struct EdgeRuntime {
     shape: DockHitShape,
+    geometry: EdgeGeometry,
+    monitor_work: Option<ScreenRect>,
     inside: bool,
     ignoring: bool,
 }
@@ -70,11 +80,23 @@ fn default_shape(edge: SideDockEdge) -> DockHitShape {
     }
 }
 
-fn set_edge_shape(edge: SideDockEdge, shape: DockHitShape) {
+fn upsert_edge_runtime(edge: SideDockEdge, shape: DockHitShape, geometry: EdgeGeometry, monitor_work: Option<ScreenRect>) {
     if let Ok(mut map) = runtime_map().lock() {
         map.entry(edge)
-            .and_modify(|entry| entry.shape = shape)
-            .or_insert(EdgeRuntime { shape, inside: false, ignoring: false });
+            .and_modify(|entry| {
+                entry.shape = shape;
+                entry.geometry = geometry;
+                if monitor_work.is_some() {
+                    entry.monitor_work = monitor_work;
+                }
+            })
+            .or_insert(EdgeRuntime {
+                shape,
+                geometry,
+                monitor_work,
+                inside: false,
+                ignoring: false,
+            });
     }
 }
 
@@ -90,6 +112,7 @@ fn ensure_hover_watcher(app: &AppHandle) {
     }
     let handle = app.clone();
     let _ = thread::Builder::new().name("side-dock-hover".into()).spawn(move || {
+        let mut tick: u32 = 0;
         loop {
             let entries: Vec<(SideDockEdge, EdgeRuntime)> = runtime_map()
                 .lock()
@@ -99,48 +122,70 @@ fn ensure_hover_watcher(app: &AppHandle) {
                 thread::sleep(Duration::from_millis(120));
                 continue;
             }
+            tick = tick.wrapping_add(1);
+            let check_monitors = tick % MONITOR_CHECK_INTERVAL_TICKS == 0;
             let cursor = screen::cursor_position();
             let mut any_active = false;
-            if let Some((cx, cy)) = cursor {
-                for (edge, state) in entries {
-                    let Some(window) = handle.get_webview_window(edge.label()) else {
-                        continue;
-                    };
-                    if !window.is_visible().unwrap_or(false) {
-                        continue;
-                    }
-                    let (Ok(pos), Ok(size), Ok(scale)) = (
-                        screen::window_position(&window),
-                        screen::window_size(&window),
-                        screen::window_scale(&window),
-                    ) else {
-                        continue;
-                    };
-                    let inside = cursor_hits_dock(
-                        f64::from(pos.x),
-                        f64::from(pos.y),
-                        f64::from(size.width.max(1)),
-                        f64::from(size.height.max(1)),
-                        scale,
-                        state.shape,
-                        cx,
-                        cy,
-                    );
-                    if inside || state.shape.expanded {
-                        any_active = true;
-                    }
-                    let should_ignore = state.shape.expanded && !inside;
-                    if should_ignore != state.ignoring {
-                        let _ = window.set_ignore_cursor_events(should_ignore);
-                    }
-                    if inside != state.inside {
-                        let _ = handle.emit_to(edge.label(), HOVER_EVENT, HoverPayload { edge, inside });
-                    }
-                    if let Ok(mut map) = runtime_map().lock() {
-                        if let Some(entry) = map.get_mut(&edge) {
-                            entry.inside = inside;
-                            entry.ignoring = should_ignore;
+            for (edge, state) in entries {
+                let Some(window) = handle.get_webview_window(edge.label()) else {
+                    continue;
+                };
+                if check_monitors {
+                    if let Some(monitor) = target_monitor(&handle, edge) {
+                        let work = monitor_work_rect(&monitor);
+                        if state.monitor_work != Some(work) {
+                            let h = handle.clone();
+                            let geom = state.geometry;
+                            let _ = handle.run_on_main_thread(move || {
+                                if let Some(win) = h.get_webview_window(edge.label()) {
+                                    let _ = apply_geometry(&h, &win, edge, geom.width, geom.height, geom.along);
+                                }
+                            });
+                            if let Ok(mut map) = runtime_map().lock() {
+                                if let Some(entry) = map.get_mut(&edge) {
+                                    entry.monitor_work = Some(work);
+                                }
+                            }
                         }
+                    }
+                }
+                if !window.is_visible().unwrap_or(false) {
+                    continue;
+                }
+                let Some((cx, cy)) = cursor else {
+                    continue;
+                };
+                let (Ok(pos), Ok(size), Ok(scale)) = (
+                    screen::window_position(&window),
+                    screen::window_size(&window),
+                    screen::window_scale(&window),
+                ) else {
+                    continue;
+                };
+                let inside = cursor_hits_dock(
+                    f64::from(pos.x),
+                    f64::from(pos.y),
+                    f64::from(size.width.max(1)),
+                    f64::from(size.height.max(1)),
+                    scale,
+                    state.shape,
+                    cx,
+                    cy,
+                );
+                if inside || state.shape.expanded {
+                    any_active = true;
+                }
+                let should_ignore = state.shape.expanded && !inside;
+                if should_ignore != state.ignoring {
+                    let _ = window.set_ignore_cursor_events(should_ignore);
+                }
+                if inside != state.inside {
+                    let _ = handle.emit_to(edge.label(), HOVER_EVENT, HoverPayload { edge, inside });
+                }
+                if let Ok(mut map) = runtime_map().lock() {
+                    if let Some(entry) = map.get_mut(&edge) {
+                        entry.inside = inside;
+                        entry.ignoring = should_ignore;
                     }
                 }
             }
@@ -177,9 +222,16 @@ fn target_monitor(app: &AppHandle, edge: SideDockEdge) -> Option<Monitor> {
     monitors.into_iter().nth(chosen)
 }
 
-fn apply_geometry(app: &AppHandle, window: &WebviewWindow, edge: SideDockEdge, width: f64, height: f64, along: f64) -> Result<(), String> {
+fn apply_geometry(
+    app: &AppHandle,
+    window: &WebviewWindow,
+    edge: SideDockEdge,
+    width: f64,
+    height: f64,
+    along: f64,
+) -> Result<Option<ScreenRect>, String> {
     let Some(monitor) = target_monitor(app, edge) else {
-        return Ok(());
+        return Ok(None);
     };
     let work = monitor_work_rect(&monitor);
     let scale = screen::monitor_scale(&monitor);
@@ -187,11 +239,12 @@ fn apply_geometry(app: &AppHandle, window: &WebviewWindow, edge: SideDockEdge, w
     let current_w = screen::window_size(window).map(|s| s.width).unwrap_or(0);
     if edge == SideDockEdge::Right && w > current_w {
         screen::set_window_position(window, PhysicalPosition::new(x, y))?;
-        screen::set_window_size(window, PhysicalSize::new(w, h))
+        screen::set_window_size(window, PhysicalSize::new(w, h))?;
     } else {
         screen::set_window_size(window, PhysicalSize::new(w, h))?;
-        screen::set_window_position(window, PhysicalPosition::new(x, y))
+        screen::set_window_position(window, PhysicalPosition::new(x, y))?;
     }
+    Ok(Some(work))
 }
 
 fn create_window(app: &AppHandle, edge: SideDockEdge, width: f64, height: f64) -> Result<WebviewWindow, String> {
@@ -213,13 +266,21 @@ fn create_window(app: &AppHandle, edge: SideDockEdge, width: f64, height: f64) -
         .build()
         .map_err(|error| format!("Could not create {label}: {error}"))?;
     let handle = app.clone();
-    window.on_window_event(move |event| {
-        if let WindowEvent::CloseRequested { api, .. } = event {
+    window.on_window_event(move |event| match event {
+        WindowEvent::CloseRequested { api, .. } => {
             api.prevent_close();
             if let Some(win) = handle.get_webview_window(label) {
                 let _ = win.hide();
             }
         }
+        WindowEvent::ScaleFactorChanged { .. } => {
+            if let Some(geom) = runtime_map().lock().ok().and_then(|map| map.get(&edge).map(|e| e.geometry)) {
+                if let Some(win) = handle.get_webview_window(label) {
+                    let _ = apply_geometry(&handle, &win, edge, geom.width, geom.height, geom.along);
+                }
+            }
+        }
+        _ => {}
     });
     #[cfg(target_os = "macos")]
     crate::macos::island_panel::make_side_dock_panel(&window)?;
@@ -235,6 +296,17 @@ fn show_window(app: &AppHandle, window: &WebviewWindow) -> Result<(), String> {
     }
     let _ = app;
     window.show().map_err(|error| error.to_string())
+}
+
+fn focus_window(app: &AppHandle, window: &WebviewWindow) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        if crate::macos::island_panel::make_panel_key(app, window.label()) {
+            return Ok(());
+        }
+    }
+    let _ = app;
+    window.set_focus().map_err(|error| error.to_string())
 }
 
 fn destroy_window(app: &AppHandle, edge: SideDockEdge) {
@@ -264,10 +336,12 @@ pub async fn sync_side_dock(
             destroy_window(&handle, edge);
             Ok(())
         } else {
-            set_edge_shape(edge, default_shape(edge));
+            let geom = EdgeGeometry { width, height, along };
+            upsert_edge_runtime(edge, default_shape(edge), geom, None);
             ensure_hover_watcher(&handle);
             create_window(&handle, edge, width, height).and_then(|window| {
-                apply_geometry(&handle, &window, edge, width, height, along)?;
+                let work = apply_geometry(&handle, &window, edge, width, height, along)?;
+                upsert_edge_runtime(edge, default_shape(edge), geom, work);
                 show_window(&handle, &window)
             })
         };
@@ -296,14 +370,17 @@ pub async fn set_side_dock_geometry(
         strip_height: strip_height.unwrap_or(0.0),
         gap: gap.unwrap_or(0.0),
     };
-    set_edge_shape(edge, shape);
+    let geom = EdgeGeometry { width, height, along };
+    upsert_edge_runtime(edge, shape, geom, None);
     ensure_hover_watcher(&app);
     let handle = app.clone();
     let (tx, rx) = std::sync::mpsc::channel();
     app.run_on_main_thread(move || {
         let result = if let Some(window) = handle.get_webview_window(edge.label()) {
             let _ = window.set_ignore_cursor_events(false);
-            apply_geometry(&handle, &window, edge, width, height, along)
+            apply_geometry(&handle, &window, edge, width, height, along).map(|work| {
+                upsert_edge_runtime(edge, shape, geom, work);
+            })
         } else {
             Ok(())
         };
@@ -334,6 +411,22 @@ pub async fn set_side_dock_visible(app: AppHandle, edge: SideDockEdge, visible: 
             } else {
                 hide_window(&window)
             }
+        } else {
+            Ok(())
+        };
+        let _ = tx.send(result);
+    })
+    .map_err(|error| error.to_string())?;
+    rx.recv().map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+pub async fn focus_side_dock(app: AppHandle, edge: SideDockEdge) -> Result<(), String> {
+    let handle = app.clone();
+    let (tx, rx) = std::sync::mpsc::channel();
+    app.run_on_main_thread(move || {
+        let result = if let Some(window) = handle.get_webview_window(edge.label()) {
+            focus_window(&handle, &window)
         } else {
             Ok(())
         };
@@ -379,6 +472,7 @@ macro_rules! tauri_commands {
             crate::side_dock::sync_side_dock,
             crate::side_dock::set_side_dock_geometry,
             crate::side_dock::set_side_dock_visible,
+            crate::side_dock::focus_side_dock,
             crate::side_dock::request_side_dock_page,
             crate::side_dock::preview_side_dock,
         ] $($rest);*)

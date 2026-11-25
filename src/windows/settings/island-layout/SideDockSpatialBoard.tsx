@@ -39,6 +39,7 @@ export function SideDockSpatialBoard({
   const text = useTranslation().settings.islandPages.sideDocks;
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [overBucket, setOverBucket] = useState<DropBucket | null>(null);
+  const [overChipId, setOverChipId] = useState<string | null>(null);
 
   const activeRows = rows.filter((row) => !row.off);
   const listedIds = activeRows.map((row) => row.id);
@@ -118,6 +119,7 @@ export function SideDockSpatialBoard({
     movePage(draggingId, bucket);
     setDraggingId(null);
     setOverBucket(null);
+    setOverChipId(null);
   };
 
   const renderChip = (row: IslandPageRow, bucket: DropBucket) => {
@@ -127,6 +129,7 @@ export function SideDockSpatialBoard({
         key={row.id}
         className="sd-chip"
         data-dragging={draggingId === row.id}
+        data-drop-before={overChipId === row.id && draggingId !== null && draggingId !== row.id}
         draggable
         onDragStart={(event) => {
           setDraggingId(row.id);
@@ -136,10 +139,15 @@ export function SideDockSpatialBoard({
         onDragEnd={() => {
           setDraggingId(null);
           setOverBucket(null);
+          setOverChipId(null);
         }}
         onDragOver={(event) => {
           if (!draggingId || draggingId === row.id) return;
           event.preventDefault();
+          if (overChipId !== row.id) setOverChipId(row.id);
+        }}
+        onDragLeave={() => {
+          setOverChipId((current) => (current === row.id ? null : current));
         }}
         onDrop={(event) => {
           if (!draggingId || draggingId === row.id) return;
@@ -148,6 +156,7 @@ export function SideDockSpatialBoard({
           movePage(draggingId, bucket, row.id);
           setDraggingId(null);
           setOverBucket(null);
+          setOverChipId(null);
         }}
       >
         <GripVertical size={12} strokeWidth={1.6} className="sd-chip__grip" aria-hidden="true" />

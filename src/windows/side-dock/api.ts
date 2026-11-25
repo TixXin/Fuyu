@@ -78,6 +78,11 @@ export async function previewSideDock(edge: SideDockEdge, open: boolean): Promis
   await invoke("preview_side_dock", { edge, open });
 }
 
+export async function focusSideDock(edge: SideDockEdge): Promise<void> {
+  if (!isTauri()) return;
+  await invoke("focus_side_dock", { edge });
+}
+
 export async function listenSideDockOpenPage(
   edge: SideDockEdge,
   onOpen: (page: string) => void,

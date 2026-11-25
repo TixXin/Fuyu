@@ -41,7 +41,7 @@ export function useSideDockPages(
             wechat: messagesOn,
             qqMail: mailOn,
             agents: enabled("agents", settings.agentStatusEnabled),
-            translation: enabled("translation", settings.translationEnabled),
+            translation: enabled("translation", settings.translationEnabled) && settings.translationTarget === "island",
           },
           unsupported,
         ),
