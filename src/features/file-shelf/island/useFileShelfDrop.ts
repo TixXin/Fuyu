@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { listenFileDrop } from "../api";
+import { listenFileDrop, setIslandFileDropAccepted } from "../api";
+import { shouldAcceptFileDrop } from "../fileShelf.ts";
 import type { FileShelfController } from "../useFileShelf";
 
 type FileShelfDropOptions<Page extends string> = {
@@ -22,6 +23,18 @@ export function useFileShelfDrop<Page extends string>(options: FileShelfDropOpti
   const latestRef = useRef(options);
   const restoreRef = useRef<(() => void) | null>(null);
   const ignoringRef = useRef(false);
+
+  const acceptsDrop = shouldAcceptFileDrop(options.enabled, options.expandOnDrop, options.mode, options.page);
+
+  useEffect(() => {
+    void setIslandFileDropAccepted(acceptsDrop).catch((error) => {
+      console.error("Failed to sync island file drop state", error);
+    });
+  }, [acceptsDrop]);
+
+  useEffect(() => () => {
+    void setIslandFileDropAccepted(false).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     latestRef.current = options;

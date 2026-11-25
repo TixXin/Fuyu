@@ -151,6 +151,7 @@ pub fn run() {
             webview_memory::page_loaded(webview);
             webview_visibility::attach(webview);
             webview_scale::attach(webview);
+            island::apply_initial_file_drop(webview);
             if let Some(window) = webview.app_handle().get_webview_window(webview.label()) {
                 recording::apply_to_window(&window);
             }

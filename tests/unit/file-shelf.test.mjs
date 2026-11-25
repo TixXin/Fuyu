@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { formatFileSize, getFileKind } from "../../src/features/file-shelf/fileShelf.ts";
+import { formatFileSize, getFileKind, shouldAcceptFileDrop } from "../../src/features/file-shelf/fileShelf.ts";
 
 test("shelf icons follow the file extension, case-insensitively", () => {
   assert.equal(getFileKind("Photos", true), "folder");
@@ -65,4 +65,13 @@ test("the shelf search matches name or path, ignoring case and slash style", asy
   assert.deepEqual(filterShelfItems(items, "report").map((item) => item.name), ["Report.docx"]);
   assert.deepEqual(filterShelfItems(items, "users/ME").map((item) => item.name), ["photo.png"]);
   assert.deepEqual(filterShelfItems(items, "zzz"), []);
+});
+
+test("native file drop stays off when the shelf is disabled or collapsed with expand-on-drop off", () => {
+  assert.equal(shouldAcceptFileDrop(false, true, "collapsed", "todo"), false);
+  assert.equal(shouldAcceptFileDrop(false, true, "expanded", "shelf"), false);
+  assert.equal(shouldAcceptFileDrop(true, true, "collapsed", "todo"), true);
+  assert.equal(shouldAcceptFileDrop(true, false, "collapsed", "todo"), false);
+  assert.equal(shouldAcceptFileDrop(true, false, "expanded", "todo"), false);
+  assert.equal(shouldAcceptFileDrop(true, false, "expanded", "shelf"), true);
 });

@@ -68,6 +68,10 @@ export function startFileShelfDrag(ids: string[], removeAfter: boolean) {
   return invoke<FileShelfSnapshot>("start_file_shelf_drag", { ids, removeAfter });
 }
 
+export function setIslandFileDropAccepted(accepted: boolean) {
+  return invoke<void>("set_island_file_drop_accepted", { accepted });
+}
+
 export type FileDropEvent =
   | { type: "enter"; paths: string[] }
   | { type: "drop"; paths: string[] }
