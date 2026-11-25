@@ -123,7 +123,7 @@ fn ensure_hover_watcher(app: &AppHandle) {
                 continue;
             }
             tick = tick.wrapping_add(1);
-            let check_monitors = tick % MONITOR_CHECK_INTERVAL_TICKS == 0;
+            let check_monitors = tick.is_multiple_of(MONITOR_CHECK_INTERVAL_TICKS);
             let cursor = screen::cursor_position();
             let mut any_active = false;
             for (edge, state) in entries {
@@ -351,6 +351,7 @@ pub async fn sync_side_dock(
     rx.recv().map_err(|error| error.to_string())?
 }
 
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub async fn set_side_dock_geometry(
     app: AppHandle,

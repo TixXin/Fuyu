@@ -124,6 +124,7 @@ fn contains(x: f64, y: f64, left: f64, top: f64, right: f64, bottom: f64) -> boo
     x >= left && x <= right && y >= top && y <= bottom
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn cursor_hits_dock(
     win_left: f64,
     win_top: f64,
