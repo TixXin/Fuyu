@@ -48,6 +48,7 @@ export function TodoProjectsSection({ projects }: { projects: IslandSettings["to
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.nativeEvent.isComposing) event.currentTarget.blur();
                     if (event.key === "Escape") {
+                      event.preventDefault();
                       event.currentTarget.value = project.name;
                       event.currentTarget.blur();
                     }

@@ -3,7 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { DEFAULT_SETTINGS_CATEGORY, featureOf, isCategoryAvailable, settingsCategoryFor, type SettingsCategory } from "./categories";
 import { FeatureOffPage } from "./FeatureOffPage";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
-import { useMacWindowKeys } from "./useMacWindowKeys";
+import { useSettingsWindowKeys } from "./useSettingsWindowKeys";
 import { useFileDropGuard } from "./useFileDropGuard";
 import { useFeatureSwitches } from "./useFeatureSwitches";
 import { LayoutEditor } from "./LayoutEditor";
@@ -130,7 +130,7 @@ export function SettingsWindow() {
     setCategory(target);
     if (target !== next) focusSection(next);
   };
-  useMacWindowKeys();
+  useSettingsWindowKeys();
 
   const switchMotion = { effect: settings.pageSwitchSettings, indicator: settings.pageSwitchIndicator, speed: settings.pageSwitchSpeed, directional: settings.pageSwitchDirectional };
   const light = activeTone(settings.themeMode, systemDark) === "light";

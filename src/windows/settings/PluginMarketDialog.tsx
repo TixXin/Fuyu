@@ -31,6 +31,7 @@ export function PluginMarketDialog({ label, size, busy = false, onClose, data, c
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
+      event.preventDefault();
       event.stopPropagation();
       if (!busy) onClose();
       return;

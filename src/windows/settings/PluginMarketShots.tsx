@@ -27,6 +27,7 @@ function ShotViewer({ shots, index, title, host, onIndex, onClose }: {
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
+      event.preventDefault();
       event.stopPropagation();
       onClose();
     } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {

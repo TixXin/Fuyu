@@ -30,6 +30,7 @@ export function PluginMenu({ label, items, outlined = false }: { label: string; 
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape" && open) {
+      event.preventDefault();
       event.stopPropagation();
       setOpen(false);
       buttonRef.current?.focus();
