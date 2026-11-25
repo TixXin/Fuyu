@@ -9,6 +9,7 @@
   align-items: flex-end;
   justify-content: center;
   container-type: inline-size;
+  overflow-y: clip;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
