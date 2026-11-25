@@ -21,9 +21,7 @@ fn can_shrink_tucked_stage(state: IslandWindowState, has_popup: bool) -> bool {
 pub(super) fn stage_height_for_with_popup(state: IslandWindowState, has_popup: bool) -> f64 {
     if can_shrink_tucked_stage(state, has_popup) {
         let collapsed = (state.collapsed_height * state.collapsed_scale).ceil();
-        return (collapsed + TUCKED_STAGE_PAD)
-            .max(TUCKED_STAGE_MIN_HEIGHT)
-            .min(STAGE_WINDOW_HEIGHT);
+        return (collapsed + TUCKED_STAGE_PAD).clamp(TUCKED_STAGE_MIN_HEIGHT, STAGE_WINDOW_HEIGHT);
     }
     let side_column = if state.side().is_some() {
         (state.side_column_height * state.collapsed_scale).ceil() + STAGE_WINDOW_PADDING_Y
