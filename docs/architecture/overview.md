@@ -63,7 +63,7 @@
 main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、styles/
 ```
 
-功能之间不直接 import（插件平台第 3 版的要求，见 [v3-phase3-plan.md](plugins/v3-phase3-plan.md)「关键设计」第 4 条）。不属于任何一个功能的共享代码在 E36.3.24 与 E36.3.50 上提了：岛屿设置的模型（含日历 `calendarSettings.ts`、歌词 `lyricsSettings.ts`、Agent `agentSettings.ts` 的设置字段与默认值）在 `lib/settings/`，待办项目的类型与规整在 `lib/todo-projects/`，主题、强调色和动效在 `lib/theme/`，快捷键工具在 `lib/shortcut/`，设置文件和备份在 `lib/settings-backup/`，系统权限在 `lib/system-permissions/`，设置页共用的分节在 `windows/settings/sections/`，岛的「第一次」提示在 `windows/island/first-hints/`；原来的 `features/appearance`、`settings-backup`、`system-permissions`、`first-hints` 不再存在。`scripts/feature-boundary-allowlist.json` 已在 E36.3.50 清零，由 `tests/unit/feature-boundaries.test.mjs` 守住零跨功能 import 和零下层反向 import。
+功能之间不直接 import（插件平台第 3 版的要求，见 [v3-phase3-plan.md](history/v3-phase3-plan.md)「关键设计」第 4 条）。不属于任何一个功能的共享代码在 E36.3.24 与 E36.3.50 上提了：岛屿设置的模型（含日历 `calendarSettings.ts`、歌词 `lyricsSettings.ts`、Agent `agentSettings.ts` 的设置字段与默认值）在 `lib/settings/`，待办项目的类型与规整在 `lib/todo-projects/`，主题、强调色和动效在 `lib/theme/`，快捷键工具在 `lib/shortcut/`，设置文件和备份在 `lib/settings-backup/`，系统权限在 `lib/system-permissions/`，设置页共用的分节在 `windows/settings/sections/`，岛的「第一次」提示在 `windows/island/first-hints/`；原来的 `features/appearance`、`settings-backup`、`system-permissions`、`first-hints` 不再存在。`scripts/feature-boundary-allowlist.json` 已在 E36.3.50 清零，由 `tests/unit/feature-boundaries.test.mjs` 守住零跨功能 import 和零下层反向 import。
 
 ## 仓库目录
 
@@ -93,4 +93,4 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 
 - [data-storage.md](data-storage.md)：每项数据存在哪里、由哪个模块负责
 - [contracts.md](contracts.md)：对外契约清单（localStorage key、事件、命令与文件格式）
-- [migration-map.md](migration-map.md)：结构重构时旧文件到新位置的对照
+- [migration-map.md](history/migration-map.md)：结构重构时旧文件到新位置的对照

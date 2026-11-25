@@ -49,4 +49,4 @@ Rust 里取目录一律用 `home_dir::fuyu_home(app.path())`，不直接用 `app
 ## 兼容
 
 - 已经发布到 npm 的 `fuyu-plugin`（0.x）固定去 `%APPDATA%\com.tixxin.fuyu\local-api.json` 读本地接口的端口和令牌，所以岛在家目录之外**还在旧位置写一份** `local-api.json`。新版 CLI 先找家目录，再找旧位置。
-- 开发脚本 `scripts/tasks/install-island-plugin.mjs` 迁移过的就装进家目录的 `plugins`；发布冒烟测试 `scripts/release/smoke-test.ps1` 检查 `~\.fuyu`。
+- 发布冒烟测试 `scripts/release/smoke-test.ps1` 检查 `~\.fuyu`。

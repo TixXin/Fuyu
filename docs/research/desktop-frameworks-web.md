@@ -1,5 +1,7 @@
 # 桌面框架调研（网页技术类）：Electron、Wails、Electrobun、NW.js、Deno 等
 
+> 附录：本文为 [desktop-frameworks.md](desktop-frameworks.md) 的 Web / WebView 框架细项附录。
+
 > 日期：2026-11-14。问题：除了 Tauri、MyGo、GPUI，还有哪些用网页技术的桌面框架（Windows、macOS）能做浮屿的「万物皆插件」架构。范围：Electron、Wails v2 / v3、Neutralinojs、Electrobun、NW.js、Deno 的桌面方案、Socket Runtime、Photino、Sciter、CEF、Saucer、webview/webview、React Native 桌面、Lynx 等的官方文档、仓库和 issue，以及几份第三方内存基准；读了 `cordiverse/cordis` 的加载器源码。**没有实测**。这是 [desktop-frameworks.md](desktop-frameworks.md) 的详细材料之一。
 
 - 调研日期：2026-11-14。版本号、星数、发布日期取自当天的 GitHub API 和各项目官网。

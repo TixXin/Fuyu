@@ -1,5 +1,7 @@
 # 桌面框架调研（原生界面类）：Qt、React Native 桌面、Avalonia、Flutter、Slint 等
 
+> 附录：本文为 [desktop-frameworks.md](desktop-frameworks.md) 的原生框架细项附录。
+
 > 日期：2026-11-14。问题：不用 WebView 的桌面框架（Windows、macOS）里，哪些能做浮屿的「万物皆插件」架构；「插件描述界面、宿主原生渲染」这条中间路线行不行。范围：Flutter、Qt 6 / QML、Avalonia 等 .NET 方案、Compose Multiplatform、JavaFX、两套原生壳加共享 JS 引擎、React Native Windows / macOS、Slint、Dioxus、egui、Iced、Lynx 的官方文档和仓库；Raycast、Zed、JetBrains、Figma 等的插件界面做法。**没有实测**，内存数字多数陈旧。这是 [desktop-frameworks.md](desktop-frameworks.md) 的详细材料之一。
 
 调研日期：2026-11-14。范围：只看 Windows + macOS，只看不靠 WebView / Chromium 的原生 UI 方案。Tauri 2、MyGo、GPUI、Electron 等已在别处调研，这里不重复。

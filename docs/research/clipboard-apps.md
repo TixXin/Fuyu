@@ -1,5 +1,7 @@
 # 剪贴板同类软件对照（第三轮）
 
+> 附录：本文为 [clipboard-managers.md](clipboard-managers.md) 的竞品补充附录。
+
 > 日期：2026-11-15。问题：剪贴板要做一次全面完善，对照同类软件看还缺什么、哪里体验比别人差，每条给「做 / 不做 / 以后」。范围：Maccy（README、2.0–2.8 发布说明、issue）、Paste 官网、Raycast Manual、Ditto（README、wiki）、CopyQ（README、FAQ）、Windows Win+V（Microsoft 支持和第三方介绍）、PastePal（App Store）、Clipy（GitHub）、macOS 26 Spotlight 剪贴板（媒体报道）；`gh api` 查 star、最近推送和最新版本。相关任务：C81（#365）。
 >
 > 前两轮在 [clipboard-managers.md](clipboard-managers.md)（2026-11-09 侧重 Win+V 和粘贴回原窗口，2026-11-10 看了 20 多个新工具的功能全景）。那两轮建议的「必做」「值得做」现在几乎都做完了，所以这一轮不重复列功能全景，而是拿**现在的代码**逐项对照，重点看前两轮没覆盖的维度：存储和规模、固定的语义、隐私收尾、Mac 上的细节。按调研规则本应续写原文件，这次按主 agent 的分工单独成文，原文件开头可以加一行链接过来（由主 agent 决定）。

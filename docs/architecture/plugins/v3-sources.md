@@ -1,6 +1,6 @@
 # 插件平台第 3 版：插件从哪来、怎么按清单加载
 
-任务 E36.3.9（#496），第 5 阶段地基要宿主做的 R1、R4、R6（[第 5 阶段计划](v3-phase5-foundation-plan.md)「要基座做的」）。建在 [内置插件](v3-builtins.md)（E36.3.6）上。清单格式和校验规则见 [v3-package.md](v3-package.md)。
+任务 E36.3.9（#496），第 5 阶段地基要宿主做的 R1、R4、R6（[第 5 阶段计划](../history/v3-phase5-foundation-plan.md)「要基座做的」）。建在 [内置插件](v3-builtins.md)（E36.3.6）上。清单格式和校验规则见 [v3-package.md](v3-package.md)。
 
 ## 四种条目
 

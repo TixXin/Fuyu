@@ -1,5 +1,7 @@
 # 发布流程的优化
 
+> 状态：历史调研（方案已落地，见 `docs/architecture/release-ci.md`）。
+
 > 日期：2026-11-12。问题：发一个版本（以 v0.3.7-beta.2 为例）每一步花多久，哪里能更快、更稳，外面的项目怎么做。范围：Tauri 官方文档（体积、更新插件、GitHub 流水线），Rust 官方博客和论坛关于 Windows 编译、链接器的讨论，corrode.dev 的编译提速汇总，Microsoft 的 Dev Drive 说明，git-cliff、GitHub Artifact Attestations、Velopack 的文档，以及几篇发布清单和首启冒烟测试的文章。关键词：rust compile time windows linker、tauri release profile、tauri-action、tauri updater dynamic server rollout、Dev Drive cargo、sccache windows、cargo --timings、artifact attestations、velopack delta。相关任务：暂无（见文末「建议的任务」）。
 
 ## 结论

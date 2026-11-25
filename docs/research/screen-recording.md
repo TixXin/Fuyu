@@ -1,6 +1,6 @@
 # 录屏：优秀的开源项目怎么做到不卡、流畅
 
-> 日期：2026-11-13。问题：做录屏（C41.11）之前，先看优秀的开源录屏软件怎么实现，重点是录的时候不卡、录出来流畅；用户同日定了要能出 GIF、要录系统声音和麦克风。范围：GitHub 上的 Cap（读了 `crates/` 下采集、编码、帧节奏、混音、时间戳的源码）、windows-capture（读了 `encoder.rs`）、微软的 SimpleRecorder 和 Microsoft Learn「Screen capture to video」、ShareX 更新日志和源码目录、ScreenToGif 的发布说明、OBS 的 NVENC 说明、FFmpeg 的 ddagrab 文档、WASAPI loopback 的微软博客和 GStreamer 的修复；crates.io 上的候选库和授权。star 数、版本号都是当天查的。相关任务：[C41.11](/docs/tasks/C/C41.11.md)。
+> 日期：2026-11-13。问题：做录屏（C41.11）之前，先看优秀的开源录屏软件怎么实现，重点是录的时候不卡、录出来流畅；用户同日定了要能出 GIF、要录系统声音和麦克风。范围：GitHub 上的 Cap（读了 `crates/` 下采集、编码、帧节奏、混音、时间戳的源码）、windows-capture（读了 `encoder.rs`）、微软的 SimpleRecorder 和 Microsoft Learn「Screen capture to video」、ShareX 更新日志和源码目录、ScreenToGif 的发布说明、OBS 的 NVENC 说明、FFmpeg 的 ddagrab 文档、WASAPI loopback 的微软博客和 GStreamer 的修复；crates.io 上的候选库和授权。star 数、版本号都是当天查的。相关任务：[C41.11](/docs/tasks/0-archive/C/C41.11.md)。
 
 ## 结论
 

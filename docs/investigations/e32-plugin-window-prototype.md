@@ -1,6 +1,6 @@
 # E32 原型：插件独立窗口里的页面是否仍然隔离
 
-> 日期：2026-11-14。任务 [E32](/docs/tasks/0-archive/E/E32.md)，issue 203。设计稿见 [plugin-windows.md](/docs/architecture/plugins/plugin-windows.md)，结论和对设计的修正写在它的第 9 节，这里记做法、原始结果和脚本要点。
+> 日期：2026-11-14。任务 [E32](/docs/tasks/0-archive/E/E32.md)，issue 203。设计稿见 [plugin-windows.md](/docs/architecture/history/plugin-windows.md)，结论和对设计的修正写在它的第 9 节，这里记做法、原始结果和脚本要点。
 >
 > 环境：Windows 11 Pro for Workstations 10.0.26300，WebView2 运行时 157.0.4341.46，Tauri 2.12.5、wry 0.57.2、webview2-com 0.39.1，一块 3840×2160 的屏幕（缩放 125%）。
 

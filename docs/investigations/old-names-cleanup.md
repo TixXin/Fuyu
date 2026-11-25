@@ -1,5 +1,7 @@
 # 去掉旧名 FocuSD 和 fly-island：清点和计划
 
+> 状态：已完成（历史记录）。
+
 > 起因：用户 2026-11-16 在 `Fuyu-[总控] issue 和 PR` 里说「为什么项目还有 focus 这个名字！把 focus 和 fly-island 都去掉！」。组长 `[任务] 去掉旧名 FocuSD 和 fly-island` 清点、出计划，等用户点头后再派会话。改名本身的记录在 [rename-plan.md](../architecture/history/rename-plan.md)（D17）。
 
 ## 结论先说

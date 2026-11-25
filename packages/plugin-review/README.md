@@ -1,6 +1,6 @@
 # @fuyu/plugin-review
 
-插件平台第 3 版的逐版审核分析器（任务 E36.5.3）。比较一个插件的两个版本，给出绿 / 黄 / 红三档和每条理由，输出 JSON 和能直接贴进 PR 评论的 Markdown。市场 CI 在每个版本的 PR 上跑它，作者提交前也能在本地跑。分档规则见 `docs/architecture/plugins/v3-phase5-foundation-plan.md` 的 Q1。
+插件平台第 3 版的逐版审核分析器（任务 E36.5.3）。比较一个插件的两个版本，给出绿 / 黄 / 红三档和每条理由，输出 JSON 和能直接贴进 PR 评论的 Markdown。市场 CI 在每个版本的 PR 上跑它，作者提交前也能在本地跑。分档规则见 [docs/plugins/review.md](../../docs/plugins/review.md)。
 
 ```bash
 node packages/plugin-review/src/cli.mjs <旧版本源码目录 | -> <新版本源码目录> [--old-built <目录>] [--new-built <目录>] [--json <文件>] [--markdown <文件>] [--format json|markdown]

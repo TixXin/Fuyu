@@ -1,5 +1,7 @@
 # 开发版岛的渲染进程崩溃（STATUS_BREAKPOINT）：是哪一处 CHECK
 
+> 状态：已完成（历史排查记录）。
+
 日期：2026-11-15。任务 D67（issue #445）。只读排查，没有改代码。前情见 [dev-island-issues.md](dev-island-issues.md) 第 1 节。
 
 ## 结论

@@ -1,6 +1,6 @@
 # 插件平台第 3 版：清单和 `.fuyu` 安装包格式
 
-> 状态：实验（第 5 阶段转正前还可能微调，转正后只增不改）。实现在 `packages/plugin-manifest`（`@fuyu/plugin-manifest`），任务 E36.5.1（#480）。字段的用途和取舍见方案 [v3-everything-plugin.md](v3-everything-plugin.md)「插件包」，这里只写格式和规则。
+> 状态：已转正（后续只增不改）。实现在 `packages/plugin-manifest`（`@fuyu/plugin-manifest`），任务 E36.5.1（#480）。字段的用途和取舍见方案 [v3-everything-plugin.md](v3-everything-plugin.md)「插件包」，给插件作者看的指南见 [docs/plugins/package.md](../../plugins/package.md)。
 
 浮屿专有的名字都能配置，基座公开改名时只改默认值：
 

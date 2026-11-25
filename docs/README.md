@@ -5,15 +5,14 @@
 | 目录 | 放什么 | 不放什么 |
 |---|---|---|
 | [features/](features/) | 功能说明：怎么用、怎么接入、怎么配置（面向用户和维护者） | 设计取舍、排查过程 |
-| [architecture/](architecture/) | 整体架构和对外契约：[overview](architecture/overview.md)、[contracts](architecture/contracts.md)、[data-storage](architecture/data-storage.md)、[migration-map](architecture/migration-map.md)；开发流程：[workflow](architecture/workflow.md)（多会话在本地 main 上开发、攒批开 PR 合入）；跨平台：[platforms](architecture/platforms.md)（各功能在 Windows / macOS 上的支持）、[macos-port-plan](architecture/macos-port-plan.md)（macOS 适配计划） | 单个功能的说明 |
+| [architecture/](architecture/) | 整体架构和对外契约：[overview](architecture/overview.md)、[contracts](architecture/contracts.md)、[data-storage](architecture/data-storage.md)、[migration-map](architecture/history/migration-map.md)；开发流程：[workflow](architecture/workflow.md)（多会话在本地 main 上开发、攒批开 PR 合入）；跨平台：[platforms](architecture/platforms.md)（各功能在 Windows / macOS 上的支持）、[macos-port-plan](architecture/macos-port-plan.md)（macOS 适配计划） | 单个功能的说明 |
 | [architecture/agent/](architecture/agent/) | AI Agent 状态、岛上交互、会话标题的方案 | |
-| [architecture/plugins/](architecture/plugins/) | 插件平台的内部设计：[方案：万物皆插件](architecture/plugins/v3-everything-plugin.md)、[开发计划和进度](architecture/plugins/v3-progress.md)（开工先读）、[怎么开工和推进](architecture/plugins/v3-workflow.md)，以及同目录里各部分的设计（服务、包格式、市场、命令行、内置插件等）；[author-signing](architecture/plugins/author-signing.md)、[macos-webview](architecture/plugins/macos-webview.md)（Mac 上的插件自定义网页，研究）；维护：[builtins](architecture/plugins/builtins.md)（内置插件）、[market-ops](architecture/plugins/market-ops.md)（官方插件、下架名单、索引签名）、[sdk-release](architecture/plugins/sdk-release.md)（发布 npm 包）；已下线的旧版插件平台，留作记录：[v1-design](architecture/plugins/v1-design.md)（P1–P4）、[v2-platform](architecture/plugins/v2-platform.md)（P5–P11，2026-11 下线） | 给插件作者看的文档（在 `plugins/`） |
+| [architecture/plugins/](architecture/plugins/) | 插件平台的内部设计：[方案：万物皆插件](architecture/plugins/v3-everything-plugin.md)、[开发计划和进度](architecture/plugins/v3-progress.md)（开工先读）、[怎么开工和推进](architecture/plugins/v3-workflow.md)，以及同目录里各部分的设计（服务、包格式、市场、内置插件、密钥边界等）；维护：[market-ops](architecture/plugins/market-ops.md)（冻结的第 2 版官方插件与紧急撤销）、[sdk-release](architecture/plugins/sdk-release.md)（发布 npm 包）。已下线的旧版设计（v1/v2、builtins、plugin-windows、author-signing、macos-webview）与已完成的第 3 版各阶段计划均归档于 [architecture/history/](architecture/history/) | 给插件作者看的文档（在 `plugins/`） |
 | [architecture/history/](architecture/history/) | 已经做完的大计划，留作记录 | |
 | [design/](design/) | 已确认的界面约定，按区域分文件（全局方向见 [design/README.md](design/README.md)） | 还没定的方案 |
 | [plugins/](plugins/) | 给插件作者的对外文档（也显示在官网 fuyu.ing/docs/）：从 [plugins/README.md](plugins/README.md) 读起；2026-11 下线的旧版插件的文档已删除，要看在 git 历史里 | 岛屿内部实现 |
 | [investigations/](investigations/) | 对**我们自己的应用**做的排查、技术验证、实测和验收 | 外部资料 |
 | [research/](research/) | 对**外部**的调研：联网搜索、GitHub 项目、竞品和参考软件，规则见 [research/README.md](research/README.md) | 我们自己应用的实测 |
-| [reviews/](reviews/) | PR 评审记录 | |
 | [releases/](releases/) | 每个版本的发布说明 `vX.Y.Z.md`（release 脚本按这个名字读）；还没发的草稿用 `draft-` 开头 | |
 | [readme/](readme/) | 仓库首页 README 的英文和其他语言版本 `README.<语言>.md`（根目录只放简体中文）；以中文版为准翻译，开头注明对应的中文版日期 | 截图和 SVG（在 `assets/readme/`） |
 | [tasks/](tasks/) | 任务，规则见 [tasks/README.md](tasks/README.md) | |

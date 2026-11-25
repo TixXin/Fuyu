@@ -109,7 +109,7 @@
 
 <details>
 <summary><b>06 · AI Agent</b></summary>
-<p>显示 Claude Code 和 Codex 会话的运行状态和用量，要你确认时直接在岛上批准，点一下切到对应窗口；离开电脑时推送到手机：Telegram、Discord、飞书机器人或 iPhone 上的 Bark，还能在聊天里接着指挥 Agent。</p>
+<p>支持 Claude Code、Codex、Cursor、WorkBuddy、Antigravity、TRAE、Qwen Code、Kimi Code、Copilot CLI 等 17 家主流 AI 代理：在岛上查看运行状态、会话列表与额度用量，需要确认时直接在岛上批准，点一下切到对应终端或编辑器，支持 SSH 远程主机监控；离开电脑时通过 Telegram、Discord、飞书机器人或 iPhone Bark 推送到手机，还能在聊天里接着指挥 Agent。</p>
 <p><a href="https://fuyu.ing/zh/#agent"><img src="docs/assets/readme/agents-zh.webp" alt="岛上弹出 Claude Code 的审批请求：要运行的命令，以及拒绝和允许两个按钮" width="800" height="450"></a></p>
 </details>
 
@@ -120,26 +120,35 @@
 
 <details>
 <summary><b>08 · 系统提示</b></summary>
-<p>音量、亮度变化，摄像头和麦克风正在被哪个程序使用。</p>
+<p>音量与亮度变化、耳机外设与电池电量、大写锁定提示，以及摄像头和麦克风正在被哪个程序使用。</p>
 </details>
 
 <details>
-<summary><b>09 · 插件与主题</b></summary>
-<p>从插件市场安装插件来扩展岛屿，敏感数据需要你单独授权；主题市场里挑现成的外观。</p>
+<summary><b>09 · 截图、录屏与贴图</b></summary>
+<p>区域 / 整窗（支持透明底与柔和阴影）/ 长截图 / 延时截图，自带标注、OCR 识字、翻译与屏幕贴图，并支持 MP4 / GIF 录屏。</p>
 </details>
 
-岛屿的外观、大小、收起方式、快捷键和每个功能都可以在设置窗口里调整，支持应用内自动更新。数据都保存在本机。
+<details>
+<summary><b>10 · 语音输入、计时器与休息提醒</b></summary>
+<p>按快捷键离线本地语音识别，一键存为待办或追加到每日笔记；内置倒计时、秒表与久坐 / 护眼休息提醒。</p>
+</details>
+
+<details>
+<summary><b>11 · 插件、主题与跨设备同步</b></summary>
+<p>从插件市场安装插件来扩展岛屿（源码构建、逐版审核与冷静期），在主题市场挑选外观，并可通过共享文件夹或 WebDAV 端到端加密同步多台设备的数据。</p>
+</details>
+
+岛屿的外观、大小、收起方式、快捷键和每个功能都可以在设置窗口里调整，支持应用内自动更新。数据默认保存在本机。
 
 ## 占用
 
-收起、闲着、不放音乐时（默认设置，不装插件）：
+收起、闲着、不放音乐时（默认设置，不装第三方插件）：
 
 | | 实测 |
 |---|---|
 | CPU | 约占单核的 **10%**（20 核电脑上约占总量的 0.5%） |
 | 内存 | 浮屿本身约 **16 MB** |
 | Agent 页每秒刷新一次会话列表 | 单核的 **0.1%** |
-| 每装一个 PowerShell 插件 | 约多 **60 MB** |
 
 测量方法和数据见 [idle-usage.md](docs/investigations/idle-usage.md)。
 
@@ -149,7 +158,7 @@
    - **Windows**：下载 `_x64-setup.exe`。安装包没有代码签名，SmartScreen 提示时点「更多信息 → 仍要运行」。
    - **macOS**：在 [Releases 列表](https://github.com/TixXin/fuyu/releases)里找最新一个带 `_aarch64.dmg` 的版本下载（最新正式版里没有时，在它上面的测试版里），把 Fuyu 拖进「应用程序」。第一次打开要在「系统设置 → 隐私与安全性」里点「仍要打开」，一步步的说明见 [Mac 安装教程](https://fuyu.ing/zh/#mac-install)。
 2. **展开小岛**：鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标（Mac 上是菜单栏图标）打开设置。Mac 上新手引导会带你打开要用到的系统权限。
-3. **配置一次**：邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)、[手机推送](docs/features/cc-connect.md)。
+3. **功能文档**：邮箱、翻译、AI Agent、同步等功能的配置见各自说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[剪贴板](docs/features/clipboard.md)、[音乐与歌词](docs/features/music-and-lyrics.md)、[截图与录屏](docs/features/screenshot.md)、[跨设备同步](docs/features/sync.md)、[系统提示](docs/features/system-alerts.md)、[语音输入](docs/features/voice-input.md)、[手机推送](docs/features/cc-connect.md)。
 
 > [!NOTE]
 > 支持 Windows 10 / 11 和 macOS 15 以上（Apple 芯片）。Mac 版有几处和 Windows 不同：QQ、微信只显示未读数，读不到消息内容；媒体控制和亮度用到了系统私有接口。每个功能在两个平台上的情况见 [platforms.md](docs/architecture/platforms.md)。

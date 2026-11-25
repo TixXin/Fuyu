@@ -1,14 +1,14 @@
 # 插件平台第 3 版第 3 阶段「内置功能插件化」：分步计划
 
-任务 E36.3（#293），父任务 E36（#289）。组长会话「[任务] 第 3 阶段内置功能插件化」2026-11-15 整理，开它的是「Fuyu-[总控] 插件系统」。**状态：2026-11-17 全部完成（E36.3.1–E36.3.53），等两台机器真岛验收与 Windows 补测**（见 [v3-progress.md](v3-progress.md)）。
+任务 E36.3（#293），父任务 E36（#289）。组长会话「[任务] 第 3 阶段内置功能插件化」2026-11-15 整理，开它的是「Fuyu-[总控] 插件系统」。**状态：2026-11-17 全部完成（E36.3.1–E36.3.53），等两台机器真岛验收与 Windows 补测**（见 [v3-progress.md](../plugins/v3-progress.md)）。
 
 第 3 阶段的地基（E36.3.1–E36.3.19：服务、宿主调 Rust、标记宏、内置插件加载、计时器和翻译的宿主样板、密钥修复、安装包带宿主）已经合入，计划和结论在 [v3-phase3-foundation-plan.md](v3-phase3-foundation-plan.md)。这份计划管剩下的主体：把 `src/features/` 的各个领域逐个变成内置插件。地基留下的三个跟进 E36.3.20（#550）、E36.3.21（#551）、E36.3.22（#552）原来先放着，用户 2026-11-15 改口交给本组，一并排进下面的批次。
 
-做子任务的会话开工先读这份，再读 [进度](v3-progress.md)、[流程](v3-workflow.md)、[服务](v3-services.md)、[内置插件](v3-builtins.md)、[边界](v3-boundary.md)。
+做子任务的会话开工先读这份，再读 [进度](../plugins/v3-progress.md)、[流程](../plugins/v3-workflow.md)、[服务](../plugins/v3-services.md)、[内置插件](../plugins/v3-builtins.md)、[边界](../plugins/v3-boundary.md)。
 
 ## 目标和做完的标志
 
-来自 #293 和 [方案](v3-everything-plugin.md)「内置功能怎么变成插件」「分阶段」：
+来自 #293 和 [方案](../plugins/v3-everything-plugin.md)「内置功能怎么变成插件」「分阶段」：
 
 - `src/features/` 下的每个领域都变成一个内置插件：宿主部分注册服务，界面部分往插槽注册。
 - 功能之间只通过服务和事件互相调用，不再直接 import。
@@ -72,7 +72,7 @@
 
 ### 1. 一个功能一个开关，存在 `plugins.yml`，由 Rust 管
 
-- **内置插件的开关就是功能开关。** 上面三套开关合成一套：数据目录 `plugins-v3/plugins.yml` 里内置插件的 `disabled`（[v3-builtins.md](v3-builtins.md) 已经定了它的写法）。
+- **内置插件的开关就是功能开关。** 上面三套开关合成一套：数据目录 `plugins-v3/plugins.yml` 里内置插件的 `disabled`（[v3-builtins.md](../plugins/v3-builtins.md) 已经定了它的写法）。
 - **由 Rust 读写，和宿主开没开无关。** Rust 新增一张内置插件开关表（放在 `plugin_kernel/` 下）。它启动时读 `plugins.yml`，提供命令 `get_builtin_plugins` / `set_builtin_plugin_enabled`，开关变化时发事件 `builtin-plugins-changed`。写文件只经 Rust 这一处。宿主照旧读同一份文件；宿主在跑时，Rust 写完就让它重读（正式版的宿主现在不监视文件，这一步要补）。
 - 这样一来，`FUYU_PLUGINS_V3` 没开时，开关、界面的显示和隐藏、后台的起停也都照常工作，不用为每个功能维持两条路。依赖宿主的只剩下宿主里的服务。
 - **旧开关一次性迁过来**：每个功能的任务负责迁自己的旧开关（`fuyu-settings` 的字段、各自存储里的开关、第 2 版 `plugins.json` 的启用状态和设置）。迁移要兼容读旧值，记进 `contracts.md` 和 `data-storage.md`。设置的备份和恢复（`BACKUP_KEYS`）要把开关一起带上。
@@ -95,7 +95,7 @@
 - 有后台的模块在自己的 `init` 里向开关表登记 `start` / `stop`，按插件 id 登记。开关表在启动时和开关变化时调它们。线程要能真正退出，不能靠 `AtomicBool` 空转；快捷键要撤掉。
 - 开机就建的窗口（剪贴板的两个、翻译的一个）改成插件开着才建，关掉就销毁。
 - 宿主部分的后台（受管定时器、监听器）随插件停用撤掉，内核已经保证（地基 E36.3.6）。
-- 宿主崩溃不影响 Rust 的后台：后台的起停跟着开关表走，不跟宿主走（[边界](v3-boundary.md)规则 7）。
+- 宿主崩溃不影响 Rust 的后台：后台的起停跟着开关表走，不跟宿主走（[边界](../plugins/v3-boundary.md)规则 7）。
 
 ### 4. 功能之间：共享代码上提，运行时调用走服务
 

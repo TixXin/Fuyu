@@ -45,7 +45,7 @@
     ·
     <a href="README.pt-BR.md">Português</a>
   </p>
-  <p><sub>이 문서는 2026-11-15 기준 <a href="../../README.md">중국어 간체 README</a>를 번역한 것으로, 최신 내용보다 늦을 수 있습니다. 원어민의 수정 제안을 환영합니다.</sub></p>
+  <p><sub>이 문서는 2026-11-25 기준 <a href="../../README.md">중국어 간체 README</a>를 번역한 것으로, 최신 내용보다 늦을 수 있습니다. 원어민의 수정 제안을 환영합니다.</sub></p>
 
   <p>
     <a href="https://fuyu.ing">웹사이트</a>
@@ -110,7 +110,7 @@ Fuyu(浮屿, '떠 있는 작은 섬')는 가볍고 테두리 없이 항상 맨 �
 
 <details>
 <summary><b>06 · AI 에이전트</b></summary>
-<p>Claude Code와 Codex 세션의 실행 상태와 사용량을 보여 줍니다. 확인이 필요할 때 섬에서 바로 승인하고, 한 번 클릭으로 해당 창으로 전환합니다. 자리를 비웠을 때는 Telegram, Discord, Feishu, Bark로 알림을 받고, 채팅에서 바로 에이전트에게 계속 지시할 수 있습니다.</p>
+<p>Claude Code, Codex, Cursor, WorkBuddy, Antigravity, TRAE, Qwen Code, Kimi Code, Copilot CLI 등 17개 주요 AI 에이전트를 지원합니다. 섬에서 세션 상태와 사용량을 확인하고 바로 승인하며, 클릭 한 번으로 해당 창으로 이동하고, SSH 원격 호스트 모니터링과 Telegram·Discord·Feishu·Bark 알림을 받을 수 있습니다.</p>
 <p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="섬에 뜬 Claude Code의 승인 요청: 실행하려는 명령어와 거부, 허용 버튼" width="800" height="450"></a></p>
 </details>
 
@@ -121,12 +121,22 @@ Fuyu(浮屿, '떠 있는 작은 섬')는 가볍고 테두리 없이 항상 맨 �
 
 <details>
 <summary><b>08 · 시스템 알림</b></summary>
-<p>볼륨과 밝기 변화, 그리고 어떤 프로그램이 카메라와 마이크를 사용 중인지 보여 줍니다.</p>
+<p>볼륨과 밝기 변화, 주변기기·배터리 알림, Caps Lock 표시, 카메라와 마이크를 사용 중인 앱.</p>
 </details>
 
 <details>
-<summary><b>09 · 플러그인과 테마</b></summary>
-<p>플러그인 마켓에서 플러그인을 설치해 섬을 확장합니다. 민감한 데이터는 따로 허용해야 합니다. 테마 마켓에서 미리 만들어진 외관을 고를 수 있습니다.</p>
+<summary><b>09 · 스크린샷, 화면 녹화 및 핀 고정</b></summary>
+<p>영역·창(투명 배경 및 그림자 지원)·스크롤·지연 스크린샷, 주석·OCR·번역·화면 핀 고정, MP4 / GIF 화면 녹화를 지원합니다.</p>
+</details>
+
+<details>
+<summary><b>10 · 음성 입력, 타이머 및 휴식 알림</b></summary>
+<p>단축키로 오프라인 로컬 음성 인식을 실행해 할 일이나 메모로 저장하며, 카운트다운·스톱워치·휴식 알림을 기본 제공합니다.</p>
+</details>
+
+<details>
+<summary><b>11 · 플러그인, 테마 및 기기 간 동기화</b></summary>
+<p>플러그인 마켓(소스 빌드·버전 심사·대기 기간)으로 섬을 확장하고, 테마 마켓에서 외관을 고르며, 공유 폴더나 WebDAV를 통한 종단간 암호화 동기화를 사용할 수 있습니다.</p>
 </details>
 
 섬의 외관, 크기, 접히는 방식, 단축키와 각 기능은 모두 설정 창에서 조정할 수 있고, 앱 내 자동 업데이트를 지원합니다. 데이터는 모두 내 컴퓨터에 저장됩니다.
@@ -140,7 +150,6 @@ Fuyu(浮屿, '떠 있는 작은 섬')는 가볍고 테두리 없이 항상 맨 �
 | CPU | 코어 하나의 약 **10%**(20코어 컴퓨터 전체 기준 약 0.5%) |
 | 메모리 | Fuyu 자체 약 **16 MB** |
 | 에이전트 페이지가 1초마다 세션 목록을 새로 고칠 때 | 코어 하나의 **0.1%** |
-| PowerShell 플러그인 하나를 설치할 때마다 | 약 **60 MB** 추가 |
 
 측정 방법과 데이터는 [idle-usage.md](../investigations/idle-usage.md)(중국어)를 참고하세요.
 

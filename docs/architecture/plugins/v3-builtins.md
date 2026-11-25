@@ -1,6 +1,6 @@
 # 插件平台第 3 版：内置插件怎么带上、加载和关掉
 
-任务 E36.3.6（#470），第 3 阶段地基（[计划](v3-phase3-foundation-plan.md)）。这一页定下内置插件的清单、它和数据目录的 `plugins.yml` 怎么合起来、宿主部分怎么写和打包、插件的数据目录、界面文件的地址。先读 [边界](v3-boundary.md) 和 [服务](v3-services.md)。
+任务 E36.3.6（#470），第 3 阶段地基（[计划](../history/v3-phase3-foundation-plan.md)）。这一页定下内置插件的清单、它和数据目录的 `plugins.yml` 怎么合起来、宿主部分怎么写和打包、插件的数据目录、界面文件的地址。先读 [边界](v3-boundary.md) 和 [服务](v3-services.md)。
 
 ## 一句话
 
@@ -61,7 +61,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 
 ## 开关表（Rust 管开关，E36.3.23）
 
-内置插件的开关就是功能的开关（[计划](v3-phase3-plan.md)「关键设计」第 1、3 条），由 Rust 的 `plugin_kernel/builtins.rs` 管，和宿主开没开无关：
+内置插件的开关就是功能的开关（[计划](../history/v3-phase3-plan.md)「关键设计」第 1、3 条），由 Rust 的 `plugin_kernel/builtins.rs` 管，和宿主开没开无关：
 
 - 清单在编译时读进 Rust（`include_str!`），启动时读 `plugins.yml` 里内置插件的 `disabled`；之后只经命令 `set_builtin_plugin_enabled` 写，写的格式就是上表「关掉内置的计时器」那样（`builtins_file.rs`，只改那一条，别的条目和注释不动）。宿主在跑时监视这个文件，Rust 写完它自己重读，不另发通知。
 - 有后台的模块在自己的 `init` 里调 `plugin_kernel::builtins::register(<插件 id>, <名字>, Arc<dyn Background>)`，`Background` 有 `start` / `stop` / `running`；名字要写进清单这个插件的 `background`。开关表在启动时和开关变化时调它们（锁外调，`start` 里可以再读开关）。`builtins::init` 在 `lib.rs` 的 setup 最前面，早于各模块的 `init`；之前登记的先记着，`init` 读完文件再起。
@@ -75,7 +75,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 - `IslandFeatures`、设置概览（`useFeatureSwitches`）、系统提示（`SystemAlertsGroup`）和新手引导直接从内置插件开关表（`useBuiltinPlugins` / `builtinSwitches`）读并调 `set_builtin_plugin_enabled`、`set_builtin_plugin_config` 写，运行时不再往 `fuyu-settings`、`fuyu-qq-notifications-enabled`、`fuyu-wechat-reminders-enabled` 回写镜像；仅在内存中用 `withSwitches` 投影一份快照传给读取 `IslandSettings` 的组件。
 - **首次升级一次性迁移保留**：主窗口启动时 `useMigrateLegacySwitches` 对照 `LEGACY_SWITCHES` 检查尚未记入 `fuyu-legacy-switches` 的旧字段，旧值是 `false` 就关掉对应的内置插件并记入 `fuyu-legacy-switches`，之后不再迁；消息的三个来源（`qq`、`wechat`、`mail`）统一在 `messages/plugin/sourceSwitches.ts` 的 `migrateSources` 里于 `messages.config` 缺少该键时从旧值补写一次。
 - **设置备份与 `settings.json` 桥接**：`builtinSwitches.ts` 向 `lib/settings-backup/storage.ts` 注册 `registerBackupSwitches`，导出备份和写 `settings.json` 时把当前内置插件开关、消息三个来源开关和语音输入开关拍进对应字段，恢复备份时由 `switchesFromBackup` 同步调回 `switchBuiltinPlugin` / `setBuiltinConfig`。
-- 剪贴板（Rust 维护 `clipboard-history.json` 兼容字段）、语音输入（`fuyu-voice-input`）和第 2 版 `plugins.json`（`v2_builtins.rs`）的迁移规则见 [contracts.md](../contracts.md)。
+- 剪贴板（Rust 维护 `clipboard-history.json` 兼容字段）、语音输入（`fuyu-voice-input`）和第 2 版 `plugins.json`（`v2_builtins.rs`、`v2_migration.rs`）的迁移规则见 [contracts.md](../contracts.md)。
 
 ## 关掉后不留界面、不跑后台：三层检查（E36.3.27）
 
@@ -129,7 +129,7 @@ node scripts/plugins-v3/build-builtins.mjs --minify --out <目录> --source <清
 
 - 每个插件的 `ctx.dataDir` 是 `plugins-v3/data/<插件 id>/` 的绝对路径（宿主 `startHost` 的 `dataDir` 可以换掉 `plugins-v3/data/` 这个根）。和 `ctx.services` 一样是内核挂在根上下文的访问器，按读它的那个插件算，插件里再建的子插件拿到的也是这个插件的目录。
 - 宿主不建目录，插件写之前自己 `mkdir`（计时器的 `writeTimers` 已经这样做）。
-- id 要能当目录名：一段（字母、数字、`.`、`-`、`_`、`@`，不以 `.` 开头或结尾）或 `@作用域/名字` 两段；`../x`、`a/b`、三段的都拒绝（读 `ctx.dataDir` 时抛错）。第三方插件的数据目录因此是 `data/@作用域/名字/`，和 [插件包](../../plugins/v3/package.md)「name 也是数据目录的名字」一致。
+- id 要能当目录名：一段（字母、数字、`.`、`-`、`_`、`@`，不以 `.` 开头或结尾）或 `@作用域/名字` 两段；`../x`、`a/b`、三段的都拒绝（读 `ctx.dataDir` 时抛错）。第三方插件的数据目录因此是 `data/@作用域/名字/`，和 [插件包](../../plugins/package.md)「name 也是数据目录的名字」一致。
 - 计时器改用它：数据文件还是 `plugins-v3/data/timer/timers.json`，位置没变，不用迁移。
 - 宿主停了、插件被关了，数据目录留着；卸载插件时删不删由第 5 阶段的安装流程定。
 

@@ -4,13 +4,13 @@
 
 第 3 阶段（E36.3）把 `src/features/` 的各个领域原样迁成了内置插件，并建起了宿主 `ctx.services` 与窗口 `windowServices` 两套同构的服务表。第 4 阶段在此基础上，把 7 项核心能力做成**可替换、可扩展的接缝（Seam = 接口定义 + 提供者 + 使用者）**，并补齐**服务冲突时的启用选择、替换关系展示、内置插件缺依赖超时提醒**。
 
-开工前先读这份计划，再读 [进度](v3-progress.md)、[流程](v3-workflow.md)、[服务契约](v3-services.md)、[内置插件](v3-builtins.md)、[边界](v3-boundary.md)。
+开工前先读这份计划，再读 [进度](../plugins/v3-progress.md)、[流程](../plugins/v3-workflow.md)、[服务契约](../plugins/v3-services.md)、[内置插件](../plugins/v3-builtins.md)、[边界](../plugins/v3-boundary.md)。
 
 ---
 
 ## 一、目标和做完的标志
 
-来自 #294 和 [方案](v3-everything-plugin.md)「服务的替换和冲突」「分阶段」：
+来自 #294 和 [方案](../plugins/v3-everything-plugin.md)「服务的替换和冲突」「分阶段」：
 
 1. **7 项能力全部做成接缝**：翻译引擎、歌词来源、日历来源、AI 代理接入、剪贴板动作、截图后动作、消息来源。
 2. **每个接缝都满足「写一个插件就能换掉或扩充内置实现」**：使用者只调服务或读接缝注册表，不绑死内置实现。
@@ -53,7 +53,7 @@
 
 ### 2. 服务冲突与启用时选择（`provides` / `replaces`）
 
-按 [方案](v3-everything-plugin.md)「服务的替换和冲突」与 [v3-services.md](v3-services.md)「替换和冲突」：
+按 [方案](../plugins/v3-everything-plugin.md)「服务的替换和冲突」与 [v3-services.md](../plugins/v3-services.md)「替换和冲突」：
 
 1. **内置插件补齐 `provides` 声明**：在 `src/features/builtins.json` 里为提供公开服务的内置插件补上 `provides` 字段（例如 `translation` → `["translator/v1"]`，`timer` → `["timers/v1", "reminders/v1"]`，`calendar` → `["calendar/v1"]`，`music` → `["media/v1", "lyrics/v1"]` 等）。
 2. **启用前静态冲突检查**：
@@ -67,7 +67,7 @@
 ### 3. 内置插件缺依赖超时（`waiting` 超过 10 秒）提醒
 
 - 宿主和窗口的插件状态视图已能拿到 `state === "waiting"` 和 `waitingFor: ["..."]`。
-- 插件页对 `waitingFor` 给出三种明确解释（[v3-services.md](v3-services.md)「状态视图」）：
+- 插件页对 `waitingFor` 给出三种明确解释（[v3-services.md](../plugins/v3-services.md)「状态视图」）：
   1. 「`timer` 插件提供 `timers/v1`，但它已停用」→ 配「打开 `timer`」按钮；
   2. 「提供 `timers/v1` 的插件启动出错或被安全模式拦下」→ 配跳转链接；
   3. 「没有已启用的插件提供 `timers/v1`」。

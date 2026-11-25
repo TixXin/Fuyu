@@ -4,7 +4,7 @@
 
 第 5 阶段（E36.5，#295）按方案要等第 4 阶段，但其中**不依赖前几阶段界面和服务接口**的部分可以先做：细则的决定、插件包格式、构建工具、市场索引和审核 CI。这份计划只管这一块；岛上的安装界面、二分排查、接口转正等第 2–4 阶段做完再拆。
 
-方案见 [v3-everything-plugin.md](v3-everything-plugin.md)（决定 7–10、14、15，「实现时再定的细则」「插件包」「安装、市场和信任」「基座做成开源项目」），进度见 [v3-progress.md](v3-progress.md)。
+方案见 [v3-everything-plugin.md](../plugins/v3-everything-plugin.md)（决定 7–10、14、15，「实现时再定的细则」「插件包」「安装、市场和信任」「基座做成开源项目」），进度见 [v3-progress.md](../plugins/v3-progress.md)。
 
 ## 一、要你定的问题
 
@@ -76,7 +76,7 @@
 
 ### Q7 市场仓库 `TixXin/fuyu-plugins` 的 `main` 怎么保护
 
-逐版审核要求「上架 = 经 PR 合入并被批准」，但它的 `main` 现在没有规则集：索引、点赞、主题三个工作流直接推 `main`，GitHub 不允许个人仓库把 Actions 设成规则集的绕过者（[market-ops.md](market-ops.md)）。方案写了第 5 阶段前要解决。
+逐版审核要求「上架 = 经 PR 合入并被批准」，但它的 `main` 现在没有规则集：索引、点赞、主题三个工作流直接推 `main`，GitHub 不允许个人仓库把 Actions 设成规则集的绕过者（[market-ops.md](../plugins/market-ops.md)）。方案写了第 5 阶段前要解决。
 
 **推荐：给这三个工作流一把有写权限的部署密钥**（私钥放在只有 `main` 能用的环境 secret 里），然后加规则集：`main` 必须经 PR、要一个批准、要过检查，只让部署密钥和管理员（只能在 PR 上）绕过。
 
@@ -216,5 +216,5 @@
   - `E36.5.8`（#768）：`packages/plugin-cli/src/installer.mjs` 提供 `inspectPackage`、`installPackage`、`uninstallPackage`、`applyRevocationsToDir`（支持解包到 `packages/<scope>/<name>`、写入 `plugins.yml`、手动安装默认拦截与 `allowManual` 放行、撤销名单 `disable` 停用保留数据）；设置窗口卡片与详情弹窗展示 `source === "manual"` 的「未经过市场审核」标记与 `undeclared` 未声明能力提示。
   - `E36.5.9`（#769）：宿主窗口 WebSocket 暴露 `bisect` 方法，设置窗口 `PluginsV3SettingsPage` 接入 `PluginBisectBar` 折半排查向导（`src/windows/settings/pluginBisect.ts`、`PluginBisectBar.tsx`）。
   - `E36.5.10`（#770）：`fuyu-plugin dev`（`packages/plugin-cli/src/dev.mjs`）支持把当前插件以 `source: dev` 登记进 `plugins.yml` 并监听构建、退出时还原。
-  - `E36.5.11`（#771）：新增 [services-and-slots.md](../../plugins/v3/services-and-slots.md) 全量服务与插槽参考文档；脚手架模板所用服务与插槽转正（`EXPERIMENTAL = []`，`fuyu-plugin check --market` 零错误通过）。
+  - `E36.5.11`（#771）：新增 [services-and-slots.md](../../plugins/services-and-slots.md) 全量服务与插槽参考文档；脚手架模板所用服务与插槽转正（`EXPERIMENTAL = []`，`fuyu-plugin check --market` 零错误通过）。
   - `E36.5.12`（#772）：新增 `tests/unit/phase5-lifecycle-e2e.test.mjs` 走通脚手架生成 → 市场检查 → 打包签名 → 审核分析（含恶意更新拦截）→ 市场索引与冷静期选择 → 安装进宿主运行 → 撤销停用全链路。

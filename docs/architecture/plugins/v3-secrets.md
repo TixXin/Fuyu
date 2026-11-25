@@ -1,6 +1,8 @@
 # 插件平台第 3 版：密钥不经 JS
 
-任务 E36.3.7（#471），父任务 E36.3（#293）。会话 v3-secrets 2026-11-15 摸底和设计，交第 3 阶段地基主 agent 审；计划见 [v3-phase3-foundation-plan.md](v3-phase3-foundation-plan.md)，方案的出处是 [v3-everything-plugin.md](v3-everything-plugin.md)「内置功能怎么变成插件」：密码、令牌这类数据只在 Rust 一侧使用，没有任何命令把明文返回给前端或宿主。
+> 状态：2026-11-15 摸底与设计记录（E36.3.7）；文中的 4 处整改与第三方插件密钥服务 `secrets/v1`（E81，见 [services-and-slots.md](../../plugins/services-and-slots.md#存密钥secretsv1)）均已落地，下面的原则与边界说明仍有效。
+
+任务 E36.3.7（#471），父任务 E36.3（#293）。会话 v3-secrets 2026-11-15 摸底和设计，交第 3 阶段地基主 agent 审；计划见 [v3-phase3-foundation-plan.md](../history/v3-phase3-foundation-plan.md)，方案的出处是 [v3-everything-plugin.md](v3-everything-plugin.md)「内置功能怎么变成插件」：密码、令牌这类数据只在 Rust 一侧使用，没有任何命令把明文返回给前端或宿主。
 
 这份文档只写设计，不改代码。文中不出现任何真实的密钥值。
 

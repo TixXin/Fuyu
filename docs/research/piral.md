@@ -1,6 +1,6 @@
 # Piral：插槽能复用多少
 
-> 日期：2026-11-15。问题：插件平台第 3 版第 2 阶段「插槽化」开工前，看微前端框架 Piral 的扩展插槽（extension slot）、pilet 加载、共享依赖、错误边界能复用多少，和第 1 阶段的 `createSlots` 逐项对比，判断 [第 2 阶段计划](../architecture/plugins/v3-phase2-plan.md)「关键设计」要不要改。范围：Piral 官方文档（docs.piral.io 的源文件，即仓库 `docs/` 下的 Markdown）、GitHub `smapiot/piral` 的源码（`main` 分支 `afae61d`，2026-11-15 浅克隆，读了 `piral-core` 的 `ExtensionSlot`、`ErrorBoundary`、`withApi`、`wrapComponent`、`modules/core`、`utils/state`、`types/extension`，`piral-base` 的加载与共享依赖，`piral-menu` 的注册）；npm 上 `piral-core` / `piral-base` 1.12.5 的包信息；本机用 esbuild 量了 `piral-core` 的体积。相关任务：E36.2.1（#424），父任务 E36.2（#292）。
+> 日期：2026-11-15。问题：插件平台第 3 版第 2 阶段「插槽化」开工前，看微前端框架 Piral 的扩展插槽（extension slot）、pilet 加载、共享依赖、错误边界能复用多少，和第 1 阶段的 `createSlots` 逐项对比，判断 [第 2 阶段计划](../architecture/history/v3-phase2-plan.md)「关键设计」要不要改。范围：Piral 官方文档（docs.piral.io 的源文件，即仓库 `docs/` 下的 Markdown）、GitHub `smapiot/piral` 的源码（`main` 分支 `afae61d`，2026-11-15 浅克隆，读了 `piral-core` 的 `ExtensionSlot`、`ErrorBoundary`、`withApi`、`wrapComponent`、`modules/core`、`utils/state`、`types/extension`，`piral-base` 的加载与共享依赖，`piral-menu` 的注册）；npm 上 `piral-core` / `piral-base` 1.12.5 的包信息；本机用 esbuild 量了 `piral-core` 的体积。相关任务：E36.2.1（#424），父任务 E36.2（#292）。
 
 ## 结论
 

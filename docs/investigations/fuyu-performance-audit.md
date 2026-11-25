@@ -1,9 +1,10 @@
-# 浮屿性能优化审查报告
+# 浮屿性能优化审查报告（v1，历史归档）
 
+> 历史归档：后续全面复审见 [fuyu-performance-audit-v2.md](fuyu-performance-audit-v2.md)。
 > 审查时间：2026-11-17 | 基于 Tauri 性能调研 + 全代码库审计
 > 更新：2026-11-17（同步标注全部 17 项 H1–H5、M1–M8、L1–L4 的落地提交与核查结论）
 
-本报告基于 [Tauri 性能优化调研](tauri-performance-optimization.md) 和 [#746](https://github.com/TixXin/Fuyu/issues/746) 实测数据，对浮屿代码进行逐项审查并跟踪落地状态。
+本报告基于 [Tauri 性能优化调研](../research/tauri-performance-optimization.md) 和 [#746](https://github.com/TixXin/Fuyu/issues/746) 实测数据，对浮屿代码进行逐项审查并跟踪落地状态。
 
 ## 进度速览
 
@@ -68,7 +69,7 @@
 **影响：** GPU 进程内存（#746 实测每窗口 +43 MB GPU）
 
 > **解决现状（`5713333f`、`4d00b60e`、`62d774b9`、`408c7a51`）：**
-> 1. **瞬态与低频窗口销毁释放（#746、D92）：** `settings`、`tray-menu`、`drag-grid`、`screenshot-N`、`pin-N`、`onboarding` 已改为关闭或结束时直接 `destroy()`（不再拦截为 `prevent_close()` + `hide()`）；移除了启动时对 `tray-menu`、`screenshot-N`、`pin-1` 的预构建，修复了 macOS 销毁窗口时的 NSPanel 残留，并在 [useScreenshotFrame.ts](/src/features/screenshot/useScreenshotFrame.ts) 卸载清理中将画布宽高置零释放纹理，同时消除了长截图 `long.rs` 滚动拼接中的整帧冗余克隆。
+> 1. **瞬态与低频窗口销毁释放（#746、D92）：** `settings`、`tray-menu`、`drag-grid`、`screenshot-N`、`pin-N`、`onboarding` 已改为关闭或结束时直接 `destroy()`（不再拦截为 `prevent_close()` + `hide()`）；移除了启动时对 `tray-menu`、`screenshot-N`、`pin-1` 的预构建，修复了 macOS 销毁窗口时的 NSPanel 残留，并在 `src/features/screenshot/useScreenshotFrame.ts`（后拆分重构）卸载清理中将画布宽高置零释放纹理，同时消除了长截图 `long.rs` 滚动拼接中的整帧冗余克隆。
 > 2. **翻译窗口空闲自动销毁（D50）：** `translation` 窗口已改为按需创建（`create: false`），收起隐藏后空闲满 10 分钟自动 `destroy()`，再次唤起时按需重建并保留原有设置与状态（[translation/background.rs](/src-tauri/src/translation/background.rs)）。
 > 3. **常驻窗口边界：** 仅快捷键延迟敏感的 `clipboard` / `clipboard-preview` 保持隐藏常驻（已配合 H2 在隐藏时停掉全部定时器；常驻隐藏窗口的 WebView2 `TrySuspend` / `MemoryUsageTargetLevel` 由 D48 单独跟进）。
 

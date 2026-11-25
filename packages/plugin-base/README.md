@@ -53,7 +53,7 @@
 | `@fuyu/plugin-manifest` | `packages/plugin-manifest` | `package.json` 清单校验、确定性 `.fuyu`（zip）打包解包、Ed25519 作者签名与市场签名校验 |
 | `@fuyu/plugin-market` | `packages/plugin-market` | 市场索引 `index.v3.json` 与撤销名单 `revoked.v3.json` 的验签、序号单调性、过期、冷静期选版 |
 | `@fuyu/plugin-review` | `packages/plugin-review` | 逐版源码与产物差异分析器（绿/黄/红三档分级） |
-| `@fuyu/plugin-cli` | `packages/plugin-cli` | `build`、`pack`、`check`、`review`、`keygen`、`sign` 命令行工具 |
+| `@fuyu/plugin-cli` | `packages/plugin-cli` | `dev`、`build`、`pack`、`check`、`icon`、`shots`、`preview`、`review`、`keygen`、`sign` 命令行工具 |
 
 ---
 
@@ -93,7 +93,7 @@ node --test packages/plugin-base/test/minimal-app.test.mjs
 
 ## 五、每条保证的说明
 
-基座对插件和宿主应用的全部承诺逐条登记在 [docs/architecture/plugins/v3-guarantees.md](../../docs/architecture/plugins/v3-guarantees.md) 中，每条承诺都由自动化测试守住（共 62 条，分布在 `packages/plugin-base/test/*.test.mjs` 与 `src-tauri/crates/plugin-base/tests/`）：
+基座对插件和宿主应用的全部承诺逐条登记在 [docs/architecture/plugins/v3-guarantees.md](../../docs/architecture/plugins/v3-guarantees.md) 中，每条承诺都由自动化测试守住（共 63 条，分布在 `packages/plugin-base/test/*.test.mjs` 与 `src-tauri/crates/plugin-base/tests/`）：
 
 1. **依赖与启动顺序（#1–#5）**
    - 插件声明在 `inject` 里的服务未就绪时不启动，状态为 `waiting` 并指明等待的服务名；

@@ -5,7 +5,7 @@
 - 「收起条上的内容，DIY 设置入口太多了：插件里可以设置，外观收起条项目里也可以设置。」
 - 「岛屿面板没有 DIY 面板：用户可以新建一个空白面板，自己选择展示什么功能、自己排版。」
 
-状态：**已定，拆成任务 [C156](/docs/tasks/C/C156.md)**（#1131，子任务 C156.1–C156.4 / #1132–#1135）。用户 2026-11-20 对四个问题都答「都要」（见「已定」）。预览页：[island-layout-preview.html](island-layout-preview.html)。前一轮的收起条方案见 [island-items-plan.md](island-items-plan.md)（C139），本方案在它上面接着做，不推翻已经做好的清单、右键菜单和「+N」。
+状态：**已定，拆成任务 [C156](/docs/tasks/0-archive/C/C156.md)**（#1131，子任务 C156.1–C156.4 / #1132–#1135）。用户 2026-11-20 对四个问题都答「都要」（见「已定」）。预览页：[island-layout-preview.html](island-layout-preview.html)。前一轮的收起条方案见 [island-items-plan.md](island-items-plan.md)（C139），本方案在它上面接着做，不推翻已经做好的清单、右键菜单和「+N」。
 
 ## 已定（用户 2026-11-20）
 

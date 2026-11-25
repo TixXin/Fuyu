@@ -172,11 +172,11 @@
 | 任务 | issue | 做什么 | 对应建议 |
 |---|---|---|---|
 | [D47](../tasks/D/D47.md) | [#255](https://github.com/TixXin/fuyu/issues/255) | 内存和 GDI 句柄的长时间测量，按进程类型拆分，8 小时以上 | 1 |
-| [D48](../tasks/D/D48.md) | [#256](https://github.com/TixXin/fuyu/issues/256) | 隐藏的窗口用 `MemoryUsageTargetLevel` / `TrySuspend` | 2、3 |
-| [D49](../tasks/D/D49.md) | [#257](https://github.com/TixXin/fuyu/issues/257) | 核对 `emit` 的频率，去重或改成拉取 | 4 |
-| [D50](../tasks/D/D50.md) | [#258](https://github.com/TixXin/fuyu/issues/258) | 翻译窗口和截图选区窗口按需创建、空闲销毁 | 5 |
-| [D51](../tasks/D/D51.md) | [#259](https://github.com/TixXin/fuyu/issues/259) | 看不见的界面里的定时器按可见性停掉 | 6 |
-| [D52](../tasks/D/D52.md) | [#260](https://github.com/TixXin/fuyu/issues/260) | 媒体状态和音量从轮询改成系统事件 | 7 |
+| [D48](../tasks/0-archive/D/D48.md) | [#256](https://github.com/TixXin/fuyu/issues/256) | 隐藏的窗口用 `MemoryUsageTargetLevel` / `TrySuspend` | 2、3 |
+| [D49](../tasks/0-archive/D/D49.md) | [#257](https://github.com/TixXin/fuyu/issues/257) | 核对 `emit` 的频率，去重或改成拉取 | 4 |
+| [D50](../tasks/0-archive/D/D50.md) | [#258](https://github.com/TixXin/fuyu/issues/258) | 翻译窗口和截图选区窗口按需创建、空闲销毁 | 5 |
+| [D51](../tasks/0-archive/D/D51.md) | [#259](https://github.com/TixXin/fuyu/issues/259) | 看不见的界面里的定时器按可见性停掉 | 6 |
+| [D52](../tasks/0-archive/D/D52.md) | [#260](https://github.com/TixXin/fuyu/issues/260) | 媒体状态和音量从轮询改成系统事件 | 7 |
 
 建议 8（定期刷新）、9（渲染）、10（构建配置）没有单独建任务：8 是 D49 的兜底，看 D47 和 D49 的结果再说；9 和展开掉帧是同一件事；10 对内存没有影响。任务结束后文件会移到 `docs/tasks/0-archive/D/`。
 
