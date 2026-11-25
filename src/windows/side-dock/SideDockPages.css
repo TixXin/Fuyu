@@ -31,12 +31,23 @@
   padding: 6px 8px 8px;
 }
 
-.side-dock-drawer__body > * {
+.side-dock-drawer__body > .plugin-slot {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.side-dock-drawer__body > *,
+.side-dock-drawer__body > .plugin-slot > * {
   min-width: 0;
   width: 100%;
 }
 
 .side-dock-drawer__body .calendar-panel {
+  flex: 1;
   flex-direction: column-reverse;
   gap: 10px;
   height: 100%;
@@ -77,15 +88,63 @@
 }
 
 .side-dock-drawer__body .custom-panel,
-.side-dock-drawer__body .agent-sessions,
-.side-dock-drawer__body .todo-island-page,
-.side-dock-drawer__body .clipboard-panel,
-.side-dock-drawer__body .file-shelf,
-.side-dock-drawer__body .music-panel,
-.side-dock-drawer__body .timer-panel {
+.side-dock-drawer__body .todo-island,
+.side-dock-drawer__body .island-list-page,
+.side-dock-drawer__body .music-player,
+.side-dock-drawer__body .translation-panel,
+.side-dock-drawer__body .feed-shell {
+  flex: 1;
   height: 100%;
   min-height: 0;
   max-width: 100%;
+}
+
+.side-dock-drawer__body .agent-sessions {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-top: 0;
+}
+
+.side-dock-drawer__body .agent-usage-chips {
+  padding-right: 0;
+}
+
+.side-dock-drawer__body .island-list-chips {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.side-dock-drawer__body .island-list-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.side-dock-drawer__body .island-list-chip {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.side-dock-drawer__body .todo-island__header {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.side-dock-drawer__body .todo-island__header::-webkit-scrollbar {
+  display: none;
+}
+
+.side-dock-drawer__body .todo-island__progress-track {
+  width: 32px;
+}
+
+.side-dock-drawer__body .music-player__head {
+  gap: 9px;
+}
+
+.side-dock-drawer__body .screenshot-history__grid {
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
 }
 
 .side-dock-drawer__body .custom-panel__scroll {
@@ -94,4 +153,19 @@
 
 .side-dock-drawer__body .focus-layout__sidebar {
   width: 100%;
+}
+
+@container (max-width: 350px) {
+  .side-dock-drawer__body .focus-card__keys {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .side-dock-drawer__body .fuyu-weather__hours:not(.is-scroll) {
+    gap: 3px;
+  }
+
+  .side-dock-drawer__body .fuyu-weather__hours:not(.is-scroll) .fuyu-weather__hour {
+    padding: 5px 2px;
+    font-size: 10.5px;
+  }
 }

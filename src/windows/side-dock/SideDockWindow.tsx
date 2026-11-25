@@ -35,6 +35,7 @@ import { useSideDockPages } from "./useSideDockPages";
 import { useSideDockPill } from "./useSideDockPill";
 import { useSideDockState } from "./useSideDockState";
 import { useSideDockSwipe } from "./useSideDockSwipe";
+import "../../features/plugin-kernel/PluginSlot.css";
 import "./SideDockWindow.css";
 import "./SideDockPages.css";
 
@@ -320,11 +321,13 @@ export function SideDockWindow() {
                     />
                     <div ref={bodyRef} className="side-dock-drawer__body">
                       {currentEntry && pageProps ? (
-                        <SlotView
-                          slot={pageSlot}
-                          props={pageProps}
-                          select={(items) => items.filter((item) => item.id === currentEntry.id)}
-                        />
+                        <div className="plugin-slot">
+                          <SlotView
+                            slot={pageSlot}
+                            props={pageProps}
+                            select={(items) => items.filter((item) => item.id === currentEntry.id)}
+                          />
+                        </div>
                       ) : (
                         <div className="side-dock-drawer__empty">
                           <span>{text.emptyHint}</span>

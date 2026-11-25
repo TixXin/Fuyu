@@ -8,6 +8,7 @@
 }
 
 .side-dock-root {
+  color-scheme: dark;
   --side-surface-fill: rgba(14, 15, 22, 0.82);
   --side-panel-blur: 26px;
   --side-overlay-rgb: 255, 255, 255;
@@ -42,6 +43,7 @@
 }
 
 .side-dock-root.island-light {
+  color-scheme: light;
   --side-overlay-rgb: 24, 24, 30;
   --overlay-rgb: 24, 24, 30;
 }
