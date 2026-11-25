@@ -3,8 +3,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { startHost } from "@fuyu/plugin-base/host";
-import { marketV1 } from "@fuyu/plugin-services";
+import { createRequire } from "node:module";
+import { startHost, openWindowSocket } from "@fuyu/plugin-base/host";
+import { connectHost, createServiceProxy } from "@fuyu/plugin-base/client";
+import { marketV1, timersV1 } from "@fuyu/plugin-services";
+
+const WebSocket = createRequire(new URL("../../packages/plugin-base/package.json", import.meta.url))("ws");
 import { packFiles } from "../../packages/plugin-manifest/src/index.mjs";
 import { SETTINGS_ONLY_METHODS } from "../../src/features/updater/host/market.mjs";
 
@@ -139,4 +143,96 @@ test("uninstall from the settings window only accepts ids that are installed, so
     assert.ok(existsSync(keepData));
     assert.deepEqual((await fromWindow("settings", "catalog", {})).installed.map((item) => item.id), ["@localdev/notes-helper"]);
   });
+});
+
+test("plugin code running in the settings window gets its own plugin identity via handshake token, blocked from market/v1 writes and isolated in timers/v1", async () => {
+  const root = mkdtempSync(join(tmpdir(), "fuyu-e68-caller-"));
+  const builtinsDir = mkdtempSync(join(tmpdir(), "fuyu-e68-builtins-"));
+  let host = null;
+  let server = null;
+  let settingsConn = null;
+  let pluginAConn = null;
+  let pluginBConn = null;
+  const origin = "tauri://localhost";
+  const open = (url) => new WebSocket(url, { origin });
+  try {
+    writeFileSync(
+      join(builtinsDir, "builtins.json"),
+      JSON.stringify({
+        format: 1,
+        plugins: [
+          { id: "updater", kind: "essential", root: "updater", host: "host/index.mjs", background: [], provides: ["market/v1"] },
+          { id: "timer", kind: "builtin", root: "timer", host: "host/index.mjs", background: [], provides: ["timers/v1"] },
+        ],
+      }),
+    );
+    mkdirSync(join(builtinsDir, "updater", "host"), { recursive: true });
+    mkdirSync(join(builtinsDir, "timer", "host"), { recursive: true });
+    writeFileSync(
+      join(builtinsDir, "updater", "host", "index.mjs"),
+      `export { name, apply } from ${JSON.stringify(new URL("../../src/features/updater/host/index.mjs", import.meta.url).href)};\n`,
+    );
+    writeFileSync(
+      join(builtinsDir, "timer", "host", "index.mjs"),
+      `export { name, apply } from ${JSON.stringify(new URL("../../src/features/timer/host/index.mjs", import.meta.url).href)};\n`,
+    );
+    writeFileSync(join(root, "plugins.yml"), "[]\n");
+    host = await startHost({ dir: root, builtins: builtinsDir, appVersion: "0.3.14" });
+    await host.settle();
+
+    server = await openWindowSocket({
+      origins: [origin],
+      snapshot: () => ({ services: host.services() }),
+      onCall: (method, params, window, plugin) => host.serviceHub.windowCall(method, params, window, plugin),
+    });
+
+    const tokenA = server.issuePluginToken("@evil/rogue");
+    const tokenB = server.issuePluginToken("@other/buddy");
+    const waitOpen = (conn) => new Promise((resolve, reject) => {
+      const start = Date.now();
+      const tick = () => {
+        if (conn.state === "open") return resolve();
+        if (Date.now() - start > 3000) return reject(new Error("socket did not open"));
+        setTimeout(tick, 10);
+      };
+      tick();
+    });
+    settingsConn = connectHost({ resolve: async () => ({ port: server.port, token: server.token }), window: "settings", open });
+    pluginAConn = connectHost({ resolve: async () => ({ port: server.port, token: tokenA }), window: "settings", open });
+    pluginBConn = connectHost({ resolve: async () => ({ port: server.port, token: tokenB }), window: "settings", open });
+    await Promise.all([waitOpen(settingsConn), waitOpen(pluginAConn), waitOpen(pluginBConn)]);
+
+    const settingsMarket = createServiceProxy((m, p, o) => settingsConn.call(m, p, o)).get(marketV1);
+    const rogueMarket = createServiceProxy((m, p, o) => pluginAConn.call(m, p, o)).get(marketV1);
+    const pluginATimers = createServiceProxy((m, p, o) => pluginAConn.call(m, p, o)).get(timersV1);
+    const pluginBTimers = createServiceProxy((m, p, o) => pluginBConn.call(m, p, o)).get(timersV1);
+
+    for (const method of SETTINGS_ONLY_METHODS) {
+      await assert.rejects(
+        rogueMarket[method](method === "setManualAllowed" ? { allowed: true } : method === "dismissAutoUpdated" ? { at: 0 } : { id: "x", name: "x", base64: "QQ==", enabled: false }),
+        (error) => error.code === "forbidden" && error.message.includes("@evil/rogue"),
+        `settings-window plugin must be rejected on ${method} with its plugin id`,
+      );
+    }
+    assert.deepEqual(await settingsMarket.setManualAllowed({ allowed: true }), { manualAllowed: true });
+
+    const { timer } = await pluginATimers.start({ kind: "countdown", durationMs: 60_000, label: "Rogue timer" });
+    assert.ok(timer.id);
+    assert.equal(timer.owner, "@evil/rogue");
+    assert.deepEqual(await pluginBTimers.remove({ id: timer.id }), { removed: false });
+    await assert.rejects(
+      pluginBTimers.pause({ id: timer.id }),
+      (error) => error.code === "not-found" || error.code === "forbidden",
+      "another plugin running in a window cannot pause timers owned by @evil/rogue",
+    );
+    assert.deepEqual(await pluginATimers.remove({ id: timer.id }), { removed: true });
+  } finally {
+    settingsConn?.close();
+    pluginAConn?.close();
+    pluginBConn?.close();
+    if (server) await server.close();
+    if (host) await host.stop();
+    rmSync(root, { recursive: true, force: true });
+    rmSync(builtinsDir, { recursive: true, force: true });
+  }
 });

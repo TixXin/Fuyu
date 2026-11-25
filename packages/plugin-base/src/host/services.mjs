@@ -291,8 +291,8 @@ export class Services {
     };
   }
 
-  windowCall(method, params, window) {
-    if (method === "service.call") return this.callFromWindow(params, window);
+  windowCall(method, params, window, plugin) {
+    if (method === "service.call") return this.callFromWindow(params, window, plugin);
     if (!params || typeof params !== "object") throw serviceError("bad-params", `${method} needs { service, event }`);
     checkName(params.service);
     if (typeof params.event !== "string" || !MEMBER_NAME.test(params.event)) throw serviceError("bad-params", `${method} needs the name of an event`);
@@ -310,9 +310,10 @@ export class Services {
     return true;
   }
 
-  async callFromWindow(params, window) {
+  async callFromWindow(params, window, plugin) {
     if (!params || typeof params !== "object" || typeof params.method !== "string") throw serviceError("bad-params", "service.call needs { service, method, params }");
-    const result = await this.invoke(params.service, params.method, params.params, { window });
+    const caller = typeof plugin === "string" && plugin ? { window, plugin } : { window };
+    const result = await this.invoke(params.service, params.method, params.params, caller);
     try {
       if (result !== undefined) JSON.stringify(result);
     } catch (error) {

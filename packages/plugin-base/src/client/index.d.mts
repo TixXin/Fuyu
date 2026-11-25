@@ -54,6 +54,7 @@ export interface ClientEntry {
   window: string;
   path: string;
   version: string;
+  token?: string;
 }
 
 export interface ClientStatus {
@@ -87,9 +88,16 @@ export interface IslandControl {
   collapse(plugin: string): Promise<boolean>;
 }
 
+export interface ScopedPluginConnection {
+  bridge?: Bridge;
+  services?: import("./services.mjs").ServiceProxy;
+  close?: () => void;
+}
+
 export function createLoader(options: {
   registry: SlotRegistry;
   bridge?: Bridge;
+  connectPlugin?: ((entry: ClientEntry) => ScopedPluginConnection | null) | null;
   base: string;
   openSettings?: ((plugin: string) => Promise<void> | void) | null;
   reportSetup?: ((plugin: string, state: { needed: boolean; hint?: unknown }) => Promise<unknown> | void) | null;

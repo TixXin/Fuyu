@@ -48,7 +48,35 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const bridge = createBridge((method, params) => connection?.call(method, params) ?? Promise.reject(new Error("the plugin host is not connected")));
   const callHost = (method: string, params?: unknown) => connection?.call(method, params) ?? Promise.reject(new HostCallError("not-ready", "the plugin host is not connected"));
   const reportSetup = (plugin: string, state: { needed: boolean; hint?: unknown }) => callHost("settings.setup", { plugin, ...state });
-  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, openSettings: openPluginSettings, reportSetup, island: islandControlFor(window, callHost) });
+  const connectPlugin = (entry: ClientEntry) => {
+    if (!entry.token) return null;
+    const token = entry.token;
+    let pluginConnection: Connection | null = null;
+    const pluginBridge = createBridge((method, params) => pluginConnection?.call(method, params) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
+    const pluginServices = createServiceProxy((method, params, options) => pluginConnection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
+    pluginConnection = connectHost<{ services?: ServiceEntry[] }>({
+      resolve: async () => {
+        const info = await getPluginHostConnection();
+        return info.port !== null ? { port: info.port, token } : null;
+      },
+      window,
+      onSnapshot: (snapshot, { fresh }) => {
+        pluginServices.update(snapshot.services ?? []);
+        if (fresh) void pluginServices.resubscribe();
+      },
+      onEvent: (name, data) => {
+        if (name === "plugin") pluginBridge.deliver(data as PluginMessage);
+        if (name === "service") pluginServices.deliver(data as ServiceEventMessage);
+        if (name === "services") pluginServices.update(data as ServiceEntry[]);
+      },
+    });
+    return {
+      bridge: pluginBridge,
+      services: pluginServices,
+      close: () => pluginConnection?.close(),
+    };
+  };
+  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, connectPlugin, openSettings: openPluginSettings, reportSetup, island: islandControlFor(window, callHost) });
   if (window === "island") attachIslandHost(callHost);
   const services = createServiceProxy((method, params, options) => connection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
   windowServices.attach(services);
