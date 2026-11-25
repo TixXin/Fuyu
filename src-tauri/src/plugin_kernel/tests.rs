@@ -230,6 +230,26 @@ fn the_host_gets_the_built_in_plugin_list_and_the_app_version() {
 }
 
 #[test]
+fn the_host_receives_the_saved_locale_flag_and_normalizes_values() {
+    assert_eq!(super::normalize_locale("en"), "en");
+    assert_eq!(super::normalize_locale("en-US"), "en");
+    assert_eq!(super::normalize_locale("\"en\""), "en");
+    assert_eq!(super::normalize_locale("zh-CN"), "zh-CN");
+    assert_eq!(super::normalize_locale("ja"), "zh-CN");
+
+    let home = scratch("saved-locale");
+    std::fs::create_dir_all(&home).unwrap();
+    assert_eq!(super::read_saved_locale(&home), "zh-CN");
+    std::fs::write(home.join(crate::settings_file::FILE_NAME), r#"{"app":"fuyu","version":1,"keys":{"fuyu-locale":"en"}}"#).unwrap();
+    assert_eq!(super::read_saved_locale(&home), "en");
+    let _ = std::fs::remove_dir_all(&home);
+
+    let args = args_for(&HostMode { locale: Some("en".into()), ..HostMode::default() });
+    assert!(args.windows(2).any(|pair| pair == ["--locale", "en"]), "{args:?}");
+    assert!(args.iter().position(|arg| arg == "--locale") > args.iter().position(|arg| arg.ends_with("main.mjs")));
+}
+
+#[test]
 fn a_release_build_runs_the_bundled_host_and_falls_back_to_the_repository() {
     let resources = scratch("bundled-resources");
     let repository = host_files(None, false);

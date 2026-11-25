@@ -23,6 +23,7 @@ const { values } = parseArgs({
     config: { type: "string", default: "plugins.yml" },
     builtins: { type: "string" },
     "app-version": { type: "string" },
+    locale: { type: "string" },
     watch: { type: "boolean", default: false },
     dev: { type: "boolean", default: false },
     safe: { type: "string" },
@@ -74,6 +75,10 @@ rpc.handle("proxy", (params) => {
   proxyFetch.setConfig(params ?? null);
   return true;
 });
+rpc.handle("locale", (params) => {
+  if (host) host.locale.set(params?.locale);
+  return host?.locale.current() ?? "zh-CN";
+});
 rpc.handle("stop", () => {
   setImmediate(() => stop(0));
   return true;
@@ -85,6 +90,7 @@ try {
     config: values.config,
     builtins: values.builtins ?? null,
     appVersion: values["app-version"] ?? null,
+    locale: values.locale ?? "zh-CN",
     watch: values.watch || values.dev,
     dev: values.dev,
     safe,
@@ -102,9 +108,9 @@ try {
     origins: values.origin.length ? values.origin : WINDOW_ORIGINS,
     snapshot: (caller) => {
       if (caller?.plugin) {
-        return { plugins: [], clients: [], services: host.services(), host: null };
+        return { plugins: [], clients: [], services: host.services(), host: null, locale: host.locale.current() };
       }
-      return { plugins: host.status(), clients: withClientTokens(host.clients()), services: host.services(), host: host.info() };
+      return { plugins: host.status(), clients: withClientTokens(host.clients()), services: host.services(), host: host.info(), locale: host.locale.current() };
     },
     onCall: (method, params, window, plugin) => {
       if (plugin) {
@@ -139,6 +145,7 @@ try {
     windows.publish("clients", withClientTokens(clients), { privilegedOnly: true });
   });
   host.watchServices((services) => windows.publish("services", services));
+  host.locale.watch((locale) => windows.publish("locale", { locale }));
   host.serviceHub.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
   host.settingsOpener.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data, { privilegedOnly: true }) });
   host.islandControl.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data, { privilegedOnly: true }) });

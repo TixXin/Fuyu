@@ -94,6 +94,27 @@ export interface ScopedPluginConnection {
   close?: () => void;
 }
 
+export type { LocaleId, LocalizedText } from "../protocol.mjs";
+import type { LocaleId, LocalizedText } from "../protocol.mjs";
+
+export interface LocaleStore {
+  current(): LocaleId;
+  set(next: unknown): boolean;
+  onChange(listener: (locale: LocaleId) => void): () => void;
+  pick(map: LocalizedText | null | undefined): string;
+}
+
+export declare const DEFAULT_LOCALE: "zh-CN";
+export function normalizeLocale(value: unknown): LocaleId;
+export function pickLocale(map: LocalizedText | null | undefined, locale?: string): string;
+export function createLocaleStore(initial?: string): LocaleStore;
+
+export declare class PluginLocale {
+  readonly current: LocaleId;
+  onChange(listener: (locale: LocaleId) => void): () => Promise<void>;
+  pick(map: LocalizedText | null | undefined): string;
+}
+
 export function createLoader(options: {
   registry: SlotRegistry;
   bridge?: Bridge;
@@ -102,6 +123,7 @@ export function createLoader(options: {
   openSettings?: ((plugin: string) => Promise<void> | void) | null;
   reportSetup?: ((plugin: string, state: { needed: boolean; hint?: unknown }) => Promise<unknown> | void) | null;
   island?: IslandControl | null;
+  locale?: LocaleStore | null;
   importModule?: (url: string) => Promise<any>;
   checkFile?: (url: string) => Promise<void>;
   onStatus?: (status: Map<string, ClientStatus>) => void;

@@ -41,9 +41,10 @@ function openFromHost(data: unknown) {
 async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const first = await getPluginHostConnection();
   if (!first.enabled) return null;
-  const { connectHost, createBridge, createLoader, createServiceProxy, HostCallError } = await import("@fuyu/plugin-base/client");
+  const { connectHost, createBridge, createLoader, createLocaleStore, createServiceProxy, HostCallError } = await import("@fuyu/plugin-base/client");
   installShared({ react: React, jsxRuntime });
   const registry = windowSlots(window);
+  const localeStore = createLocaleStore(loadLocale());
   let connection: Connection | null = null;
   const bridge = createBridge((method, params) => connection?.call(method, params) ?? Promise.reject(new Error("the plugin host is not connected")));
   const callHost = (method: string, params?: unknown) => connection?.call(method, params) ?? Promise.reject(new HostCallError("not-ready", "the plugin host is not connected"));
@@ -54,13 +55,14 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
     let pluginConnection: Connection | null = null;
     const pluginBridge = createBridge((method, params) => pluginConnection?.call(method, params) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
     const pluginServices = createServiceProxy((method, params, options) => pluginConnection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
-    pluginConnection = connectHost<{ services?: ServiceEntry[] }>({
+    pluginConnection = connectHost<{ services?: ServiceEntry[]; locale?: string }>({
       resolve: async () => {
         const info = await getPluginHostConnection();
         return info.port !== null ? { port: info.port, token } : null;
       },
       window,
       onSnapshot: (snapshot, { fresh }) => {
+        if (typeof snapshot.locale === "string") localeStore.set(snapshot.locale);
         pluginServices.update(snapshot.services ?? []);
         if (fresh) void pluginServices.resubscribe();
       },
@@ -68,6 +70,10 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
         if (name === "plugin") pluginBridge.deliver(data as PluginMessage);
         if (name === "service") pluginServices.deliver(data as ServiceEventMessage);
         if (name === "services") pluginServices.update(data as ServiceEntry[]);
+        if (name === "locale") {
+          const next = (data as { locale?: unknown } | null)?.locale;
+          if (typeof next === "string") localeStore.set(next);
+        }
       },
     });
     return {
@@ -76,7 +82,7 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
       close: () => pluginConnection?.close(),
     };
   };
-  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, connectPlugin, openSettings: openPluginSettings, reportSetup, island: islandControlFor(window, callHost) });
+  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, connectPlugin, openSettings: openPluginSettings, reportSetup, island: islandControlFor(window, callHost), locale: localeStore });
   if (window === "island") attachIslandHost(callHost);
   const services = createServiceProxy((method, params, options) => connection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
   windowServices.attach(services);
@@ -103,10 +109,11 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const sync = () => {
     void loader.sync(clients.filter((entry) => entry.window === window));
   };
-  connection = connectHost<{ clients?: ClientEntry[]; services?: ServiceEntry[]; plugins?: WaitingPluginInput[] }>({
+  connection = connectHost<{ clients?: ClientEntry[]; services?: ServiceEntry[]; plugins?: WaitingPluginInput[]; locale?: string }>({
     resolve: target,
     window,
     onSnapshot: (snapshot, { fresh }) => {
+      if (typeof snapshot.locale === "string") localeStore.set(snapshot.locale);
       clients = snapshot.clients ?? [];
       services.update(snapshot.services ?? []);
       if (snapshot.plugins) {
@@ -120,6 +127,10 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
       if (name === "plugin") bridge.deliver(data as PluginMessage);
       if (name === "service") services.deliver(data as ServiceEventMessage);
       if (name === "services") services.update(data as ServiceEntry[]);
+      if (name === "locale") {
+        const next = (data as { locale?: unknown } | null)?.locale;
+        if (typeof next === "string") localeStore.set(next);
+      }
       if (name === "settings.open" && window === "island") openFromHost(data);
       if (name === "island.request" && window === "island") void answerIslandRequest(data, callHost).catch((error: unknown) => console.error("Failed to answer an island request from the plugin host", error));
       if (name === "plugins" && Array.isArray(data)) {

@@ -13,3 +13,5 @@ export { DEV_PREFIX, INSTALLED_SOURCES, PACKAGES_DIR, SOURCES, readManifest } fr
 export { KEYBINDINGS_FILE } from "./commands.mjs";
 export { CONFIG_FILE } from "./plugin-config.mjs";
 export { MAX_WINDOWS_PER_PLUGIN, MAX_WINDOWS_TOTAL, WINDOW_RULES_FILE } from "./windows.mjs";
+export { HostLocale } from "./locale.mjs";
+export { DEFAULT_LOCALE, normalizeLocale, pickLocale } from "../locale.mjs";

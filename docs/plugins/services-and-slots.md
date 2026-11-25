@@ -256,3 +256,29 @@ export function apply(ctx) {
   - `not-ready`：岛窗口还没连上宿主；`timeout`：岛 10 秒没回答；`bad-params`：`page` 不是非空字符串。
 - `collapse()`：只给窗口代码。岛展开着、当前是本插件的页面时收起岛，返回 `true`；岛已经收起、或用户正在看别的页面时什么也不做，返回 `false`，不会关掉用户在看的东西。宿主代码里没有 `collapse`：宿主不知道用户此刻在不在看岛，收起应该跟着用户在插件界面上的操作走；确实需要时，宿主用 `ctx.clients.publish` 通知窗口部分，由窗口代码调。
 - 老版本的浮屿没有 `ctx.island`：窗口代码用 `ctx.island?.open` 判断接口在不在；宿主代码把 `island` 写成可选的：代码里 `export const inject = { commands: null, island: { required: false } }`，`package.json` 写进 `fuyu.inject.optional`，没有时 `ctx.island` 是 `undefined`，插件照常启动（官方插件「应用启动台」就是这样写的）。写成必需的（数组里写 `"island"`）时，插件在老版本上会一直停在「等待」。
+
+---
+
+## 六、界面语言（`ctx.locale`）
+
+插件在宿主和各窗口都能通过 `ctx.locale` 读取浮屿设置里选择的界面语言（`"zh-CN"` 或 `"en"`），不用再猜 `navigator.language` 或 `Intl`，宿主在窗口连上之前也能拿到和设置一致的语言。
+
+```ts
+// 窗口代码（直接使用）
+const label = ctx.locale.pick({ "zh-CN": "开始倒计时", en: "Start countdown" });
+ctx.locale.onChange((next) => setLocale(next));
+
+// 宿主代码：inject 和 package.json 的 fuyu.inject 里写 "locale"（要兼容旧版本可写 optional）
+export const inject = ["clients", "locale"];
+export function apply(ctx) {
+  const title = ctx.locale.pick({ "zh-CN": "定时提醒", en: "Timer Reminder" });
+  ctx.locale.onChange((next) => {
+    console.log("locale changed to", next);
+  });
+}
+```
+
+- `ctx.locale.current`：当前界面语言，固定为 `"zh-CN"` 或 `"en"`。
+- `ctx.locale.onChange(fn)`：监听设置切换语言；返回取消订阅函数，插件停用时也会自动解除。
+- `ctx.locale.pick(map)`：按当前语言从 `{ "zh-CN": "…", en: "…" }` 中选文案，缺哪种回退另一种，传入字符串时原样返回（去除首尾空白）。
+- 该接口为正式接口（非实验接口）。要兼容旧版本浮屿时，窗口代码可写 `ctx.locale?.current`，宿主代码把 `"locale"` 放进 `fuyu.inject.optional` 并写 `locale: { required: false }`。

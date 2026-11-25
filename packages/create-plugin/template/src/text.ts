@@ -1,3 +1,4 @@
+import type { LocaleId } from "@fuyu/plugin-base";
 import type { TimerKind } from "@fuyu/plugin-services";
 
 const en = {
@@ -18,4 +19,9 @@ const zhCN: typeof en = {
   dismiss: (ringing: number) => (ringing > 0 ? `清掉 ${ringing} 个已到点的` : "没有已到点的"),
 };
 
-export const text = navigator.language.toLowerCase().startsWith("zh") ? zhCN : en;
+export function textFor(locale: LocaleId | string | undefined) {
+  const current = locale ?? navigator.language;
+  return current.toLowerCase().startsWith("en") ? en : zhCN;
+}
+
+export const text = textFor(navigator.language);

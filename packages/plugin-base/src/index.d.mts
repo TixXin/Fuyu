@@ -1,10 +1,29 @@
 import type { RustApi } from "./host/index.mjs";
-import type { SlotName } from "./protocol.mjs";
+import type { LocaleId, LocalizedText, SlotName } from "./protocol.mjs";
 import type { Json, PluginWindowState, ServicesApi } from "./services.mjs";
 
 export { Context, Service } from "cordis";
 export type * from "./services.mjs";
 export type { RustApi, RustCallOptions } from "./host/index.mjs";
+export type { LocaleId, LocalizedText } from "./protocol.mjs";
+
+export interface PluginLocaleApi {
+  /**
+   * The current Fuyu interface language (`"zh-CN"` or `"en"`). Matches the language chosen in Fuyu's settings,
+   * both in host code (even before any window connects) and in every window.
+   */
+  readonly current: LocaleId;
+  /**
+   * Subscribes to interface language changes. Returns an unsubscribe function and automatically cleans up when
+   * this plugin stops.
+   */
+  onChange(listener: (locale: LocaleId) => void): () => Promise<void>;
+  /**
+   * Picks the text matching the current interface language from a map such as `{ "zh-CN": "…", en: "…" }`,
+   * falling back to the other language when one is missing. Strings are returned trimmed as-is.
+   */
+  pick(map: LocalizedText | null | undefined): string;
+}
 
 export interface PluginWindowSpec {
   id: string;
@@ -128,6 +147,11 @@ declare module "cordis" {
       open(page?: string): Promise<void>;
       collapse(): Promise<boolean>;
     };
+    /**
+     * Fuyu's current interface language (`"zh-CN"` or `"en"`). Window code can read it directly; host code lists
+     * `"locale"` in `inject` (or as an optional injection to stay compatible with older Fuyu versions).
+     */
+    locale: PluginLocaleApi;
     http: {
       fetch: HttpFetch;
     };

@@ -1,6 +1,7 @@
 import { Context, Service } from "cordis";
 import { HostBridge } from "./bridge.mjs";
 import { PluginIsland } from "./island-service.mjs";
+import { PluginLocale } from "./locale-service.mjs";
 import { PluginSettings } from "./settings-service.mjs";
 import { Slots } from "./slot-service.mjs";
 
@@ -35,13 +36,20 @@ export function createLoader({
   openSettings = null,
   reportSetup = null,
   island = null,
+  locale = null,
   importModule = (url) => import(/* @vite-ignore */ url),
   checkFile = defaultCheck,
   onStatus,
 }) {
   const root = new Context();
-  const ready = Promise.all([root.plugin(Slots, registry), root.plugin(PluginSettings, { open: openSettings, setup: reportSetup }), root.plugin(PluginIsland, { control: island }), bridge ? root.plugin(HostBridge, bridge) : null]);
-  const baseInject = bridge ? ["slots", "settings", "island", "host"] : ["slots", "settings", "island"];
+  const ready = Promise.all([
+    root.plugin(Slots, registry),
+    root.plugin(PluginSettings, { open: openSettings, setup: reportSetup }),
+    root.plugin(PluginIsland, { control: island }),
+    root.plugin(PluginLocale, locale),
+    bridge ? root.plugin(HostBridge, bridge) : null,
+  ]);
+  const baseInject = bridge ? ["slots", "settings", "island", "locale", "host"] : ["slots", "settings", "island", "locale"];
   const loaded = new Map();
   const status = new Map();
 
@@ -65,8 +73,9 @@ export function createLoader({
       isolated.plugin(Slots, registry),
       isolated.plugin(PluginSettings, { open: openSettings, setup: reportSetup }),
       isolated.plugin(PluginIsland, { control: island }),
+      isolated.plugin(PluginLocale, locale),
     ];
-    const inject = ["slots", "settings", "island"];
+    const inject = ["slots", "settings", "island", "locale"];
     const pluginBridge = scoped.bridge ?? bridge;
     if (pluginBridge) {
       tasks.push(isolated.plugin(HostBridge, pluginBridge));
