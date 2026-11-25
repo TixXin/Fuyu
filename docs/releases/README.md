@@ -51,5 +51,5 @@
 - 指定版本：`pnpm release:share 0.3.9`；只要一种语言：`--lang zh`；倍率：`--scale 1`；不复制：`--no-copy`；不打开文件夹：`--no-open`。
 - 用本机的 Chrome 或 Edge 无界面截图，找不到时设 `CHROME_PATH`。复制图片在 Mac 上用 `osascript`，Windows 上用 PowerShell，Linux 上要装 `xclip`；复制失败只提示，不影响出图。日期取版本 tag 的提交日期，还没打 tag 时用今天。
 - 推到 QQ：`--push` 把中文图和一份说明文件（`fuyu-v<版本号>.json`）用 `scp` 传到环境变量 `FUYU_BOT_INBOX` 指的机器人收件箱（`主机:/路径/inbox/`），QQ 机器人插件随后私聊发出，插件见 [bot/README.md](../../bot/README.md)。`pnpm release` 在设了这个变量时自动带上 `--push`；推送失败只提示，不影响发布。收件箱地址写在本机环境变量里，不进仓库。
-- 推到微信群：设了环境变量 `FUYU_FUXI=<ssh 主机>:<浮汐部署目录>` 时，`--push` 还会经 ssh 调浮汐（微信机器人，仓库 `TixXin/Fuxi`）的 `/announce`：中文图加一段「浮屿 v… 已更新 / 在 设置 → 关于 里更新 / 更新说明链接」先发到你的文件传输助手预览，你在那里回 `/发布 编号` 才发到群，`/取消 编号` 放弃；发到哪个群在浮汐里用 `/设置 发版群` 配。幂等键是 `fuyu-v<版本号>`，重跑不会重复预览或重复发群。`pnpm release` 设了这个变量也自动带 `--push`。
+- 推到微信群：设了环境变量 `FUYU_FUXI=<ssh 主机>:<浮汐部署目录>` 时，`--push` 还会经 ssh 调浮汐（微信机器人，仓库 `TixXin/Fuxi`）的 `/announce`：中文图加一段「浮屿 v… 已更新 / 在 设置 → 关于 里更新 / 更新说明链接」直接发到发版群，发到哪个群在浮汐里用 `/设置 发版群` 配；想先在文件传输助手预览、回 `/发布 编号` 才进群，在浮汐里 `/设置 发版公告预览 开`。幂等键是 `fuyu-v<版本号>`，重跑不会重复发群。`pnpm release` 设了这个变量也自动带 `--push`。
 - 样式在 `scripts/release/share-card.html`，解析在 `scripts/release/share-card-notes.mjs`；三个方案的对比见 [release-share-card-preview.html](../investigations/release-share-card-preview.html)。
