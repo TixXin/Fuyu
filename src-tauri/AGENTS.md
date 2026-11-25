@@ -80,7 +80,7 @@ src-tauri/src/
                              # capture_targets、taskbar、taskbar_shell / taskbar_uia（找任务栏、设所有者；UIA 读任务栏按钮和托盘的范围）、taskbar_slot（任务栏里的透明占位窗口，自带消息循环线程）、uia_list / uia_tabs、brightness、
                              # notification_state（前台是否有全屏程序）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、webview_visibility（窗口隐藏、显示时设 IsVisible，D117）、webview_scale（关掉 WebView2 的缩放自动检测、设 RasterizationScale，D122）、
                              # job（插件宿主进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
-                             # session（是否锁屏与键鼠空闲时间，和 macos/session.rs 同签名）、audio_outputs（在用的音频输出及类型）、
+                             # session（是否锁屏与键鼠空闲时间，和 macos/session.rs 同签名）、session_end（关机注销时先收到 WM_QUERYENDSESSION，插件宿主据此停下、不再重启 node）、audio_outputs（在用的音频输出及类型）、
                              # devnode（设备节点属性：容器、蓝牙电量）、power（电源与电池）、graphics_capture（D3D11 设备与 WGC 显示器采集，帧留在 GPU）、
                              # video_writer（Media Foundation Sink Writer：硬件 H.264 写 MP4，失败换软件；可带 AAC 声音）、
                              # audio_capture（WASAPI 录系统声音和麦克风，系统声音同时开一路静音播放流，防止没声音时断包）

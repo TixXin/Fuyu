@@ -403,6 +403,10 @@ pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let shift = crate::platform::input::is_shift_key_down();
     let serve = methods::table(app)?;
     let _ = TRACKER.set(Mutex::new(safe_mode::Tracker::new(Some(&dir), std::env::var(SAFE_SWITCH).ok(), shift)));
+    #[cfg(windows)]
+    if let Err(error) = crate::win32::session_end::watch(stop_for_session_end) {
+        eprintln!("[plugins-v3] could not watch for the session ending: {error}");
+    }
     std::thread::Builder::new()
         .name("plugin-host-start".into())
         .spawn(move || {
@@ -516,6 +520,15 @@ macro_rules! tauri_commands {
     };
 }
 pub(crate) use tauri_commands;
+
+#[cfg(windows)]
+fn stop_for_session_end() {
+    if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
+        return;
+    }
+    STOPPING.store(true, std::sync::atomic::Ordering::SeqCst);
+    let _ = std::thread::Builder::new().name("plugin-host-session-end".into()).spawn(shutdown);
+}
 
 pub(crate) fn shutdown() {
     STOPPING.store(true, std::sync::atomic::Ordering::SeqCst);

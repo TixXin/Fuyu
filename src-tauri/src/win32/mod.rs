@@ -37,6 +37,7 @@ pub(crate) mod process_tree;
 pub(crate) mod registry;
 pub(crate) mod screen_capture;
 pub(crate) mod session;
+pub(crate) mod session_end;
 pub(crate) mod shell_hook;
 pub(crate) mod sibling_island;
 pub(crate) mod system_stats;
