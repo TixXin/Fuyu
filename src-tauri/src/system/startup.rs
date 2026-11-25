@@ -1,4 +1,7 @@
-use std::{os::windows::process::CommandExt, process::Command};
+use std::{
+    os::windows::process::CommandExt,
+    process::{Command, Stdio},
+};
 
 use super::CREATE_NO_WINDOW;
 use crate::user_error::UserError;
@@ -10,6 +13,9 @@ const LEGACY_STARTUP_REGISTRY_VALUE: &str = "FocuSD Island";
 fn reg(args: &[&str]) -> Result<bool, String> {
     Command::new("reg")
         .creation_flags(CREATE_NO_WINDOW)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .args(args)
         .status()
         .map(|status| status.success())
@@ -46,6 +52,9 @@ fn registry_value_present() -> Result<bool, String> {
     let mut command = Command::new("reg");
     let status = command
         .creation_flags(CREATE_NO_WINDOW)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .args(["query", STARTUP_REGISTRY_KEY, "/v", STARTUP_REGISTRY_VALUE])
         .status()
         .map_err(|error| format!("Failed to query startup registry: {error}"))?;
@@ -62,6 +71,9 @@ fn set_registry_value(enabled: bool) -> Result<(), String> {
         let mut command = Command::new("reg");
         command
             .creation_flags(CREATE_NO_WINDOW)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .args([
                 "add",
                 STARTUP_REGISTRY_KEY,
@@ -78,6 +90,9 @@ fn set_registry_value(enabled: bool) -> Result<(), String> {
         let mut command = Command::new("reg");
         command
             .creation_flags(CREATE_NO_WINDOW)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .args([
                 "delete",
                 STARTUP_REGISTRY_KEY,
