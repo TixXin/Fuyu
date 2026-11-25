@@ -12,7 +12,7 @@ export type RowNote =
   | { kind: "paused"; errors: number; seconds: number }
   | { kind: "waiting"; service: string; provider: BuiltinPluginName | null; providerOff: boolean }
   | { kind: "unreachable"; windows: string[] }
-  | { kind: "revoked"; reasons: MarketLocalizedText[] }
+  | { kind: "revoked"; reasons: MarketLocalizedText[]; fixVersion?: string }
   | { kind: "warned"; reasons: MarketLocalizedText[]; update: string | null }
   | { kind: "held"; version: string; added: MarketCapabilitySet }
   | { kind: "trust"; version: string }
@@ -60,8 +60,11 @@ function updateCandidate(market: MarketCatalogPlugin): MarketVersionCandidate | 
 }
 
 function marketNote(market: MarketCatalogPlugin | undefined, revocation: MarketRevocation | null): RowNote | null {
-  if (revocation?.level === "disable" || (!revocation && market?.installedVersion && market.revoked)) return { kind: "revoked", reasons: revocation?.reasons ?? [] };
   const candidate = market?.installedVersion ? updateCandidate(market) : null;
+  if (revocation?.level === "disable" || (!revocation && market?.installedVersion && market.revoked)) {
+    const fixVersion = candidate && (candidate.trustChange || candidate.confirmation.trustChange || market?.autoUpdateHeld) ? candidate.version : undefined;
+    return { kind: "revoked", reasons: revocation?.reasons ?? [], ...(fixVersion ? { fixVersion } : {}) };
+  }
   if (revocation?.level === "warn") return { kind: "warned", reasons: revocation.reasons, update: candidate?.version ?? null };
   if (!market || !candidate) return null;
   if (candidate.trustChange || candidate.confirmation.trustChange) return { kind: "trust", version: candidate.version };

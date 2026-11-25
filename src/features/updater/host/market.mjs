@@ -85,7 +85,9 @@ export function createMarketService(options = {}) {
     const depPlan = planRequiredDependencies({ doc, rootName: pluginEntry.name, rootEntry: versionEntry, installedById, appVersion, platform, now, revocations: state.revocations, strict: true });
     const steps = [...depPlan.map((dep) => verifyMarketStep(dep.plugin, dep.entry)), verifyMarketStep(pluginEntry, versionEntry)];
     const { lastInstalled, trustedAuthors } = await downloadAndInstallSteps(steps, state.revocations, state.trustedAuthors);
-    writeState(dataDir, { ...state, trustedAuthors });
+    const nextRevokedDisabled = { ...state.revokedDisabled };
+    for (const step of steps) delete nextRevokedDisabled[step.pluginEntry.name];
+    writeState(dataDir, { ...state, trustedAuthors, revokedDisabled: nextRevokedDisabled });
     if (announce) await announceInstalled();
     return {
       id: lastInstalled.id,
@@ -121,9 +123,15 @@ export function createMarketService(options = {}) {
       const now = nowFn();
       const { doc } = readVerifiedCachedIndex(dataDir, trust, now);
       if (!doc) return snapshot();
-      const { upgraded, trustedAuthors } = await runSilentAutoUpdates({ doc, revocations: state.revocations, trustedAuthors: state.trustedAuthors, now });
+      const { upgraded, trustedAuthors, revokedDisabled } = await runSilentAutoUpdates({
+        doc,
+        revocations: state.revocations,
+        trustedAuthors: state.trustedAuthors,
+        revokedDisabled: state.revokedDisabled,
+        now,
+      });
       if (upgraded.length > 0) {
-        writeState(dataDir, { ...state, trustedAuthors, autoUpdated: mergeAutoUpdated(readState(dataDir).autoUpdated, upgraded, toTimestamp(now)) });
+        writeState(dataDir, { ...state, trustedAuthors, revokedDisabled, autoUpdated: mergeAutoUpdated(readState(dataDir).autoUpdated, upgraded, toTimestamp(now)) });
         if (onConfigChanged) await onConfigChanged();
         notifyChanged();
       }
@@ -146,17 +154,37 @@ export function createMarketService(options = {}) {
       writeFileSync(join(dataDir, INDEX_FILE), indexText, "utf8");
       writeFileSync(join(dataDir, INDEX_SIG_FILE), `${JSON.stringify(indexSig, null, 2)}\n`, "utf8");
 
+      let nextRevokedDisabled = { ...state.revokedDisabled };
+      let disabledCount = 0;
+      if (revoked.updated) {
+        const beforeRevoke = readInstalledPackages(pluginsDir);
+        const beforeById = new Map(beforeRevoke.map((item) => [item.id, item]));
+        const disabledIds = applyRevocationsToDir(pluginsDir, nextRevocations, { installed: beforeRevoke }).disabled;
+        disabledCount = disabledIds.length;
+        const stamp = toTimestamp(now);
+        for (const id of disabledIds) {
+          const prev = beforeById.get(id);
+          if (!prev) continue;
+          const existing = nextRevokedDisabled[id];
+          if (!existing || existing.version !== prev.version) {
+            nextRevokedDisabled[id] = { wasEnabled: prev.enabled, version: prev.version, at: stamp };
+          }
+        }
+      }
+
       let nextTrustedAuthors = state.trustedAuthors;
       let upgraded = [];
       if (shouldAutoUpdate) {
-        const autoRes = await runSilentAutoUpdates({ doc: opened.doc, revocations: nextRevocations, trustedAuthors: nextTrustedAuthors, now });
+        const autoRes = await runSilentAutoUpdates({
+          doc: opened.doc,
+          revocations: nextRevocations,
+          trustedAuthors: nextTrustedAuthors,
+          revokedDisabled: nextRevokedDisabled,
+          now,
+        });
         upgraded = autoRes.upgraded;
         nextTrustedAuthors = autoRes.trustedAuthors;
-      }
-
-      let disabledCount = 0;
-      if (revoked.updated) {
-        disabledCount = applyRevocationsToDir(pluginsDir, nextRevocations, { installed: readInstalledPackages(pluginsDir) }).disabled.length;
+        nextRevokedDisabled = autoRes.revokedDisabled;
       }
 
       writeState(dataDir, {
@@ -164,6 +192,7 @@ export function createMarketService(options = {}) {
         lastIndexSerial: opened.doc.serial,
         revocations: nextRevocations,
         trustedAuthors: nextTrustedAuthors,
+        revokedDisabled: nextRevokedDisabled,
         updatedAt: toTimestamp(now),
         lastError: null,
         revocationWarning: revoked.warning,
@@ -249,7 +278,8 @@ export function createMarketService(options = {}) {
       }
       const found = readInstalledPackages(pluginsDir).find((item) => item.id === params.id);
       if (!found) throw marketError("not-found", `Installed plugin ${params.id} was not found`);
-      const revocation = params.enabled ? revocationView(readState(dataDir).revocations, found.id, found.version) : null;
+      const state = readState(dataDir);
+      const revocation = params.enabled ? revocationView(state.revocations, found.id, found.version) : null;
       if (revocation?.level === "disable") {
         throw marketError("revoked", `${found.id}@${found.version} has been revoked and cannot be turned on`, { reasons: revocation.reasons });
       }
@@ -260,6 +290,11 @@ export function createMarketService(options = {}) {
         disabled: !params.enabled,
         replaces: found.replaces,
       });
+      if (Object.hasOwn(state.revokedDisabled, found.id)) {
+        const nextRevokedDisabled = { ...state.revokedDisabled };
+        delete nextRevokedDisabled[found.id];
+        writeState(dataDir, { ...state, revokedDisabled: nextRevokedDisabled });
+      }
       if (onConfigChanged) await onConfigChanged();
       notifyChanged();
       return { id: found.id, enabled: params.enabled };
@@ -278,6 +313,12 @@ export function createMarketService(options = {}) {
         const found = readInstalledPackages(pluginsDir).find((item) => item.id === params.id);
         if (!found) throw marketError("not-found", `Installed plugin ${params.id} was not found`);
         uninstallPackage(pluginsDir, found.id, { removeData: params.removeData === true });
+      }
+      const state = readState(dataDir);
+      if (Object.hasOwn(state.revokedDisabled, params.id)) {
+        const nextRevokedDisabled = { ...state.revokedDisabled };
+        delete nextRevokedDisabled[params.id];
+        writeState(dataDir, { ...state, revokedDisabled: nextRevokedDisabled });
       }
       if (params.removeData === true && forgetSecrets) await Promise.resolve(forgetSecrets(params.id)).catch(() => undefined);
       if (onConfigChanged) await onConfigChanged();

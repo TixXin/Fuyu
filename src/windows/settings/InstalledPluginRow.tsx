@@ -52,7 +52,14 @@ export function useNoteParts(note: RowNote): { text: string; icon: ReactNode; de
     case "unreachable":
       return { text: page.notes.unreachable(note.windows.join(", ")), icon: <AlertCircle size={13} strokeWidth={2.2} />, actions: [] };
     case "revoked":
-      return { text: page.notes.revoked, icon: <ShieldAlert size={13} strokeWidth={2.2} />, details: reasonTexts(note.reasons, locale), actions: [["uninstall", page.actions.uninstall, false]] };
+      return {
+        text: note.fixVersion ? page.notes.revokedFix(note.fixVersion) : page.notes.revoked,
+        icon: <ShieldAlert size={13} strokeWidth={2.2} />,
+        details: reasonTexts(note.reasons, locale),
+        actions: note.fixVersion
+          ? [["update", page.actions.reviewUpdate, true], ["uninstall", page.actions.uninstall, false]]
+          : [["uninstall", page.actions.uninstall, false]],
+      };
     case "warned":
       return { text: page.notes.warned, icon: <ShieldAlert size={13} strokeWidth={2.2} />, details: reasonTexts(note.reasons, locale), actions: note.update ? [["update", page.actions.update, false]] : [] };
     case "held": {
