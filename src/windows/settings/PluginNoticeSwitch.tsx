@@ -6,7 +6,7 @@ import { usePluginNoticeMutes } from "../../lib/plugin-notice-mutes/usePluginNot
 import type { InstalledEntry } from "./pluginEntries";
 
 export function PluginNoticeSwitch({ entry }: { entry: InstalledEntry }) {
-  const text = useTranslation().settings.pluginsV3.page.notices;
+  const text = useTranslation().settings.pluginHost.page.notices;
   const { mutes, senders, setMuted } = usePluginNoticeMutes();
   const id = useId();
   if (!noticeSwitchShown(entry.id, entry.places.includes("alerts"), mutes, senders)) return null;

@@ -18,7 +18,7 @@ export function PluginMarketToolbar({ query, category, sort, total, categories, 
   onCategory: (next: string | null) => void;
   onSort: (next: PluginMarketSort) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.marketPage;
+  const text = useTranslation().settings.pluginHost.marketPage;
   const chip = (id: string | null, label: string, count: number) => (
     <button key={id ?? "all"} className="plugin-chip" type="button" aria-pressed={!query && category === id} disabled={disabled} data-market-category={id ?? "all"} onClick={() => onCategory(id)}>
       {label}

@@ -1,4 +1,5 @@
 export { SERVICE_NAME } from "@fuyu/plugin-manifest/names";
+export { DEFAULT_LOCALE, normalizeLocale, pickLocale } from "./locale.mjs";
 
 export const HOST_PROTOCOL = 2;
 export const WINDOW_PROTOCOL = 1;

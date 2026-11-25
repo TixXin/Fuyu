@@ -50,6 +50,7 @@ pub(crate) mod uia_links;
 pub(crate) mod uia_list;
 pub(crate) mod wallpaper;
 pub(crate) mod uia_tabs;
+pub(crate) mod url_protocol;
 pub(crate) mod video_writer;
 pub(crate) mod webview_crash;
 pub(crate) mod webview_drop;

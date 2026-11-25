@@ -20,7 +20,7 @@ const clients: RosterClients = {
 type Busy = { kind: "install" | "settings"; done: number; total: number };
 
 export function PluginRosterBanners({ onOpenMarket }: { onOpenMarket?: (name: string) => void }) {
-  const text = useTranslation().settings.pluginsV3.page.banners.roster;
+  const text = useTranslation().settings.pluginHost.page.banners.roster;
   const { locale } = useLocale();
   const errorText = useErrorText();
   const catalog = usePluginMarketCatalog(true);

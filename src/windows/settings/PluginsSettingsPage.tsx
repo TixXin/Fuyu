@@ -57,7 +57,7 @@ function usePackageRedirect(onOpenPage?: (page: SettingsCategory) => void) {
   }, [errorText, onOpenPage]);
 }
 
-export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins: givenBuiltins, initialDetail = null, barUsage, onOpenPage }: {
+export function PluginsView({ view, hostOff = false, node: givenNode, builtins: givenBuiltins, initialDetail = null, barUsage, onOpenPage }: {
   view: PluginHostView;
   hostOff?: boolean;
   barUsage?: BarUsageView;
@@ -66,7 +66,7 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
   builtins?: readonly BuiltinPlugin[] | null;
   onOpenPage?: (page: SettingsCategory) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const learnMore = useTranslation().settings.aboutPlugins.learnMore;
   const { locale } = useLocale();
   const loadedBuiltins = useBuiltinPlugins();
@@ -201,10 +201,10 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
 function HostConnectedPage({ connect, initialDetail, onOpenPage }: { connect?: PluginHostConnector; initialDetail: PluginDetailRequest | null; onOpenPage?: (page: SettingsCategory) => void }) {
   const view = usePluginHostStatus(connect);
   const bar = usePluginBarUsage(view.connection === "open");
-  return <PluginsV3View view={view} initialDetail={initialDetail} barUsage={bar.usage} onOpenPage={onOpenPage} />;
+  return <PluginsView view={view} initialDetail={initialDetail} barUsage={bar.usage} onOpenPage={onOpenPage} />;
 }
 
-export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
+export function PluginsSettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
   const hostEnabled = usePluginHostEnabled();
   const [initialDetail, setInitialDetail] = useState(takePluginDetailRequest);
   useEffect(
@@ -216,7 +216,7 @@ export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: Plugi
     [],
   );
   usePackageRedirect(onOpenPage);
-  if (hostEnabled === null) return <PluginsV3View view={LOADING_VIEW} node={null} onOpenPage={onOpenPage} />;
-  return hostEnabled ? <HostConnectedPage connect={connect} initialDetail={initialDetail} onOpenPage={onOpenPage} /> : <PluginsV3View view={OFF_VIEW} hostOff node={null} onOpenPage={onOpenPage} />;
+  if (hostEnabled === null) return <PluginsView view={LOADING_VIEW} node={null} onOpenPage={onOpenPage} />;
+  return hostEnabled ? <HostConnectedPage connect={connect} initialDetail={initialDetail} onOpenPage={onOpenPage} /> : <PluginsView view={OFF_VIEW} hostOff node={null} onOpenPage={onOpenPage} />;
 }
 

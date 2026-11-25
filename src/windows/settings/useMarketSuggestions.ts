@@ -11,7 +11,7 @@ const NONE: readonly SearchablePlugin[] = [];
 let cached: { plugins: readonly SearchablePlugin[]; at: number } | null = null;
 
 export function useMarketSuggestions(query: string, settingsResults: number): readonly SearchablePlugin[] {
-  const categories = useTranslation().settings.pluginsV3.marketPage.categories;
+  const categories = useTranslation().settings.pluginHost.marketPage.categories;
   const searching = query.trim() !== "";
   const [plugins, setPlugins] = useState<readonly SearchablePlugin[]>(() => cached?.plugins ?? NONE);
   useEffect(() => {

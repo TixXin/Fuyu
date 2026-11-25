@@ -12,7 +12,7 @@ function pickText(map: Record<string, string> | null | undefined, locale: string
   return map[locale] ?? map["zh-CN"] ?? map.en ?? fallback;
 }
 
-export function PluginV3ShortcutOwners() {
+export function PluginShortcutOwners() {
   const { locale } = useLocale();
   const [items, setItems] = useState<CommandItem[]>([]);
 
@@ -44,7 +44,7 @@ export function PluginV3ShortcutOwners() {
       item.active && item.keybinding
         ? [
             {
-              id: `pluginV3:${item.pluginId}/${item.id}`,
+              id: `plugin:${item.pluginId}/${item.id}`,
               label: `${pickText(item.title, locale, item.id)} · ${pickText(item.pluginName, locale, item.pluginId)}`,
               shortcut: item.keybinding,
               home: "pluginsV3",

@@ -16,7 +16,7 @@ import { PluginWindowRulesGroup } from "./PluginWindowRulesGroup";
 const commandsClient = windowServices.get(commandsV1);
 
 export function PluginSettingsTab({ entry }: { entry: InstalledEntry }) {
-  const text = useTranslation().settings.pluginsV3.page.detail;
+  const text = useTranslation().settings.pluginHost.page.detail;
   const running = stateOf(entry.plugin) === "running";
   return (
     <div className="plugin-detail__settings">
@@ -34,7 +34,7 @@ function runBlock(entry: InstalledEntry, stale: boolean): RunBlock | null {
 }
 
 export function PluginCommandsTab({ entry, stale, onOpenShortcuts }: { entry: InstalledEntry; stale: boolean; onOpenShortcuts?: () => void }) {
-  const text = useTranslation().settings.pluginsV3.page.detail;
+  const text = useTranslation().settings.pluginHost.page.detail;
   const [items, setItems] = useState<CommandItem[] | null>(null);
   useEffect(() => {
     let live = true;
@@ -91,7 +91,7 @@ export function PluginOverviewExtras({ entry }: { entry: InstalledEntry }) {
 }
 
 export function PluginActivityTab({ entry, onRestart, restartDisabled }: { entry: InstalledEntry; onRestart: () => void; restartDisabled: boolean }) {
-  const t = useTranslation().settings.pluginsV3;
+  const t = useTranslation().settings.pluginHost;
   const text = t.page.detail;
   const { locale } = useLocale();
   const [copied, setCopied] = useState(false);

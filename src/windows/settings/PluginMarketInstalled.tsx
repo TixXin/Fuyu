@@ -17,7 +17,7 @@ export function PluginMarketInstalled({ plugins, open, onToggle, categoryName, h
   categoryName: (id: string) => string;
   handlers: MarketCardHandlers;
 }) {
-  const text = useTranslation().settings.pluginsV3.marketPage;
+  const text = useTranslation().settings.pluginHost.marketPage;
   const { locale } = useLocale();
   const listId = useId();
   const titleOf = (plugin: MarketCatalogPlugin) => localized(plugin.displayName, locale, plugin.name);

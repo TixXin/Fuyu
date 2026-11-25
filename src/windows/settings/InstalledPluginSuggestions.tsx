@@ -11,7 +11,7 @@ export function InstalledPluginSuggestions({ snapshot, onBrowse, onInstall }: {
   onBrowse: () => void;
   onInstall: (plugin: MarketCatalogPlugin) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const { locale } = useLocale();
   const picks = popularPlugins(snapshot);
   if (picks.length === 0) return null;

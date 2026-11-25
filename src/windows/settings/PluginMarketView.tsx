@@ -16,6 +16,7 @@ import { categoryCounts, formatMarketTime, localized, newListings } from "./plug
 import { usePluginFilePicker } from "./PluginPageActions";
 import { onMarketViewRequest, requestPluginDetail, takeMarketViewRequest, type OpenedPluginPackage } from "./pluginPageHandoff";
 import { pluginPlaces } from "./pluginReach";
+import { marketActionCandidate } from "./pluginRowStatus";
 import { usePluginInstallFlow } from "./usePluginInstallFlow";
 import { usePluginMarketPackage } from "./usePluginMarketPackage";
 import "./PluginPage.css";
@@ -39,10 +40,12 @@ export interface PluginMarketViewProps {
   openedPackage?: OpenedPluginPackage | null;
   openedError?: string | null;
   onConsumePackage?: (seq: number) => void;
+  requestedInstall?: string | null;
+  onConsumeInstall?: (name: string) => void;
 }
 
-export function PluginMarketView({ host, snapshot, failure = null, refreshing = false, onRefresh, onReload, onOpenPage, initialQuery = "", initialDetail = null, initialBundle = null, followRequests = true, openedPackage, openedError, onConsumePackage }: PluginMarketViewProps) {
-  const text = useTranslation().settings.pluginsV3.marketPage;
+export function PluginMarketView({ host, snapshot, failure = null, refreshing = false, onRefresh, onReload, onOpenPage, initialQuery = "", initialDetail = null, initialBundle = null, followRequests = true, openedPackage, openedError, onConsumePackage, requestedInstall = null, onConsumeInstall }: PluginMarketViewProps) {
+  const text = useTranslation().settings.pluginHost.marketPage;
   const { locale } = useLocale();
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState<string | null>(null);
@@ -67,8 +70,10 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
   const flow = usePluginInstallFlow(onReload, snapshot ? { plugins, manualAllowed: snapshot.manualAllowed } : null);
   const file = usePluginFilePicker(announceMarketPackage);
   const offerFileRef = useRef(flow.offerFile);
+  const offerInstallRef = useRef(flow.offer);
   useLayoutEffect(() => {
     offerFileRef.current = flow.offerFile;
+    offerInstallRef.current = flow.offer;
   });
   const offerPackage = useCallback(async (base64: string, fileName: string) => {
     const inspected = await marketClient.inspectPackage({ base64 });
@@ -76,6 +81,22 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
     offerFileRef.current(inspected, base64, fileName);
   }, []);
   usePluginMarketPackage(host === "open", openedPackage, onConsumePackage, offerPackage, setPackageError);
+  useEffect(() => {
+    if (host !== "open" || !snapshot || !requestedInstall) return;
+    onConsumeInstall?.(requestedInstall);
+    const target = requestedInstall.toLowerCase();
+    const matched = snapshot.plugins.find((plugin) => plugin.name.toLowerCase() === target);
+    if (!matched) {
+      setQuery(requestedInstall);
+      return;
+    }
+    if (marketActionCandidate(matched)) {
+      setDetailName(null);
+      offerInstallRef.current(matched);
+      return;
+    }
+    setDetailName(matched.name);
+  }, [host, onConsumeInstall, requestedInstall, snapshot]);
 
   const categoryName = (id: string) => text.categories[id] ?? id;
   const nameOf = (id: string) => {

@@ -1927,3 +1927,67 @@ mod approval_hooks_without_the_installed_endpoint {
         assert_eq!(hook_count(&settings, "fuyu-agent-approval"), 0, "with approvals off the installed app removes them");
     }
 }
+
+#[test]
+fn workbuddy_session_registry_and_multi_window_fallback_matching() {
+    use super::session_process::running_sessions_in_dirs;
+    use super::window_focus::{best_window, candidate_summary, fallback_target_window, SessionHints, WindowCandidate};
+    use super::workbuddy;
+
+    let (home, _app) = temp_dirs();
+    let pid = std::process::id();
+    let started = crate::platform::process_times::start_time(pid);
+    let wb_sessions = home.join(".workbuddy").join("sessions");
+    let wbai_sessions = home.join(".workbuddy-ai").join("sessions");
+    fs::create_dir_all(&wb_sessions).unwrap();
+    fs::create_dir_all(&wbai_sessions).unwrap();
+    let write_entry = |dir: &Path, id: &str| {
+        let mut entry = json!({ "sessionId": id, "pid": pid });
+        if let Some(ticks) = started {
+            entry["procStart"] = json!(ticks);
+        }
+        fs::write(dir.join(format!("{pid}.json")), entry.to_string()).unwrap();
+    };
+    write_entry(&wb_sessions, "wb-cn-1");
+    write_entry(&wbai_sessions, "wb-ai-2");
+    let dirs = workbuddy::session_dirs(&home);
+    assert!(dirs.contains(&wb_sessions));
+    assert!(dirs.contains(&wbai_sessions));
+    let running = running_sessions_in_dirs(&dirs);
+    assert_eq!(running.get("wb-cn-1"), Some(&pid));
+    assert_eq!(running.get("wb-ai-2"), Some(&pid));
+
+    let windows = [
+        WindowCandidate { title: "WorkBuddy - other".into(), app: "workbuddy".into() },
+        WindowCandidate { title: "main.rs - fuyu - WorkBuddy AI".into(), app: "workbuddy ai".into() },
+    ];
+    let hints = SessionHints { folder: Some("fuyu"), ancestors: &[], title: None, is_codex: false };
+    assert_eq!(best_window(&windows, &hints), Some(1));
+
+    let fallbacks = [
+        WindowCandidate { title: String::new(), app: "workbuddy".into() },
+        WindowCandidate { title: "WorkBuddy".into(), app: "workbuddy".into() },
+        WindowCandidate { title: String::new(), app: "workbuddy".into() },
+    ];
+    let owners = [100u32, 100, 100];
+    let visible = [false, false, true];
+    let empty_hints = SessionHints::default();
+    assert_eq!(
+        fallback_target_window(&fallbacks, &owners, &visible, &[100], &["workbuddy".into()], &empty_hints),
+        Some(2)
+    );
+    let hidden_only = [false, false, false];
+    assert_eq!(
+        fallback_target_window(&fallbacks, &owners, &hidden_only, &[100], &["workbuddy".into()], &empty_hints),
+        Some(1)
+    );
+    assert_eq!(
+        candidate_summary(&[
+            WindowCandidate { title: "a".into(), app: "code".into() },
+            WindowCandidate { title: "b".into(), app: "code".into() },
+            WindowCandidate { title: "c".into(), app: "workbuddy".into() },
+        ]),
+        "code:2|workbuddy:1"
+    );
+    let _ = fs::remove_dir_all(&home);
+}

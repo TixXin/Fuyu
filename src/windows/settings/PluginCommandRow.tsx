@@ -19,7 +19,7 @@ function pick(map: Record<string, string> | null | undefined, locale: string, fa
 }
 
 export function PluginCommandRow({ item, block, onOpenShortcuts }: { item: CommandItem; block: RunBlock | null; onOpenShortcuts?: () => void }) {
-  const text = useTranslation().settings.pluginsV3.page.detail;
+  const text = useTranslation().settings.pluginHost.page.detail;
   const { locale } = useLocale();
   const errorText = useErrorText();
   const [state, setState] = useState<RunState>({ kind: "idle" });

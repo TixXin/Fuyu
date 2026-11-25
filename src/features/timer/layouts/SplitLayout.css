@@ -1,0 +1,321 @@
+.timer-split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(210px, 286px) 1fr;
+  gap: 12px;
+}
+
+.timer-split__left {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timer-split__presets {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.timer-split__preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px;
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.045);
+  border: 1px solid rgba(var(--list-ink), 0.07);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+
+.timer-split__preset:hover,
+.timer-split__preset:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 12%, rgba(var(--list-ink), 0.05));
+  border-color: color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
+
+.timer-split__preset-num {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.timer-split__preset-tag {
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.timer-split__foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-split__sw-btn {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-2);
+  background: rgba(var(--list-ink), 0.06);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
+}
+
+.timer-split__sw-btn:hover,
+.timer-split__sw-btn:focus-visible {
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.11);
+}
+
+.timer-split__sw-live {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--list-accent-text);
+}
+
+.timer-split__stage {
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(var(--list-ink), 0.04);
+  border: 1px solid rgba(var(--list-ink), 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.timer-split__stage--ringing {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+
+.timer-split__empty,
+.timer-split__hero {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 0;
+  background: transparent;
+}
+
+.timer-split__hero.timer-panel__row--done {
+  padding: 10px 12px;
+  border-radius: var(--radius-xl);
+}
+
+.timer-split__dial {
+  flex: none;
+  position: relative;
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+}
+
+.timer-split__dial-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-split__dial-track {
+  fill: none;
+  stroke: rgba(var(--list-ink), 0.1);
+  stroke-width: 5;
+}
+
+.timer-split__dial-arc {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dashoffset: var(--timer-ring-offset, 0);
+  transition: stroke-dashoffset var(--motion-base) var(--motion-ease);
+}
+
+.timer-split__dial-arc--paused {
+  stroke: var(--text-3);
+}
+
+.timer-split__dial-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.timer-split__dial-time {
+  font-size: 21px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--text-1);
+}
+
+.timer-split__dial-sub {
+  margin-top: 2px;
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.timer-split__empty-side,
+.timer-split__hero-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.timer-split__empty-title {
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.timer-split__steps {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.timer-split__step {
+  height: 24px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  background: rgba(var(--list-ink), 0.07);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.timer-split__step:hover,
+.timer-split__step:focus-visible {
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.14);
+}
+
+.timer-split__hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.timer-split__hero-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.timer-split__source-pill {
+  padding: 1px 6px;
+  background: rgba(var(--list-ink), 0.09);
+  border-radius: var(--radius-sm);
+}
+
+.timer-split__hero-meta {
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-split__hero-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.timer-split__list-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+@container (max-width: 580px) {
+  .timer-split {
+    grid-template-columns: 196px 1fr;
+    gap: 8px;
+  }
+
+  .timer-split__empty,
+  .timer-split__hero {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .timer-split__empty-side,
+  .timer-split__hero-info {
+    align-items: center;
+    text-align: center;
+  }
+
+  .timer-split__dial {
+    width: 84px;
+    height: 84px;
+  }
+
+  .timer-split__dial-time {
+    font-size: 17px;
+  }
+}
+
+@container (max-width: 440px) {
+  .timer-split {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .timer-split__presets {
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: 1fr;
+  }
+
+  .timer-split__preset-tag,
+  .timer-split__dial {
+    display: none;
+  }
+}

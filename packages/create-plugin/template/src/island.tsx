@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import type { Context } from "@fuyu/plugin-base";
-import { text } from "./text.ts";
+import { textFor } from "./text.ts";
 import { COUNTDOWN_MS, METHODS, formatMs, shownMs } from "./timers.ts";
 import { useTimers } from "./useTimers.ts";
 import "./styles.css";
@@ -15,6 +16,14 @@ function TimerIcon({ size = 16 }: { size?: number | string }) {
 
 export default function apply(ctx: Context) {
   function Page() {
+    const [locale, setLocale] = useState(() => ctx.locale?.current ?? navigator.language);
+    useEffect(() => {
+      if (!ctx.locale) return undefined;
+      setLocale(ctx.locale.current);
+      const off = ctx.locale.onChange((next) => setLocale(next));
+      return () => void off();
+    }, []);
+    const text = textFor(locale);
     const { list, error, call } = useTimers(ctx);
     return (
       <div className="{{css}}">

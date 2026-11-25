@@ -57,8 +57,8 @@ src-tauri/src/
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
 ├── webview_gpu.rs           # Windows WebView2 图形兼容模式（D123）：建 WebView2 前读家目录 webview-gpu.json / FUYU_GPU_MODE / --software-rendering，按需拼 --use-angle=warp 并清理损坏 GPU 着色器缓存；命令 get_webview_gpu_state / set_webview_gpu_mode / clear_webview_gpu_cache_and_restart
 ├── webview_recovery.rs      # 窗口的 WebView2 渲染进程崩溃或无响应后自动重载（D66），以及 GPU 进程 60 秒内连崩 3 次自动切 WARP 软渲染重启、不稳定态退回原生托盘菜单（D123）：on_page_load 时给每个 WebView 挂一次，记 webview-crashes.log；Mac 上是 webview_recovery_unsupported.rs
-├── webview_memory.rs        # 隐藏的翻译、剪贴板、截图选区窗口把 WebView2 的 MemoryUsageTargetLevel 设成 Low、显示前改回 Normal（D48，默认关，设 FUYU_WEBVIEW_LOW_MEMORY=1 才生效）；Mac 上是 webview_memory_unsupported.rs
-├── webview_visibility.rs    # 窗口隐藏、显示时同步 WebView2 控制器的 IsVisible（D117）：Tauri 的 hide() 不设它，隐藏窗口里的页面一直是 visible，动画帧和定时器照跑、缓存不释放；on_page_load 时给每个 WebView 挂一次（窗口子类在 win32/webview_visibility.rs），主岛 main 不接；Mac 上是 webview_visibility_unsupported.rs
+├── webview_memory.rs        # 隐藏的翻译、剪贴板、托盘卡片与截图选区窗口把 WebView2 的 MemoryUsageTargetLevel 设成 Low、显示前改回 Normal（D48，默认开，设 FUYU_WEBVIEW_LOW_MEMORY=0 可关闭）；Mac 上是 webview_memory_unsupported.rs
+├── webview_visibility.rs    # 窗口隐藏、显示时同步 WebView2 控制器的 IsVisible（D117、D124.6）：Tauri 的 hide() 不设它，隐藏窗口里的页面一直是 visible，动画帧和定时器照跑、缓存不释放；on_page_load 时给每个 WebView 挂一次（窗口子类在 win32/webview_visibility.rs），主岛 main 跳过首次同步但在托盘隐藏/恢复时跟随；Mac 上是 webview_visibility_unsupported.rs
 ├── webview_scale.rs         # 把每个 WebView2 的缩放（RasterizationScale）固定成窗口的显示器缩放，不跟系统「文本大小」（D122）：WebView2 默认按显示器缩放 × 文本大小画，而窗口尺寸都按「CSS 像素 × scale_factor()」算，文本大小不是 100% 时内容会比窗口大；on_page_load 时给每个 WebView 设一次（含主岛 main），ScaleFactorChanged 时再设；接口在 win32/webview_scale.rs；Mac 上是 webview_scale_unsupported.rs
 ├── emit_diagnostics.rs      # 只在调试和测试构建编译，设 FUYU_EMIT_DIAGNOSTICS=1 才开：统计各事件发了多少次、多少次载荷没变，排查事件发得太频繁（docs/investigations/emit-frequency-audit.md）
 ├── settings_file.rs         # 数据目录里的 settings.json（D30.2）：BACKUP_KEYS 设置的文件镜像，格式同设置备份；命令 read_settings_file / write_settings_file
@@ -73,7 +73,7 @@ src-tauri/src/
 ├── user_error_codes.json    # 全部错误码的清单：新 code 要加进来；Rust 测试核对它和代码里 UserError::new 用到的一致（code 只能写字面量），tests/unit/native-error.test.mjs 核对它和 errors.ts 的文案一致
 ├── platform_support.rs      # 命令 get_platform_support：当前系统和它还不支持的功能，前端据此在设置和岛上隐藏
 ├── platform.rs              # 两个平台都有的平台层模块（icon、job、process、process_env、process_times、process_tree、session）：Windows 上取 win32/，macOS 上取 macos/
-├── macos/                   # macOS 平台层（G1，决定 M10），和 win32/ 一样是允许 unsafe 的地方：和 win32/ 同名同签名的平台模块（process、session、icon、job 等），以及 Mac 独有的实现（岛和托盘的 NSPanel、刘海、毛玻璃、程序坞角标、辅助功能、热键、截屏、OCR 等），各功能在 Mac 上的支持情况见 docs/architecture/platforms.md
+├── macos/                   # macOS 平台层（G1，决定 M10），和 win32/ 一样是允许 unsafe 的地方：和 win32/ 同名同签名的平台模块（process、session、icon、job 等），以及 Mac 独有的实现（岛和托盘的 NSPanel、刘海、系统通知、毛玻璃、程序坞角标、辅助功能、热键、截屏、OCR 等），各功能在 Mac 上的支持情况见 docs/architecture/platforms.md
 └── win32/                   # Win32 / COM 的安全封装，和 macos/ 一起是 crate 中允许 unsafe 的地方：window（窗口查询、枚举、前台切换）、
                              # message_window（隐藏消息窗口与安全的窗口过程）、named_mutex（探测、持有命名互斥量）、hotkey、win_key_hook、clipboard、shell_hook、input、
                              # com（COM / WinRT 初始化守卫）、audio、ole（文件拖出）、process / process_times / process_env /

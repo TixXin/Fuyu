@@ -2,12 +2,10 @@ import { isMacOS } from "../../../lib/platform.ts";
 
 export type SettingsPluginsText = {
   allowThirdParty: string;
-  warning: string;
   folder: string;
   brokenState: (backup: string) => string;
   openFolder: string;
   reload: string;
-  secretsPermissionMac: string;
   feedback: {
     checking: string;
     upToDate: string;
@@ -35,11 +33,6 @@ export type SettingsPluginsText = {
   enable: string;
   by: (author: string) => string;
   homepage: string;
-  permissions: string;
-  noPermissions: string;
-  optionalPermission: string;
-  permissionCount: (count: number) => string;
-  permission: Record<"todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write" | "windows", string>;
   needsApproval: string;
   keybindingConflict: (shortcuts: string) => string;
   notAllowed: string;
@@ -326,12 +319,10 @@ export type SettingsPluginsText = {
 
 export const zhCN: SettingsPluginsText = {
   allowThirdParty: "允许运行第三方插件",
-  warning: "插件是在你电脑上运行的程序，和你本人有同样的权限：可以读写文件、联网，也能读到这台电脑上保存的密码和授权码（包括岛屿保存的邮箱授权码和翻译密钥）。下面列出的权限只限制它能通过岛屿读写哪些数据。只安装你信任的插件。",
   folder: "插件目录",
   brokenState: (backup) => `插件设置文件读不出来，已按默认值重新开始：第三方插件的开关、授权、设置和信任的发布者都要重新设置。原文件备份在 ${backup}。`,
   openFolder: "打开",
   reload: "重新加载",
-  secretsPermissionMac: "在钥匙串中保存密码和令牌",
   feedback: {
     checking: "正在检查…",
     upToDate: "已是最新（刚刚检查）",
@@ -359,27 +350,6 @@ export const zhCN: SettingsPluginsText = {
   enable: "启用",
   by: (author: string) => `作者：${author}`,
   homepage: "主页",
-  permissions: "需要的权限",
-  noPermissions: "不需要读写岛上的数据",
-  optionalPermission: "可选，用到时询问",
-  permissionCount: (count: number) => `${count} 项权限`,
-  permission: {
-    "todos:read": "读取待办",
-    "todos:write": "添加、修改和删除待办",
-    "notes:read": "读取每日笔记",
-    "notes:write": "修改每日笔记",
-    "agent-status:read": "读取 AI Agent 状态",
-    "agent-status:write": "在状态灯上显示 AI Agent 状态",
-    "island:notify": "在岛上显示通知",
-    secrets: "在 Windows 凭据管理器中保存密码和令牌",
-    "clipboard:read": "读取剪贴板历史中的文字（敏感，首次使用时询问）",
-    "messages:read": "读取 QQ、微信和邮箱的提醒：发送者和预览文字，不含邮件正文（敏感）",
-    "media:read": "读取正在播放的歌曲和播放器（敏感）",
-    "media:control": "播放、暂停、上一首、下一首",
-    "shelf:read": "读取文件中转列表（只有路径，敏感）",
-    "shelf:write": "往文件中转添加或移除条目，不会删除文件（敏感）",
-    windows: "在岛屿之外新建自己的窗口（实验，暂只支持 Windows）",
-  },
   needsApproval: "新版本需要更多权限，已暂停。关掉再打开开关即可授权。",
   keybindingConflict: (shortcuts: string) => `快捷键已被其他程序占用：${shortcuts}`,
   notAllowed: "先在上面打开“允许运行第三方插件”。",
@@ -743,12 +713,10 @@ export const zhCN: SettingsPluginsText = {
 
 export const en: SettingsPluginsText = {
   allowThirdParty: "Allow third-party plugins",
-  warning: "Plugins are programs that run on your computer with the same rights as you: they can read and write files, use the network, and read passwords and codes saved on this computer (including the mail codes and translation keys the island saves). The permissions below only limit which data they can use through the island. Only install plugins you trust.",
   folder: "Plugins folder",
   brokenState: (backup) => `The plugin settings file could not be read, so plugins started over with the defaults: third-party plugins, permissions, settings and trusted publishers need setting up again. The original file is kept at ${backup}.`,
   openFolder: "Open",
   reload: "Reload",
-  secretsPermissionMac: "Keep passwords and tokens in the keychain",
   feedback: {
     checking: "Checking…",
     upToDate: "Up to date (just checked)",
@@ -776,27 +744,6 @@ export const en: SettingsPluginsText = {
   enable: "Enabled",
   by: (author: string) => `by ${author}`,
   homepage: "Homepage",
-  permissions: "Permissions",
-  noPermissions: "Uses no island data",
-  optionalPermission: "optional, asked when needed",
-  permissionCount: (count: number) => (count === 1 ? "1 permission" : `${count} permissions`),
-  permission: {
-    "todos:read": "Read todos",
-    "todos:write": "Add, change and delete todos",
-    "notes:read": "Read the daily note",
-    "notes:write": "Change the daily note",
-    "agent-status:read": "Read AI Agent status",
-    "agent-status:write": "Show AI Agent status on the light",
-    "island:notify": "Show notifications on the island",
-    secrets: "Keep passwords and tokens in Windows Credential Manager",
-    "clipboard:read": "Read text from the clipboard history (sensitive: asks on first use)",
-    "messages:read": "Read QQ, WeChat and mail alerts: sender and preview, never mail bodies (sensitive)",
-    "media:read": "See what is playing and in which player (sensitive)",
-    "media:control": "Play, pause, next and previous track",
-    "shelf:read": "Read the file shelf (paths only; sensitive)",
-    "shelf:write": "Add to or remove from the file shelf; never deletes files (sensitive)",
-    windows: "Open windows of its own outside the island (experimental, Windows only for now)",
-  },
   needsApproval: "The new version asks for more permissions, so it is paused. Switch it off and on to allow them.",
   keybindingConflict: (shortcuts: string) => `Shortcut already in use by another app: ${shortcuts}`,
   notAllowed: "Turn on “Allow third-party plugins” above first.",

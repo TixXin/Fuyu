@@ -49,7 +49,7 @@ export const CAPTURE = `(async () => {
   const volatile = (value) => value
     .replace(/\\b1[6-9]\\d{8}(?:\\d{3})?\\b/g, "<ts>")
     .replace(/blob:[^\\s"')]+/g, "blob:<url>");
-  const unstableStyle = /^(transition|animation|will-change)(-|$)|^--wave-/;
+  const unstableStyle = /^(transition|animation|will-change)(-|$)|^--(wave|timer)-/;
   const LIVE_TEXT = [".timer-panel__time", ".timer-chip__time", ".agent-session__elapsed"];
   const MEASURED = ["island__page-pill", "clipboard-popup__spacer"];
   const anchored = (el) => ["dialog", "menu", "tooltip", "listbox"].includes(el.getAttribute("role"));

@@ -15,7 +15,7 @@ function ShotViewer({ shots, index, title, host, onIndex, onClose }: {
   onClose: () => void;
 }) {
   const { locale } = useLocale();
-  const text = useTranslation().settings.pluginsV3.marketPage.detail.viewer;
+  const text = useTranslation().settings.pluginHost.marketPage.detail.viewer;
   const viewerRef = useRef<HTMLDivElement>(null);
   const shot = shots[index];
   const caption = localized(shot.caption, locale, "");
@@ -74,7 +74,7 @@ function ShotViewer({ shots, index, title, host, onIndex, onClose }: {
 
 export function PluginMarketShots({ shots, title }: { shots: readonly MarketPluginScreenshot[]; title: string }) {
   const { locale } = useLocale();
-  const copy = useTranslation().settings.pluginsV3.marketPage.detail;
+  const copy = useTranslation().settings.pluginHost.marketPage.detail;
   const stripRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState<{ index: number; host: HTMLElement } | null>(null);
   const close = () => {

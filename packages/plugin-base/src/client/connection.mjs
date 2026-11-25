@@ -86,6 +86,7 @@ export function connectHost({ resolve, window, onSnapshot, onEvent, onState, ope
       return schedule(String(error?.message ?? error));
     }
     socket = current;
+    current.addEventListener("error", () => {});
     current.addEventListener("open", () => {
       current.send(JSON.stringify({ type: "hello", token: target.token, protocol: WINDOW_PROTOCOL, window }));
     });

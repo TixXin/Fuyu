@@ -298,6 +298,10 @@ pub(super) fn focus_session(
         if let Some(missing) = missing {
             log.note(format!("missing={}", missing.reason()));
         }
+        let summary = window_focus::visible_candidate_summary();
+        if !summary.is_empty() {
+            log.note(format!("candidates={summary}"));
+        }
         log.finish(app_dir, "not found");
         return Focused { found: false, exact: false, focused_app: None, missing_extension: None, missing };
     };

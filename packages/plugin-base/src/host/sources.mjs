@@ -128,7 +128,8 @@ export function sourceOf(options, { dir, appVersion }) {
     return { source, root, ...readManifest(root, { allowExperimental: true, official: true }) };
   }
   const root = installedRoot(id, join(dir, PACKAGES_DIR));
-  const manifest = readManifest(root, { allowExperimental: false, appVersion, official: source === "market" });
+  const official = source === "market" && options.official === true;
+  const manifest = readManifest(root, { allowExperimental: false, appVersion, official });
   if (manifest.package !== id) throw rejection(`the package in ${root} is ${manifest.package}, not ${id}`);
   return { source, root, ...manifest };
 }

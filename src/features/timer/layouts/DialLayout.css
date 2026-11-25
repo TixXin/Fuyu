@@ -1,0 +1,341 @@
+.timer-dial {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timer-dial__bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timer-dial__tabs {
+  flex: none;
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  background: rgba(var(--list-ink), 0.06);
+  border-radius: var(--radius-pill);
+}
+
+.timer-dial__tab {
+  height: 24px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.timer-dial__tab--on {
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.14);
+}
+
+.timer-dial__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
+  background: var(--color-accent);
+}
+
+.timer-dial__bar-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.timer-dial__bar-right .timer-panel__form {
+  max-width: 240px;
+}
+
+.timer-dial__main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 10px;
+}
+
+.timer-dial__stage {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: rgba(var(--list-ink), 0.04);
+  border: 1px solid rgba(var(--list-ink), 0.07);
+  border-radius: 14px;
+}
+
+.timer-dial__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.timer-dial__eta {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-dial__big {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-dial__tenths {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.timer-dial__track {
+  width: min(320px, 100%);
+  height: 4px;
+  background: rgba(var(--list-ink), 0.1);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.timer-dial__fill {
+  width: var(--timer-progress, 0%);
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: var(--radius-pill);
+  transition: width var(--motion-base) var(--motion-ease);
+}
+
+.timer-dial__acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.timer-dial__picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-dial__unit-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-dial__unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.timer-dial__nudge {
+  width: 30px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.timer-dial__nudge:hover,
+.timer-dial__nudge:focus-visible {
+  color: var(--text-1);
+  background: rgba(var(--list-ink), 0.1);
+}
+
+.timer-dial__num {
+  width: 48px;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-dial__lbl {
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.timer-dial__colon {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-top: -12px;
+}
+
+.timer-dial__go {
+  height: 32px;
+  margin-left: 8px;
+  padding: 0 14px;
+}
+
+.timer-dial__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+}
+
+.timer-dial__chip {
+  height: 24px;
+  padding: 0 9px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: rgba(var(--list-ink), 0.06);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.timer-dial__chip:hover,
+.timer-dial__chip:focus-visible {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+.timer-dial__rail,
+.timer-dial__laps {
+  flex: none;
+  width: 210px;
+  min-height: 0;
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(var(--list-ink), 0.04);
+  border: 1px solid rgba(var(--list-ink), 0.07);
+  border-radius: 14px;
+}
+
+.timer-dial__rail-head,
+.timer-dial__laps-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-dial__rail-list,
+.timer-dial__laps-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.timer-dial__qitem {
+  width: 100%;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-2);
+  background: rgba(var(--list-ink), 0.04);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.timer-dial__qitem--active {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--color-accent) 12%, rgba(var(--list-ink), 0.04));
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.timer-dial__qlabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.timer-dial__qtime {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+
+.timer-dial__laps-empty {
+  margin: auto 0;
+  font-size: 11.5px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.timer-dial__lap-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(var(--list-ink), 0.07);
+}
+
+.timer-dial__lap-diff {
+  color: var(--text-3);
+}
+
+@container (max-width: 580px) {
+  .timer-dial__rail,
+  .timer-dial__laps {
+    width: 164px;
+  }
+}
+
+@container (max-width: 440px) {
+  .timer-dial__main {
+    flex-direction: column;
+  }
+
+  .timer-dial__rail,
+  .timer-dial__laps {
+    width: 100%;
+    max-height: 92px;
+  }
+}

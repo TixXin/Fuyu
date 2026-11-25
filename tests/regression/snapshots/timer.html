@@ -1,6 +1,6 @@
 <body>
   <div id="root">
-    <div style="width: 380px; display: grid; gap: 10px; background: var(--island-background-color, #000); padding: 12px">
+    <div style="width: 760px; display: grid; gap: 10px; background: var(--island-background-color, #000); padding: 12px">
       <div class="bar" style="display: flex; align-items: center; gap: 8px; height: 38px; padding: 0px 18px">
         <button aria-label="打开计时器" class="timer-chip" title="打开计时器" type="button">
           <svg aria-hidden="true" class="lucide lucide-timer" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -10,75 +10,163 @@
         </button>
       </div>
       <div class="reminder-bar" style="display: flex; align-items: center; gap: 8px; height: 38px; padding: 0px 18px"></div>
-      <div style="height: 260px; display: flex">
-        <section aria-label="倒计时" class="island-list-page timer-panel">
-          <form class="timer-panel__form">
-            <input aria-invalid="false" aria-label="开始倒计时" class="timer-panel__input" placeholder="10、10m、1h30m、90s" value="">
-            <button aria-label="开始倒计时" class="timer-panel__button timer-panel__button--main" title="开始倒计时" type="submit">
-              <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
-            </button>
-            <button aria-label="开始秒表" class="timer-panel__button" title="开始秒表" type="button">
-              <svg aria-hidden="true" class="lucide lucide-watch" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
-            </button>
-          </form>
-          <ul class="timer-panel__list">
-            <li class="timer-panel__row">
-              <svg aria-hidden="true" class="lucide lucide-timer timer-panel__icon" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-              <span class="timer-panel__label">
-                倒计时 · 10:00
-              </span>
-              <span class="timer-panel__time">
-                ##:##
-              </span>
-              <span class="timer-panel__actions">
-                <button aria-label="暂停" class="timer-panel__button" title="暂停" type="button">
-                  <svg aria-hidden="true" class="lucide lucide-pause" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div style="height: 248px; display: flex">
+        <section aria-label="倒计时" class="island-list-page timer-panel" data-layout="split">
+          <div class="timer-split">
+            <div class="timer-split__left">
+              <form class="timer-panel__form">
+                <input aria-invalid="false" aria-label="开始倒计时" class="timer-panel__input" placeholder="10、10m、1h30m、90s" value="">
+                <button aria-label="开始倒计时" class="timer-panel__go" title="开始倒计时" type="submit">
+                  <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
                 </button>
-                <button aria-label="取消" class="timer-panel__button" title="取消" type="button">
-                  <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              </form>
+              <div class="timer-split__presets">
+                <button aria-label="开始 1 分钟倒计时" class="timer-split__preset" type="button">
+                  <strong class="timer-split__preset-num">
+                    1分
+                  </strong>
+                  <span class="timer-split__preset-tag">
+                    极速
+                  </span>
                 </button>
-              </span>
-            </li>
-            <li class="timer-panel__row">
-              <svg aria-hidden="true" class="lucide lucide-timer timer-panel__icon" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-              <span class="timer-panel__label">
-                倒计时 · 05:01
-              </span>
-              <span class="timer-panel__time">
-                ##:##
-              </span>
-              <span class="timer-panel__actions">
-                <button aria-label="暂停" class="timer-panel__button" title="暂停" type="button">
-                  <svg aria-hidden="true" class="lucide lucide-pause" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                <button aria-label="开始 3 分钟倒计时" class="timer-split__preset" type="button">
+                  <strong class="timer-split__preset-num">
+                    3分
+                  </strong>
+                  <span class="timer-split__preset-tag">
+                    泡茶
+                  </span>
                 </button>
-                <button aria-label="取消" class="timer-panel__button" title="取消" type="button">
-                  <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                <button aria-label="开始 5 分钟倒计时" class="timer-split__preset" type="button">
+                  <strong class="timer-split__preset-num">
+                    5分
+                  </strong>
+                  <span class="timer-split__preset-tag">
+                    短休
+                  </span>
                 </button>
-              </span>
-            </li>
-            <li class="timer-panel__row timer-panel__row--paused">
-              <svg aria-hidden="true" class="lucide lucide-timer timer-panel__icon" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-              <span class="timer-panel__label timer-panel__label--sourced" title="倒计时 · 25:00 · 来自 番茄钟">
-                <span class="timer-panel__kind">
-                  倒计时 · 25:00
+                <button aria-label="开始 10 分钟倒计时" class="timer-split__preset" type="button">
+                  <strong class="timer-split__preset-num">
+                    10分
+                  </strong>
+                  <span class="timer-split__preset-tag">
+                    小憩
+                  </span>
+                </button>
+                <button aria-label="开始 15 分钟倒计时" class="timer-split__preset" type="button">
+                  <strong class="timer-split__preset-num">
+                    15分
+                  </strong>
+                  <span class="timer-split__preset-tag">
+                    会议
+                  </span>
+                </button>
+                <button aria-label="开始 25 分钟倒计时" class="timer-split__preset" type="button">
+                  <strong class="timer-split__preset-num">
+                    25分
+                  </strong>
+                  <span class="timer-split__preset-tag">
+                    专注
+                  </span>
+                </button>
+              </div>
+              <div class="timer-split__foot">
+                <button aria-label="开始秒表" class="timer-split__sw-btn" title="开始秒表" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-watch" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span>
+                    开始秒表
+                  </span>
+                </button>
+                <button aria-label="到点提示音：开" aria-pressed="true" class="timer-panel__icon-btn timer-panel__icon-btn--accent" title="到点提示音：开" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-volume2 lucide-volume-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <button aria-expanded="false" aria-haspopup="menu" aria-label="计时器布局：左右双栏" class="timer-panel__icon-btn" title="计时器布局：左右双栏" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-columns2 lucide-columns-2" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+              </div>
+            </div>
+            <div class="timer-split__stage">
+              <div class="timer-split__list-head">
+                <span>
+                  进行中 · 3 / 12
                 </span>
-                <span class="timer-panel__source">
-                  来自 番茄钟
+                <span>
+                  按状态排序
                 </span>
-              </span>
-              <span class="timer-panel__time">
-                ##:##
-              </span>
-              <span class="timer-panel__actions">
-                <button aria-label="继续" class="timer-panel__button" title="继续" type="button">
-                  <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                </button>
-                <button aria-label="取消" class="timer-panel__button" title="取消" type="button">
-                  <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                </button>
-              </span>
-            </li>
-          </ul>
+              </div>
+              <ul class="timer-panel__list">
+                <li class="timer-panel__row">
+                  <svg aria-hidden="true" class="lucide lucide-timer timer-panel__icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span class="timer-panel__label timer-panel__label--sourced" title="倒计时 · 10:00">
+                    <span class="timer-panel__kind">
+                      倒计时 · 10:00
+                    </span>
+                    <span class="timer-panel__sub">
+                      预计 10:10
+                    </span>
+                  </span>
+                  <span class="timer-panel__time">
+                    ##:##
+                  </span>
+                  <span class="timer-panel__actions">
+                    <button aria-label="暂停" class="timer-panel__button" title="暂停" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-pause" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </button>
+                    <button aria-label="取消" class="timer-panel__button timer-panel__button--ghost" title="取消" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </button>
+                  </span>
+                  <span aria-hidden="true" class="timer-panel__bar"></span>
+                </li>
+                <li class="timer-panel__row">
+                  <svg aria-hidden="true" class="lucide lucide-timer timer-panel__icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span class="timer-panel__label timer-panel__label--sourced" title="倒计时 · 05:01">
+                    <span class="timer-panel__kind">
+                      倒计时 · 05:01
+                    </span>
+                    <span class="timer-panel__sub">
+                      预计 10:05
+                    </span>
+                  </span>
+                  <span class="timer-panel__time">
+                    ##:##
+                  </span>
+                  <span class="timer-panel__actions">
+                    <button aria-label="暂停" class="timer-panel__button" title="暂停" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-pause" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </button>
+                    <button aria-label="取消" class="timer-panel__button timer-panel__button--ghost" title="取消" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </button>
+                  </span>
+                  <span aria-hidden="true" class="timer-panel__bar"></span>
+                </li>
+                <li class="timer-panel__row timer-panel__row--paused">
+                  <svg aria-hidden="true" class="lucide lucide-timer timer-panel__icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span class="timer-panel__label timer-panel__label--sourced" title="倒计时 · 25:00 · 来自 番茄钟">
+                    <span class="timer-panel__kind">
+                      倒计时 · 25:00
+                    </span>
+                    <span class="timer-panel__source">
+                      来自 番茄钟
+                    </span>
+                  </span>
+                  <span class="timer-panel__time">
+                    ##:##
+                  </span>
+                  <span class="timer-panel__actions">
+                    <button aria-label="继续" class="timer-panel__button" title="继续" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </button>
+                    <button aria-label="取消" class="timer-panel__button timer-panel__button--ghost" title="取消" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </button>
+                  </span>
+                  <span aria-hidden="true" class="timer-panel__bar"></span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </section>
       </div>
       <div class="settings-harness" style="width: 360px">

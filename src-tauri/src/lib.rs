@@ -137,6 +137,8 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             if let Some(package) = plugin_kernel::package_open::find_in_args(args.iter().skip(1), Some(std::path::Path::new(&cwd))) {
                 plugin_kernel::package_open::open(app, package, false);
+            } else if let Some(plugin) = plugin_kernel::market_link::find_in_args(args.iter().skip(1)) {
+                plugin_kernel::market_link::open(app, plugin, false);
             } else {
                 tray_visibility::reopen(app);
             }
@@ -265,8 +267,11 @@ pub fn run() {
                 eprintln!("failed to start the plugin platform v3 host: {error}");
             }
             plugin_kernel::package_open::mark_started();
+            plugin_kernel::market_link::init();
             if let Some(package) = plugin_kernel::package_open::find_in_args(std::env::args_os().skip(1), None) {
                 plugin_kernel::package_open::open(app.handle(), package, true);
+            } else if let Some(plugin) = plugin_kernel::market_link::find_in_args(std::env::args().skip(1)) {
+                plugin_kernel::market_link::open(app.handle(), plugin, true);
             }
             mail::init();
             if let Err(error) = qq_notifications::init(app.handle()) {
@@ -282,6 +287,7 @@ pub fn run() {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
             system::fullscreen::start(app.handle());
+            system::agent_notifications::init(app.handle());
             media_control::init(app.handle());
             system_levels::init(app.handle());
             caps_lock::init(app.handle());
@@ -354,7 +360,10 @@ pub fn run() {
                 }
                 #[cfg(target_os = "macos")]
                 tauri::RunEvent::Opened { urls } => {
-                    let _ = plugin_kernel::package_open::open_opened_urls(_app, &urls);
+                    let rest = plugin_kernel::package_open::open_opened_urls(_app, &urls);
+                    if !rest.is_empty() {
+                        plugin_kernel::market_link::open_opened_urls(_app, &rest);
+                    }
                 }
                 #[cfg(target_os = "macos")]
                 tauri::RunEvent::Reopen { .. } => tray_visibility::reopen(_app),

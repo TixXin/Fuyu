@@ -1,4 +1,9 @@
 export { SERVICE_NAME } from "@fuyu/plugin-manifest/names";
+export type LocaleId = "zh-CN" | "en";
+export type LocalizedText = string | Readonly<Record<string, string>>;
+export declare const DEFAULT_LOCALE: "zh-CN";
+export function normalizeLocale(value: unknown): LocaleId;
+export function pickLocale(map: unknown, locale?: string): string;
 export declare const HOST_PROTOCOL: 2;
 export declare const WINDOW_PROTOCOL: 1;
 export declare const CLOSE: {

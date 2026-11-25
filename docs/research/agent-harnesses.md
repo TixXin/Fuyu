@@ -34,7 +34,7 @@
 - `~/.workbuddy/projects/<编码后的 cwd>/<sessionId>.jsonl`，一行一条记录，每条都带 `sessionId`、`cwd`、`timestamp`（毫秒）。
 - 记录类型：`message`（`role` 是 `user` / `assistant`，`status` 是 `completed` / `incomplete`，内容是 `input_text` / `output_text`）、`function_call` / `function_call_result`（`name`、`callId`）、`reasoning`、`file-history-snapshot`、`ai-title`（`aiTitle` 就是标题）。
 - 模型在 `providerData.requestModelName`（如 `Kimi-K3`、`Hy3`）。
-- `~/.workbuddy/sessions/<pid>.json` 是活动进程登记：`pid`、`sessionId`、`cwd`、`lastHeartbeat`、`version`，和 Claude Code 的 `~/.claude/sessions` 一样，能判断会话是否已退出。
+- `~/.workbuddy/sessions/<pid>.json` 是活动进程登记：`pid`、`sessionId`、`cwd`、`lastHeartbeat`、`version`，和 Claude Code 的 `~/.claude/sessions` 一样，能判断会话是否已退出，也可用于跳转时追踪会话进程链（A15 补齐 `~/.workbuddy/sessions`、`~/.workbuddy-ai/sessions` 与 `$WORKBUDDY_CONFIG_DIR/sessions`，并将 `workbuddy` / `workbuddy ai` / `workbuddyai` 纳入多窗口评分与隐藏主窗口兜底恢复）。
 - 判断状态：最后一条是 `function_call` 或没有结果的工具调用时算运行中；最后一条是 `assistant` 的 `completed` 消息时算这一轮结束。
 
 国际版有 `sessions/` 目录，没见到 `projects/`，格式没找到 [6]。

@@ -4,7 +4,7 @@ import { localized } from "./pluginMarketModel";
 import type { SearchablePlugin } from "./marketSearch";
 
 export function SettingsMarketHits({ plugins, onOpen }: { plugins: readonly SearchablePlugin[]; onOpen: (plugin: SearchablePlugin) => void }) {
-  const text = useTranslation().settings.pluginsV3.marketPage.settingsSearch;
+  const text = useTranslation().settings.pluginHost.marketPage.settingsSearch;
   const { locale } = useLocale();
   return (
     <section className="settings-sidebar__group settings-sidebar__market" aria-label={text.heading} data-market-hits>

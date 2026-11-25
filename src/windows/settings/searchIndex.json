@@ -3158,12 +3158,12 @@
       "zh-CN": {
         "group": "粘贴",
         "title": "岛上的复制卡片",
-        "description": "在剪贴板窗口或岛上的剪贴板页复制一条后，浮屿顶部显示刚复制的内容。自动粘贴时不显示。鼠标停在上面时不会收起。"
+        "description": "在剪贴板窗口或岛上的剪贴板页复制、粘贴一条后，浮屿顶部显示刚操作的内容。鼠标停在上面时不会收起。"
       },
       "en": {
         "group": "Pasting",
         "title": "Copy card on the island",
-        "description": "After you copy an entry from the clipboard window or the island's clipboard page, the island shows what was copied. Not shown when it is pasted for you. It stays while the pointer is on it."
+        "description": "After you copy or paste an entry from the clipboard window or the island's clipboard page, the island shows what was copied or pasted. It stays while the pointer is on it."
       }
     },
     {
@@ -3882,6 +3882,18 @@
         "title": "Play a sound when time is up",
         "description": "When a countdown ends, a sound plays as well as the reminder on the island"
       }
+    },
+    {
+      "page": "timerAlerts",
+      "zh-CN": {
+        "group": "计时器",
+        "title": "计时器页布局"
+      },
+      "en": {
+        "group": "Timer",
+        "title": "Timer layout"
+      },
+      "since": "next"
     },
     {
       "page": "timerAlerts",

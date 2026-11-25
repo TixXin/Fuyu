@@ -1,6 +1,6 @@
 import type { Context } from "cordis";
 import type { ManifestIssue, ValidateManifestOptions } from "@fuyu/plugin-manifest";
-import type { ServiceCallName } from "../protocol.mjs";
+import type { LocaleId, LocalizedText, ServiceCallName } from "../protocol.mjs";
 import type { ServiceEntry } from "../services.mjs";
 
 export interface LogEntry {
@@ -132,6 +132,7 @@ export interface HostOptions {
   builtins?: string | null;
   dataDir?: string | null;
   appVersion?: string | null;
+  locale?: string;
   apiNames?: string[];
   watch?: boolean;
   dev?: boolean;
@@ -141,6 +142,14 @@ export interface HostOptions {
   onLog?: (entry: LogEntry) => void;
   rpc?: HostRpc | null;
   fetchImpl?: (input: any, init?: any) => Promise<any>;
+}
+
+export declare class HostLocale {
+  constructor(initial?: string);
+  install(ctx: Context): () => void;
+  current(): LocaleId;
+  set(next: unknown): boolean;
+  watch(listener: (locale: LocaleId) => void): () => void;
 }
 
 export interface SettingsOpener {
@@ -179,6 +188,7 @@ export interface Host {
   serviceHub: ServiceHub;
   settingsOpener: SettingsOpener;
   islandControl: IslandControlHub;
+  locale: HostLocale;
   services(): ServiceEntry[];
   watchServices(onChange: (services: ServiceEntry[]) => void): () => void;
   settle(): Promise<unknown>;
@@ -281,3 +291,6 @@ export const CONFIG_FILE: "config.json";
 export const WINDOW_RULES_FILE: "window-rules.json";
 export const MAX_WINDOWS_PER_PLUGIN: 8;
 export const MAX_WINDOWS_TOTAL: 24;
+export const DEFAULT_LOCALE: "zh-CN";
+export function normalizeLocale(value: unknown): LocaleId;
+export function pickLocale(map: LocalizedText | null | undefined, locale?: string): string;

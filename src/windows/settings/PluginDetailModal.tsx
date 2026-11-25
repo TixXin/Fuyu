@@ -28,7 +28,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
   onAction: (action: RowAction) => void;
   onOpenShortcuts?: () => void;
 }) {
-  const t = useTranslation().settings.pluginsV3;
+  const t = useTranslation().settings.pluginHost;
   const text = t.page;
   const errorText = useErrorText();
   const dialogRef = useRef<HTMLDivElement>(null);

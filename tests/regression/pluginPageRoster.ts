@@ -10,7 +10,7 @@ interface RosterCheckTools {
   click: (element: Element | null | undefined) => Promise<void>;
   settle: (ms?: number) => Promise<void>;
   within: (key: string, selector: string) => HTMLElement | null;
-  text: (typeof TRANSLATIONS)["en"]["settings"]["pluginsV3"]["page"]["banners"]["roster"];
+  text: (typeof TRANSLATIONS)["en"]["settings"]["pluginHost"]["page"]["banners"]["roster"];
 }
 
 const SYNCED: RosterItem[] = [

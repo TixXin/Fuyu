@@ -80,7 +80,7 @@ function Lead({ view, hostOff, builtins, onOpenPage }: {
           name="process"
           label={text.stats.process}
           tone={processTone(view, hostOff)}
-          value={hostOff ? text.stats.processOff : t.pluginsV3.page.diagnostics.states[view.connection]}
+          value={hostOff ? text.stats.processOff : t.pluginHost.page.diagnostics.states[view.connection]}
           note={!hostOff && view.connection === "open" && view.host ? text.stats.processNode(view.host.node) : null}
         />
       </dl>

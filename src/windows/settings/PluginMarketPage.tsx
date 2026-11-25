@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../i18n";
-import { onPluginPackageOpen } from "../../features/plugin-kernel/api";
+import { onPluginMarketInstall, onPluginPackageOpen, takePendingMarketInstall } from "../../features/plugin-kernel/api";
 import type { SettingsCategory } from "./categories";
 import { onMarketPackage, onMarketRefreshRequest, setMarketRefreshing } from "./pluginMarketBus";
 import { PluginMarketView, type PluginMarketHost } from "./PluginMarketView";
@@ -41,10 +41,37 @@ function useOpenedPackage() {
   return { openedPackage, openedError, consume };
 }
 
+function useRequestedMarketInstall() {
+  const [requestedInstall, setRequestedInstall] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let stop: (() => void) | null = null;
+    const sync = () =>
+      void takePendingMarketInstall()
+        .then((plugin) => {
+          if (!cancelled && plugin) setRequestedInstall(plugin);
+        })
+        .catch(() => undefined);
+    sync();
+    void onPluginMarketInstall(sync)
+      .then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, []);
+  const consume = useCallback((name: string) => {
+    setRequestedInstall((prev) => (prev === name ? null : prev));
+  }, []);
+  return { requestedInstall, consume };
+}
+
 function ConnectedMarket({ host, onOpenPage }: { host: PluginMarketHost; onOpenPage?: (page: SettingsCategory) => void }) {
   const [request] = useState(takeMarketViewRequest);
   const catalog = usePluginMarketCatalog(host === "open", { fetchWhenEmpty: true });
   const opened = useOpenedPackage();
+  const marketLink = useRequestedMarketInstall();
   const { refresh } = catalog;
   useEffect(() => onMarketRefreshRequest(refresh), [refresh]);
   useEffect(() => {
@@ -66,6 +93,8 @@ function ConnectedMarket({ host, onOpenPage }: { host: PluginMarketHost; onOpenP
       openedPackage={opened.openedPackage}
       openedError={opened.openedError}
       onConsumePackage={opened.consume}
+      requestedInstall={marketLink.requestedInstall}
+      onConsumeInstall={marketLink.consume}
     />
   );
 }

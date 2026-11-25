@@ -97,3 +97,32 @@ flowchart TD
 | `D124.4` | 主岛收起态物理舞台按需收缩（降低 GPU 合成层内存） | `src-tauri/src/island/`, `src/windows/island/` |
 | `D124.5` | Node 宿主禁用内置插件启动零加载 | `packages/plugin-base/src/host/`, `tests/unit/` |
 | `D124.6` | Windows 内存收口：托盘主岛 `SetIsVisible`、Win OCR 子进程化与实测清单 | `src-tauri/src/webview_visibility.rs`, `src-tauri/src/win32/ocr.rs`, `src-tauri/src/lib.rs`, `src-tauri/src/tray.rs` |
+| `D125` | 移除 `mimalloc` 全局分配器，回退系统原生分配器消除 Rust 主进程 130+ MB 私有内存膨胀 | `src-tauri/src/main.rs`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock` |
+| `D48` | 默认开启 Windows 隐藏窗口 WebView2 低内存模式（`MemoryUsageTargetLevel = Low`） | `src-tauri/src/webview_memory.rs`, `src-tauri/AGENTS.md` |
+
+## 五、Windows 11 真机实测结果（2026-11-25）
+
+测试环境：Windows 11（`tixxin-computer`），WebView2 `158.0.4370.33`，Node `26.12.0`，真实用户配置（5 个已启用内置 v3 插件 + 剪贴板预热，2 个 WebView2 Renderer）。
+
+### 1. 关键发现：移除 `mimalloc v3` 释放 Rust 主进程 ~130 MB（D125）
+
+`VirtualQueryEx` 与 `MIMALLOC_VERBOSE=1` 剖析发现，`libmimalloc-sys 0.1.49` 内置的 `mimalloc v3.3.2` 在 ~89 线程的桌面托盘进程里会保留多个 64 MiB arena 且默认关闭 `page_commit_on_demand`，导致仅 ~18 MB 的真实 Rust 活跃分配被放大到 **150–161 MB 私有提交**（最大 62 MB 段含 70% 全零页）。移除 `mimalloc` 回退系统原生分配器（Windows NT LFH / macOS libmalloc）后：
+
+| 配置 | `mimalloc v3.3.2`（D93） | 系统原生分配器（D125） | 降幅 |
+|---|---:|---:|---:|
+| 真实用户配置（Private / WS） | 150.0–161.2 / 89.6–91.8 MB | **22.3–24.1 / 72.6–75.3 MB** | **-127 至 -137 MB（-85%）** |
+| 空配置 `empty-home`（Private / WS） | 89.8 / 76.6 MB | **18.8 / 65.6 MB** | **-71.0 MB（-79%）** |
+| `fuyu.exe` 安装体积 | 51.88 MB | **50.08 MB** | **-1.80 MB** |
+
+### 2. 全套优化前后对照（原装 `0.3.12-beta.2` vs `D124 + D125 + D48`）
+
+| 阶段 / 进程（MB） | 原装 `0.3.12-beta.2`（优化前） | `D124 + D125`（D48 关） | `D124 + D125 + D48`（默认开） | 较基线变化 |
+|---|---:|---:|---:|---:|
+| **启动 30s — 总私有 / 总 WS** | 643.0 / 837.0 | 538.5 / 808.1 | **503.5 / 801.1** | **-139.5 Private（-21.7%）/ -35.9 WS** |
+| **托盘隐藏期 — 总私有 / 总 WS** | 492.8 / 699.2 | 379.5 / 702.5 | **410.6 / 698.5** | **-82.2 至 -113.3 Private** |
+| **稳态闲置 — 总私有 / 总 WS** | 492.6 / 699.8 | 416.2 / 706.0 | **398.1 / 684.8** | **-94.5 Private（-19.2%）/ -15.0 WS** |
+| `fuyu.exe` Rust 主进程（稳态 Private / WS） | 145.0 / 90.5 | 23.2 / 75.2 | **22.6 / 72.9** | **-122.4 Private（-84.4%）** |
+| `node.exe` 插件宿主（稳态 Private） | 60.1–68.9（无堆限） | 72.2（带 V8 约束） | **67.2**（带 `--max-semi-space-size=2 --max-old-space-size=192`） | 长跑封顶防膨胀 |
+| `IslandApp.js` 首屏包体（D124.3） | 556 KB | **144 KB** | **144 KB** | **-74%** |
+| WinRT OCR 子进程（D124.6） | 主进程常驻模型 | 短命子进程 `378 ms` 冷 / `33 ms` 热，退出 0 残留 | 同左 | 主进程零模型常驻 |
+| 主岛托盘恢复 & 剪贴板唤醒延迟 | — | 主岛 `10.7 ms`，剪贴板 5 次中位数 `12.6 ms` | 隐藏/恢复稳定无异常 | 无明显延迟退化 |

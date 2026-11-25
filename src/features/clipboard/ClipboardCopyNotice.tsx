@@ -9,7 +9,7 @@ import "./ClipboardCopyNotice.css";
 export function ClipboardCopyNotice({ card }: { card: ClipboardCopyCardState }) {
   const t = useTranslation().clipboard;
   if (!card.current) return null;
-  const { item, offered, needsAccess } = card.current;
+  const { item, offered, pasted, needsAccess } = card.current;
   const label = copyNoticeLabel(item);
   const thumbnail = copyNoticeThumbnail(item);
   const text = needsAccess
@@ -17,13 +17,15 @@ export function ClipboardCopyNotice({ card }: { card: ClipboardCopyCardState }) 
     : card.bookmarkFailed
     ? t.links.failed
     : label.kind === "image"
-    ? t.notice.copiedImage
+    ? (pasted ? t.notice.pastedImage : t.notice.copiedImage)
     : label.kind === "files"
-    ? t.notice.copiedFiles(label.name, label.more)
+    ? (pasted ? t.notice.pastedFiles(label.name, label.more) : t.notice.copiedFiles(label.name, label.more))
     : label.kind === "masked"
-    ? t.notice.masked
+    ? (pasted ? t.notice.pastedMasked : t.notice.masked)
     : offered
     ? t.links.linkCopied(label.summary)
+    : pasted
+    ? t.notice.pasted(label.summary)
     : t.notice.copied(label.summary);
   return (
     <span className="clipboard-copy-notice" role="status" data-kind={item.kind} onPointerEnter={card.hold} onPointerLeave={card.release}>

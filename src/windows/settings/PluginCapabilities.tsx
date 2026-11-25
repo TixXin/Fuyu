@@ -17,7 +17,7 @@ const ICONS: Record<PluginCapabilityKind, ReactNode> = {
 const MODULE_KINDS = new Set<PluginCapabilityKind>(["runPrograms", "files", "nodeSensitive"]);
 
 export function PluginCapabilities({ caps }: { caps: Capabilities }) {
-  const text = useTranslation().settings.pluginsV3.marketPage.capabilities;
+  const text = useTranslation().settings.pluginHost.marketPage.capabilities;
   const { locale } = useLocale();
   const items = capabilityItems(caps);
   if (items.length === 0) return null;

@@ -7,7 +7,7 @@ import { SyncSettingsPage } from "../SyncSettingsPage";
 import { OverviewSettingsPage } from "../OverviewSettingsPage";
 import { ShortcutsSettingsPage } from "../ShortcutsSettingsPage";
 import { AboutSettingsPage } from "../AboutSettingsPage";
-import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
+import { PluginsSettingsPage } from "../PluginsSettingsPage";
 import { PluginMarketPage } from "../PluginMarketPage";
 import { PluginDiagnosticsPage } from "../PluginDiagnosticsPage";
 import { IslandLayoutPage } from "../island-layout/IslandLayoutPage";
@@ -95,7 +95,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   shortcuts: shortcuts("shortcuts"),
   shortcutsIsland: shortcuts("shortcutsIsland"),
   shortcutsReference: shortcuts("shortcutsReference"),
-  pluginsV3: ({ onShowPage }) => <PluginsV3SettingsPage onOpenPage={onShowPage} />,
+  pluginsV3: ({ onShowPage }) => <PluginsSettingsPage onOpenPage={onShowPage} />,
   pluginDiagnostics: ({ onShowPage }) => <PluginDiagnosticsPage onOpenPage={onShowPage} />,
   pluginMarket: ({ onShowPage }) => <PluginMarketPage onOpenPage={onShowPage} />,
   about: about("about"),

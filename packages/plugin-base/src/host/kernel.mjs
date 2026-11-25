@@ -16,6 +16,7 @@ import { recordLogs } from "./logs.mjs";
 import { PluginConfig } from "./plugin-config.mjs";
 import { DEV_WATCHED, watchBuiltins } from "./reload.mjs";
 import { IslandControl } from "./island.mjs";
+import { HostLocale } from "./locale.mjs";
 import { RustBridge } from "./rust.mjs";
 import { PluginSecrets } from "./secrets.mjs";
 import { Services } from "./services.mjs";
@@ -67,7 +68,7 @@ function hostInfo(startedAt, safe, dev) {
   return { pid: process.pid, node: process.versions.node, startedAt, safe, dev, rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, cpuMs: Math.round((cpu.user + cpu.system) / 1000) };
 }
 
-export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, appVersion = null, apiNames = [], watch = false, dev = false, safe = null, bisect = [], faultLimit, onLog, rpc = null, fetchImpl = globalThis.fetch } = {}) {
+export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, appVersion = null, locale = "zh-CN", apiNames = [], watch = false, dev = false, safe = null, bisect = [], faultLimit, onLog, rpc = null, fetchImpl = globalThis.fetch } = {}) {
   if (!dir) throw new Error("startHost needs the directory that holds the plugin configuration");
   const startedAt = Date.now();
   const catalog = builtins ? readBuiltins(builtins) : null;
@@ -102,6 +103,8 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   settings.install(ctx);
   const island = new IslandControl();
   island.install(ctx);
+  const hostLocale = new HostLocale(locale);
+  hostLocale.install(ctx);
   const http = new ControlledHttp({ fetchImpl });
   http.install(ctx);
   const windows = new PluginWindows({ dir, services, usage });
@@ -157,6 +160,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     serviceHub: services,
     settingsOpener: settings,
     islandControl: island,
+    locale: hostLocale,
     services: () => services.list(),
     watchServices: (onChange) => services.watch(onChange),
     settle: () => Promise.all(ctx.loader.getTasks()),

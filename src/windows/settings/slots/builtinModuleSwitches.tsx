@@ -5,7 +5,7 @@ import { isBuiltinEnabled, switchBuiltinPlugin } from "../../../features/plugin-
 import { islandItemStyleId, islandItemStyles } from "../../../features/plugin-kernel/settingsSlots";
 import { useBuiltinPlugins } from "../../../features/plugin-kernel/useBuiltinPlugins";
 import { useTranslation } from "../../../i18n";
-import type { BuiltinPluginName } from "../../../i18n/sections/settings/pluginsV3";
+import type { BuiltinPluginName } from "../../../i18n/sections/settings/pluginHost";
 import { settingsSections } from "./sectionSlot";
 
 type ModuleCategory = "generalApi" | "agentRings" | "agentPush" | "agentRemote";
@@ -38,7 +38,7 @@ function ModuleOffCard({
 
 function LocalApiOff() {
   const t = useTranslation().settings;
-  return <ModuleOffCard pluginId="local-api" title={t.localApi.title} description={t.pluginsV3.builtinSummaries["local-api"]} footer={t.localApi.hint} />;
+  return <ModuleOffCard pluginId="local-api" title={t.localApi.title} description={t.pluginHost.builtinSummaries["local-api"]} footer={t.localApi.hint} />;
 }
 
 function CenterPatternOff() {
@@ -49,7 +49,7 @@ function CenterPatternOff() {
     <SettingsToggleRow
       searchable={false}
       title={t.plugins.centerPattern.group}
-      description={t.pluginsV3.builtinSummaries["center-pattern"]}
+      description={t.pluginHost.builtinSummaries["center-pattern"]}
       checked={false}
       onChange={(on) => void switchBuiltinPlugin("center-pattern", on).catch(() => undefined)}
     />
@@ -58,22 +58,22 @@ function CenterPatternOff() {
 
 function ClaudeUsageOff() {
   const t = useTranslation();
-  return <ModuleOffCard pluginId="claude-usage" title={t.claudeUsage.settings.title} description={t.settings.pluginsV3.builtinSummaries["claude-usage"]} footer={t.claudeUsage.settings.footer} />;
+  return <ModuleOffCard pluginId="claude-usage" title={t.claudeUsage.settings.title} description={t.settings.pluginHost.builtinSummaries["claude-usage"]} footer={t.claudeUsage.settings.footer} />;
 }
 
 function SessionRingOff() {
   const t = useTranslation();
-  return <ModuleOffCard pluginId="session-ring" title={t.sessionRing.settings.title} description={t.settings.pluginsV3.builtinSummaries["session-ring"]} footer={t.sessionRing.settings.footer} />;
+  return <ModuleOffCard pluginId="session-ring" title={t.sessionRing.settings.title} description={t.settings.pluginHost.builtinSummaries["session-ring"]} footer={t.sessionRing.settings.footer} />;
 }
 
 function CcConnectOff() {
   const t = useTranslation().settings;
-  return <ModuleOffCard pluginId="cc-connect" title={t.plugins.ccConnect.group} description={t.pluginsV3.builtinSummaries["cc-connect"]} footer={t.plugins.ccConnect.groupHint} />;
+  return <ModuleOffCard pluginId="cc-connect" title={t.plugins.ccConnect.group} description={t.pluginHost.builtinSummaries["cc-connect"]} footer={t.plugins.ccConnect.groupHint} />;
 }
 
 function SshTunnelOff() {
   const t = useTranslation().settings;
-  return <ModuleOffCard pluginId="ssh-tunnel" title={t.plugins.sshTunnel.group} description={t.pluginsV3.builtinSummaries["ssh-tunnel"]} footer={t.plugins.sshTunnel.groupHint} />;
+  return <ModuleOffCard pluginId="ssh-tunnel" title={t.plugins.sshTunnel.group} description={t.pluginHost.builtinSummaries["ssh-tunnel"]} footer={t.plugins.sshTunnel.groupHint} />;
 }
 
 const sections = settingsSections<object, ModuleCategory>();

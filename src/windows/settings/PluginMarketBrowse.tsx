@@ -29,7 +29,7 @@ export function PluginMarketBrowse({ plugins, bundles, newNames, query, category
   onInstallFile: () => void;
   onOpenBundle: (id: string) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.marketPage;
+  const text = useTranslation().settings.pluginHost.marketPage;
   const { locale } = useLocale();
   const [ownedOpen, setOwnedOpen] = useState<boolean | null>(null);
   const pinyin = usePinyin(queryWantsPinyin(query));

@@ -174,3 +174,50 @@ test("service events a window asked for before it connected, or before the host 
     connection.close();
   }
 });
+
+test("plugin-scoped socket tokens bind caller.plugin on the host and never receive privileged snapshots or events", async () => {
+  const server = await serve(
+    (caller) => (caller?.plugin ? { clients: [], role: caller.plugin } : { clients: [{ plugin: "@a/b", token: "secret" }], role: "window" }),
+    (method, params, window, plugin) => ({ method, params, window, plugin: plugin ?? null }),
+  );
+  const pluginToken = server.issuePluginToken("@evil/plugin");
+  assert.notEqual(pluginToken, server.token);
+  const windowSnapshots = [];
+  const pluginSnapshots = [];
+  const windowEvents = [];
+  const pluginEvents = [];
+  const mainConn = connectHost({
+    resolve: async () => ({ port: server.port, token: server.token }),
+    window: "settings",
+    open,
+    onSnapshot: (snap) => windowSnapshots.push(snap),
+    onEvent: (name, data) => windowEvents.push([name, data]),
+  });
+  const pluginConn = connectHost({
+    resolve: async () => ({ port: server.port, token: pluginToken }),
+    window: "settings",
+    open,
+    onSnapshot: (snap) => pluginSnapshots.push(snap),
+    onEvent: (name, data) => pluginEvents.push([name, data]),
+  });
+  try {
+    assert.ok(await until(() => mainConn.state === "open" && pluginConn.state === "open"));
+    assert.equal(windowSnapshots[0].role, "window");
+    assert.equal(pluginSnapshots[0].role, "@evil/plugin");
+    assert.deepEqual(pluginSnapshots[0].clients, []);
+    assert.deepEqual(await mainConn.call("service.call", { x: 1 }), { method: "service.call", params: { x: 1 }, window: "settings", plugin: null });
+    assert.deepEqual(await pluginConn.call("service.call", { x: 1 }), { method: "service.call", params: { x: 1 }, window: "settings", plugin: "@evil/plugin" });
+    assert.deepEqual(server.windows(), ["settings"]);
+
+    server.publish("clients", [{ secret: true }], { privilegedOnly: true });
+    server.publish("services", [{ name: "timers/v1" }]);
+    assert.ok(await until(() => windowEvents.length === 2 && pluginEvents.length === 1));
+    assert.deepEqual(pluginEvents, [["services", [{ name: "timers/v1" }]]]);
+
+    server.revokePluginToken("@evil/plugin");
+    assert.ok(await until(() => pluginConn.state !== "open"));
+  } finally {
+    mainConn.close();
+    pluginConn.close();
+  }
+});

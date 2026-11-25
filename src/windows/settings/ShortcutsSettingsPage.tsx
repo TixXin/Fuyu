@@ -1,7 +1,7 @@
 import { PageShortcutSection } from "./sections/PageShortcutSection";
 import { IslandLayerShortcutSection } from "./sections/IslandLayerShortcutSection";
 import type { IslandSettings } from "../../lib/settings/types";
-import { PluginV3ShortcutSection } from "./PluginV3ShortcutSection";
+import { PluginShortcutSection } from "./PluginShortcutSection";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { SettingsCategory } from "./categories";
@@ -48,12 +48,12 @@ function ClipboardReference() {
   );
 }
 
-function PluginsV3Section({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSectionProps) {
-  return <PluginV3ShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={<FeaturePageLink page="pluginsV3" onOpenPage={onOpenPage} />} />;
+function PluginShortcutsSection({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSectionProps) {
+  return <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={<FeaturePageLink page="pluginsV3" onOpenPage={onOpenPage} />} />;
 }
 
 shortcutSections.add({ id: "shortcuts.islandLayer", category: "shortcuts", order: 5, component: IslandLayerSection });
-shortcutSections.add({ id: "shortcuts.pluginsV3", category: "shortcuts", order: 48, component: PluginsV3Section });
+shortcutSections.add({ id: "shortcuts.pluginHost", category: "shortcuts", order: 48, component: PluginShortcutsSection });
 shortcutSections.add({ id: "shortcutsIsland.pages", category: "shortcutsIsland", order: 10, component: PageKeysSection });
 shortcutReferences.add({ id: "shortcutsReference.island", category: "shortcutsReference", order: 10, component: IslandReference });
 shortcutReferences.add({ id: "shortcutsReference.clipboard", category: "shortcutsReference", order: 15, component: ClipboardReference });

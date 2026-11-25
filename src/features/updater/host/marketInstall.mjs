@@ -1,4 +1,4 @@
-import { compareVersions, selectVersions, verifyVersionSignature } from "../../../../packages/plugin-market/src/index.mjs";
+import { compareVersions, revocationOf, selectVersions, verifyVersionSignature } from "../../../../packages/plugin-market/src/index.mjs";
 import { commitStaged, discardStaged, stagePackage } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { sha256Hex } from "../../../../packages/plugin-manifest/src/index.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
@@ -64,14 +64,19 @@ export function createMarketInstaller({ pluginsDir, appVersion, platform, downlo
     return { lastInstalled: installed[installed.length - 1], trustedAuthors: nextTrusted };
   };
 
-  const runSilentAutoUpdates = async ({ doc, revocations, trustedAuthors, now }) => {
+  const runSilentAutoUpdates = async ({ doc, revocations, trustedAuthors, revokedDisabled = {}, now }) => {
     const installedList = readInstalledPackages(pluginsDir);
     const installedById = new Map(installedList.map((item) => [item.id, item]));
     let nextTrusted = { ...trustedAuthors };
+    const nextRevokedDisabled = { ...revokedDisabled };
     const upgraded = [];
 
     for (const inst of installedList) {
-      if (inst.source !== "market" || !inst.enabled) continue;
+      if (inst.source !== "market") continue;
+      const revRecord = nextRevokedDisabled[inst.id] ?? null;
+      const revokedNow = revocationOf(revocations, inst.id, inst.version)?.level === "disable";
+      const recoverFromRevocation = !inst.enabled && revokedNow && revRecord?.wasEnabled === true;
+      if (!inst.enabled && !recoverFromRevocation) continue;
       const pluginEntry = doc.plugins.find((item) => item.name === inst.id);
       if (!pluginEntry) continue;
       const selected = selectVersions(pluginEntry, { fuyuVersion: appVersion, platform, now, installed: inst.version, revocations });
@@ -101,10 +106,12 @@ export function createMarketInstaller({ pluginsDir, appVersion, platform, downlo
           if (from && from !== step.versionEntry.version) {
             upgraded.push({ name: step.pluginEntry.name, displayName: step.versionEntry.manifest?.displayName, from, to: step.versionEntry.version });
           }
+          delete nextRevokedDisabled[step.pluginEntry.name];
           installedById.set(step.pluginEntry.name, {
             id: step.pluginEntry.name,
             version: step.versionEntry.version,
             source: "market",
+            official: step.official,
             enabled: true,
             capabilities: capabilitiesOf(step.versionEntry.manifest),
           });
@@ -113,7 +120,7 @@ export function createMarketInstaller({ pluginsDir, appVersion, platform, downlo
         continue;
       }
     }
-    return { upgraded, trustedAuthors: nextTrusted };
+    return { upgraded, trustedAuthors: nextTrusted, revokedDisabled: nextRevokedDisabled };
   };
 
   return { verifyMarketStep, downloadAndInstallSteps, runSilentAutoUpdates };

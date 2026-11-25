@@ -190,3 +190,26 @@ test("services and windows a plugin did not declare show up in its status", asyn
   assert.equal(byId(host, "loose").undeclared, undefined);
   assert.equal(byId(host, "loose").source, "file");
 });
+
+test("a market plugin under @fuyu/* is rejected unless marked official: true in plugins.yml", async () => {
+  const made = space({
+    "data/plugins.yml": [
+      '- id: "@fuyu/impostor"\n  source: market\n',
+      '- id: "@fuyu/verified"\n  source: market\n  official: true\n',
+    ].join(""),
+    "data/packages/@fuyu/impostor/package.json": manifest("@fuyu/impostor", { host: "host.mjs" }),
+    "data/packages/@fuyu/impostor/host.mjs": HOST("impostor"),
+    "data/packages/@fuyu/verified/package.json": manifest("@fuyu/verified", { host: "host.mjs" }),
+    "data/packages/@fuyu/verified/host.mjs": HOST("verified"),
+  });
+  const host = await open(made, { appVersion: "0.6.0" });
+  const impostor = byId(host, "@fuyu/impostor");
+  assert.equal(impostor.state, "failed", JSON.stringify(impostor));
+  assert.equal(impostor.blocked.by, "manifest");
+  assert.match(impostor.reason, /@fuyu|official/i);
+  assert.equal(globalThis.sourceProbe?.impostor, undefined);
+
+  const verified = byId(host, "@fuyu/verified");
+  assert.equal(verified.state, "running", JSON.stringify(verified));
+  assert.equal(globalThis.sourceProbe?.verified, join(made.data, "data", "@fuyu", "verified"));
+});

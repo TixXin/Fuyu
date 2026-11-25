@@ -1,6 +1,6 @@
-import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
+import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginHost";
 import type { SettingsCategory } from "./categories";
-import type { PluginStatusV3 } from "./usePluginHostStatus";
+import type { PluginStatus } from "./usePluginHostStatus";
 
 export const BUILTIN_PAGES: Record<BuiltinPluginName, SettingsCategory> = {
   todos: "todos", calendar: "calendar", music: "music", clipboard: "clipboard", screenshot: "screenshot",
@@ -19,6 +19,6 @@ export function megabytes(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function isExternalPlugin(plugin: PluginStatusV3, builtinIds: ReadonlySet<string>): boolean {
+export function isExternalPlugin(plugin: PluginStatus, builtinIds: ReadonlySet<string>): boolean {
   return !builtinIds.has(plugin.id) && plugin.kind !== "builtin" && plugin.kind !== "essential";
 }

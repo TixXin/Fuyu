@@ -6,7 +6,7 @@ import { resolveLegacyPluginTitle, shouldShowSettingsMigrationCard } from "../..
 import { PluginBanner } from "./PluginPageBanners";
 
 export function V2PluginMigrationCard({ onOpenMarket }: { onOpenMarket?: (detail?: string) => void }) {
-  const copy = useTranslation().settings.pluginsV3.page.migration;
+  const copy = useTranslation().settings.pluginHost.page.migration;
   const { locale } = useLocale();
   const { snapshot, dismiss } = useV2PluginMigration();
   const [open, setOpen] = useState(true);

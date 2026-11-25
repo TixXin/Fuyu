@@ -50,6 +50,7 @@ const SECRET: ClipboardHistoryItem = { ...base, id: "s1", kind: "text", preview:
 const IMAGE: ClipboardHistoryItem = { ...base, id: "i1", kind: "image", preview: "", image: { width: 10, height: 10, byteSize: 100, originalPath: "a.png", thumbnailPath: "a-t.png", thumbnailDataUrl: THUMB } };
 const FILES: ClipboardHistoryItem = { ...base, id: "f1", kind: "files", preview: "report.pdf", files: ["C:\\Users\\me\\report.pdf", "C:\\Users\\me\\notes.txt"] };
 const copied = (item: ClipboardHistoryItem, seconds = 3) => act(async () => { await emit("clipboard-item-copied", { item, seconds }); });
+const pasted = (item: ClipboardHistoryItem, seconds = 3) => act(async () => { await emit("clipboard-item-copied", { item, seconds, pasted: true }); });
 
 async function runChecks() {
   try {
@@ -84,6 +85,22 @@ async function runChecks() {
 
     await copied(TEXT);
     check(!document.querySelector('.clipboard-copy-notice__actions button[aria-label="打开辅助功能设置"]'), "An ordinary copy has no settings button");
+
+    await pasted(TEXT);
+    check(card()?.textContent === "已粘贴 · pnpm test:regression clipboard" && !document.querySelector('.clipboard-copy-notice__actions button[aria-label="打开辅助功能设置"]'), "Pasted text says pasted with the summary and no settings button");
+
+    await pasted(SECRET);
+    check(card()?.textContent === "已粘贴（已打码）", "A pasted masked entry stays masked");
+
+    await pasted(IMAGE);
+    check(card()?.textContent === "已粘贴图片" && document.querySelector(".clipboard-copy-notice__thumb"), "A pasted image says pasted with its thumbnail");
+
+    await pasted(FILES);
+    check(card()?.textContent === "已粘贴 report.pdf 等 2 个文件", "Pasted files say pasted with the first name and count");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('.clipboard-copy-notice__actions button[aria-label="关闭"]')!.click(); });
+    await pasted(TEXT, 0);
+    check(!card(), "Nothing shows on paste when the card is turned off");
 
     await copied(TEXT, 1);
     await wait(1200);

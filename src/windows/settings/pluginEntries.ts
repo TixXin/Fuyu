@@ -5,13 +5,13 @@ import { newestMarketVersion, pluginPlaces, pluginSettingsKnown, type PluginPlac
 import { pluginRowStatus, type RowContext, type RowStatus } from "./pluginRowStatus.ts";
 import { pluginSetupNeed, type PluginSetupNeed } from "./pluginSetupStore.ts";
 import { stateOf } from "./pluginServiceStatus.ts";
-import type { PluginStatusV3 } from "./usePluginHostStatus";
+import type { PluginStatus } from "./usePluginHostStatus";
 
 export type PluginSourceKind = "official" | "market" | "manual" | "local";
 
 export interface InstalledEntry {
   id: string;
-  plugin: PluginStatusV3;
+  plugin: PluginStatus;
   market?: MarketCatalogPlugin;
   title: string;
   icons: string[];
@@ -40,7 +40,7 @@ export function localized(value: MarketLocalizedText | string | undefined | null
   return text?.trim() || null;
 }
 
-function titleOf(plugin: PluginStatusV3, market: MarketCatalogPlugin | undefined, installed: InstalledMarketPlugin | undefined, locale: string): string {
+function titleOf(plugin: PluginStatus, market: MarketCatalogPlugin | undefined, installed: InstalledMarketPlugin | undefined, locale: string): string {
   const fromMarket = localized(market?.displayName, locale) ?? localized(installed?.displayName, locale);
   if (fromMarket) return fromMarket;
   const raw = plugin.name?.trim();
@@ -48,14 +48,14 @@ function titleOf(plugin: PluginStatusV3, market: MarketCatalogPlugin | undefined
   return raw;
 }
 
-function sourceOf(plugin: PluginStatusV3, market: MarketCatalogPlugin | undefined): PluginSourceKind {
+function sourceOf(plugin: PluginStatus, market: MarketCatalogPlugin | undefined): PluginSourceKind {
   if (plugin.source === "manual") return "manual";
   if (plugin.source === "market") return market?.official || plugin.id.startsWith("@fuyu/") ? "official" : "market";
   return "local";
 }
 
 export function installedEntries(
-  plugins: readonly PluginStatusV3[] | null,
+  plugins: readonly PluginStatus[] | null,
   builtinIds: ReadonlySet<string>,
   snapshot: MarketCatalogSnapshot | null,
   context: RowContext,

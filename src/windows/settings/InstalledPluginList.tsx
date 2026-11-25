@@ -24,7 +24,7 @@ export function InstalledPluginList({ entries, stale, query, filter, onQuery, on
   onAction: (entry: InstalledEntry, action: RowAction) => void;
   onSearchMarket: () => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const counts = countEntries(entries);
   const active: InstalledFilter = counts[filter] === 0 ? "all" : filter;
   const searchable = counts.all >= SEARCH_FROM;

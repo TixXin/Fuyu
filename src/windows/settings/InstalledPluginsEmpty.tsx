@@ -19,7 +19,7 @@ export function InstalledPluginsEmpty({ snapshot, onBrowse, onInstallFile, onIns
   onInstallFile: () => void;
   onInstall: (plugin: MarketCatalogPlugin) => void;
 }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const { locale } = useLocale();
   const popular = popularPlugins(snapshot);
   return (

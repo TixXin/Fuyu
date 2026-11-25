@@ -13,7 +13,7 @@ export function openOnIsland(entry: InstalledEntry) {
 }
 
 export function PluginPlaceTags({ entry, stale, onOpenSettings }: { entry: InstalledEntry; stale: boolean; onOpenSettings: () => void }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   const { mutes } = usePluginNoticeMutes();
   if (entry.places.length === 0) return null;
   const canOpen = canOpenOnIsland(entry, stale);
@@ -48,7 +48,7 @@ export function PluginPlaceTags({ entry, stale, onOpenSettings }: { entry: Insta
 }
 
 export function PluginWhereLine({ entry, stale, onOpenSettings }: { entry: InstalledEntry; stale: boolean; onOpenSettings: () => void }) {
-  const text = useTranslation().settings.pluginsV3.page;
+  const text = useTranslation().settings.pluginHost.page;
   if (entry.places.length === 0) return null;
   return (
     <div className="plugin-where" data-where={entry.id}>

@@ -6,7 +6,7 @@ import { announceMarketPackage, isMarketRefreshing, requestMarketRefresh, watchM
 import "./PluginPage.css";
 
 export function PluginMarketHeaderActions() {
-  const text = useTranslation().settings.pluginsV3.marketPage;
+  const text = useTranslation().settings.pluginHost.marketPage;
   const refreshing = useSyncExternalStore(watchMarketRefreshing, isMarketRefreshing);
   const file = usePluginFilePicker(announceMarketPackage);
   const refreshLabel = refreshing ? text.refreshing : text.refresh;

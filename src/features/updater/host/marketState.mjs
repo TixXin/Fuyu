@@ -21,9 +21,19 @@ export function normalizeLastSource(raw) {
   return isObject(raw) && typeof raw.name === "string" && raw.name && typeof raw.at === "number" ? { name: raw.name, at: raw.at } : null;
 }
 
+export function normalizeRevokedDisabled(raw) {
+  if (!isObject(raw)) return {};
+  const out = {};
+  for (const [id, entry] of Object.entries(raw)) {
+    if (!isObject(entry) || typeof entry.wasEnabled !== "boolean" || typeof entry.version !== "string" || !entry.version) continue;
+    out[id] = { wasEnabled: entry.wasEnabled, version: entry.version, at: typeof entry.at === "number" ? entry.at : 0 };
+  }
+  return out;
+}
+
 export function readState(dataDir) {
   const statePath = join(dataDir, STATE_FILE);
-  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null, revocationWarning: null, lastSource: null, autoUpdated: null });
+  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, revokedDisabled: {}, updatedAt: null, lastError: null, revocationWarning: null, lastSource: null, autoUpdated: null });
   if (!existsSync(statePath)) return empty();
   try {
     const raw = JSON.parse(readFileSync(statePath, "utf8"));
@@ -32,6 +42,7 @@ export function readState(dataDir) {
       lastIndexSerial: Number.isSafeInteger(raw?.lastIndexSerial) ? raw.lastIndexSerial : null,
       revocations: isObject(raw?.revocations) && Array.isArray(raw.revocations.entries) ? raw.revocations : emptyRevocations(),
       trustedAuthors: normalizeTrustedAuthors(raw?.trustedAuthors),
+      revokedDisabled: normalizeRevokedDisabled(raw?.revokedDisabled),
       updatedAt: typeof raw?.updatedAt === "number" ? raw.updatedAt : null,
       lastError: typeof raw?.lastError === "string" ? raw.lastError : null,
       revocationWarning: typeof raw?.revocationWarning === "string" ? raw.revocationWarning : null,

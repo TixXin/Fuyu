@@ -77,6 +77,7 @@ export type SettingsPluginPageText = {
     waitingNobody: string;
     unreachable: (windows: string) => string;
     revoked: string;
+    revokedFix: (version: string) => string;
     warned: string;
     held: (version: string) => string;
     heldItem: (what: string, list: string) => string;
@@ -347,6 +348,7 @@ export const zhCN: SettingsPluginPageText = {
     waitingNobody: "要用另一个插件提供的功能，现在还没有插件提供它",
     unreachable: (windows) => `界面文件（${windows}）不在浮屿能读的文件夹里，这部分界面不会显示`,
     revoked: "市场撤销了这个版本，它不能再打开，建议卸载",
+    revokedFix: (version) => `市场撤销了当前版本，已有修复版 v${version}，看看再更新`,
     warned: "市场对这个版本发出了提醒，插件照常运行",
     held: (version) => `新版本 v${version} 会做更多事，需要你确认后再更新`,
     heldItem: (what, list) => `${what}：${list}`,
@@ -617,6 +619,7 @@ export const en: SettingsPluginPageText = {
     waitingNobody: "Needs a feature from another plugin, and no plugin offers it yet",
     unreachable: (windows) => `Its window files (${windows}) are outside the folders Fuyu can read, so those parts won't show`,
     revoked: "The market revoked this version; it can't be turned on again, and uninstalling is recommended",
+    revokedFix: (version) => `This version was revoked, and fix v${version} is available — review before updating`,
     warned: "The market flagged this version; the plugin keeps running",
     held: (version) => `v${version} does more than this version, so it waits for you to confirm the update`,
     heldItem: (what, list) => `${what}: ${list}`,

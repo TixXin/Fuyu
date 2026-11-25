@@ -5,6 +5,7 @@ mod containment;
 #[cfg(debug_assertions)]
 pub(crate) mod diagnostics;
 pub(crate) mod keybindings;
+pub(crate) mod market_link;
 mod methods;
 mod node_status;
 pub(crate) mod package_open;
@@ -34,7 +35,41 @@ static APP: OnceLock<AppHandle> = OnceLock::new();
 static SUPERVISOR: OnceLock<(Mutex<Option<Arc<Supervisor>>>, Condvar)> = OnceLock::new();
 static PLUGINS_DIR: OnceLock<PathBuf> = OnceLock::new();
 static TRACKER: OnceLock<Mutex<safe_mode::Tracker>> = OnceLock::new();
+static LOCALE: OnceLock<Mutex<String>> = OnceLock::new();
 static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn normalize_locale(value: &str) -> &'static str {
+    let trimmed = value.trim().trim_matches('"');
+    if trimmed.to_ascii_lowercase().starts_with("en") {
+        "en"
+    } else {
+        "zh-CN"
+    }
+}
+
+fn read_saved_locale(home: &std::path::Path) -> &'static str {
+    let path = home.join(crate::settings_file::FILE_NAME);
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return "zh-CN";
+    };
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return "zh-CN";
+    };
+    value
+        .get("keys")
+        .and_then(|keys| keys.get("fuyu-locale"))
+        .and_then(serde_json::Value::as_str)
+        .map(normalize_locale)
+        .unwrap_or("zh-CN")
+}
+
+fn locale_slot() -> &'static Mutex<String> {
+    LOCALE.get_or_init(|| Mutex::new("zh-CN".into()))
+}
+
+fn current_locale() -> String {
+    locale_slot().lock().unwrap_or_else(PoisonError::into_inner).clone()
+}
 
 fn supervisor_gate() -> &'static (Mutex<Option<Arc<Supervisor>>>, Condvar) {
     SUPERVISOR.get_or_init(|| (Mutex::new(None), Condvar::new()))
@@ -126,6 +161,7 @@ struct HostMode {
     safe: Option<String>,
     bisect: Vec<String>,
     max_old_space_mb: Option<u32>,
+    locale: Option<String>,
 }
 
 fn host_args(dir: PathBuf, files: &HostFiles, origins: &[String], mode: &HostMode) -> Vec<std::ffi::OsString> {
@@ -151,6 +187,10 @@ fn host_args(dir: PathBuf, files: &HostFiles, origins: &[String], mode: &HostMod
         env!("CARGO_PKG_VERSION").into(),
         "--watch".into(),
     ]);
+    if let Some(locale) = &mode.locale {
+        args.push("--locale".into());
+        args.push(locale.into());
+    }
     if mode.development {
         args.push("--dev".into());
     }
@@ -255,6 +295,7 @@ fn spec_for(node: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>,
             safe: safe.map(|safe| safe.mode),
             bisect: off,
             max_old_space_mb: Some(resolve_max_old_space_mb(std::env::var(MAX_OLD_SPACE_SWITCH).ok().as_deref())),
+            locale: Some(current_locale()),
         };
         HostSpec { program: node.clone(), args: host_args(dir.clone(), &files, &origins, &mode), env: env.clone(), current_dir: None }
     }
@@ -271,6 +312,7 @@ fn track(event: &Event) {
             let generation = *generation;
             let _ = std::thread::Builder::new().name("plugin-host-bisect".into()).spawn(move || resend_bisect(generation));
             let _ = std::thread::Builder::new().name("plugin-host-proxy".into()).spawn(move || resend_proxy(generation));
+            let _ = std::thread::Builder::new().name("plugin-host-locale".into()).spawn(move || resend_locale(generation));
             let _ = std::thread::Builder::new().name("plugin-host-healthy".into()).spawn(move || {
                 std::thread::sleep(safe_mode::HEALTHY_AFTER);
                 if let Some(mut tracker) = tracker() {
@@ -379,6 +421,31 @@ pub(crate) fn notify_proxy_changed() {
     });
 }
 
+fn resend_locale(generation: u32) {
+    let Some(supervisor) = wait_for_supervisor() else { return };
+    if ready_generation(&supervisor) != Some(generation) {
+        return;
+    }
+    let payload = serde_json::json!({ "locale": current_locale() });
+    if let Err(error) = supervisor.call("locale", payload, BISECT_TIMEOUT) {
+        eprintln!("[plugins-v3] could not hand the locale setting to the plugin host (#{generation}): {error}");
+    }
+}
+
+pub(crate) fn set_locale(locale: &str) {
+    let normalized = normalize_locale(locale).to_owned();
+    *locale_slot().lock().unwrap_or_else(PoisonError::into_inner) = normalized.clone();
+    let payload = serde_json::json!({ "locale": normalized });
+    let _ = std::thread::Builder::new().name("plugin-host-locale-update".into()).spawn(move || {
+        let Some(supervisor) = supervisor().filter(|supervisor| ready_generation(supervisor).is_some()) else {
+            return;
+        };
+        if let Err(error) = supervisor.call("locale", payload, BISECT_TIMEOUT) {
+            eprintln!("[plugins-v3] could not update locale setting in the plugin host: {error}");
+        }
+    });
+}
+
 fn send_bisect(params: serde_json::Value) -> Result<Option<serde_json::Value>, plugin_base::RpcError> {
     match supervisor().filter(|supervisor| ready_generation(supervisor).is_some()) {
         Some(supervisor) => supervisor.call(bisect::METHOD, params, BISECT_TIMEOUT).map(Some),
@@ -443,6 +510,7 @@ pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     }
     let _ = node_status::gate();
     let home = crate::home_dir::fuyu_home(tauri::Manager::path(app)).map_err(|error| error.to_string())?;
+    *locale_slot().lock().unwrap_or_else(PoisonError::into_inner) = read_saved_locale(&home).to_owned();
     let dir = plugins_dir(app)?;
     let _ = PLUGINS_DIR.set(dir.clone());
     let _ = supervisor_gate();
@@ -566,6 +634,7 @@ macro_rules! tauri_commands {
             crate::plugin_kernel::v2_migration::get_v2_plugin_migration,
             crate::plugin_kernel::v2_migration::dismiss_v2_plugin_migration,
             crate::plugin_kernel::package_open::take_pending_plugin_package,
+            crate::plugin_kernel::market_link::take_pending_market_install,
         ] $($rest)*)
     };
 }

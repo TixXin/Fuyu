@@ -1,7 +1,7 @@
 import type { MarketCapabilitySet, MarketCatalogPlugin, MarketLocalizedText, MarketRevocation, MarketVersionCandidate } from "@fuyu/plugin-services";
-import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
+import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginHost";
 import { BUILTIN_PROVIDES, stateOf } from "./pluginServiceStatus.ts";
-import type { PluginStatusV3 } from "./usePluginHostStatus";
+import type { PluginStatus } from "./usePluginHostStatus";
 
 export type RowDot = "ok" | "off" | "bad" | "wait";
 
@@ -12,7 +12,7 @@ export type RowNote =
   | { kind: "paused"; errors: number; seconds: number }
   | { kind: "waiting"; service: string; provider: BuiltinPluginName | null; providerOff: boolean }
   | { kind: "unreachable"; windows: string[] }
-  | { kind: "revoked"; reasons: MarketLocalizedText[] }
+  | { kind: "revoked"; reasons: MarketLocalizedText[]; fixVersion?: string }
   | { kind: "warned"; reasons: MarketLocalizedText[]; update: string | null }
   | { kind: "held"; version: string; added: MarketCapabilitySet }
   | { kind: "trust"; version: string }
@@ -46,7 +46,7 @@ export function firstLine(text: string): string {
   return text.split(/\r?\n/).find((line) => line.trim() !== "")?.trim() ?? text.trim();
 }
 
-function waitingNote(plugin: PluginStatusV3, context: RowContext): RowNote | null {
+function waitingNote(plugin: PluginStatus, context: RowContext): RowNote | null {
   const service = plugin.waitingFor?.[0];
   if (!service) return null;
   const provider = (Object.entries(BUILTIN_PROVIDES).find(([, services]) => services?.includes(service))?.[0] ?? null) as BuiltinPluginName | null;
@@ -60,8 +60,11 @@ function updateCandidate(market: MarketCatalogPlugin): MarketVersionCandidate | 
 }
 
 function marketNote(market: MarketCatalogPlugin | undefined, revocation: MarketRevocation | null): RowNote | null {
-  if (revocation?.level === "disable" || (!revocation && market?.installedVersion && market.revoked)) return { kind: "revoked", reasons: revocation?.reasons ?? [] };
   const candidate = market?.installedVersion ? updateCandidate(market) : null;
+  if (revocation?.level === "disable" || (!revocation && market?.installedVersion && market.revoked)) {
+    const fixVersion = candidate && (candidate.trustChange || candidate.confirmation.trustChange || market?.autoUpdateHeld) ? candidate.version : undefined;
+    return { kind: "revoked", reasons: revocation?.reasons ?? [], ...(fixVersion ? { fixVersion } : {}) };
+  }
   if (revocation?.level === "warn") return { kind: "warned", reasons: revocation.reasons, update: candidate?.version ?? null };
   if (!market || !candidate) return null;
   if (candidate.trustChange || candidate.confirmation.trustChange) return { kind: "trust", version: candidate.version };
@@ -69,7 +72,7 @@ function marketNote(market: MarketCatalogPlugin | undefined, revocation: MarketR
   return { kind: "update", version: candidate.version, fresh: Boolean(candidate.fresh) };
 }
 
-function hostPart(plugin: PluginStatusV3, context: RowContext): Pick<RowStatus, "dot" | "label" | "note"> {
+function hostPart(plugin: PluginStatus, context: RowContext): Pick<RowStatus, "dot" | "label" | "note"> {
   const state = stateOf(plugin);
   if (state === "disabled") return { dot: "off", label: "off", note: null };
   if (!context.live) return { dot: "off", label: "unknown", note: null };
@@ -97,7 +100,7 @@ function hostPart(plugin: PluginStatusV3, context: RowContext): Pick<RowStatus, 
   }
 }
 
-export function pluginRowStatus(plugin: PluginStatusV3, market: MarketCatalogPlugin | undefined, context: RowContext, revocation: MarketRevocation | null = market?.revocation ?? null): RowStatus {
+export function pluginRowStatus(plugin: PluginStatus, market: MarketCatalogPlugin | undefined, context: RowContext, revocation: MarketRevocation | null = market?.revocation ?? null): RowStatus {
   const host = hostPart(plugin, context);
   const note = host.note ?? marketNote(market, revocation);
   const attention = host.dot === "bad" || host.label === "waiting" || (note !== null && ATTENTION_NOTES.has(note.kind));

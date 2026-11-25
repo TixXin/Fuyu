@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { planInvocation } from "../../scripts/macos/dev-cargo.mjs";
-import { cargoOriginal, replaceWithCopy, DEV_IDENTIFIER, DEV_IDENTITY, devSigningDir, parseSha1Fingerprint, pickAppleDevelopment, signedBy } from "../../scripts/macos/dev-signing.mjs";
+import { cargoOriginal, replaceWithCopy, signViaTemp, DEV_IDENTIFIER, DEV_IDENTITY, devSigningDir, parseSha1Fingerprint, pickAppleDevelopment, signedBy } from "../../scripts/macos/dev-signing.mjs";
 import { IDENTITY } from "../../scripts/macos/self-signed-cert.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -104,6 +104,30 @@ test("the signed copy replaces the binary as a new file, so macOS does not reuse
   assert.equal(readFileSync(target, "utf8"), "signed");
   assert.equal(statSync(target).mode & 0o777, 0o755);
   assert.deepEqual(readdirSync(dir).sort(), ["fuyu", "original"]);
+});
+
+test("signing happens on a temp copy, so a failed or interrupted codesign never corrupts the deps binary", { skip: process.platform === "win32" }, () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "fuyu-stage-"));
+  const original = path.join(dir, "fuyu-0123456789abcdef");
+  const binary = path.join(dir, "fuyu");
+  writeFileSync(original, "ad-hoc");
+  chmodSync(original, 0o755);
+  writeFileSync(binary, "ad-hoc");
+  const originalIno = statSync(original).ino;
+  const binaryIno = statSync(binary).ino;
+  assert.throws(() => signViaTemp(original, [binary, original], (file) => {
+    writeFileSync(file, "half-signed");
+    throw new Error("interrupted");
+  }), /interrupted/);
+  assert.equal(readFileSync(original, "utf8"), "ad-hoc");
+  assert.equal(readFileSync(binary, "utf8"), "ad-hoc");
+  assert.deepEqual(readdirSync(dir).sort(), ["fuyu", "fuyu-0123456789abcdef"]);
+  signViaTemp(original, [binary, original], (file) => writeFileSync(file, "signed"));
+  assert.equal(readFileSync(original, "utf8"), "signed");
+  assert.equal(readFileSync(binary, "utf8"), "signed");
+  assert.notEqual(statSync(original).ino, originalIno);
+  assert.notEqual(statSync(binary).ino, binaryIno);
+  assert.deepEqual(readdirSync(dir).sort(), ["fuyu", "fuyu-0123456789abcdef"]);
 });
 
 test("the runner builds before run, then hands over to cargo run, and passes exit codes back", { skip: process.platform === "win32" }, () => {

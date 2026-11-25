@@ -153,6 +153,16 @@ export function onPluginPackageOpen(listener: () => void): Promise<UnlistenFn> {
   return listen(PLUGIN_PACKAGE_OPEN, () => listener());
 }
 
+export const PLUGIN_MARKET_INSTALL = "plugin-market-install-requested";
+
+export function takePendingMarketInstall(): Promise<string | null> {
+  return invoke<string | null>("take_pending_market_install");
+}
+
+export function onPluginMarketInstall(listener: () => void): Promise<UnlistenFn> {
+  return listen(PLUGIN_MARKET_INSTALL, () => listener());
+}
+
 export function requestPluginBarUsage(id: number): Promise<void> {
   return emitTo("main", PLUGIN_BAR_USAGE_REQUEST, { id });
 }

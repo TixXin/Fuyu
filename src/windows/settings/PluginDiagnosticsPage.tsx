@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { MarketDownloadSource } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
-import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
+import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginHost";
 import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import type { SettingsCategory } from "./categories";
@@ -14,7 +14,7 @@ import { requestPluginDetail } from "./pluginPageHandoff";
 import { stateOf } from "./pluginServiceStatus";
 import type { RowDot } from "./pluginRowStatus";
 import { usePluginHostNode } from "./usePluginHostNode";
-import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginUsageV3 } from "./usePluginHostStatus";
+import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginUsage } from "./usePluginHostStatus";
 import { usePluginMarketCatalog } from "./usePluginMarketCatalog";
 import "./PluginPage.css";
 import "./PluginDiagnosticsPage.css";
@@ -27,7 +27,7 @@ interface DiagRow {
   builtin: boolean;
   dot: RowDot;
   label: string;
-  usage?: PluginUsageV3;
+  usage?: PluginUsage;
 }
 
 function duration(ms: number) {
@@ -38,7 +38,7 @@ function duration(ms: number) {
 }
 
 function ProcessCard({ view, hostOff, now }: { view: PluginHostView; hostOff: boolean; now: number }) {
-  const t = useTranslation().settings.pluginsV3;
+  const t = useTranslation().settings.pluginHost;
   const text = t.page.diagnostics;
   const { host, connection, memory } = view;
   if (hostOff) return <div className="plugin-card plugin-card--pad"><p className="plugin-diag__intro">{text.hostOff}</p></div>;
@@ -71,7 +71,7 @@ export function PluginDiagnosticsView({ view, hostOff = false, now = Date.now(),
   marketSource?: MarketDownloadSource | null;
   onOpenPage?: (page: SettingsCategory) => void;
 }) {
-  const t = useTranslation().settings.pluginsV3;
+  const t = useTranslation().settings.pluginHost;
   const text = t.page.diagnostics;
   const { locale } = useLocale();
   const loadedBuiltins = useBuiltinPlugins();

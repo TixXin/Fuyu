@@ -12,7 +12,7 @@ fn enabled() -> bool {
 }
 
 fn flag_on(value: Option<&str>) -> bool {
-    value.is_some_and(|value| value.trim() == "1")
+    !value.is_some_and(|value| matches!(value.trim().to_ascii_lowercase().as_str(), "0" | "false" | "off"))
 }
 
 fn is_target(label: &str) -> bool {
@@ -57,12 +57,15 @@ mod tests {
     use super::flag_on;
 
     #[test]
-    fn only_one_turns_the_flag_on() {
+    fn enabled_by_default_unless_explicitly_disabled() {
+        assert!(flag_on(None));
+        assert!(flag_on(Some("")));
         assert!(flag_on(Some("1")));
         assert!(flag_on(Some(" 1 ")));
-        assert!(!flag_on(None));
-        assert!(!flag_on(Some("")));
+        assert!(flag_on(Some("true")));
         assert!(!flag_on(Some("0")));
-        assert!(!flag_on(Some("true")));
+        assert!(!flag_on(Some(" 0 ")));
+        assert!(!flag_on(Some("false")));
+        assert!(!flag_on(Some("OFF")));
     }
 }

@@ -9,6 +9,7 @@ import { BuildError, formatIssue } from "./errors.mjs";
 import { icon } from "./icon.mjs";
 import { searchGlyphs } from "./icon/glyphs.mjs";
 import { KEY_ENV, generateSigningKey, loadSigningKey } from "./keys.mjs";
+import { runMcp } from "./mcp.mjs";
 import { pack } from "./pack.mjs";
 import { reviewSources } from "./review.mjs";
 import { preview } from "./preview.mjs";
@@ -75,6 +76,8 @@ Commands:
     --data-dir <folder>  plugin host data directory containing plugins.yml
     --once               build and register once without watching
     --clean              remove the dev entry from plugins.yml
+  mcp                  Serve Fuyu's Local API over stdio as an MCP server
+    --config <file>      path to local-api.json
   version, help
 
 The signing key comes from --key, else ${KEY_ENV} (the PEM text), else ~/.fuyu-plugin/signing.key.
@@ -101,6 +104,7 @@ const OPTIONS = {
   keygen: { key: { type: "string" } },
   sign: { key: { type: "string" }, out: { type: "string" }, commit: { type: "string" }, repository: { type: "string" } },
   dev: { ...BUILD, out: { type: "string" }, "data-dir": { type: "string" }, once: { type: "boolean" }, clean: { type: "boolean" } },
+  mcp: { config: { type: "string" } },
 };
 const CONFIG_KEYS = ["shared", "hostExternal", "appModules", "packageDepth", "nodeTarget", "browserTarget"];
 
@@ -287,11 +291,16 @@ const commands = {
     out.out(`dev ${session.id} -> ${out.show(session.result.outDir)} (registered in ${out.show(session.ymlFile)})`);
     return 0;
   },
+
+  async mcp({ values }, io) {
+    const config = values.config ? resolve(io.cwd, values.config) : undefined;
+    return runMcp({ config, input: io.stdin ?? process.stdin, output: io.stdout });
+  },
 };
 
 export async function run(argv, io = {}) {
   const env = io.env ?? process.env;
-  const context = { stdout: io.stdout ?? process.stdout, stderr: io.stderr ?? process.stderr, cwd: io.cwd ?? process.cwd(), env };
+  const context = { stdin: io.stdin ?? process.stdin, stdout: io.stdout ?? process.stdout, stderr: io.stderr ?? process.stderr, cwd: io.cwd ?? process.cwd(), env };
   const out = createOutput(context, context.cwd);
   const [command = "help", ...rest] = argv;
   if (command === "help" || command === "--help" || command === "-h") {

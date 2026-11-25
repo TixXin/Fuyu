@@ -132,15 +132,18 @@ Invoke-RestMethod "$api/notify" -Method Post -Headers $headers -ContentType "app
 
 ## 给 AI 工具用：MCP
 
-`fuyu-plugin mcp`（C43）是一个 MCP 服务器，走标准输入输出，通过本地接口给 Claude Code、Cursor 这类工具三个只读工具：`clipboard_history`（最近的文字记录，可按文字筛选，需要上面那个剪贴板开关）、`todos_today`、`daily_note`。端口和令牌每次都从 `local-api.json` 读，岛屿换了端口也不用改配置。
+`fuyu-plugin mcp`（C43、E59）是一个 MCP 服务器，走标准输入输出，通过本地接口给 Claude Code、Cursor 这类工具提供读写能力：
+
+- 读取：`clipboard_history`（最近的文字记录，可按文字筛选，需要开启「允许本地接口读取历史」）、`todos_today`、`daily_note`。
+- 写入与通知：`todo_add`、`todo_update`、`todo_delete`、`daily_note_set`、`agent_status_report`、`agent_status_clear`（需要打开「允许修改」）；`island_notify`（需要打开「允许弹消息」）。
+
+端口和令牌每次都从 `local-api.json` 读，岛屿换了端口也不用改配置；也可以用 `--config <路径>` 指定配置文件。
 
 ```sh
-claude mcp add fuyu -- npx -y fuyu-plugin@0.7.0 mcp
+claude mcp add fuyu -- npx -y fuyu-plugin mcp
 ```
 
-其他工具在 MCP 配置里写命令 `npx`、参数 `["-y", "fuyu-plugin@0.7.0", "mcp"]`。
-
-> 它是旧版 SDK `fuyu-plugin` 0.7.0 里的旧实现，源码随旧版 SDK 从仓库删除（E36.6.6），不再维护；npm 上的 `fuyu-plugin` 2.0 起是现在插件的命令行，没有 `mcp`，所以命令里要写明 `@0.7.0`。
+其他工具在 MCP 配置里写命令 `npx`、参数 `["-y", "fuyu-plugin", "mcp"]`。
 
 ## 示例
 

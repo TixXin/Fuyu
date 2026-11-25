@@ -29,7 +29,7 @@ export function PluginInstallConfirmModal({ pending, busy, error, onConfirm, onC
   onCancel: () => void;
 }) {
   const { locale } = useLocale();
-  const text = useTranslation().settings.pluginsV3.marketPage;
+  const text = useTranslation().settings.pluginHost.marketPage;
   const copy = text.confirm;
   const { id, version, kind, confirmation } = pending;
   const name = localized(confirmation.displayName, locale, id);

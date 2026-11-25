@@ -23,6 +23,7 @@ const { values } = parseArgs({
     config: { type: "string", default: "plugins.yml" },
     builtins: { type: "string" },
     "app-version": { type: "string" },
+    locale: { type: "string" },
     watch: { type: "boolean", default: false },
     dev: { type: "boolean", default: false },
     safe: { type: "string" },
@@ -74,6 +75,10 @@ rpc.handle("proxy", (params) => {
   proxyFetch.setConfig(params ?? null);
   return true;
 });
+rpc.handle("locale", (params) => {
+  if (host) host.locale.set(params?.locale);
+  return host?.locale.current() ?? "zh-CN";
+});
 rpc.handle("stop", () => {
   setImmediate(() => stop(0));
   return true;
@@ -85,6 +90,7 @@ try {
     config: values.config,
     builtins: values.builtins ?? null,
     appVersion: values["app-version"] ?? null,
+    locale: values.locale ?? "zh-CN",
     watch: values.watch || values.dev,
     dev: values.dev,
     safe,
@@ -97,10 +103,28 @@ try {
     },
   });
   await host.settle();
+  const withClientTokens = (entries) => entries.map((entry) => ({ ...entry, token: windows.issuePluginToken(entry.plugin) }));
   windows = await openWindowSocket({
     origins: values.origin.length ? values.origin : WINDOW_ORIGINS,
-    snapshot: () => ({ plugins: host.status(), clients: host.clients(), services: host.services(), host: host.info() }),
-    onCall: (method, params, window) => {
+    snapshot: (caller) => {
+      if (caller?.plugin) {
+        return { plugins: [], clients: [], services: host.services(), host: null, locale: host.locale.current() };
+      }
+      return { plugins: host.status(), clients: withClientTokens(host.clients()), services: host.services(), host: host.info(), locale: host.locale.current() };
+    },
+    onCall: (method, params, window, plugin) => {
+      if (plugin) {
+        if (method === "plugin.call") {
+          if (params?.plugin && params.plugin !== plugin) {
+            throw Object.assign(new Error(`plugin ${plugin} cannot call window methods of ${params.plugin}`), { code: "forbidden" });
+          }
+          return host.ctx.clients.call(plugin, params?.method, params?.params, window);
+        }
+        if (method === "island.open" || method === "island.collapse") return host.islandControl.request(method.slice("island.".length), plugin, params?.page);
+        if (method === "settings.setup") return host.settingsOpener.setup(plugin, { ...params, plugin });
+        if (SERVICE_CALLS.includes(method)) return host.serviceHub.windowCall(method, params, window, plugin);
+        throw Object.assign(new Error(`plugin ${plugin} cannot call host method ${method}`), { code: "forbidden" });
+      }
       if (method === "status") return host.status();
       if (method === "host") return host.info();
       if (method === "bisect") return host.bisect(params?.off);
@@ -113,18 +137,19 @@ try {
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },
   });
-  host.watchStatus((plugins) => windows.publish("plugins", plugins), USAGE_TICK_MS);
-  setInterval(() => windows.publish("host", host.info()), HOST_TICK_MS).unref();
+  host.watchStatus((plugins) => windows.publish("plugins", plugins, { privilegedOnly: true }), USAGE_TICK_MS);
+  setInterval(() => windows.publish("host", host.info(), { privilegedOnly: true }), HOST_TICK_MS).unref();
   const tellRust = (clients) => rpc.notify("clients", { paths: [...new Set(clients.map((entry) => entry.path))], roots: host.clientRoots(clients) });
   host.watchClients((clients) => {
     tellRust(clients);
-    windows.publish("clients", clients);
+    windows.publish("clients", withClientTokens(clients), { privilegedOnly: true });
   });
   host.watchServices((services) => windows.publish("services", services));
+  host.locale.watch((locale) => windows.publish("locale", { locale }));
   host.serviceHub.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
-  host.settingsOpener.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
-  host.islandControl.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
-  host.ctx.clients.onMessage((message) => windows.publish("plugin", message));
+  host.settingsOpener.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data, { privilegedOnly: true }) });
+  host.islandControl.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data, { privilegedOnly: true }) });
+  host.ctx.clients.onMessage((message) => windows.publish("plugin", message, { plugin: message.plugin }));
   tellRust(host.clients());
   rpc.notify("ready", {
     protocol: HOST_PROTOCOL,

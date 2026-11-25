@@ -8,17 +8,17 @@ import { marketV1 } from "@fuyu/plugin-services";
 import { ipc, locale, market, configCalls, windowServices, PLUGIN, NORMAL, HOST, MB, REASON, held } from "./pluginPageMocks";
 import { I18nProvider, TRANSLATIONS } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
-import type { PluginHostView, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
+import type { PluginHostView, PluginStatus } from "../../src/windows/settings/usePluginHostStatus";
 import type { BarUsageView } from "../../src/windows/settings/usePluginBarUsage";
 import { BAR, BAR_OPEN, ON_BAR, checkBarUsage } from "./pluginPageBar";
 import { checkRoster } from "./pluginPageRoster";
 import type { PluginDetailRequest } from "../../src/windows/settings/pluginPageHandoff";
 
-const { PluginsV3View } = await import("../../src/windows/settings/PluginsV3SettingsPage");
+const { PluginsView } = await import("../../src/windows/settings/PluginsSettingsPage");
 const { PluginPageActions } = await import("../../src/windows/settings/PluginPageActions");
 const { takeMarketViewRequest } = await import("../../src/windows/settings/pluginPageHandoff");
 
-const t = TRANSLATIONS[locale].settings.pluginsV3.page;
+const t = TRANSLATIONS[locale].settings.pluginHost.page;
 market.revocationCases = true;
 market.reach = true;
 localStorage.removeItem("fuyu-collapsed-items");
@@ -29,8 +29,8 @@ const open = (plugins: PluginHostView["plugins"], more: Partial<PluginHostView> 
 const safeHost = { ...HOST, safe: "third-party" as const };
 const SETUP_HINT = { "zh-CN": "选一个城市", en: "Pick a city" };
 const COUNTDOWN_HINT = { "zh-CN": "添加一个日子", en: "Add a date" };
-const NEEDS_SETUP: PluginStatusV3[] = [{ ...PLUGIN.weather, setup: { hint: SETUP_HINT } }, { ...PLUGIN.local, setup: {} }, PLUGIN.clock, { ...PLUGIN.gadget, setup: { hint: "off" } }];
-const COUNTDOWN: PluginStatusV3 = { id: "@fuyu/countdown", name: "Countdown", state: "running", kind: "third-party", source: "market" };
+const NEEDS_SETUP: PluginStatus[] = [{ ...PLUGIN.weather, setup: { hint: SETUP_HINT } }, { ...PLUGIN.local, setup: {} }, PLUGIN.clock, { ...PLUGIN.gadget, setup: { hint: "off" } }];
+const COUNTDOWN: PluginStatus = { id: "@fuyu/countdown", name: "Countdown", state: "running", kind: "third-party", source: "market" };
 
 interface Stage { key: string; title: string; view: PluginHostView; node?: HostNodeStatus | null; hostOff?: boolean; detail?: PluginDetailRequest; migration?: boolean; narrow?: boolean; head?: boolean; bar?: BarUsageView }
 const STAGES: Stage[] = [
@@ -94,7 +94,7 @@ function LiveStage({ item }: { item: Stage }) {
   useEffect(() => {
     liveViews.set(item.key, setView);
   }, [item.key]);
-  return <PluginsV3View view={view} hostOff={item.hostOff} node={item.node ?? null} builtins={ipc.builtins} initialDetail={item.detail ?? null} barUsage={item.bar} onOpenPage={(page) => opened.push(`${item.key}:${page}`)} />;
+  return <PluginsView view={view} hostOff={item.hostOff} node={item.node ?? null} builtins={ipc.builtins} initialDetail={item.detail ?? null} barUsage={item.bar} onOpenPage={(page) => opened.push(`${item.key}:${page}`)} />;
 }
 const showView = (key: string, view: PluginHostView) => act(async () => liveViews.get(key)!(view));
 

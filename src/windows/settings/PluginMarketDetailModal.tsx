@@ -24,7 +24,7 @@ export function PluginMarketDetailModal({ plugin, isNew = false, categoryName, n
   onClose: () => void;
 }) {
   const { locale } = useLocale();
-  const text = useTranslation().settings.pluginsV3.marketPage;
+  const text = useTranslation().settings.pluginHost.marketPage;
   const copy = text.detail;
   const errorText = useErrorText();
   const [details, setDetails] = useState<MarketPluginDetails | null>(null);

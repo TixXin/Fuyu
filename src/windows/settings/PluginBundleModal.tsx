@@ -21,7 +21,7 @@ export function PluginBundleModal({ bundle: listed, plugins, onClose, onInstalle
   onInstalled?: () => void;
 }) {
   const { locale } = useLocale();
-  const page = useTranslation().settings.pluginsV3.marketPage;
+  const page = useTranslation().settings.pluginHost.marketPage;
   const text = page.bundles;
   const errorText = useErrorText();
   const [busy, setBusy] = useState(false);
