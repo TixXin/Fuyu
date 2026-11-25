@@ -26,6 +26,7 @@ pub(crate) mod monitor_ddc;
 pub(crate) mod named_mutex;
 pub(crate) mod notification_state;
 pub(crate) mod ocr;
+pub(crate) mod ocr_worker;
 pub(crate) mod ole;
 pub(crate) mod power;
 pub(crate) mod private_memory;
