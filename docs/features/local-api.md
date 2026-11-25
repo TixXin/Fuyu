@@ -1,6 +1,6 @@
 # 本地接口（Local API）
 
-本地接口让脚本、AutoHotkey、Raycast、MCP 适配器等程序通过 HTTP 读写**今天的待办**和**每日笔记**、上报 AI Agent 状态，以及在岛上**弹一条消息**（2026-11-19 起，C142）。它是[插件系统](../architecture/plugins/v1-design.md)路线图的 P1。
+本地接口让脚本、AutoHotkey、Raycast、MCP 适配器等程序通过 HTTP 读写**今天的待办**和**每日笔记**、上报 AI Agent 状态，以及在岛上**弹一条消息**（2026-11-19 起，C142）。它是[插件系统](../architecture/history/v1-design.md)路线图的 P1。
 
 ## 开启
 

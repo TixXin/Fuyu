@@ -80,7 +80,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 
 - 只能向右（向下）依赖，下层不得 import 上层。`components/`、`utils/` 不得依赖任何 feature。
 - `utils/` 只放纯函数，不依赖 React、Tauri、DOM 和 `localStorage`。
-- feature 之间不直接 import：共享的类型、函数和样式上提到 `lib/`、`components/`、`utils/`，运行时要调别的功能走服务（插件平台第 3 版，见 `docs/architecture/plugins/v3-phase3-plan.md`「关键设计」第 4 条）。`tests/unit/feature-boundaries.test.mjs` 检查 feature 之间、`lib/`、`components/`、`utils/` 到 feature 的 import，以及 feature 到 `windows/` 的 import；`scripts/feature-boundary-allowlist.json` 已清零，不得新增白名单记录。
+- feature 之间不直接 import：共享的类型、函数和样式上提到 `lib/`、`components/`、`utils/`，运行时要调别的功能走服务（插件平台第 3 版，见 `docs/architecture/history/v3-phase3-plan.md`「关键设计」第 4 条）。`tests/unit/feature-boundaries.test.mjs` 检查 feature 之间、`lib/`、`components/`、`utils/` 到 feature 的 import，以及 feature 到 `windows/` 的 import；`scripts/feature-boundary-allowlist.json` 已清零，不得新增白名单记录。
 - `windows/` 负责组合 feature、处理窗口级状态（折叠/展开、尺寸、面板切换），不写领域逻辑。
 
 ## 边界收口

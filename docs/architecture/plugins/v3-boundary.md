@@ -313,7 +313,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | `glow` | `color`（`#hex`）、`priority`（`GLOW_PRIORITY`，大的先）、`reason`、`pulse`（闪） | 刘海模式下的边框和摄像头一圈按它变色（C166、C167）：摄像头 / 麦克风开着、新消息、Agent 等你和刚完成时各自写一条，取 `priority` 最高的 |
 | `playback` | `startedAt`（从头播放的时刻，毫秒）、`durationMs` | 正在播放的进度，摄像头一圈的「进度」样式用 CSS 动画按它走，不每秒刷新外壳；暂停时不写 |
 
-外壳只能 import `plugin-kernel` 和第 2 版插件系统（`plugins`、`plugin-views`）这几个功能目录，`tests/unit/feature-boundaries.test.mjs` 检查；第 2 版那两个随第 6 阶段删掉时从检查的名单里去掉。
+外壳只能 import `plugin-kernel`（第 2 版的 `plugins`、`plugin-views` 目录已于 E36.6.5 删除），由 `tests/unit/feature-boundaries.test.mjs` 检查。
 
 ### 插槽的主题变量
 

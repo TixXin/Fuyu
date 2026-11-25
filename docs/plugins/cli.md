@@ -1,6 +1,6 @@
 # 命令行
 
-> 命令行是 npm 上的 `fuyu-plugin`（2.0 起，[#483](https://github.com/TixXin/fuyu/issues/483)）。2026-11 下线的旧版插件用的是 1.x，已停止更新。内部设计见[命令行的设计](../architecture/plugins/v3-cli.md)。
+> 命令行是 npm 上的 `fuyu-plugin`（2.0 起，[#483](https://github.com/TixXin/fuyu/issues/483)）。2026-11 下线的旧版插件用的是 1.x，已停止更新。早期设计稿见 [v3-cli.md](../architecture/history/v3-cli.md)。
 
 ## 怎么运行
 
@@ -100,7 +100,7 @@ fuyu-plugin build [文件夹] [--out <文件夹>] [--config <文件>] [--officia
 |---|---|---|
 | `shared` | `react`、`react/jsx-runtime` 两项 | 共享模块名单：模块名对应插件协议根下的路径 |
 | `packageDepth` | 不写 | 不写或 `false`：共享模块写根路径 `/__shared/…`。`true`：按已安装包的 3 层（`packages/@作用域/名字/`）写相对路径。非负整数：按给的层数写相对路径 |
-| `hostExternal` | `["@fuyu/plugin-base", "fuyu-plugin"]`（浮屿宿主共享的模块） | 宿主部分留在外面的模块，按名字精确匹配，子路径不算 |
+| `hostExternal` | `["@fuyu/plugin-base", "fuyu-plugin", "@fuyu/plugin-base/services"]`（与 `HOST_SHARED_MODULES` 一致） | 宿主部分留在外面的模块，按名字精确匹配，子路径不算 |
 | `appModules` | `["react", "react-dom", "fuyu-plugin", "@fuyu/plugin-base"]` | 界面部分不许自己打进去的包 |
 | `nodeTarget`、`browserTarget` | `node22`、`es2022` | esbuild 的目标 |
 

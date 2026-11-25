@@ -8,8 +8,8 @@ npm create fuyu-plugin@latest [folder] -- --owner <github-user> --name <name>
 
 The project has a host part that uses the timer service `timers/v1`, an island page (`island.page/v1`)
 and a settings section (`settings.section/v1`), with `tsconfig.json` and ESLint rules that stop raw
-`setTimeout` / `setInterval`, `addEventListener` and injected styles. Every interface it uses is listed
-in `fuyu.experimental`, so it loads only from a development folder until the interfaces are settled.
+`setTimeout` / `setInterval`, `addEventListener` and injected styles. All interfaces it uses are
+stable and ready for market submission.
 
 ## Names
 
@@ -29,5 +29,5 @@ node packages/create-plugin/bin/create-fuyu-plugin.mjs ~/my-plugin --owner you -
 
 `--fuyu <folder>` links from another checkout. `--help` lists the other options.
 
-Guide for plugin authors: [docs/plugins](https://github.com/TixXin/fuyu/tree/main/docs/plugins). Design of the
-command line: [docs/architecture/plugins/v3-cli.md](https://github.com/TixXin/fuyu/blob/main/docs/architecture/plugins/v3-cli.md).
+Guide for plugin authors: [docs/plugins](https://github.com/TixXin/fuyu/tree/main/docs/plugins). CLI reference:
+[docs/plugins/cli.md](https://github.com/TixXin/fuyu/blob/main/docs/plugins/cli.md).

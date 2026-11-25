@@ -1,6 +1,6 @@
 # 别的产品怎么让插件拥有窗口或桌面组件
 
-> 日期：2026-11-13。问题：浮屿想让插件开独立窗口（启动台、桌面小组件这类），别的产品是怎么做的，尤其是窗口归谁管、怎么隔离、给不给权限。范围：各产品的官方开发文档（Raycast、uTools、Rainmeter、Übersicht、Stream Deck、Windows 11 小组件），用 WebSearch 找入口、WebFetch 读原文；没有装这些软件实测。相关任务：[E31](/docs/tasks/E/E31.md)，方案见 [plugin-windows.md](/docs/architecture/plugins/plugin-windows.md)。
+> 日期：2026-11-13。问题：浮屿想让插件开独立窗口（启动台、桌面小组件这类），别的产品是怎么做的，尤其是窗口归谁管、怎么隔离、给不给权限。范围：各产品的官方开发文档（Raycast、uTools、Rainmeter、Übersicht、Stream Deck、Windows 11 小组件），用 WebSearch 找入口、WebFetch 读原文；没有装这些软件实测。相关任务：[E31](/docs/tasks/E/E31.md)，方案见 [plugin-windows.md](/docs/architecture/history/plugin-windows.md)。
 
 ## 结论
 

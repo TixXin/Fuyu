@@ -31,8 +31,8 @@
     "platforms": ["windows", "macos"],
     "host": "dist/host.js",
     "client": { "island": "dist/island.js", "settings": "dist/settings.js" },
-    "inject": { "required": ["notify", "http"], "optional": ["calendar"] },
-    "provides": ["weather"],
+    "inject": { "required": ["messages/v1", "timers/v1"], "optional": ["calendar/v1"] },
+    "provides": ["@someone/weather/v1"],
     "slots": ["island.page/v1", "settings.section/v1"],
     "commands": [
       { "id": "weather.refresh", "title": { "zh-CN": "刷新天气", "en": "Refresh weather" }, "keybinding": "Ctrl+Alt+W" }
@@ -43,7 +43,7 @@
 }
 ```
 
-服务名、插槽名还在第 3、4 阶段定，上面用到的只是示意。
+全部已转正的服务名、扩展接缝与插槽名见[服务、接缝与插槽参考](services-and-slots.md)。
 
 ### npm 的标准字段
 

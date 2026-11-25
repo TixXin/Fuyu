@@ -1,10 +1,10 @@
 # 服务、接缝与插槽参考
 
-本文档列出插件平台已转正的全部**公开服务（`@fuyu/plugin-services`）**、**7 个扩展接缝（Seam）**与**窗口界面插槽（`@fuyu/plugin-base/protocol` 的 `SLOTS`）**。
+本文档列出插件平台已转正的全部**公开服务**、**7 个扩展接缝（Seam）**与**窗口界面插槽（`SLOTS`）**。第三方插件作者从 npm 包 `fuyu-plugin` 导入：`fuyu-plugin/services`（服务定义）和 `fuyu-plugin/protocol`（插槽与主题常量）；在本仓库内部对应 `@fuyu/plugin-services` 与 `@fuyu/plugin-base/protocol`。
 
 ---
 
-## 一、公开服务（`@fuyu/plugin-services`）
+## 一、公开服务（`fuyu-plugin/services` / 仓内 `@fuyu/plugin-services`）
 
 在宿主插件中通过 `ctx.services.get(serviceDef)` 调用（并在 `package.json` 的 `fuyu.inject.required` 或 `optional` 中声明服务名）；在窗口插件中通过 `ctx.services.get(serviceDef)` 调用。想要整体替换某项内置服务的插件，在 `package.json` 中声明 `fuyu.provides` 与 `fuyu.replaces`，并在宿主调用 `ctx.services.provide(serviceDef, impl)`。
 
@@ -57,7 +57,7 @@
 
 ---
 
-## 三、窗口界面插槽（`@fuyu/plugin-base/protocol` 的 `SLOTS`）
+## 三、窗口界面插槽（`fuyu-plugin/protocol` / 仓内 `@fuyu/plugin-base/protocol` 的 `SLOTS`）
 
 在窗口代码中通过 `ctx.slots.add(slotName, entry)` 注册，并在 `package.json` 的 `fuyu.slots` 中声明插槽名。插件停用时所有插槽项自动卸载。
 

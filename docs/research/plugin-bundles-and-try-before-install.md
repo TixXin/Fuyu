@@ -182,7 +182,7 @@
 
 ### 分步计划
 
-0. **真机验证（先做，约两天，决定做不做）**：做一个最小的试用页，在 Windows 和 Mac 的设置窗口里各打开一次，逐项试：看不看得到 `window.__TAURI_INTERNALS__`、`window.ipc`、`chrome.webview`、`webkit.messageHandlers`；调一个 Tauri 命令；连宿主的 WebSocket；`fetch`、图片、WebRTC、表单、把自己导航走；死循环时设置窗口卡不卡。结果写进 `docs/investigations/`。任何一项能碰到命令或用户数据，就停在 (a)，或者改用不经过 Tauri 的独立 WebView（[macos-webview.md](../architecture/plugins/macos-webview.md) 里评估过的 wry 那条路，工作量再加一档）。
+0. **真机验证（先做，约两天，决定做不做）**：做一个最小的试用页，在 Windows 和 Mac 的设置窗口里各打开一次，逐项试：看不看得到 `window.__TAURI_INTERNALS__`、`window.ipc`、`chrome.webview`、`webkit.messageHandlers`；调一个 Tauri 命令；连宿主的 WebSocket；`fetch`、图片、WebRTC、表单、把自己导航走；死循环时设置窗口卡不卡。结果写进 `docs/investigations/`。任何一项能碰到命令或用户数据，就停在 (a)，或者改用不经过 Tauri 的独立 WebView（[macos-webview.md](../architecture/history/macos-webview.md) 里评估过的 wry 那条路，工作量再加一档）。
 1. **作者工具**：`packages/plugin-cli/src/shots/`（`harness.mjs` 加试用模式，`bundle.mjs` 出压缩过的单个网页）、`fuyu-plugin check` 加检查（选了试用就得有示例数据、岛上代码不碰 `localStorage` 和网络）、`packages/plugin-manifest/`（新字段）、文档 `docs/plugins/screenshots.md`、`package.md`。
 2. **索引和 CI**：`packages/plugin-market/src/index-format.mjs`（可选的 `demo`）、`v3-market.md`、`contracts.md`；市场仓库的 `scripts/v3/` 构建并上传试用包。
 3. **宿主和 Rust**：`src/features/updater/host/` 加下载和缓存（照 `marketMedia.mjs` 的做法）、`market/v1` 加一个方法；`src-tauri/src/plugin_kernel/protocol.rs` 加试用路径和回应头，配 Rust 测试。

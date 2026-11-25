@@ -4,7 +4,7 @@
 
 第 5 阶段（E36.5，#295）按方案要等第 4 阶段，但其中**不依赖前几阶段界面和服务接口**的部分可以先做：细则的决定、插件包格式、构建工具、市场索引和审核 CI。这份计划只管这一块；岛上的安装界面、二分排查、接口转正等第 2–4 阶段做完再拆。
 
-方案见 [v3-everything-plugin.md](v3-everything-plugin.md)（决定 7–10、14、15，「实现时再定的细则」「插件包」「安装、市场和信任」「基座做成开源项目」），进度见 [v3-progress.md](v3-progress.md)。
+方案见 [v3-everything-plugin.md](../plugins/v3-everything-plugin.md)（决定 7–10、14、15，「实现时再定的细则」「插件包」「安装、市场和信任」「基座做成开源项目」），进度见 [v3-progress.md](../plugins/v3-progress.md)。
 
 ## 一、要你定的问题
 
@@ -76,7 +76,7 @@
 
 ### Q7 市场仓库 `TixXin/fuyu-plugins` 的 `main` 怎么保护
 
-逐版审核要求「上架 = 经 PR 合入并被批准」，但它的 `main` 现在没有规则集：索引、点赞、主题三个工作流直接推 `main`，GitHub 不允许个人仓库把 Actions 设成规则集的绕过者（[market-ops.md](market-ops.md)）。方案写了第 5 阶段前要解决。
+逐版审核要求「上架 = 经 PR 合入并被批准」，但它的 `main` 现在没有规则集：索引、点赞、主题三个工作流直接推 `main`，GitHub 不允许个人仓库把 Actions 设成规则集的绕过者（[market-ops.md](../plugins/market-ops.md)）。方案写了第 5 阶段前要解决。
 
 **推荐：给这三个工作流一把有写权限的部署密钥**（私钥放在只有 `main` 能用的环境 secret 里），然后加规则集：`main` 必须经 PR、要一个批准、要过检查，只让部署密钥和管理员（只能在 PR 上）绕过。
 

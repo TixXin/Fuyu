@@ -61,8 +61,6 @@
 | D47–D52 | 内存和性能 | **照常做** | 和第 3 版互不依赖；D47 的测量结果就是第 3 版的基线，D49（`emit` 泄漏）第 3 版也受益 |
 | 天气插件（待上架） | 等签名 | 照常上架 | 同 E33 |
 
-冻结期间的规则：旧插件系统（`src-tauri/src/plugin_host/`、`src/features/plugins/`、`src/features/plugin-views/`、`packages/fuyu-plugin` 1.x、`plugins/`）只接受 bug 和安全修复，不加新的方法、事件、模板、权限。E30 定的「新能力先进实验通道」对第 2 版不再有意义，它的精神搬到了第 3 版的「接口分层」。2026-11-18 起第 2 版已删除（E36.6.5、E36.6.6），这条规则不再适用。
-
 ## 任务和 issue
 
 按 [docs/tasks/README.md](/docs/tasks/README.md)：先提 issue，再建任务。

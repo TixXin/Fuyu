@@ -45,4 +45,4 @@ npm create fuyu-plugin@latest
 - [包格式](../architecture/plugins/v3-package.md)：清单和包的完整规则、错误码、摘要和签名格式。
 - [市场](../architecture/plugins/v3-market.md)：市场索引、撤销名单、冷静期和作者密钥固定的判断规则。
 - 审核分析器：[`packages/plugin-review`](../../packages/plugin-review/README.md)。
-- 编译在浮屿里、能单独开关的内置插件：[builtins.md](../architecture/plugins/builtins.md)。
+- 编译在浮屿里、能单独开关的内置插件：[v3-builtins.md](../architecture/plugins/v3-builtins.md)。

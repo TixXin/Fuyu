@@ -1,6 +1,8 @@
-# 插件的独立窗口（设计稿）
+# 插件的独立窗口（第 2 版历史设计稿）
 
-> 状态：**用户已定方向**（2026-11-13，决定见第 11 节）。任务 [E31](/docs/tasks/E/E31.md)，issue 201；后续任务 E32（原型）、E33（岛上的简版启动台）、E34（窗口接口）。外部产品的做法见 [docs/research/plugin-windows.md](/docs/research/plugin-windows.md)。原型已做（2026-11-14，E32）：通过，有三处按实测修正，见第 9 节。
+> 历史归档：本稿为已下线的第 2 版插件独立窗口设计。现行第 3 版独立窗口实现在 `src-tauri/src/plugin_kernel/plugin_windows.rs`，公开服务 `plugin-windows/v1` 与插槽 `plugin-window.view/v1` 见 [services-and-slots.md](../../plugins/services-and-slots.md)。
+>
+> 原状态：**用户已定方向**（2026-11-13，决定见第 11 节）。任务 E31（issue 201）；后续任务 E32（原型）、E33（岛上的简版启动台）、E34（窗口接口）。外部产品的做法见 [docs/research/plugin-windows.md](../../research/plugin-windows.md)。原型已做（2026-11-14，E32）：通过，有三处按实测修正，见第 9 节。
 >
 > 第 1、2 期已实现（2026-11-14，E34），在实验通道里；和本稿不一样的地方见第 12 节。
 
@@ -31,7 +33,7 @@
 
 ## 2. 隔离是否还成立
 
-现有页面的隔离全部挂在 WebView2 控制器上，和它的父窗口是谁无关（[webview_page.rs](/src-tauri/src/win32/webview_page.rs)）：
+现有页面的隔离全部挂在 WebView2 控制器上，和它的父窗口是谁无关（旧版 `src-tauri/src/win32/webview_page.rs`，已于 E36.6.5 删除）：
 
 - `WebResourceRequested` 过滤 `*`，只回答页面来源下、入口文件夹里的文件，其余返回 403。
 - `NavigationStarting` 和 `FrameNavigationStarting` 取消一切离开页面来源的跳转。
@@ -118,7 +120,7 @@
 - **护栏**，都由岛屿的原生层执行，插件绕不过去：
   1. 浮层顶上有一条岛屿画的标题条，写着插件的图标和名字，页面盖不住它。
   2. 小组件不拿键盘焦点（第 3 节）。
-  3. 浮层只能在用户刚操作过这个插件的 15 秒内显示或取得焦点（按过它的快捷键、点过它的命令或它的窗口），和 `island.openView` 用同一条规则（[reveal.rs](/src-tauri/src/plugin_host/reveal.rs)）。
+  3. 浮层只能在用户刚操作过这个插件的 15 秒内显示或取得焦点（按过它的快捷键、点过它的命令或它的窗口），和 `island.openView` 用同一条规则（旧版 `src-tauri/src/plugin_host/reveal.rs`，已于 E36.6.5 删除）。
   4. 窗口不进任务栏，系统标题固定带「· 浮屿」，页面改不了。
   5. 不能全屏盖住所有屏幕，不能跑到屏幕外，数量有上限（第 4 节）。
   6. 用户的三个开关（第 3 节）优先于插件的设置。

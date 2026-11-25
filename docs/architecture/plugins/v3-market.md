@@ -1,8 +1,8 @@
 # 插件平台第 3 版：市场索引和撤销名单
 
-> 状态：格式和客户端校验库已实现（E36.5.2，#481），代码在 `packages/plugin-market`（`@fuyu/plugin-market`）。市场 CI（E36.5.5）和以后宿主里的市场客户端（内置插件 `market/v1`，E36.5.8）共用这一份代码。还在实验期，第 5 阶段转正前可能微调。
+> 状态：已实现并转正（E36.5.2，#481），校验库在 `packages/plugin-market`（`@fuyu/plugin-market`），市场 CI（[v3-market-ci.md](v3-market-ci.md)）与宿主内置插件 `market/v1` 均已上线；格式后续只增不改。
 
-定下这些规则的决定见 [v3-everything-plugin.md](v3-everything-plugin.md)「第 5 阶段开头定下的细则」和「安装、市场和信任」，取舍见 [第 5 阶段地基的计划](v3-phase5-foundation-plan.md) Q2、Q5、Q6、Q8、Q9、Q10。第 2 版的做法见 [market-ops.md](market-ops.md)、[author-signing.md](author-signing.md)。
+定下这些规则的决定见 [v3-everything-plugin.md](v3-everything-plugin.md)「第 5 阶段开头定下的细则」和「安装、市场和信任」，取舍见 [第 5 阶段地基的计划](../history/v3-phase5-foundation-plan.md) Q2、Q5、Q6、Q8、Q9、Q10。第 2 版的做法见 [market-ops.md](market-ops.md)、[author-signing.md](../history/author-signing.md)。
 
 ## 文件
 

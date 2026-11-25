@@ -4,7 +4,7 @@
 
 ## 一、两步走策略（先行重写 vs. 满一周期后删旧版）
 
-按 [方案](v3-everything-plugin.md)「分阶段 → 第 6 阶段」与 `E36.6.md` 约定：
+按 [方案](../plugins/v3-everything-plugin.md)「分阶段 → 第 6 阶段」与 `E36.6.md` 约定：
 - **「删除第 2 版插件系统」是唯一不能靠开关回退的一步**，必须放在第 3 版默认开满一个完整的发版周期之后，并在动手前由用户确认。
 - **「用第 3 版新接口重写 7 个官方插件」完全独立于旧系统删除**：新插件源码放在 `plugins/v3/official/<name>/`（包名 `@fuyu/<name>`，去掉旧 `dev.focusd.*` 前缀，含原 E29 的跨平台 Node 化目标），用 TypeScript + React 编写，跑在浮屿自带的 Node 宿主里，Windows 和 macOS 双端通用，可以**立即先行完成**。
 

@@ -30,4 +30,4 @@
 - 上游仓库信息和文件列表：`gh api repos/flyl1u/fly-island`、`gh api repos/flyl1u/fly-island/git/trees/HEAD?recursive=1`，2026-11-16。
 - [上游插件宿主说明](https://github.com/flyl1u/fly-island/blob/main/docs/architecture/plugins.md)、[上游插件 API v1](https://github.com/flyl1u/fly-island/blob/main/docs/plugins/api.md)，2026-11-16 读取。
 - 上游 `src-tauri/src/plugin_host` 的提交记录：`feat(plugins): 插件平台核心与 API v1 支持`（2026-11-15）到 `feat(发布): 暂时隐藏插件与邮箱验证码`（2026-11-16）。
-- 第 3 版：[v3-everything-plugin.md](../architecture/plugins/v3-everything-plugin.md)「已经定下的」；第 2 版：[v2-platform.md](../architecture/plugins/v2-platform.md)。
+- 第 3 版：[v3-everything-plugin.md](../architecture/plugins/v3-everything-plugin.md)「已经定下的」；第 2 版：[v2-platform.md](../architecture/history/v2-platform.md)。
