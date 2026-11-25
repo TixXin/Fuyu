@@ -2,7 +2,10 @@ import { useCallback, useMemo } from "react";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
-import { takeIslandClickFocus } from "./api";
+import { hasActiveIslandBanner, takeIslandClickFocus } from "./api";
+import { IslandHoverPreview } from "./IslandHoverPreview";
+import { PREVIEW_HEIGHT, previewWidth as computePreviewWidth } from "./hoverPreview";
+import { useHoverPreview } from "./useHoverPreview";
 import { islandHost } from "./islandHost";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useMigrateLegacySwitches, useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
@@ -216,6 +219,16 @@ export function IslandApp() {
     [collapsedIslandWidth, collapsedIslandHeight, ringExtra, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, settings.islandBounce, reducedMotion, islandOpacity, style.vars, glassStyle],
   );
 
+  const previewTargetWidth = computePreviewWidth(collapsedIslandWidth, expandedIslandWidth);
+  const { previewOpen, closePreview } = useHoverPreview({
+    enabled: settings.expandTrigger === "preview" && side === null && !game.quiet && !onTaskbar.placed,
+    delayMs: settings.hoverExpandDelayMs,
+    autoExpandMs: settings.previewAutoExpandMs,
+    paused: contributedReveal.pauseHover || contributedPreview !== null || hasActiveIslandBanner(),
+    mode,
+    isTucked: isTucked || navigation.isPeeking,
+    onExpand: () => openEnabledPage(homePage),
+  });
   const {
     isPositionDetached,
     nativeGlassState,
@@ -224,6 +237,9 @@ export function IslandApp() {
     resetIslandPosition,
   } = useIslandWindow({
     mode,
+    previewOpen,
+    previewWidth: previewTargetWidth,
+    previewHeight: PREVIEW_HEIGHT,
     isTucked,
     isDimmed,
     gamePassthrough: game.passthrough,
@@ -330,6 +346,18 @@ export function IslandApp() {
     pageDigitModifiers: settings.pageDigitModifiers,
     hoverSwitchPage: settings.hoverSwitchPage,
     hoverSwitchDelayMs: settings.hoverSwitchDelayMs,
+    wheelSwitchPage: settings.wheelSwitchPage,
+    preview: previewOpen,
+    previewWidth: previewTargetWidth,
+    previewContent: previewOpen ? (
+      <IslandHoverPreview
+        homePage={homePage}
+        autoExpandMs={settings.previewAutoExpandMs}
+        onOpenPage={openEnabledPage}
+        onExpand={() => openEnabledPage(homePage)}
+        onClose={closePreview}
+      />
+    ) : null,
     fuyuTabIcon: settings.fuyuTabIcon,
     notice: islandNotice,
     collapsedSlots,

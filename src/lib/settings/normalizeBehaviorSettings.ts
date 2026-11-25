@@ -60,7 +60,8 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     revealOnMessage: settings?.revealOnMessage !== false,
     messageNotice: oneOf(MESSAGE_NOTICES, settings?.messageNotice, LEGACY_FALLBACKS.messageNotice),
     messagePanelSeconds: oneOf(MESSAGE_PANEL_SECONDS, settings?.messagePanelSeconds, DEFAULT_SETTINGS.messagePanelSeconds),
-    expandTrigger: settings?.expandTrigger === "hover" ? "hover" : "click",
+    expandTrigger: settings?.expandTrigger === "hover" ? "hover" : settings?.expandTrigger === "preview" ? "preview" : "click",
+    previewAutoExpandMs: settings?.previewAutoExpandMs === 1000 || settings?.previewAutoExpandMs === 1500 || settings?.previewAutoExpandMs === 2500 ? settings.previewAutoExpandMs : 0,
     clickCollapseOnLeave: settings?.clickCollapseOnLeave === true,
     hoverExpandDelayMs: typeof settings?.hoverExpandDelayMs === "number" && Number.isFinite(settings.hoverExpandDelayMs)
       ? clamp(Math.round(settings.hoverExpandDelayMs), MIN_HOVER_EXPAND_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS)
@@ -72,6 +73,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     hoverSwitchDelayMs: typeof settings?.hoverSwitchDelayMs === "number" && Number.isFinite(settings.hoverSwitchDelayMs)
       ? clamp(Math.round(settings.hoverSwitchDelayMs), MIN_HOVER_SWITCH_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS)
       : DEFAULT_SETTINGS.hoverSwitchDelayMs,
+    wheelSwitchPage: settings?.wheelSwitchPage === true,
     fuyuTabIcon: settings?.fuyuTabIcon === true,
     minimizeAction: settings?.minimizeAction === "tuck" ? "tuck" : "tray",
     tuckedHoverAction: settings?.tuckedHoverAction === "expand" ? "expand" : "reveal",

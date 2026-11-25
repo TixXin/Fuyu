@@ -820,3 +820,25 @@ fn collapsed_stage_height_shrinks_safely_and_expands_for_popups() {
     let dragging = IslandWindowState { is_dragging: true, ..tucked };
     assert_eq!(stage_height_for_with_popup(dragging, false), STAGE_WINDOW_HEIGHT);
 }
+
+#[test]
+fn preview_mode_uses_preview_dimensions_radius_and_hit_tests_cleanly() {
+    assert!(matches!(IslandMode::from_value("preview"), Ok(IslandMode::Preview)));
+    let preview = IslandWindowState {
+        mode: IslandMode::Preview,
+        preview_width: 420.0,
+        preview_height: 86.0,
+        collapsed_scale: 1.0,
+        attached_edge: Some(Edge::Top),
+        ..IslandWindowState::default()
+    };
+    assert_eq!(preview.base_size(), (420.0, 86.0));
+    assert_eq!(preview.active_scale(), 1.0);
+    assert!(cursor_on_island(0.0, 0.0, STAGE_WINDOW_WIDTH, STAGE_WINDOW_HEIGHT, STAGE_WINDOW_WIDTH / 2.0, 70.0, preview));
+    assert!(!cursor_on_island(0.0, 0.0, STAGE_WINDOW_WIDTH, STAGE_WINDOW_HEIGHT, STAGE_WINDOW_WIDTH / 2.0, 100.0, preview));
+    let rect = island_rect(0.0, 0.0, STAGE_WINDOW_WIDTH, STAGE_WINDOW_HEIGHT, preview);
+    assert!(!rect.expanded);
+    assert_eq!((rect.width, rect.height), (420.0, 86.0));
+    let bottom_preview = IslandWindowState { attached_edge: Some(Edge::Bottom), ..preview };
+    assert!(cursor_on_island(0.0, 0.0, STAGE_WINDOW_WIDTH, STAGE_WINDOW_HEIGHT, STAGE_WINDOW_WIDTH / 2.0, STAGE_WINDOW_HEIGHT - 60.0, bottom_preview));
+}

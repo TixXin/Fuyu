@@ -122,8 +122,10 @@ export type IslandGlassFrame = {
   activeTransition?: boolean;
 };
 
+export type NativeIslandMode = IslandMode | "preview";
+
 export type IslandInteraction = {
-  mode: IslandMode;
+  mode: NativeIslandMode;
   collapsedScale: number;
   expandedScale: number;
   marginY: number;
@@ -149,6 +151,8 @@ export type IslandInteraction = {
   isDimmed?: boolean;
   gamePassthrough?: boolean;
   collapsedHeight?: number;
+  previewWidth?: number;
+  previewHeight?: number;
   notchRingExtra?: number;
   glassHidden?: boolean;
 };

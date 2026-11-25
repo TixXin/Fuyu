@@ -24,6 +24,8 @@ pub(super) const COLLAPSED_ISLAND_WIDTH: f64 = 340.0;
 pub(super) const MIN_ADJUSTED_COLLAPSED_WIDTH: f64 = 220.0;
 pub(super) const MAX_ADJUSTED_COLLAPSED_WIDTH: f64 = 520.0;
 pub(super) const COLLAPSED_ISLAND_HEIGHT: f64 = 38.0;
+pub(super) const PREVIEW_ISLAND_HEIGHT: f64 = 86.0;
+pub(super) const MIN_PREVIEW_ISLAND_WIDTH: f64 = 400.0;
 pub(super) const MAX_GROWN_COLLAPSED_HEIGHT: f64 = 140.0;
 
 pub(super) fn grown_collapsed_height(height: f64) -> f64 {
@@ -35,6 +37,7 @@ pub(super) fn grown_collapsed_height(height: f64) -> f64 {
 }
 #[cfg_attr(not(windows), allow(dead_code))]
 pub(super) const COLLAPSED_RADIUS: f64 = 22.0;
+pub(super) const PREVIEW_RADIUS: f64 = 24.0;
 pub(super) const EXPANDED_ISLAND_WIDTH: f64 = 560.0;
 pub(super) const SIDE_HANDLE_WIDTH: f64 = 12.0;
 pub(super) const SIDE_HANDLE_HEIGHT: f64 = 72.0;

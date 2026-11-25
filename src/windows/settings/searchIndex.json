@@ -1562,6 +1562,20 @@
     {
       "page": "behavior",
       "zh-CN": {
+        "group": "展开",
+        "title": "页头滚轮切页",
+        "description": "在展开面板顶部的图标栏上滚动滚轮切换上一页 / 下一页，不影响内容区自己的滚动"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Scroll header to switch pages",
+        "description": "Scroll over the top page icon bar of the open panel to switch pages without interfering with page scrolling"
+      },
+      "since": "next"
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
         "group": "开合动画",
         "title": "动画曲线",
         "description": "鼠标移到格子上就演一次，点一下选用"

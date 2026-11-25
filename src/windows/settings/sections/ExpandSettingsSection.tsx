@@ -1,4 +1,5 @@
 import { useTranslation } from "../../../i18n";
+import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsChoiceCards } from "../../../components/settings/SettingsChoiceCards";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
@@ -48,11 +49,12 @@ export function ExpandSettingsSection({
             options={[
               { value: "click", label: expand.click, hint: expand.clickHint, art: <IslandGlyph state="collapsed" pointer="click" /> },
               { value: "hover", label: expand.hover, hint: expand.hoverHint, art: <IslandGlyph state="expanded" pointer /> },
+              { value: "preview", label: expand.preview, hint: expand.previewHint, art: <IslandGlyph state="collapsed" pointer /> },
             ]}
             onChange={(expandTrigger) => update({ expandTrigger })}
           />
         </SettingsRow>
-        {settings.expandTrigger === "hover" && (
+        {(settings.expandTrigger === "hover" || settings.expandTrigger === "preview") && (
           <SettingsSliderRow
             indent
             title={expand.hoverDelay}
@@ -66,7 +68,27 @@ export function ExpandSettingsSection({
             onChange={(hoverExpandDelayMs) => update({ hoverExpandDelayMs })}
           />
         )}
-        {settings.expandTrigger === "click" && (
+        {settings.expandTrigger === "preview" && (
+          <SettingsRow
+            indent
+            title={expand.previewAutoExpand}
+            description={expand.previewAutoExpandHint}
+            control={
+              <SettingsChoice<string>
+                value={String(settings.previewAutoExpandMs)}
+                ariaLabel={expand.previewAutoExpand}
+                options={[
+                  { value: "0", label: expand.previewAutoExpandOff },
+                  { value: "1000", label: layout.seconds(1) },
+                  { value: "1500", label: layout.seconds(1.5) },
+                  { value: "2500", label: layout.seconds(2.5) },
+                ]}
+                onChange={(value) => update({ previewAutoExpandMs: Number(value) })}
+              />
+            }
+          />
+        )}
+        {(settings.expandTrigger === "click" || settings.expandTrigger === "preview") && (
           <SettingsToggleRow
             indent
             title={expand.clickCollapseOnLeave}
@@ -109,6 +131,12 @@ export function ExpandSettingsSection({
             onChange={(hoverSwitchDelayMs) => update({ hoverSwitchDelayMs })}
           />
         )}
+        <SettingsToggleRow
+          title={expand.wheelSwitchPage}
+          description={expand.wheelSwitchPageHint}
+          checked={settings.wheelSwitchPage}
+          onChange={(wheelSwitchPage) => update({ wheelSwitchPage })}
+        />
         {onOpenPageKeys && (
           <SettingsRow
             searchable={false}

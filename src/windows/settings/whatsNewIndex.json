@@ -122,6 +122,18 @@
       }
     },
     {
+      "page": "behavior",
+      "since": "next",
+      "zh-CN": {
+        "group": "展开",
+        "title": "页头滚轮切页"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Scroll header to switch pages"
+      }
+    },
+    {
       "page": "calendar",
       "since": "0.3.14-beta.2",
       "zh-CN": {

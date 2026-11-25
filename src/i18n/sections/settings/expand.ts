@@ -7,6 +7,10 @@ export type SettingsExpandText = {
   trigger: string;
   click: string;
   hover: string;
+  preview: string;
+  previewAutoExpand: string;
+  previewAutoExpandHint: string;
+  previewAutoExpandOff: string;
   clickCollapseOnLeave: string;
   clickCollapseOnLeaveHint: string;
   hoverDelay: string;
@@ -14,6 +18,8 @@ export type SettingsExpandText = {
   hoverSwitchPage: string;
   hoverSwitchPageHint: string;
   hoverSwitchDelay: string;
+  wheelSwitchPage: string;
+  wheelSwitchPageHint: string;
   tuckTitle: string;
   revealTitle: string;
   holdMusic: string;
@@ -89,6 +95,7 @@ export type SettingsExpandText = {
   hoverNone: string;
   clickHint: string;
   hoverHint: string;
+  previewHint: string;
   instant: string;
   pageKeys: string;
   pageKeysHint: string;
@@ -122,6 +129,10 @@ export const zhCN: SettingsExpandText = {
   trigger: "展开方式",
   click: "点击",
   hover: "鼠标悬停",
+  preview: "悬停预览",
+  previewAutoExpand: "预览时继续停留自动展开",
+  previewAutoExpandHint: "默认关闭；开启后，鼠标继续停在预览卡上满设定时间后自动展开完整面板",
+  previewAutoExpandOff: "关闭",
   clickCollapseOnLeave: "鼠标移开后自动收起",
   clickCollapseOnLeaveHint: "点开面板看完后，鼠标移出就自动收起，不用再点外部",
   hoverDelay: "悬停多久后展开",
@@ -129,6 +140,8 @@ export const zhCN: SettingsExpandText = {
   hoverSwitchPage: "悬停切换页面",
   hoverSwitchPageHint: "鼠标停在展开后顶部的页面图标上，就切到那一页，不用点击；划过的图标不会切换",
   hoverSwitchDelay: "悬停多久后切换",
+  wheelSwitchPage: "页头滚轮切页",
+  wheelSwitchPageHint: "在展开面板顶部的图标栏上滚动滚轮切换上一页 / 下一页，不影响内容区自己的滚动",
   tuckTitle: "贴边隐藏",
   revealTitle: "露出",
   holdMusic: "音乐播放中不收起",
@@ -234,6 +247,7 @@ export const zhCN: SettingsExpandText = {
   hoverNone: "不变化",
   clickHint: "点一下小岛才展开",
   hoverHint: "鼠标移上去就展开，移开收起",
+  previewHint: "悬停先出轻量预览卡，点击或向下滚动再展开",
   instant: "立即",
   pageKeys: "页面切换快捷键",
   pageKeysHint: "数字键切页、上一页和下一页，在「快捷键 › 岛上」里改。",
@@ -295,6 +309,10 @@ export const en: SettingsExpandText = {
   trigger: "Open the island by",
   click: "Click",
   hover: "Hover",
+  preview: "Hover preview",
+  previewAutoExpand: "Auto-open while hovering preview",
+  previewAutoExpandHint: "Off by default; when enabled, resting on the preview card expands the full panel after the chosen time",
+  previewAutoExpandOff: "Off",
   clickCollapseOnLeave: "Close when pointer leaves",
   clickCollapseOnLeaveHint: "Closes the panel after the pointer leaves, without clicking outside",
   hoverDelay: "Hover time before opening",
@@ -302,6 +320,8 @@ export const en: SettingsExpandText = {
   hoverSwitchPage: "Switch pages on hover",
   hoverSwitchPageHint: "Resting the pointer on a page icon at the top of the open island opens that page, no click needed; icons the pointer passes over do not",
   hoverSwitchDelay: "Hover time before switching",
+  wheelSwitchPage: "Scroll header to switch pages",
+  wheelSwitchPageHint: "Scroll over the top page icon bar of the open panel to switch pages without interfering with page scrolling",
   tuckTitle: "Tuck to edge",
   revealTitle: "Sliding out",
   holdMusic: "Stay out while music plays",
@@ -407,6 +427,7 @@ export const en: SettingsExpandText = {
   hoverNone: "None",
   clickHint: "Opens only when you click the island",
   hoverHint: "Opens under the pointer, closes when it leaves",
+  previewHint: "Shows a compact preview card on hover; click or scroll down to open",
   instant: "At once",
   pageKeys: "Page switching keys",
   pageKeysHint: "Number keys, next page and previous page are set under Shortcuts › On the island.",
