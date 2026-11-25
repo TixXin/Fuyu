@@ -75,7 +75,7 @@
     },
     {
       "page": "islandLayout",
-      "since": "next",
+      "since": "0.3.14-beta.3",
       "zh-CN": {
         "group": "",
         "title": "收起条电池显示"
@@ -87,7 +87,7 @@
     },
     {
       "page": "islandLayout",
-      "since": "next",
+      "since": "0.3.14-beta.3",
       "zh-CN": {
         "group": "",
         "title": "显示电量曲线"
@@ -123,7 +123,7 @@
     },
     {
       "page": "behavior",
-      "since": "next",
+      "since": "0.3.14-beta.3",
       "zh-CN": {
         "group": "展开",
         "title": "页头滚轮切页"
@@ -135,7 +135,7 @@
     },
     {
       "page": "todos",
-      "since": "next",
+      "since": "0.3.14-beta.3",
       "zh-CN": {
         "group": "小岛显示与排序",
         "title": "显示已顺延天数"
@@ -147,7 +147,7 @@
     },
     {
       "page": "todosReminders",
-      "since": "next",
+      "since": "0.3.14-beta.3",
       "zh-CN": {
         "group": "到点和到期",
         "title": "截止日提醒"
@@ -183,7 +183,7 @@
     },
     {
       "page": "screenshot",
-      "since": "next",
+      "since": "0.3.14-beta.3",
       "zh-CN": {
         "group": "截图时",
         "title": "延时截图时长"
@@ -195,7 +195,7 @@
     },
     {
       "page": "timerAlerts",
-      "since": "next",
+      "since": "0.3.14-beta.3",
       "zh-CN": {
         "group": "计时器",
         "title": "计时器页布局"

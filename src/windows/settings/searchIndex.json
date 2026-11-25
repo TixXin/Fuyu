@@ -1183,7 +1183,7 @@
           "Time left"
         ]
       },
-      "since": "next"
+      "since": "0.3.14-beta.3"
     },
     {
       "page": "islandLayout",
@@ -1197,7 +1197,7 @@
         "title": "Show battery curve",
         "description": "Display recent battery history at the bottom of the medium battery widget; hover or use arrow keys to inspect samples."
       },
-      "since": "next"
+      "since": "0.3.14-beta.3"
     },
     {
       "page": "islandLayout",
@@ -1571,7 +1571,7 @@
         "title": "Scroll header to switch pages",
         "description": "Scroll over the top page icon bar of the open panel to switch pages without interfering with page scrolling"
       },
-      "since": "next"
+      "since": "0.3.14-beta.3"
     },
     {
       "page": "behavior",
@@ -2215,7 +2215,7 @@
         "title": "Show carried-over days",
         "description": "Shows a subtle badge (for example, Carried 3d) on tasks carried over for more than one day."
       },
-      "since": "next"
+      "since": "0.3.14-beta.3"
     },
     {
       "page": "todos",
@@ -2417,7 +2417,7 @@
         "title": "Deadline reminder",
         "description": "Shows one island reminder when an unfinished task with a deadline is coming due."
       },
-      "since": "next"
+      "since": "0.3.14-beta.3"
     },
     {
       "page": "todosReminders",
@@ -3754,7 +3754,7 @@
         "title": "Delayed screenshot timer",
         "description": "How many seconds to wait before freezing the screen when using the delayed shortcut, so menus or tooltips can open first. Right-click the scissors button on the island or the tray card to pick 3, 5 or 10 s."
       },
-      "since": "next"
+      "since": "0.3.14-beta.3"
     },
     {
       "page": "screenshot",
@@ -3985,7 +3985,7 @@
         "group": "Timer",
         "title": "Timer layout"
       },
-      "since": "next"
+      "since": "0.3.14-beta.3"
     },
     {
       "page": "timerAlerts",
