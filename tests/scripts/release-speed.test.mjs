@@ -110,8 +110,17 @@ test("a smoke test started ahead counts only for the Windows build the release u
   assert.equal(smokeAhead(record, root), null);
 });
 
-test("the release PR starts only from a version commit that changes nothing but the version, the notes and their snapshot", () => {
-  const files = ["package.json", "src-tauri/tauri.conf.json", "src-tauri/Cargo.toml", "src-tauri/Cargo.lock", "docs/releases/v1.2.0-beta.1.md", "tests/regression/snapshots/version-history.html"];
+test("the release PR starts only from a version commit that changes nothing but the version, the notes, the settings indices and their snapshot", () => {
+  const files = [
+    "package.json",
+    "src-tauri/tauri.conf.json",
+    "src-tauri/Cargo.toml",
+    "src-tauri/Cargo.lock",
+    "docs/releases/v1.2.0-beta.1.md",
+    "src/windows/settings/searchIndex.json",
+    "src/windows/settings/whatsNewIndex.json",
+    "tests/regression/snapshots/version-history.html",
+  ];
   assert.equal(versionCommitProblem({ subject: "chore(release): 1.2.0-beta.1", files, version: "1.2.0-beta.1" }), null);
   assert.match(versionCommitProblem({ subject: "feat(x): y", files, version: "1.2.0-beta.1" }), /not "chore\(release\): 1\.2\.0-beta\.1"/);
   assert.match(versionCommitProblem({ subject: "chore(release): 1.2.0-beta.1", files: [...files, "src/main.tsx"], version: "1.2.0-beta.1" }), /also changes src\/main\.tsx/);

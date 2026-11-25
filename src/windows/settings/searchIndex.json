@@ -71,7 +71,7 @@
           "Direct"
         ]
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "generalData",
@@ -129,7 +129,7 @@
         "title": "Compatibility software rendering (WARP)",
         "description": "Uses Windows WARP software rendering instead of hardware GPU acceleration while keeping window transparency. Helps recover from blank islands or black screens caused by GPU drivers or virtual display software."
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "generalData",
@@ -143,7 +143,7 @@
         "title": "Clear WebView graphics cache",
         "description": "Removes only GPU shader caches and restarts; keeps settings, todos, and local data intact."
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "generalSync",
@@ -447,7 +447,7 @@
           "Mono"
         ]
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "themeStyle",
@@ -461,7 +461,7 @@
         "title": "Font size",
         "description": "Scales text across the island and settings."
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "themeStyle",
@@ -475,7 +475,7 @@
         "title": "Local fonts",
         "description": "Import a local font file to switch right away; falls back to System if unavailable."
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "themeStyle",
@@ -1450,7 +1450,7 @@
         "title": "Right dock",
         "description": "Drag tall list pages such as Todos, Clipboard, and File shelf to the left or right screen edge so the top island stays clean. Dropping onto a disabled side enables it automatically."
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "sideDocks",
@@ -1462,7 +1462,7 @@
         "group": "Screen side docks",
         "title": "Left dock"
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "behavior",
@@ -2500,7 +2500,7 @@
         "title": "Regional public holidays",
         "description": "Subscribe to official iCloud public holiday calendars by country or region; multiple regions can be active together without an account."
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "calendar",
@@ -2569,7 +2569,7 @@
         "title": "Show international festivals",
         "description": "Show well-known international holidays and observances (Halloween, Thanksgiving, Easter, Earth Day, etc.) on the month grid and day header."
       },
-      "since": "next"
+      "since": "0.3.14-beta.2"
     },
     {
       "page": "calendar",
