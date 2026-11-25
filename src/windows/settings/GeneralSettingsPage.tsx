@@ -2,6 +2,7 @@ import type { LocaleCode } from "../../i18n";
 import { BehaviorSettingsSection } from "./sections/BehaviorSettingsSection";
 import { CrashLogsSection } from "./sections/CrashLogsSection";
 import { DataSettingsSection } from "./sections/DataSettingsSection";
+import { GraphicsCompatibilitySection } from "./sections/GraphicsCompatibilitySection";
 import { NetworkProxySection } from "./sections/NetworkProxySection";
 import { SystemPermissionsSection } from "./sections/SystemPermissionsSection";
 import { loadSaveDirectory, saveSaveDirectory } from "../../features/todos/storage";
@@ -58,6 +59,7 @@ sections.add({ id: "general.networkProxy", category: "general", order: 20, compo
 sections.add({ id: "general.permissions", category: "general", order: 30, component: SystemPermissionsSection });
 sections.add({ id: "generalData.data", category: "generalData", order: 10, component: DataSection });
 sections.add({ id: "generalData.crashLogs", category: "generalData", order: 20, component: CrashLogsSection });
+sections.add({ id: "generalData.graphics", category: "generalData", order: 25, component: GraphicsCompatibilitySection });
 
 export function GeneralSettingsPage({ tab, ...props }: GeneralSectionProps & { tab: GeneralTab }) {
   return <SlotView slot={sections} group={tab} props={props} />;
