@@ -11,7 +11,7 @@ use windows::{
         DirectX::{Direct3D11::IDirect3DDevice, DirectXPixelFormat},
     },
     Win32::{
-        Foundation::{E_FAIL, HMODULE, POINT, RECT},
+        Foundation::{E_FAIL, HMODULE, HWND, POINT, RECT},
         Graphics::{
             Direct3D::D3D_DRIVER_TYPE_HARDWARE,
             Direct3D11::{
@@ -252,6 +252,71 @@ pub(crate) fn grab_screen(x: i32, y: i32, width: u32, height: u32, wait: Duratio
     drop(capture);
     let (read_width, read_height, rgba) = gpu.read_rgba(&frame).ok()?;
     ((read_width, read_height) == (width, height)).then_some(rgba)
+}
+
+pub(crate) fn grab_window(hwnd: HWND, wait: Duration) -> Option<(u32, u32, Vec<u8>)> {
+    let _apartment = super::com::WinRtApartment::multithreaded().ok()?;
+    let gpu = Gpu::create().ok()?;
+    let interop = factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>().ok()?;
+    let item: GraphicsCaptureItem = unsafe { interop.CreateForWindow(hwnd) }.ok()?;
+    let size = item.Size().ok()?;
+    if size.Width <= 0 || size.Height <= 0 {
+        return None;
+    }
+    let pool = Direct3D11CaptureFramePool::CreateFreeThreaded(
+        &gpu.direct3d,
+        DirectXPixelFormat::B8G8R8A8UIntNormalized,
+        1,
+        size,
+    )
+    .ok()?;
+    let (sender, receiver) = mpsc::sync_channel(1);
+    let source = pool.clone();
+    let gpu_copy = gpu.clone();
+    let token = pool
+        .FrameArrived(&TypedEventHandler::new(move |_, _| {
+            let frame = source.TryGetNextFrame()?;
+            let access: IDirect3DDxgiInterfaceAccess = frame.Surface()?.cast()?;
+            let texture: ID3D11Texture2D = unsafe { access.GetInterface() }?;
+            let mut described = D3D11_TEXTURE2D_DESC::default();
+            unsafe { texture.GetDesc(&mut described) };
+            let area = MonitorArea { monitor: 0, x: 0, y: 0, width: described.Width, height: described.Height };
+            if let Some(copy) = gpu_copy.copy(&texture, &area)? {
+                let _ = sender.try_send(copy);
+            }
+            frame.Close()
+        }))
+        .ok()?;
+    let session = pool.CreateCaptureSession(&item).ok()?;
+    let _ = session.SetIsCursorCaptureEnabled(false);
+    let _ = session.SetIsBorderRequired(false);
+    session.StartCapture().ok()?;
+    let frame = receiver.recv_timeout(wait).ok();
+    let _ = pool.RemoveFrameArrived(token);
+    let _ = session.Close();
+    let _ = pool.Close();
+    let (width, height, rgba) = gpu.read_rgba(&frame?).ok()?;
+    let crop_rect = super::window::window_rect(hwnd)
+        .zip(super::dwm::frame_bounds(hwnd))
+        .and_then(|(outer, inner)| {
+            let left = (inner.left - outer.left).max(0) as u32;
+            let top = (inner.top - outer.top).max(0) as u32;
+            let cw = (inner.right - inner.left).max(0) as u32;
+            let ch = (inner.bottom - inner.top).max(0) as u32;
+            (cw > 0 && ch > 0 && left + cw <= width && top + ch <= height).then_some((left, top, cw, ch))
+        });
+    if let Some((left, top, cw, ch)) = crop_rect {
+        if (left, top, cw, ch) != (0, 0, width, height) {
+            let row = width as usize * 4;
+            let mut cut = Vec::with_capacity(cw as usize * ch as usize * 4);
+            for y in top..top + ch {
+                let start = y as usize * row + left as usize * 4;
+                cut.extend_from_slice(&rgba[start..start + cw as usize * 4]);
+            }
+            return Some((cw, ch, cut));
+        }
+    }
+    Some((width, height, rgba))
 }
 
 const ONE_FRAME_INTERVAL: i64 = 166_667;

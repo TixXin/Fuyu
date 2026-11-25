@@ -1,3 +1,4 @@
+import { isDateString } from "./schedule.ts";
 import { todoElapsedLabel, type TodoPrefs } from "./todoPrefs.ts";
 import type { TodoItem, TodoPriority } from "./types.ts";
 
@@ -44,6 +45,7 @@ export function getTodoSignature(date: string, todos: TodoItem[], dailyNote: str
         : {}),
       ...(includePriority && todo.priority ? { priority: todo.priority } : {}),
       ...(includeElapsed && todo.focusMinutes ? { focusMinutes: todo.focusMinutes } : {}),
+      ...(isDateString(todo.deadline) ? { deadline: todo.deadline } : {}),
     })),
     dailyNote,
   });
@@ -68,8 +70,9 @@ export function formatTodosAsMarkdown(todos: TodoItem[], options?: TodoMarkdownO
       const priority = includePriority && todo.priority ? `${PRIORITY_MARKS[todo.priority]} ` : "";
       const elapsed = includeElapsed ? todoElapsedLabel(todo.startedAt, now, true) : null;
       const focus = includeElapsed ? formatFocusBadge(todo.focusMinutes) : null;
-      const timeParts = [focus, elapsed].filter((part): part is string => Boolean(part));
-      const suffix = timeParts.length > 0 ? ` (${timeParts.join(" · ")})` : "";
+      const deadline = isDateString(todo.deadline) ? `截止 ${todo.deadline.slice(5)}` : null;
+      const metaParts = [focus, elapsed, deadline].filter((part): part is string => Boolean(part));
+      const suffix = metaParts.length > 0 ? ` (${metaParts.join(" · ")})` : "";
       const lines = [`- [${todo.completed ? "x" : " "}] ${project}${priority}${todo.title}${suffix}`];
       if (includeNote && todo.note) {
         lines.push(`  > ${todo.note}`);

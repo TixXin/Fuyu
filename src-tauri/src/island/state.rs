@@ -5,8 +5,8 @@ use tauri::PhysicalPosition;
 use super::geometry::{
     COLLAPSED_ISLAND_HEIGHT, COLLAPSED_ISLAND_WIDTH, COLLAPSED_RADIUS, DEFAULT_COLLAPSED_SCALE,
     DEFAULT_EXPANDED_ISLAND_HEIGHT, DEFAULT_EXPANDED_SCALE, DEFAULT_MARGIN_Y,
-    EXPANDED_ISLAND_WIDTH, EXPANDED_RADIUS, SIDE_COLUMN_MIN_HEIGHT, SIDE_COLUMN_WIDTH, SIDE_HANDLE_HEIGHT, SIDE_HANDLE_RADIUS,
-    SIDE_HANDLE_WIDTH,
+    EXPANDED_ISLAND_WIDTH, EXPANDED_RADIUS, MIN_PREVIEW_ISLAND_WIDTH, PREVIEW_ISLAND_HEIGHT, PREVIEW_RADIUS,
+    SIDE_COLUMN_MIN_HEIGHT, SIDE_COLUMN_WIDTH, SIDE_HANDLE_HEIGHT, SIDE_HANDLE_RADIUS, SIDE_HANDLE_WIDTH,
 };
 
 pub(super) static WINDOW_STATE: OnceLock<Mutex<IslandWindowState>> = OnceLock::new();
@@ -14,6 +14,7 @@ pub(super) static WINDOW_STATE: OnceLock<Mutex<IslandWindowState>> = OnceLock::n
 #[derive(Clone, Copy)]
 pub(crate) enum IslandMode {
     Collapsed,
+    Preview,
     Expanded,
 }
 
@@ -21,6 +22,7 @@ impl IslandMode {
     pub(super) fn from_value(value: &str) -> Result<Self, String> {
         match value {
             "collapsed" => Ok(Self::Collapsed),
+            "preview" => Ok(Self::Preview),
             "expanded" => Ok(Self::Expanded),
             _ => Err(format!("Unsupported island mode: {value}")),
         }
@@ -29,6 +31,7 @@ impl IslandMode {
     pub(super) fn base_size(self, collapsed_width: f64, expanded_width: f64, expanded_height: f64) -> (f64, f64) {
         match self {
             Self::Collapsed => (collapsed_width, COLLAPSED_ISLAND_HEIGHT),
+            Self::Preview => (collapsed_width.max(MIN_PREVIEW_ISLAND_WIDTH), PREVIEW_ISLAND_HEIGHT),
             Self::Expanded => (expanded_width, expanded_height),
         }
     }
@@ -36,6 +39,7 @@ impl IslandMode {
     pub(super) fn corner_radius(self) -> f64 {
         match self {
             Self::Collapsed => COLLAPSED_RADIUS,
+            Self::Preview => PREVIEW_RADIUS,
             Self::Expanded => EXPANDED_RADIUS,
         }
     }
@@ -132,6 +136,8 @@ pub(crate) struct IslandWindowState {
     pub(super) under_menu_bar: bool,
     pub(super) collapsed_width: f64,
     pub(super) collapsed_height: f64,
+    pub(super) preview_width: f64,
+    pub(super) preview_height: f64,
     pub(super) expanded_width: f64,
     pub(super) widest_width: f64,
     pub(super) expanded_height: f64,
@@ -199,6 +205,9 @@ impl IslandWindowState {
         if let (IslandMode::Collapsed, Some(notch)) = (self.mode, self.notch) {
             return super::notch::collapsed_size(self.collapsed_width, self.collapsed_scale, notch, self.is_tucked, self.notch_drop, self.notch_ring_extra);
         }
+        if matches!(self.mode, IslandMode::Preview) {
+            return (self.preview_width, self.preview_height);
+        }
         if matches!(self.mode, IslandMode::Collapsed) && !self.is_tucked {
             return (self.collapsed_width, self.collapsed_height);
         }
@@ -218,7 +227,7 @@ impl IslandWindowState {
 
     pub(super) fn active_scale(self) -> f64 {
         match self.mode {
-            IslandMode::Collapsed => self.collapsed_scale,
+            IslandMode::Collapsed | IslandMode::Preview => self.collapsed_scale,
             IslandMode::Expanded => self.expanded_scale,
         }
     }
@@ -301,6 +310,8 @@ impl Default for IslandWindowState {
             under_menu_bar: false,
             collapsed_width: COLLAPSED_ISLAND_WIDTH,
             collapsed_height: COLLAPSED_ISLAND_HEIGHT,
+            preview_width: MIN_PREVIEW_ISLAND_WIDTH,
+            preview_height: PREVIEW_ISLAND_HEIGHT,
             expanded_width: EXPANDED_ISLAND_WIDTH,
             widest_width: 0.0,
             expanded_height: DEFAULT_EXPANDED_ISLAND_HEIGHT,

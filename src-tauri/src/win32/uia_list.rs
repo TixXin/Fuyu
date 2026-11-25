@@ -61,7 +61,7 @@ pub(crate) fn shows_qt_controls(window: HWND) -> bool {
     check().unwrap_or(false)
 }
 
-pub(super) unsafe fn automation() -> windows::core::Result<IUIAutomation> {
+pub(crate) unsafe fn automation() -> windows::core::Result<IUIAutomation> {
     unsafe {
         let automation: IUIAutomation =
             CoCreateInstance(&CUIAutomation8, None, CLSCTX_INPROC_SERVER)?;

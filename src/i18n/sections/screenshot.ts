@@ -17,6 +17,7 @@ export type ScreenshotText = {
   quickHints: Record<"copy" | "text" | "translate" | "long" | "record", string>;
   longShot: string;
   recordArea: string;
+  windowShadow: string;
   showKeys: string;
   long: {
     title: string;
@@ -100,6 +101,13 @@ export type ScreenshotText = {
     shelved: string;
     close: string;
   };
+  delay: {
+    countdown: (seconds: number) => string;
+    cancel: string;
+    menu: string;
+    option: (seconds: number) => string;
+    buttonHint: string;
+  };
   card: {
     copied: string;
     saved: string;
@@ -166,6 +174,7 @@ export const zhCN: ScreenshotText = {
   shelfOff: "文件中转已关闭",
   longShot: "长截图（自动往下滚动拼接，也可以自己滚）",
   recordArea: "录屏（3 秒后开始录这个区域，标注不会录进去）",
+  windowShadow: "导出透明背景与窗口阴影（PNG）",
   showKeys: "快捷键（?）",
   long: {
     title: "长截图",
@@ -271,6 +280,13 @@ export const zhCN: ScreenshotText = {
     shelved: "已放进文件中转",
     close: "关闭",
   },
+  delay: {
+    countdown: (seconds) => `${seconds} 秒后截图`,
+    cancel: "取消延时截图",
+    menu: "延时截图",
+    option: (seconds) => `${seconds} 秒后截图`,
+    buttonHint: "截图（右键可选延时）",
+  },
   card: {
     copied: "截图已复制",
     saved: "截图已保存",
@@ -337,6 +353,7 @@ export const en: ScreenshotText = {
   shelfOff: "The file shelf is off",
   longShot: "Long screenshot (scrolls and stitches; you can scroll yourself too)",
   recordArea: "Record this area (starts in 3 seconds; marks are not recorded)",
+  windowShadow: "Export with transparent background & window shadow (PNG)",
   showKeys: "Shortcuts (?)",
   long: {
     title: "Long screenshot",
@@ -441,6 +458,13 @@ export const en: ScreenshotText = {
     shelve: "Put on the file shelf",
     shelved: "Put on the file shelf",
     close: "Close",
+  },
+  delay: {
+    countdown: (seconds) => `Screenshot in ${seconds} s`,
+    cancel: "Cancel delayed screenshot",
+    menu: "Delayed screenshot",
+    option: (seconds) => `In ${seconds} s`,
+    buttonHint: "Screenshot (right-click for delay)",
   },
   card: {
     copied: "Screenshot copied",

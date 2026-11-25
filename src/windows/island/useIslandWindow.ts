@@ -28,13 +28,15 @@ function wait(ms: number) {
 }
 
 type InteractionSnapshot = {
-  mode: IslandMode;
+  mode: islandApi.NativeIslandMode;
   settings: IslandSettings;
   expandedHeight: number;
   expandedWidth: number;
   widestWidth: number;
   collapsedWidth: number;
   collapsedHeight: number;
+  previewWidth?: number;
+  previewHeight?: number;
   notchRingExtra: number;
   isTucked: boolean;
   isDimmed: boolean;
@@ -45,6 +47,9 @@ type InteractionSnapshot = {
 
 type IslandWindowOptions = {
   mode: IslandMode;
+  previewOpen?: boolean;
+  previewWidth?: number;
+  previewHeight?: number;
   isTucked: boolean;
   isDimmed?: boolean;
   gamePassthrough?: boolean;
@@ -63,6 +68,9 @@ type IslandWindowOptions = {
 
 export function useIslandWindow({
   mode,
+  previewOpen = false,
+  previewWidth,
+  previewHeight,
   isTucked,
   isDimmed = false,
   gamePassthrough = false,
@@ -96,6 +104,8 @@ export function useIslandWindow({
       widestWidth,
       collapsedWidth,
       collapsedHeight,
+      previewWidth: nextPreviewWidth,
+      previewHeight: nextPreviewHeight,
       notchRingExtra: nextNotchRingExtra,
       isTucked: nextIsTucked,
       isDimmed: nextIsDimmed,
@@ -135,6 +145,8 @@ export function useIslandWindow({
           tuckLipWidth: nextSettings.tuckLipWidth,
           gamePassthrough: nextGamePassthrough,
           collapsedHeight,
+          previewWidth: nextPreviewWidth,
+          previewHeight: nextPreviewHeight,
           notchRingExtra: nextNotchRingExtra,
           glassHidden,
         });
@@ -249,14 +261,17 @@ export function useIslandWindow({
 
   useEffect(() => {
     if (!ready || !queueRef.current) return;
+    const nativeMode: islandApi.NativeIslandMode = mode === "collapsed" && previewOpen ? "preview" : mode;
     const synced = queueRef.current.schedule({
-      mode,
+      mode: nativeMode,
       settings,
       expandedHeight: expandedIslandHeight,
       expandedWidth: expandedIslandWidth,
       widestWidth: widestIslandWidth,
       collapsedWidth: collapsedIslandWidth,
       collapsedHeight: collapsedIslandHeight,
+      previewWidth,
+      previewHeight,
       notchRingExtra,
       isTucked,
       isDimmed,
@@ -277,6 +292,9 @@ export function useIslandWindow({
     widestIslandWidth,
     collapsedIslandWidth,
     collapsedIslandHeight,
+    previewOpen,
+    previewWidth,
+    previewHeight,
     notchRingExtra,
     isTucked,
     isDimmed,

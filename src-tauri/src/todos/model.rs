@@ -40,6 +40,10 @@ pub struct TodoItem {
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recurrence: Option<TodoRecurrence>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deadline: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub carried_from: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub subtasks: Vec<TodoSubtask>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -81,6 +85,8 @@ pub struct ScheduledTodo {
     pub color: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recurrence: Option<TodoRecurrence>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deadline: Option<String>,
     #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<Hlc>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -145,6 +151,11 @@ pub(crate) fn validate(data: &TodosData) -> Result<(), String> {
         if !is_date(&todo.date) {
             return Err(format!("Scheduled todo {} has the date \"{}\".", todo.id, todo.date));
         }
+        if let Some(deadline) = &todo.deadline {
+            if !is_date(deadline) {
+                return Err(format!("Scheduled todo {} has the deadline \"{deadline}\".", todo.id));
+            }
+        }
     }
     for archive in &data.archives {
         if archive.date.is_empty() {
@@ -162,6 +173,16 @@ pub(crate) fn validate(data: &TodosData) -> Result<(), String> {
 
 fn check_todo(todo: &TodoItem) -> Result<(), String> {
     check_item(&todo.id, &todo.title)?;
+    if let Some(deadline) = &todo.deadline {
+        if !is_date(deadline) {
+            return Err(format!("Todo {} has the deadline \"{deadline}\".", todo.id));
+        }
+    }
+    if let Some(carried_from) = &todo.carried_from {
+        if !is_date(carried_from) {
+            return Err(format!("Todo {} has the carriedFrom date \"{carried_from}\".", todo.id));
+        }
+    }
     if todo.subtasks.len() > MAX_SUBTASKS {
         return Err(format!("Todo {} has more than {MAX_SUBTASKS} subtasks.", todo.id));
     }

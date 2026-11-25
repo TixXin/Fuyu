@@ -135,7 +135,7 @@ if (!automated) {
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-group__header .settings-link-button")].find((link) => link.textContent === "全部快捷键 ›")?.click(); });
     check(element(".settings-page__title").textContent === "快捷键", "A feature page's shortcut group links back to all shortcuts");
     await openPage("behavior");
-    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has two tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
+    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停|悬停预览", "Behavior has two tabs; opening is chosen from three picture cards, and page keys are no longer repeated here");
     const leaveSwitch = () => settingRow("鼠标移开后自动收起")?.querySelector<HTMLInputElement>("input");
     check(leaveSwitch()?.checked === false && !settingRow("鼠标移开后收起前等待"), "Click mode offers close-on-leave, off by default without the delay slider");
     await act(async () => { leaveSwitch()!.click(); }); check(leaveSwitch()?.checked === true && Boolean(settingRow("鼠标移开后收起前等待")) && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { clickCollapseOnLeave?: boolean }).clickCollapseOnLeave === true, "Turning close-on-leave on saves it and shows the collapse delay slider"); await act(async () => { leaveSwitch()!.click(); });
@@ -152,7 +152,7 @@ if (!automated) {
     await act(async () => { appleSwitch()!.click(); });
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
     await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|计时器页布局|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound, layout and break reminders");
-    await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && /^音量与亮度\|耳机与充电\|大写锁定(\|提示方式\|关掉大写时也提示\|点角标关掉大写)?\|摄像头和麦克风使用提示$/.test(texts(".settings-row__title")), "Volume, headphones, Caps Lock and camera alerts are one group on the System alerts tab, Caps Lock's options right under its switch");
+    await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && /^音量与亮度\|耳机与充电\|大写锁定(\|提示方式\|关掉大写时也提示\|点角标关掉大写(\|输密码时一直提醒\|数字锁定也提示)?)?\|摄像头和麦克风使用提示$/.test(texts(".settings-row__title")), "Volume, headphones, Caps Lock and camera alerts are one group on the System alerts tab, Caps Lock's options right under its switch");
     await openPage("general"); check(texts(".settings-group__title") === "启动与语言|网络代理" && !texts(".settings-row__title").includes("最小化按钮") && !texts(".settings-tabs__tab").includes("本机接口"), "General opens on startup, language and network proxy, without a Local API tab");
     const proxyModeRow = settingRow("代理模式");
     const proxyManualButton = [...(proxyModeRow?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === "手动代理");

@@ -67,8 +67,8 @@ use geometry::{
     grown_collapsed_height, max_expanded_height, max_expanded_width, monitor_for_island_position, nominal_position,
     out_at_top_after, should_apply_stage_geometry, stage_geometry_synced, stage_room, COLLAPSED_ISLAND_HEIGHT,
     MAX_ADJUSTED_COLLAPSED_WIDTH, MAX_CORNER_RADIUS, MIN_ADJUSTED_COLLAPSED_WIDTH,
-    MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS, MIN_EXPANDED_ISLAND_HEIGHT,
-    POSITION_ANIMATION_GENERATION,
+    MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS, MIN_EXPANDED_ISLAND_HEIGHT, MIN_PREVIEW_ISLAND_WIDTH,
+    POSITION_ANIMATION_GENERATION, PREVIEW_ISLAND_HEIGHT,
 };
 use glass::apply_glass_material;
 #[cfg(windows)]
@@ -191,6 +191,8 @@ pub fn set_island_interaction(
     tuck_lip_width: Option<f64>,
     game_passthrough: Option<bool>,
     collapsed_height: Option<f64>,
+    preview_width: Option<f64>,
+    preview_height: Option<f64>,
     notch_ring_extra: Option<f64>,
     glass_hidden: Option<bool>,
 ) -> Result<String, String> {
@@ -237,6 +239,16 @@ pub fn set_island_interaction(
                 collapsed_width.clamp(MIN_ADJUSTED_COLLAPSED_WIDTH, MAX_ADJUSTED_COLLAPSED_WIDTH);
         }
         state.collapsed_height = grown_collapsed_height(collapsed_height.unwrap_or(COLLAPSED_ISLAND_HEIGHT));
+        if let Some(width) = preview_width.filter(|w| w.is_finite()) {
+            state.preview_width = width.clamp(MIN_PREVIEW_ISLAND_WIDTH, widest_room);
+        } else {
+            state.preview_width = state.collapsed_width.max(MIN_PREVIEW_ISLAND_WIDTH).min(state.expanded_width.max(MIN_PREVIEW_ISLAND_WIDTH));
+        }
+        if let Some(height) = preview_height.filter(|h| h.is_finite()) {
+            state.preview_height = height.clamp(COLLAPSED_ISLAND_HEIGHT, 240.0);
+        } else {
+            state.preview_height = PREVIEW_ISLAND_HEIGHT;
+        }
         state.notch_ring_extra = notch::notch_ring_extra(notch_ring_extra);
         if state.custom_position.is_none() {
             state.custom_position = restored_custom_position;

@@ -15,6 +15,7 @@ pub(crate) enum ShortcutAction {
     Translate,
     Long,
     Fullscreen,
+    Delayed,
     Record,
     Pins,
 }
@@ -28,6 +29,7 @@ impl ShortcutAction {
             Self::Translate => Some(Mode::Translate),
             Self::Long => Some(Mode::Long),
             Self::Fullscreen => Some(Mode::Fullscreen),
+            Self::Delayed => None,
             Self::Record => Some(Mode::Record),
             Self::Pins => None,
         }

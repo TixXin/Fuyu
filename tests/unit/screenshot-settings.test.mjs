@@ -11,13 +11,16 @@ test("missing or broken screenshot settings fall back to Ctrl+Shift+digits, no P
   assert.deepEqual(normalizeScreenshotSettings(null), DEFAULT_SCREENSHOT_SETTINGS);
   assert.deepEqual(normalizeScreenshotSettings("x"), DEFAULT_SCREENSHOT_SETTINGS);
   assert.equal(DEFAULT_SCREENSHOT_SETTINGS.shortcuts.pins, "", "the global pins shortcut starts unset");
+  assert.equal(DEFAULT_SCREENSHOT_SETTINGS.shortcuts.delayed, "", "the delayed screenshot shortcut starts unset");
+  assert.equal(DEFAULT_SCREENSHOT_SETTINGS.delaySeconds, 3);
   assert.equal(DEFAULT_SCREENSHOT_SETTINGS.printScreen, false);
 });
 
 test("a cleared shortcut stays off, odd values are replaced, and the folder is trimmed", () => {
   const settings = normalizeScreenshotSettings({
-    shortcuts: { region: "Alt+Q", copy: "", text: 3, pins: "x".repeat(80) },
+    shortcuts: { region: "Alt+Q", copy: "", text: 3, delayed: "Ctrl+Shift+9", pins: "x".repeat(80) },
     printScreen: true,
+    delaySeconds: 10,
     saveFolder: "  D:\\Shots  ",
     cardSeconds: 9,
     version: 2,
@@ -25,7 +28,10 @@ test("a cleared shortcut stays off, odd values are replaced, and the folder is t
   assert.equal(settings.shortcuts.region, "Alt+Q");
   assert.equal(settings.shortcuts.copy, "");
   assert.equal(settings.shortcuts.text, "Ctrl+Shift+3");
+  assert.equal(settings.shortcuts.delayed, "Ctrl+Shift+9");
   assert.equal(settings.shortcuts.pins, "");
+  assert.equal(settings.delaySeconds, 10);
+  assert.equal(normalizeScreenshotSettings({ delaySeconds: 7 }).delaySeconds, 3);
   assert.equal(settings.printScreen, true);
   assert.equal(settings.saveFolder, "D:\\Shots");
   assert.equal(settings.cardSeconds, 3);
@@ -42,7 +48,7 @@ test("a cleared shortcut stays off, odd values are replaced, and the folder is t
 });
 
 test("the native side gets every action in order, and an empty folder means the default", () => {
-  assert.deepEqual(shortcutConfig(DEFAULT_SCREENSHOT_SETTINGS).map(({ action }) => action), ["region", "copy", "text", "translate", "long", "record", "fullscreen", "pins"]);
+  assert.deepEqual(shortcutConfig(DEFAULT_SCREENSHOT_SETTINGS).map(({ action }) => action), ["region", "copy", "text", "translate", "long", "record", "fullscreen", "delayed", "pins"]);
   assert.equal(saveFolderOf(DEFAULT_SCREENSHOT_SETTINGS), undefined);
   assert.equal(saveFolderOf({ ...DEFAULT_SCREENSHOT_SETTINGS, saveFolder: "D:\\Shots" }), "D:\\Shots");
 });

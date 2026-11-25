@@ -5,6 +5,7 @@ mod blank;
 mod capture;
 #[cfg_attr(target_os = "macos", path = "clipboard_macos.rs")]
 mod clipboard;
+mod delay;
 #[cfg_attr(target_os = "macos", path = "front_window_macos.rs")]
 mod front_window;
 mod history;
@@ -25,6 +26,7 @@ mod source;
 mod stitch;
 #[cfg_attr(target_os = "macos", path = "targets_macos.rs")]
 mod targets;
+pub(crate) mod window_shadow;
 #[cfg(test)]
 mod tests;
 
@@ -65,6 +67,7 @@ pub(crate) fn init(app: &AppHandle) {
 }
 
 pub(crate) fn cancel(app: &AppHandle) {
+    delay::cancel(app);
     session::end(app);
 }
 
@@ -80,8 +83,12 @@ pub async fn screenshot_configure(
     print_screen: Option<bool>,
     history_days: Option<u32>,
     history_text: Option<bool>,
+    delay_seconds: Option<u8>,
 ) {
     hotkeys::configure(enabled, shortcuts, print_screen);
+    if let Some(seconds) = delay_seconds {
+        delay::set_default_seconds(seconds);
+    }
     if let Some(read) = history_text {
         history_text::set_enabled(read);
     }
@@ -117,6 +124,13 @@ pub(crate) fn start_from_tray(app: &AppHandle) {
     });
 }
 
+pub(crate) fn start_delayed_from_tray(app: &AppHandle, seconds: Option<u8>) {
+    if !is_enabled() {
+        return;
+    }
+    delay::start(app, seconds);
+}
+
 #[tauri::command]
 pub fn screenshot_shortcut_status() -> Vec<shortcuts::ShortcutStatus> {
     hotkeys::status()
@@ -127,8 +141,28 @@ pub fn screenshot_start(app: AppHandle, mode: session::Mode) -> Result<(), Strin
     if !is_enabled() {
         return Err("Screenshots are turned off in Settings.".to_string());
     }
+    delay::cancel(&app);
     session::start(&app, mode);
     Ok(())
+}
+
+#[tauri::command]
+pub fn screenshot_start_delayed(app: AppHandle, seconds: Option<u8>) -> Result<(), String> {
+    if !is_enabled() {
+        return Err("Screenshots are turned off in Settings.".to_string());
+    }
+    delay::start(&app, seconds);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn screenshot_cancel_delay(app: AppHandle) -> bool {
+    delay::cancel(&app)
+}
+
+#[tauri::command]
+pub fn screenshot_delay_status() -> delay::DelayState {
+    delay::status()
 }
 
 #[tauri::command]
@@ -197,6 +231,28 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
     wait_for_capture().await;
     let (width, height, rgba) = session::selection(window.label(), PixelRect { x: left, y: top, width, height }).ok_or_else(|| "Nothing is selected.".to_string())?;
     let mut picture = Picture { width, height, rgba };
+    let window_shadow = header("x-window-shadow") == Some("true") && matches!(action, Action::Copy | Action::Save | Action::Pin);
+    let native_handle = if window_shadow { number("x-window-id").and_then(session::native_window) } else { None };
+    let scale = session::scale(window.label()).unwrap_or_else(|| window.scale_factor().unwrap_or(1.0));
+    let mut used_native_shadow = false;
+    if window_shadow {
+        if body.is_empty() {
+            if let Some(handle) = native_handle {
+                if let Some((w, h, rgba)) = tauri::async_runtime::spawn_blocking(move || capture::window_with_native_shadow(handle, scale)).await.ok().flatten() {
+                    picture = Picture { width: w, height: h, rgba };
+                    used_native_shadow = true;
+                } else if let Some((w, h, rgba)) = tauri::async_runtime::spawn_blocking(move || capture::window_image(handle, scale)).await.ok().flatten() {
+                    picture = Picture { width: w, height: h, rgba };
+                }
+            }
+        } else if let Some(handle) = native_handle {
+            if let Some((w, h, rgba)) = tauri::async_runtime::spawn_blocking(move || capture::window_image(handle, scale)).await.ok().flatten() {
+                if (w, h) == (picture.width, picture.height) {
+                    picture = Picture { width: w, height: h, rgba };
+                }
+            }
+        }
+    }
     if !body.is_empty() {
         let patch = PixelRect {
             x: number("x-patch-left").unwrap_or(0),
@@ -207,6 +263,9 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
         if !output::lay_over(&mut picture, patch, body) {
             return Err("The annotated pixels do not fit the selection.".to_string());
         }
+    }
+    if window_shadow && !used_native_shadow {
+        picture = window_shadow::add_shadow(&picture, scale);
     }
     match action {
         Action::Long => {
@@ -455,6 +514,9 @@ pub(crate) fn percent_decode(text: &str) -> Option<String> {
 
 #[tauri::command]
 pub fn screenshot_cancel(app: AppHandle) {
+    if delay::cancel(&app) {
+        return;
+    }
     if long::end_with(long::Ending::Cancel) {
         return;
     }
@@ -560,6 +622,9 @@ macro_rules! tauri_commands {
             crate::screenshot::screenshot_configure,
             crate::screenshot::screenshot_shortcut_status,
             crate::screenshot::screenshot_start,
+            crate::screenshot::screenshot_start_delayed,
+            crate::screenshot::screenshot_cancel_delay,
+            crate::screenshot::screenshot_delay_status,
             crate::screenshot::screenshot_find_words,
             crate::screenshot::qr::screenshot_read_qr,
             crate::screenshot::screenshot_long_bar,

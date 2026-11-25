@@ -100,8 +100,10 @@ export function TodoIslandTasks({
     <TodoIslandRow
       key={todo.id}
       todo={todo}
+      currentDate={currentDate}
       showProject={!inGroup && filter === null}
       showElapsed={prefs.showElapsed}
+      showCarriedDays={prefs.showCarriedDays}
       editable={editable}
       isActive={editable && (todo.id === activeTodoId || isInProgress(todo)) && !todo.completed}
       canReorder={canReorder}

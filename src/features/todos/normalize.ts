@@ -4,7 +4,7 @@ import type { FocusCreditKind } from "./useTodoFocusTimer.ts";
 import { getLocalDateString } from "../../utils/date.ts";
 import { isInProgress, withoutStart } from "./activeTodos.ts";
 import { readProject } from "./project.ts";
-import { normalizeScheduledTodo, sortScheduledTodos } from "./schedule.ts";
+import { isDateString, normalizeScheduledTodo, sortScheduledTodos } from "./schedule.ts";
 import { readTags } from "./tags.ts";
 import { getLogicalTodoDate } from "./todoPrefs.ts";
 
@@ -60,6 +60,7 @@ export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
     createdAt: typeof todo.createdAt === "number" ? todo.createdAt : Date.now(),
     ...withProject(todo.project),
     ...readTags(todo),
+    ...(isDateString(todo.carriedFrom) ? { carriedFrom: todo.carriedFrom } : {}),
     ...(typeof todo.startedAt === "number" && Number.isFinite(todo.startedAt) && !todo.completed ? { startedAt: todo.startedAt } : {}),
     ...normalizeTodoSubtasks(todo.subtasks),
     ...normalizeTodoNote(todo.note),

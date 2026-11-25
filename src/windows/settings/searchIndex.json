@@ -1167,6 +1167,42 @@
       "page": "islandLayout",
       "zh-CN": {
         "group": "",
+        "title": "收起条电池显示",
+        "description": "选择在收起条电池芯片上显示电量百分比还是剩余/充满时间（读不到估时时自动退回百分比）。",
+        "options": [
+          "电量百分比",
+          "剩余 / 充满时间"
+        ]
+      },
+      "en": {
+        "group": "",
+        "title": "Collapsed battery display",
+        "description": "Show either battery percentage or remaining / charge time in the collapsed chip (falls back to percentage when unavailable).",
+        "options": [
+          "Percentage",
+          "Time left"
+        ]
+      },
+      "since": "next"
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "显示电量曲线",
+        "description": "在中等尺寸电池组件底部显示最近一段时间的电量变化曲线，可悬停或用方向键查看采样点。"
+      },
+      "en": {
+        "group": "",
+        "title": "Show battery curve",
+        "description": "Display recent battery history at the bottom of the medium battery widget; hover or use arrow keys to inspect samples."
+      },
+      "since": "next"
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
         "title": "显示会话数",
         "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
       },
@@ -1522,6 +1558,20 @@
         "group": "Opening",
         "title": "Hover time before switching"
       }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "展开",
+        "title": "页头滚轮切页",
+        "description": "在展开面板顶部的图标栏上滚动滚轮切换上一页 / 下一页，不影响内容区自己的滚动"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Scroll header to switch pages",
+        "description": "Scroll over the top page icon bar of the open panel to switch pages without interfering with page scrolling"
+      },
+      "since": "next"
     },
     {
       "page": "behavior",
@@ -2157,6 +2207,20 @@
       "page": "todos",
       "zh-CN": {
         "group": "小岛显示与排序",
+        "title": "显示已顺延天数",
+        "description": "顺延超过 1 天的待办在行尾标出来，例如「已顺延 3 天」。"
+      },
+      "en": {
+        "group": "Island display & sorting",
+        "title": "Show carried-over days",
+        "description": "Shows a subtle badge (for example, Carried 3d) on tasks carried over for more than one day."
+      },
+      "since": "next"
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "小岛显示与排序",
         "title": "多任务流动"
       },
       "en": {
@@ -2340,6 +2404,20 @@
         "title": "Remind when scheduled tasks are due",
         "description": "Shows one island reminder when a scheduled task reaches its day and joins today's list."
       }
+    },
+    {
+      "page": "todosReminders",
+      "zh-CN": {
+        "group": "到点和到期",
+        "title": "截止日提醒",
+        "description": "设了截止日的未完成待办快到时在岛上提醒一次。"
+      },
+      "en": {
+        "group": "Timed and due",
+        "title": "Deadline reminder",
+        "description": "Shows one island reminder when an unfinished task with a deadline is coming due."
+      },
+      "since": "next"
     },
     {
       "page": "todosReminders",
@@ -3667,6 +3745,20 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "截图时",
+        "title": "延时截图时长",
+        "description": "按延时截图快捷键时等待的秒数，方便打开下拉菜单或悬停提示后再冻结屏幕。也可以在岛上剪刀按钮或托盘卡片右键临时选 3 / 5 / 10 秒。"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Delayed screenshot timer",
+        "description": "How many seconds to wait before freezing the screen when using the delayed shortcut, so menus or tooltips can open first. Right-click the scissors button on the island or the tray card to pick 3, 5 or 10 s."
+      },
+      "since": "next"
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "截完之后",
         "title": "保存位置",
         "description": "Ctrl+S 和贴图的「保存」放到这里，文件名带时间。要写完整路径，例如 D:\\截图；留空就是「图片 › 浮屿截图」。"
@@ -3992,6 +4084,32 @@
         "group": "Shown on the island",
         "title": "Click the badge to turn it off",
         "description": "Place the badge in Island layout"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "输密码时一直提醒",
+        "description": "别的程序的密码框有焦点、大写又开着时，提示不自动消失"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Keep alerting in password fields",
+        "description": "Stay visible while another app's password box is focused and Caps Lock is on"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "数字锁定也提示",
+        "description": "Num Lock 开关时同样提示"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Also alert for Num Lock",
+        "description": "Show the same brief flash when Num Lock is toggled"
       }
     },
     {

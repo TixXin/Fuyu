@@ -1,7 +1,9 @@
 import { getLocalDateString } from "../../utils/date.ts";
+import { effectiveCreatedAt, type TodoDeadlineReminder } from "./deadline.ts";
 import { addDays } from "./schedule.ts";
 import type { TodoItem, TodoPriority } from "./types.ts";
 
+export type { TodoDeadlineReminder };
 export type TodoSortBy = "manual" | "priority" | "createdDesc";
 export type TodoInsertPosition = "bottom" | "top";
 export type TodoDayStartHour = 0 | 2 | 3 | 4 | 5 | 6;
@@ -38,6 +40,8 @@ export type TodoPrefs = {
   recurrenceHolidayAware: boolean;
   noteTemplate: string;
   showWeekSummary: boolean;
+  showCarriedDays: boolean;
+  deadlineReminder: TodoDeadlineReminder;
 };
 
 export const TODO_SORT_MODES: readonly TodoSortBy[] = ["manual", "priority", "createdDesc"];
@@ -47,6 +51,7 @@ export const TODO_DONE_DISPLAYS: readonly TodoDoneDisplay[] = ["fold", "inline",
 export const TODO_ARCHIVE_RETENTION_DAYS: readonly TodoArchiveRetentionDays[] = [0, 90, 180, 365];
 export const TODO_REMINDER_LEAD_MINUTES: readonly TodoReminderLeadMinutes[] = [0, 5, 10, 15, 30];
 export const TODO_DUE_REMINDER_SCOPES: readonly TodoDueReminderScope[] = ["off", "high", "highMedium", "all"];
+export const TODO_DEADLINE_REMINDERS: readonly TodoDeadlineReminder[] = ["off", "sameDay", "dayBefore"];
 export const TODO_DEFAULT_PRIORITIES: readonly TodoDefaultPriority[] = ["none", "low", "medium", "high"];
 export const DEFAULT_WRAP_UP_REMINDER_TIME = "18:00";
 export const MAX_NOTE_TEMPLATE_LENGTH = 2000;
@@ -81,6 +86,8 @@ export const DEFAULT_TODO_PREFS: TodoPrefs = {
   recurrenceHolidayAware: true,
   noteTemplate: "",
   showWeekSummary: true,
+  showCarriedDays: true,
+  deadlineReminder: "dayBefore",
 };
 
 const MIN_REAL_TIMESTAMP_MS = 946_684_800_000;
@@ -141,6 +148,8 @@ export function normalizeTodoPrefs(value: unknown): TodoPrefs {
     recurrenceHolidayAware: pickBoolean(saved.recurrenceHolidayAware, DEFAULT_TODO_PREFS.recurrenceHolidayAware),
     noteTemplate: pickText(saved.noteTemplate, MAX_NOTE_TEMPLATE_LENGTH),
     showWeekSummary: pickBoolean(saved.showWeekSummary, DEFAULT_TODO_PREFS.showWeekSummary),
+    showCarriedDays: pickBoolean(saved.showCarriedDays, DEFAULT_TODO_PREFS.showCarriedDays),
+    deadlineReminder: pickOne(TODO_DEADLINE_REMINDERS, saved.deadlineReminder, DEFAULT_TODO_PREFS.deadlineReminder),
   };
 }
 
@@ -159,13 +168,18 @@ function priorityRank(priority: TodoPriority | undefined): number {
   return 3;
 }
 
-export function sortTodos<T extends Pick<TodoItem, "priority" | "createdAt">>(todos: readonly T[], sortBy: TodoSortBy): T[] {
+export function sortTodos<T extends Pick<TodoItem, "priority" | "createdAt" | "carriedFrom">>(todos: readonly T[], sortBy: TodoSortBy): T[] {
   if (sortBy === "manual") return [...todos];
   const indexed = todos.map((todo, index) => ({ todo, index }));
   if (sortBy === "priority") {
     indexed.sort((left, right) => priorityRank(left.todo.priority) - priorityRank(right.todo.priority) || left.index - right.index);
   } else {
-    indexed.sort((left, right) => right.todo.createdAt - left.todo.createdAt || left.index - right.index);
+    indexed.sort(
+      (left, right) =>
+        effectiveCreatedAt(right.todo) - effectiveCreatedAt(left.todo) ||
+        right.todo.createdAt - left.todo.createdAt ||
+        left.index - right.index,
+    );
   }
   return indexed.map((entry) => entry.todo);
 }

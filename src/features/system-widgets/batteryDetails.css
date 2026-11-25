@@ -1,0 +1,133 @@
+.sys-battery__detail {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.sys-battery__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sys-battery__summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+  gap: 1px;
+}
+
+.sys-battery__eta {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--widget-text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sys-battery__power {
+  color: var(--widget-text-3);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sys-battery__metrics {
+  overflow: hidden;
+  color: var(--widget-text-3);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sys-battery__curve-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+  border-radius: 6px;
+  outline: none;
+}
+
+.sys-battery__curve-wrap:focus-visible {
+  box-shadow: 0 0 0 1.5px var(--color-accent);
+}
+
+.sys-battery__curve {
+  width: 100%;
+  height: 36px;
+  cursor: crosshair;
+}
+
+.sys-battery__curve-line {
+  fill: none;
+  stroke: var(--mint-text);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sys-battery__curve-guide {
+  stroke: rgba(var(--overlay-rgb, 255, 255, 255), 0.3);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.sys-battery__curve-dot {
+  fill: var(--mint-text);
+}
+
+.sys-battery__curve-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--widget-text-3);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sys-battery__curve-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battery-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  box-sizing: border-box;
+  max-width: 58px;
+  height: 18px;
+  padding: 0 5px;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: rgba(var(--island-ink-rgb, 241, 240, 246), 0.88);
+  background: rgba(var(--island-ink-rgb, 241, 240, 246), 0.1);
+  border-radius: var(--radius-pill);
+}
+
+.battery-chip__text {
+  font-variant-numeric: tabular-nums;
+}
+
+.battery-chip[data-low] {
+  color: var(--error-text);
+  background: color-mix(in srgb, var(--error-text) 18%, transparent);
+}
+
+.battery-chip[data-charging] {
+  color: var(--mint-text);
+}

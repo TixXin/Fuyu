@@ -48,18 +48,20 @@ const NO_SLOTS: CollapsedSlots = {};
 const NO_SOURCES = {};
 const OPENS_BAR = "data-opens-bar";
 
-type BarUnit = { key: string; ids: string[]; node: ReactNode; movable: boolean };
+type BarUnit = { key: string; ids: string[]; node: ReactNode; movable: boolean; keep?: boolean };
+
+const KEEP_IN_NOTCH = new Set(["caps-lock"]);
 
 function barUnits(items: readonly CollapsedBarItem[], placed: ReadonlySet<string>): BarUnit[] {
   const units: BarUnit[] = [];
   for (let index = 0; index < items.length; index += 1) {
     const item = items[index];
-    if (!item.group) {
-      units.push({ key: item.id, ids: [item.id], node: item.node, movable: !placed.has(item.id) });
+    if (!item.group || KEEP_IN_NOTCH.has(item.id)) {
+      units.push({ key: item.id, ids: [item.id], node: item.node, movable: !placed.has(item.id), keep: KEEP_IN_NOTCH.has(item.id) });
       continue;
     }
     const group = [item];
-    while (items[index + 1]?.group === item.group) group.push(items[(index += 1)]);
+    while (items[index + 1]?.group === item.group && !KEEP_IN_NOTCH.has(items[index + 1].id)) group.push(items[(index += 1)]);
     units.push({ key: group[0].id, ids: group.map((member) => member.id), node: <div className="island__gauge-slot">{group.map((member) => <Fragment key={member.id}>{member.node}</Fragment>)}</div>, movable: group.every((member) => !placed.has(member.id)) });
   }
   return units;

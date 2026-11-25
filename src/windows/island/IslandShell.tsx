@@ -85,6 +85,10 @@ export type IslandShellProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
+  wheelSwitchPage?: boolean;
+  preview?: boolean;
+  previewWidth?: number;
+  previewContent?: ReactNode;
   fuyuTabIcon?: boolean;
   overlay?: ReactNode;
   resize?: ReactNode;
@@ -110,29 +114,18 @@ function useCollapsedPrewarm(isExpanded: boolean) {
   const timerRef = useRef<number | null>(null);
 
   const clearTimer = useCallback(() => {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+    if (timerRef.current !== null) { window.clearTimeout(timerRef.current); timerRef.current = null; }
   }, []);
-
   const wake = useCallback(() => {
     if (isExpanded) return;
     clearTimer();
     setIsPrewarmed(true);
-    timerRef.current = window.setTimeout(() => {
-      timerRef.current = null;
-      setIsPrewarmed(false);
-    }, PREWARM_HOLD_MS);
+    timerRef.current = window.setTimeout(() => { timerRef.current = null; setIsPrewarmed(false); }, PREWARM_HOLD_MS);
   }, [clearTimer, isExpanded]);
-
   const leave = useCallback(() => {
     if (isExpanded) return;
     clearTimer();
-    timerRef.current = window.setTimeout(() => {
-      timerRef.current = null;
-      setIsPrewarmed(false);
-    }, PREWARM_LEAVE_MS);
+    timerRef.current = window.setTimeout(() => { timerRef.current = null; setIsPrewarmed(false); }, PREWARM_LEAVE_MS);
   }, [clearTimer, isExpanded]);
 
   if (isExpanded && isPrewarmed) {
@@ -192,6 +185,10 @@ export function IslandShell({
   pageDigitModifiers,
   hoverSwitchPage,
   hoverSwitchDelayMs,
+  wheelSwitchPage = false,
+  preview = false,
+  previewWidth,
+  previewContent,
   fuyuTabIcon = false,
   overlay,
   resize,
@@ -225,11 +222,12 @@ export function IslandShell({
   const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
   useEffect(() => setPanelAwake(isExpanded), [isExpanded]);
   useShellMotionGuard(shellRef, mode);
-  useHoverGrow(shellRef, !isExpanded && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow, hoverBounce);
+  useHoverGrow(shellRef, !isExpanded && !preview && !side && !isTucked && !isDimmed && !(isLiquidGlass && nativeGlassState === "active"), hoverGrow, hoverBounce);
   const narrowTuck = isTucked && !side && !notch && !isExpanded && tuckLipWidth > 0;
   const className = [
     "island",
     `island--${mode}`,
+    preview && !isExpanded ? "island--preview" : "",
     `island--${page}`,
     `island--appearance-${appearanceMode}`,
     isPreparing && !isExpanded ? "island--preparing" : "",
@@ -264,6 +262,7 @@ export function IslandShell({
           ...ISLAND_OUTLINE_STYLE,
           ...(side ? { "--island-side-column-height": `${sideLayout.height}px` } : {}),
           ...(narrowTuck ? { "--island-tuck-width": `${tuckLipWidth}px` } : {}),
+          ...(previewWidth ? { "--preview-island-width": `${previewWidth}px` } : {}),
         } as CSSProperties}
         aria-label={collapsedLabel}
         onClick={(event) => {
@@ -325,6 +324,7 @@ export function IslandShell({
             onWindowDragStart={onWindowDragStart}
             onTuck={onTuck}
           />}
+          {part !== "panel" && preview && !isExpanded && previewContent}
 
           {part !== "bar" && <div
             id="island-panel"
@@ -362,6 +362,7 @@ export function IslandShell({
               pageDigitModifiers={pageDigitModifiers}
               hoverSwitchPage={hoverSwitchPage}
               hoverSwitchDelayMs={hoverSwitchDelayMs}
+              wheelSwitchPage={wheelSwitchPage}
               fuyuTabIcon={fuyuTabIcon}
             />
             <div ref={contentRef} className="island__content">

@@ -35,7 +35,7 @@ export const SCREENSHOT_SHORTCUT_STATUS_EVENT = "screenshot-shortcut-status";
 export type ShortcutStatus = { action: ShortcutAction; problem: "invalid" | "duplicate" | "taken" };
 
 export function configureScreenshot(enabled: boolean, settings: ScreenshotSettings) {
-  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen, historyDays: settings.historyDays, historyText: settings.historyText });
+  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen, historyDays: settings.historyDays, historyText: settings.historyText, delaySeconds: settings.delaySeconds });
 }
 
 export function getScreenshotShortcutStatus() {
@@ -78,7 +78,7 @@ export function quickAction(mode: ScreenshotMode | undefined): QuickAction | nul
   return mode === "copy" || mode === "text" || mode === "translate" || mode === "long" || mode === "record" ? mode : null;
 }
 
-export type SaveTarget = { folder?: string; folderName: string; record?: RecordSettings };
+export type SaveTarget = { folder?: string; folderName?: string; record?: RecordSettings; windowShadow?: number };
 
 function rawBytes(image: ImageData) {
   return new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength);
@@ -102,7 +102,11 @@ export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | 
     headers["x-patch-height"] = String(patch.image.height);
   }
   if (save?.folder) headers["x-folder"] = encodeURIComponent(save.folder);
-  if (save) headers["x-folder-name"] = encodeURIComponent(save.folderName);
+  if (save?.folderName) headers["x-folder-name"] = encodeURIComponent(save.folderName);
+  if (save?.windowShadow !== undefined) {
+    headers["x-window-shadow"] = "true";
+    headers["x-window-id"] = String(save.windowShadow);
+  }
   if (save?.record) {
     headers["x-format"] = save.record.format;
     headers["x-fps"] = String(save.record.fps);

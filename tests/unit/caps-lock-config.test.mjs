@@ -2,12 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readCapsLockConfig, shouldFlash, showsBadge } from "../../src/features/caps-lock/capsLockConfig.ts";
 
-const DEFAULTS = { mode: "both", offAlert: true, badgeClick: true };
+const DEFAULTS = { mode: "both", offAlert: true, badgeClick: true, passwordWarn: true, numLock: false };
 
 test("a missing or broken caps-lock config falls back to flash + badge with both switches on", () => {
   assert.deepEqual(readCapsLockConfig({}), DEFAULTS);
   assert.deepEqual(readCapsLockConfig({ mode: "loud", offAlert: "no", badgeClick: 1 }), DEFAULTS);
-  assert.deepEqual(readCapsLockConfig({ mode: "badge", offAlert: false, badgeClick: false }), { mode: "badge", offAlert: false, badgeClick: false });
+  assert.deepEqual(
+    readCapsLockConfig({ mode: "badge", offAlert: false, badgeClick: false }),
+    { mode: "badge", offAlert: false, badgeClick: false, passwordWarn: true, numLock: false },
+  );
 });
 
 test("a change made while asleep never flashes, only the key does", () => {

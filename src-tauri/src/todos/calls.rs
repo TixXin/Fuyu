@@ -66,6 +66,15 @@ fn add_focus_minutes(todo: &mut TodoItem, asked: u64, now: u64) {
     todo.focused_at = Some(Number::from(now));
 }
 
+fn read_deadline(value: Option<&Value>) -> Result<Option<String>, CallError> {
+    match value {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(date)) if date.trim().is_empty() => Ok(None),
+        Some(Value::String(date)) if is_date(date) => Ok(Some(date.clone())),
+        Some(_) => Err(bad("\"deadline\" must look like YYYY-MM-DD.")),
+    }
+}
+
 fn read_title(value: Option<&Value>) -> Option<String> {
     let title = value?.as_str()?.trim();
     (!title.is_empty() && title.encode_utf16().count() <= MAX_TITLE_LENGTH).then(|| title.to_string())
@@ -93,6 +102,7 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
             let title = read_title(input.get("title")).ok_or_else(title_error)?;
             let project = read_project(input.get("project"))?;
             let note = read_note(input.get("note"))?;
+            let deadline = read_deadline(input.get("deadline"))?;
             let date = match input.get("date") {
                 None => None,
                 Some(Value::String(date)) if is_date(date) => Some(date.clone()),
@@ -102,7 +112,7 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
             match date {
                 Some(date) if date < data.date => Err(bad(format!("\"date\" cannot be before the list's day ({}).", data.date))),
                 Some(date) if date > data.date => {
-                    let todo = ScheduledTodo { id: id.to_string(), title, date, created_at: Number::from(now), project, priority: None, color: None, recurrence: None, updated_at: None, device_id: None };
+                    let todo = ScheduledTodo { id: id.to_string(), title, date, created_at: Number::from(now), project, priority: None, color: None, recurrence: None, deadline, updated_at: None, device_id: None };
                     next.scheduled.push(todo.clone());
                     sort_scheduled(&mut next.scheduled);
                     changed(json!(todo), next)
@@ -118,6 +128,8 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
                         priority: None,
                         color: None,
                         recurrence: None,
+                        deadline,
+                        carried_from: None,
                         subtasks: Vec::new(),
                         note,
                         focus_minutes: None,
@@ -137,6 +149,9 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
             let mut todo = data.todos[index].clone();
             if input.contains_key("title") {
                 todo.title = read_title(input.get("title")).ok_or_else(title_error)?;
+            }
+            if input.contains_key("deadline") {
+                todo.deadline = read_deadline(input.get("deadline"))?;
             }
             match input.get("completed") {
                 None => {}

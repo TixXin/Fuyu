@@ -65,6 +65,16 @@ pub(super) fn area((x, y, width, height): (i32, i32, u32, u32), scale: f64) -> O
     screen_capture::capture(rect, scale, Leave::OwnWindows).map(|shot| (shot.width, shot.height, shot.rgba))
 }
 
+pub(super) fn window_image(window_id: u64, scale: f64) -> Option<(u32, u32, Vec<u8>)> {
+    let id = u32::try_from(window_id).ok()?;
+    screen_capture::capture_window(id, scale, true).map(|shot| (shot.width, shot.height, shot.rgba))
+}
+
+pub(super) fn window_with_native_shadow(window_id: u64, scale: f64) -> Option<(u32, u32, Vec<u8>)> {
+    let id = u32::try_from(window_id).ok()?;
+    screen_capture::capture_window(id, scale, false).map(|shot| (shot.width, shot.height, shot.rgba))
+}
+
 pub(super) fn units_per_css(_scale: f64) -> f64 {
     1.0
 }

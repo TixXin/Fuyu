@@ -58,6 +58,10 @@ pub(crate) fn is_caps_lock_on() -> bool {
     CGEventSource::flags_state(CGEventSourceStateID::CombinedSessionState).contains(CGEventFlags::MaskAlphaShift)
 }
 
+pub(crate) fn is_num_lock_on() -> bool {
+    false
+}
+
 pub(crate) fn turn_off_caps_lock() -> bool {
     let service = unsafe { IOServiceGetMatchingService(0, IOServiceMatching(HID_SYSTEM.as_ptr().cast())) };
     if service == 0 {

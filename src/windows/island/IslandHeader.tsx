@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type WheelEvent } from "react";
 import { Bot } from "lucide-react";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
@@ -7,6 +7,7 @@ import { PluginIcon } from "../../features/plugin-kernel/PluginIcon";
 import { useTranslation } from "../../i18n";
 import { shortcutLabel } from "../../lib/shortcut/shortcut";
 import { headerDotPages, isPageEnabled, isPageShown, pageShortcutLabel, pageShortcutOrder, type IslandFeatures } from "./features";
+import { createWheelPageSwitchTracker, normalizeWheelDelta, stepPageIndex } from "./wheelPageSwitch";
 import { headerSlot, TRAILING_HEADER_IDS, withShortcut, type IslandHeaderContext } from "./slots/header";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
@@ -48,6 +49,7 @@ type IslandHeaderProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
+  wheelSwitchPage?: boolean;
   fuyuTabIcon?: boolean;
   onWindowDragStart: () => void;
 };
@@ -70,6 +72,7 @@ export function IslandHeader({
   pageDigitModifiers,
   hoverSwitchPage,
   hoverSwitchDelayMs,
+  wheelSwitchPage = false,
   fuyuTabIcon = false,
   onWindowDragStart,
 }: IslandHeaderProps) {
@@ -78,6 +81,8 @@ export function IslandHeader({
   const { hints } = useIslandContributed();
   const editing = usePanelEditing() !== null;
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage && !editing, hoverSwitchDelayMs, page, onPageChange);
+  const wheelTrackerRef = useRef<ReturnType<typeof createWheelPageSwitchTracker> | null>(null);
+  if (wheelTrackerRef.current === null) wheelTrackerRef.current = createWheelPageSwitchTracker();
   const spotlightOf = useHeaderSpotlight();
   const { didDragRef, prepareWindowDrag, cancelWindowDrag } = useWindowDragGesture(false, onWindowDragStart);
   const pages = useSlotEntries(pageSlot);
@@ -234,10 +239,25 @@ export function IslandHeader({
 
   const hasStaticNotchTitle = !agentsShown || showTitle;
 
+  const handleHeaderWheel = (event: WheelEvent<HTMLElement>) => {
+    if (!wheelSwitchPage || !isExpanded || editing || shortcutOrder.length <= 1) return;
+    const step = wheelTrackerRef.current?.feed(normalizeWheelDelta(event.deltaY, event.deltaX, event.deltaMode), performance.now()) ?? 0;
+    if (step === 0) return;
+    const currentIndex = shortcutOrder.indexOf(page);
+    if (currentIndex < 0) return;
+    const nextIndex = stepPageIndex(currentIndex, step, shortcutOrder.length);
+    if (nextIndex !== currentIndex) {
+      event.preventDefault();
+      event.stopPropagation();
+      onPageChange(shortcutOrder[nextIndex]);
+    }
+  };
+
   return (
     <header
       ref={headerRef}
       className="island__header"
+      onWheel={handleHeaderWheel}
       onPointerDown={prepareWindowDrag}
       onPointerUp={cancelWindowDrag}
       onPointerCancel={cancelWindowDrag}

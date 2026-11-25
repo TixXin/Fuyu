@@ -547,3 +547,37 @@ fn duplicate_pin_keys_resolve_by_hlc_and_sensitive_entries_never_leave_or_get_ov
     assert_eq!(kept_private["note"], "local private");
     assert_eq!(kept_private["pinKey"], "P");
 }
+
+#[test]
+fn todo_deadline_and_carried_from_survive_two_device_sync() {
+    let (folder, mut a, mut b) = pair("todo-deadline-carried");
+    let first = a.stamp();
+    let mut item = todo("t1", "Finish slides", &first);
+    item["deadline"] = json!("2026-11-28");
+    item["carriedFrom"] = json!("2026-11-22");
+    let mut sched = todo("s1", "File tax", &first);
+    sched["date"] = json!("2026-11-26");
+    sched["deadline"] = json!("2026-11-30");
+    a.todos.data["todos"] = json!([item]);
+    a.todos.data["scheduled"] = json!([sched]);
+    settle(&folder, &mut a, &mut b);
+
+    let decoded_b: crate::todos::TodosData = serde_json::from_value(b.todos.data.clone()).expect("decode b");
+    assert_eq!(decoded_b.todos.len(), 1);
+    assert_eq!(decoded_b.todos[0].deadline.as_deref(), Some("2026-11-28"));
+    assert_eq!(decoded_b.todos[0].carried_from.as_deref(), Some("2026-11-22"));
+    assert_eq!(decoded_b.scheduled.len(), 1);
+    assert_eq!(decoded_b.scheduled[0].deadline.as_deref(), Some("2026-11-30"));
+
+    b.clock.wall = a.clock.wall + 2_000;
+    let edited = b.stamp();
+    let mut updated = todo("t1", "Finish slides", &edited);
+    updated["deadline"] = json!("2026-11-29");
+    updated["carriedFrom"] = json!("2026-11-22");
+    b.todos.data["todos"] = json!([updated]);
+    settle(&folder, &mut a, &mut b);
+
+    let decoded_a: crate::todos::TodosData = serde_json::from_value(a.todos.data.clone()).expect("decode a");
+    assert_eq!(decoded_a.todos[0].deadline.as_deref(), Some("2026-11-29"));
+    assert_eq!(decoded_a.todos[0].carried_from.as_deref(), Some("2026-11-22"));
+}

@@ -28,4 +28,8 @@ export type TrayCardHandlers = {
   onJoin: () => void;
 };
 
-export type TrayCardProps = { data: TrayCardData; handlers: TrayCardHandlers };
+export type TrayCardProps = {
+  data: TrayCardData;
+  handlers: TrayCardHandlers;
+  onScreenshotDelayMenu?: () => void;
+};

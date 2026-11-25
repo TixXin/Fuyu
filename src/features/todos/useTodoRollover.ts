@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
+import { nextCarriedFrom } from "./deadline.ts";
 import { getTodoSignature, type TodoMarkdownOptions } from "./markdown.ts";
 import { hasNoteContent } from "./newTodoDefaults.ts";
 import { withoutFocus } from "./normalize.ts";
@@ -45,12 +46,16 @@ export function useTodoRollover({
       const carriedTodos = carryOverIncompleteTodos
         ? todos
             .filter((todo) => !todo.completed)
-            .map((todo, index) => ({
-              ...withoutFocus(todo),
-              id: createTodoId(),
-              completed: false,
-              createdAt: carryOverCreatedAt + index,
-            }))
+            .map((todo, index) => {
+              const carriedFrom = nextCarriedFrom(todo, currentTodoDate);
+              return {
+                ...withoutFocus(todo),
+                id: createTodoId(),
+                completed: false,
+                createdAt: carryOverCreatedAt + index,
+                ...(carriedFrom ? { carriedFrom } : {}),
+              };
+            })
         : [];
 
       if ((todos.length > 0 || hasNoteContent(dailyNote, noteTemplate)) && signature !== lastSavedSignature) {

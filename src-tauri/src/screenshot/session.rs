@@ -63,6 +63,7 @@ struct Session {
     frames: Vec<Frame>,
     pointer_label: String,
     targets: Vec<Target>,
+    native_windows: Vec<(u32, u64)>,
     captured: bool,
     shown: Vec<String>,
 }
@@ -117,15 +118,15 @@ fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
     }
 
     let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
-    *session() = Some(Session { id, mode, frames, pointer_label: label(pointer_index), targets: Vec::new(), captured: false, shown: Vec::new() });
+    *session() = Some(Session { id, mode, frames, pointer_label: label(pointer_index), targets: Vec::new(), native_windows: Vec::new(), captured: false, shown: Vec::new() });
     announce(app, id);
 
     let grabs: Vec<Option<super::capture::Grab>> = thread::scope(|scope| {
         let shots: Vec<_> = monitors.iter().map(|monitor| scope.spawn(move || super::capture::monitor(monitor))).collect();
         shots.into_iter().map(|shot| shot.join().ok().flatten()).collect()
     });
-    let (window_targets, window_handles) = targets::windows_on_screen(app);
-    finish_capture(app, id, grabs, window_targets);
+    let (window_targets, window_handles, native_windows) = targets::windows_on_screen(app);
+    finish_capture(app, id, grabs, window_targets, native_windows);
     targets::read_controls(app, id, window_handles);
     Ok(())
 }
@@ -156,7 +157,13 @@ fn hold_overlays(app: &AppHandle, held: bool) {
     }
 }
 
-fn finish_capture(app: &AppHandle, id: u64, grabs: Vec<Option<super::capture::Grab>>, window_targets: Vec<Target>) {
+fn finish_capture(
+    app: &AppHandle,
+    id: u64,
+    grabs: Vec<Option<super::capture::Grab>>,
+    window_targets: Vec<Target>,
+    native_windows: Vec<(u32, u64)>,
+) {
     let mut resized = false;
     let mut failed = Vec::new();
     let focus = {
@@ -188,6 +195,7 @@ fn finish_capture(app: &AppHandle, id: u64, grabs: Vec<Option<super::capture::Gr
             resized = true;
         }
         session.targets = window_targets;
+        session.native_windows = native_windows;
         session.captured = true;
         CAPTURED.notify_all();
         session.shown.contains(&session.pointer_label).then(|| session.pointer_label.clone())
@@ -348,6 +356,15 @@ pub(crate) fn origin(label: &str) -> Option<(i32, i32)> {
 
 pub(crate) fn scale(label: &str) -> Option<f64> {
     session().as_ref()?.frames.iter().find(|frame| frame.label == label).map(|frame| frame.scale)
+}
+
+pub(crate) fn native_window(window_index: u32) -> Option<u64> {
+    session()
+        .as_ref()?
+        .native_windows
+        .iter()
+        .find(|(index, _)| *index == window_index)
+        .map(|(_, native)| *native)
 }
 
 pub(crate) fn global_point(label: &str, left: u32, top: u32) -> Option<(i32, i32)> {

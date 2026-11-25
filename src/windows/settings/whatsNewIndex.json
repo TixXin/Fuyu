@@ -74,6 +74,30 @@
       }
     },
     {
+      "page": "islandLayout",
+      "since": "next",
+      "zh-CN": {
+        "group": "",
+        "title": "收起条电池显示"
+      },
+      "en": {
+        "group": "",
+        "title": "Collapsed battery display"
+      }
+    },
+    {
+      "page": "islandLayout",
+      "since": "next",
+      "zh-CN": {
+        "group": "",
+        "title": "显示电量曲线"
+      },
+      "en": {
+        "group": "",
+        "title": "Show battery curve"
+      }
+    },
+    {
       "page": "sideDocks",
       "since": "0.3.14-beta.2",
       "zh-CN": {
@@ -98,6 +122,42 @@
       }
     },
     {
+      "page": "behavior",
+      "since": "next",
+      "zh-CN": {
+        "group": "展开",
+        "title": "页头滚轮切页"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Scroll header to switch pages"
+      }
+    },
+    {
+      "page": "todos",
+      "since": "next",
+      "zh-CN": {
+        "group": "小岛显示与排序",
+        "title": "显示已顺延天数"
+      },
+      "en": {
+        "group": "Island display & sorting",
+        "title": "Show carried-over days"
+      }
+    },
+    {
+      "page": "todosReminders",
+      "since": "next",
+      "zh-CN": {
+        "group": "到点和到期",
+        "title": "截止日提醒"
+      },
+      "en": {
+        "group": "Timed and due",
+        "title": "Deadline reminder"
+      }
+    },
+    {
       "page": "calendar",
       "since": "0.3.14-beta.2",
       "zh-CN": {
@@ -119,6 +179,18 @@
       "en": {
         "group": "Calendar panel",
         "title": "Show international festivals"
+      }
+    },
+    {
+      "page": "screenshot",
+      "since": "next",
+      "zh-CN": {
+        "group": "截图时",
+        "title": "延时截图时长"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Delayed screenshot timer"
       }
     },
     {

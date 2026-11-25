@@ -43,7 +43,7 @@ async function checkKeyboard(check: Check) {
   await press(chip("session-count")!, "Escape");
   check(lane("shelf") === "会话数 / 会话环" && savedItem("session-count")?.shelf === true, "Esc puts a picked-up item back where it was");
   await press(chip("status-light")!, "Delete");
-  check(savedItem("status-light")?.hidden === true && off() === "浮屿水母|外设电量" && lane("left") === "", "Delete takes an item off the bar into the list below");
+  check(savedItem("status-light")?.hidden === true && off() === "浮屿水母|电池|外设电量" && lane("left") === "", "Delete takes an item off the bar into the list below");
   await press(document.body, "z", { ctrlKey: true });
   check(!savedItem("status-light")?.hidden && lane("left") === "浮屿水母", "Ctrl+Z undoes it");
 }
@@ -163,8 +163,8 @@ async function checkMirror(check: Check) {
 
 export async function checkCollapsedLanes(check: Check) {
   localStorage.removeItem("fuyu-collapsed-items");
-  check(lane("left") === "浮屿水母" && lane("right").startsWith("新邮件提醒") && lane("right").endsWith("会话数 / 会话环|大写锁定|计时器") && off() === "外设电量" && saved() === null,
-    "The lanes show the default layout without saving anything, and the peripheral battery, off by default, waits in the list below");
+  check(lane("left") === "浮屿水母" && lane("right").startsWith("新邮件提醒") && lane("right").endsWith("会话数 / 会话环|大写锁定|计时器") && off() === "电池|外设电量" && saved() === null,
+    "The lanes show the default layout without saving anything, and battery and peripheral battery, off by default, wait in the list below");
   await checkKeyboard(check);
   await checkButtons(check);
   await checkDrag(check);

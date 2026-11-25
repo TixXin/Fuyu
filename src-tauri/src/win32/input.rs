@@ -3,7 +3,7 @@ use std::mem::size_of;
 use windows::Win32::UI::{
     Input::KeyboardAndMouse::{
         keybd_event, GetAsyncKeyState, GetKeyState, SendInput, INPUT, INPUT_0, INPUT_MOUSE, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
-        MOUSEEVENTF_WHEEL, MOUSEINPUT, VIRTUAL_KEY, VK_CAPITAL, VK_CONTROL, VK_ESCAPE, VK_LBUTTON, VK_RBUTTON, VK_RETURN, VK_SHIFT,
+        MOUSEEVENTF_WHEEL, MOUSEINPUT, VIRTUAL_KEY, VK_CAPITAL, VK_CONTROL, VK_ESCAPE, VK_LBUTTON, VK_NUMLOCK, VK_RBUTTON, VK_RETURN, VK_SHIFT,
     },
     WindowsAndMessaging::SetCursorPos,
 };
@@ -51,6 +51,11 @@ pub(crate) fn send_enter() {
 
 pub(crate) fn is_caps_lock_on() -> bool {
     let state = unsafe { GetKeyState(i32::from(VK_CAPITAL.0)) };
+    state & 1 != 0
+}
+
+pub(crate) fn is_num_lock_on() -> bool {
+    let state = unsafe { GetKeyState(i32::from(VK_NUMLOCK.0)) };
     state & 1 != 0
 }
 

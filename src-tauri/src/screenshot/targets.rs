@@ -30,7 +30,10 @@ pub(crate) struct LocalTarget {
     height: u32,
 }
 
-pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<(u32, isize, RECT)>) {
+pub(super) type ControlWindow = (u32, isize, RECT);
+pub(super) type NativeWindows = Vec<(u32, u64)>;
+
+pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<ControlWindow>, NativeWindows) {
     let own: Vec<isize> = app
         .webview_windows()
         .into_iter()
@@ -48,7 +51,12 @@ pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<(u32, isiz
         .enumerate()
         .map(|(index, window)| (index as u32, window.handle.0 as isize, window.rect))
         .collect();
-    (targets, handles)
+    let native = shown
+        .iter()
+        .enumerate()
+        .map(|(index, window)| (index as u32, window.handle.0 as usize as u64))
+        .collect();
+    (targets, handles, native)
 }
 
 fn intersect(a: RECT, b: RECT) -> Option<RECT> {

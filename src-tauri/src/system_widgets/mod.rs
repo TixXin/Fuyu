@@ -1,4 +1,5 @@
 mod apps;
+mod battery;
 mod launch;
 mod stats;
 
@@ -11,6 +12,7 @@ use serde::Serialize;
 
 use crate::platform::{power, system_stats};
 use crate::user_error::UserError;
+pub use battery::Battery;
 use stats::{cpu_share, network_rate, Counters};
 
 const MIN_SPAN: Duration = Duration::from_millis(500);
@@ -36,13 +38,6 @@ pub struct Memory {
 pub struct Network {
     down: f64,
     up: f64,
-}
-
-#[derive(Debug, Clone, Copy, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Battery {
-    level: Option<u8>,
-    plugged_in: bool,
 }
 
 #[derive(Debug, Clone, Copy, Serialize)]
@@ -80,7 +75,7 @@ fn read_stats() -> SystemStats {
         cpu,
         memory: system_stats::memory().map(|(used, total)| Memory { used, total }),
         network,
-        battery: power::power_source().map(|source| Battery { level: source.battery, plugged_in: source.plugged_in }),
+        battery: power::power_source().map(battery::evaluate),
     }
 }
 

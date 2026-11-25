@@ -4,6 +4,7 @@ import { LINE_PRIORITY, type IslandContribution } from "../../plugin-kernel/isla
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { togglePins } from "../api";
+import { useDelayedScreenshot } from "../useDelayedScreenshot";
 import { useIslandScreenshot } from "../useIslandScreenshot";
 import { useRecording } from "../useRecording";
 import { useScreenshotCard } from "../useScreenshotCard";
@@ -43,11 +44,15 @@ function ScreenshotRunner({ settings, features, openIslandPage, collapseIsland }
   const card = useScreenshotCard(screenshot.settings.cardSeconds);
   const notice = useScreenshotNotice(card, screenshot.settings.agentSource);
   const recording = useRecording();
+  const delay = useDelayedScreenshot();
   usePinsKey();
   useIslandAction("screenshot.start", screenshot.start);
   const openScreenshots = useCallback(() => openIslandPage("screenshots"), [openIslandPage]);
   const openHistory = features.screenshots || features.clipboardScreenshots === true ? openScreenshots : null;
-  screenshotIsland.useProvide(useMemo(() => ({ recording, notice, peek, openHistory }), [recording, notice, peek, openHistory]));
+  screenshotIsland.useProvide(useMemo(
+    () => ({ recording, delay, notice, peek, openHistory, startDelayed: screenshot.startDelayed }),
+    [recording, delay, notice, peek, openHistory, screenshot.startDelayed],
+  ));
   const list: IslandContribution[] = [];
   if (screenshot.start) list.push({ kind: "hint", key: "screenshot.start" });
   if (peek !== null) {
@@ -56,6 +61,7 @@ function ScreenshotRunner({ settings, features, openIslandPage, collapseIsland }
   }
   if (card.current !== null) list.push({ kind: "reveal", reveal: "always" }, { kind: "busy" });
   if (recording.shown) list.push({ kind: "busy" }, { kind: "notice", item: "recording" });
+  if (delay.active) list.push({ kind: "busy" }, { kind: "notice", item: "delay" });
   if (notice.taken) list.push({ kind: "notice", item: "screenshot" });
   useIslandContributions(OWNER, "screenshot.island", list);
   return null;

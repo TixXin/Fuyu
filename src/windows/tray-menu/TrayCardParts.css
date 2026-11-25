@@ -321,3 +321,44 @@
 .tray-card .tray-card__menu-row--danger > svg {
   color: var(--tray-danger);
 }
+
+.tray-card__delay-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--tray-tile);
+}
+
+.tray-card__delay-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--tray-fg2);
+  white-space: nowrap;
+}
+
+.tray-card__delay-options {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tray-card .tray-card__delay-option {
+  padding: 4px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tray-fg);
+  background: var(--tray-track);
+  white-space: nowrap;
+}
+
+.tray-card .tray-card__delay-option:hover,
+.tray-card .tray-card__delay-option:focus-visible {
+  background: var(--tray-accent);
+  color: var(--tray-on-accent);
+}

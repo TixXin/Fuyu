@@ -1,7 +1,8 @@
-import { Activity, BatteryCharging, BatteryFull, Cpu } from "lucide-react";
-import { WidgetEmpty, WidgetFrame } from "../../components/island-widget/WidgetFrame";
+import { Activity, Cpu } from "lucide-react";
+import { WidgetFrame } from "../../components/island-widget/WidgetFrame";
 import { useTranslation } from "../../i18n";
 import { useSystemStats } from "./statsStore";
+export { BatteryWidget } from "./BatteryWidget";
 
 const RING_R = 17;
 const RING_LENGTH = 2 * Math.PI * RING_R;
@@ -37,38 +38,6 @@ export function SystemStatusWidget() {
         <Ring share={stats?.cpu ?? null} label={t.content.cpu} kind="cpu" />
         <Ring share={memory} label={t.content.memory} kind="memory" />
       </div>
-    </WidgetFrame>
-  );
-}
-
-export function BatteryWidget() {
-  const t = useTranslation().islandWidgets;
-  const { stats } = useSystemStats();
-  const battery = stats?.battery ?? null;
-  const level = battery?.level ?? null;
-  const state = !battery ? null : battery.pluggedIn ? (level !== null && level >= 100 ? t.content.charged : t.content.charging) : t.content.onBattery;
-  return (
-    <WidgetFrame icon={battery?.pluggedIn ? BatteryCharging : BatteryFull} title={t.widgets.battery} className="sys-battery">
-      {battery && level !== null ? (
-        <>
-          <div className="sys-fill" />
-          <span className="island-widget__big sys-battery__level" data-low={level <= 20 && !battery.pluggedIn ? "true" : undefined}>
-            {level}
-            <small>%</small>
-          </span>
-          <span className="sys-battery__bar" aria-hidden="true">
-            <b style={{ width: `${level}%` }} data-low={level <= 20 && !battery.pluggedIn ? "true" : undefined} />
-          </span>
-          <span className="island-widget__sub">{state}</span>
-        </>
-      ) : stats && !battery ? (
-        <>
-          <WidgetEmpty>{t.content.noBattery}</WidgetEmpty>
-          <span className="island-widget__sub sys-battery__hint">{t.content.noBatteryHint}</span>
-        </>
-      ) : (
-        <span className="island-widget__big sys-battery__level">–</span>
-      )}
     </WidgetFrame>
   );
 }

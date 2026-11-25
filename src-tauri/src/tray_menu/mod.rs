@@ -69,6 +69,7 @@ enum Action {
     ToggleIsland,
     RaiseIsland,
     Screenshot,
+    ScreenshotDelayed(Option<u8>),
     Translate,
     Clipboard,
     ToggleClipboardPause,
@@ -85,6 +86,19 @@ fn parse_action(action: &str, arg: Option<&str>) -> Result<Action, String> {
         "toggle_island" => Action::ToggleIsland,
         "raise_island" => Action::RaiseIsland,
         "screenshot" => Action::Screenshot,
+        "screenshot_delayed" => {
+            let seconds = match arg.map(str::trim).filter(|value| !value.is_empty()) {
+                Some(raw) => {
+                    let parsed = raw.parse::<u8>().map_err(|_| format!("Invalid screenshot delay: {raw}"))?;
+                    if !matches!(parsed, 3 | 5 | 10) {
+                        return Err(format!("Unsupported screenshot delay: {parsed}"));
+                    }
+                    Some(parsed)
+                }
+                None => None,
+            };
+            Action::ScreenshotDelayed(seconds)
+        }
         "translate" => Action::Translate,
         "clipboard" => Action::Clipboard,
         "toggle_clipboard_pause" => Action::ToggleClipboardPause,
@@ -125,6 +139,7 @@ fn run(app: &AppHandle, action: Action) {
         Action::ToggleIsland => crate::tray::toggle_island_from_card(app),
         Action::RaiseIsland => island::layer::bring_front(app),
         Action::Screenshot => crate::screenshot::start_from_tray(app),
+        Action::ScreenshotDelayed(seconds) => crate::screenshot::start_delayed_from_tray(app, seconds),
         Action::Translate => translation::open_translator(app),
         Action::Clipboard => crate::clipboard_history::open_from_tray(),
         Action::ToggleClipboardPause => {
@@ -190,6 +205,9 @@ mod tests {
     fn actions_parse_by_name_and_pages_are_checked() {
         assert_eq!(parse_action("toggle_island", None), Ok(Action::ToggleIsland));
         assert_eq!(parse_action("raise_island", None), Ok(Action::RaiseIsland));
+        assert_eq!(parse_action("screenshot_delayed", None), Ok(Action::ScreenshotDelayed(None)));
+        assert_eq!(parse_action("screenshot_delayed", Some("5")), Ok(Action::ScreenshotDelayed(Some(5))));
+        assert!(parse_action("screenshot_delayed", Some("7")).is_err());
         assert_eq!(parse_action("open_page", Some("calendar")), Ok(Action::OpenPage("calendar")));
         assert_eq!(parse_action("open_page", Some("file-shelf")), Ok(Action::OpenPage("file-shelf")));
         assert!(parse_action("open_page", Some("settings")).is_err());

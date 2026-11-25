@@ -36,3 +36,13 @@ export function layersKey(layers: readonly PixelRect[]): string {
   const inner = layers[0];
   return inner ? `${layers.length}:${inner.x},${inner.y},${inner.width},${inner.height}` : "";
 }
+
+export function fullWindowAt(targets: readonly Target[], selection: PixelRect): number | null {
+  let match: number | null = null;
+  for (const target of targets) {
+    if (!target.element && same(target, selection) && (match === null || target.window < match)) {
+      match = target.window;
+    }
+  }
+  return match;
+}

@@ -124,11 +124,13 @@
         "messageNotice": "sync",
         "messagePanelSeconds": "sync",
         "expandTrigger": "sync",
+        "previewAutoExpandMs": "sync",
         "clickCollapseOnLeave": "sync",
         "hoverExpandDelayMs": "sync",
         "hoverCollapseDelayMs": "sync",
         "hoverSwitchPage": "sync",
         "hoverSwitchDelayMs": "sync",
+        "wheelSwitchPage": "sync",
         "pageArrows": "sync",
         "pageArrowKeys": "sync",
         "pageSwipe": "sync",
@@ -295,6 +297,7 @@
       "fields": {
         "shortcuts": "local",
         "printScreen": "optional",
+        "delaySeconds": "sync",
         "saveFolder": "local",
         "cardSeconds": "sync",
         "historyDays": "sync",
@@ -349,6 +352,7 @@
     },
     "fuyu-calendar-prefs": "sync",
     "fuyu-todo-prefs": "sync",
+    "fuyu-battery-prefs": "sync",
     "fuyu-market-plugins": "byId"
   }
 }
