@@ -72,6 +72,30 @@
         "group": "Screen side docks",
         "title": "Left dock"
       }
+    },
+    {
+      "page": "calendar",
+      "since": "next",
+      "zh-CN": {
+        "group": "已添加的日历",
+        "title": "国家/地区节假日订阅"
+      },
+      "en": {
+        "group": "Your calendars",
+        "title": "Regional public holidays"
+      }
+    },
+    {
+      "page": "calendar",
+      "since": "next",
+      "zh-CN": {
+        "group": "日历面板",
+        "title": "显示国际节日"
+      },
+      "en": {
+        "group": "Calendar panel",
+        "title": "Show international festivals"
+      }
     }
   ]
 }

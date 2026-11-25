@@ -1,10 +1,12 @@
-import { addCalendarSource, type CalendarSource } from "./api";
-import { CHINA_HOLIDAYS_LINK } from "./presets";
+import { addCalendarSource } from "./api";
+import { hasChinaHolidays, hasHolidayRegion, HOLIDAY_REGIONS, holidayLinkFor, type HolidayRegionId } from "./holidayRegions.ts";
 
-export function hasChinaHolidays(sources: readonly CalendarSource[]) {
-  return sources.some((source) => source.kind === "ics" && source.host === new URL(CHINA_HOLIDAYS_LINK).host);
+export { hasChinaHolidays, hasHolidayRegion, HOLIDAY_REGIONS, holidayLinkFor, type HolidayRegionId };
+
+export function addHolidayRegion(region: HolidayRegionId, name: string) {
+  return addCalendarSource({ kind: "ics", name, url: "", username: "", secret: holidayLinkFor(region) });
 }
 
 export function addChinaHolidays(name: string) {
-  return addCalendarSource({ kind: "ics", name, url: "", username: "", secret: CHINA_HOLIDAYS_LINK });
+  return addHolidayRegion("cn", name);
 }

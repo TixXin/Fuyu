@@ -113,10 +113,12 @@
 
 .calendar-month__lunar {
   max-width: 100%;
+  padding: 0 2px;
   overflow: hidden;
   color: rgba(var(--calendar-ink), 0.5);
   font-size: 10px;
   line-height: 1.1;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

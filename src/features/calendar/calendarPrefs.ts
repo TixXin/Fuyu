@@ -40,6 +40,7 @@ export type CalendarPrefs = {
   ignoreFreeInCountdown: boolean;
   foldAllDay: boolean;
   showWeekNumbers: boolean;
+  showInternationalFestivals: boolean;
   weekStartsOn: WeekStartsOn;
   includeTimedTodos: boolean;
   customMeetingDomain: string;
@@ -61,6 +62,7 @@ export const DEFAULT_CALENDAR_PREFS: CalendarPrefs = {
   ignoreFreeInCountdown: true,
   foldAllDay: false,
   showWeekNumbers: false,
+  showInternationalFestivals: true,
   weekStartsOn: "auto",
   includeTimedTodos: true,
   customMeetingDomain: "",
@@ -219,6 +221,10 @@ export function normalizeCalendarPrefs(value: unknown): CalendarPrefs {
     ignoreFreeInCountdown: saved.ignoreFreeInCountdown !== undefined ? Boolean(saved.ignoreFreeInCountdown) : DEFAULT_CALENDAR_PREFS.ignoreFreeInCountdown,
     foldAllDay: saved.foldAllDay !== undefined ? Boolean(saved.foldAllDay) : DEFAULT_CALENDAR_PREFS.foldAllDay,
     showWeekNumbers: saved.showWeekNumbers !== undefined ? Boolean(saved.showWeekNumbers) : DEFAULT_CALENDAR_PREFS.showWeekNumbers,
+    showInternationalFestivals:
+      saved.showInternationalFestivals !== undefined
+        ? Boolean(saved.showInternationalFestivals)
+        : DEFAULT_CALENDAR_PREFS.showInternationalFestivals,
     weekStartsOn: pick(WEEK_STARTS_ON, saved.weekStartsOn, DEFAULT_CALENDAR_PREFS.weekStartsOn),
     includeTimedTodos: saved.includeTimedTodos !== undefined ? Boolean(saved.includeTimedTodos) : DEFAULT_CALENDAR_PREFS.includeTimedTodos,
     customMeetingDomain: rawDomain,

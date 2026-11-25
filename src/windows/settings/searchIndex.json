@@ -2463,6 +2463,20 @@
     {
       "page": "calendar",
       "zh-CN": {
+        "group": "已添加的日历",
+        "title": "国家/地区节假日订阅",
+        "description": "按需订阅各国家/地区官方 iCloud 公共假期日历，可同时订阅多个地区，无需账号。"
+      },
+      "en": {
+        "group": "Your calendars",
+        "title": "Regional public holidays",
+        "description": "Subscribe to official iCloud public holiday calendars by country or region; multiple regions can be active together without an account."
+      },
+      "since": "next"
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
         "group": "日历面板",
         "title": "默认日程视图",
         "description": "打开日历页时默认展示的议程跨度，面板右上角也可以随时切换。",
@@ -2514,6 +2528,20 @@
         "title": "Show week numbers",
         "description": "Show ISO week numbers alongside the monthly grid."
       }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板",
+        "title": "显示国际节日",
+        "description": "在月历与当日信息中标注常见国际节日与世界纪念日（如万圣节、感恩节、复活节、世界地球日等），优先级低于中国传统节日与节气。"
+      },
+      "en": {
+        "group": "Calendar panel",
+        "title": "Show international festivals",
+        "description": "Show well-known international holidays and observances (Halloween, Thanksgiving, Easter, Earth Day, etc.) on the month grid and day header."
+      },
+      "since": "next"
     },
     {
       "page": "calendar",

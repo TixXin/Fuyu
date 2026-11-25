@@ -4,6 +4,7 @@ type CountdownFormat = "titleMinutes" | "timeTitle" | "compact";
 type CalendarHoldMinutes = 0 | 5 | 15 | -1;
 type CalendarBannerMinutes = 0 | 1 | 3 | 5;
 type WeekStartsOn = "auto" | "monday" | "sunday";
+type HolidayRegionId = "cn" | "hk" | "tw" | "mo" | "us" | "gb" | "jp" | "kr" | "sg" | "ca" | "au" | "de" | "fr";
 
 export type SettingsCalendarText = {
   island: string;
@@ -56,6 +57,8 @@ export type SettingsCalendarText = {
   foldAllDayHint: string;
   showWeekNumbers: string;
   showWeekNumbersHint: string;
+  showInternationalFestivals: string;
+  showInternationalFestivalsHint: string;
   weekStartsOn: string;
   weekStartsOnOptions: Record<WeekStartsOn, string>;
   includeTimedTodos: string;
@@ -76,6 +79,12 @@ export type SettingsCalendarText = {
   addHolidays: string;
   holidaysAdded: string;
   holidaysName: string;
+  holidayRegionsRow: string;
+  holidayRegionsHint: string;
+  subscribeRegion: string;
+  regionSubscribed: string;
+  holidayRegionName: (region: string) => string;
+  holidayRegions: Record<HolidayRegionId, string>;
   add: string;
   cancelAdd: string;
   service: string;
@@ -151,6 +160,8 @@ export const zhCN: SettingsCalendarText = {
   foldAllDayHint: "同一天有多条全天日程时默认折叠其余项，点击可展开。",
   showWeekNumbers: "月历显示周数",
   showWeekNumbersHint: "在月历每行左侧显示 ISO 周数。",
+  showInternationalFestivals: "显示国际节日",
+  showInternationalFestivalsHint: "在月历与当日信息中标注常见国际节日与世界纪念日（如万圣节、感恩节、复活节、世界地球日等），优先级低于中国传统节日与节气。",
   weekStartsOn: "每周起始日",
   weekStartsOnOptions: { auto: "默认", monday: "周一", sunday: "周日" },
   includeTimedTodos: "以时间开头的待办并入日程",
@@ -171,6 +182,26 @@ export const zhCN: SettingsCalendarText = {
   addHolidays: "订阅中国节假日",
   holidaysAdded: "已订阅节假日",
   holidaysName: "中国节假日",
+  holidayRegionsRow: "国家/地区节假日订阅",
+  holidayRegionsHint: "按需订阅各国家/地区官方 iCloud 公共假期日历，可同时订阅多个地区，无需账号。",
+  subscribeRegion: "订阅",
+  regionSubscribed: "已订阅",
+  holidayRegionName: (region) => `${region}节假日`,
+  holidayRegions: {
+    cn: "中国大陆",
+    hk: "中国香港",
+    tw: "中国台湾",
+    mo: "中国澳门",
+    us: "美国",
+    gb: "英国",
+    jp: "日本",
+    kr: "韩国",
+    sg: "新加坡",
+    ca: "加拿大",
+    au: "澳大利亚",
+    de: "德国",
+    fr: "法国",
+  },
   add: "添加日历",
   cancelAdd: "取消",
   service: "用的是",
@@ -254,6 +285,8 @@ export const en: SettingsCalendarText = {
   foldAllDayHint: "Collapse additional all-day events when a day has more than one.",
   showWeekNumbers: "Show week numbers",
   showWeekNumbersHint: "Show ISO week numbers alongside the monthly grid.",
+  showInternationalFestivals: "Show international festivals",
+  showInternationalFestivalsHint: "Show well-known international holidays and observances (Halloween, Thanksgiving, Easter, Earth Day, etc.) on the month grid and day header.",
   weekStartsOn: "Week starts on",
   weekStartsOnOptions: { auto: "Auto", monday: "Mon", sunday: "Sun" },
   includeTimedTodos: "Include timed todos in schedule",
@@ -274,6 +307,26 @@ export const en: SettingsCalendarText = {
   addHolidays: "Subscribe to China's holidays",
   holidaysAdded: "Holidays subscribed",
   holidaysName: "China holidays",
+  holidayRegionsRow: "Regional public holidays",
+  holidayRegionsHint: "Subscribe to official iCloud public holiday calendars by country or region; multiple regions can be active together without an account.",
+  subscribeRegion: "Subscribe",
+  regionSubscribed: "Subscribed",
+  holidayRegionName: (region) => `${region} holidays`,
+  holidayRegions: {
+    cn: "China mainland",
+    hk: "Hong Kong",
+    tw: "Taiwan",
+    mo: "Macao",
+    us: "United States",
+    gb: "United Kingdom",
+    jp: "Japan",
+    kr: "South Korea",
+    sg: "Singapore",
+    ca: "Canada",
+    au: "Australia",
+    de: "Germany",
+    fr: "France",
+  },
   add: "Add a calendar",
   cancelAdd: "Cancel",
   service: "Service",

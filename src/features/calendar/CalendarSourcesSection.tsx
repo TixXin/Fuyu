@@ -7,7 +7,7 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { useFlash } from "../../components/settings/useFlash";
 import { addCalendarSource, getCalendarEvents, listCalendarSources, removeCalendarSource, type CalendarSource } from "./api";
-import { addChinaHolidays, hasChinaHolidays } from "./holidays";
+import { addChinaHolidays, addHolidayRegion, hasChinaHolidays, hasHolidayRegion, HOLIDAY_REGIONS, type HolidayRegionId } from "./holidays";
 import { CALENDAR_PRESETS, guessKind, needsServer, presetOf, type CalendarService } from "./presets";
 import { notifyCalendarRefresh } from "./storage";
 import { SubCalendarList } from "./SubCalendarList";
@@ -23,6 +23,7 @@ export function CalendarSourcesSection() {
   const [sources, setSources] = useState<CalendarSource[]>([]);
   const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
   const [service, setService] = useState<CalendarService>("feishu");
+  const [holidayRegion, setHolidayRegion] = useState<HolidayRegionId>("us");
   const [form, setForm] = useState(EMPTY_FORM);
   const [adding, setAdding] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -108,6 +109,8 @@ export function CalendarSourcesSection() {
   const ready =
     kind === "ics" ? form.address.trim() !== "" : form.username.trim() !== "" && form.password.trim() !== "" && (!askServer || form.address.trim() !== "");
   const holidaysAdded = hasChinaHolidays(sources);
+  const regionName = text.holidayRegionName(text.holidayRegions[holidayRegion]);
+  const regionAdded = hasHolidayRegion(sources, holidayRegion, [regionName]);
   const showForm = adding || sources.length === 0;
 
   return (
@@ -238,6 +241,26 @@ export function CalendarSourcesSection() {
             </div>
           </>
         )}
+        <SettingsRow
+          title={text.holidayRegionsRow}
+          description={text.holidayRegionsHint}
+          control={
+            <span className="calendar-source__region-controls">
+              <SettingsSelect<HolidayRegionId>
+                value={holidayRegion}
+                ariaLabel={text.holidayRegionsRow}
+                options={HOLIDAY_REGIONS.map((region) => ({ value: region.id, label: text.holidayRegions[region.id] }))}
+                onChange={setHolidayRegion}
+              />
+              <SettingsLinkButton
+                disabled={regionAdded || state.busy}
+                onClick={() => void run(() => addHolidayRegion(holidayRegion, regionName))}
+              >
+                {regionAdded ? text.regionSubscribed : text.subscribeRegion}
+              </SettingsLinkButton>
+            </span>
+          }
+        />
       </SettingsGroup>
     </>
   );

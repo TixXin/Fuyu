@@ -128,20 +128,20 @@
               廿一
             </span>
           </button>
-          <button aria-label="10月31日 周六 九月廿二" aria-pressed="false" class="calendar-month__day calendar-month__day--outside calendar-month__day--weekend" tabindex="-1" type="button">
+          <button aria-label="10月31日 周六 九月廿二 万圣夜" aria-pressed="false" class="calendar-month__day calendar-month__day--outside calendar-month__day--weekend" tabindex="-1" type="button">
             <span class="calendar-month__date">
               31
             </span>
-            <span class="calendar-month__lunar">
-              廿二
+            <span class="calendar-month__lunar calendar-month__lunar--special">
+              万圣夜
             </span>
           </button>
-          <button aria-label="11月1日 周日 九月廿三" aria-pressed="false" class="calendar-month__day calendar-month__day--weekend" tabindex="-1" type="button">
+          <button aria-label="11月1日 周日 九月廿三 万圣节" aria-pressed="false" class="calendar-month__day calendar-month__day--weekend" tabindex="-1" type="button">
             <span class="calendar-month__date">
               1
             </span>
-            <span class="calendar-month__lunar">
-              廿三
+            <span class="calendar-month__lunar calendar-month__lunar--special">
+              万圣节
             </span>
           </button>
           <button aria-label="11月2日 周一 九月廿四" aria-pressed="false" class="calendar-month__day" tabindex="-1" type="button">
@@ -336,12 +336,12 @@
               十七
             </span>
           </button>
-          <button aria-label="11月26日 周四 十月十八" aria-pressed="false" class="calendar-month__day" tabindex="-1" type="button">
+          <button aria-label="11月26日 周四 十月十八 感恩节" aria-pressed="false" class="calendar-month__day" tabindex="-1" type="button">
             <span class="calendar-month__date">
               26
             </span>
-            <span class="calendar-month__lunar">
-              十八
+            <span class="calendar-month__lunar calendar-month__lunar--special">
+              感恩节
             </span>
           </button>
           <button aria-label="11月27日 周五 十月十九" aria-pressed="false" class="calendar-month__day" tabindex="-1" type="button">
@@ -376,12 +376,12 @@
               廿二
             </span>
           </button>
-          <button aria-label="12月1日 周二 十月廿三" aria-pressed="false" class="calendar-month__day calendar-month__day--outside" tabindex="-1" type="button">
+          <button aria-label="12月1日 周二 十月廿三 艾滋病日" aria-pressed="false" class="calendar-month__day calendar-month__day--outside" tabindex="-1" type="button">
             <span class="calendar-month__date">
               1
             </span>
-            <span class="calendar-month__lunar">
-              廿三
+            <span class="calendar-month__lunar calendar-month__lunar--special">
+              艾滋病日
             </span>
           </button>
           <button aria-label="12月2日 周三 十月廿四" aria-pressed="false" class="calendar-month__day calendar-month__day--outside" tabindex="-1" type="button">
@@ -392,12 +392,12 @@
               廿四
             </span>
           </button>
-          <button aria-label="12月3日 周四 十月廿五" aria-pressed="false" class="calendar-month__day calendar-month__day--outside" tabindex="-1" type="button">
+          <button aria-label="12月3日 周四 十月廿五 残疾人日" aria-pressed="false" class="calendar-month__day calendar-month__day--outside" tabindex="-1" type="button">
             <span class="calendar-month__date">
               3
             </span>
-            <span class="calendar-month__lunar">
-              廿五
+            <span class="calendar-month__lunar calendar-month__lunar--special">
+              残疾人日
             </span>
           </button>
           <button aria-label="12月4日 周五 十月廿六 宪法日" aria-pressed="false" class="calendar-month__day calendar-month__day--outside" tabindex="-1" type="button">
@@ -570,6 +570,35 @@
             </button>
           </div>
         </div>
+        <div class="settings-row">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <span class="settings-row__title">
+                国家/地区节假日订阅
+              </span>
+              <span class="settings-row__description">
+                按需订阅各国家/地区官方 iCloud 公共假期日历，可同时订阅多个地区，无需账号。
+              </span>
+            </div>
+            <div class="settings-row__control">
+              <span class="calendar-source__region-controls">
+                <div class="settings-select">
+                  <div class="select-control">
+                    <button aria-controls="_id2_" aria-expanded="false" aria-haspopup="listbox" aria-label="国家/地区节假日订阅" class="select-control__trigger" role="combobox" type="button">
+                      <span>
+                        美国
+                      </span>
+                      <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </button>
+                  </div>
+                </div>
+                <button class="settings-link-button" type="button">
+                  订阅
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -681,7 +710,7 @@
         <div class="settings-row">
           <div class="settings-row__main">
             <div class="settings-row__text">
-              <label class="settings-row__title" for="_id2_">
+              <label class="settings-row__title" for="_id3_">
                 显示会议标题
               </label>
               <span class="settings-row__description">
@@ -690,7 +719,7 @@
             </div>
             <div class="settings-row__control">
               <span class="settings-switch">
-                <input id="_id2_" role="switch" type="checkbox">
+                <input id="_id3_" role="switch" type="checkbox">
                 <span aria-hidden="true" class="settings-switch__track"></span>
               </span>
             </div>
