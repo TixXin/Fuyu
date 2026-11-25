@@ -22,6 +22,11 @@ import {
   stripWidthFor,
   targetVisualStateOnTrigger,
 } from "../../src/windows/side-dock/dockGeometry.ts";
+import {
+  IDLE_SIDE_SWIPE,
+  SIDE_SWIPE_THRESHOLD_PX,
+  stepSideDockGesture,
+} from "../../src/windows/side-dock/sideDockSwipe.ts";
 
 describe("islandPages placement", () => {
   it("defaults missing or invalid placement to top and keeps v1 compatibility", () => {
@@ -171,5 +176,52 @@ describe("sideDocks settings", () => {
     const drawerEmpty = sideDockWindowSize(DEFAULT_SIDE_DOCKS, "drawer", 0);
     assert.equal(drawerThree.width - drawerTwo.width, 66 + DEFAULT_SIDE_DOCKS.gap);
     assert.equal(drawerEmpty.width, drawerTwo.width);
+  });
+
+  it("fires exactly once across a long macOS momentum swipe tail and supports repeated forward and gentle reverse swipes", () => {
+    let state = IDLE_SIDE_SWIPE;
+    const turns = [];
+    const momentumTail = [24, 42, 48, 36, 26, 18, 12, 6, 2, 1, 3, 5, 2, 1, 2, 4, 2, 1];
+    let t = 1000;
+    for (const dx of momentumTail) {
+      const res = stepSideDockGesture(state, dx, 2, t, SIDE_SWIPE_THRESHOLD_PX, true);
+      state = res.state;
+      if (res.turn !== null) turns.push(res.turn);
+      t += 16;
+    }
+    assert.deepEqual(turns, [1]);
+
+    for (let i = 0; i < 6; i += 1) {
+      const res = stepSideDockGesture(state, 0, 20, t, SIDE_SWIPE_THRESHOLD_PX, true);
+      state = res.state;
+      t += 16;
+    }
+
+    t += 150;
+    for (const dx of [38, 40]) {
+      const res = stepSideDockGesture(state, dx, 0, t, SIDE_SWIPE_THRESHOLD_PX, true);
+      state = res.state;
+      if (res.turn !== null) turns.push(res.turn);
+      t += 16;
+    }
+    assert.deepEqual(turns, [1, 1]);
+
+    t += 120;
+    for (let i = 0; i < 12; i += 1) {
+      const res = stepSideDockGesture(state, -7, 0, t, SIDE_SWIPE_THRESHOLD_PX, true);
+      state = res.state;
+      if (res.turn !== null) turns.push(res.turn);
+      t += 16;
+    }
+    assert.deepEqual(turns, [1, 1, -1]);
+
+    t += 150;
+    for (const dx of [-40, -40]) {
+      const res = stepSideDockGesture(state, dx, 0, t, SIDE_SWIPE_THRESHOLD_PX, true);
+      state = res.state;
+      if (res.turn !== null) turns.push(res.turn);
+      t += 16;
+    }
+    assert.deepEqual(turns, [1, 1, -1, -1]);
   });
 });

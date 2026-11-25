@@ -1,14 +1,18 @@
 import { useEffect, useRef } from "react";
-import { IDLE_SWIPE, swipeStep, wheelPixels } from "../island/pageSwipe";
+import { wheelPixels } from "../island/pageSwipe";
 import { pulsePageArrow } from "../island/usePageArrowKeys";
+import {
+  IDLE_SIDE_SWIPE,
+  SIDE_SWIPE_THRESHOLD_PX,
+  SIDE_WHEEL_THRESHOLD_PX,
+  stepSideDockGesture,
+} from "./sideDockSwipe";
 
 type SideDockSwipeOptions = {
   enabled: boolean;
   canStep: boolean;
   onStep: (direction: 1 | -1) => void;
 };
-
-const SHIFT_WHEEL_COOLDOWN_MS = 260;
 
 function isInsideDrawerWithoutHorizontalScroll(target: EventTarget | null): boolean {
   let element = target instanceof Element ? target : null;
@@ -39,8 +43,8 @@ export function useSideDockSwipe(options: SideDockSwipeOptions) {
 
   useEffect(() => {
     if (!options.enabled) return;
-    let state = IDLE_SWIPE;
-    let lastWheelStepAt = 0;
+    let drawerState = IDLE_SIDE_SWIPE;
+    let stripState = IDLE_SIDE_SWIPE;
 
     const trigger = (turn: 1 | -1) => {
       latestRef.current.onStep(turn);
@@ -49,38 +53,32 @@ export function useSideDockSwipe(options: SideDockSwipeOptions) {
 
     const onWheel = (event: WheelEvent) => {
       if (!latestRef.current.canStep || event.ctrlKey || event.metaKey || event.altKey) return;
+      const dx = wheelPixels(event.deltaX, event.deltaMode, window.innerWidth);
+      const dy = wheelPixels(event.deltaY, event.deltaMode, window.innerHeight);
 
       if (isInsideNonScrollingStrip(event.target)) {
-        const dy = wheelPixels(event.deltaY, event.deltaMode, window.innerHeight);
-        if (Math.abs(dy) >= 16 && event.timeStamp - lastWheelStepAt >= SHIFT_WHEEL_COOLDOWN_MS) {
-          lastWheelStepAt = event.timeStamp;
-          trigger(dy > 0 ? 1 : -1);
-        }
+        const result = stepSideDockGesture(stripState, dy, dx, event.timeStamp, SIDE_WHEEL_THRESHOLD_PX, false);
+        stripState = result.state;
+        if (result.turn !== null) trigger(result.turn);
         return;
       }
 
       if (event.shiftKey && isInsideDrawerWithoutHorizontalScroll(event.target)) {
-        const dy = wheelPixels(event.deltaY, event.deltaMode, window.innerHeight);
-        const dx = wheelPixels(event.deltaX, event.deltaMode, window.innerWidth);
-        const delta = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
-        if (Math.abs(delta) >= 16 && event.timeStamp - lastWheelStepAt >= SHIFT_WHEEL_COOLDOWN_MS) {
-          lastWheelStepAt = event.timeStamp;
-          trigger(delta > 0 ? 1 : -1);
-        }
+        const primary = Math.abs(dy) >= Math.abs(dx) ? dy : dx;
+        const result = stepSideDockGesture(drawerState, primary, 0, event.timeStamp, SIDE_WHEEL_THRESHOLD_PX, false);
+        drawerState = result.state;
+        if (result.turn !== null) trigger(result.turn);
         return;
       }
 
       if (event.shiftKey || !isInsideDrawerWithoutHorizontalScroll(event.target)) {
-        state = IDLE_SWIPE;
+        drawerState = IDLE_SIDE_SWIPE;
         return;
       }
 
-      const dx = wheelPixels(event.deltaX, event.deltaMode, window.innerWidth);
-      const dy = wheelPixels(event.deltaY, event.deltaMode, window.innerHeight);
-      const step = swipeStep(state, dx, dy, event.timeStamp);
-      state = step.state;
-      if (step.turn === null) return;
-      trigger(step.turn);
+      const result = stepSideDockGesture(drawerState, dx, dy, event.timeStamp, SIDE_SWIPE_THRESHOLD_PX, true);
+      drawerState = result.state;
+      if (result.turn !== null) trigger(result.turn);
     };
 
     window.addEventListener("wheel", onWheel, { passive: true });
