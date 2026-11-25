@@ -1,5 +1,5 @@
 import type { CSSProperties, PointerEvent, ReactNode } from "react";
-import { AudioLines, BatteryMedium, Camera, Download, Inbox, LayoutGrid, ListTodo, Mail, Puzzle, Sparkles, Timer } from "lucide-react";
+import { AudioLines, BatteryFull, BatteryMedium, Camera, Download, Inbox, LayoutGrid, ListTodo, Mail, Puzzle, Sparkles, Timer } from "lucide-react";
 import { CapsLockIcon } from "../../../features/caps-lock/CapsLockIcon";
 import { USAGE_PROVIDERS } from "../../../features/claude-usage/usageRing";
 import { useTranslation } from "../../../i18n";
@@ -20,6 +20,7 @@ const ICONS: Record<string, ReactNode> = {
   shelf: <Inbox size={13} strokeWidth={2.2} />,
   music: <AudioLines size={13} strokeWidth={2.2} />,
   timer: <Timer size={13} strokeWidth={2.2} />,
+  battery: <BatteryFull size={13} strokeWidth={2.2} />,
   "peripheral-battery": <BatteryMedium size={13} strokeWidth={2.2} />,
   "session-count": <LayoutGrid size={13} strokeWidth={2.2} />,
   center: <Sparkles size={13} strokeWidth={2.2} />,

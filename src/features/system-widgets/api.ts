@@ -5,11 +5,24 @@ import type { QuickTarget } from "./launcherItems.ts";
 
 export type { QuickTarget };
 
+export type BatteryStats = {
+  level: number | null;
+  pluggedIn: boolean;
+  charging?: boolean;
+  remainingMinutes?: number | null;
+  timeToFullMinutes?: number | null;
+  currentMwh?: number | null;
+  fullChargeMwh?: number | null;
+  designMwh?: number | null;
+  healthPercent?: number | null;
+  rateMw?: number | null;
+};
+
 export type SystemStats = {
   cpu: number | null;
   memory: { used: number; total: number } | null;
   network: { down: number; up: number } | null;
-  battery: { level: number | null; pluggedIn: boolean } | null;
+  battery: BatteryStats | null;
 };
 
 export type QuickAppInfo = { path: string; name: string; icon: string | null };

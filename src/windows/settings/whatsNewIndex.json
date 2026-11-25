@@ -74,6 +74,30 @@
       }
     },
     {
+      "page": "islandLayout",
+      "since": "next",
+      "zh-CN": {
+        "group": "",
+        "title": "收起条电池显示"
+      },
+      "en": {
+        "group": "",
+        "title": "Collapsed battery display"
+      }
+    },
+    {
+      "page": "islandLayout",
+      "since": "next",
+      "zh-CN": {
+        "group": "",
+        "title": "显示电量曲线"
+      },
+      "en": {
+        "group": "",
+        "title": "Show battery curve"
+      }
+    },
+    {
       "page": "sideDocks",
       "since": "0.3.14-beta.2",
       "zh-CN": {

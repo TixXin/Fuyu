@@ -17,7 +17,7 @@ const DEFAULT_ORDER: readonly { id: string; zone: CollapsedZone }[] = [
   { id: "session-count", zone: "right" },
 ];
 
-const HIDDEN_BY_DEFAULT: ReadonlySet<string> = new Set(["peripheral-battery"]);
+const HIDDEN_BY_DEFAULT: ReadonlySet<string> = new Set(["battery", "peripheral-battery"]);
 
 export const COLLAPSED_ITEM_PLUGINS: Readonly<Record<string, string>> = {
   mail: "messages",

@@ -4,6 +4,7 @@ import { HOVER_ONLY_ITEM_ID, needsHoverOnlyGauge, shownUsageProviders, usageItem
 import { OWNER as CLAUDE_USAGE } from "../../../features/claude-usage/plugin/owner";
 import { builtinConfigBoolean, disabledBuiltinIds, isBuiltinEnabled } from "../../../features/plugin-kernel/builtinSwitches";
 import { useBuiltinConfig, useBuiltinPlugins } from "../../../features/plugin-kernel/useBuiltinPlugins";
+import { useHasBattery } from "../../../features/system-widgets/batteryPresence";
 import { arrangeCollapsedItems, filterCollapsedItemEntries } from "../../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../../lib/settings/useCollapsedPlacements";
 import { useCollapsedPluginItems } from "../sections/useCollapsedPluginItems";
@@ -20,7 +21,9 @@ export function useCollapsedLayout() {
   const usageConfig = useBuiltinConfig(CLAUDE_USAGE);
   const { items: pluginItems, pages: pluginPages, widgets: pluginWidgets } = useCollapsedPluginItems();
   const timerName = t.island.timer;
+  const batteryName = t.islandWidgets.widgets.battery;
   const peripheralsName = t.islandWidgets.widgets.peripherals;
+  const hasBattery = useHasBattery();
 
   const names = useMemo(() => {
     const disabled = disabledBuiltinIds(plugins);
@@ -35,11 +38,13 @@ export function useCollapsedLayout() {
       for (const provider of shownUsageProviders(usageConfig)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
       if (needsHoverOnlyGauge(usageConfig)) entries.push([HOVER_ONLY_ITEM_ID, text.item.usage(hoverOnlyItemName)]);
     }
-    entries.push(["timer", timerName], ["peripheral-battery", peripheralsName], ["session-count", text.item.sessionCount]);
+    entries.push(["timer", timerName]);
+    if (hasBattery !== false) entries.push(["battery", batteryName]);
+    entries.push(["peripheral-battery", peripheralsName], ["session-count", text.item.sessionCount]);
     const builtin = new Map(filterCollapsedItemEntries(entries, disabled, mailOn));
     for (const [id, name] of pluginItems) if (!builtin.has(id)) builtin.set(id, name);
     return builtin;
-  }, [hoverOnlyItemName, peripheralsName, pluginItems, plugins, text, timerName, usageOn, usageConfig]);
+  }, [batteryName, hasBattery, hoverOnlyItemName, peripheralsName, pluginItems, plugins, text, timerName, usageOn, usageConfig]);
 
   const listed = useMemo(() => [...names.keys()], [names]);
   const placements = useMemo(() => arrangeCollapsedItems(listed, saved), [listed, saved]);

@@ -350,6 +350,7 @@
     },
     "fuyu-calendar-prefs": "sync",
     "fuyu-todo-prefs": "sync",
+    "fuyu-battery-prefs": "sync",
     "fuyu-market-plugins": "byId"
   }
 }

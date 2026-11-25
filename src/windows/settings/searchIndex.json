@@ -1167,6 +1167,42 @@
       "page": "islandLayout",
       "zh-CN": {
         "group": "",
+        "title": "收起条电池显示",
+        "description": "选择在收起条电池芯片上显示电量百分比还是剩余/充满时间（读不到估时时自动退回百分比）。",
+        "options": [
+          "电量百分比",
+          "剩余 / 充满时间"
+        ]
+      },
+      "en": {
+        "group": "",
+        "title": "Collapsed battery display",
+        "description": "Show either battery percentage or remaining / charge time in the collapsed chip (falls back to percentage when unavailable).",
+        "options": [
+          "Percentage",
+          "Time left"
+        ]
+      },
+      "since": "next"
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
+        "title": "显示电量曲线",
+        "description": "在中等尺寸电池组件底部显示最近一段时间的电量变化曲线，可悬停或用方向键查看采样点。"
+      },
+      "en": {
+        "group": "",
+        "title": "Show battery curve",
+        "description": "Display recent battery history at the bottom of the medium battery widget; hover or use arrow keys to inspect samples."
+      },
+      "since": "next"
+    },
+    {
+      "page": "islandLayout",
+      "zh-CN": {
+        "group": "",
         "title": "显示会话数",
         "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
       },

@@ -33,6 +33,7 @@ export const BACKUP_KEYS = [
   "fuyu-voice-input",
   "fuyu-todo-prefs",
   "fuyu-calendar-prefs",
+  "fuyu-battery-prefs",
   "fuyu-market-plugins",
 ] as const;
 
