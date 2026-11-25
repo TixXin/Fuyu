@@ -107,14 +107,33 @@ function appleDevelopmentIdentity() {
   return result.status === 0 ? pickAppleDevelopment(result.stdout) : null;
 }
 
+export function signViaTemp(source, targets, signFile) {
+  const staged = `${source}.signing-${process.pid}`;
+  rmSync(staged, { force: true });
+  try {
+    copyFileSync(source, staged);
+    chmodSync(staged, statSync(source).mode);
+    signFile(staged);
+    for (const target of targets) {
+      if (target !== source) replaceWithCopy(staged, target);
+    }
+    if (targets.includes(source)) renameSync(staged, source);
+    else rmSync(staged, { force: true });
+  } catch (error) {
+    rmSync(staged, { force: true });
+    throw error;
+  }
+}
+
 export function signDevBinary(binary, dir = devSigningDir()) {
   if (!existsSync(binary)) return { signed: false, message: `${binary} is missing` };
   const apple = appleDevelopmentIdentity();
   if (signedBy(codesignDetails(binary), apple ? apple.name : DEV_IDENTITY)) return { signed: false, message: "already signed" };
   const signer = apple ? ["--sign", apple.sha1] : (({ keychain, sha1 }) => ["--sign", sha1, "--keychain", keychain])(ensureDevIdentity(dir));
   const original = cargoOriginal(binary);
-  run("codesign", ["--force", ...signer, "--identifier", DEV_IDENTIFIER, original ?? binary]);
-  if (original) replaceWithCopy(original, binary);
+  const source = original ?? binary;
+  const targets = original ? [binary, original] : [binary];
+  signViaTemp(source, targets, (file) => run("codesign", ["--force", ...signer, "--identifier", DEV_IDENTIFIER, file]));
   return {
     signed: true,
     message: `signed ${binary} as ${DEV_IDENTIFIER} with ${apple ? apple.name : DEV_IDENTITY}`,
