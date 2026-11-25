@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { JellyfishStyleContext } from "../../components/jellyfish/jellyfishStyleContext";
+import { previewSamples } from "../../features/agent-status/reminder-settings/previewSamples";
 import { activeTone } from "../../lib/theme/themeMode";
+import type { IslandForm } from "../../lib/settings/types";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { setBuiltinConfig, switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
@@ -12,6 +14,8 @@ import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { useTranslation } from "../../i18n";
 import { settingsWindowOpening } from "../settings/api";
+import { useIslandDockEdge } from "../settings/sections/useIslandDockEdge";
+import { useIslandTaskbar } from "../settings/sections/useIslandTaskbar";
 import type { SettingsFocusSection } from "../settings/storage";
 import { useLaunchAtStartup } from "../settings/useLaunchAtStartup";
 import { AgentCardsAct } from "./AgentCardsAct";
@@ -90,18 +94,29 @@ export function OnboardingWindow() {
   const lastSetup = activeSetup && currentSetupIndex === setupSteps.length - 1 && (currentStep.id !== "push" || pushStep >= PUSH_STEPS - 1);
 
   const spot = useIslandSpot();
+  const edge = useIslandDockEdge();
+  const taskbar = useIslandTaskbar();
   const viewport = useViewport();
   const card = useRef<HTMLDivElement | null>(null);
   const hudRef = useRef<HTMLDivElement | null>(null);
   const cornerRef = useRef<HTMLDivElement | null>(null);
   const hitTargets = useMemo(() => [card, hudRef, cornerRef], []);
   const placement = cardPlacement(spot, viewport, currentStep.layout, activeSetup || currentStep.spotlight === "off");
+  const agentSamples = useMemo(() => previewSamples(t.settings.agentNotice.preview.sample), [t.settings.agentNotice.preview.sample]);
+  const setIslandForm = useCallback((form: IslandForm) => setSettings((cur) => (cur.islandForm === form ? cur : { ...cur, islandForm: form })), [setSettings]);
   const director = useOnboardingDirector({
     autoPlay: Boolean(currentStep.autoDirector),
     islandExpanded: spot ? spot.expanded : null,
     stepId: currentStep.id,
+    islandForm: settings.islandForm,
+    edge,
+    taskbarAvailable: taskbar.available,
+    taskbarDocked: taskbar.docked,
+    agentsEnabled: modules.has("agents"),
+    onSetIslandForm: setIslandForm,
     notifyTitle: text.director.notifyTitle,
     notifyBody: text.director.notifyBody,
+    agentSamples,
   });
 
   useCardRect(hitTargets, `${currentStep.id}:${placement.left}:${placement.top}:${placement.width}:${track}:${qrZoomed}`, qrZoomed);
@@ -119,9 +134,14 @@ export function OnboardingWindow() {
     requestIslandWelcome("hello");
   }, [launch.mode]);
 
+  const closeGuide = () => {
+    director.restoreAnchor();
+    closeOnboardingGuide();
+  };
+
   const finish = () => {
     if (!activeWhatsNew) requestIslandWelcome("ready");
-    closeOnboardingGuide();
+    closeGuide();
   };
 
   const exitSetup = (markDone: boolean) => {
@@ -188,7 +208,7 @@ export function OnboardingWindow() {
   useOnboardingKeyboard({
     qrZoomed,
     onCloseQr: () => setQrZoomed(false),
-    onCloseGuide: closeOnboardingGuide,
+    onCloseGuide: closeGuide,
     onForward: forward,
     onBackward: backward,
   });
@@ -244,6 +264,8 @@ export function OnboardingWindow() {
             hudRef={hudRef}
             status={director.status}
             currentScene={director.currentScene}
+            sceneIndex={director.sceneIndex}
+            sceneCount={director.sceneCount}
             onToggle={director.togglePlay}
             onNext={director.nextScene}
           />
@@ -259,12 +281,12 @@ export function OnboardingWindow() {
                 setPushStep(0);
               }}
               onBackToSummary={() => exitSetup(false)}
-              onClose={closeOnboardingGuide}
+              onClose={closeGuide}
             />
           ) : activeWhatsNew ? (
-            <OnboardingHeader mode="whatsNew" steps={whatsNewSteps} index={whatsNewIndex} onJump={setIndex} onClose={closeOnboardingGuide} />
+            <OnboardingHeader mode="whatsNew" steps={whatsNewSteps} index={whatsNewIndex} onJump={setIndex} onClose={closeGuide} />
           ) : (
-            <OnboardingHeader mode="firstRun" steps={mainSteps} index={mainIndex} onJump={setIndex} onClose={closeOnboardingGuide} />
+            <OnboardingHeader mode="firstRun" steps={mainSteps} index={mainIndex} onJump={setIndex} onClose={closeGuide} />
           )}
           <section className="onboarding__body" key={currentStep.id}>
             {!spot && !activeSetup && <p className="onboarding__notice">{isMacOS ? text.noIslandMac : text.noIsland}</p>}
@@ -272,8 +294,17 @@ export function OnboardingWindow() {
               <HelloAct
                 settings={settings}
                 onSettingsChange={setSettings}
+                scenes={director.scenes}
+                status={director.status}
                 activeScene={director.activeScene}
+                currentScene={director.currentScene}
+                currentDurationMs={director.currentDurationMs}
+                runToken={director.runToken}
+                anchorDirty={director.anchorDirty}
                 onSelectScene={director.selectScene}
+                onPlayGroup={director.playGroup}
+                onTogglePlay={director.togglePlay}
+                onRestoreAnchor={director.restoreAnchor}
               />
             )}
             {currentStep.id === "shape" && (
@@ -281,7 +312,7 @@ export function OnboardingWindow() {
                 settings={settings}
                 onSettingsChange={setSettings}
                 onPreviewMotion={director.previewMotion}
-                onUserInteract={() => director.pause("user")}
+                onUserInteract={director.claimUserControl}
               />
             )}
             {currentStep.id === "outfit" && (
@@ -321,7 +352,7 @@ export function OnboardingWindow() {
               <WhatsNewNotesAct fromVersion={launch.fromVersion} onLeaveForSettings={leaveForSettings} />
             )}
             {currentStep.id === "whatsNewForms" && (
-              <WhatsNewFormsAct settings={settings} onSettingsChange={setSettings} />
+              <WhatsNewFormsAct settings={settings} onSettingsChange={setSettings} onUserInteract={director.claimUserControl} />
             )}
             {currentStep.id === "agentCards" && <AgentCardsAct settings={settings} onSettingsChange={setSettings} />}
             {currentStep.id === "agentConnect" && <AgentConnectAct settings={settings} onSettingsChange={setSettings} />}
@@ -331,7 +362,7 @@ export function OnboardingWindow() {
             {lastMain || lastWhatsNew ? (
               <span className="onboarding__esc">{text.escHint}</span>
             ) : (
-              <button className="onboarding__button onboarding__button--quiet" type="button" onClick={closeOnboardingGuide}>
+              <button className="onboarding__button onboarding__button--quiet" type="button" onClick={closeGuide}>
                 {text.exit}
               </button>
             )}

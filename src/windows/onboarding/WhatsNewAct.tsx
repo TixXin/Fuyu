@@ -71,15 +71,17 @@ export function WhatsNewNotesAct({
 export function WhatsNewFormsAct({
   settings,
   onSettingsChange,
+  onUserInteract,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
+  onUserInteract?: () => void;
 }) {
   const text = useTranslation().onboarding.whatsNew;
   return (
     <>
       <ActHeading title={text.formsTitle} lead={text.formsLead} />
-      <IslandFormsPicker settings={settings} onSettingsChange={onSettingsChange} />
+      <IslandFormsPicker settings={settings} onSettingsChange={onSettingsChange} onUserInteract={onUserInteract} />
     </>
   );
 }

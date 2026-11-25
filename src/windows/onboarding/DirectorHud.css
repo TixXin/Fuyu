@@ -45,6 +45,12 @@
   text-overflow: ellipsis;
 }
 
+.director-hud__count {
+  color: var(--color-text-muted);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
 .director-hud__btn {
   display: inline-flex;
   align-items: center;

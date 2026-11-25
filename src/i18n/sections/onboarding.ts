@@ -1,4 +1,5 @@
 import { en as pushEn, zhCN as pushZhCN, type OnboardingPushText } from "./onboarding-push.ts";
+import type { DirectorSceneGroup, DirectorSceneId } from "../../windows/onboarding/directorScenes.ts";
 import type { OnboardingModule } from "../../windows/onboarding/personas.ts";
 
 export type OnboardingFormId = "top" | "pill" | "notch" | "bottom" | "left" | "right" | "taskbar";
@@ -30,10 +31,13 @@ export type OnboardingText = {
     userControl: string;
     pause: string;
     resume: string;
+    playAll: string;
+    restoreAnchor: string;
     nextScene: string;
     stripTitle: string;
     stripHint: string;
-    scenes: Record<"greet" | "dashboard" | "agents" | "music" | "tuck" | "collapse", string>;
+    groups: Record<DirectorSceneGroup, string>;
+    scenes: Record<DirectorSceneId, string>;
     notifyTitle: string;
     notifyBody: string;
   };
@@ -235,16 +239,35 @@ export const zhCN: OnboardingText = {
     userControl: "已交由你操控真岛",
     pause: "暂停",
     resume: "继续演示",
+    playAll: "自动连播",
+    restoreAnchor: "还原原形态",
     nextScene: "下一段",
-    stripTitle: "真岛与面板自动演示",
-    stripHint: "随时可碰真岛接管控制权",
+    stripTitle: "真岛实时演播台",
+    stripHint: "点击任意胶囊或分组立即在真岛上演一遍；随时可碰真岛接管，切步或关闭会自动还原原位置。",
+    groups: {
+      forms: "形态与吸附",
+      agents: "Agent 通知",
+      panels: "面板展开",
+    },
     scenes: {
       greet: "落岛问候",
-      dashboard: "展开 Fuyu 面板",
-      agents: "展开 Agent 页",
-      music: "展开音乐页",
+      formPill: "悬空胶囊",
+      formNotch: "刘海双翼",
+      dockRight: "右侧吸附",
+      dockLeft: "左侧吸附",
+      dockBottom: "底边吸附",
+      dockTaskbar: "任务栏嵌入",
       tuck: "贴边收起",
-      collapse: "回到收起态",
+      collapse: "唤出回位",
+      agentApproval: "审批弹窗",
+      agentQuestion: "提问卡片",
+      agentYourTurn: "等待回复",
+      agentDone: "任务完成",
+      agentFailed: "运行异常",
+      agentStack: "多条堆叠",
+      dashboard: "Fuyu 看板",
+      agents: "Agent 页",
+      music: "音乐歌词",
     },
     notifyTitle: "你好啊，我在这儿 👋",
     notifyBody: "我是浮屿，平时安静停在屏幕边缘，有事才展开。",
@@ -505,16 +528,35 @@ export const en: OnboardingText = {
     userControl: "You're in control",
     pause: "Pause",
     resume: "Resume",
+    playAll: "Play reel",
+    restoreAnchor: "Restore form",
     nextScene: "Next scene",
-    stripTitle: "Live island & panel demo",
-    stripHint: "Touch the island anytime to take control",
+    stripTitle: "Live island showcase",
+    stripHint: "Click any scene or group to watch it live on the real island; your original position restores automatically.",
+    groups: {
+      forms: "Forms & dock",
+      agents: "Agent alerts",
+      panels: "Panels",
+    },
     scenes: {
       greet: "Greeting",
-      dashboard: "Open Fuyu panel",
-      agents: "Open Agents",
-      music: "Open Music",
+      formPill: "Floating pill",
+      formNotch: "Notch wings",
+      dockRight: "Dock right",
+      dockLeft: "Dock left",
+      dockBottom: "Dock bottom",
+      dockTaskbar: "Taskbar",
       tuck: "Edge tuck",
-      collapse: "Collapse",
+      collapse: "Reveal back",
+      agentApproval: "Approval",
+      agentQuestion: "Question",
+      agentYourTurn: "Your turn",
+      agentDone: "Done",
+      agentFailed: "Failed",
+      agentStack: "Stacked",
+      dashboard: "Fuyu panel",
+      agents: "Agents tab",
+      music: "Music tab",
     },
     notifyTitle: "Hi there, I'm up here 👋",
     notifyBody: "I'm Fuyu — quiet at the screen edge until something needs you.",

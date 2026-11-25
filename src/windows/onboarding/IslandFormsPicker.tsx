@@ -88,7 +88,7 @@ export function IslandFormsPicker({
       }
       applyForm(sequence[step], false);
       step += 1;
-      timerRef.current = window.setTimeout(runNext, 950);
+      timerRef.current = window.setTimeout(runNext, 1300);
     };
     runNext();
   };

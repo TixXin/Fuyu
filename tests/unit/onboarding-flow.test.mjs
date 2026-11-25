@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { anchorRestoreTarget, groupDirectorScenes, resolveDirectorScenes } from "../../src/windows/onboarding/directorScenes.ts";
 import { clampIndex, resolveExtensions, resolveMainSteps, resolveSetupSteps, resolveWhatsNewSteps } from "../../src/windows/onboarding/flow.ts";
 import { isNewerGuideVersion, parseDirectorCommand } from "../../src/windows/onboarding/storage.ts";
 
@@ -106,4 +107,25 @@ test("clampIndex stays in range for empty and non-empty step lists", () => {
   assert.equal(clampIndex(-2, 5), 0);
   assert.equal(clampIndex(9, 5), 4);
   assert.equal(clampIndex(2, 5), 2);
+});
+
+test("resolveDirectorScenes filters taskbar and agent scenes by environment and capabilities", () => {
+  const full = resolveDirectorScenes({ agentsEnabled: true, taskbarAvailable: true });
+  assert.ok(full.some((scene) => scene.id === "dockTaskbar"));
+  assert.ok(full.some((scene) => scene.id === "agentApproval"));
+  assert.ok(full.some((scene) => scene.id === "agentStack"));
+  assert.deepEqual(groupDirectorScenes(full).map((entry) => entry.group), ["forms", "agents", "panels"]);
+
+  const noTaskbarNoAgents = resolveDirectorScenes({ agentsEnabled: false, taskbarAvailable: false });
+  assert.equal(noTaskbarNoAgents.some((scene) => scene.id === "dockTaskbar"), false);
+  assert.equal(noTaskbarNoAgents.some((scene) => scene.group === "agents"), false);
+  assert.equal(noTaskbarNoAgents.some((scene) => scene.id === "agents"), false);
+  assert.deepEqual(groupDirectorScenes(noTaskbarNoAgents).map((entry) => entry.group), ["forms", "panels"]);
+});
+
+test("anchorRestoreTarget maps saved island form and edge back to top or dock target", () => {
+  assert.deepEqual(anchorRestoreTarget({ islandForm: "pill", edge: "top", taskbarDocked: false }), { kind: "top", form: "pill" });
+  assert.deepEqual(anchorRestoreTarget({ islandForm: "top", edge: "right", taskbarDocked: false }), { kind: "dock", target: "right" });
+  assert.deepEqual(anchorRestoreTarget({ islandForm: "top", edge: "bottom", taskbarDocked: true }), { kind: "dock", target: "taskbar" });
+  assert.deepEqual(anchorRestoreTarget({ islandForm: "top", edge: "bottom", taskbarDocked: false }), { kind: "dock", target: "bottom" });
 });

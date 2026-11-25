@@ -8,12 +8,16 @@ export function DirectorHud({
   hudRef,
   status,
   currentScene,
+  sceneIndex,
+  sceneCount,
   onToggle,
   onNext,
 }: {
   hudRef: RefObject<HTMLDivElement | null>;
   status: DirectorStatus;
   currentScene: DirectorSceneId;
+  sceneIndex: number;
+  sceneCount: number;
   onToggle: () => void;
   onNext: () => void;
 }) {
@@ -29,6 +33,11 @@ export function DirectorHud({
     <div className="director-hud" ref={hudRef} role="region" aria-label={text.stripTitle}>
       <span className={`director-hud__dot director-hud__dot--${status}`} aria-hidden="true" />
       <span className="director-hud__caption">{label}</span>
+      {status === "playing" && sceneCount > 0 && (
+        <span className="director-hud__count">
+          {sceneIndex + 1}/{sceneCount}
+        </span>
+      )}
       <button className="director-hud__btn" type="button" onClick={onToggle}>
         {status === "playing" ? <Pause size={11} aria-hidden="true" /> : <Play size={11} aria-hidden="true" />}
         {status === "playing" ? text.pause : text.resume}

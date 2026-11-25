@@ -21,8 +21,12 @@
 
 ## 真岛自动化演示导演系统
 
-- 前端导演 hook（`useOnboardingDirector.ts`）经跨窗口键 `fuyu-onboarding-director` 向真岛主窗口发送真实动作指令（`expand(page)`、`collapse`、`tuck`、`reveal`、`notify`），主窗口的 `useFirstRunGuide` 直接调用 `IslandApp` 自身的导航与通知函数，驱动 **100% 真实的 `IslandShell` 和 `IslandPages`**。
-- 右上角提供悬浮导演控台 `DirectorHud`（显示当前演出的片段、暂停/继续、下一段）；遵循**用户优先原则**、切后台自动暂停（`visibilitychange`）与 `prefers-reduced-motion`（开启减少动画时停用自动轮播）。
+- 导演场景注册表（`src/windows/onboarding/directorScenes.ts`）与前端导演 hook（`useOnboardingDirector.ts`）将真实演示分为三组并在真岛上连播或按需点播：
+  1. **形态与吸附（`forms`）**：落岛问候 → 悬空胶囊（`pill`）→ 刘海双翼（`notch`）→ 右侧吸附 → 左侧吸附 → 底边吸附 → 任务栏嵌入（Windows 可用时）→ 贴边收起（`tuck`）→ 唤出回位（`collapse`）。
+  2. **Agent 通知（`agents`，启用 AI Agent 时出现）**：直接复用 `requestAgentTestNotice` + `previewSamples` 驱动真岛展示全部真实 Agent 通知形态——审批弹窗（`approval`）、提问卡片（`question`）、等待回复（`yourTurn`）、任务完成（`done`）、运行异常（`failed`）与多条堆叠（`stack`）。
+  3. **面板展开（`panels`）**：经跨窗口键 `fuyu-onboarding-director` 驱动真岛依次展开 Fuyu 看板、Agent 页与音乐歌词页（**100% 真实的 `IslandShell` 和 `IslandPages`**）。
+- **原始形态自动保护**：首次切换形态或停靠边前自动快照用户原本的 `islandForm`、停靠边与任务栏嵌入状态；切出首页、关闭引导或点「还原原形态」时自动还原，用户在「形态与外观」中主动选择形态时则自动释放快照、保留用户的新选择。
+- 右上角提供悬浮导演控台 `DirectorHud`（显示当前演出的片段与进度计数、暂停/继续、下一段）；遵循**用户优先原则**、切后台自动暂停（`visibilitychange`）与 `prefers-reduced-motion`（开启减少动画时停用自动轮播，但仍支持手动点击单段预览）。
 
 ## 左下角微信交流群二维码
 

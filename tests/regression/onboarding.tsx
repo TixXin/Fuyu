@@ -89,6 +89,15 @@ mockIPC((command, payload) => {
   }
 }, { shouldMockEvents: true });
 mockWindows("onboarding");
+const emittedTo: { label: string; event: string; payload: unknown }[] = [];
+type Invoke = (command: string, args?: unknown, options?: unknown) => Promise<unknown>;
+const internals = (window as unknown as { __TAURI_INTERNALS__: { invoke: Invoke } }).__TAURI_INTERNALS__;
+const mockedInvoke = internals.invoke;
+internals.invoke = (command, args, options) => {
+  const sent = (args ?? {}) as { target?: { label?: string }; event?: unknown; payload?: unknown };
+  if (command === "plugin:event|emit_to") emittedTo.push({ label: sent.target?.label ?? "", event: String(sent.event), payload: sent.payload });
+  return mockedInvoke(command, args, options);
+};
 
 const original = new Map(Object.entries(localStorage).filter(([key]) => key.startsWith("fuyu-")));
 const restore = () => {
@@ -179,15 +188,30 @@ if (!automated) {
     await wait(10);
     check(!document.querySelector(".wechat-lightbox"), "Pressing Esc closes the QR lightbox first without closing onboarding");
 
-    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="agents"]')!.click(); });
+    check(document.querySelectorAll("[data-director-group]").length === 3, "Act 1 exposes all three live demo groups (forms & docking, agent notices, panels)");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="formPill"]')!.click(); });
     await wait(10);
-    check(director().action === "expand" && director().page === "agents", "Clicking a director scene drives the real island to open that page");
+    check(stored().islandForm === "pill", "Clicking Floating Pill in the director strip transforms the real island form");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="dockRight"]')!.click(); });
+    await wait(10);
+    check(commands.some(({ command, args }) => command === "set_island_edge" && args.edge === "right"), "Clicking Dock Right drives real side-edge adsorption");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="agentApproval"]')!.click(); });
+    await until(() => emittedTo.some((sent) => sent.label === "main" && sent.event === "agent-test-notice"));
+    const noticeEmit = emittedTo.find((sent) => sent.label === "main" && sent.event === "agent-test-notice");
+    check((noticeEmit?.payload as { event?: string } | undefined)?.event === "approval", "Clicking an Agent notice scene triggers a real Agent test notice on the island");
+
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="agents"]')!.click(); });
+    await until(() => director().action === "expand" && director().page === "agents");
+    check(director().action === "expand" && director().page === "agents", "Clicking a panel scene clears notices and opens that page on the real island");
 
     await press("English");
     check(title() === "Hi, this is Fuyu" && button("Customize Fuyu"), "Picking English switches the guide at once");
     await press("简体中文");
 
     await press("开始定制浮屿");
+    check(stored().islandForm === "top", "Advancing out of Act 1 automatically restores the user's original island form");
     check(title() === "选一种形态，捏成喜欢的样子" && Boolean(document.querySelector(".onboarding-spotlight--calm")), "Act 2 shapes island form, theme, jellyfish and motion with a calm spotlight");
     check(document.querySelectorAll("[data-island-form]").length === 7, "Act 2 exposes all 7 island forms including taskbar when available");
     await act(async () => { document.querySelector<HTMLButtonElement>('[data-island-form="pill"]')!.click(); });
