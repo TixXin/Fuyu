@@ -73,7 +73,7 @@ test("@fuyu/plugin-base/services pulls in neither Cordis nor Node modules, so wi
     }
   };
   visit(createRequire(import.meta.url).resolve("@fuyu/plugin-base/services"));
-  assert.deepEqual([...seen].map((file) => file.split(/[\\/]/).slice(-2).join("/")), ["src/services.mjs", "src/protocol.mjs", "src/names.mjs"]);
+  assert.deepEqual([...seen].map((file) => file.split(/[\\/]/).slice(-2).join("/")), ["src/services.mjs", "src/protocol.mjs", "src/names.mjs", "src/locale.mjs"]);
 });
 
 test("a plugin provides a declared service and another calls it and hears its events", async () => {
