@@ -4,12 +4,18 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useLocale, useTranslation } from "../../i18n";
 import { bundleText, type RecommendedBundle } from "../../lib/onboarding-bundle/recommend";
 import { isMacOS, useDevBuild } from "../../lib/platform";
+import type { IslandSettings } from "../../lib/settings/types";
+import { useIslandDockEdge } from "../settings/sections/useIslandDockEdge";
+import { useIslandTaskbar } from "../settings/sections/useIslandTaskbar";
 import type { SettingsFocusSection } from "../settings/storage";
 import { ActHeading } from "./ActHeading";
 import type { OnboardingExtensionSpec } from "./flow";
+import { activeOnboardingForm } from "./IslandFormsPicker";
 import "./ReleaseAct.css";
 
 export function ReleaseAct({
+  settings,
+  moduleCount,
   extensions,
   bundle,
   agentSetupDone,
@@ -18,6 +24,8 @@ export function ReleaseAct({
   onOpenAgentSetup,
   onLeaveForSettings,
 }: {
+  settings: IslandSettings;
+  moduleCount: number;
   extensions: readonly OnboardingExtensionSpec[];
   bundle: RecommendedBundle | null;
   agentSetupDone: boolean;
@@ -28,14 +36,33 @@ export function ReleaseAct({
 }) {
   const t = useTranslation();
   const text = t.onboarding.release;
+  const shapeText = t.onboarding.shape;
   const devText = t.settings.devBuild;
   const { locale } = useLocale();
   const devBuild = useDevBuild();
+  const edge = useIslandDockEdge();
+  const taskbar = useIslandTaskbar();
+  const activeForm = activeOnboardingForm(edge, taskbar.docked, settings.islandForm);
+  const motionLabel =
+    settings.islandMotion in shapeText.motions
+      ? shapeText.motions[settings.islandMotion as keyof typeof shapeText.motions]
+      : settings.islandMotion;
   const bundleDesc = bundle ? bundleText(bundle.description, locale) : "";
 
   return (
     <>
       <ActHeading title={text.title} lead={text.lead} />
+      <div className="release-act__summary">
+        <span>
+          {text.summaryForm}: <strong>{shapeText.forms[activeForm]}</strong>
+        </span>
+        <span>
+          {text.summaryMotion}: <strong>{motionLabel}</strong>
+        </span>
+        <span>
+          <strong>{text.summaryModules(moduleCount)}</strong>
+        </span>
+      </div>
       <SettingsGroup>
         <SettingsToggleRow
           title={isMacOS ? text.launchAtStartupMac : text.launchAtStartup}

@@ -1,5 +1,11 @@
+import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { setOnboardingLaunchMode } from "./storage";
+
+export function getGuideAppVersion() {
+  return getVersion();
+}
 
 const ONBOARDING_ISLAND_EVENT = "onboarding-island";
 
@@ -14,11 +20,18 @@ function open(clearDesktop: boolean) {
 }
 
 export function openOnboardingWindow() {
+  setOnboardingLaunchMode("firstRun");
   open(false);
 }
 
 export function openFirstRunOnboardingWindow() {
+  setOnboardingLaunchMode("firstRun");
   open(true);
+}
+
+export function openWhatsNewOnboardingWindow(fromVersion?: string | null) {
+  setOnboardingLaunchMode("whatsNew", fromVersion);
+  open(false);
 }
 
 export function showOnboardingWindow() {

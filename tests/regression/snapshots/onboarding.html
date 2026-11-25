@@ -1,105 +1,140 @@
 <body style="background: linear-gradient(135deg, rgb(58, 63, 85), rgb(106, 90, 122) 50%, rgb(43, 74, 106))">
   <div id="root">
-    <main class="onboarding stage--font-system island-light onboarding--light" data-act="release" data-mode="main">
-      <div aria-hidden="true" class="onboarding-spotlight onboarding-spotlight--calm" style="width: 276px; height: 54px; --spot-x: 502px; --spot-y: -8px; --spot-radius: 27px"></div>
-      <div aria-label="欢迎使用浮屿" class="onboarding__card" role="dialog" style="left: #px; width: 480px; top: #px; max-height: 691px">
+    <main class="onboarding stage--font-system island-light onboarding--light" data-act="whatsNewForms" data-mode="whatsNew">
+      <div aria-hidden="true" class="onboarding-spotlight" style="width: 276px; height: 54px; --spot-x: 502px; --spot-y: -8px; --spot-radius: 27px"></div>
+      <div aria-label="真岛与面板自动演示" class="director-hud" role="region">
+        <span aria-hidden="true" class="director-hud__dot director-hud__dot--paused"></span>
+        <span class="director-hud__caption">
+          自动演示已暂停
+        </span>
+        <button class="director-hud__btn" type="button">
+          <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+          继续演示
+        </button>
+        <button class="director-hud__btn" type="button">
+          <svg aria-hidden="true" class="lucide lucide-skip-forward" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+          下一段
+        </button>
+      </div>
+      <div aria-label="欢迎使用浮屿" class="onboarding__card" role="dialog" style="left: #px; width: 760px; top: #px; max-height: 708px">
         <header class="onboarding__bar">
           <div class="onboarding__stage">
-            <div aria-label="第 5 步，共 5 步" class="onboarding__progress" role="group">
-              <button aria-label="回到「认识浮屿」" class="onboarding__dot onboarding__dot--done" title="回到「认识浮屿」" type="button"></button>
-              <button aria-label="回到「外观风格」" class="onboarding__dot onboarding__dot--done" title="回到「外观风格」" type="button"></button>
-              <button aria-label="回到「功能搭配」" class="onboarding__dot onboarding__dot--done" title="回到「功能搭配」" type="button"></button>
-              <button aria-label="回到「上手体验」" class="onboarding__dot onboarding__dot--done" title="回到「上手体验」" type="button"></button>
-              <button aria-current="step" aria-label="准备就绪" class="onboarding__dot onboarding__dot--active" disabled="" title="准备就绪" type="button"></button>
+            <div aria-label="第 2 步，共 2 步" class="onboarding__progress" role="group">
+              <button aria-label="回到「版本说明」" class="onboarding__dot onboarding__dot--done" title="回到「版本说明」" type="button">
+                <span aria-hidden="true" class="onboarding__dot-num">
+                  <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                </span>
+                <span class="onboarding__dot-label">
+                  版本说明
+                </span>
+              </button>
+              <button aria-current="step" aria-label="多形态体验" class="onboarding__dot onboarding__dot--active" disabled="" title="多形态体验" type="button">
+                <span aria-hidden="true" class="onboarding__dot-num">
+                  2
+                </span>
+                <span class="onboarding__dot-label">
+                  多形态体验
+                </span>
+              </button>
             </div>
-            <span class="onboarding__stage-meta">
-              <span>
-                5 / 5
-              </span>
-              <span aria-hidden="true" class="onboarding__stage-sep">
-                ·
-              </span>
-              <span>
-                准备就绪
-              </span>
-            </span>
           </div>
-          <button aria-label="关闭引导" class="onboarding__close" type="button">
-            <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-          </button>
+          <div class="onboarding__bar-right">
+            <span class="onboarding__track-pill">
+              版本更新引导
+            </span>
+            <button aria-label="关闭引导" class="onboarding__close" type="button">
+              <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+            </button>
+          </div>
         </header>
         <section class="onboarding__body">
           <div class="onboarding__heading">
             <h1 class="onboarding__title">
-              浮屿已就绪
+              在真岛上试试多种形态
             </h1>
             <p class="onboarding__lead">
-              点「开始使用」后演示内容会收起，真正的岛会安静留在屏幕顶部。
+              点下面任意形态，顶部真岛会立刻切换，随时可以还原回原来的位置。
             </p>
           </div>
-          <section class="settings-group">
-            <div class="settings-group__card">
-              <div class="settings-row">
-                <div class="settings-row__main">
-                  <div class="settings-row__text">
-                    <label class="settings-row__title" for="_id1_">
-                      开机时启动
-                    </label>
-                    <span class="settings-row__description">
-                      登录 Windows 后岛自动出现
-                    </span>
-                  </div>
-                  <div class="settings-row__control">
-                    <span class="settings-switch">
-                      <input id="_id1_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section aria-label="按需进阶配置" class="release-act__section">
-            <div class="release-act__section-head">
-              <h2 class="release-act__section-title">
-                按需进阶配置
-              </h2>
-              <span class="release-act__section-hint">
-                以下为可选项，随时可以在设置里再弄。
+          <div class="island-forms">
+            <div class="island-forms__head">
+              <span class="island-forms__label">
+                形态与停靠位置
+                <span class="island-forms__hint">
+                  ·
+                  贴合屏幕刘海，左右双翼显示状态
+                </span>
               </span>
+              <button class="onboarding__chip-btn" type="button">
+                <svg aria-hidden="true" class="lucide lucide-play" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
+                轮播形态
+              </button>
             </div>
-            <div class="release-act__cards">
-              <button class="release-act__card" data-extension="agentSetup" type="button">
-                <span aria-hidden="true" class="release-act__card-icon">
-                  <svg aria-hidden="true" class="lucide lucide-bot" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div aria-label="形态与停靠位置" class="island-forms__grid" role="radiogroup">
+              <button aria-checked="false" class="island-forms__card" data-island-form="top" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--top">
+                  <b></b>
+                  <i></i>
                 </span>
-                <span class="release-act__card-body">
-                  <span class="release-act__card-title">
-                    配置 AI Agent 与手机推送
-                    <span class="release-act__done-badge">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="11" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已配置
-                    </span>
-                  </span>
-                  <span class="release-act__card-desc">
-                    选会话布局、装状态钩子、可选接入飞书 / Telegram 推送
-                  </span>
+                <span class="island-forms__name">
+                  贴顶
                 </span>
-                <span class="release-act__card-action">
-                  再次查看
-                  <svg aria-hidden="true" class="lucide lucide-chevron-right" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="pill" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--pill">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  悬空药丸
+                </span>
+              </button>
+              <button aria-checked="true" class="island-forms__card island-forms__card--active" data-island-form="notch" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--notch">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  刘海
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="bottom" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--bottom">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  底边
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="left" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--left">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  左侧
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="right" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--right">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  右侧
+                </span>
+              </button>
+              <button aria-checked="false" class="island-forms__card" data-island-form="taskbar" role="radio" type="button">
+                <span aria-hidden="true" class="island-forms__mini island-forms__mini--taskbar">
+                  <b></b>
+                  <i></i>
+                </span>
+                <span class="island-forms__name">
+                  任务栏
                 </span>
               </button>
             </div>
-          </section>
-          <div class="release-act__bottom">
-            <button class="onboarding-release__link" type="button">
-              <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-              打开全部设置
-            </button>
-            <p class="release-act__find-later">
-              以后想改什么：右键托盘里的浮屿图标，选「设置」。
-            </p>
           </div>
         </section>
         <footer class="onboarding__footer">
@@ -110,11 +145,33 @@
             <button class="onboarding__button" type="button">
               上一步
             </button>
+            <button class="onboarding__button onboarding__button--quiet" type="button">
+              跳过此步
+            </button>
             <button class="onboarding__button onboarding__button--primary" type="button">
-              开始使用
+              我知道了，继续使用
             </button>
           </div>
         </footer>
+      </div>
+      <div aria-label="浮屿用户交流群 · 点击卡片居中放大扫码，欢迎交流与反馈" class="wechat-corner" role="button" tabindex="0">
+        <span class="wechat-corner__qr">
+          <img alt="浮屿微信交流群二维码" height="64" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" width="64">
+        </span>
+        <span class="wechat-corner__meta">
+          <span class="wechat-corner__head">
+            <span class="wechat-corner__title">
+              <span aria-hidden="true" class="wechat-corner__dot"></span>
+              浮屿用户交流群
+            </span>
+            <button class="wechat-corner__hide" type="button">
+              收起
+            </button>
+          </span>
+          <span class="wechat-corner__sub">
+            点击卡片居中放大扫码，欢迎交流与反馈
+          </span>
+        </span>
       </div>
     </main>
   </div>

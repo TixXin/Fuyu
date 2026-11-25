@@ -4,13 +4,17 @@ import type { OnboardingModule } from "./personas.ts";
 
 export type OnboardingStepId = "hello" | "shape" | "outfit" | "permissions" | "play" | "release";
 
+export type OnboardingWhatsNewStepId = "whatsNewNotes" | "whatsNewForms";
+
 export type OnboardingSetupStepId = "agentCards" | "agentConnect" | "push";
 
 export type OnboardingExtensionId = "agentSetup" | "bundle" | "mail";
 
+export type OnboardingTrack = "firstRun" | "whatsNew" | "setup";
+
 export type SpotlightMode = "pulse" | "calm" | "off";
 
-export type CardLayoutMode = "compact" | "wide";
+export type CardLayoutMode = "compact" | "wide" | "stage";
 
 export type OnboardingFlowContext = {
   isMacOS: boolean;
@@ -19,22 +23,19 @@ export type OnboardingFlowContext = {
   bundle: RecommendedBundle | null;
 };
 
-export type OnboardingStepSpec = {
-  id: OnboardingStepId;
+export type OnboardingStepSpec<Id extends string = OnboardingStepId> = {
+  id: Id;
   layout: CardLayoutMode;
   spotlight: SpotlightMode;
   skippable: boolean;
-  when: (ctx: OnboardingFlowContext) => boolean;
-};
-
-export type OnboardingSetupStepSpec = {
-  id: OnboardingSetupStepId;
-  layout: CardLayoutMode;
-  spotlight: SpotlightMode;
-  skippable: boolean;
+  autoDirector?: boolean;
   substeps?: number;
   when: (ctx: OnboardingFlowContext) => boolean;
 };
+
+export type OnboardingSetupStepSpec = OnboardingStepSpec<OnboardingSetupStepId>;
+
+export type OnboardingWhatsNewStepSpec = OnboardingStepSpec<OnboardingWhatsNewStepId>;
 
 export type OnboardingExtensionSpec = {
   id: OnboardingExtensionId;
@@ -43,18 +44,23 @@ export type OnboardingExtensionSpec = {
 };
 
 export const STEP_REGISTRY: readonly OnboardingStepSpec[] = [
-  { id: "hello", layout: "compact", spotlight: "pulse", skippable: false, when: () => true },
-  { id: "shape", layout: "compact", spotlight: "calm", skippable: false, when: () => true },
-  { id: "outfit", layout: "compact", spotlight: "calm", skippable: false, when: () => true },
+  { id: "hello", layout: "stage", spotlight: "pulse", skippable: false, autoDirector: true, when: () => true },
+  { id: "shape", layout: "stage", spotlight: "calm", skippable: false, when: () => true },
+  { id: "outfit", layout: "stage", spotlight: "calm", skippable: false, when: () => true },
   {
     id: "permissions",
-    layout: "compact",
+    layout: "wide",
     spotlight: "off",
     skippable: true,
     when: (ctx) => ctx.isMacOS && ctx.permissionKinds.length > 0,
   },
-  { id: "play", layout: "compact", spotlight: "pulse", skippable: true, when: () => true },
-  { id: "release", layout: "compact", spotlight: "calm", skippable: false, when: () => true },
+  { id: "play", layout: "wide", spotlight: "pulse", skippable: true, when: () => true },
+  { id: "release", layout: "stage", spotlight: "calm", skippable: false, when: () => true },
+];
+
+export const WHATS_NEW_REGISTRY: readonly OnboardingWhatsNewStepSpec[] = [
+  { id: "whatsNewNotes", layout: "stage", spotlight: "calm", skippable: false, when: () => true },
+  { id: "whatsNewForms", layout: "stage", spotlight: "pulse", skippable: true, when: () => true },
 ];
 
 export const AGENT_SETUP_REGISTRY: readonly OnboardingSetupStepSpec[] = [
@@ -71,6 +77,10 @@ export const EXTENSION_REGISTRY: readonly OnboardingExtensionSpec[] = [
 
 export function resolveMainSteps(ctx: OnboardingFlowContext): OnboardingStepSpec[] {
   return STEP_REGISTRY.filter((step) => step.when(ctx));
+}
+
+export function resolveWhatsNewSteps(ctx: OnboardingFlowContext): OnboardingWhatsNewStepSpec[] {
+  return WHATS_NEW_REGISTRY.filter((step) => step.when(ctx));
 }
 
 export function resolveSetupSteps(ctx: OnboardingFlowContext): OnboardingSetupStepSpec[] {

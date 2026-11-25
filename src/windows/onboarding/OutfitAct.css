@@ -1,21 +1,28 @@
+.outfit-act__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
 .outfit-act__question {
-  margin: 0 0 var(--space-md);
+  margin: 0 0 var(--space-sm);
   color: var(--color-text-muted);
   font-size: 12px;
 }
 
 .outfit-act__personas {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-md);
-  margin-bottom: var(--space-2xl);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
 }
 
 .outfit-act__persona {
   position: relative;
   display: grid;
-  gap: 3px;
-  padding: 10px 12px;
+  gap: 2px;
+  padding: 9px 11px;
   color: var(--color-text);
   font: inherit;
   text-align: left;
@@ -41,21 +48,28 @@
 }
 
 .outfit-act__persona-name {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
 }
 
 .outfit-act__persona-hint {
   color: var(--color-text-muted);
-  font-size: 11px;
-  line-height: 1.45;
+  font-size: 10.5px;
+  line-height: 1.4;
 }
 
 .outfit-act__persona-check {
   position: absolute;
-  top: 9px;
-  right: 9px;
+  top: 8px;
+  right: 8px;
   color: var(--color-accent);
+}
+
+.outfit-act__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+  gap: var(--space-lg);
+  align-items: start;
 }
 
 .outfit-act__sticker-head {
@@ -63,7 +77,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
 }
 
 .outfit-act__sticker-head .outfit-act__question {
@@ -79,7 +93,7 @@
 .outfit-act__stickers {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .outfit-act__sticker {
@@ -87,7 +101,7 @@
   align-items: center;
   gap: var(--space-sm);
   height: 30px;
-  padding: 0 12px;
+  padding: 0 11px;
   color: var(--color-text-muted);
   font: inherit;
   font-size: 12px;
@@ -114,14 +128,83 @@
   border: 1px solid var(--color-accent);
 }
 
-.outfit-act__removed {
-  margin: var(--space-xl) 0 0;
+.outfit-act__sticker--focused {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 36%, transparent);
+}
+
+.outfit-act__preview {
+  display: grid;
+  gap: var(--space-md);
+  padding: 12px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-lg);
+}
+
+.outfit-act__preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+}
+
+.outfit-act__badge {
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  font-size: 10.5px;
+  background: var(--color-white-a06);
+  color: var(--color-text-muted);
+}
+
+.outfit-act__badge--on {
+  background: color-mix(in srgb, var(--mint-text, #7ee2b8) 16%, transparent);
+  color: var(--mint-text, #7ee2b8);
+  font-weight: 600;
+}
+
+.outfit-act__preview-card {
+  display: grid;
+  gap: 5px;
+}
+
+.outfit-act__preview-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.outfit-act__preview-title svg {
+  color: var(--color-accent);
+  flex: none;
+}
+
+.outfit-act__preview-desc {
+  margin: 0;
   color: var(--color-text-muted);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.5;
+}
+
+.outfit-act__removed {
+  margin: var(--space-lg) 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 :is(.outfit-act__persona, .outfit-act__sticker):focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+@media (max-width: 680px) {
+  .outfit-act__personas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .outfit-act__split {
+    grid-template-columns: 1fr;
+  }
 }

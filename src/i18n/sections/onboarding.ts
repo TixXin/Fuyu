@@ -1,4 +1,7 @@
 import { en as pushEn, zhCN as pushZhCN, type OnboardingPushText } from "./onboarding-push.ts";
+import type { OnboardingModule } from "../../windows/onboarding/personas.ts";
+
+export type OnboardingFormId = "top" | "pill" | "notch" | "bottom" | "left" | "right" | "taskbar";
 
 export type OnboardingText = {
   windowTitle: string;
@@ -17,11 +20,38 @@ export type OnboardingText = {
   islandName: string;
   noIsland: string;
   noIslandMac: string;
+  trackLabels: Record<"firstRun" | "whatsNew" | "setup", string>;
   stages: Record<"hello" | "shape" | "outfit" | "permissions" | "play" | "release", string>;
+  whatsNewStages: Record<"whatsNewNotes" | "whatsNewForms", string>;
   setupStages: Record<"agentCards" | "agentConnect" | "push", string>;
+  director: {
+    playing: (scene: string) => string;
+    paused: string;
+    userControl: string;
+    pause: string;
+    resume: string;
+    nextScene: string;
+    stripTitle: string;
+    stripHint: string;
+    scenes: Record<"greet" | "dashboard" | "agents" | "music" | "tuck" | "collapse", string>;
+    notifyTitle: string;
+    notifyBody: string;
+  };
+  community: {
+    title: string;
+    collapsed: string;
+    sub: string;
+    hide: string;
+    modalTitle: string;
+    modalHint: string;
+    close: string;
+    qrAlt: string;
+  };
   hello: {
     title: string;
     lead: string;
+    emblemTitle: string;
+    emblemHint: string;
     language: string;
     previewLabel: string;
     previewItems: [string, string, string];
@@ -29,14 +59,29 @@ export type OnboardingText = {
   shape: {
     title: string;
     lead: string;
+    formTitle: string;
+    tourForms: string;
+    forms: Record<OnboardingFormId, string>;
+    formHints: Record<OnboardingFormId, string>;
+    taskbarLook: string;
+    themesTitle: string;
     theme: string;
     look: string;
     solid: string;
     glassHint: string;
+    jellyfishStyle: string;
+    jellyVector: string;
+    jellyPixel: string;
+    motionTitle: string;
+    playMotion: string;
+    motions: Record<"pop" | "lively" | "snappy" | "soft" | "none", string>;
   };
   outfit: {
     title: string;
     lead: string;
+    tourStart: string;
+    tourStop: string;
+    demoThis: string;
     personaQuestion: string;
     personas: Record<"code" | "office" | "study" | "fun", string>;
     list: (names: string[]) => string;
@@ -44,7 +89,11 @@ export type OnboardingText = {
     selectedCount: (on: number, total: number) => string;
     stickers: string;
     stickersHint: string;
-    modules: Record<"todo" | "music" | "agents" | "translation" | "shelf" | "mail" | "screenshot" | "clipboard", string>;
+    previewLabel: string;
+    enabledBadge: string;
+    disabledBadge: string;
+    modules: Record<OnboardingModule, string>;
+    moduleDescs: Record<OnboardingModule, string>;
   };
   play: {
     title: string;
@@ -68,6 +117,18 @@ export type OnboardingText = {
     lead: string;
     allGranted: string;
     later: string;
+  };
+  whatsNew: {
+    title: (version: string) => string;
+    upgradedFrom: (from: string, to: string) => string;
+    releasedAt: (date: string) => string;
+    lead: string;
+    loading: string;
+    empty: string;
+    openHistory: string;
+    formsTitle: string;
+    formsLead: string;
+    finish: string;
   };
   push: OnboardingPushText;
   agentCards: {
@@ -93,6 +154,9 @@ export type OnboardingText = {
   release: {
     title: string;
     lead: string;
+    summaryForm: string;
+    summaryMotion: string;
+    summaryModules: (count: number) => string;
     launchAtStartup: string;
     launchAtStartupMac: string;
     launchAtStartupHint: string;
@@ -134,44 +198,122 @@ export const zhCN: OnboardingText = {
   back: "上一步",
   backToSummary: "返回收尾",
   next: "下一步",
-  startTour: "开始认识",
+  startTour: "开始定制浮屿",
   doneSetup: "完成配置",
   close: "关闭引导",
   escHint: "按 Esc 随时退出",
   islandName: "浮屿",
   noIsland: "岛现在藏起来了。点托盘图标让它出来，引导会跟着它。",
   noIslandMac: "岛现在藏起来了。点菜单栏里的浮屿图标让它出来，引导会跟着它。",
+  trackLabels: {
+    firstRun: "首次安装引导",
+    whatsNew: "版本更新引导",
+    setup: "进阶配置工作区",
+  },
   stages: {
     hello: "认识浮屿",
-    shape: "外观风格",
-    outfit: "功能搭配",
+    shape: "形态与外观",
+    outfit: "能力全景",
     permissions: "系统权限",
     play: "上手体验",
     release: "准备就绪",
+  },
+  whatsNewStages: {
+    whatsNewNotes: "版本说明",
+    whatsNewForms: "多形态体验",
   },
   setupStages: {
     agentCards: "会话样式",
     agentConnect: "连接代理",
     push: "手机推送",
   },
+  director: {
+    playing: (scene) => `自动演示：${scene}`,
+    paused: "自动演示已暂停",
+    userControl: "已交由你操控真岛",
+    pause: "暂停",
+    resume: "继续演示",
+    nextScene: "下一段",
+    stripTitle: "真岛与面板自动演示",
+    stripHint: "随时可碰真岛接管控制权",
+    scenes: {
+      greet: "落岛问候",
+      dashboard: "展开 Fuyu 面板",
+      agents: "展开 Agent 页",
+      music: "展开音乐页",
+      tuck: "贴边收起",
+      collapse: "回到收起态",
+    },
+    notifyTitle: "你好啊，我在这儿 👋",
+    notifyBody: "我是浮屿，平时安静停在屏幕边缘，有事才展开。",
+  },
+  community: {
+    title: "浮屿微信交流群",
+    collapsed: "微信交流群",
+    sub: "点击卡片居中放大扫码，欢迎交流与反馈",
+    hide: "收起",
+    modalTitle: "浮屿微信用户交流群",
+    modalHint: "打开微信扫一扫加入交流群 · 点击空白处或按 Esc 关闭",
+    close: "关闭二维码",
+    qrAlt: "浮屿微信交流群二维码",
+  },
   hello: {
     title: "你好，这就是浮屿",
-    lead: "亮着的就是它：平时安静地停在屏幕顶部，有事才变大。一分钟带你定好风格并上手试试。",
+    lead: "亮着的就是真正的岛：平时安静地停在屏幕边缘，有事才优雅变大。一分钟带你挑形态、定外观、搭功能并亲手试一下。",
+    emblemTitle: "浮屿 · 你的桌面悬浮效率岛",
+    emblemHint: "点一下水母切换矢量 / 像素画风",
     language: "界面语言",
     previewLabel: "接下来会一起完成",
-    previewItems: ["挑外观风格", "留常用功能", "真岛试一下"],
+    previewItems: ["挑形态与外观", "搭核心能力", "真岛试一下"],
   },
   shape: {
-    title: "把它捏成你喜欢的样子",
-    lead: "改动会立刻出现在顶部真岛上。圆角、开合动画等细节以后随时可以在设置里微调。",
+    title: "选一种形态，捏成喜欢的样子",
+    lead: "每一次选择都会立刻作用于真正的岛；切换形态或开合动画时，真岛会现场演示给你看。",
+    formTitle: "形态与停靠位置",
+    tourForms: "轮播形态",
+    forms: {
+      top: "贴顶",
+      pill: "悬空药丸",
+      notch: "刘海",
+      bottom: "底边",
+      left: "左侧",
+      right: "右侧",
+      taskbar: "任务栏",
+    },
+    formHints: {
+      top: "紧贴屏幕顶边，自然向下展开",
+      pill: "离顶悬空 10px，四角全圆角带投影",
+      notch: "贴合屏幕刘海，左右双翼显示状态",
+      bottom: "贴在屏幕底边，向上展开",
+      left: "竖向细条停靠屏幕左侧",
+      right: "竖向细条停靠屏幕右侧",
+      taskbar: "直接嵌入任务栏空白槽位",
+    },
+    taskbarLook: "任务栏外观",
+    themesTitle: "主题与质感",
     theme: "深色还是浅色",
     look: "质感",
     solid: "纯色",
     glassHint: "透出桌面壁纸的毛玻璃。颜色、流动和模糊在「设置 → 外观 → 样式」里调。系统关掉「透明效果」或读不到壁纸（目前 Mac 上）时显示为纯色玻璃。",
+    jellyfishStyle: "水母画风",
+    jellyVector: "矢量",
+    jellyPixel: "像素",
+    motionTitle: "开合动画",
+    playMotion: "真岛试播",
+    motions: {
+      pop: "Q 弹",
+      lively: "灵动",
+      snappy: "利落",
+      soft: "柔和",
+      none: "无动画",
+    },
   },
   outfit: {
-    title: "留下你用得上的功能",
-    lead: "先选一个最像你日常电脑用途的组合，再用下面的功能贴纸自由增减；顶部真岛的图标会跟着变化。",
+    title: "核心能力全景，按需装配",
+    lead: "先选一个日常场景快速搭配，再自由增减下面各项内置能力；点击「在真岛演示」或开启自动巡礼，顶部真岛会切到对应页面展示。",
+    tourStart: "自动巡礼已选",
+    tourStop: "停止巡礼",
+    demoThis: "在真岛打开这一页",
     personaQuestion: "你平时主要用电脑做什么？（可多选，再点一次撤回）",
     personas: {
       code: "写代码",
@@ -180,12 +322,16 @@ export const zhCN: OnboardingText = {
       fun: "娱乐",
     },
     list: (names) => names.join("、"),
-    takenOff: (names) => `已卸下：${names}。点贴纸就能装回，以后在设置里也行。`,
+    takenOff: (names) => `已卸下：${names}。点能力卡就能装回，以后在设置里也行。`,
     selectedCount: (on, total) => `已开启 ${on} / ${total}`,
     stickers: "功能贴纸",
-    stickersHint: "点击贴纸随时装上或卸下",
+    stickersHint: "点击卡片开关对应内置能力",
+    previewLabel: "当前聚焦能力",
+    enabledBadge: "已开启",
+    disabledBadge: "未开启",
     modules: {
       todo: "待办",
+      calendar: "日历",
       music: "音乐",
       agents: "AI Agent",
       translation: "翻译",
@@ -193,15 +339,30 @@ export const zhCN: OnboardingText = {
       mail: "邮箱",
       screenshot: "截图",
       clipboard: "剪贴板",
+      timer: "计时器",
+      voice: "语音输入",
+    },
+    moduleDescs: {
+      todo: "随手记任务、项目分组与每日笔记",
+      calendar: "日程提醒与收起条会前倒计时",
+      music: "悬浮播放控制、律动波形与同步歌词",
+      agents: "Claude / Codex 等代理状态灯、审批与用量环",
+      translation: "快捷键弹窗即时翻译，不打断阅读",
+      shelf: "拖到岛上暂存文件，切窗口随时拖出",
+      mail: "新邮件提醒与岛内快速预览回复",
+      screenshot: "选区标注、置顶贴图与录屏",
+      clipboard: "全局热键秒开剪贴板历史与图片预览",
+      timer: "收起条安静倒计时、番茄钟与休息提醒",
+      voice: "本地离线语音转文字，直接存待办或复制",
     },
   },
   play: {
     title: "在真岛上试一下",
     lead: (song, agent) =>
-      song && agent ? "岛上正放着一首演示歌曲，还有一个演示 Agent 在干活。动手完成下面的小任务，每完成一个亮一颗星。"
-        : song ? "岛上正放着一首演示歌曲。动手完成下面的小任务，每完成一个亮一颗星。"
-          : agent ? "岛上有一个演示 Agent 在干活。动手完成下面的小任务，每完成一个亮一颗星。"
-            : "动手完成下面的小任务，每完成一个亮一颗星。",
+      song && agent ? "岛上正放着演示歌曲和演示 Agent。亲手完成下面的小任务，每完成一个亮一颗星。"
+        : song ? "岛上正放着演示歌曲。亲手完成下面的小任务，每完成一个亮一颗星。"
+          : agent ? "岛上有一个演示 Agent 在干活。亲手完成下面的小任务，每完成一个亮一颗星。"
+            : "亲手完成下面的小任务，每完成一个亮一颗星。",
     stars: (done, total) => `${done} / ${total}`,
     allDone: "全部完成，你已经上手了。",
     hover: "把鼠标停在岛上，让它展开",
@@ -221,6 +382,18 @@ export const zhCN: OnboardingText = {
     lead: "你选的功能要用到下面这些系统权限，开了以后下一步练习和日常快捷键才能直接生效。",
     allGranted: "权限都已允许，你选的功能都可以直接用。",
     later: "现在不开也可以点「跳过此步」，以后在「设置 → 通用 → 系统权限」里随时能补开。",
+  },
+  whatsNew: {
+    title: (version) => (version ? `浮屿 v${version.replace(/^v/i, "")} 更新了什么` : "这个版本更新了什么"),
+    upgradedFrom: (from, to) => `已从 v${from.replace(/^v/i, "")} 升级至 v${to.replace(/^v/i, "")}`,
+    releasedAt: (date) => `发布于 ${date}`,
+    lead: "这里汇总了本次版本的主要更新内容，接下来也可以在真岛上直接试一下新形态。",
+    loading: "正在读取版本说明…",
+    empty: "当前版本已更新就绪，可以在设置 → 关于 → 版本历史中查看完整记录。",
+    openHistory: "查看完整版本历史",
+    formsTitle: "在真岛上试试多种形态",
+    formsLead: "点下面任意形态，顶部真岛会立刻切换，随时可以还原回原来的位置。",
+    finish: "我知道了，继续使用",
   },
   push: pushZhCN,
   agentCards: {
@@ -245,7 +418,10 @@ export const zhCN: OnboardingText = {
   },
   release: {
     title: "浮屿已就绪",
-    lead: "点「开始使用」后演示内容会收起，真正的岛会安静留在屏幕顶部。",
+    lead: "点「开始使用」后演示内容会收起，真正的岛会安静留在屏幕边缘。",
+    summaryForm: "形态",
+    summaryMotion: "动效",
+    summaryModules: (count) => `已启 ${count} 项能力`,
     launchAtStartup: "开机时启动",
     launchAtStartupMac: "登录 Mac 时启动",
     launchAtStartupHint: "登录 Windows 后岛自动出现",
@@ -290,44 +466,122 @@ export const en: OnboardingText = {
   back: "Back",
   backToSummary: "Back to finish",
   next: "Next",
-  startTour: "Let's start",
+  startTour: "Customize Fuyu",
   doneSetup: "Done",
   close: "Close the guide",
   escHint: "Press Esc to leave at any time",
   islandName: "Fuyu",
   noIsland: "The island is hidden. Click the tray icon to bring it back, and the guide will follow it.",
   noIslandMac: "The island is hidden. Click the Fuyu icon in the menu bar to bring it back, and the guide will follow it.",
+  trackLabels: {
+    firstRun: "First-run Tour",
+    whatsNew: "What's New",
+    setup: "Setup Workspace",
+  },
   stages: {
     hello: "Welcome",
-    shape: "Look",
-    outfit: "Features",
+    shape: "Form & Look",
+    outfit: "Capabilities",
     permissions: "Permissions",
     play: "Try it",
     release: "Ready",
+  },
+  whatsNewStages: {
+    whatsNewNotes: "Release Notes",
+    whatsNewForms: "Try Forms",
   },
   setupStages: {
     agentCards: "Layout",
     agentConnect: "Connect",
     push: "Phone push",
   },
+  director: {
+    playing: (scene) => `Auto-demo: ${scene}`,
+    paused: "Auto-demo paused",
+    userControl: "You're in control",
+    pause: "Pause",
+    resume: "Resume",
+    nextScene: "Next scene",
+    stripTitle: "Live island & panel demo",
+    stripHint: "Touch the island anytime to take control",
+    scenes: {
+      greet: "Greeting",
+      dashboard: "Open Fuyu panel",
+      agents: "Open Agents",
+      music: "Open Music",
+      tuck: "Edge tuck",
+      collapse: "Collapse",
+    },
+    notifyTitle: "Hi there, I'm up here 👋",
+    notifyBody: "I'm Fuyu — quiet at the screen edge until something needs you.",
+  },
+  community: {
+    title: "WeChat Community",
+    collapsed: "WeChat Group",
+    sub: "Click card to enlarge & scan with WeChat",
+    hide: "Hide",
+    modalTitle: "Fuyu WeChat Community",
+    modalHint: "Scan with WeChat to join · Click backdrop or press Esc to close",
+    close: "Close QR code",
+    qrAlt: "Fuyu WeChat community QR code",
+  },
   hello: {
     title: "Hi, this is Fuyu",
-    lead: "That's it, lit up at the top of your screen: quiet while you work, expanding when something needs you. Take a minute to make it yours.",
+    lead: "That's the real island lit up above: quiet while you focus, expanding when something needs you. Take a minute to pick its form, look, and tools.",
+    emblemTitle: "Fuyu · Your Floating Desktop Island",
+    emblemHint: "Click the jellyfish to switch Vector / Pixel",
     language: "Language",
     previewLabel: "What we'll do next",
-    previewItems: ["Pick a look", "Choose features", "Try the real island"],
+    previewItems: ["Form & look", "Pick tools", "Try it live"],
   },
   shape: {
-    title: "Shape it your way",
-    lead: "Changes appear on the real island immediately. Corners, motion and finer details are always in Settings.",
+    title: "Pick a form and shape it your way",
+    lead: "Every change applies live to the real island. Try switching forms or motion presets to watch it react.",
+    formTitle: "Form & Docking",
+    tourForms: "Tour forms",
+    forms: {
+      top: "Top",
+      pill: "Pill",
+      notch: "Notch",
+      bottom: "Bottom",
+      left: "Left",
+      right: "Right",
+      taskbar: "Taskbar",
+    },
+    formHints: {
+      top: "Flush against the top screen edge",
+      pill: "Floats 10px below the top with soft shadow",
+      notch: "Wraps the display notch with left & right wings",
+      bottom: "Docks along the bottom edge and opens upward",
+      left: "Slim vertical bar docked on the left edge",
+      right: "Slim vertical bar docked on the right edge",
+      taskbar: "Embeds directly inside the Windows taskbar",
+    },
+    taskbarLook: "Taskbar look",
+    themesTitle: "Themes & Surface",
     theme: "Dark or light",
     look: "Surface",
     solid: "Solid",
     glassHint: "Frosted glass showing your desktop wallpaper. Colors, flow and blur are in Settings → Appearance → Style. With Transparency effects off, or no wallpaper to read (on Mac for now), the glass stays solid.",
+    jellyfishStyle: "Jellyfish",
+    jellyVector: "Vector",
+    jellyPixel: "Pixel",
+    motionTitle: "Open/close motion",
+    playMotion: "Play live",
+    motions: {
+      pop: "Pop",
+      lively: "Lively",
+      snappy: "Snappy",
+      soft: "Soft",
+      none: "None",
+    },
   },
   outfit: {
-    title: "Keep the features you'll use",
-    lead: "Start with a preset that matches how you use this computer, then toggle individual stickers while watching the island update live.",
+    title: "Choose the capabilities you'll use",
+    lead: "Start with a preset that matches your workflow, then toggle built-in capabilities and preview any tab live on the real island.",
+    tourStart: "Auto-tour enabled",
+    tourStop: "Stop tour",
+    demoThis: "Open on real island",
     personaQuestion: "What do you mostly use your computer for? (Pick any; click again to undo)",
     personas: {
       code: "Coding",
@@ -336,12 +590,16 @@ export const en: OnboardingText = {
       fun: "Leisure",
     },
     list: (names) => names.join(", "),
-    takenOff: (names) => `Taken off: ${names}. Click a sticker to put one back, or do it in Settings later.`,
+    takenOff: (names) => `Taken off: ${names}. Click a card to put one back, or do it in Settings later.`,
     selectedCount: (on, total) => `${on} / ${total} on`,
     stickers: "Feature stickers",
-    stickersHint: "Click any sticker to turn it on or off",
+    stickersHint: "Click any card to turn that capability on or off",
+    previewLabel: "Focused capability",
+    enabledBadge: "Enabled",
+    disabledBadge: "Off",
     modules: {
       todo: "Todos",
+      calendar: "Calendar",
       music: "Music",
       agents: "AI agents",
       translation: "Translate",
@@ -349,6 +607,21 @@ export const en: OnboardingText = {
       mail: "Mail",
       screenshot: "Screenshots",
       clipboard: "Clipboard",
+      timer: "Timer",
+      voice: "Voice input",
+    },
+    moduleDescs: {
+      todo: "Quick tasks, project groups & daily notes",
+      calendar: "Schedules & collapsed pre-meeting countdown",
+      music: "Floating controls, live wave & synced lyrics",
+      agents: "Status lights, inline approvals & usage rings",
+      translation: "Instant hotkey translation popup",
+      shelf: "Drop files to hold & drag out anywhere",
+      mail: "Incoming mail alerts & quick replies",
+      screenshot: "Snip, pin on top & screen recording",
+      clipboard: "Global hotkey history & image previews",
+      timer: "Collapsed countdown, Pomodoro & break alerts",
+      voice: "Offline local speech-to-text into todos",
     },
   },
   play: {
@@ -378,6 +651,18 @@ export const en: OnboardingText = {
     allGranted: "All set — every feature you picked is ready to work.",
     later: "You can also click Skip step now and enable these later in Settings → General → System permissions.",
   },
+  whatsNew: {
+    title: (version) => (version ? `What's new in Fuyu v${version.replace(/^v/i, "")}` : "What's new in this update"),
+    upgradedFrom: (from, to) => `Updated from v${from.replace(/^v/i, "")} to v${to.replace(/^v/i, "")}`,
+    releasedAt: (date) => `Released ${date}`,
+    lead: "Here are the highlights of this release, followed by a quick live preview of island forms.",
+    loading: "Loading release notes…",
+    empty: "You're up to date. Full notes are always available in Settings → About → Version history.",
+    openHistory: "View full version history",
+    formsTitle: "Try Fuyu's island forms live",
+    formsLead: "Click any form below to see the real island transform immediately.",
+    finish: "Got it, continue",
+  },
   push: pushEn,
   agentCards: {
     title: "Pick an agent session layout",
@@ -401,7 +686,10 @@ export const en: OnboardingText = {
   },
   release: {
     title: "You're all set",
-    lead: "Click Get started to clear the demo content and keep Fuyu ready at the top of your screen.",
+    lead: "Click Get started to clear the demo content and keep Fuyu ready at the edge of your screen.",
+    summaryForm: "Form",
+    summaryMotion: "Motion",
+    summaryModules: (count) => `${count} tools active`,
     launchAtStartup: "Start with Windows",
     launchAtStartupMac: "Open at Mac login",
     launchAtStartupHint: "The island appears after you sign in",

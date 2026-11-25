@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { clampIndex, resolveExtensions, resolveMainSteps, resolveSetupSteps } from "../../src/windows/onboarding/flow.ts";
+import { clampIndex, resolveExtensions, resolveMainSteps, resolveSetupSteps, resolveWhatsNewSteps } from "../../src/windows/onboarding/flow.ts";
+import { parseDirectorCommand } from "../../src/windows/onboarding/storage.ts";
 
 const sampleBundle = {
   id: "pomodoro-flow",
@@ -20,6 +21,7 @@ test("main flow stays concise on Windows even when agents and a bundle are avail
     steps.map((step) => step.id),
     ["hello", "shape", "outfit", "play", "release"],
   );
+  assert.equal(steps[0].autoDirector, true);
 });
 
 test("macOS permissions always come before the hands-on practice step", () => {
@@ -45,6 +47,16 @@ test("macOS skips permissions when no selected module requires system permission
   assert.equal(steps.some((step) => step.id === "permissions"), false);
 });
 
+test("whats-new track stays independent from first-run steps", () => {
+  const steps = resolveWhatsNewSteps({
+    isMacOS: true,
+    modules: new Set(["agents"]),
+    permissionKinds: [],
+    bundle: null,
+  });
+  assert.deepEqual(steps.map((step) => step.id), ["whatsNewNotes", "whatsNewForms"]);
+});
+
 test("optional extensions and agent setup track adapt to enabled modules and bundle availability", () => {
   const full = {
     isMacOS: false,
@@ -64,6 +76,20 @@ test("optional extensions and agent setup track adapt to enabled modules and bun
   };
   assert.deepEqual(resolveExtensions(minimal), []);
   assert.deepEqual(resolveSetupSteps(minimal), []);
+});
+
+test("director command parser validates action payloads and expiry", () => {
+  const now = 2_000_000;
+  assert.deepEqual(
+    parseDirectorCommand(JSON.stringify({ action: "expand", page: "agents", requestedAt: now - 100 }), now),
+    { action: "expand", page: "agents", requestedAt: now - 100 },
+  );
+  assert.deepEqual(
+    parseDirectorCommand(JSON.stringify({ action: "tuck", requestedAt: now - 50 }), now),
+    { action: "tuck", requestedAt: now - 50 },
+  );
+  assert.equal(parseDirectorCommand(JSON.stringify({ action: "tuck", requestedAt: now - 8_000 }), now), null);
+  assert.equal(parseDirectorCommand(JSON.stringify({ action: "unknown", requestedAt: now }), now), null);
 });
 
 test("clampIndex stays in range for empty and non-empty step lists", () => {

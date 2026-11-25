@@ -1,0 +1,73 @@
+.whats-new-act__banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: 9px 12px;
+  margin-bottom: var(--space-lg);
+  background: color-mix(in srgb, var(--color-accent) 11%, var(--color-white-a04));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-white-a08));
+  border-radius: var(--radius-lg);
+}
+
+.whats-new-act__version-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.whats-new-act__pill {
+  padding: 2px 9px;
+  color: var(--color-on-accent);
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--color-accent);
+  border-radius: var(--radius-pill);
+}
+
+.whats-new-act__span {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.whats-new-act__date {
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+}
+
+.whats-new-act__notes {
+  padding: 12px 14px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-lg);
+}
+
+.whats-new-act__list {
+  display: grid;
+  gap: 6px;
+}
+
+.whats-new-act__heading {
+  margin: 6px 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.whats-new-act__heading:first-child {
+  margin-top: 0;
+}
+
+.whats-new-act__item,
+.whats-new-act__text,
+.whats-new-act__empty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.whats-new-act__footer {
+  margin-top: var(--space-lg);
+}

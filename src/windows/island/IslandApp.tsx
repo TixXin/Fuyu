@@ -91,7 +91,11 @@ export function IslandApp() {
   const settings = useResolvedTheme(useSettingsWithBuiltinSwitches(storedSettings));
   useTrayMark(settings.jellyfishStyle);
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
-  useFirstRunGuide();
+  const director = useMemo(
+    () => ({ openIslandPage, collapseIsland, tuckIsland, revealIsland }),
+    [openIslandPage, collapseIsland, tuckIsland, revealIsland],
+  );
+  useFirstRunGuide(director);
   const demo = useOnboardingDemo();
   const decor = useIslandDecor();
   const gauges = useCollapsedGauges(mode !== "collapsed" || isTucked || game.quiet);

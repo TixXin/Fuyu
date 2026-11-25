@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings.ts";
 import { MODULES, NO_ANSWER, PERSONAS, enabledModules, moduleSwitchChanges, modulesFor, personaModules, takenOff, togglePersona, withModules } from "../../src/windows/onboarding/personas.ts";
 
 test("each answer picks its own set, and several answers take every module any of them uses", () => {
-  assert.deepEqual([...modulesFor(["fun"])].sort(), ["music", "shelf"]);
+  assert.deepEqual([...modulesFor(["fun"])].sort(), ["music", "screenshot", "shelf"]);
   assert.ok(modulesFor(["code"]).has("agents"));
   assert.ok(!modulesFor(["office"]).has("agents"));
   const both = modulesFor(["code", "fun"]);
@@ -26,8 +26,8 @@ test("the island gets exactly the modules chosen; clipboard history is not in it
 test("an answer swaps in its set and remembers what was on, so taking every answer back restores it", () => {
   const before = new Set(["todo", "music", "agents", "translation", "shelf", "mail", "clipboard"]);
   const fun = togglePersona(NO_ANSWER, "fun", before);
-  assert.deepEqual([...fun.modules].sort(), ["music", "shelf"]);
-  assert.deepEqual(takenOff(fun.answer, fun.modules), ["todo", "agents", "translation", "mail", "clipboard"]);
+  assert.deepEqual([...fun.modules].sort(), ["music", "screenshot", "shelf"]);
+  assert.deepEqual(takenOff(fun.answer, fun.modules), ["agents", "todo", "clipboard", "translation", "mail"]);
 
   const both = togglePersona(fun.answer, "code", fun.modules);
   assert.deepEqual(both.answer.personas, ["fun", "code"]);
@@ -48,7 +48,7 @@ test("what a persona card lists is exactly what it puts on", () => {
 });
 
 test("the modules on now are read back the same way", () => {
-  const chosen = new Set(["todo", "agents", "clipboard"]);
+  const chosen = new Set(["todo", "calendar", "agents", "clipboard", "timer", "voice"]);
   assert.deepEqual(enabledModules(withModules(DEFAULT_SETTINGS, chosen), true), chosen);
   assert.ok(!enabledModules(withModules(DEFAULT_SETTINGS, chosen), false).has("clipboard"));
   assert.equal(enabledModules(withModules(DEFAULT_SETTINGS, new Set(MODULES)), true).size, MODULES.length);
@@ -57,12 +57,15 @@ test("the modules on now are read back the same way", () => {
 test("onboarding reads and diffs built-in plugin switches and mail source directly when plugins are loaded", () => {
   const plugins = [
     { id: "todos", kind: "builtin", enabled: false, background: [], config: {} },
+    { id: "calendar", kind: "builtin", enabled: false, background: [], config: {} },
     { id: "music", kind: "builtin", enabled: true, background: [], config: {} },
     { id: "agents", kind: "builtin", enabled: false, background: [], config: {} },
     { id: "translation", kind: "builtin", enabled: true, background: [], config: {} },
     { id: "file-shelf", kind: "builtin", enabled: true, background: [], config: {} },
     { id: "screenshot", kind: "builtin", enabled: false, background: [], config: {} },
     { id: "clipboard", kind: "builtin", enabled: false, background: [], config: {} },
+    { id: "timer", kind: "builtin", enabled: false, background: [], config: {} },
+    { id: "voice-input", kind: "builtin", enabled: false, background: [], config: {} },
     { id: "messages", kind: "builtin", enabled: true, background: [], config: { mail: false } },
   ];
   const current = enabledModules(DEFAULT_SETTINGS, true, plugins);
