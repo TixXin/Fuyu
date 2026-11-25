@@ -295,6 +295,7 @@
       "fields": {
         "shortcuts": "local",
         "printScreen": "optional",
+        "delaySeconds": "sync",
         "saveFolder": "local",
         "cardSeconds": "sync",
         "historyDays": "sync",

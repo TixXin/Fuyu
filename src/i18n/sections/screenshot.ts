@@ -100,6 +100,13 @@ export type ScreenshotText = {
     shelved: string;
     close: string;
   };
+  delay: {
+    countdown: (seconds: number) => string;
+    cancel: string;
+    menu: string;
+    option: (seconds: number) => string;
+    buttonHint: string;
+  };
   card: {
     copied: string;
     saved: string;
@@ -271,6 +278,13 @@ export const zhCN: ScreenshotText = {
     shelved: "已放进文件中转",
     close: "关闭",
   },
+  delay: {
+    countdown: (seconds) => `${seconds} 秒后截图`,
+    cancel: "取消延时截图",
+    menu: "延时截图",
+    option: (seconds) => `${seconds} 秒后截图`,
+    buttonHint: "截图（右键可选延时）",
+  },
   card: {
     copied: "截图已复制",
     saved: "截图已保存",
@@ -441,6 +455,13 @@ export const en: ScreenshotText = {
     shelve: "Put on the file shelf",
     shelved: "Put on the file shelf",
     close: "Close",
+  },
+  delay: {
+    countdown: (seconds) => `Screenshot in ${seconds} s`,
+    cancel: "Cancel delayed screenshot",
+    menu: "Delayed screenshot",
+    option: (seconds) => `In ${seconds} s`,
+    buttonHint: "Screenshot (right-click for delay)",
   },
   card: {
     copied: "Screenshot copied",

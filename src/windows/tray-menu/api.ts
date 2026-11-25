@@ -23,6 +23,7 @@ export type TrayMenuAction =
   | "toggle_island"
   | "raise_island"
   | "screenshot"
+  | "screenshot_delayed"
   | "translate"
   | "clipboard"
   | "toggle_clipboard_pause"

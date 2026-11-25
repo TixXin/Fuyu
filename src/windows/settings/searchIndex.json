@@ -3667,6 +3667,20 @@
     {
       "page": "screenshot",
       "zh-CN": {
+        "group": "截图时",
+        "title": "延时截图时长",
+        "description": "按延时截图快捷键时等待的秒数，方便打开下拉菜单或悬停提示后再冻结屏幕。也可以在岛上剪刀按钮或托盘卡片右键临时选 3 / 5 / 10 秒。"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Delayed screenshot timer",
+        "description": "How many seconds to wait before freezing the screen when using the delayed shortcut, so menus or tooltips can open first. Right-click the scissors button on the island or the tray card to pick 3, 5 or 10 s."
+      },
+      "since": "next"
+    },
+    {
+      "page": "screenshot",
+      "zh-CN": {
         "group": "截完之后",
         "title": "保存位置",
         "description": "Ctrl+S 和贴图的「保存」放到这里，文件名带时间。要写完整路径，例如 D:\\截图；留空就是「图片 › 浮屿截图」。"

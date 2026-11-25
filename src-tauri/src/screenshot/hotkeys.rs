@@ -195,8 +195,17 @@ fn run_action(action: ShortcutAction) {
         crate::recording::stop_in_background(app);
         return;
     }
+    if action == ShortcutAction::Delayed {
+        if !super::delay::cancel(app) {
+            super::delay::start(app, None);
+        }
+        return;
+    }
     match action.mode() {
-        Some(mode) => session::start(app, mode),
+        Some(mode) => {
+            super::delay::cancel(app);
+            session::start(app, mode);
+        }
         None => super::pin::toggle_all(app),
     }
 }

@@ -16,6 +16,9 @@ export type TrayMenuText = {
   showIsland: string;
   hideIsland: string;
   screenshot: string;
+  screenshotDelay: string;
+  screenshotDelayOption: (seconds: number) => string;
+  screenshotDelayHint: string;
   translate: string;
   clipboard: string;
   off: string;
@@ -67,6 +70,9 @@ export const zhCN: TrayMenuText = {
   showIsland: "显示岛屿",
   hideIsland: "隐藏岛屿",
   screenshot: "截图",
+  screenshotDelay: "延时截图",
+  screenshotDelayOption: (seconds) => `${seconds} 秒`,
+  screenshotDelayHint: "右键可选延时",
   translate: "翻译",
   clipboard: "剪贴板",
   off: "已关闭",
@@ -118,6 +124,9 @@ export const en: TrayMenuText = {
   showIsland: "Show island",
   hideIsland: "Hide island",
   screenshot: "Screenshot",
+  screenshotDelay: "Delayed screenshot",
+  screenshotDelayOption: (seconds) => `${seconds} s`,
+  screenshotDelayHint: "Right-click for delay",
   translate: "Translate",
   clipboard: "Clipboard",
   off: "Off",

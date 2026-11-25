@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { configureScreenshot, rememberPins, startScreenshot } from "./api";
+import { startDelayedScreenshot } from "./delay/api";
 import { useScreenshotSettings } from "./useScreenshotSettings";
 import { getErrorMessage } from "../../utils/error";
 
@@ -26,5 +27,10 @@ export function useIslandScreenshot(enabled: boolean, collapseIsland: () => void
     }, COLLAPSE_MS);
   }, [collapseIsland]);
 
-  return { settings, start: enabled ? start : null };
+  const startDelayed = useCallback((seconds?: number) => {
+    collapseIsland();
+    startDelayedScreenshot(seconds).catch((error: unknown) => console.error("Failed to start a delayed screenshot", getErrorMessage(error)));
+  }, [collapseIsland]);
+
+  return { settings, start: enabled ? start : null, startDelayed: enabled ? startDelayed : null };
 }

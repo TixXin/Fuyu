@@ -19,6 +19,7 @@ export function FeatureButton({
   showShortcut,
   data,
   handlers,
+  onScreenshotDelayMenu,
 }: TrayCardProps & { feature: TrayFeature; variant: "tile" | "pill"; showShortcut: boolean }) {
   const text = useTranslation().trayMenu;
   const Icon = ICONS[feature];
@@ -27,7 +28,8 @@ export function FeatureButton({
   const raw = data.shortcuts[feature];
   const shortcut = raw ? shortcutLabel(raw, data.state.platform === "macos") : "";
   const name = [label, on ? shortcut : text.off].filter(Boolean).join(text.separator);
-  const tip = on ? [label, shortcut].filter(Boolean).join("  ") : text.offHint(label);
+  const delayTip = feature === "screenshot" && on ? text.screenshotDelayHint : "";
+  const tip = on ? [label, shortcut, delayTip].filter(Boolean).join("  ") : text.offHint(label);
   return (
     <button
       type="button"
@@ -36,6 +38,11 @@ export function FeatureButton({
       aria-label={name}
       title={tip}
       onClick={() => handlers.onAction(on ? feature : "open_settings")}
+      onContextMenu={feature === "screenshot" && on && onScreenshotDelayMenu ? (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onScreenshotDelayMenu();
+      } : undefined}
     >
       <Icon size={16} aria-hidden="true" />
       <span className="tray-card__label">{label}</span>

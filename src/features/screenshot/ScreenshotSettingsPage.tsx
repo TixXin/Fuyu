@@ -7,7 +7,7 @@ import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../lib/settings/types";
 import { ScreenshotShortcutRows } from "./ScreenshotShortcutRows";
-import { CARD_SECONDS, HISTORY_DAYS, SHORTCUT_PANEL_CORNERS, SHORTCUT_PANEL_STATES, type CardSeconds, type HistoryDays, type ScreenshotSettings, type ShortcutPanelCorner, type ShortcutPanelState } from "./settings";
+import { CARD_SECONDS, DELAY_SECONDS, HISTORY_DAYS, SHORTCUT_PANEL_CORNERS, SHORTCUT_PANEL_STATES, type CardSeconds, type DelaySeconds, type HistoryDays, type ScreenshotSettings, type ShortcutPanelCorner, type ShortcutPanelState } from "./settings";
 import { RecordSettingsGroup } from "./RecordSettingsGroup";
 import { useScreenshotSettings } from "./useScreenshotSettings";
 import { useTranslation } from "../../i18n";
@@ -92,6 +92,18 @@ function CapturingSection({ settings, onSettingsChange, screenshot, onScreenshot
           }
         />
       )}
+      <SettingsRow
+        title={text.delaySeconds}
+        description={text.delaySecondsHint}
+        control={
+          <SettingsSelect
+            value={String(screenshot.delaySeconds)}
+            options={DELAY_SECONDS.map((seconds) => ({ value: String(seconds), label: text.delaySecondsOption(seconds) }))}
+            ariaLabel={text.delaySeconds}
+            onChange={(seconds) => setScreenshot({ ...screenshot, delaySeconds: Number(seconds) as DelaySeconds })}
+          />
+        }
+      />
     </SettingsGroup>
   );
 }

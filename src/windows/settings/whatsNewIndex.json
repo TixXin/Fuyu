@@ -122,6 +122,18 @@
       }
     },
     {
+      "page": "screenshot",
+      "since": "next",
+      "zh-CN": {
+        "group": "截图时",
+        "title": "延时截图时长"
+      },
+      "en": {
+        "group": "While capturing",
+        "title": "Delayed screenshot timer"
+      }
+    },
+    {
       "page": "timerAlerts",
       "since": "next",
       "zh-CN": {

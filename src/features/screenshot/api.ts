@@ -35,7 +35,7 @@ export const SCREENSHOT_SHORTCUT_STATUS_EVENT = "screenshot-shortcut-status";
 export type ShortcutStatus = { action: ShortcutAction; problem: "invalid" | "duplicate" | "taken" };
 
 export function configureScreenshot(enabled: boolean, settings: ScreenshotSettings) {
-  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen, historyDays: settings.historyDays, historyText: settings.historyText });
+  return invoke<void>("screenshot_configure", { enabled, shortcuts: shortcutConfig(settings), printScreen: settings.printScreen, historyDays: settings.historyDays, historyText: settings.historyText, delaySeconds: settings.delaySeconds });
 }
 
 export function getScreenshotShortcutStatus() {

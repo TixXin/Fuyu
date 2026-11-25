@@ -1,5 +1,8 @@
-export const SHORTCUT_ACTIONS = ["region", "copy", "text", "translate", "long", "record", "fullscreen", "pins"] as const;
+export const SHORTCUT_ACTIONS = ["region", "copy", "text", "translate", "long", "record", "fullscreen", "delayed", "pins"] as const;
 export type ShortcutAction = (typeof SHORTCUT_ACTIONS)[number];
+
+export const DELAY_SECONDS = [3, 5, 10] as const;
+export type DelaySeconds = (typeof DELAY_SECONDS)[number];
 
 export const CARD_SECONDS = [0, 3, 5, 8, 15, 30] as const;
 export type CardSeconds = (typeof CARD_SECONDS)[number];
@@ -31,6 +34,7 @@ export type RecordSettings = {
 export type ScreenshotSettings = {
   shortcuts: Record<ShortcutAction, string>;
   printScreen: boolean;
+  delaySeconds: DelaySeconds;
   saveFolder: string;
   cardSeconds: CardSeconds;
   historyDays: HistoryDays;
@@ -51,12 +55,14 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutAction, string> = {
   long: "Ctrl+Shift+5",
   record: "Ctrl+Shift+6",
   fullscreen: "Ctrl+Shift+7",
+  delayed: "",
   pins: "",
 };
 
 export const DEFAULT_SCREENSHOT_SETTINGS: ScreenshotSettings = {
   shortcuts: DEFAULT_SHORTCUTS,
   printScreen: false,
+  delaySeconds: 3,
   saveFolder: "",
   cardSeconds: 3,
   historyDays: 7,
@@ -101,6 +107,7 @@ export function normalizeScreenshotSettings(value: unknown): ScreenshotSettings 
   return {
     shortcuts: Object.fromEntries(SHORTCUT_ACTIONS.map((action) => [action, shortcutOf(shortcuts[action], DEFAULT_SHORTCUTS[action])])) as Record<ShortcutAction, string>,
     printScreen: saved.printScreen === true,
+    delaySeconds: oneOf(DELAY_SECONDS, saved.delaySeconds, DEFAULT_SCREENSHOT_SETTINGS.delaySeconds),
     saveFolder: folder.length <= MAX_FOLDER_CHARS ? folder : "",
     cardSeconds: saved.version === 2 && (CARD_SECONDS as readonly unknown[]).includes(saved.cardSeconds) ? (saved.cardSeconds as CardSeconds) : DEFAULT_SCREENSHOT_SETTINGS.cardSeconds,
     historyDays: (HISTORY_DAYS as readonly unknown[]).includes(saved.historyDays) ? (saved.historyDays as HistoryDays) : DEFAULT_SCREENSHOT_SETTINGS.historyDays,
