@@ -99,6 +99,17 @@ const click = async (selector: string) => {
   if (!element) throw new Error(`Missing ${selector}`);
   await act(async () => { element.click(); });
 };
+const waitForSelector = async (selector: string, timeoutMs = 4000) => {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const found = document.querySelector(selector);
+    if (found) return found;
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+  }
+  return document.querySelector(selector);
+};
 const LANGUAGE_TRIGGER = [TRANSLATIONS["zh-CN"], TRANSLATIONS.en]
   .map((text) => `.settings-select .select-control__trigger[aria-label='${text.settings.language.label}']`)
   .join(", ");
@@ -143,12 +154,14 @@ else {
     await act(async () => { changeLocale!("constructor" as "en"); });
     check(document.documentElement.lang === "en", "Invalid locale cannot break the mounted interface");
     await click(".dot-button--todo");
+    await waitForSelector(".todo-island-row__title");
     check(document.querySelector(".todo-island-row__title")?.textContent?.includes("保留用户任务 Привет"), "User task content stays as written");
     const archiveTab = [...document.querySelectorAll<HTMLButtonElement>(".todo-island__tab")].find((tab) => tab.textContent === "Archive");
     await act(async () => { archiveTab?.click(); await new Promise((resolve) => setTimeout(resolve, 40)); });
     check(document.querySelector(".todo-island__archive-preview")?.textContent === "No tasks were written down", "Archive empty states follow the selected language");
     check(document.querySelectorAll("[title]").length === 0, "No hover tooltips on the island");
     await click("button.island-message-button[aria-label^='Messages']");
+    await waitForSelector(".feed-layout");
     check(document.querySelector(".feed-layout")?.getAttribute("aria-label") === "Three panes", "Messages page opens in three panes, in English");
     await click("button[aria-label='More actions']");
     const qqDetails = [...document.querySelectorAll<HTMLButtonElement>("[role='menuitem']")].find((item) => item.textContent === "QQ details and settings");

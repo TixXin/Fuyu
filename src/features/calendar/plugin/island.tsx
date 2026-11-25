@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { defineSlot, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
-import { CalendarPanel } from "../CalendarPanel";
 import { MeetingBannerActions, MeetingBannerNotice } from "../MeetingBannerNotice";
 import { useCalendarDayRequest } from "./dayRequest";
 import { calendarState, meetingBannerState, todoLinkState } from "./islandState";
 import { islandPage } from "./page.ts";
 import { OWNER } from "./owner.ts";
+
+const CalendarPanel = lazy(() => import("../CalendarPanel").then((m) => ({ default: m.CalendarPanel })));
 
 type CalendarPageProps = {
   onOpenSettings: (section: "calendar") => void;

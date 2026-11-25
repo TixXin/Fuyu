@@ -1,11 +1,13 @@
+import { lazy } from "react";
 import { defineSlot, type IslandCollapsedMeta, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { ReminderNotice, ReminderNoticeActions } from "../ReminderNotice";
 import { TimerNotice, TimerNoticeActions } from "../TimerNotice";
 import { TIMER_CHIP_WIDTH, TimerChip } from "../TimerChip";
-import { TimerPanel } from "../TimerPanel";
 import { islandPage } from "./page.ts";
 import { TIMER_CHIP_HINT, timerIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
+
+const TimerPanel = lazy(() => import("../TimerPanel").then((m) => ({ default: m.TimerPanel })));
 
 type TimerPageProps = { mode: string };
 

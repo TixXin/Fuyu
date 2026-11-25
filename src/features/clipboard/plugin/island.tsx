@@ -1,13 +1,15 @@
-import type { ComponentProps } from "react";
+import { lazy, type ComponentProps } from "react";
 import { defineSlot, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { ClipboardCopyNotice, ClipboardCopyNoticeActions } from "../ClipboardCopyNotice";
-import { ClipboardHistoryPanel } from "../ClipboardHistoryPanel";
+import type { ClipboardHistoryPanel as ClipboardHistoryPanelComponent } from "../ClipboardHistoryPanel";
 import { clipboardIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 import { islandPage } from "./page.ts";
 
+const ClipboardHistoryPanel = lazy(() => import("../ClipboardHistoryPanel").then((m) => ({ default: m.ClipboardHistoryPanel })));
+
 type ClipboardPageProps = {
-  extraView?: ComponentProps<typeof ClipboardHistoryPanel>["extraView"];
+  extraView?: ComponentProps<typeof ClipboardHistoryPanelComponent>["extraView"];
 };
 
 const pageSlot = defineSlot<ClipboardPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");

@@ -1,13 +1,11 @@
-import type { ComponentProps } from "react";
-import type { ReactNode } from "react";
+import { lazy, type ComponentProps, type ReactNode } from "react";
 import type { Translations } from "../../../i18n";
 import { Gauge, RotateCcw } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandAlertMeta, type IslandCollapsedMeta, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { AgentArrangeButton } from "../AgentArrangeButton";
 import { QuotaAlertPopup } from "../QuotaAlertPopup";
-import { AgentSessionsPanel } from "../AgentSessionsPanel";
-import { AgentEmptyState } from "../AgentEmptyState";
+import type { AgentSessionsPanel as AgentSessionsPanelComponent } from "../AgentSessionsPanel";
 import { SessionLightStyleContext } from "../SessionLightMark";
 import type { AgentLightStyle } from "../../../lib/settings/types";
 import type { AgentSettingValues } from "../agentSettings";
@@ -16,7 +14,10 @@ import { agentArrange, agentPage, agentShell, quotaAlertState } from "./islandSt
 import { islandPage } from "./page.ts";
 import { OWNER } from "./owner.ts";
 
-type Panel = ComponentProps<typeof AgentSessionsPanel>;
+const AgentSessionsPanel = lazy(() => import("../AgentSessionsPanel").then((m) => ({ default: m.AgentSessionsPanel })));
+const AgentEmptyState = lazy(() => import("../AgentEmptyState").then((m) => ({ default: m.AgentEmptyState })));
+
+type Panel = ComponentProps<typeof AgentSessionsPanelComponent>;
 
 type AgentsPageProps = {
   settings: {

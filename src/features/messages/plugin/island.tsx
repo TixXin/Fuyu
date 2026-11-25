@@ -1,20 +1,22 @@
-import type { ComponentProps } from "react";
+import { lazy, type ComponentProps } from "react";
 import { Bell } from "lucide-react";
 import { useTranslation, type Translations } from "../../../i18n";
 import { useTrackArt } from "../../../lib/now-playing/trackArt";
 import { defineSlot, type IslandCollapsedMeta, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { runIslandAction, useIslandContributed } from "../../plugin-kernel/useIslandContributions";
-import { MessageArrivalsPanel } from "../arrivals/MessageArrivalsPanel";
 import { firstPendingImSource, imUnreadTotal } from "../im-sources/imSourcesState";
 import { resolveMessageSource } from "../island/messageSource";
-import { MessagesPanel } from "../Messages";
+import type { MessagesPanel as MessagesPanelComponent } from "../Messages";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import { messagesIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 import { islandPage } from "./page.ts";
 import { useMessageLayout } from "./useSourceSwitches";
 
-type Panel = ComponentProps<typeof MessagesPanel>;
+const MessageArrivalsPanel = lazy(() => import("../arrivals/MessageArrivalsPanel").then((m) => ({ default: m.MessageArrivalsPanel })));
+const MessagesPanel = lazy(() => import("../Messages").then((m) => ({ default: m.MessagesPanel })));
+
+type Panel = ComponentProps<typeof MessagesPanelComponent>;
 
 type MessagesPageProps = {
   features: Panel["enabledSources"];
