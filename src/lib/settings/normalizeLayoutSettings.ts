@@ -2,6 +2,7 @@ import { clamp } from "../../utils/number.ts";
 import { getColorSetting } from "../../utils/color.ts";
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
+  CUSTOM_FONT_ID_PATTERN, ISLAND_FONTS, MAX_FONT_SCALE, MIN_FONT_SCALE,
   MAX_ISLAND_CORNER_RADIUS, MAX_ISLAND_OPACITY, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS,
   MIN_ISLAND_CORNER_RADIUS, MIN_ISLAND_OPACITY, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
   MAX_PANEL_WIDTH, MIN_PANEL_WIDTH, MAX_COLLAPSED_WIDTH_EXTRA, MIN_COLLAPSED_WIDTH_EXTRA, MAX_NOTCH_WING_MAX, MIN_NOTCH_WING_MAX,
@@ -37,9 +38,20 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
   const hasPreviousDefaultMargin =
     settings?.topEdgeLayoutVersion !== 1 && (marginY === 31 || marginY === 12);
 
+  const customFontId = typeof settings?.customFontId === "string" && CUSTOM_FONT_ID_PATTERN.test(settings.customFontId)
+    ? settings.customFontId
+    : "";
+  const requestedFont = oneOf(ISLAND_FONTS, settings?.fontFamily, DEFAULT_SETTINGS.fontFamily);
+  const fontFamily = requestedFont === "custom" && !customFontId ? DEFAULT_SETTINGS.fontFamily : requestedFont;
+  const fontScale = typeof settings?.fontScale === "number" && Number.isFinite(settings.fontScale)
+    ? clamp(Math.round(settings.fontScale), MIN_FONT_SCALE, MAX_FONT_SCALE)
+    : DEFAULT_SETTINGS.fontScale;
+
   return {
     topEdgeLayoutVersion: 1,
-    fontFamily: settings?.fontFamily === "pixel" ? "pixel" : "system",
+    fontFamily,
+    fontScale,
+    customFontId,
     appearanceMode:
       settings?.appearanceMode === "classic" ||
       settings?.appearanceMode === "liquidGlass"

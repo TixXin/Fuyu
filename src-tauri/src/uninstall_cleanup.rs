@@ -42,6 +42,7 @@ const MANAGED_HOME_ITEMS: &[&str] = &[
     "local-api.json",
     "island-lab.json",
     "backups",
+    "fonts",
     "sound-packs",
     "dsh-plugin",
     "fuyu-dsh-hooks.json",

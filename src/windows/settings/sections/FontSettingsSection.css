@@ -1,0 +1,23 @@
+.font-settings__input {
+  display: none;
+}
+
+.font-settings__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.font-settings__active {
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.font-settings__error {
+  color: var(--error-text, #ff8f8f);
+}
+
+.font-settings__status {
+  color: var(--color-text-muted);
+}

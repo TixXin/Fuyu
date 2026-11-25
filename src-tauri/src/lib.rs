@@ -8,6 +8,7 @@ mod caps_lock;
 mod cc_connect;
 mod claude_usage;
 mod clipboard_history;
+mod custom_fonts;
 #[cfg_attr(not(windows), path = "coexist/unsupported.rs")]
 mod coexist;
 mod dev_lane;
@@ -304,6 +305,7 @@ pub fn run() {
             media_control;
             lyrics;
             clipboard_history;
+            custom_fonts;
             translation;
             screenshot;
             recording;

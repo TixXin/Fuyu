@@ -36,7 +36,7 @@ pub(crate) const FILES: &[&str] = &[
     "plugins-v3/plugins.yml",
 ];
 
-pub(crate) const DIRS: &[&str] = &["plugins-data", "plugins", "sound-packs", "pets"];
+pub(crate) const DIRS: &[&str] = &["plugins-data", "plugins", "sound-packs", "pets", "fonts"];
 
 pub(crate) const EXCLUDED_KEYS: &[&str] = &[
     "fuyu-settings-focus",

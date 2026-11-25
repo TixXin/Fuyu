@@ -31,6 +31,7 @@
   corner-shape: var(--preview-corner-shape, round);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
   color: rgb(var(--preview-ink));
+  font-family: var(--preview-font, inherit);
   transform-origin: top center;
   transition:
     background-color var(--motion-medium) var(--motion-ease),

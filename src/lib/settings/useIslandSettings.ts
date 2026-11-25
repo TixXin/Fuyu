@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { isSameSettings } from "./settings.ts";
-import { STORAGE_KEY, loadSettings, readSettingsText } from "./storage.ts";
+import { SETTINGS_UPDATED_EVENT, STORAGE_KEY, loadSettings, readSettingsText } from "./storage.ts";
 import type { IslandSettings } from "./types";
 
 export type SettingsSyncControllerOptions = {
@@ -19,6 +19,9 @@ export function createSettingsSyncController(options: SettingsSyncControllerOpti
     options.writeRaw ??
     ((serialized: string) => {
       window.localStorage.setItem(STORAGE_KEY, serialized);
+      if (typeof window.dispatchEvent === "function" && typeof Event === "function") {
+        window.dispatchEvent(new Event(SETTINGS_UPDATED_EVENT));
+      }
     });
   const requestFrame =
     options.requestFrame ??

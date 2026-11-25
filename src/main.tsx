@@ -19,6 +19,7 @@ import { trackIslandNotch } from "./windows/island/notch";
 import { trackAutoIslandForm } from "./windows/island/autoIslandForm";
 import { setPluginSettingsOpener } from "./features/plugin-kernel/settingsOpener";
 import { openPluginSettingsWindow } from "./windows/settings/api";
+import { installWindowFont } from "./lib/theme/windowFont";
 
 blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
 installCrashReporting();
@@ -170,6 +171,7 @@ void Promise.all([
   loadSettingsFile(),
   preloadI18n(loadLocale(), windowKind),
 ]).then(([, content]) => {
+  installWindowFont();
   renderWindow(content);
   markMounted();
 }).catch(async (error: unknown) => {

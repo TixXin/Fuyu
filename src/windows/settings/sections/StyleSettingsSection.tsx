@@ -3,7 +3,8 @@ import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useTranslation } from "../../../i18n";
-import type { AppearanceMode, IslandFont, IslandSettings } from "../../../lib/settings/types";
+import type { AppearanceMode, IslandSettings } from "../../../lib/settings/types";
+import { FontSettingsSection } from "./FontSettingsSection";
 import { OpacityCards } from "./OpacityCards";
 
 export function StyleSettingsSection({
@@ -21,10 +22,6 @@ export function StyleSettingsSection({
     { value: "classic", label: text.classic },
     { value: "liquidGlass", label: text.liquidGlass },
   ] as const;
-  const fonts = [
-    { value: "system", label: text.systemFont },
-    { value: "pixel", label: text.pixelFont },
-  ] as const;
 
   return (
     <>
@@ -40,19 +37,9 @@ export function StyleSettingsSection({
             />
           }
         />
-        <SettingsRow
-          title={text.font}
-          control={
-            <SettingsChoice<IslandFont>
-              value={settings.fontFamily}
-              options={fonts}
-              ariaLabel={text.fontLabel}
-              onChange={(fontFamily) => onSettingsChange({ ...settings, fontFamily })}
-            />
-          }
-        />
         {children}
       </SettingsGroup>
+      <FontSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
       <OpacityCards settings={settings} onSettingsChange={onSettingsChange} />
     </>
   );

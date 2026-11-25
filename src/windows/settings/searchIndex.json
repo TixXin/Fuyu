@@ -358,25 +358,6 @@
       "page": "themeStyle",
       "zh-CN": {
         "group": "质感与形状",
-        "title": "字体",
-        "options": [
-          "默认字体",
-          "像素字体"
-        ]
-      },
-      "en": {
-        "group": "Look and shape",
-        "title": "Font",
-        "options": [
-          "System",
-          "Pixel"
-        ]
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "质感与形状",
         "title": "圆角样式",
         "options": [
           "方圆",
@@ -412,6 +393,57 @@
       "en": {
         "group": "Look and shape",
         "title": "Docked corner radius"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "字体",
+        "title": "字体样式",
+        "options": [
+          "默认",
+          "像素",
+          "圆润",
+          "衬线",
+          "等宽"
+        ]
+      },
+      "en": {
+        "group": "Font",
+        "title": "Font style",
+        "options": [
+          "System",
+          "Pixel",
+          "Rounded",
+          "Serif",
+          "Mono"
+        ]
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "字体",
+        "title": "字体大小",
+        "description": "按比例调整岛屿与设置页的文字大小。"
+      },
+      "en": {
+        "group": "Font",
+        "title": "Font size",
+        "description": "Scales text across the island and settings."
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "字体",
+        "title": "本地字体",
+        "description": "导入本地字体文件后可立即切换使用，缺失时自动回退默认字体。"
+      },
+      "en": {
+        "group": "Font",
+        "title": "Local fonts",
+        "description": "Import a local font file to switch right away; falls back to System if unavailable."
       }
     },
     {
