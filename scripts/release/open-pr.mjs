@@ -9,20 +9,24 @@ import { readVersion, VERSION_FILES } from "./versions.mjs";
 
 const REPO = "TixXin/fuyu";
 const SNAPSHOT = "tests/regression/snapshots/version-history.html";
+const SETTINGS_INDICES = [
+  "src/windows/settings/searchIndex.json",
+  "src/windows/settings/whatsNewIndex.json",
+];
 export const MAC_VERIFIED = "mac-verified";
 export const LOCAL_STEPS = ["verify", "regression", "exe"];
 
 export const locallyVerified = (record, sha) => record?.sha === sha && LOCAL_STEPS.every((step) => record.passed?.[step]);
 
 export function releaseFiles(version) {
-  return [...Object.values(VERSION_FILES), `docs/releases/v${version}.md`, SNAPSHOT];
+  return [...Object.values(VERSION_FILES), `docs/releases/v${version}.md`, ...SETTINGS_INDICES, SNAPSHOT];
 }
 
 export function versionCommitProblem({ subject, files, version }) {
   if (subject !== `chore(release): ${version}`) return `HEAD is "${subject}", not "chore(release): ${version}": commit the version and the notes first.`;
   const allowed = new Set(releaseFiles(version));
   const other = files.filter((file) => !allowed.has(file));
-  return other.length ? `the version commit also changes ${other.join(", ")}; it may only change the version files, the notes and the version-history snapshot.` : null;
+  return other.length ? `the version commit also changes ${other.join(", ")}; it may only change the version files, the notes, the settings indices and the version-history snapshot.` : null;
 }
 
 export function openRequest(args) {
