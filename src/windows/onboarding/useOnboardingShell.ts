@@ -41,6 +41,17 @@ export function useViewport() {
   return size;
 }
 
+export function useOnboardingCleanup(onCleanup: () => void) {
+  useEffect(() => {
+    const run = () => {
+      onCleanup();
+      endIslandDemo();
+    };
+    window.addEventListener("pagehide", run);
+    return () => window.removeEventListener("pagehide", run);
+  }, [onCleanup]);
+}
+
 export function useOnboardingKeyboard(handlers: {
   qrZoomed: boolean;
   onCloseQr: () => void;

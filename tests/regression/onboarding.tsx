@@ -62,7 +62,10 @@ mockIPC((command, payload) => {
     case "get_island_edge": return "top";
     case "get_island_taskbar": return { docked: false, placed: false, light: false };
     case "get_taskbar_layout": return [{ edge: "bottom" }];
-    case "set_island_edge": return null;
+    case "set_island_edge":
+    case "preview_side_dock":
+    case "sync_side_dock":
+      return null;
     case "get_builtin_plugins": return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
     case "set_builtin_plugin_enabled":
       builtins = builtins.map((plugin) => (plugin.id === String(args.id) ? { ...plugin, enabled: Boolean(args.enabled) } : plugin));
@@ -116,6 +119,8 @@ localStorage.removeItem("fuyu-onboarding-bundle");
 localStorage.removeItem("fuyu-onboarding-director");
 localStorage.removeItem("fuyu-onboarding-mode");
 localStorage.removeItem("fuyu-onboarding-guide-version");
+localStorage.removeItem("fuyu-side-docks");
+localStorage.removeItem("fuyu-island-pages");
 if (query.has("light")) localStorage.setItem("fuyu-settings", JSON.stringify({ themeMode: "light" }));
 document.body.style.background = "linear-gradient(135deg, #3a3f55, #6a5a7a 50%, #2b4a6a)";
 
@@ -202,6 +207,11 @@ if (!automated) {
     const noticeEmit = emittedTo.find((sent) => sent.label === "main" && sent.event === "agent-test-notice");
     check((noticeEmit?.payload as { event?: string } | undefined)?.event === "approval", "Clicking an Agent notice scene triggers a real Agent test notice on the island");
 
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="sideSplit"]')!.click(); });
+    await until(() => commands.some(({ command, args }) => command === "preview_side_dock" && args.edge === "right" && args.open === true));
+    const sideSplitSaved = JSON.parse(localStorage.getItem("fuyu-side-docks") ?? "{}") as { left?: { enabled?: boolean }; right?: { enabled?: boolean } };
+    check(sideSplitSaved.left?.enabled === true && sideSplitSaved.right?.enabled === true, "Clicking One-click Split in the live showcase enables both side-dock wings and previews them");
+
     await act(async () => { document.querySelector<HTMLButtonElement>('[data-director-scene="agents"]')!.click(); });
     await until(() => director().action === "expand" && director().page === "agents");
     check(director().action === "expand" && director().page === "agents", "Clicking a panel scene clears notices and opens that page on the real island");
@@ -211,7 +221,7 @@ if (!automated) {
     await press("简体中文");
 
     await press("开始定制浮屿");
-    check(stored().islandForm === "top", "Advancing out of Act 1 automatically restores the user's original island form");
+    check(stored().islandForm === "top" && localStorage.getItem("fuyu-side-docks") === null, "Advancing out of Act 1 automatically restores both original island form and side-dock settings");
     check(title() === "选一种形态，捏成喜欢的样子" && Boolean(document.querySelector(".onboarding-spotlight--calm")), "Act 2 shapes island form, theme, jellyfish and motion with a calm spotlight");
     check(document.querySelectorAll("[data-island-form]").length === 7, "Act 2 exposes all 7 island forms including taskbar when available");
     await act(async () => { document.querySelector<HTMLButtonElement>('[data-island-form="pill"]')!.click(); });
@@ -250,6 +260,13 @@ if (!automated) {
     check(pluginOn("agents") === true && clipboard.enabled === true, "Undoing the preset restores the previous modules");
     await press("在真岛打开这一页");
     check(director().action === "expand" && director().page === "agents", "Live capability preview opens the corresponding page on the real island");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-action="side-dock-split"]')!.click(); });
+    await wait(20);
+    const splitAfterOutfit = JSON.parse(localStorage.getItem("fuyu-side-docks") ?? "{}") as { left?: { enabled?: boolean }; right?: { enabled?: boolean } };
+    check(splitAfterOutfit.left?.enabled === true && splitAfterOutfit.right?.enabled === true, "Act 3 one-click side-dock split offloads tools to left & right wings");
+    await act(async () => { document.querySelector<HTMLButtonElement>('[data-action="side-dock-reset"]')!.click(); });
+    await wait(20);
+    check(localStorage.getItem("fuyu-side-docks") === null, "Clicking Move all to top cleanly resets side docks back to default");
 
     await placeIsland(open);
     await press("下一步");

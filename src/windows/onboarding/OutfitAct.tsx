@@ -30,6 +30,7 @@ import {
   type Persona,
   type PersonaAnswer,
 } from "./personas";
+import { SideDockSplitCard } from "./SideDockSplitCard";
 import "./OutfitAct.css";
 
 const MODULE_ICONS: Record<OnboardingModule, LucideIcon> = {
@@ -52,12 +53,16 @@ export function OutfitAct({
   onAnswerChange,
   onModulesChange,
   onPreviewPage,
+  onCollapsePreview,
+  onUserInteract,
 }: {
   modules: ReadonlySet<OnboardingModule>;
   answer: PersonaAnswer;
   onAnswerChange: (answer: PersonaAnswer) => void;
   onModulesChange: (modules: ReadonlySet<OnboardingModule>) => void;
   onPreviewPage: (page: IslandPage) => void;
+  onCollapsePreview: () => void;
+  onUserInteract: () => void;
 }) {
   const text = useTranslation().onboarding.outfit;
   const [focused, setFocused] = useState<OnboardingModule>("agents");
@@ -66,7 +71,19 @@ export function OutfitAct({
   const names = (list: readonly OnboardingModule[]) => text.list(list.map((module) => text.modules[module]));
   const removed = takenOff(answer, modules);
 
-  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) {
+        window.clearTimeout(timerRef.current);
+        setTouring(false);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const stopTour = () => {
     window.clearTimeout(timerRef.current);
@@ -99,8 +116,9 @@ export function OutfitAct({
     setTouring(true);
     let idx = 0;
     const step = () => {
-      if (idx >= previewable.length) {
+      if (document.hidden || idx >= previewable.length) {
         setTouring(false);
+        if (idx >= previewable.length) onCollapsePreview();
         return;
       }
       const mod = previewable[idx];
@@ -206,6 +224,7 @@ export function OutfitAct({
         </aside>
       </div>
       {removed.length > 0 && <p className="outfit-act__removed" role="status">{text.takenOff(names(removed))}</p>}
+      <SideDockSplitCard onUserInteract={onUserInteract} />
     </>
   );
 }

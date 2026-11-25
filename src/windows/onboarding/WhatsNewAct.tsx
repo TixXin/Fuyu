@@ -4,6 +4,7 @@ import type { IslandSettings } from "../../lib/settings/types";
 import type { SettingsFocusSection } from "../settings/storage";
 import { ActHeading } from "./ActHeading";
 import { IslandFormsPicker } from "./IslandFormsPicker";
+import { SideDockSplitCard } from "./SideDockSplitCard";
 import { useReleaseGuideData } from "./useReleaseGuideData";
 import "./WhatsNewAct.css";
 
@@ -72,16 +73,22 @@ export function WhatsNewFormsAct({
   settings,
   onSettingsChange,
   onUserInteract,
+  onLeaveForSettings,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onUserInteract?: () => void;
+  onLeaveForSettings?: (section?: SettingsFocusSection) => void;
 }) {
   const text = useTranslation().onboarding.whatsNew;
   return (
     <>
       <ActHeading title={text.formsTitle} lead={text.formsLead} />
       <IslandFormsPicker settings={settings} onSettingsChange={onSettingsChange} onUserInteract={onUserInteract} />
+      <SideDockSplitCard
+        onUserInteract={onUserInteract}
+        onOpenSettings={onLeaveForSettings ? () => onLeaveForSettings("sideDocks") : undefined}
+      />
     </>
   );
 }

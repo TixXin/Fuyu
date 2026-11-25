@@ -114,6 +114,9 @@ test("resolveDirectorScenes filters taskbar and agent scenes by environment and 
   assert.ok(full.some((scene) => scene.id === "dockTaskbar"));
   assert.ok(full.some((scene) => scene.id === "agentApproval"));
   assert.ok(full.some((scene) => scene.id === "agentStack"));
+  assert.ok(full.some((scene) => scene.id === "sideSplit"));
+  assert.ok(full.some((scene) => scene.id === "sideRight"));
+  assert.ok(full.some((scene) => scene.id === "sideLeft"));
   assert.deepEqual(groupDirectorScenes(full).map((entry) => entry.group), ["forms", "agents", "panels"]);
 
   const noTaskbarNoAgents = resolveDirectorScenes({ agentsEnabled: false, taskbarAvailable: false });

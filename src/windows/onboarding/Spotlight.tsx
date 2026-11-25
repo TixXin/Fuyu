@@ -19,7 +19,7 @@ export function Spotlight({ spot, mode = "pulse" }: { spot: IslandSpot | null; m
     height: spot.height + PAD * 2,
     "--spot-x": `${spot.x - PAD}px`,
     "--spot-y": `${spot.y - PAD}px`,
-    "--spot-radius": `${Math.min(28, (spot.height + PAD * 2) / 2)}px`,
+    "--spot-radius": `${Math.min(28, Math.min(spot.width, spot.height) / 2 + PAD)}px`,
   } as CSSProperties;
   const classes = [
     "onboarding-spotlight",

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { JellyfishStyleContext } from "../../components/jellyfish/jellyfishStyleContext";
@@ -47,7 +47,7 @@ import { useCardRect } from "./useCardRect";
 import { useDemoHeartbeat } from "./useDemoHeartbeat";
 import { useIslandSpot } from "./useIslandSpot";
 import { useOnboardingDirector } from "./useOnboardingDirector";
-import { closeOnboardingGuide, useOnboardingKeyboard, useShowWhenPainted, useViewport } from "./useOnboardingShell";
+import { closeOnboardingGuide, useOnboardingCleanup, useOnboardingKeyboard, useShowWhenPainted, useViewport } from "./useOnboardingShell";
 import { useRecommendedBundle } from "./useRecommendedBundle";
 import { WechatCommunityCorner } from "./WechatCommunityCorner";
 import { WhatsNewFormsAct, WhatsNewNotesAct } from "./WhatsNewAct";
@@ -72,6 +72,7 @@ export function OnboardingWindow() {
   const [agentSetupDone, setAgentSetupDone] = useState(false);
   const [answer, setAnswer] = useState(NO_ANSWER);
   const [qrZoomed, setQrZoomed] = useState(false);
+  const [cornerRev, bumpCorner] = useReducer((n: number) => n + 1, 0);
 
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
   const modules = useMemo(() => enabledModules(settings, clipboard.enabled, plugins), [settings, clipboard.enabled, plugins]);
@@ -106,6 +107,7 @@ export function OnboardingWindow() {
   const setIslandForm = useCallback((form: IslandForm) => setSettings((cur) => (cur.islandForm === form ? cur : { ...cur, islandForm: form })), [setSettings]);
   const director = useOnboardingDirector({
     autoPlay: Boolean(currentStep.autoDirector),
+    skipInitialNotify: launch.mode === "firstRun",
     islandExpanded: spot ? spot.expanded : null,
     stepId: currentStep.id,
     islandForm: settings.islandForm,
@@ -119,7 +121,8 @@ export function OnboardingWindow() {
     agentSamples,
   });
 
-  useCardRect(hitTargets, `${currentStep.id}:${placement.left}:${placement.top}:${placement.width}:${track}:${qrZoomed}`, qrZoomed);
+  useCardRect(hitTargets, `${currentStep.id}:${placement.left}:${placement.top}:${placement.width}:${track}:${qrZoomed}:${cornerRev}`, qrZoomed);
+  useOnboardingCleanup(director.restoreAnchor);
   useWindowAccent(settings);
   useShowWhenPainted();
   useDemoHeartbeat();
@@ -322,6 +325,8 @@ export function OnboardingWindow() {
                 onAnswerChange={setAnswer}
                 onModulesChange={changeModules}
                 onPreviewPage={director.previewPage}
+                onCollapsePreview={director.collapsePreview}
+                onUserInteract={director.claimUserControl}
               />
             )}
             {currentStep.id === "permissions" && <PermissionsAct kinds={permissionKinds} />}
@@ -352,7 +357,12 @@ export function OnboardingWindow() {
               <WhatsNewNotesAct fromVersion={launch.fromVersion} onLeaveForSettings={leaveForSettings} />
             )}
             {currentStep.id === "whatsNewForms" && (
-              <WhatsNewFormsAct settings={settings} onSettingsChange={setSettings} onUserInteract={director.claimUserControl} />
+              <WhatsNewFormsAct
+                settings={settings}
+                onSettingsChange={setSettings}
+                onUserInteract={director.claimUserControl}
+                onLeaveForSettings={leaveForSettings}
+              />
             )}
             {currentStep.id === "agentCards" && <AgentCardsAct settings={settings} onSettingsChange={setSettings} />}
             {currentStep.id === "agentConnect" && <AgentConnectAct settings={settings} onSettingsChange={setSettings} />}
@@ -383,7 +393,7 @@ export function OnboardingWindow() {
             </div>
           </footer>
         </div>
-        <WechatCommunityCorner cornerRef={cornerRef} visible={!activeSetup} zoomed={qrZoomed} onZoomChange={setQrZoomed} />
+        <WechatCommunityCorner cornerRef={cornerRef} visible={!activeSetup} zoomed={qrZoomed} onZoomChange={setQrZoomed} onBoundsChange={bumpCorner} />
       </main>
     </JellyfishStyleContext.Provider>
   );

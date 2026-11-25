@@ -101,6 +101,24 @@ export type OnboardingText = {
     modules: Record<OnboardingModule, string>;
     moduleDescs: Record<OnboardingModule, string>;
   };
+  sideDockSplit: {
+    title: string;
+    desc: string;
+    recommendedBadge: string;
+    activeBadge: string;
+    splitBtn: string;
+    resetBtn: string;
+    previewBtn: string;
+    stopPreviewBtn: string;
+    tuneBtn: string;
+    zonesLabel: string;
+    zoneLeft: string;
+    zoneLeftItems: string;
+    zoneTop: string;
+    zoneTopItems: string;
+    zoneRight: string;
+    zoneRightItems: string;
+  };
   play: {
     title: string;
     lead: (song: boolean, agent: boolean) => string;
@@ -247,7 +265,7 @@ export const zhCN: OnboardingText = {
     groups: {
       forms: "形态与吸附",
       agents: "Agent 通知",
-      panels: "面板展开",
+      panels: "面板与侧翼",
     },
     scenes: {
       greet: "落岛问候",
@@ -268,6 +286,9 @@ export const zhCN: OnboardingText = {
       dashboard: "Fuyu 看板",
       agents: "Agent 页",
       music: "音乐歌词",
+      sideSplit: "一键分流",
+      sideRight: "右侧翼抽屉",
+      sideLeft: "左侧翼抽屉",
     },
     notifyTitle: "你好啊，我在这儿 👋",
     notifyBody: "我是浮屿，平时安静停在屏幕边缘，有事才展开。",
@@ -382,6 +403,24 @@ export const zhCN: OnboardingText = {
       timer: "收起条安静倒计时、番茄钟与休息提醒",
       voice: "本地离线语音转文字，直接存待办或复制",
     },
+  },
+  sideDockSplit: {
+    title: "左右侧翼一键分流，给主岛减负",
+    desc: "开的功能多时，顶岛只留核心状态，把待办、剪贴板、文件中转、日历分流到左右侧翼抽屉，信息不再拥挤。",
+    recommendedBadge: "新功能",
+    activeBadge: "已开启分流",
+    splitBtn: "一键分流并预览",
+    resetBtn: "还原全回顶岛",
+    previewBtn: "预览侧翼",
+    stopPreviewBtn: "收起预览",
+    tuneBtn: "微调侧翼",
+    zonesLabel: "三区自动分流方案",
+    zoneLeft: "左侧翼",
+    zoneLeftItems: "日历 · 消息",
+    zoneTop: "顶部主岛（精简）",
+    zoneTopItems: "看板 · Agent · 音乐 · 计时",
+    zoneRight: "右侧翼",
+    zoneRightItems: "待办 · 剪贴板 · 中转 · 截图 · 翻译",
   },
   play: {
     title: "在真岛上试一下",
@@ -536,7 +575,7 @@ export const en: OnboardingText = {
     groups: {
       forms: "Forms & dock",
       agents: "Agent alerts",
-      panels: "Panels",
+      panels: "Panels & wings",
     },
     scenes: {
       greet: "Greeting",
@@ -557,6 +596,9 @@ export const en: OnboardingText = {
       dashboard: "Fuyu panel",
       agents: "Agents tab",
       music: "Music tab",
+      sideSplit: "One-click split",
+      sideRight: "Right wing",
+      sideLeft: "Left wing",
     },
     notifyTitle: "Hi there, I'm up here 👋",
     notifyBody: "I'm Fuyu — quiet at the screen edge until something needs you.",
@@ -671,6 +713,24 @@ export const en: OnboardingText = {
       timer: "Collapsed countdown, Pomodoro & break alerts",
       voice: "Offline local speech-to-text into todos",
     },
+  },
+  sideDockSplit: {
+    title: "One-click split to left & right wings",
+    desc: "Keep the top island light with core status while offloading todos, clipboard, shelf and calendar to screen-edge wings.",
+    recommendedBadge: "New",
+    activeBadge: "Split active",
+    splitBtn: "Split & preview",
+    resetBtn: "Move all to top",
+    previewBtn: "Preview wings",
+    stopPreviewBtn: "Hide preview",
+    tuneBtn: "Fine-tune",
+    zonesLabel: "Three-zone offload layout",
+    zoneLeft: "Left wing",
+    zoneLeftItems: "Calendar · Messages",
+    zoneTop: "Top island (lean)",
+    zoneTopItems: "Fuyu · Agents · Music · Timer",
+    zoneRight: "Right wing",
+    zoneRightItems: "Todos · Clipboard · Shelf · Snip · Translate",
   },
   play: {
     title: "Try it on the real island",

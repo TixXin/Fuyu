@@ -25,6 +25,9 @@ export const DIRECTOR_SCENE_IDS = [
   "dashboard",
   "agents",
   "music",
+  "sideSplit",
+  "sideRight",
+  "sideLeft",
 ] as const;
 
 export type DirectorSceneId = (typeof DIRECTOR_SCENE_IDS)[number];
@@ -36,7 +39,9 @@ export type DirectorSceneAction =
   | { kind: "tuck" }
   | { kind: "collapse" }
   | { kind: "agentNotice"; event: PreviewEvent }
-  | { kind: "expand"; page: IslandPage };
+  | { kind: "expand"; page: IslandPage }
+  | { kind: "sideSplit" }
+  | { kind: "sideWing"; edge: "left" | "right" };
 
 export type DirectorSceneDef = {
   id: DirectorSceneId;
@@ -44,6 +49,7 @@ export type DirectorSceneDef = {
   durationMs: number;
   expanded: boolean | null;
   mutatesAnchor: boolean;
+  mutatesSideDocks?: boolean;
   requiresAgents?: boolean;
   requiresTaskbar?: boolean;
   action: DirectorSceneAction;
@@ -78,6 +84,9 @@ export const ALL_DIRECTOR_SCENES: readonly DirectorSceneDef[] = [
   { id: "dashboard", group: "panels", durationMs: 2900, expanded: true, mutatesAnchor: false, action: { kind: "expand", page: "fuyu" } },
   { id: "agents", group: "panels", durationMs: 2900, expanded: true, mutatesAnchor: false, requiresAgents: true, action: { kind: "expand", page: "agents" } },
   { id: "music", group: "panels", durationMs: 2800, expanded: true, mutatesAnchor: false, action: { kind: "expand", page: "music" } },
+  { id: "sideSplit", group: "panels", durationMs: 3600, expanded: null, mutatesAnchor: false, mutatesSideDocks: true, action: { kind: "sideSplit" } },
+  { id: "sideRight", group: "panels", durationMs: 2800, expanded: false, mutatesAnchor: false, mutatesSideDocks: true, action: { kind: "sideWing", edge: "right" } },
+  { id: "sideLeft", group: "panels", durationMs: 2800, expanded: false, mutatesAnchor: false, mutatesSideDocks: true, action: { kind: "sideWing", edge: "left" } },
 ];
 
 export function resolveDirectorScenes({

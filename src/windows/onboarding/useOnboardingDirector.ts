@@ -27,6 +27,7 @@ const USER_OVERRIDE_GRACE_MS = 750;
 
 export function useOnboardingDirector({
   autoPlay,
+  skipInitialNotify = false,
   islandExpanded,
   stepId,
   islandForm,
@@ -40,6 +41,7 @@ export function useOnboardingDirector({
   agentSamples,
 }: {
   autoPlay: boolean;
+  skipInitialNotify?: boolean;
   islandExpanded: boolean | null;
   stepId: string;
   islandForm: IslandForm;
@@ -73,8 +75,11 @@ export function useOnboardingDirector({
     lastKind: "collapsed",
     virtualDocked: false,
     savedAnchor: null,
+    savedSideDocks: null,
+    wingsPreviewOpen: false,
     noticeSeq: 0,
   });
+  const initialGreetingRef = useRef(skipInitialNotify);
 
   const envRef = useRef<DirectorDispatchEnv & { scenes: DirectorSceneDef[] }>({
     scenes,
@@ -114,13 +119,15 @@ export function useOnboardingDirector({
     }
   }, []);
 
-  const dispatchScene = useCallback((scene: DirectorSceneDef) => {
+  const dispatchScene = useCallback((scene: DirectorSceneDef, fromAutoStart = false) => {
     setRunToken((n) => n + 1);
-    runDirectorScene(scene, dispatchRef.current, () => envRef.current, () => setAnchorDirty(true));
+    const skipNotify = fromAutoStart && scene.id === "greet" && initialGreetingRef.current;
+    if (skipNotify) initialGreetingRef.current = false;
+    runDirectorScene(scene, dispatchRef.current, () => envRef.current, () => setAnchorDirty(true), { skipNotify });
   }, []);
 
   const startFrom = useCallback(
-    (startIndex: number) => {
+    (startIndex: number, fromAutoStart = false) => {
       clearTimers();
       if (reducedMotion) {
         playingRef.current = false;
@@ -129,17 +136,17 @@ export function useOnboardingDirector({
       }
       playingRef.current = true;
       setStatus("playing");
-      const run = (at: number) => {
+      const run = (at: number, initial: boolean) => {
         if (!playingRef.current || document.hidden) return;
         const list = envRef.current.scenes;
         if (list.length === 0) return;
         const idx = ((at % list.length) + list.length) % list.length;
         const scene = list[idx];
         setSceneIndex(idx);
-        dispatchScene(scene);
-        timerRef.current = window.setTimeout(() => run(idx + 1), scene.durationMs);
+        dispatchScene(scene, initial);
+        timerRef.current = window.setTimeout(() => run(idx + 1, false), scene.durationMs);
       };
-      run(startIndex);
+      run(startIndex, fromAutoStart);
     },
     [clearTimers, dispatchScene, reducedMotion],
   );
@@ -213,6 +220,11 @@ export function useOnboardingDirector({
     [pause],
   );
 
+  const collapsePreview = useCallback(() => {
+    dispatchRef.current.lastKind = "collapsed";
+    sendIslandDirectorCommand({ action: "collapse" });
+  }, []);
+
   useEffect(() => {
     if (prevStepRef.current !== stepId) {
       const prev = prevStepRef.current;
@@ -236,7 +248,7 @@ export function useOnboardingDirector({
   }, [islandExpanded, pause]);
 
   useEffect(() => {
-    if (autoPlay && !reducedMotion) startFrom(0);
+    if (autoPlay && !reducedMotion) startFrom(0, true);
     else pause("paused");
     return clearTimers;
   }, [autoPlay, clearTimers, pause, reducedMotion, startFrom]);
@@ -271,5 +283,6 @@ export function useOnboardingDirector({
     restoreAnchor: () => restoreAnchor(false),
     previewMotion,
     previewPage,
+    collapsePreview,
   };
 }

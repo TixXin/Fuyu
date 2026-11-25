@@ -2,12 +2,15 @@ import { requestAgentTestNotice } from "../../features/agent-status/api";
 import type { PreviewSamples } from "../../features/agent-status/reminder-settings/previewSamples";
 import { testNoticeRequest } from "../../features/agent-status/testNotice";
 import { dockIslandTo, type IslandDockEdge } from "../../lib/settings/api";
+import { loadIslandPages, saveIslandPages, type IslandPagesLayout } from "../../lib/settings/islandPages";
+import { applySideDockSplitPreset, loadSideDocks, saveSideDocks, type SideDocksSettings } from "../../lib/settings/sideDocks";
 import type { IslandForm } from "../../lib/settings/types";
 import { requestIslandPositionReset } from "../settings/storage";
+import { previewSideDock } from "../side-dock/api";
 import { anchorRestoreTarget, type DirectorSceneDef, type SavedIslandAnchor } from "./directorScenes";
 import { sendIslandDirectorCommand } from "./storage";
 
-export type LastDispatchedKind = "collapsed" | "expanded" | "tucked" | "docked" | "agentNotice";
+export type LastDispatchedKind = "collapsed" | "expanded" | "tucked" | "docked" | "agentNotice" | "sideDock";
 
 export type DirectorDispatchEnv = {
   islandForm: IslandForm;
@@ -19,6 +22,11 @@ export type DirectorDispatchEnv = {
   agentSamples: PreviewSamples;
 };
 
+export type SavedSideDocksSnapshot = {
+  sideDocks: SideDocksSettings;
+  layout: IslandPagesLayout;
+};
+
 export type DirectorDispatchState = {
   prepTimer: number;
   expectedExpanded: boolean | null;
@@ -26,12 +34,22 @@ export type DirectorDispatchState = {
   lastKind: LastDispatchedKind;
   virtualDocked: boolean;
   savedAnchor: SavedIslandAnchor | null;
+  savedSideDocks: SavedSideDocksSnapshot | null;
+  wingsPreviewOpen: boolean;
   noticeSeq: number;
 };
 
 const SETTLE_TOP_MS = 320;
 const AGENT_NOTICE_PREP_MS = 380;
 const AGENT_PAGE_PREP_MS = 260;
+const SIDE_DOCK_PREP_MS = 420;
+
+export function closeSideDockPreviews(state: DirectorDispatchState) {
+  if (!state.wingsPreviewOpen) return;
+  state.wingsPreviewOpen = false;
+  void previewSideDock("left", false).catch(() => undefined);
+  void previewSideDock("right", false).catch(() => undefined);
+}
 
 export function ensureIslandAtTop(
   state: DirectorDispatchState,
@@ -57,8 +75,20 @@ export function restoreSavedAnchor(
   env: DirectorDispatchEnv,
   clearOnly: boolean,
 ): boolean {
+  closeSideDockPreviews(state);
+  let hadSaved = false;
+  const sideSnapshot = state.savedSideDocks;
+  if (sideSnapshot) {
+    hadSaved = true;
+    state.savedSideDocks = null;
+    if (!clearOnly) {
+      saveIslandPages(sideSnapshot.layout);
+      saveSideDocks(sideSnapshot.sideDocks);
+    }
+  }
   const anchor = state.savedAnchor;
-  if (!anchor) return false;
+  if (!anchor) return hadSaved;
+  hadSaved = true;
   state.savedAnchor = null;
   if (clearOnly) return true;
   const target = anchorRestoreTarget(anchor);
@@ -74,11 +104,29 @@ export function restoreSavedAnchor(
   return true;
 }
 
+function ensureSideDockSplitActive(state: DirectorDispatchState, onCaptured: () => void): boolean {
+  const currentSideDocks = loadSideDocks();
+  const alreadyBoth = currentSideDocks.left.enabled && currentSideDocks.right.enabled;
+  if (!state.savedSideDocks) {
+    state.savedSideDocks = {
+      sideDocks: currentSideDocks,
+      layout: loadIslandPages(),
+    };
+    onCaptured();
+  }
+  if (alreadyBoth) return false;
+  const applied = applySideDockSplitPreset(currentSideDocks, loadIslandPages());
+  saveIslandPages(applied.layout);
+  saveSideDocks(applied.settings);
+  return true;
+}
+
 export function runDirectorScene(
   scene: DirectorSceneDef,
   state: DirectorDispatchState,
   getEnv: () => DirectorDispatchEnv,
   onAnchorCaptured: () => void,
+  options?: { skipNotify?: boolean },
 ) {
   window.clearTimeout(state.prepTimer);
   state.prepTimer = 0;
@@ -94,6 +142,9 @@ export function runDirectorScene(
 
   const topForm = state.savedAnchor?.islandForm;
   const action = scene.action;
+  if (action.kind !== "sideSplit" && action.kind !== "sideWing") {
+    closeSideDockPreviews(state);
+  }
 
   if (action.kind === "notify") {
     const wasDocked = ensureIslandAtTop(state, env, topForm);
@@ -102,7 +153,9 @@ export function runDirectorScene(
       state.expectedExpanded = false;
       state.lastCommandAt = Date.now();
       state.lastKind = "collapsed";
-      sendIslandDirectorCommand({ action: "notify", title: cur.notifyTitle, body: cur.notifyBody });
+      if (!options?.skipNotify) {
+        sendIslandDirectorCommand({ action: "notify", title: cur.notifyTitle, body: cur.notifyBody });
+      }
     };
     if (wasDocked) {
       state.expectedExpanded = null;
@@ -162,9 +215,50 @@ export function runDirectorScene(
     return;
   }
 
+  if (action.kind === "sideSplit") {
+    const wasDocked = ensureIslandAtTop(state, env, topForm);
+    const spawned = ensureSideDockSplitActive(state, onAnchorCaptured);
+    state.expectedExpanded = null;
+    state.lastCommandAt = Date.now();
+    state.lastKind = "sideDock";
+    sendIslandDirectorCommand({ action: "expand", page: "fuyu" });
+    const openWings = () => {
+      state.wingsPreviewOpen = true;
+      void previewSideDock("left", true).catch(() => undefined);
+      void previewSideDock("right", true).catch(() => undefined);
+    };
+    if (spawned || wasDocked) {
+      state.prepTimer = window.setTimeout(openWings, SIDE_DOCK_PREP_MS);
+    } else {
+      openWings();
+    }
+    return;
+  }
+
+  if (action.kind === "sideWing") {
+    const wasDocked = ensureIslandAtTop(state, env, topForm);
+    const spawned = ensureSideDockSplitActive(state, onAnchorCaptured);
+    const other = action.edge === "left" ? "right" : "left";
+    state.expectedExpanded = false;
+    state.lastCommandAt = Date.now();
+    state.lastKind = "sideDock";
+    sendIslandDirectorCommand({ action: "collapse" });
+    const showWing = () => {
+      state.wingsPreviewOpen = true;
+      void previewSideDock(other, false).catch(() => undefined);
+      void previewSideDock(action.edge, true).catch(() => undefined);
+    };
+    if (spawned || wasDocked) {
+      state.prepTimer = window.setTimeout(showWing, SIDE_DOCK_PREP_MS);
+    } else {
+      showWing();
+    }
+    return;
+  }
+
   if (action.kind === "agentNotice") {
     const wasDocked = ensureIslandAtTop(state, env, topForm);
-    const needsPrep = wasDocked || state.lastKind === "expanded" || state.lastKind === "tucked";
+    const needsPrep = wasDocked || state.lastKind === "expanded" || state.lastKind === "tucked" || state.lastKind === "sideDock";
     const fire = () => {
       state.noticeSeq += 1;
       state.expectedExpanded = null;

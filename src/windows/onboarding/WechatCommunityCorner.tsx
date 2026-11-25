@@ -1,4 +1,4 @@
-import { useState, type RefObject } from "react";
+import { useLayoutEffect, useState, type RefObject } from "react";
 import { X } from "lucide-react";
 import { communityUrl, groupsFor, imageSourcesFrom, isExpired } from "../../features/updater/community/communityGroups";
 import { useCommunityList } from "../../features/updater/community/useCommunityList";
@@ -10,11 +10,13 @@ export function WechatCommunityCorner({
   visible,
   zoomed,
   onZoomChange,
+  onBoundsChange,
 }: {
   cornerRef: RefObject<HTMLDivElement | null>;
   visible: boolean;
   zoomed: boolean;
   onZoomChange: (open: boolean) => void;
+  onBoundsChange?: () => void;
 }) {
   const { locale } = useLocale();
   const text = useTranslation().onboarding.community;
@@ -22,15 +24,17 @@ export function WechatCommunityCorner({
   const [collapsed, setCollapsed] = useState(false);
   const [imageTry, setImageTry] = useState(0);
 
-  if (!visible || state.status !== "ready") return null;
-
-  const candidates = groupsFor(state.list.groups, locale);
+  const candidates = state.status === "ready" ? groupsFor(state.list.groups, locale) : [];
   const wechat = candidates.find((group) => group.platform === "wechat" && group.qr && !isExpired(group));
-  if (!wechat || !wechat.qr) return null;
-
-  const sources = imageSourcesFrom(state.list.source);
+  const sources = state.status === "ready" ? imageSourcesFrom(state.list.source) : [];
   const source = sources[imageTry];
-  if (!source) return null;
+  const shown = visible && state.status === "ready" && Boolean(wechat?.qr) && Boolean(source);
+
+  useLayoutEffect(() => {
+    onBoundsChange?.();
+  }, [shown, collapsed, onBoundsChange]);
+
+  if (!shown || !wechat?.qr || !source) return null;
 
   const qrUrl = communityUrl(source, wechat.qr);
   const groupName = wechat.name[locale] || text.title;
