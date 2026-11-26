@@ -66,6 +66,7 @@
 | `launcher` | `#e0a020` | `rocket` |
 | `now-playing` | `#f0559a` | `music-2` |
 | `pomodoro` | `#f25a4c` | 自己画的番茄钟（lucide 没有） |
+| `stock` | `#e04f5f` | `chart-candlestick` |
 | `system-monitor` | `#1fb877` | `activity` |
 | `todo-digest` | `#1fb5b5` | `list-checks` |
 | `todo-ring` | `#4fbf4a` | `circle-check-big` |

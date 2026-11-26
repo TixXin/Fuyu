@@ -1,0 +1,106 @@
+{
+  "name": "@fuyu/stock",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Your watchlist on the island: A-share, Hong Kong and US quotes take turns on the bar, the page lists them all.",
+  "keywords": [
+    "股票",
+    "自选股",
+    "行情",
+    "股价",
+    "A股",
+    "港股",
+    "美股",
+    "指数",
+    "基金",
+    "ETF",
+    "stock",
+    "stocks",
+    "watchlist",
+    "quote",
+    "market",
+    "index"
+  ],
+  "license": "MIT",
+  "author": "TixXin",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev --official",
+    "build": "fuyu-plugin build --official",
+    "check": "fuyu-plugin check --official --market",
+    "package": "fuyu-plugin pack --official",
+    "typecheck": "tsc",
+    "lint": "eslint ."
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "自选股",
+      "en": "Stocks"
+    },
+    "description": {
+      "zh-CN": "在岛上看自选股：A 股、港股、美股在收起条上轮流显示，点开看完整列表。",
+      "en": "Your watchlist on the island: A-share, Hong Kong and US quotes take turns on the bar, the page lists them all."
+    },
+    "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：自选股的现价和涨跌",
+          "en": "Island page: price and change for each stock on the watchlist"
+        }
+      },
+      {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：自选股轮流显示涨跌幅",
+          "en": "Collapsed bar: the watchlist takes turns showing its change"
+        }
+      }
+    ],
+    "categories": [
+      "information"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
+    },
+    "inject": {
+      "required": [
+        "commands"
+      ],
+      "optional": [
+        "http",
+        "settings"
+      ]
+    },
+    "slots": [
+      "island.page/v1",
+      "island.collapsed/v1",
+      "settings.section/v1"
+    ],
+    "commands": [
+      {
+        "id": "refresh",
+        "title": {
+          "zh-CN": "立即刷新行情",
+          "en": "Refresh quotes now"
+        }
+      }
+    ],
+    "network": [
+      "push2.eastmoney.com",
+      "searchapi.eastmoney.com",
+      "qt.gtimg.cn"
+    ]
+  }
+}
