@@ -137,6 +137,12 @@ export function ExpandSettingsSection({
           checked={settings.wheelSwitchPage}
           onChange={(wheelSwitchPage) => update({ wheelSwitchPage })}
         />
+        <SettingsToggleRow
+          title={expand.rememberLastPage}
+          description={expand.rememberLastPageHint}
+          checked={settings.rememberLastPage}
+          onChange={(rememberLastPage) => update({ rememberLastPage })}
+        />
         {onOpenPageKeys && (
           <SettingsRow
             searchable={false}

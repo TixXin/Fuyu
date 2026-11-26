@@ -13,6 +13,13 @@ test("with nothing written on the bar the island hugs its items instead of the o
   assert.ok(width < MIN_COLLAPSED_ISLAND_WIDTH - 60);
 });
 
+test("when items overflow behind +N a bare bar stays at the cap instead of shrinking to the remaining items", () => {
+  const width = collapsedWidth({ ...base, contentWidth: 80, fitWidth: 408, overflowHeld: true, widthExtra: 180 });
+  assert.equal(width, 520);
+  const defaultExtra = collapsedWidth({ ...base, contentWidth: 180, fitWidth: 408, overflowHeld: true });
+  assert.equal(defaultExtra, 520);
+});
+
 test("a todo line, a title, a message preview, an alert or a notice keep today's width", () => {
   const before = (input) => collapsedWidth({ ...input, contentWidth: 0 });
   for (const input of [

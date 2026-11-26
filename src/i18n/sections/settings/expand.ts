@@ -20,6 +20,8 @@ export type SettingsExpandText = {
   hoverSwitchDelay: string;
   wheelSwitchPage: string;
   wheelSwitchPageHint: string;
+  rememberLastPage: string;
+  rememberLastPageHint: string;
   tuckTitle: string;
   revealTitle: string;
   holdMusic: string;
@@ -142,6 +144,8 @@ export const zhCN: SettingsExpandText = {
   hoverSwitchDelay: "悬停多久后切换",
   wheelSwitchPage: "页头滚轮切页",
   wheelSwitchPageHint: "在展开面板顶部的图标栏上滚动滚轮切换上一页 / 下一页，不影响内容区自己的滚动",
+  rememberLastPage: "记住上次退出时的面板页面",
+  rememberLastPageHint: "下次展开面板时回到上次收起或退出前停留的页面，而不是每次都回到 Fuyu 首页",
   tuckTitle: "贴边隐藏",
   revealTitle: "露出",
   holdMusic: "音乐播放中不收起",
@@ -322,6 +326,8 @@ export const en: SettingsExpandText = {
   hoverSwitchDelay: "Hover time before switching",
   wheelSwitchPage: "Scroll header to switch pages",
   wheelSwitchPageHint: "Scroll over the top page icon bar of the open panel to switch pages without interfering with page scrolling",
+  rememberLastPage: "Remember last panel page",
+  rememberLastPageHint: "Reopen the page you were on before closing the panel or quitting, instead of returning to the Fuyu page each time",
   tuckTitle: "Tuck to edge",
   revealTitle: "Sliding out",
   holdMusic: "Stay out while music plays",

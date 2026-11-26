@@ -97,6 +97,7 @@ mockIPC((command, payload) => {
     }
     case "get_reply_marker_state": return replyMarker();
     case "get_island_notch": return islandNotch.value;
+    case "get_island_expand_shortcut_problem": return null;
     case "get_editor_extension_states":
       return [
         { app: "code", name: "VS Code", installed: true, canInstall: true },

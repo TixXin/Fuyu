@@ -302,6 +302,7 @@ export function SideDockWindow() {
                   {surface.isGlass && <IslandGlassLayer glass={glass} />}
                   <div className="side-dock-drawer__inner">
                     <SideDockDrawerHeader
+                      edge={edge}
                       dockPages={dockPages}
                       currentEntry={currentEntry}
                       pageLayout={pageLayout}

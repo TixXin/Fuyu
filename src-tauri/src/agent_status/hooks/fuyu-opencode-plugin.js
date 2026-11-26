@@ -166,6 +166,7 @@ async function decide(client, request, directory, controller) {
 }
 
 async function server({ client, directory }) {
+  if (process.env.FUYU_AGENT_STATUS === "off") return {};
   return {
     event: async ({ event }) => {
       const props = event?.properties;

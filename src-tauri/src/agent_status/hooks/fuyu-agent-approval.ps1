@@ -1,4 +1,5 @@
 $ErrorActionPreference = 'Stop'
+if ($env:FUYU_AGENT_STATUS -eq 'off') { exit 0 }
 $routes = @{
     codex = 'codex/permission-request'
     workbuddy = 'workbuddy/permission-request'

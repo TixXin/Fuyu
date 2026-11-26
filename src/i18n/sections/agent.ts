@@ -93,6 +93,8 @@ export type AgentText = {
       copyId: string;
       archive: string;
       hideFolder: string;
+      hideSimilar: (name: string) => string;
+      hiddenSimilar: (name: string) => string;
       copied: string;
       revealFailed: string;
     };
@@ -292,6 +294,8 @@ export const zhCN: AgentText = {
       copyId: "复制会话 id",
       archive: "归档",
       hideFolder: "隐藏这个目录的会话",
+      hideSimilar: (name) => `隐藏 ${name} 这类目录的会话`,
+      hiddenSimilar: (name) => `已隐藏 ${name} 这类会话`,
       copied: "已复制",
       revealFailed: "打不开这个文件夹",
     },
@@ -498,6 +502,8 @@ export const en: AgentText = {
       copyId: "Copy session id",
       archive: "Archive",
       hideFolder: "Hide sessions in this folder",
+      hideSimilar: (name) => `Hide sessions in ${name} folders`,
+      hiddenSimilar: (name) => `Hid ${name} sessions`,
       copied: "Copied",
       revealFailed: "Couldn't open this folder",
     },

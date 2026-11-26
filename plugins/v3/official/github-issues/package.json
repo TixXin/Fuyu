@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/github-issues",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "description": "See the open issues of the GitHub repositories you follow, grouped by repository, right on the island.",
   "keywords": [

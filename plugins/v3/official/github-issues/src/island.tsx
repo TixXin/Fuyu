@@ -68,28 +68,29 @@ function Group({ group, settings, keyword, at }: { group: RepoGroup; settings: I
   const matched = group.items.filter((item) => matchesFilter(item, keyword));
   const folded = !keyword && !open && matched.length > settings.perRepo;
   const shown = folded ? matched.slice(0, settings.perRepo) : matched;
+  const hasCached = group.loaded && group.items.length > 0;
   let note: string | null = null;
   if (group.error) note = errorLabel(group.error);
   else if (!group.loaded) note = text.loadingRepo;
   else if (matched.length === 0) note = keyword ? text.noMatch : text.noOpenIssues;
+  const showList = hasCached && matched.length > 0;
   return (
     <div className="fuyu-gh-issues__group">
       <div className="fuyu-gh-issues__group-head">
         <span className="fuyu-gh-issues__repo">{group.repo}</span>
-        {group.loaded && !group.error && (
+        {group.loaded && (!group.error || hasCached) && (
           <span className="fuyu-gh-issues__badge">{text.count(group.items.length, group.more)}</span>
         )}
       </div>
-      {note ? (
-        <p className="fuyu-gh-issues__note">{note}</p>
-      ) : (
+      {note && <p className="fuyu-gh-issues__note">{note}</p>}
+      {showList && (
         <ul className="fuyu-gh-issues__list">
           {shown.map((item) => (
             <Row key={item.id} item={item} settings={settings} at={at} />
           ))}
         </ul>
       )}
-      {!keyword && matched.length > settings.perRepo && (
+      {showList && !keyword && matched.length > settings.perRepo && (
         <button type="button" className="fuyu-gh-issues__more" onClick={() => setOpen(!open)}>
           {open ? text.showLess : text.showMore(matched.length - settings.perRepo)}
         </button>
@@ -108,6 +109,7 @@ export default function apply(ctx: Context) {
     const { settings } = state;
     const keyword = filter.trim().toLowerCase();
     const total = state.groups.reduce((sum, group) => sum + group.items.length, 0);
+    const anyLoaded = state.groups.some((group) => group.loaded && (!group.error || group.items.length > 0));
     const showFilter = total > FILTER_THRESHOLD;
 
     useEffect(() => {
@@ -154,7 +156,7 @@ export default function apply(ctx: Context) {
               onChange={(event) => setFilter(event.target.value)}
             />
           ) : (
-            <span className="fuyu-gh-issues__summary">{text.barTitle(total)}</span>
+            <span className="fuyu-gh-issues__summary">{anyLoaded ? text.barTitle(total) : ""}</span>
           )}
           <div className="fuyu-gh-issues__actions">
             <button

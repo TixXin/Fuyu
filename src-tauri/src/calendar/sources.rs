@@ -1,5 +1,10 @@
 use crate::user_error::{credential, UserError};
-use std::{fs, path::Path};
+use std::{
+    collections::BTreeMap,
+    fs,
+    path::Path,
+    sync::{Mutex, PoisonError},
+};
 
 use keyring::{Entry, Error as KeyringError};
 use serde::{Deserialize, Serialize};
@@ -56,7 +61,20 @@ fn entry(id: &str) -> Result<Entry, UserError> {
     Entry::new(&crate::dev_lane::service(CREDENTIAL_SERVICE), id).map_err(credential::open)
 }
 
-pub(super) fn read_secret(id: &str) -> Result<Option<String>, UserError> {
+type Remembered = BTreeMap<String, Result<Option<String>, UserError>>;
+
+static REMEMBERED: Mutex<Remembered> = Mutex::new(BTreeMap::new());
+
+fn remembered(known: &mut Remembered, id: &str, retry: bool, read: impl FnOnce() -> Result<Option<String>, UserError>) -> Result<Option<String>, UserError> {
+    if let Some(answer) = known.get(id).filter(|answer| !retry || matches!(answer, Ok(Some(_)))) {
+        return answer.clone();
+    }
+    let answer = read();
+    known.insert(id.to_string(), answer.clone());
+    answer
+}
+
+fn read_keychain(id: &str) -> Result<Option<String>, UserError> {
     match entry(id)?.get_password() {
         Ok(secret) => Ok(Some(secret)),
         Err(KeyringError::NoEntry) => Ok(None),
@@ -64,11 +82,19 @@ pub(super) fn read_secret(id: &str) -> Result<Option<String>, UserError> {
     }
 }
 
+pub(super) fn read_secret(id: &str, retry: bool) -> Result<Option<String>, UserError> {
+    let mut known = REMEMBERED.lock().unwrap_or_else(PoisonError::into_inner);
+    remembered(&mut known, id, retry, || read_keychain(id))
+}
+
 pub(super) fn save_secret(id: &str, secret: &str) -> Result<(), UserError> {
-    entry(id)?.set_password(secret).map_err(credential::save)
+    entry(id)?.set_password(secret).map_err(credential::save)?;
+    REMEMBERED.lock().unwrap_or_else(PoisonError::into_inner).insert(id.to_string(), Ok(Some(secret.to_string())));
+    Ok(())
 }
 
 pub(super) fn delete_secret(id: &str) -> Result<(), UserError> {
+    REMEMBERED.lock().unwrap_or_else(PoisonError::into_inner).remove(id);
     match entry(id)?.delete_credential() {
         Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
         Err(error) => Err(credential::delete(error)),
@@ -104,6 +130,26 @@ mod tests {
         assert_eq!(ics_url("not a link").unwrap_err().code(), "calendar.link");
         assert_eq!(host_of("https://caldav.feishu.cn/abc"), "caldav.feishu.cn");
         assert_eq!(host_of("nonsense"), "");
+    }
+
+    #[test]
+    fn the_keychain_is_asked_once_and_a_failure_waits_for_a_manual_refresh() {
+        let mut known = Remembered::new();
+        let mut asked = 0;
+        let mut ask = |answer: Result<Option<String>, UserError>| {
+            asked += 1;
+            answer
+        };
+        assert_eq!(remembered(&mut known, "c1", false, || ask(Ok(Some("https://a".into())))).unwrap().as_deref(), Some("https://a"));
+        assert_eq!(remembered(&mut known, "c1", false, || ask(Ok(None))).unwrap().as_deref(), Some("https://a"));
+        assert_eq!(remembered(&mut known, "c1", true, || ask(Ok(None))).unwrap().as_deref(), Some("https://a"));
+        let denied = || Err(UserError::new("credential.read", "denied"));
+        assert_eq!(remembered(&mut known, "c2", false, || ask(denied())).unwrap_err().code(), "credential.read");
+        assert_eq!(remembered(&mut known, "c2", false, || ask(Ok(Some("late".into())))).unwrap_err().code(), "credential.read");
+        assert_eq!(remembered(&mut known, "c2", true, || ask(Ok(Some("https://b".into())))).unwrap().as_deref(), Some("https://b"));
+        assert_eq!(remembered(&mut known, "c3", false, || ask(Ok(None))).unwrap(), None);
+        assert_eq!(remembered(&mut known, "c3", false, || ask(Ok(Some("x".into())))).unwrap(), None);
+        assert_eq!(asked, 4);
     }
 
     #[test]

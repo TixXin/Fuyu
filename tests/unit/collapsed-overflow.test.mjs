@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { balancedLanes, fitCollapsedZones, fitPill, HYDRATE_GRACE_MS, isUnbalanced, leastWing, overflowCount, resolveUnitWidth } from "../../src/windows/island/collapsedOverflow.ts";
+import { balancedLanes, fitCollapsedZones, fitPill, HYDRATE_GRACE_MS, isUnbalanced, leastWing, overflowCount, pillWidestWidth, resolveUnitWidth } from "../../src/windows/island/collapsedOverflow.ts";
 
 const GAP = 8;
 const CHIP = 26;
@@ -187,4 +187,11 @@ test("a freshly remounted async item keeps its previous width during hydration i
 
   const neverShown = resolveUnitWidth(0, 0, false, 1000, 1010);
   assert.deepEqual(neverShown, { width: 0, hydrating: false, retryIn: null });
+});
+
+test("widest pill width stays in unscaled bar units even when collapsedScale is above 1", () => {
+  assert.equal(pillWidestWidth(380, 380, 380 * 1.4), 520);
+  assert.equal(pillWidestWidth(260, 260, 260 * 1.4), 520);
+  assert.equal(pillWidestWidth(340, 340, 340 * 0.89), 520);
+  assert.equal(pillWidestWidth(340, 340, 0), 520);
 });

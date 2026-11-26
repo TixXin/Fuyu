@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
-import { fitPill } from "./collapsedOverflow";
-import { MAX_FITTED_COLLAPSED_WIDTH } from "./layout";
+import { fitPill, pillWidestWidth } from "./collapsedOverflow";
 import { BAR_UNIT, boxWidth, createUnitWidthTracker, flexBoxes, isMoreChip, isOpenButton, measureBarUnits, MORE_CHIP_WIDTH, px, seedUnitWidths, useOverflowHold, type CollapsedOverflowState, type OverflowUnit, type UnitWidthTracker } from "./useCollapsedOverflow";
 
 export const PILL_TEXT_FLOOR = 160;
 
+const PILL_HOLD_ID = "overflow:hold:pill";
 const NONE: CollapsedOverflowState = { fitting: false, shelved: new Set(), moved: new Set(), chip: null, wing: null };
 
 function inFlow(element: Element) {
@@ -30,11 +30,10 @@ function measureBar(bar: HTMLElement) {
   const base = px(style.paddingLeft) + px(style.paddingRight) + openPad + text;
   const cost = (boxes: readonly Element[]) => boxes.reduce((total, box) => total + boxWidth(box) + gap, 0);
   const rest = children.filter((child) => !isOpenButton(child));
-  const island = bar.closest<HTMLElement>(".island")?.offsetWidth ?? bar.offsetWidth;
   return {
     gap,
     width: bar.clientWidth,
-    widest: bar.clientWidth + Math.max(0, MAX_FITTED_COLLAPSED_WIDTH - island),
+    widest: pillWidestWidth(bar.clientWidth, bar.offsetWidth, bar.getBoundingClientRect().width),
     need: base + cost(flexBoxes(rest)) + cost(rest.filter(isMoreChip)),
     reserved: base + cost(flexBoxes(rest.filter((child) => !child.hasAttribute(BAR_UNIT) && !isMoreChip(child)))),
   };
@@ -42,7 +41,7 @@ function measureBar(bar: HTMLElement) {
 
 const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b.size && [...a].every((id) => b.has(id));
 
-export function usePillOverflow(enabled: boolean, active: boolean, units: readonly OverflowUnit[], barRef: RefObject<HTMLElement | null>, { auto, keepChip }: { auto: boolean; keepChip: boolean }): CollapsedOverflowState {
+export function usePillOverflow(enabled: boolean, active: boolean, units: readonly OverflowUnit[], barRef: RefObject<HTMLElement | null>, { auto, keepChip, hasText = false }: { auto: boolean; keepChip: boolean; hasText?: boolean }): CollapsedOverflowState {
   const [state, setState] = useState(NONE);
   const widthsRef = useRef(new Map<string, number>());
   const trackerRef = useRef<UnitWidthTracker | null>(null);
@@ -108,8 +107,8 @@ export function usePillOverflow(enabled: boolean, active: boolean, units: readon
       window.clearTimeout(retryTimer);
       observer.disconnect();
     };
-  }, [enabled, active, signature, state, barRef, auto, keepChip]);
+  }, [enabled, active, signature, state, barRef, auto, keepChip, hasText]);
 
-  useOverflowHold(state.fitting);
+  useOverflowHold(state.fitting, PILL_HOLD_ID);
   return state;
 }

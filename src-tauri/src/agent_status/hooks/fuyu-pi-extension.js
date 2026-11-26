@@ -196,7 +196,7 @@ function postTo(config, body, signal) {
 }
 
 export default function fuyuIslandExtension(pi) {
-  if (!pi || typeof pi.on !== "function") return;
+  if (!pi || typeof pi.on !== "function" || process.env.FUYU_AGENT_STATUS === "off") return;
 
   pi.on("session_start", async (event, ctx) => {
     await recordSession(ctx, event?.reason, null);

@@ -19,6 +19,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($env:FUYU_AGENT_STATUS -eq "off") {
+  if ($HookResponse) { [Console]::Out.Write('{"continue":true,"suppressOutput":true}') }
+  exit 0
+}
+
 if ($Provider -eq "claudeCode" -and $env:CURSOR_VERSION) { exit 0 }
 
 function New-AgentTaskStatus {

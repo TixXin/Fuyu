@@ -48,6 +48,8 @@ export type SettingsShortcutsText = {
   shortcutProblem: Record<"invalid" | "taken", string>;
   shortcutInvalidMac: string;
   islandLayerTitle: string;
+  islandExpandToggle: string;
+  islandExpandHint: string;
   islandLayerToggle: string;
   islandLayerHint: string;
   islandLayerHintMac: string;
@@ -106,6 +108,8 @@ export const zhCN: SettingsShortcutsText = {
   shortcutProblem: { invalid: "这个快捷键用不了，换一个带修饰键的组合。", taken: "这个快捷键被别的程序占用了，换一个。" },
   shortcutInvalidMac: "这个快捷键在 Mac 上用不了，换一个带 Control、Option 或 Command 的组合。",
   islandLayerTitle: "岛屿",
+  islandExpandToggle: "展开 / 收起面板",
+  islandExpandHint: "在任何程序里按下可展开岛屿面板，已展开时再按一次收起；默认不设。",
   islandLayerToggle: "切换岛的上下层",
   islandLayerHint: "按一次，岛退到所有窗口下面，不再挡住浏览器标签页、工具栏；再按一次回到最前。默认不设；退下去前岛上会提示一下，托盘卡片里也能叫回最前。只改前后层，位置和贴边不变；重启浮屿后回到最前。",
   islandLayerHintMac: "按一次，岛退到所有窗口下面，不再挡住菜单栏和窗口顶部；再按一次回到最前。默认不设；退下去前岛上会提示一下，菜单栏图标的卡片里也能叫回最前。只改前后层，位置和贴边不变；重启浮屿后回到最前。",
@@ -164,6 +168,8 @@ export const en: SettingsShortcutsText = {
   shortcutProblem: { invalid: "This shortcut cannot be used; pick one with a modifier key.", taken: "Another app is using this shortcut; pick another." },
   shortcutInvalidMac: "This shortcut cannot be used on a Mac; pick one with Control, Option or Command.",
   islandLayerTitle: "Island",
+  islandExpandToggle: "Expand or collapse the panel",
+  islandExpandHint: "Pressed anywhere, expands the island panel; press again while open to collapse it. Off by default.",
   islandLayerToggle: "Send the island back / bring it to front",
   islandLayerHint: "Press once to put the island behind every window so it no longer covers browser tabs or toolbars; press again to bring it back to the front. Off by default; the island says so before it goes, and the tray card can bring it back. Only the stacking order changes, not the position or tuck; Fuyu starts in front again after a restart.",
   islandLayerHintMac: "Press once to put the island behind every window so it no longer covers the menu bar or window tops; press again to bring it back to the front. Off by default; the island says so before it goes, and the menu bar card can bring it back. Only the stacking order changes, not the position or tuck; Fuyu starts in front again after a restart.",

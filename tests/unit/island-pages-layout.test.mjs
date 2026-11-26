@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import "./islandPageSlot.mjs";
+import { FUYU_PAGE_ID } from "../../src/lib/settings/customPanels.ts";
+import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/lib/settings/settings.ts";
 import { arrangeIslandPages, moveIslandPage, placeIslandPage, readIslandPages, setIslandPageHidden, setIslandPageIcon } from "../../src/lib/settings/islandPages.ts";
 import { cycleShortcutPage, headerDotPages, isPageShown, pageForAltDigit, pageShortcutOrder, resolveIslandPage } from "../../src/windows/island/features.ts";
+import { resolveHomePage } from "../../src/windows/island/homePage.ts";
 import { pageSlot } from "../../src/windows/island/slots/pageSlot.ts";
 
 const every = { agents: true, todo: true, calendar: true, music: true, clipboard: true, shelf: true, screenshots: true, timer: true, qq: true, wechat: false, qqMail: false, translation: true };
@@ -75,4 +78,39 @@ test("setting a page icon keeps order and hidden, and clearing the last one drop
   assert.deepEqual(setIslandPageIcon(starred, "todo", null), layout);
   assert.deepEqual(setIslandPageHidden(starred, "todo", true).icons, { todo: "star" });
   assert.deepEqual(moveIslandPage(starred, ["timer", "todo"], "todo", -1).icons, { todo: "star" });
+});
+
+test("resolveHomePage respects rememberLastPage, urgent popups, hidden Fuyu page and side-docked pages", () => {
+  const removeFuyu = pageSlot.add({ id: FUYU_PAGE_ID, shortcutOrder: 0, headerDot: true, component: () => null });
+  try {
+    assert.equal(resolveHomePage({ rememberLastPage: false, urgentPage: null, page: "music", features: every }), FUYU_PAGE_ID);
+    assert.equal(resolveHomePage({ rememberLastPage: true, urgentPage: null, page: "music", features: every }), "music");
+    assert.equal(resolveHomePage({ rememberLastPage: true, urgentPage: "agents", page: "music", features: every }), "agents");
+    assert.equal(resolveHomePage({ rememberLastPage: true, urgentPage: "agents", page: "music", features: { ...every, agents: false } }), "music");
+    assert.equal(resolveHomePage({ rememberLastPage: true, urgentPage: null, page: "music", features: { ...every, music: false } }), FUYU_PAGE_ID);
+    const hiddenMusic = { ...every, pageLayout: { order: [], hidden: ["music"] } };
+    assert.equal(resolveHomePage({ rememberLastPage: true, urgentPage: null, page: "music", features: hiddenMusic }), FUYU_PAGE_ID);
+    const sideDockedMusic = {
+      ...every,
+      pageLayout: { order: [], hidden: [], placement: { music: "left" } },
+      enabledSides: { left: true, right: false },
+    };
+    assert.equal(resolveHomePage({ rememberLastPage: true, urgentPage: null, page: "music", features: sideDockedMusic }), FUYU_PAGE_ID);
+    const hiddenFuyu = { ...every, pageLayout: { order: ["timer", "todo", "agents"], hidden: [FUYU_PAGE_ID] } };
+    assert.equal(resolveHomePage({ rememberLastPage: false, urgentPage: null, page: "music", features: hiddenFuyu }), "timer");
+    assert.equal(resolveHomePage({ rememberLastPage: true, urgentPage: null, page: "music", features: hiddenFuyu }), "music");
+  } finally {
+    removeFuyu();
+  }
+});
+
+test("islandExpandShortcut and rememberLastPage default to off and normalize safely", () => {
+  assert.equal(DEFAULT_SETTINGS.islandExpandShortcut, "");
+  assert.equal(normalizeSettings({}).islandExpandShortcut, "");
+  assert.equal(normalizeSettings({ islandExpandShortcut: 42 }).islandExpandShortcut, "");
+  assert.equal(normalizeSettings({ islandExpandShortcut: " Ctrl+Alt+Space " }).islandExpandShortcut, "Ctrl+Alt+Space");
+  assert.equal(DEFAULT_SETTINGS.rememberLastPage, false);
+  assert.equal(normalizeSettings({}).rememberLastPage, false);
+  assert.equal(normalizeSettings({ rememberLastPage: "yes" }).rememberLastPage, false);
+  assert.equal(normalizeSettings({ rememberLastPage: true }).rememberLastPage, true);
 });

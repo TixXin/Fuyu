@@ -35,9 +35,13 @@ export interface RepoInfoAnswer {
   errorMessage: string | null;
 }
 
+const USER_AGENT = "Fuyu-GitHub-Issues";
+const REQUEST_TIMEOUT_MS = 15_000;
+
 const HEADERS = {
   Accept: "application/vnd.github+json",
   "X-GitHub-Api-Version": "2022-11-28",
+  "User-Agent": USER_AGENT,
 };
 
 const MOVED = new Set([301, 302, 307, 308]);
@@ -65,13 +69,13 @@ async function errorMessageOf(response: Response): Promise<string> {
 }
 
 async function getFollowing(url: string, headers: Record<string, string>): Promise<{ response: Response; moved: boolean }> {
-  let response = await fetch(url, { headers });
+  let response = await fetch(url, { headers, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   let moved = response.redirected;
   for (let hops = 0; hops < 3 && MOVED.has(response.status); hops += 1) {
     const location = response.headers.get("location");
     if (!location) break;
     moved = true;
-    response = await fetch(new URL(location, url).toString(), { headers });
+    response = await fetch(new URL(location, url).toString(), { headers, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   }
   return { response, moved };
 }

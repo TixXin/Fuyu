@@ -23,7 +23,8 @@ import { usePageArrowKeys } from "./usePageArrowKeys";
 import { usePageSwipe } from "./usePageSwipe";
 import { IslandPageArrows } from "./IslandPageArrows";
 import { useIslandFeatures } from "./useIslandFeatures";
-import { useIslandNavigation } from "./useIslandNavigation";
+import { useIslandNavigation, useRememberLastPage } from "./useIslandNavigation";
+import { useIslandExpandToggle } from "./useIslandExpandToggle";
 import { useIslandTucking } from "./useIslandTucking";
 import { useIslandOnTaskbar } from "./useIslandOnTaskbar";
 import { useIslandHover } from "./useIslandHover";
@@ -66,7 +67,7 @@ import { useIdleDim } from "./useIdleDim";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
-import { isPageEnabled, isPageShown } from "./features";
+import { resolveHomePage } from "./homePage";
 import { urgentPopupPage } from "../../features/plugin-kernel/islandContributions";
 import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
 import { IslandResize } from "./resize/IslandResize";
@@ -149,11 +150,11 @@ export function IslandApp() {
     islandSide: side,
   });
   const urgentPage = urgentPopupPage(popups) as IslandPage | null;
-  const homePage: IslandPage = urgentPage && isPageEnabled(urgentPage, features)
-    ? urgentPage
-    : isPageShown(FUYU_PAGE_ID, features) ? FUYU_PAGE_ID : page;
+  const homePage = resolveHomePage({ rememberLastPage: settings.rememberLastPage, urgentPage, page, features });
   const openPopup = [...popups.values()].find((entry) => entry.open === true);
   const hasOpenPopup = openPopup !== undefined;
+  useRememberLastPage(mode, page, hasOpenPopup);
+  useIslandExpandToggle({ shortcut: settings.islandExpandShortcut, mode, homePage, openEnabledPage, collapseIsland });
   const panelEditing = usePanelEditing() !== null && !hasOpenPopup;
   const fuyuPage = page === FUYU_PAGE_ID && !hasOpenPopup;
   const pageSize = islandPageSize(settings, page);

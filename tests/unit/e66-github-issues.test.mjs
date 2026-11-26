@@ -113,8 +113,10 @@ test("host: add checks the repo exists, follows renames (301) and registers the 
   writeFileSync(join(dataDir, "config.json"), JSON.stringify({ reposText: "zeit/next.js", refreshMinutes: 15, notifyNew: false, locale: "zh-CN" }));
 
   const seen = [];
-  globalThis.fetch = async (input) => {
+  globalThis.fetch = async (input, init) => {
     const url = String(input);
+    const headers = new Headers(init?.headers);
+    assert.ok(headers.get("user-agent"), `missing User-Agent for ${url}`);
     seen.push(url);
     if (url.includes("/repos/zeit/next.js/issues")) {
       return reply(200, [issue(5, { repository_url: "https://api.github.com/repos/vercel/next.js" }), issue(6, { pull_request: {} })], {
@@ -195,9 +197,9 @@ test("host: fresh install seeds a sample repository, replacing on add and asking
   await new Promise((resolve) => setImmediate(resolve));
 });
 
-test("manifest: GitHub Issues in both languages, 1.2.0, refresh command wired, check passes", async () => {
+test("manifest: GitHub Issues in both languages, 1.2.1, refresh command wired, check passes", async () => {
   const manifest = JSON.parse(readFileSync(join(PLUGIN_DIR, "package.json"), "utf8"));
-  assert.equal(manifest.version, "1.2.0");
+  assert.equal(manifest.version, "1.2.1");
   assert.deepEqual(manifest.fuyu.displayName, { "zh-CN": "GitHub Issues", en: "GitHub Issues" });
   assert.equal(manifest.description, manifest.fuyu.description.en);
   assert.ok(manifest.fuyu.inject.required.includes("commands"));

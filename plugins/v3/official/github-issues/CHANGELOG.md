@@ -1,5 +1,13 @@
 # 更新记录 · Changelog
 
+## 1.2.1
+
+- 请求 GitHub API 时附带 `User-Agent` 头与超时保护，修复开启代理时返回 `HTTP 403` 的问题。
+- 刷新失败时保留已加载的缓存列表并在上方提示错误，避免顶部未关闭总数与列表状态不一致。
+
+- Send a `User-Agent` header and request timeout to GitHub API, fixing `HTTP 403` errors when using a proxy.
+- Keep showing previously loaded issues under the error note when a refresh fails so the header count stays consistent with the list.
+
 ## 1.2.0
 
 - 首次安装默认关注示例仓库（`TixXin/fuyu`），装完即看真实 issue 列表；添加第一个自定义仓库时自动替换示例，清空后支持一键恢复示例。

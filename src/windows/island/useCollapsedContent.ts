@@ -16,7 +16,7 @@ export function useCollapsedContent(barRef: RefObject<HTMLElement | null>, enabl
       sizes.disconnect();
       sizes.observe(bar);
       for (const child of bar.children) sizes.observe(child);
-      for (const item of bar.querySelectorAll("[data-fit-item] > *, .island__center-slot")) sizes.observe(item);
+      for (const item of bar.querySelectorAll("[data-bar-unit] > *, [data-fit-item] > *, .island__center-slot")) sizes.observe(item);
     };
     watch();
     const tree = new MutationObserver(() => {

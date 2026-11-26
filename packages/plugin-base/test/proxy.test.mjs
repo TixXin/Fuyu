@@ -26,7 +26,12 @@ test("shouldBypassProxy matches loopback, wildcards, suffixes, and <local>", () 
 test("createProxyFetch forwards HTTP requests with Basic auth and respects bypass and dynamic config updates", async () => {
   const seen = [];
   const proxyServer = http.createServer((req, res) => {
-    seen.push({ url: req.url, method: req.method, auth: req.headers["proxy-authorization"] });
+    seen.push({ url: req.url, method: req.method, auth: req.headers["proxy-authorization"], ua: req.headers["user-agent"] });
+    if (req.url === "http://example.com/old") {
+      res.writeHead(301, { location: "http://example.com/new" });
+      res.end();
+      return;
+    }
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify({ proxied: true, target: req.url }));
   });
@@ -47,9 +52,19 @@ test("createProxyFetch forwards HTTP requests with Basic auth and respects bypas
     pf.setConfig({ url: `http://alice:s3cret@127.0.0.1:${proxyPort}`, bypass: ["*.corp.local"] });
     const proxiedRes = await pf.fetch("http://example.com/index.v3.json", { headers: { accept: "application/json" } });
     assert.equal(proxiedRes.status, 200);
+    assert.equal(proxiedRes.url, "http://example.com/index.v3.json");
+    assert.equal(proxiedRes.redirected, false);
     assert.deepEqual(await proxiedRes.json(), { proxied: true, target: "http://example.com/index.v3.json" });
     assert.equal(seen.length, 1);
     assert.equal(seen[0].auth, `Basic ${Buffer.from("alice:s3cret").toString("base64")}`);
+    assert.ok(typeof seen[0].ua === "string" && seen[0].ua.length > 0);
+
+    const customUaRes = await pf.fetch("http://example.com/old", { headers: { "User-Agent": "CustomAgent/1.0" } });
+    assert.equal(customUaRes.status, 200);
+    assert.equal(customUaRes.url, "http://example.com/new");
+    assert.equal(customUaRes.redirected, true);
+    assert.equal(seen[1].ua, "CustomAgent/1.0");
+    assert.equal(seen[2].ua, "CustomAgent/1.0");
 
     const bypassedRes = await pf.fetch("http://git.corp.local/repo");
     assert.equal(await bypassedRes.text(), "direct");

@@ -1,3 +1,5 @@
+import { maxCollapsedIslandWidth } from "./layout.ts";
+
 export type OverflowSide = "left" | "right";
 export type OverflowZone = { widths: readonly number[]; capacity: number; movable?: readonly boolean[]; keep?: readonly boolean[] };
 export type OverflowFit = {
@@ -137,6 +139,12 @@ export function fitPill(widths: readonly number[], capacity: number, gap: number
   const chipCost = chipWidth + gap;
   const second = options.auto === false || first.used + chipCost <= capacity ? first : pack(capacity - chipCost);
   return { away: second.away, chip: true, used: second.used + chipCost };
+}
+
+export function pillWidestWidth(barClientWidth: number, barOffsetWidth: number, barRectWidth: number) {
+  const scale = barOffsetWidth > 0 && barRectWidth > 0 ? barRectWidth / barOffsetWidth : 1;
+  const cap = maxCollapsedIslandWidth(scale);
+  return barClientWidth + Math.max(0, cap - barOffsetWidth);
 }
 
 export const HYDRATE_GRACE_MS = 350;

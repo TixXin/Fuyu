@@ -50,6 +50,18 @@ test("the store sums held widths plus one gap per item, tells listeners only whe
   assert.equal(calls, 3);
 });
 
+test("an overflow hold reports width and flips isHeld until dropped", () => {
+  const fit = createCollapsedFit();
+  assert.equal(fit.isHeld(), false);
+  fit.report("plugin", 80);
+  assert.equal(fit.isHeld(), false);
+  fit.hold("overflow:hold:pill", 400);
+  assert.equal(fit.isHeld(), true);
+  assert.ok(fit.total() >= 400);
+  fit.drop("overflow:hold:pill");
+  assert.equal(fit.isHeld(), false);
+});
+
 const base = { lines: [], noticeText: null, appName: "Fuyu", showTitle: false, widthExtra: 0, peeking: false, center: false, centerWidth: 0, sideWidth: 0, viewportWidth: 820, devicePixelRatio: 1 };
 
 test("without plugin items the collapsed width is what it was before measuring existed", () => {

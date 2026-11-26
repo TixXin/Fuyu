@@ -33,16 +33,27 @@ const LongChip = () => <span className="test-long-chip" style={chipStyle}>{"一�
 
 const WeatherChip = () => <span className="test-weather-chip" style={chipStyle}>晴 18°</span>;
 const CountdownChip = () => <span className="test-countdown-chip" style={chipStyle}>还有 12 天</span>;
+const WideChip = ({ label }: { label: string }) => <span className="test-wide-chip" style={{ ...chipStyle, width: 120 }}>{label}</span>;
 
 let width = 0;
 let setTodo: (title: string | null) => void = noop;
+let setScale: (scale: number) => void = noop;
+let setExtra: (extra: number) => void = noop;
 function Collapsed() {
   const [todoTitle, set] = useState<string | null>("整理下周的发布说明");
+  const [collapsedScale, updateScale] = useState(1);
+  const [widthExtra, updateExtra] = useState(0);
   setTodo = set;
+  setScale = updateScale;
+  setExtra = updateExtra;
   useFixtureLines({ todoTitle });
   const slots = useCollapsedGauges(false);
-  width = useCollapsedWidth({ barText: true, noticeText: null, showTitle: false, widthExtra: 0, peeking: false, slots, collapsedScale: 1 });
-  return <div className="stage stage--collapsed" style={{ "--collapsed-island-width": `${width}px` } as CSSProperties}>
+  width = useCollapsedWidth({ barText: true, noticeText: null, showTitle: false, widthExtra, peeking: false, slots, collapsedScale });
+  const stageStyle = {
+    "--collapsed-island-width": `${width}px`,
+    ...(collapsedScale !== 1 ? { "--island-scale": collapsedScale, "--island-collapsed-scale": collapsedScale } : {}),
+  } as CSSProperties;
+  return <div className="stage stage--collapsed" style={stageStyle}>
     <IslandShell
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled" features={FEATURES} collapsedSlots={slots}
@@ -148,6 +159,35 @@ async function runChecks() {
     removeCountdown();
   });
   await settle(() => width === plain, "bare items removed");
+
+  const removeWides = await act(async () => [
+    registry.add("island.collapsed/v1", { id: "wide-1", component: () => <WideChip label="甲项" /> }, "@test/wide-1", external),
+    registry.add("island.collapsed/v1", { id: "wide-2", component: () => <WideChip label="乙项" /> }, "@test/wide-2", external),
+    registry.add("island.collapsed/v1", { id: "wide-3", component: () => <WideChip label="丙项" /> }, "@test/wide-3", external),
+  ]);
+  await act(async () => {
+    setTodo(null);
+    setScale(1.4);
+  });
+  await settle(() => width >= 380 && bar().querySelectorAll(".test-wide-chip").length === 3, "scaled bare bar fits");
+  check(!bar().querySelector(".island__more-chip") && bar().querySelectorAll(".test-wide-chip").length === 3, `放大到 1.4 倍且没有文字时，没到 520 上限的项目不被误收进「+N」（${width}px）`);
+  await act(async () => setExtra(180));
+  await settle(() => width === MAX_FITTED_COLLAPSED_WIDTH, "scaled bare bar widens with extra");
+  check(width === MAX_FITTED_COLLAPSED_WIDTH && !bar().querySelector(".island__more-chip"), `放大到 1.4 倍且拉宽 +180 时岛宽能到上限 ${MAX_FITTED_COLLAPSED_WIDTH}px（${width}px）`);
+
+  const removeBareLong = await act(async () => registry.add("island.collapsed/v1", { id: "bare-long", component: LongChip }, "@test/bare-long", external));
+  await settle(() => bar().querySelector(".island__more-chip") !== null, "bare bar overflows");
+  await frame();
+  check(width === MAX_FITTED_COLLAPSED_WIDTH && bar().querySelectorAll(".test-wide-chip").length >= 2, `没有文字但真的超出上限收进「+N」时，岛宽稳在 ${MAX_FITTED_COLLAPSED_WIDTH}px 不塌缩（${width}px）`);
+
+  await act(async () => {
+    removeBareLong();
+    removeWides.forEach((remove) => remove());
+    setExtra(0);
+    setScale(1);
+    setTodo("整理下周的发布说明");
+  });
+  await settle(() => width === plain && !bar().querySelector(".island__more-chip"), "scaled bare bar cleaned up");
 
   results.textContent = `${messages.join("\n")}\n\nALL PASS (${messages.length})`;
   results.dataset.result = "passed";

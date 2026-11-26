@@ -1,4 +1,5 @@
 #!/bin/sh
+[ "$FUYU_AGENT_STATUS" = off ] && exit 0
 provider=$1
 case "$provider" in
   codex|claudeCode|workbuddy|dsh|qoder|codebuddy|qwen|zcode|kimiCode|grok|copilot|droid|pi|cursor) ;;

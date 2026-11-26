@@ -1,4 +1,5 @@
 #!/bin/sh
+[ "$FUYU_AGENT_STATUS" = off ] && exit 0
 provider=$1
 phase=$2
 task=$(printf '%s' "${3:-}" | tr -cd 'A-Za-z0-9_.:-')

@@ -1,6 +1,13 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { loadLastIslandPage, saveLastIslandPage } from "./storage";
 import { nextTuckSource, type TuckEvent, type TuckSource } from "./tuckRecall";
 import type { IslandMode, IslandPage } from "./types";
+
+export function useRememberLastPage(mode: IslandMode, page: IslandPage, hasOpenPopup: boolean) {
+  useEffect(() => {
+    if (mode === "expanded" && !hasOpenPopup) saveLastIslandPage(page);
+  }, [hasOpenPopup, mode, page]);
+}
 
 export function useIslandNavigation() {
   const [mode, setMode] = useState<IslandMode>("collapsed");
@@ -9,7 +16,7 @@ export function useIslandNavigation() {
   const [tuckSource, setTuckSource] = useState<TuckSource>(null);
   const [openedByHover, setOpenedByHover] = useState(false);
   const [peekRetractDelayMs, setPeekRetractDelayMs] = useState<number | null>(null);
-  const [page, setPage] = useState<IslandPage>("todo");
+  const [page, setPage] = useState<IslandPage>(() => loadLastIslandPage() ?? "todo");
   const clipboardShortcutToggleAt = useRef(0);
   const markTuck = useCallback((event: TuckEvent) => {
     setTuckSource((source) => nextTuckSource(source, event));

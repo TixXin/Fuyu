@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { AppWindow, Archive, Copy, EyeOff, FolderOpen, Hash } from "lucide-react";
+import { AppWindow, Archive, Copy, EyeOff, FolderOpen, FolderX, Hash } from "lucide-react";
 import { RowMenu, type RowMenuItem } from "../../components/list/RowMenu";
 import { useTranslation } from "../../i18n";
 import { revealAgentSessionFolder, type AgentSessionSummary } from "./api";
-import { SESSION_FILTERS_STORAGE_KEY, loadSessionFilters, normalizeSessionFilters, saveSessionFilters } from "./sessionFilters";
+import { SESSION_FILTERS_STORAGE_KEY, loadSessionFilters, normalizeSessionFilters, saveSessionFilters, similarFolderPattern } from "./sessionFilters";
 
 const ICON = { size: 14, strokeWidth: 2 } as const;
 const MENU_ITEMS = ".row-menu [role=menuitem]:not(:disabled)";
@@ -48,6 +48,7 @@ export function AgentSessionRowMenu({
   const anchorRef = useRef<HTMLSpanElement>(null);
   const [open, setOpen] = useState(false);
   const cwd = session.cwd;
+  const similar = similarFolderPattern(cwd);
 
   useEffect(() => {
     if (!open) return;
@@ -91,6 +92,17 @@ export function AgentSessionRowMenu({
     { key: "copyId", label: text.copyId, icon: <Hash {...ICON} />, onSelect: () => copy(session.sessionId) },
     ...(onArchive ? [{ key: "archive", label: text.archive, icon: <Archive {...ICON} />, onSelect: onArchive }] : []),
     { key: "hideFolder", label: text.hideFolder, icon: <EyeOff {...ICON} />, disabled: !cwd, onSelect: () => cwd && hideSessionFolder(cwd) },
+    ...(similar
+      ? [{
+          key: "hideSimilar",
+          label: text.hideSimilar(similar.slice(2)),
+          icon: <FolderX {...ICON} />,
+          onSelect: () => {
+            hideSessionFolder(similar);
+            onNotice(text.hiddenSimilar(similar.slice(2)));
+          },
+        }]
+      : []),
   ];
 
   return (

@@ -173,7 +173,7 @@ export function IslandCollapsedBar({
     !isExpanded && !isTucked,
     [...leftUnits, ...rightUnits],
     barRef,
-    { auto: overflowMore, keepChip: pinned.size > 0 },
+    { auto: overflowMore, keepChip: pinned.size > 0, hasText: Boolean(notice || activeAlert || line || (showCollapsedText && showTitle)) },
   );
   const overflow = notch !== null ? notchOverflow : pillOverflow;
   const overflowKey = [...overflow.shelved].join("\n");

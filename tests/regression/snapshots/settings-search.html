@@ -1192,7 +1192,7 @@
                     </div>
                   </div>
                   <form class="session-filter__form">
-                    <input aria-label="添加规则" class="settings-input settings-input--mono" placeholder="例如 E:\Projects\scratch" spellcheck="false" value="">
+                    <input aria-label="添加规则" class="settings-input settings-input--mono" placeholder="例如 E:\Projects\scratch 或 */agy-title-*" spellcheck="false" value="">
                     <button class="settings-link-button" disabled="" type="button">
                       添加
                     </button>
@@ -1202,6 +1202,51 @@
               <div class="settings-group__footer">
                 <p class="settings-footnote">
                   符合任一条的会话在岛上完全不出现：Agent 页、会话数、收起条标题、提醒和音效都不算它。
+                  <button aria-expanded="false" class="settings-footnote__toggle" type="button">
+                    了解更多
+                  </button>
+                </p>
+              </div>
+            </section>
+            <section class="settings-group">
+              <div class="settings-group__header">
+                <h2 class="settings-group__title">
+                  静默启动
+                </h2>
+                <div aria-label="写法" class="settings-choice" role="group">
+                  <button aria-pressed="false" class="settings-choice__option" type="button">
+                    bash / zsh
+                  </button>
+                  <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                    PowerShell
+                  </button>
+                  <button aria-pressed="false" class="settings-choice__option" type="button">
+                    Node.js
+                  </button>
+                </div>
+              </div>
+              <div class="settings-group__card">
+                <div class="settings-code-block" data-search="off">
+                  <div class="settings-code-block__bar">
+                    <span class="settings-code-block__label">
+                      <svg aria-hidden="true" class="lucide lucide-terminal" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+                      PowerShell
+                    </span>
+                    <span class="settings-code-block__action">
+                      <button class="settings-link-button" type="button">
+                        <svg aria-hidden="true" class="lucide lucide-copy" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+                        复制
+                      </button>
+                    </span>
+                  </div>
+                  <pre class="settings-code-block__pre">
+                    $env:FUYU_AGENT_STATUS = "off" agy -p "…"
+                  </pre>
+                </div>
+              </div>
+              <div class="settings-group__footer">
+                <p class="settings-footnote">
+                  给脚本和插件在后台起的一次性代理（例如 agy -p、claude -p、codex exec）用：启动时带上环境变量 FUYU_AGENT_STATUS=off，浮屿的钩子见到它就直接退出，这个会话不提醒、不响、不点亮状态灯。
                   <button aria-expanded="false" class="settings-footnote__toggle" type="button">
                     了解更多
                   </button>

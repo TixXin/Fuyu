@@ -134,6 +134,18 @@
       }
     },
     {
+      "page": "behavior",
+      "since": "next",
+      "zh-CN": {
+        "group": "展开",
+        "title": "记住上次退出时的面板页面"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Remember last panel page"
+      }
+    },
+    {
       "page": "shortcutsIsland",
       "since": "0.3.14",
       "zh-CN": {

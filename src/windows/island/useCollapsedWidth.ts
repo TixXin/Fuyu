@@ -22,6 +22,7 @@ export function useCollapsedWidth({ barText, noticeText, showTitle, widthExtra, 
   const t = useTranslation();
   const { lines, alerts } = useIslandContributed();
   const fitWidth = useSyncExternalStore(collapsedFit.subscribe, collapsedFit.total);
+  const overflowHeld = useSyncExternalStore(collapsedFit.subscribe, collapsedFit.isHeld);
   const contentWidth = useSyncExternalStore(collapsedContent.subscribe, collapsedContent.total);
   const alerted = alerts.size > 0;
   return useMemo(() => collapsedWidth({
@@ -36,9 +37,10 @@ export function useCollapsedWidth({ barText, noticeText, showTitle, widthExtra, 
     sideWidth: slots.sideWidth ?? 0,
     fitWidth: fitWidth + Math.max(0, growWidth),
     contentWidth: growWidth > 0 ? 0 : contentWidth,
+    overflowHeld,
     alerted,
     collapsedScale,
     viewportWidth: window.innerWidth,
     devicePixelRatio: window.devicePixelRatio,
-  }), [lines, barText, noticeText, t, showTitle, widthExtra, peeking, slots, fitWidth, contentWidth, alerted, collapsedScale, growWidth]);
+  }), [lines, barText, noticeText, t, showTitle, widthExtra, peeking, slots, fitWidth, contentWidth, overflowHeld, alerted, collapsedScale, growWidth]);
 }
