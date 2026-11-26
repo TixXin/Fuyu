@@ -135,7 +135,7 @@
     },
     {
       "page": "shortcutsIsland",
-      "since": "next",
+      "since": "0.3.14",
       "zh-CN": {
         "group": "页面切换",
         "title": "方向键 / Tab 翻页和展开收起"
@@ -195,7 +195,7 @@
     },
     {
       "page": "music",
-      "since": "next",
+      "since": "0.3.14",
       "zh-CN": {
         "group": "任务栏",
         "title": "在任务栏显示歌词"
@@ -207,7 +207,7 @@
     },
     {
       "page": "music",
-      "since": "next",
+      "since": "0.3.14",
       "zh-CN": {
         "group": "任务栏",
         "title": "显示内容"
@@ -219,7 +219,7 @@
     },
     {
       "page": "music",
-      "since": "next",
+      "since": "0.3.14",
       "zh-CN": {
         "group": "任务栏",
         "title": "不在播放时"

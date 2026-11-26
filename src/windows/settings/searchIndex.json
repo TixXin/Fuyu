@@ -2035,7 +2035,7 @@
         "title": "Arrow keys and Tab turn pages and open or close",
         "description": "In the panel, ← → or Tab / Shift+Tab turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it"
       },
-      "since": "next"
+      "since": "0.3.14"
     },
     {
       "page": "shortcutsIsland",
@@ -2869,7 +2869,7 @@
         "title": "Show lyrics on the taskbar",
         "description": "Puts a lyrics strip in the free space of the Windows 11 taskbar: the cover, the current line and playback buttons. Click it to open the island's music page. When the island is docked to the taskbar too, the strip sits to its left."
       },
-      "since": "next"
+      "since": "0.3.14"
     },
     {
       "page": "music",
@@ -2891,7 +2891,7 @@
           "Song only"
         ]
       },
-      "since": "next"
+      "since": "0.3.14"
     },
     {
       "page": "music",
@@ -2911,7 +2911,7 @@
           "Icon only"
         ]
       },
-      "since": "next"
+      "since": "0.3.14"
     },
     {
       "page": "music",
