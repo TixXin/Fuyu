@@ -146,6 +146,25 @@
         "focus": false,
         "focusable": false,
         "visible": false
+      },
+      {
+        "label": "taskbar-lyrics",
+        "create": false,
+        "title": "Fuyu",
+        "url": "index.html?window=taskbar-lyrics",
+        "width": 280,
+        "height": 48,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
+        "focusable": false,
+        "visible": false
       }
     ],
     "security": {

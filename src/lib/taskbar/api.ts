@@ -22,6 +22,7 @@ export type DockState = {
   status: DockStatus;
   rect: Rect | null;
   edge: BarEdge | null;
+  light: boolean;
 };
 
 const TASKBAR_DOCK_CHANGED_EVENT = "taskbar-dock-changed";

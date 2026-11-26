@@ -13,6 +13,7 @@ src-tauri/src/
 ├── tray_mark.rs             # 只在 macOS 上编译：菜单栏用的单色模板图，按 docs/assets/logo/menubar-template.svg 的水母剪影在代码里画
 ├── tray_visibility.rs       # 托盘 / 菜单栏图标显示与否（tray-icon.json，建托盘时页面还没加载所以放原生侧）；隐藏后再次打开浮屿时显示岛并打开设置
 ├── taskbar_host/            # 把窗口挂到 Win11 任务栏上（C154）：窗口所有者设成任务栏、加 NOACTIVATE | TOOLWINDOW；岛的预留槽位另由一个透明原生占位窗口（win32/taskbar_slot.rs）挂在任务栏上，岛的窗口挂在占位窗口下面（dock.rs，每 500ms 跟随任务栏位置、自动隐藏、全屏和 Explorer 重启，发 taskbar-dock-changed）；空白区域和排位的纯计算在 layout.rs，读任务栏在 snapshot.rs；命令 get_taskbar_layout / taskbar_dock / taskbar_undock；Mac 上是 unsupported.rs
+├── taskbar_lyrics/          # 任务栏歌词条窗口 taskbar-lyrics（C154.3）：命令 set_taskbar_lyrics（只在 Win11 建、关时取下并销毁）/ show_taskbar_lyrics（不抢焦点地显示或隐藏）；挂任务栏走 taskbar_host；Mac 上是 unsupported.rs
 ├── island/                  # 主窗口：命令、窗口状态、几何计算、毛玻璃、鼠标穿透（banner_hit.rs：新消息横幅的可点区域）、贴边动画
 ├── wallpaper/               # 读各显示器的桌面壁纸给岛的背景用（get_wallpapers，thumbnail.rs 缩成 JPEG），变了发 wallpaper-changed；Mac 上是 unsupported.rs
 ├── todos/                   # 待办与每日笔记：todos.json 持久化、从旧版 localStorage 迁移、命令与插件/本地接口读写

@@ -2857,6 +2857,62 @@
     {
       "page": "music",
       "zh-CN": {
+        "group": "任务栏",
+        "title": "在任务栏显示歌词",
+        "description": "在 Windows 11 任务栏的空白处放一条歌词：封面、当前一句歌词和播放按钮，点它打开岛的音乐页。岛也吸附在任务栏时，歌词条排在岛的左边。"
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "Show lyrics on the taskbar",
+        "description": "Puts a lyrics strip in the free space of the Windows 11 taskbar: the cover, the current line and playback buttons. Click it to open the island's music page. When the island is docked to the taskbar too, the strip sits to its left."
+      },
+      "since": "next"
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "任务栏",
+        "title": "显示内容",
+        "options": [
+          "歌词和歌名",
+          "只显示歌词",
+          "只显示歌名"
+        ]
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "Show",
+        "options": [
+          "Lyrics and song",
+          "Lyrics only",
+          "Song only"
+        ]
+      },
+      "since": "next"
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "任务栏",
+        "title": "不在播放时",
+        "options": [
+          "隐藏",
+          "只显示图标"
+        ]
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "When nothing plays",
+        "options": [
+          "Hide",
+          "Icon only"
+        ]
+      },
+      "since": "next"
+    },
+    {
+      "page": "music",
+      "zh-CN": {
         "group": "贴边隐藏",
         "title": "音乐播放中不收起",
         "description": "播放音乐时岛一直留在屏幕上。和「行为 → 贴边隐藏」里的是同一个开关，打开了自动收起才起作用。"

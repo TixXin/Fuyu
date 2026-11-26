@@ -5,6 +5,7 @@ import { MusicSourceSettingsSection } from "./MusicSourceSettingsSection";
 import { MusicBarSettingsSection } from "./MusicBarSettingsSection";
 import { LyricsSettingsSection } from "./lyrics/LyricsSettingsSection";
 import { LyricsKaraokeSettingsSection } from "./lyrics/LyricsKaraokeSettingsSection";
+import { TaskbarLyricsSettingsSection } from "./taskbar/TaskbarLyricsSettingsSection";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { SlotView } from "../plugin-kernel/SlotView";
@@ -61,6 +62,7 @@ const sections = settingsSections<MusicSectionProps, MusicTab>();
 
 sections.add({ id: "music.bar", category: "music", order: 10, component: MusicBarSettingsSection });
 sections.add({ id: "music.lyrics", category: "music", order: 20, component: IslandLyricsSection });
+sections.add({ id: "music.taskbar", category: "music", order: 25, component: TaskbarLyricsSettingsSection });
 sections.add({ id: "music.sources", category: "music", order: 30, component: MusicSourceSettingsSection });
 sections.add({ id: "music.tuck", category: "music", order: 40, component: TuckSection });
 sections.add({ id: "musicLyrics.sources", category: "musicLyrics", order: 10, component: LyricsSourcesSection });

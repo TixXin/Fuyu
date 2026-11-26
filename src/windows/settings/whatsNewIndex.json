@@ -182,6 +182,42 @@
       }
     },
     {
+      "page": "music",
+      "since": "next",
+      "zh-CN": {
+        "group": "任务栏",
+        "title": "在任务栏显示歌词"
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "Show lyrics on the taskbar"
+      }
+    },
+    {
+      "page": "music",
+      "since": "next",
+      "zh-CN": {
+        "group": "任务栏",
+        "title": "显示内容"
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "Show"
+      }
+    },
+    {
+      "page": "music",
+      "since": "next",
+      "zh-CN": {
+        "group": "任务栏",
+        "title": "不在播放时"
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "When nothing plays"
+      }
+    },
+    {
       "page": "screenshot",
       "since": "0.3.14-beta.3",
       "zh-CN": {

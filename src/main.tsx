@@ -106,6 +106,10 @@ async function loadWindow(): Promise<ReactNode> {
       const { PluginWindowApp } = await import("./windows/plugin-window/PluginWindowApp");
       return <PluginWindowApp />;
     }
+    case "taskbar-lyrics": {
+      const { TaskbarLyricsWindow } = await import("./windows/taskbar-lyrics/TaskbarLyricsWindow");
+      return <TaskbarLyricsWindow />;
+    }
     case "side": {
       const [{ TodosGate }, { SideDockWindow }] = await Promise.all([
         import("./features/todos/TodosGate"),
