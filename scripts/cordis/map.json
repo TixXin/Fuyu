@@ -1,0 +1,40 @@
+{
+  "cordisRepo": "../tauri-cordis",
+  "trees": [
+    { "from": "packages/plugin-base", "to": "packages/tauri-cordis", "paths": ["src", "test", "examples"] },
+    { "from": "packages/plugin-cli", "to": "packages/cli", "paths": ["src", "test"] },
+    { "from": "packages/create-plugin", "to": "packages/create-plugin", "paths": ["src", "test", "template"] },
+    { "from": "packages/plugin-manifest", "to": "packages/manifest", "paths": ["src", "test"] },
+    { "from": "packages/plugin-market", "to": "packages/market", "paths": ["src", "test"] },
+    { "from": "packages/plugin-review", "to": "packages/review", "paths": ["src", "test"] },
+    { "from": "src-tauri/crates/plugin-base", "to": "crates/tauri-cordis", "paths": ["src", "tests"] },
+    { "from": "src-tauri/crates/plugin-base-macros", "to": "crates/tauri-cordis-macros", "paths": ["src"] },
+    { "from": "vendor/cordis", "to": "packages/tauri-cordis/vendor/cordis", "paths": ["LICENSE", "core", "fs", "fs-node", "hmr", "include", "loader"] }
+  ],
+  "skip": ["node_modules", ".DS_Store"],
+  "fuyuOnly": [],
+  "names": [
+    ["@fuyu/plugin-base", "tauri-cordis"],
+    ["@fuyu/plugin-manifest", "@tauri-cordis/manifest"],
+    ["@fuyu/plugin-market", "@tauri-cordis/market"],
+    ["@fuyu/plugin-review", "@tauri-cordis/review"],
+    ["@fuyu/plugin-cli", "@tauri-cordis/cli"],
+    ["@fuyu/create-plugin", "create-tauri-cordis-plugin"],
+    ["plugin_base_macros", "tauri_cordis_macros"],
+    ["plugin_base", "tauri_cordis"],
+    ["plugin-base-macros", "tauri-cordis-macros"]
+  ],
+  "vendor": {
+    "dir": "packages/tauri-cordis/vendor/cordis",
+    "specifiers": {
+      "cordis": "core",
+      "@cordisjs/loader": "loader",
+      "@cordisjs/hmr": "hmr",
+      "@cordisjs/include": "include",
+      "@cordisjs/fs": "fs",
+      "@cordisjs/fs-node": "fs-node"
+    }
+  },
+  "overrides": {},
+  "namesAllowedIn": ["/test/fixtures/"]
+}
