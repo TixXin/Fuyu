@@ -89,14 +89,6 @@ pub(crate) fn load_or_create() -> Result<Identity, UserError> {
     Ok(identity)
 }
 
-pub(crate) fn forget() -> Result<(), UserError> {
-    *cache().lock().unwrap_or_else(PoisonError::into_inner) = None;
-    match entry()?.delete_credential() {
-        Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
-        Err(error) => Err(credential::delete(error)),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

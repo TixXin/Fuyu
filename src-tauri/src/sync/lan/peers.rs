@@ -20,13 +20,15 @@ pub(crate) struct Peer {
     pub(crate) paired_at: u64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct PeersFile {
+pub(crate) struct Saved {
     #[serde(default)]
     version: u32,
     #[serde(default)]
-    peers: Vec<Peer>,
+    pub(crate) peers: Vec<Peer>,
+    #[serde(default)]
+    pub(crate) clip_push: bool,
 }
 
 pub(crate) fn now_ms() -> u64 {
@@ -41,12 +43,12 @@ fn usable(peer: &Peer) -> bool {
     is_fingerprint(&peer.fingerprint) && crate::sync::device::is_valid_id(&peer.device_id)
 }
 
-pub(crate) fn load(dir: &Path) -> Vec<Peer> {
+pub(crate) fn load(dir: &Path) -> Saved {
     let Ok(text) = fs::read_to_string(dir.join(FILE_NAME)) else {
-        return Vec::new();
+        return Saved::default();
     };
-    let Ok(file) = serde_json::from_str::<PeersFile>(text.trim_start_matches('\u{feff}')) else {
-        return Vec::new();
+    let Ok(file) = serde_json::from_str::<Saved>(text.trim_start_matches('\u{feff}')) else {
+        return Saved::default();
     };
     let mut peers: Vec<Peer> = Vec::new();
     for mut peer in file.peers.into_iter().filter(usable) {
@@ -55,11 +57,11 @@ pub(crate) fn load(dir: &Path) -> Vec<Peer> {
             peers.push(peer);
         }
     }
-    peers
+    Saved { version: VERSION, peers, clip_push: file.clip_push }
 }
 
-pub(crate) fn save(dir: &Path, peers: &[Peer]) -> Result<(), String> {
-    let file = PeersFile { version: VERSION, peers: peers.to_vec() };
+pub(crate) fn save(dir: &Path, saved: &Saved) -> Result<(), String> {
+    let file = Saved { version: VERSION, ..saved.clone() };
     let text = serde_json::to_string_pretty(&file).map_err(|error| format!("Could not encode the paired devices: {error}"))?;
     fs::create_dir_all(dir).map_err(|error| format!("Could not create {}: {error}", dir.display()))?;
     let path = dir.join(FILE_NAME);
@@ -93,7 +95,7 @@ mod tests {
     fn peers_round_trip_and_drop_broken_or_duplicate_rows() {
         let dir = std::env::temp_dir().join(format!("fuyu-lan-peers-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
-        assert!(load(&dir).is_empty());
+        assert!(load(&dir).peers.is_empty());
         let mut peers = vec![peer('a', "d1")];
         upsert(&mut peers, peer('b', "d2"));
         upsert(&mut peers, peer('c', "d1"));
@@ -103,13 +105,15 @@ mod tests {
         let mut broken = peers.clone();
         broken.push(Peer { fingerprint: "zz".into(), ..peer('d', "d3") });
         broken.push(peer('b', "d4"));
-        save(&dir, &broken).unwrap();
-        let back = load(&dir);
+        save(&dir, &Saved { peers: broken, clip_push: true, ..Saved::default() }).unwrap();
+        let saved = load(&dir);
+        assert!(saved.clip_push);
+        let back = saved.peers;
         assert_eq!(back.len(), 2);
         assert_eq!(back[0].name, "Mac");
         assert_eq!(back[0].address.as_deref(), Some("192.168.1.5:47321"));
         fs::write(dir.join(FILE_NAME), "{oops").unwrap();
-        assert!(load(&dir).is_empty());
+        assert_eq!(load(&dir), Saved::default());
         let _ = fs::remove_dir_all(&dir);
     }
 }

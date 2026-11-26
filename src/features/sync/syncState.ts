@@ -56,7 +56,7 @@ export const DEFAULT_SYNC_STATUS: SyncStatus = {
 };
 
 export function activeSyncBackend(status: SyncStatus): SyncBackendKind {
-  if (status.backend === "webdav" || status.backend === "folder" || status.backend === "off") {
+  if (status.backend === "webdav" || status.backend === "folder" || status.backend === "lan" || status.backend === "off") {
     return status.backend;
   }
   return status.folder ? "folder" : "off";

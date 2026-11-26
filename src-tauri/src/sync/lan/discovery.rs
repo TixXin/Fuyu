@@ -7,6 +7,11 @@ use std::{
 pub(crate) const SERVICE_TYPE: &str = "_fuyu._tcp.local.";
 const PROTOCOL: &str = "1";
 
+pub(crate) enum Seen {
+    Found { id: String, name: String, addr: SocketAddr },
+    Lost { id: String },
+}
+
 pub(crate) struct Discovery {
     daemon: ServiceDaemon,
     fullname: String,
@@ -23,10 +28,11 @@ fn failed(error: mdns_sd::Error) -> String {
     format!("Could not announce this device on the local network: {error}")
 }
 
-pub(crate) fn start(device_id: &str, port: u16, on_found: impl Fn(String, SocketAddr) + Send + 'static) -> Result<Discovery, String> {
+pub(crate) fn start(device_id: &str, name: &str, port: u16, on_seen: impl Fn(Seen) + Send + 'static) -> Result<Discovery, String> {
     let daemon = ServiceDaemon::new().map_err(failed)?;
     let host_name = format!("fuyu-{}.local.", device_id.chars().take(12).collect::<String>());
-    let properties = [("id", device_id), ("v", PROTOCOL)];
+    let name: String = name.chars().filter(|ch| !ch.is_control()).take(64).collect();
+    let properties = [("id", device_id), ("v", PROTOCOL), ("n", name.as_str())];
     let info = ServiceInfo::new(SERVICE_TYPE, device_id, &host_name, "", port, &properties[..]).map_err(failed)?.enable_addr_auto();
     let fullname = info.get_fullname().to_string();
     daemon.register(info).map_err(failed)?;
@@ -36,10 +42,18 @@ pub(crate) fn start(device_id: &str, port: u16, on_found: impl Fn(String, Socket
         .name("fuyu-lan-browse".into())
         .spawn(move || {
             while let Ok(event) = events.recv() {
-                if let ServiceEvent::ServiceResolved(service) = event {
-                    if let Some((id, addr)) = resolved(&own, &service) {
-                        on_found(id, addr);
+                match event {
+                    ServiceEvent::ServiceResolved(service) => {
+                        if let Some(seen) = resolved(&own, &service) {
+                            on_seen(seen);
+                        }
                     }
+                    ServiceEvent::ServiceRemoved(_, fullname) => {
+                        if let Some(id) = fullname.strip_suffix(&format!(".{SERVICE_TYPE}")).filter(|id| *id != own && crate::sync::device::is_valid_id(id)) {
+                            on_seen(Seen::Lost { id: id.to_string() });
+                        }
+                    }
+                    _ => {}
                 }
             }
         })
@@ -47,7 +61,7 @@ pub(crate) fn start(device_id: &str, port: u16, on_found: impl Fn(String, Socket
     Ok(Discovery { daemon, fullname })
 }
 
-fn resolved(own: &str, service: &ResolvedService) -> Option<(String, SocketAddr)> {
+fn resolved(own: &str, service: &ResolvedService) -> Option<Seen> {
     if service.get_property_val_str("v") != Some(PROTOCOL) {
         return None;
     }
@@ -56,7 +70,8 @@ fn resolved(own: &str, service: &ResolvedService) -> Option<(String, SocketAddr)
         return None;
     }
     let ip = pick_address(service.get_addresses().iter().map(ScopedIp::to_ip_addr))?;
-    Some((id.to_string(), SocketAddr::new(ip, service.port)))
+    let name = service.get_property_val_str("n").unwrap_or_default().to_string();
+    Some(Seen::Found { id: id.to_string(), name, addr: SocketAddr::new(ip, service.port) })
 }
 
 fn rank(ip: &IpAddr) -> Option<u8> {

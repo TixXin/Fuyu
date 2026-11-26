@@ -77,7 +77,10 @@ fn pairing_pins_both_certificates_and_then_serves_only_paired_devices() {
         other => panic!("{other:?}"),
     }
     assert_eq!(session.call(&Request::Read { path: "missing".into() }).unwrap(), Reply::Data { bytes: None });
-    assert_eq!(session.call(&Request::PushClip { item: serde_json::json!({ "text": "hi" }) }).unwrap(), Reply::Done);
+    let clip = Request::PushClip { item: serde_json::json!({ "text": "hi" }) };
+    assert_eq!(session.call(&clip).unwrap(), Reply::Refused { reason: reason::FAILED.into() });
+    shower.set_clip_push(true).unwrap();
+    assert_eq!(session.call(&clip).unwrap(), Reply::Done);
     assert_eq!(shelf.clips.lock().unwrap().as_slice(), [("bbb2".to_string(), serde_json::json!({ "text": "hi" }))]);
     assert_eq!(session.call(&Request::PairConfirm { tag: String::new() }).unwrap(), Reply::Refused { reason: reason::BAD_REQUEST.into() });
 
@@ -158,4 +161,17 @@ fn a_saved_lan_choice_stays_active_without_a_folder_or_webdav() {
     assert_eq!(config.active_backend(), SyncBackendKind::Lan);
     assert_eq!(config.target_key().as_deref(), Some("lan"));
     assert!(crate::sync::LOCAL_FILES.contains(&"sync-lan-peers.json"));
+}
+
+#[test]
+fn typed_addresses_get_the_default_port_and_clips_must_be_plain_text() {
+    use super::{clip::text_of, commands::parse_address};
+    assert_eq!(parse_address(" 192.168.1.20 "), Some(SocketAddr::from(([192, 168, 1, 20], 47321))));
+    assert_eq!(parse_address("192.168.1.20:5000"), Some(SocketAddr::from(([192, 168, 1, 20], 5000))));
+    assert_eq!(parse_address("[fe80::1]").map(|addr| addr.port()), Some(47321));
+    assert_eq!(parse_address("mac.local"), None);
+    assert_eq!(text_of(&serde_json::json!({ "text": "hi" })), Some("hi"));
+    assert_eq!(text_of(&serde_json::json!({ "text": "  " })), None);
+    assert_eq!(text_of(&serde_json::json!({ "text": "x".repeat(super::clip::MAX_TEXT_BYTES + 1) })), None);
+    assert_eq!(text_of(&serde_json::json!({ "image": "..." })), None);
 }

@@ -1,7 +1,7 @@
 import { ClipboardList, File, FileArchive, FileAudio, FileCode, FileImage, FileText, FileVideo, Files, KeyRound, Smartphone, type LucideIcon } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem } from "./api";
-import { itemFileKind, OTHER_DEVICE_SOURCE, sourceName, type FileKind } from "./fileEntry";
+import { isOtherDeviceSource, itemFileKind, sourceName, type FileKind } from "./fileEntry";
 import { useAppIcon } from "./useAppIcon";
 import "./ClipboardEntryIcon.css";
 
@@ -17,7 +17,7 @@ const FILE_ICONS: Record<FileKind, LucideIcon> = {
 
 export function ClipboardEntryIcon({ item, className }: { item: ClipboardHistoryItem; className?: string }) {
   const t = useTranslation();
-  const otherDevice = item.source?.path === OTHER_DEVICE_SOURCE;
+  const otherDevice = isOtherDeviceSource(item.source?.path);
   const appIcon = useAppIcon(otherDevice ? undefined : item.source?.path);
   const fileKind = itemFileKind(item);
   const several = item.kind === "files" && (item.files?.length ?? 0) > 1;

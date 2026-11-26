@@ -190,8 +190,8 @@ impl Serve for StoreServe {
         self.own.read(path).map_err(|error| error.message().to_string())
     }
 
-    fn clip(&self, _from: &Peer, _item: serde_json::Value) -> Result<(), String> {
-        Err("clipboard push is off".into())
+    fn clip(&self, from: &Peer, item: serde_json::Value) -> Result<(), String> {
+        super::clip::receive(from, &item)
     }
 
     fn paired(&self, _peer: &Peer) {

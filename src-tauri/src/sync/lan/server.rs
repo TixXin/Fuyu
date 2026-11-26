@@ -129,7 +129,8 @@ fn serve_peer(host: &Host, tls: &mut Tls, peer: &Peer) -> io::Result<()> {
         let reply = match request {
             Request::List { dir } => host.serve.list(&dir).map(|entries| Reply::Entries { entries }),
             Request::Read { path } => host.serve.read(&path).map(|bytes| Reply::Data { bytes: bytes.as_deref().map(encode_bytes) }),
-            Request::PushClip { item } => host.serve.clip(peer, item).map(|()| Reply::Done),
+            Request::PushClip { item } if host.clip_push() => host.serve.clip(peer, item).map(|()| Reply::Done),
+            Request::PushClip { .. } => Err("clipboard push is off".into()),
             Request::Poke => {
                 host.serve.poke();
                 Ok(Reply::Done)

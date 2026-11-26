@@ -1,4 +1,5 @@
 use std::{
+    collections::BTreeMap,
     path::PathBuf,
     sync::{Arc, Mutex, MutexGuard, PoisonError},
     time::Instant,
@@ -7,7 +8,7 @@ use std::{
 use super::{
     identity::Identity,
     pairing::{new_code, Refusal, Window},
-    peers::{self, Peer},
+    peers::{self, Peer, Saved},
     wire::{reason, Entry},
 };
 
@@ -25,8 +26,15 @@ pub(crate) struct Host {
     pub(crate) name: String,
     pub(crate) serve: Arc<dyn Serve>,
     peers_dir: PathBuf,
-    peers: Mutex<Vec<Peer>>,
+    saved: Mutex<Saved>,
     pairing: Mutex<Option<Window>>,
+    nearby: Mutex<BTreeMap<String, Nearby>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Nearby {
+    pub(crate) name: String,
+    pub(crate) address: String,
 }
 
 fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -35,54 +43,79 @@ fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
 
 impl Host {
     pub(crate) fn new(identity: Identity, device_id: String, name: String, peers_dir: PathBuf, serve: Arc<dyn Serve>) -> Arc<Self> {
-        let peers = peers::load(&peers_dir);
-        Arc::new(Self { identity, device_id, name: peers::clean_name(&name), serve, peers_dir, peers: Mutex::new(peers), pairing: Mutex::new(None) })
+        let saved = peers::load(&peers_dir);
+        Arc::new(Self {
+            identity,
+            device_id,
+            name: peers::clean_name(&name),
+            serve,
+            peers_dir,
+            saved: Mutex::new(saved),
+            pairing: Mutex::new(None),
+            nearby: Mutex::new(BTreeMap::new()),
+        })
     }
 
-    pub(crate) fn peers(&self) -> Vec<Peer> {
-        locked(&self.peers).clone()
-    }
-
-    pub(crate) fn peer(&self, fingerprint: &str) -> Option<Peer> {
-        locked(&self.peers).iter().find(|peer| peer.fingerprint == fingerprint).cloned()
-    }
-
-    pub(crate) fn add_peer(&self, peer: Peer) -> Result<(), String> {
-        let mut peers = locked(&self.peers);
-        let mut next = peers.clone();
-        peers::upsert(&mut next, peer);
-        peers::save(&self.peers_dir, &next)?;
-        *peers = next;
-        Ok(())
-    }
-
-    pub(crate) fn remove_peer(&self, fingerprint: &str) -> Result<bool, String> {
-        let mut peers = locked(&self.peers);
-        let next: Vec<Peer> = peers.iter().filter(|peer| peer.fingerprint != fingerprint).cloned().collect();
-        if next.len() == peers.len() {
+    fn change(&self, edit: impl FnOnce(&mut Saved) -> bool) -> Result<bool, String> {
+        let mut saved = locked(&self.saved);
+        let mut next = saved.clone();
+        if !edit(&mut next) {
             return Ok(false);
         }
         peers::save(&self.peers_dir, &next)?;
-        *peers = next;
+        *saved = next;
         Ok(true)
     }
 
-    pub(crate) fn remember_address(&self, fingerprint: &str, address: &str) {
-        let mut peers = locked(&self.peers);
-        if peers::remember_address(&mut peers, fingerprint, address) {
-            let _ = peers::save(&self.peers_dir, &peers);
-        }
+    pub(crate) fn peers(&self) -> Vec<Peer> {
+        locked(&self.saved).peers.clone()
     }
 
-    pub(crate) fn remember_device(&self, device_id: &str, address: &str) -> bool {
-        let mut peers = locked(&self.peers);
-        let Some(fingerprint) = peers.iter().find(|peer| peer.device_id == device_id).map(|peer| peer.fingerprint.clone()) else {
+    pub(crate) fn peer(&self, fingerprint: &str) -> Option<Peer> {
+        locked(&self.saved).peers.iter().find(|peer| peer.fingerprint == fingerprint).cloned()
+    }
+
+    pub(crate) fn clip_push(&self) -> bool {
+        locked(&self.saved).clip_push
+    }
+
+    pub(crate) fn set_clip_push(&self, on: bool) -> Result<(), String> {
+        self.change(|saved| std::mem::replace(&mut saved.clip_push, on) != on).map(|_| ())
+    }
+
+    pub(crate) fn add_peer(&self, peer: Peer) -> Result<(), String> {
+        locked(&self.nearby).remove(&peer.device_id);
+        self.change(|saved| {
+            peers::upsert(&mut saved.peers, peer);
+            true
+        })
+        .map(|_| ())
+    }
+
+    pub(crate) fn remove_peer(&self, fingerprint: &str) -> Result<bool, String> {
+        self.change(|saved| {
+            let before = saved.peers.len();
+            saved.peers.retain(|peer| peer.fingerprint != fingerprint);
+            saved.peers.len() != before
+        })
+    }
+
+    pub(crate) fn remember_device(&self, device_id: &str, name: &str, address: &str) -> bool {
+        let fingerprint = locked(&self.saved).peers.iter().find(|peer| peer.device_id == device_id).map(|peer| peer.fingerprint.clone());
+        let Some(fingerprint) = fingerprint else {
+            locked(&self.nearby).insert(device_id.to_string(), Nearby { name: peers::clean_name(name), address: address.to_string() });
             return false;
         };
-        if peers::remember_address(&mut peers, &fingerprint, address) {
-            let _ = peers::save(&self.peers_dir, &peers);
-        }
+        let _ = self.change(|saved| peers::remember_address(&mut saved.peers, &fingerprint, address));
         true
+    }
+
+    pub(crate) fn forget_nearby(&self, device_id: &str) {
+        locked(&self.nearby).remove(device_id);
+    }
+
+    pub(crate) fn nearby(&self) -> Vec<(String, Nearby)> {
+        locked(&self.nearby).iter().map(|(id, found)| (id.clone(), found.clone())).collect()
     }
 
     pub(crate) fn open_pairing(&self, now: Instant) -> Result<(String, u64), String> {
@@ -119,6 +152,6 @@ impl Host {
     }
 
     pub(crate) fn admits(&self, fingerprint: &str) -> bool {
-        locked(&self.peers).iter().any(|peer| peer.fingerprint == fingerprint) || locked(&self.pairing).is_some()
+        locked(&self.saved).peers.iter().any(|peer| peer.fingerprint == fingerprint) || locked(&self.pairing).is_some()
     }
 }

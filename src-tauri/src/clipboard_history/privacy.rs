@@ -70,6 +70,15 @@ fn nearest(choices: &[u32], value: u32) -> u32 {
         .unwrap_or(value)
 }
 
+pub(super) const LAN_DEVICE_PATH: &str = "fuyu:lan-device";
+
+pub(super) fn lan_device_source(name: &str) -> ClipboardSource {
+    ClipboardSource {
+        path: LAN_DEVICE_PATH.to_string(),
+        name: name.to_string(),
+    }
+}
+
 pub(super) fn other_device_source() -> ClipboardSource {
     ClipboardSource {
         path: OTHER_DEVICE_PATH.to_string(),

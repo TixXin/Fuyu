@@ -1,6 +1,6 @@
 import { emit } from "@tauri-apps/api/event";
 import { mockIPC } from "@tauri-apps/api/mocks";
-import { SYNC_STATUS_EVENT, type OptionalSyncGroup, type SyncCategory, type SyncStatus } from "../../src/features/sync/api";
+import { SYNC_STATUS_EVENT, type LanState, type OptionalSyncGroup, type SyncCategory, type SyncStatus } from "../../src/features/sync/api";
 import { DEFAULT_ENABLED_CATEGORIES, SYNC_CATEGORY_ITEMS } from "../../src/features/sync/syncState";
 
 export const LAST_SYNC = Date.UTC(2026, 10, 15, 1, 30);
@@ -39,6 +39,7 @@ export function installSyncSettingsMocks(): SyncTestHarness {
 
   const calls: { command: string; args: Record<string, unknown> }[] = [];
   let nextWebdavTestError: unknown = null;
+  let lanState: LanState = { running: false, port: null, announced: false, shortId: null, peers: [], nearby: [], pairing: null, clipPush: false };
 
   mockIPC((command, payload) => {
     const args = (payload ?? {}) as Record<string, unknown>;
@@ -171,6 +172,34 @@ export function installSyncSettingsMocks(): SyncTestHarness {
         void emit(SYNC_STATUS_EVENT, structuredClone(currentStatus));
         return structuredClone(currentStatus);
       }
+      case "get_sync_lan_state":
+        return structuredClone(lanState);
+      case "set_sync_lan":
+        lanState = {
+          ...lanState,
+          running: true,
+          port: 47321,
+          announced: true,
+          shortId: "ABCD-1234",
+          nearby: [{ deviceId: "a1b2c3d4", name: "Windows PC", address: "192.168.1.20:47321" }],
+        };
+        currentStatus = { ...currentStatus, backend: "lan", phase: "idle" };
+        return structuredClone(currentStatus);
+      case "start_sync_lan_pairing":
+        lanState = { ...lanState, pairing: { code: "482913", secondsLeft: 118 } };
+        return structuredClone(lanState.pairing);
+      case "join_sync_lan": {
+        if (args.code === "000000") throw { code: "sync.lanWrongCode", message: "Wrong code" };
+        lanState = {
+          ...lanState,
+          nearby: [],
+          peers: [{ fingerprint: "f".repeat(64), shortId: "FFFF-FFFF", deviceId: "a1b2c3d4", name: "Windows PC", address: String(args.address), pairedAt: LAST_SYNC }],
+        };
+        return structuredClone(lanState);
+      }
+      case "set_sync_lan_clip_push":
+        lanState = { ...lanState, clipPush: Boolean(args.enabled) };
+        return structuredClone(lanState);
       case "copy_sync_recovery_key":
         return null;
       case "save_sync_recovery_key":

@@ -307,9 +307,15 @@ impl ClipboardHistoryService {
             return;
         }
         let masked = secret && settings.secrets == SecretHandling::Mask;
+        let shared = match &capture {
+            ClipboardCapture::Text { text, .. } if !secret && !private_capture && !remote => Some(text.clone()),
+            _ => None,
+        };
 
         if let Err(error) = self.insert_capture_inner(capture, source, masked, private_capture) {
             eprintln!("failed to store clipboard history item: {error}");
+        } else if let Some(text) = shared {
+            crate::sync::lan::clip::offer(&text);
         }
     }
 

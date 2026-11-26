@@ -457,6 +457,27 @@ pub(crate) fn configure(
     apply_saved_config(engine, &previous, next)
 }
 
+pub(crate) fn configure_lan(categories: Vec<SyncCategory>, optional_groups: Vec<String>) -> Result<SyncStatus, UserError> {
+    let engine = engine()?;
+    let previous = config::load(&engine.home);
+    let next = SyncConfig {
+        version: previous.version,
+        backend: Some(SyncBackendKind::Lan),
+        folder: previous.folder.clone(),
+        webdav: previous.webdav.clone(),
+        categories,
+        optional_groups,
+    }
+    .normalized();
+    let device_id = device::id().map_err(UserError::from)?;
+    super::lan::runtime::start(&engine.home, &device_id, &device_name(), Arc::new(wake_now))?;
+    apply_saved_config(engine, &previous, next)
+}
+
+pub(crate) fn lan_home() -> Result<PathBuf, UserError> {
+    Ok(engine()?.home.clone())
+}
+
 pub(super) fn resolve_webdav_password_for_saved(
     saved: Option<&WebdavConfig>,
     target_url: &reqwest::Url,

@@ -150,19 +150,21 @@
       "zh-CN": {
         "group": "设置跨设备同步",
         "title": "选同步方式",
-        "description": "同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV",
+        "description": "同步文件夹（网盘、Syncthing、NAS 的文件夹）、WebDAV，或同一网络里两台电脑直连",
         "options": [
           "同步文件夹",
-          "WebDAV"
+          "WebDAV",
+          "局域网"
         ]
       },
       "en": {
         "group": "Set up cross-device sync",
         "title": "Choose how to sync",
-        "description": "A synced folder (cloud drive, Syncthing, NAS) or WebDAV",
+        "description": "A synced folder (cloud drive, Syncthing, NAS), WebDAV, or two computers on the same network",
         "options": [
           "Sync folder",
-          "WebDAV"
+          "WebDAV",
+          "LAN"
         ]
       }
     },

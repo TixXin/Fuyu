@@ -1,5 +1,6 @@
 import type { CategoryState, OptionalSyncGroup, SyncCategory, SyncPhase } from "../../features/sync/api";
 import { en as encryptionEn, zhCN as encryptionZhCN, type SyncEncryptionText } from "./syncEncryption.ts";
+import { en as lanEn, zhCN as lanZhCN, type SyncLanText } from "./syncLan.ts";
 
 export type SyncText = {
   status: {
@@ -12,6 +13,7 @@ export type SyncText = {
     devices: (count: number) => string;
     encrypted: string;
     notEncrypted: string;
+    lanLink: string;
     manage: string;
     manageDone: string;
     phases: Record<SyncPhase, { headline: string; hint: string }>;
@@ -32,6 +34,7 @@ export type SyncText = {
     methods: {
       folder: string;
       webdav: string;
+      lan: string;
     };
     folderTitle: string;
     folderUnset: string;
@@ -62,6 +65,7 @@ export type SyncText = {
       forgetConfirm: string;
       activeBadge: string;
     };
+    lan: SyncLanText;
     footnote: string;
   };
   encryption: SyncEncryptionText;
@@ -73,6 +77,8 @@ export type SyncText = {
     folderHint: string;
     webdavTitle: string;
     webdavHint: string;
+    lanTitle: string;
+    lanHint: string;
     encryptionTitle: string;
     encryptionHint: string;
     later: string;
@@ -128,6 +134,7 @@ export const zhCN: SyncText = {
     devices: (count) => `${count} 台设备`,
     encrypted: "已加密",
     notEncrypted: "没加密",
+    lanLink: "局域网直连，链路已加密",
     manage: "更换…",
     manageDone: "收起",
     phases: {
@@ -187,6 +194,7 @@ export const zhCN: SyncText = {
     methods: {
       folder: "同步文件夹",
       webdav: "WebDAV",
+      lan: "局域网",
     },
     folderTitle: "同步文件夹",
     folderUnset: "未选择（首次使用请手动指定一个空目录或已有的 fuyu-sync 上级目录）",
@@ -217,17 +225,20 @@ export const zhCN: SyncText = {
       forgetConfirm: "确认清除",
       activeBadge: "正在使用",
     },
+    lan: lanZhCN,
     footnote: "请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。",
   },
   encryption: encryptionZhCN,
   guide: {
     groupTitle: "设置跨设备同步",
     methodTitle: "选同步方式",
-    methodHint: "同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV",
+    methodHint: "同步文件夹（网盘、Syncthing、NAS 的文件夹）、WebDAV，或同一网络里两台电脑直连",
     folderTitle: "选一个文件夹",
     folderHint: "空文件夹，或别的电脑已经在用的 fuyu-sync 的上一级",
     webdavTitle: "填 WebDAV",
     webdavHint: "服务器目录、账号和应用密码，测试通过后保存",
+    lanTitle: "和另一台电脑配对",
+    lanHint: "两台都打开局域网直连，一台显示配对码，另一台输入",
     encryptionTitle: "要不要端到端加密",
     encryptionHint: "网盘看不到内容；忘了口令又没留恢复密钥就找不回来。打开的话，设好同步后接着设口令",
     later: "设好后在这里选同步什么",
@@ -372,6 +383,7 @@ export const en: SyncText = {
     devices: (count) => (count === 1 ? "1 device" : `${count} devices`),
     encrypted: "Encrypted",
     notEncrypted: "Not encrypted",
+    lanLink: "Local network link, encrypted in transit",
     manage: "Change…",
     manageDone: "Done",
     phases: {
@@ -431,6 +443,7 @@ export const en: SyncText = {
     methods: {
       folder: "Sync folder",
       webdav: "WebDAV",
+      lan: "LAN",
     },
     folderTitle: "Sync folder",
     folderUnset: "Not selected (pick an empty folder or an existing parent folder containing fuyu-sync)",
@@ -461,17 +474,20 @@ export const en: SyncText = {
       forgetConfirm: "Confirm clear",
       activeBadge: "Active",
     },
+    lan: lanEn,
     footnote: "Use a dedicated subfolder for sync rather than placing Fuyu's data folder (~/.fuyu) inside a cloud drive. Each device writes only its own files, and a local backup is created automatically before the first merge.",
   },
   encryption: encryptionEn,
   guide: {
     groupTitle: "Set up cross-device sync",
     methodTitle: "Choose how to sync",
-    methodHint: "A synced folder (cloud drive, Syncthing, NAS) or WebDAV",
+    methodHint: "A synced folder (cloud drive, Syncthing, NAS), WebDAV, or two computers on the same network",
     folderTitle: "Choose a folder",
     folderHint: "An empty folder, or the parent of the fuyu-sync folder another computer already uses",
     webdavTitle: "Connect WebDAV",
     webdavHint: "Server folder, account and app password; test, then save",
+    lanTitle: "Pair with another computer",
+    lanHint: "Turn on the local network link on both, show a code on one and type it on the other",
     encryptionTitle: "End-to-end encryption?",
     encryptionHint: "Your cloud provider can't read your data; a forgotten passphrase without the recovery key can't be recovered. If on, you'll set the passphrase right after",
     later: "Once set up, choose what to sync here",

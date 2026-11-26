@@ -8,6 +8,7 @@ import { useTranslation } from "../../i18n";
 import type { SyncStatus } from "./api";
 import { SYNC_BACKENDS, type SyncBackendId } from "./syncBackends";
 import { activeSyncBackend } from "./syncState";
+import { SyncLanSection } from "./SyncLanSection";
 import { SyncWebdavSection } from "./SyncWebdavSection";
 
 const CONFIRM_MS = 4_000;
@@ -38,7 +39,7 @@ export function SyncBackendSection({
   }, [confirmingStop]);
 
   const activeKind = activeSyncBackend(status);
-  const selectedBackend: SyncBackendId = pickedBackend ?? (activeKind === "webdav" ? "webdav" : "folder");
+  const selectedBackend: SyncBackendId = pickedBackend ?? (activeKind === "webdav" || activeKind === "lan" ? activeKind : "folder");
   const activeEntry = SYNC_BACKENDS.find((entry) => entry.id === selectedBackend) ?? SYNC_BACKENDS[0];
   const ExtraBackend = activeEntry?.component;
   const isFolderActive = activeKind === "folder" && Boolean(status.folder);
@@ -147,6 +148,8 @@ export function SyncBackendSection({
           }}
           onStopSync={onStopSync}
         />
+      ) : selectedBackend === "lan" ? (
+        <SyncLanSection status={status} busy={busy} />
       ) : ExtraBackend ? (
         <ExtraBackend status={status} busy={busy} />
       ) : null}

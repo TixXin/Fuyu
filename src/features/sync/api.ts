@@ -19,7 +19,7 @@ export const OPTIONAL_SYNC_GROUPS = [
 
 export type OptionalSyncGroup = (typeof OPTIONAL_SYNC_GROUPS)[number];
 
-export type SyncBackendKind = "off" | "folder" | "webdav";
+export type SyncBackendKind = "off" | "folder" | "webdav" | "lan";
 
 export type SyncPhase =
   | "off"
@@ -151,6 +151,65 @@ export function saveSyncRecoveryKey() {
 
 export function resetSyncRemote(passphrase: string | null) {
   return invoke<SyncStatus>("reset_sync_remote", { passphrase });
+}
+
+export type LanPeer = {
+  fingerprint: string;
+  shortId: string;
+  deviceId: string;
+  name: string;
+  address: string | null;
+  pairedAt: number;
+};
+
+export type LanNearby = {
+  deviceId: string;
+  name: string;
+  address: string;
+};
+
+export type LanPairing = {
+  code: string;
+  secondsLeft: number;
+};
+
+export type LanState = {
+  running: boolean;
+  port: number | null;
+  announced: boolean;
+  shortId: string | null;
+  peers: LanPeer[];
+  nearby: LanNearby[];
+  pairing: LanPairing | null;
+  clipPush: boolean;
+};
+
+export function setSyncLan(categories: SyncCategory[], optionalGroups: OptionalSyncGroup[]) {
+  return invoke<SyncStatus>("set_sync_lan", { categories, optionalGroups });
+}
+
+export function getSyncLanState() {
+  return invoke<LanState>("get_sync_lan_state");
+}
+
+export function startSyncLanPairing() {
+  return invoke<LanPairing>("start_sync_lan_pairing");
+}
+
+export function cancelSyncLanPairing() {
+  return invoke<LanState>("cancel_sync_lan_pairing");
+}
+
+export function joinSyncLan(address: string, code: string) {
+  return invoke<LanState>("join_sync_lan", { address, code });
+}
+
+export function removeSyncLanPeer(fingerprint: string) {
+  return invoke<LanState>("remove_sync_lan_peer", { fingerprint });
+}
+
+export function setSyncLanClipPush(enabled: boolean) {
+  return invoke<LanState>("set_sync_lan_clip_push", { enabled });
 }
 
 export function onSyncStatus(handler: (status: SyncStatus) => void): Promise<UnlistenFn> {

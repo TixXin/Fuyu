@@ -169,6 +169,51 @@ pub(crate) async fn reset_sync_remote(
         .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
+#[tauri::command]
+pub(crate) async fn set_sync_lan(
+    categories: Vec<SyncCategory>,
+    optional_groups: Vec<String>,
+) -> Result<SyncStatus, crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || engine::configure_lan(categories, optional_groups))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) fn get_sync_lan_state() -> lan::commands::LanState {
+    lan::commands::state()
+}
+
+#[tauri::command]
+pub(crate) fn start_sync_lan_pairing() -> Result<lan::commands::LanPairing, crate::user_error::UserError> {
+    lan::commands::start_pairing()
+}
+
+#[tauri::command]
+pub(crate) fn cancel_sync_lan_pairing() -> lan::commands::LanState {
+    lan::commands::cancel_pairing()
+}
+
+#[tauri::command]
+pub(crate) async fn join_sync_lan(address: String, code: String) -> Result<lan::commands::LanState, crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || lan::commands::join(&address, &code))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) async fn remove_sync_lan_peer(fingerprint: String) -> Result<lan::commands::LanState, crate::user_error::UserError> {
+    let home = engine::lan_home()?;
+    tauri::async_runtime::spawn_blocking(move || lan::commands::remove_peer(&home, &fingerprint))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) fn set_sync_lan_clip_push(enabled: bool) -> Result<lan::commands::LanState, crate::user_error::UserError> {
+    lan::commands::set_clip_push(enabled)
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -186,6 +231,13 @@ macro_rules! tauri_commands {
             crate::sync::copy_sync_recovery_key,
             crate::sync::save_sync_recovery_key,
             crate::sync::reset_sync_remote,
+            crate::sync::set_sync_lan,
+            crate::sync::get_sync_lan_state,
+            crate::sync::start_sync_lan_pairing,
+            crate::sync::cancel_sync_lan_pairing,
+            crate::sync::join_sync_lan,
+            crate::sync::remove_sync_lan_peer,
+            crate::sync::set_sync_lan_clip_push,
         ] $($rest)*)
     };
 }

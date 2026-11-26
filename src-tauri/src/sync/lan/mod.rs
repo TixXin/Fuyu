@@ -1,6 +1,6 @@
-#![allow(dead_code)]
-
 pub(crate) mod client;
+pub(crate) mod clip;
+pub(crate) mod commands;
 pub(crate) mod discovery;
 pub(crate) mod host;
 pub(crate) mod identity;

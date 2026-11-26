@@ -292,8 +292,14 @@ export type ErrorCode =
   | "sync.cryptoNewerVersion"
   | "sync.cryptoRandom"
   | "sync.cryptoWrapFailed"
+  | "sync.lanBadAddress"
+  | "sync.lanCodeExpired"
   | "sync.lanListen"
   | "sync.lanNoEncryption"
+  | "sync.lanOff"
+  | "sync.lanPairFailed"
+  | "sync.lanUnreachable"
+  | "sync.lanWrongCode"
   | "sync.migrationIo"
   | "sync.needBackendFirst"
   | "sync.newerVersion"
@@ -693,8 +699,14 @@ export const zhCN: ErrorsText = {
     "sync.cryptoNewerVersion": "远端加密使用了更新的格式，请先更新浮屿。",
     "sync.cryptoRandom": "无法生成加密所需的随机密钥。",
     "sync.cryptoWrapFailed": "封装同步数据密钥失败。",
+    "sync.lanBadAddress": "请填写像 192.168.1.20 或 192.168.1.20:47321 这样的地址。",
+    "sync.lanCodeExpired": "对方没有在显示配对码，或配对码已过期。请在那台设备上重新显示配对码再试。",
     "sync.lanListen": "没能打开局域网直连用的端口，请检查防火墙或安全软件后再试。",
     "sync.lanNoEncryption": "局域网直连本身已加密，端到端加密只用于同步文件夹和 WebDAV。",
+    "sync.lanOff": "请先打开局域网直连。",
+    "sync.lanPairFailed": "配对没有完成，请再试一次。",
+    "sync.lanUnreachable": "连不上那台设备。请确认两台在同一个网络，并且防火墙允许浮屿。",
+    "sync.lanWrongCode": "配对码不对，请核对另一台设备上的 6 位数字。",
     "sync.migrationIo": "读写远端同步文件失败，请检查同步目录或 WebDAV 连接后再试。",
     "sync.needBackendFirst": "请先选择同步文件夹或连接 WebDAV，再配置端到端加密。",
     "sync.newerVersion": "远端数据由更新版本的浮屿写入，请先更新浮屿。",
@@ -1091,8 +1103,14 @@ export const en: ErrorsText = {
     "sync.cryptoNewerVersion": "Remote encryption uses a newer format; update Fuyu first.",
     "sync.cryptoRandom": "Could not generate a random encryption key.",
     "sync.cryptoWrapFailed": "Could not wrap the sync data key.",
+    "sync.lanBadAddress": "Enter an address like 192.168.1.20 or 192.168.1.20:47321.",
+    "sync.lanCodeExpired": "That device is not showing a pairing code, or the code has expired. Show a new code there and try again.",
     "sync.lanListen": "Could not open a port for the local network link; check the firewall or security software and try again.",
     "sync.lanNoEncryption": "The local network link is already encrypted; end-to-end encryption is for sync folders and WebDAV.",
+    "sync.lanOff": "Turn on the local network link first.",
+    "sync.lanPairFailed": "Pairing did not finish. Try again.",
+    "sync.lanUnreachable": "Could not reach that device. Check that both are on the same network and the firewall allows Fuyu.",
+    "sync.lanWrongCode": "The pairing code does not match. Check the 6 digits on the other device.",
     "sync.migrationIo": "Could not read or write remote sync files; check the sync folder or WebDAV connection and try again.",
     "sync.needBackendFirst": "Choose a sync folder or connect WebDAV before configuring end-to-end encryption.",
     "sync.newerVersion": "Remote data was written by a newer version of Fuyu; update Fuyu first.",
