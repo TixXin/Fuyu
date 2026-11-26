@@ -1,5 +1,5 @@
 use std::{
-    sync::{Mutex, PoisonError},
+    sync::{mpsc, Mutex, PoisonError},
     thread,
     time::Duration,
 };
@@ -113,10 +113,18 @@ pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     super::preview_window::hide(app, false);
     super::background::schedule_preview_close_after_popup(app);
     super::background::popup_hidden(app);
-    let Some(window) = app.get_webview_window(WINDOW_LABEL) else {
+    if app.get_webview_window(WINDOW_LABEL).is_none() {
         return Ok(());
-    };
-    window.hide().map_err(|error| error.to_string())
+    }
+    let handle = app.clone();
+    app.run_on_main_thread(move || {
+        if !crate::macos::island_panel::hide_panel(&handle, WINDOW_LABEL) {
+            if let Ok(window) = popup_window(&handle) {
+                let _ = window.hide();
+            }
+        }
+    })
+    .map_err(|error| error.to_string())
 }
 
 pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
@@ -191,7 +199,7 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
     if !settings.popup_pinned {
         hide_before_paste(app);
     }
-    let outcome = paste_into(target, settings.auto_paste, options.enter);
+    let outcome = paste_into(app, target, settings.auto_paste, options.enter);
     super::copy_notice::notify_paste(id, outcome);
     Ok(outcome == PasteOutcome::Sent)
 }
@@ -203,7 +211,7 @@ pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(),
     if !settings.popup_pinned {
         hide_before_paste(app);
     }
-    paste_into(target_for_paste(settings.popup_pinned), settings.auto_paste, enter);
+    paste_into(app, target_for_paste(settings.popup_pinned), settings.auto_paste, enter);
     Ok(())
 }
 
@@ -222,7 +230,7 @@ fn outcome(target: Option<i32>, auto_paste: bool, can_post_keys: impl FnOnce() -
     }
 }
 
-fn paste_into(target: Option<i32>, auto_paste: bool, enter: bool) -> PasteOutcome {
+fn paste_into(app: &AppHandle, target: Option<i32>, auto_paste: bool, enter: bool) -> PasteOutcome {
     let result = outcome(target, auto_paste, input::can_post_keys);
     match result {
         PasteOutcome::NoTarget => eprintln!("clipboard paste: no app was recorded when the window opened, so it was only copied"),
@@ -237,13 +245,25 @@ fn paste_into(target: Option<i32>, auto_paste: bool, enter: bool) -> PasteOutcom
     let (PasteOutcome::Sent, Some(target)) = (result, target) else {
         return result;
     };
+    let handle = app.clone();
     thread::spawn(move || {
-        if !apps::activate(target) {
+        let (tx, rx) = mpsc::sync_channel(1);
+        let main = handle.clone();
+        let queued = handle.run_on_main_thread(move || {
+            let _ = tx.send(crate::macos::island_panel::hand_key_back_to(&main, WINDOW_LABEL, target));
+        });
+        let activated = match queued {
+            Ok(()) => rx.recv_timeout(Duration::from_millis(500)).unwrap_or_else(|_| apps::activate_main_window(target)),
+            Err(_) => apps::activate_main_window(target),
+        };
+        if !activated {
             eprintln!("clipboard paste: could not bring app {target} to the front, so ⌘V was not sent");
             return;
         }
         thread::sleep(FOCUS_SETTLE);
         input::send_paste_shortcut();
+        #[cfg(debug_assertions)]
+        eprintln!("clipboard paste: sent ⌘V to pid {target} ({})", apps::display_name(target).unwrap_or_default());
         if enter {
             thread::sleep(FOCUS_SETTLE);
             input::send_enter();

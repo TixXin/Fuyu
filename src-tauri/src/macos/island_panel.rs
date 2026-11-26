@@ -146,6 +146,15 @@ pub(crate) fn make_panel_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label
     true
 }
 
+pub(crate) fn hide_panel<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
+    let Ok(panel) = app.get_webview_panel(label) else {
+        return false;
+    };
+    panel.resign_key_window();
+    panel.hide();
+    true
+}
+
 pub(crate) fn make_panel(window: &WebviewWindow) -> Result<(), String> {
     let panel = window.to_panel::<IslandPanel>().map_err(|error| error.to_string())?;
     panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR);
@@ -248,12 +257,15 @@ pub(crate) fn make_island_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, labe
 }
 
 pub(crate) fn hand_key_back<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, pid: i32) {
+    let _ = hand_key_back_to(app, label, pid);
+}
+
+pub(crate) fn hand_key_back_to<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, pid: i32) -> bool {
     if let Ok(panel) = app.get_webview_panel(label) {
         panel.resign_key_window();
     }
-    if let Some(running) = NSRunningApplication::runningApplicationWithProcessIdentifier(pid) {
-        running.activateWithOptions(NSApplicationActivationOptions::empty());
-    }
+    NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
+        .is_some_and(|running| running.activateWithOptions(NSApplicationActivationOptions::empty()))
 }
 
 pub(crate) fn set_island_front<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, front: bool) {

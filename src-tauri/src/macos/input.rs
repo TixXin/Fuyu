@@ -1,10 +1,11 @@
-use std::ffi::c_char;
+use std::{ffi::c_char, thread, time::Duration};
 
 use objc2_app_kit::NSEvent;
 use objc2_core_foundation::{CFDictionary, CGPoint};
 use objc2_core_graphics::{
-    CGDisplayBounds, CGError, CGEvent, CGEventFlags, CGEventSource, CGEventSourceStateID, CGEventTapLocation, CGKeyCode, CGMainDisplayID,
-    CGPreflightPostEventAccess, CGRequestPostEventAccess, CGScrollEventUnit, CGWarpMouseCursorPosition,
+    CGDisplayBounds, CGError, CGEvent, CGEventFilterMask, CGEventFlags, CGEventSource, CGEventSourceStateID, CGEventSuppressionState,
+    CGEventTapLocation, CGKeyCode, CGMainDisplayID, CGPreflightPostEventAccess, CGRequestPostEventAccess, CGScrollEventUnit,
+    CGWarpMouseCursorPosition,
 };
 
 pub(crate) fn is_left_button_down() -> bool {
@@ -103,22 +104,40 @@ pub(crate) fn ask_to_post_keys() -> bool {
     CGRequestPostEventAccess()
 }
 
+const LEFT_COMMAND_DEVICE_MASK: u64 = 0x0000_0008;
+const KEY_TAP_HOLD: Duration = Duration::from_millis(12);
+
+fn command_flags() -> CGEventFlags {
+    CGEventFlags::from_bits_retain(CGEventFlags::MaskCommand.0 | LEFT_COMMAND_DEVICE_MASK)
+}
+
 fn tap_key(key: CGKeyCode, flags: CGEventFlags) {
-    for down in [true, false] {
-        let Some(event) = CGEvent::new_keyboard_event(None, key, down) else {
+    let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState);
+    if let Some(source) = source.as_deref() {
+        CGEventSource::set_local_events_filter_during_suppression_state(
+            Some(source),
+            CGEventFilterMask::PermitLocalMouseEvents | CGEventFilterMask::PermitSystemDefinedEvents,
+            CGEventSuppressionState::EventSuppressionStateSuppressionInterval,
+        );
+    }
+    for (index, down) in [true, false].into_iter().enumerate() {
+        if index > 0 {
+            thread::sleep(KEY_TAP_HOLD);
+        }
+        let Some(event) = CGEvent::new_keyboard_event(source.as_deref(), key, down) else {
             return;
         };
         CGEvent::set_flags(Some(&event), flags);
-        CGEvent::post(CGEventTapLocation::HIDEventTap, Some(&event));
+        CGEvent::post(CGEventTapLocation::SessionEventTap, Some(&event));
     }
 }
 
 pub(crate) fn send_copy_shortcut() {
-    tap_key(KEY_C, CGEventFlags::MaskCommand);
+    tap_key(KEY_C, command_flags());
 }
 
 pub(crate) fn send_paste_shortcut() {
-    tap_key(KEY_V, CGEventFlags::MaskCommand);
+    tap_key(KEY_V, command_flags());
 }
 
 pub(crate) fn send_enter() {
