@@ -109,7 +109,7 @@
 | 邮箱 IMAP ID `"name" "fly-island"` | `mail/client_id.rs`，每次连邮箱发给邮件服务器 | 改成 `fuyu`；163 / 126 只要求发 ID 命令，不看名字。放进 A1，提交说明写清 |
 | 远程审批令牌的盐 `focusd-remote:` | `agent_approval/config.rs`，远端 hook 装好时存的是加盐后的值 | 改了已装的远端 hook 全部失效、要重装；不值得，等哪天 hook 本来就要升级时一起换 |
 | hook 脚本里的环境变量 `FOCUSD_AGENT_STATUS_DIR/PATH` 和互斥量 `FocuSD.AgentStatus` | 编译进程序的 `agent_status/hooks/*`，新旧 hook 同时在跑时靠互斥量互斥 | 同上：改脚本内容会让已装的 hook 显示要修复，等下次 hook 升级一起改 |
-| 插件签名私钥旧位置 `~/.fly-island-plugin/`、`FLY_ISLAND_PLUGIN_SIGNING_KEY` | `packages/fuyu-plugin`、`packages/plugin-cli`、`scripts/plugins/plugin-signing.mjs` | 用户在两台机器上把私钥挪到新位置后，第 3 版的 `plugin-cli` 可以删旧位置；第 2 版的随 E36.6 |
+| 插件签名私钥旧位置 `~/.fly-island-plugin/`、`FLY_ISLAND_PLUGIN_SIGNING_KEY` | `packages/fuyu-plugin`、`packages/plugin-cli`、`scripts/plugins/plugin-signing.mjs` | **已做**（2026-11-25，E57）：两台机器都确认没有旧目录，第 3 版 `plugin-cli` 不再读旧位置、旧变量，DPAPI 子进程变量改名 `FUYU_DPAPI_INPUT`；第 2 版的随 E36.6 已删 |
 | 发版签名配置旧位置 `~/.tauri/fly-island`、`FOCUSD_SIGNING_CONFIG` | `scripts/signing-dir.mjs` | 同上：确认两台机器都已经在新位置，就删旧位置 |
 | `FOCUSD_PLUGIN_AUTHOR_KEY`、`FOCUSD_DPAPI_INPUT` | `scripts/plugins/` | 第 2 版市场的签名脚本，随 E36.6 |
 | 已发布的 npm 旧包 `fly-island-plugin`、VS Code 旧扩展 | 改名时已标弃用（由用户做） | 不用管 |

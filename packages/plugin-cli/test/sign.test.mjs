@@ -21,19 +21,17 @@ test("keygen writes one key file, refuses to replace it, and the key loads back"
   assert.equal(publicKeyOf(loaded.privateKey).keyId, key.keyId);
 });
 
-test("keys come from --key, then the environment, then the 1.x key file", () => {
+test("keys come from --key, then the environment, then the key file", () => {
   const home = tempDir("home");
-  assert.equal(defaultKeyFile(home), join(home, ".fuyu-plugin", "signing.key"));
-  const legacy = join(home, ".fly-island-plugin", "signing.key");
-  mkdirSync(join(home, ".fly-island-plugin"));
+  const file = join(home, ".fuyu-plugin", "signing.key");
+  assert.equal(defaultKeyFile(home), file);
+  mkdirSync(join(home, ".fuyu-plugin"));
   const { privateKey } = generateKeyPairSync("ed25519");
   const pem = privateKey.export({ format: "pem", type: "pkcs8" });
-  writeFileSync(legacy, pem);
-  assert.equal(defaultKeyFile(home), legacy);
-  assert.equal(loadSigningKey({ env: {}, home, ...POSIX }).source, legacy);
+  writeFileSync(file, pem);
+  assert.equal(loadSigningKey({ env: {}, home, ...POSIX }).source, file);
   assert.equal(loadSigningKey({ env: { [KEY_ENV]: pem }, home, ...POSIX }).source, `$${KEY_ENV}`);
-  assert.equal(loadSigningKey({ env: { FLY_ISLAND_PLUGIN_SIGNING_KEY: pem }, home, ...POSIX }).source, "$FLY_ISLAND_PLUGIN_SIGNING_KEY");
-  assert.equal(loadSigningKey({ file: legacy, env: { [KEY_ENV]: "not a key" }, ...POSIX }).source, legacy);
+  assert.equal(loadSigningKey({ file, env: { [KEY_ENV]: "not a key" }, ...POSIX }).source, file);
   const rsa = join(home, "rsa.key");
   writeFileSync(rsa, generateKeyPairSync("rsa", { modulusLength: 1024 }).privateKey.export({ format: "pem", type: "pkcs8" }));
   assert.throws(() => loadSigningKey({ file: rsa, ...POSIX }), /signing keys are Ed25519/);

@@ -23,7 +23,7 @@ export { DEFAULT_ICON_FILE, icon, renderIcon } from "./icon.mjs";
 export { findGlyph, glyphFromSvg, searchGlyphs } from "./icon/glyphs.mjs";
 export { OFFICIAL_ICONS, assessTone, normalizeColor, toneDistance } from "./icon/tones.mjs";
 export { lintListing } from "./lint.mjs";
-export { KEY_ENV, LEGACY_KEY_ENV, defaultKeyFile, generateSigningKey, loadSigningKey } from "./keys.mjs";
+export { KEY_ENV, defaultKeyFile, generateSigningKey, loadSigningKey } from "./keys.mjs";
 export { TOOLS as MCP_TOOLS, defaultLocalApiConfigPath, handleMessage as handleMcpMessage, localApiClient, runMcp } from "./mcp.mjs";
 export { DEFAULT_PACK_DIR, pack } from "./pack.mjs";
 export { DEFAULT_PREVIEW_FILE, PREVIEW_LOCALES, PREVIEW_THEMES, preview } from "./preview.mjs";

@@ -6,22 +6,19 @@ import { dirname, join } from "node:path";
 import { publicKeyOf } from "@fuyu/plugin-market";
 
 export const KEY_ENV = "FUYU_PLUGIN_SIGNING_KEY";
-export const LEGACY_KEY_ENV = "FLY_ISLAND_PLUGIN_SIGNING_KEY";
 
 export function defaultKeyFile(home = homedir()) {
-  const file = join(home, ".fuyu-plugin", "signing.key");
-  const legacy = join(home, ".fly-island-plugin", "signing.key");
-  return existsSync(file) || !existsSync(legacy) ? file : legacy;
+  return join(home, ".fuyu-plugin", "signing.key");
 }
 
 function dpapi(mode, input) {
   const command = `
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Security
-$data = [Convert]::FromBase64String($env:FLY_ISLAND_DPAPI_INPUT)
+$data = [Convert]::FromBase64String($env:FUYU_DPAPI_INPUT)
 $out = [Security.Cryptography.ProtectedData]::${mode}($data, $null, 'CurrentUser')
 [Console]::Out.Write([Convert]::ToBase64String($out))`;
-  const env = { ...process.env, FLY_ISLAND_DPAPI_INPUT: input.toString("base64") };
+  const env = { ...process.env, FUYU_DPAPI_INPUT: input.toString("base64") };
   delete env.PSModulePath;
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], { encoding: "utf8", windowsHide: true, env });
   if (result.error || result.status !== 0) throw new Error(`DPAPI ${mode} failed. Run as the Windows user who created the key, or set ${KEY_ENV}.`);
@@ -41,8 +38,7 @@ function ed25519(pem, source) {
 
 export function loadSigningKey({ file, env = process.env, platform = process.platform, home } = {}) {
   if (!file) {
-    const name = env[KEY_ENV]?.trim() ? KEY_ENV : env[LEGACY_KEY_ENV]?.trim() ? LEGACY_KEY_ENV : null;
-    if (name) return { privateKey: ed25519(env[name], `$${name}`), source: `$${name}` };
+    if (env[KEY_ENV]?.trim()) return { privateKey: ed25519(env[KEY_ENV], `$${KEY_ENV}`), source: `$${KEY_ENV}` };
   }
   const path = file ?? defaultKeyFile(home);
   if (!existsSync(path)) throw new Error(`No signing key at ${path}: run "fuyu-plugin keygen" once, or set ${KEY_ENV} to the PEM text.`);
