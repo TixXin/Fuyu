@@ -2027,14 +2027,15 @@
       "page": "shortcutsIsland",
       "zh-CN": {
         "group": "页面切换",
-        "title": "方向键翻页和展开收起",
-        "description": "面板里 ← → 翻页，↑ 收起（内容滚动过时先回到顶部）；岛有焦点时 ↓ 或回车展开。输入框里有字时不生效"
+        "title": "方向键 / Tab 翻页和展开收起",
+        "description": "面板里 ← → 或 Tab / Shift+Tab 翻页，↑ 收起（内容滚动过时先回到顶部）；岛有焦点时 ↓ 或回车展开。输入框里有字时不生效"
       },
       "en": {
         "group": "Page switching",
-        "title": "Arrow keys turn pages and open or close",
-        "description": "In the panel, ← → turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it"
-      }
+        "title": "Arrow keys and Tab turn pages and open or close",
+        "description": "In the panel, ← → or Tab / Shift+Tab turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it"
+      },
+      "since": "next"
     },
     {
       "page": "shortcutsIsland",

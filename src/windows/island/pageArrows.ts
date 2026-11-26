@@ -27,7 +27,9 @@ export const PRESSABLE_TARGET = "button, a[href], summary, [role='button'], [rol
 
 export function pageArrowAction(event: PageArrowKeyEvent, expanded: boolean): PageArrowAction | null {
   if (event.defaultPrevented || event.repeat || event.isComposing) return null;
-  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return null;
+  if (event.altKey || event.ctrlKey || event.metaKey) return null;
+  if (event.key === "Tab") return expanded ? (event.shiftKey ? "previous" : "next") : null;
+  if (event.shiftKey) return null;
   if (!expanded) return event.key === "ArrowDown" || event.key === "Enter" ? "open" : null;
   if (event.key === "ArrowLeft") return "previous";
   if (event.key === "ArrowRight") return "next";
@@ -52,6 +54,7 @@ export function pageArrowTargetAllows(action: PageArrowAction, key: string, targ
   const field = target.closest(EDITABLE_TARGET);
   if (field && (action === "open" || !emptyTextField(field))) return false;
   if (action === "open") return key !== "Enter" || !target.closest(PRESSABLE_TARGET);
+  if (key === "Tab") return true;
   return !target.closest(ARROW_OWNER_TARGET);
 }
 

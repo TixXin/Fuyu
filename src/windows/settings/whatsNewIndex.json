@@ -134,6 +134,18 @@
       }
     },
     {
+      "page": "shortcutsIsland",
+      "since": "next",
+      "zh-CN": {
+        "group": "页面切换",
+        "title": "方向键 / Tab 翻页和展开收起"
+      },
+      "en": {
+        "group": "Page switching",
+        "title": "Arrow keys and Tab turn pages and open or close"
+      }
+    },
+    {
       "page": "todos",
       "since": "0.3.14-beta.3",
       "zh-CN": {
