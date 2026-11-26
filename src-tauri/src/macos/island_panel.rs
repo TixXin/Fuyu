@@ -1,32 +1,40 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
 use tauri::{Manager, WebviewWindow};
 use tauri_nspanel::{tauri_panel, CollectionBehavior, ManagerExt, PanelHandle, PanelLevel, StyleMask, WebviewWindowExt};
 
+static SUPPRESS_PANEL_KEY: AtomicBool = AtomicBool::new(false);
+
+fn panels_can_become_key() -> bool {
+    !SUPPRESS_PANEL_KEY.load(Ordering::SeqCst)
+}
+
 tauri_panel! {
     panel!(IslandPanel {
         config: {
-            can_become_key_window: true,
+            can_become_key_window: panels_can_become_key(),
             is_floating_panel: true
         }
     })
 
     panel!(PopupPanel {
         config: {
-            can_become_key_window: true,
+            can_become_key_window: panels_can_become_key(),
             is_floating_panel: true
         }
     })
 
     panel!(PreviewPanel {
         config: {
-            can_become_key_window: super::preview_panel::can_become_key(),
+            can_become_key_window: super::preview_panel::can_become_key() && panels_can_become_key(),
             is_floating_panel: true
         }
     })
 
     panel!(OverlayPanel {
         config: {
-            can_become_key_window: true,
+            can_become_key_window: panels_can_become_key(),
             is_floating_panel: true
         }
     })
@@ -131,6 +139,7 @@ pub(crate) fn make_preview_panel(window: &WebviewWindow) -> Result<(), String> {
 
 fn float_above_island(window: &WebviewWindow, panel: PanelHandle<tauri::Wry>) -> Result<(), String> {
     panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR + POPUP_ABOVE_ISLAND);
+    panel.set_hides_on_deactivate(false);
     panel.set_collection_behavior(
         CollectionBehavior::new()
             .move_to_active_space()
@@ -174,9 +183,14 @@ pub(crate) fn hide_panel<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &s
     let Ok(panel) = app.get_webview_panel(label) else {
         return false;
     };
-    panel.resign_key_window();
+    SUPPRESS_PANEL_KEY.store(true, Ordering::SeqCst);
     panel.hide();
+    SUPPRESS_PANEL_KEY.store(false, Ordering::SeqCst);
     true
+}
+
+pub(crate) fn is_panel_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
+    app.get_webview_panel(label).is_ok_and(|panel| panel.as_panel().isKeyWindow())
 }
 
 pub(crate) fn make_panel(window: &WebviewWindow) -> Result<(), String> {
@@ -281,15 +295,44 @@ pub(crate) fn make_island_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, labe
 }
 
 pub(crate) fn hand_key_back<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, pid: i32) {
-    let _ = hand_key_back_to(app, label, pid);
-}
-
-pub(crate) fn hand_key_back_to<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, pid: i32) -> bool {
     if let Ok(panel) = app.get_webview_panel(label) {
         panel.resign_key_window();
     }
+    if let Some(running) = NSRunningApplication::runningApplicationWithProcessIdentifier(pid) {
+        running.activateWithOptions(NSApplicationActivationOptions::empty());
+    }
+}
+
+pub(crate) fn release_panel_key_for_paste<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    label: &str,
+    pid: i32,
+    keep_visible: bool,
+) -> bool {
+    if let Ok(panel) = app.get_webview_panel(label) {
+        if keep_visible {
+            if panel.as_panel().isKeyWindow() {
+                SUPPRESS_PANEL_KEY.store(true, Ordering::SeqCst);
+                panel.hide();
+                panel.show();
+                SUPPRESS_PANEL_KEY.store(false, Ordering::SeqCst);
+            }
+        } else if panel.is_visible() {
+            hide_panel(app, label);
+        }
+    }
     NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
         .is_some_and(|running| running.activateWithOptions(NSApplicationActivationOptions::empty()))
+}
+
+#[cfg(debug_assertions)]
+pub(crate) fn debug_app_focus_state() -> (bool, Option<String>) {
+    let Some(mtm) = objc2::MainThreadMarker::new() else {
+        return (false, None);
+    };
+    let ns_app = objc2_app_kit::NSApplication::sharedApplication(mtm);
+    let key = ns_app.keyWindow().map(|window| window.title().to_string());
+    (ns_app.isActive(), key)
 }
 
 pub(crate) fn set_island_front<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, front: bool) {
