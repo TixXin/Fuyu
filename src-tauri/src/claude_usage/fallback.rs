@@ -5,7 +5,12 @@ use std::{
 
 use serde_json::Value;
 
-use super::{background::PLUGIN_ID, source, ClaudeUsage, UsageError};
+use super::{
+    background::PLUGIN_ID,
+    cli,
+    source::{self, FetchError, Limits},
+    ClaudeUsage, UsageError,
+};
 
 const GAP: Duration = Duration::from_secs(15 * 60);
 const MAX_GAP: Duration = Duration::from_secs(2 * 60 * 60);
@@ -63,7 +68,7 @@ pub(crate) async fn usage(stale: bool) -> Option<ClaudeUsage> {
             .map(str::to_string);
         let proxy = source::resolve_proxy(configured.as_deref());
         let now_ms = source::unix_ms(SystemTime::now());
-        let result = source::fetch_api(proxy.as_deref(), source::Keychain::Skip, now_ms).await;
+        let result = ask(proxy, now_ms).await;
         let mut state = state();
         state.in_flight = false;
         match result {
@@ -82,6 +87,31 @@ pub(crate) async fn usage(stale: bool) -> Option<ClaudeUsage> {
     }
     let state = state();
     answer(state.usage.clone(), state.error.clone(), stale)
+}
+
+async fn ask(proxy: Option<String>, now_ms: u64) -> Result<Limits, FetchError> {
+    let cli = match super::home_dir() {
+        Some(home) => {
+            let proxy = proxy.clone();
+            tauri::async_runtime::spawn_blocking(move || cli::fetch(&home, proxy.as_deref())).await.ok().flatten()
+        }
+        None => None,
+    };
+    let cli_error = match cli {
+        Some(Ok(limits)) => return Ok(limits),
+        Some(Err(error)) => Some(error),
+        None => None,
+    };
+    let api = source::fetch_api(proxy.as_deref(), source::Keychain::Skip, now_ms).await;
+    pick(cli_error, api)
+}
+
+pub(super) fn pick(cli_error: Option<FetchError>, api: Result<Limits, FetchError>) -> Result<Limits, FetchError> {
+    match (cli_error, api) {
+        (_, Ok(limits)) => Ok(limits),
+        (Some(cli_error), Err(api_error)) if api_error.kind.is_local() => Err(cli_error),
+        (_, Err(api_error)) => Err(api_error),
+    }
 }
 
 pub(super) fn answer(usage: Option<ClaudeUsage>, error: Option<UsageError>, stale: bool) -> Option<ClaudeUsage> {

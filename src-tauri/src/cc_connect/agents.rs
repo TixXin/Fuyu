@@ -50,6 +50,11 @@ pub(super) fn find_local() -> Vec<FoundAgent> {
         .collect()
 }
 
+pub(crate) fn find_command(command: &str) -> Option<PathBuf> {
+    let dirs = search_dirs(env::var_os("PATH"), crate::system::windows_home_dir().ok());
+    on_path(&dirs, &extensions(env::var_os("PATHEXT")), command, Path::is_file)
+}
+
 fn search_dirs(path: Option<OsString>, home: Option<PathBuf>) -> Vec<PathBuf> {
     let mut dirs: Vec<PathBuf> = path.map(|paths| env::split_paths(&paths).collect()).unwrap_or_default();
     let mut extra: Vec<PathBuf> = home.map(|home| vec![home.join(".local").join("bin"), home.join(".bun").join("bin"), home.join(".npm-global").join("bin")]).unwrap_or_default();

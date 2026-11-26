@@ -25,7 +25,7 @@ pub(super) struct FetchError {
 }
 
 impl FetchError {
-    fn new(kind: UsageErrorKind, message: impl Into<String>) -> Self {
+    pub(super) fn new(kind: UsageErrorKind, message: impl Into<String>) -> Self {
         Self {
             kind,
             message: message.into(),

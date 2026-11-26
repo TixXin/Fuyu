@@ -1,5 +1,7 @@
 mod antigravity;
 mod background;
+mod cached;
+mod cli;
 mod cursor;
 mod cursor_token;
 mod dsh;
@@ -14,6 +16,7 @@ mod workbuddy_plan;
 mod tests;
 
 pub(crate) use background::init;
+pub(crate) use cached::read as cached_usage;
 pub(crate) use fallback::usage as fallback_usage;
 use serde::Serialize;
 use source::{FetchError, Limits};
