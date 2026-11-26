@@ -83,8 +83,14 @@ node scripts/release/make-latest-json.mjs
 node scripts/release/make-latest-json.mjs --base-url "https://ghfast.top/https://github.com/<owner>/<repo>/releases/download/v0.2.12"
 ```
 
-公共加速前缀是第三方服务，可用性不由本项目保证（放一份到自己的国内镜像见 D63）；有条件时换成自己的对象存储或 CDN，把地址填进 `--base-url` 即可，代码无需改动。
+公共加速前缀是第三方服务，可用性不由本项目保证，所以官网 `fuyu.tix.xin` 另放了一份（D63，见下面「官网镜像」）；要换成别的对象存储或 CDN，把地址填进 `--base-url` 即可，代码无需改动。
 镜像或自建分发要改清单地址时，也可以用环境变量 `TAURI_UPDATER_ENDPOINTS`（逗号或换行分隔）在构建时整组替换端点。
+
+### 官网镜像（D63）
+
+- **地址**：清单是 `https://fuyu.tix.xin/api/update/stable/latest.json` 和 `/api/update/beta/latest.json`，安装包是 `https://fuyu.tix.xin/files/<内容哈希>/<文件名>`。文件按内容哈希放、永不覆盖，响应带 `cache-control: public, immutable, max-age=31536000`。
+- **怎么传上去**：不是从本机上传安装包。`pnpm release` 公开 GitHub Release 后，调官网仓库（默认 `../fuyu-desktop`，`FUYU_SITE_DIR` 可改）的 `pnpm releases:import <tag>`：从 GitHub 下载这一版、核对 SHA-256，经 SSH 放到服务器再由 `fuyu-site-api` 容器导入数据库，清单随之更新（流程见上面「更新通道」和 `fuyu-desktop/scripts/import-release.mjs`，需要它的 `.env.deploy`）。导入失败重试 3 次，仍失败只在最后报错并给出手动命令，不影响 GitHub 那边已发好的版本；漏了就手动跑那条命令补，再读一次两个通道的清单确认。
+- **服务器和带宽**：源站是机房服务器上的 `fuyu-site` 容器（1Panel / OpenResty，数据在 `/data/fuyu-site/files/`），前面是腾讯云 EdgeOne CDN。安装包第一次被下载后由 CDN 缓存，之后的请求不回源（响应头 `eo-cache-status: HIT`），所以源站上行带宽只在新版刚发布、各节点首次回源时用到。2026-11-25 在国内家宽实测：14.5 MB 的 Windows 安装包命中 CDN 时约 1.8 MB/s，8 秒下完。源站的上行带宽没有单独测，新版发布后短时间大量回源时可能变慢；客户端同时查 GitHub 组，官网慢不会让人收不到更新，但已经选了官网清单的那次下载不会换到 GitHub。
 
 ## 签名密钥
 
