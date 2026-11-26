@@ -28,6 +28,17 @@ export interface Quote {
   change: number | null;
   percent: number | null;
   time: number | null;
+  open?: number | null;
+  high?: number | null;
+  low?: number | null;
+  preClose?: number | null;
+}
+
+export interface TrendSeries {
+  id: string;
+  preClose: number | null;
+  points: number[];
+  updatedAt: number;
 }
 
 export type FeedStatus = "idle" | "live" | "closed" | "holiday" | "offline";
@@ -35,6 +46,7 @@ export type FeedStatus = "idle" | "live" | "closed" | "holiday" | "offline";
 export interface StockState {
   settings: StockSettings;
   quotes: Record<string, Quote>;
+  trends?: Record<string, TrendSeries>;
   status: FeedStatus;
   source: SourceId | null;
   updatedAt: number | null;
@@ -79,6 +91,7 @@ export const METHODS = {
   moveStock: "moveStock",
   restoreSample: "restoreSample",
   refresh: "refresh",
+  getTrend: "getTrend",
 } as const;
 
 export const TOPICS = { state: "state" } as const;

@@ -1,0 +1,112 @@
+.fuyu-stock__chart {
+  position: relative;
+  height: 82px;
+  min-width: 0;
+  color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-stock__chart.is-up { color: var(--fuyu-stock-up); }
+.fuyu-stock__chart.is-down { color: var(--fuyu-stock-down); }
+
+.fuyu-stock__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.fuyu-stock__stroke {
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fuyu-stock__refline {
+  stroke: var(--fuyu-plugin-border);
+  stroke-width: 1;
+}
+
+.fuyu-stock__end-dot {
+  fill: currentColor;
+}
+
+.fuyu-stock__chart-hi,
+.fuyu-stock__chart-lo,
+.fuyu-stock__chart-ref {
+  position: absolute;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fuyu-plugin-text-muted);
+  pointer-events: none;
+  line-height: 1;
+}
+
+.fuyu-stock__chart-hi { top: 2px; left: 2px; }
+.fuyu-stock__chart-lo { bottom: 2px; left: 2px; }
+.fuyu-stock__chart-ref { bottom: 2px; right: 2px; }
+
+.fuyu-stock__range-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  height: 64px;
+  color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-stock__range-fallback.is-up { color: var(--fuyu-stock-up); }
+.fuyu-stock__range-fallback.is-down { color: var(--fuyu-stock-down); }
+
+.fuyu-stock__range-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-stock__range-track {
+  position: relative;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--fuyu-plugin-border);
+}
+
+.fuyu-stock__range-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.fuyu-stock__range-thumb {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.fuyu-stock__spark-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 16px;
+}
+
+.fuyu-stock__mini-spark {
+  display: block;
+  width: 44px;
+  height: 16px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-stock__mini-spark.is-up { color: var(--fuyu-stock-up); }
+.fuyu-stock__mini-spark.is-down { color: var(--fuyu-stock-down); }

@@ -54,7 +54,16 @@ test("Eastmoney batch quotes: ids join market and code, a suspended stock has no
 test("Tencent fallback reads the numbers after the code, and its local times land on the right instant", () => {
   const ids = ["1.600519", "116.00700", "105.AAPL"];
   const quotes = Object.fromEntries(parseTencent(TENCENT_BODY, ids).map((quote) => [quote.id, quote]));
-  assert.deepEqual(quotes["1.600519"], { id: "1.600519", price: 1464.02, change: -10.82, percent: -0.73, time: at("2026-11-26T09:45:39+08:00") });
+  assert.deepEqual(quotes["1.600519"], {
+    id: "1.600519",
+    price: 1464.02,
+    change: -10.82,
+    percent: -0.73,
+    time: at("2026-11-26T09:45:39+08:00"),
+    open: 1470,
+    high: 1470,
+    preClose: 1474.84,
+  });
   assert.equal(quotes["116.00700"].time, at("2026-11-26T09:30:40+08:00"));
   assert.equal(quotes["116.00700"].percent, 1.07);
   assert.equal(quotes["105.AAPL"].time, at("2026-11-25T16:00:02-05:00"));

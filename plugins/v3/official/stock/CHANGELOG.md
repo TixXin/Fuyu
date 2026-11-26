@@ -1,5 +1,15 @@
 # 更新记录 · Changelog
 
+## 1.2.0
+
+- 重做宽岛布局为「左图右表」分时看板（对标 Apple Stocks 与桌面迷你看盘，适配窄屏自动堆叠）：左侧展示选中股票的大号现价、实时分时折线渐变面积图、昨收虚线基准线与今开/最高/最低/昨收指标，右侧展示高密度自选列表与行内微型走势线，点击任意一只实时切换左侧分时。
+- 示例模式提示收进右侧紧凑顶栏小胶囊，不再占用整行高度，一屏可直接看全 5 只以上自选股。
+- 分时数据双源接入腾讯（`web.ifzq.gtimg.cn`）与东方财富（`push2.eastmoney.com`），覆盖 A 股、港股、美股与指数。
+
+- Redesigned the wide island layout into a Master-Detail intraday dashboard (with automatic narrow-width stacking): a focused left card with hero price, real intraday area sparkline, dashed previous-close baseline, and Open/High/Low/Prev metrics, paired with a dense right watchlist featuring inline mini sparklines; click any stock to inspect its intraday curve.
+- Compacted the sample watchlist hint into an inline header pill so 5+ stocks fit cleanly in one viewport.
+- Added dual-source intraday trends from Tencent (`web.ifzq.gtimg.cn`) and Eastmoney (`push2.eastmoney.com`) across A-share, HK, US stocks, and indexes.
+
 ## 1.1.0
 
 - 首次安装自带一组示例自选股（上证指数、贵州茅台、腾讯控股、苹果、英伟达），装完即可看行情；列表为空时也支持一键载入示例。
