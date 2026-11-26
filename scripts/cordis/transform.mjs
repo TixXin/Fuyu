@@ -57,8 +57,23 @@ function dirFor(map, name) {
 export function rename(map, text) {
   let out = text.replace(new RegExp(`((?:\\.\\./)+)(${DIRS.join("|")})/`, "g"), (_, up, name) => `${up}${dirFor(map, name)}/`);
   for (const [from, to] of map.names) {
+    if (from.includes("/")) out = out.replaceAll(from.replaceAll("/", "\\/"), to.replaceAll("/", "\\/"));
     const pattern = /^[A-Za-z_]/.test(from) ? new RegExp(`(?<![A-Za-z0-9_@/.-])${from.replace(/[.*+?^${}()|[\]\\/-]/g, "\\$&")}(?![A-Za-z0-9_])`, "g") : new RegExp(from.replace(/[.*+?^${}()|[\]\\/-]/g, "\\$&") + "(?![A-Za-z0-9_-])", "g");
     out = out.replace(pattern, to);
+  }
+  return out;
+}
+
+function matchCase(sample, word) {
+  if (sample === sample.toUpperCase() && sample !== sample.toLowerCase()) return word.toUpperCase();
+  if (sample[0] !== sample[0].toLowerCase()) return word[0].toUpperCase() + word.slice(1);
+  return word;
+}
+
+export function replaceWords(map, text) {
+  let out = text;
+  for (const [from, to] of map.words ?? []) {
+    out = out.replace(new RegExp(from.replace(/[.*+?^${}()|[\]\\/-]/g, "\\$&"), "gi"), (found) => matchCase(found, to));
   }
   return out;
 }
@@ -74,7 +89,7 @@ export function rewriteVendor(map, to, text) {
 export function transform(map, file, bytes) {
   if (!isText(file.to)) return bytes;
   const text = bytes.toString("utf8");
-  return Buffer.from(rewriteVendor(map, file.to, rename(map, text)), "utf8");
+  return Buffer.from(rewriteVendor(map, file.to, replaceWords(map, rename(map, text))), "utf8");
 }
 
 export function exportFiles(root, map) {
@@ -95,7 +110,7 @@ export function brokenImports(files) {
   for (const [path, bytes] of files) {
     if (!SCRIPT.test(path) || path.includes("/vendor/")) continue;
     for (const [, , , specifier] of bytes.toString("utf8").matchAll(IMPORT)) {
-      if (specifier.startsWith("@fuyu/")) broken.push({ path, specifier });
+      if (/^@(fuyu|cordis)\//.test(specifier)) broken.push({ path, specifier });
       if (!specifier.startsWith(".") || !/(\.m?js|\/[^./]+)$/.test(specifier)) continue;
       const target = posix.normalize(posix.join(posix.dirname(path), specifier));
       if (/\/(test|tests|examples)\//.test(`/${path}`) && !files.has(target)) continue;
@@ -112,7 +127,7 @@ export function fuyuNames(map, files) {
     if (!isText(path) || map.namesAllowedIn.some((part) => `/${path}`.includes(part))) continue;
     const lines = bytes.toString("utf8").split(/\r?\n/);
     lines.forEach((line, index) => {
-      if (/fuyu/i.test(line)) hits.push({ path, line: index + 1, text: line.trim().slice(0, 160) });
+      if (/fuyu|浮屿|focusd|fly-?island/i.test(line)) hits.push({ path, line: index + 1, text: line.trim().slice(0, 160) });
     });
   }
   return hits;

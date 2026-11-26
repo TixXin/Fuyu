@@ -287,7 +287,7 @@ fn a_node_on_this_computer_wins_and_otherwise_the_download_is_used() {
     fs::remove_dir_all(other.0.join("runtime")).unwrap();
     fs::write(other.0.join("runtime"), b"a file where the runtime folder should be").unwrap();
     let error = choose(Err(tried), minimum, &other.0, Ok(zip_download(&server, &["official"], &body)), &mut quiet()).unwrap_err();
-    assert_eq!(error.cause, FailureCause::Disk, "a folder Fuyu cannot write to is not reported as a network problem: {error}");
+    assert_eq!(error.cause, FailureCause::Disk, "a folder the app cannot write to is not reported as a network problem: {error}");
 }
 
 #[test]

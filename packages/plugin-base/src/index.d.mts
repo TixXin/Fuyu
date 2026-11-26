@@ -11,7 +11,7 @@ export type * from "./app/context.mjs";
 
 export interface PluginLocaleApi {
   /**
-   * The current Fuyu interface language (`"zh-CN"` or `"en"`). Matches the language chosen in Fuyu's settings,
+   * The app's current interface language (`"zh-CN"` or `"en"`). Matches the language chosen in the app's settings,
    * both in host code (even before any window connects) and in every window.
    */
   readonly current: LocaleId;
@@ -100,8 +100,8 @@ declare module "cordis" {
       onChange<T extends Record<string, any> = Record<string, Json>>(listener: (values: T) => void): () => Promise<void>;
     };
     /**
-     * Fuyu's current interface language (`"zh-CN"` or `"en"`). Window code can read it directly; host code lists
-     * `"locale"` in `inject` (or as an optional injection to stay compatible with older Fuyu versions).
+     * The app's current interface language (`"zh-CN"` or `"en"`). Window code can read it directly; host code lists
+     * `"locale"` in `inject` (or as an optional injection to stay compatible with older versions of the app).
      */
     locale: PluginLocaleApi;
     http: {
@@ -124,7 +124,7 @@ declare module "cordis" {
      */
     services: ServicesApi;
     /**
-     * Calls into Fuyu's Rust side and hears its events (host only, built-in plugins only: for any other plugin
+     * Calls into the app's Rust side and hears its events (host only, built-in plugins only: for any other plugin
      * `call` and `on` fail with `forbidden`, and it uses services instead). Calls fail with `peer-gone` when Rust is
      * not there and with `inactive` when this plugin stops; listeners go away with the plugin.
      */

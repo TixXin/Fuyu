@@ -45,7 +45,7 @@ test("Fuyu-only files stay out, and an exported file that still imports one is r
     put(root, "packages/plugin-base/src/host/main.mjs", 'import { ISLAND } from "./island.mjs";\nimport { x } from "@fuyu/plugin-services";\n');
     const files = exportFiles(root, map);
     assert.equal(files.has("packages/tauri-cordis/src/host/island.mjs"), false);
-    assert.deepEqual(brokenImports(files).map((item) => item.specifier), ["./island.mjs", "@fuyu/plugin-services"]);
+    assert.deepEqual(brokenImports(files).map((item) => item.specifier), ["./island.mjs", "@cordis/plugin-services"]);
   });
 });
 
@@ -53,7 +53,8 @@ test("Fuyu names are reported everywhere except test fixtures", () => {
   withRepo((root) => {
     put(root, "packages/plugin-cli/src/cli.mjs", 'const HELP = "Usage: fuyu-plugin";\n');
     put(root, "packages/plugin-cli/test/fixtures/hello/package.json", '{ "fuyu": {} }\n');
-    const hits = fuyuNames(map, exportFiles(root, map));
+    const bare = { ...map, words: [] };
+    const hits = fuyuNames(bare, exportFiles(root, bare));
     assert.deepEqual(hits.map((hit) => `${hit.path}:${hit.line}`), ["packages/cli/src/cli.mjs:1"]);
   });
 });
@@ -79,5 +80,22 @@ test("an override puts tauri-cordis's own copy of a Fuyu-only file in the export
     put(root, "neutral/island.mjs", 'export const APP = "@fuyu/plugin-base";\n');
     const files = exportFiles(root, { ...map, overrides: { "packages/tauri-cordis/src/host/island.mjs": "neutral/island.mjs" } });
     assert.equal(files.get("packages/tauri-cordis/src/host/island.mjs").toString("utf8"), 'export const APP = "@fuyu/plugin-base";\n');
+  });
+});
+
+test("Fuyu's own names become tauri-cordis names, keeping their case", () => {
+  withRepo((root) => {
+    put(root, "packages/plugin-cli/src/keys.mjs", 'export const KEY_ENV = "FUYU_PLUGIN_SIGNING_KEY";\nconst file = "~/.fuyu-plugin/signing.key";\nconst text = "Fuyu 和浮屿 read engines.fuyu from TixXin/fuyu, fuyuVersion";\n');
+    const text = exportFiles(root, map).get("packages/cli/src/keys.mjs").toString("utf8");
+    assert.equal(text, 'export const KEY_ENV = "CORDIS_PLUGIN_SIGNING_KEY";\nconst file = "~/.tauri-cordis-plugin/signing.key";\nconst text = "Cordis 和宿主应用 read engines.cordis from TixXin/tauri-cordis, cordisVersion";\n');
+    assert.deepEqual(fuyuNames(map, new Map([["packages/cli/src/a.mjs", Buffer.from("浮屿\nfocusd-island\nfly-island\nok\n")]])).map((hit) => hit.line), [1, 2, 3]);
+  });
+});
+
+test("package names written inside regular expressions are renamed too", () => {
+  withRepo((root) => {
+    put(root, "packages/plugin-base/test/boundary.test.mjs", 'const ALLOWED = [/^@fuyu\\/plugin-base(\\/|$)/, /^@fuyu\\/plugin-manifest(\\/|$)/];\n');
+    const text = exportFiles(root, map).get("packages/tauri-cordis/test/boundary.test.mjs").toString("utf8");
+    assert.equal(text, 'const ALLOWED = [/^tauri-cordis(\\/|$)/, /^@tauri-cordis\\/manifest(\\/|$)/];\n');
   });
 });

@@ -54,7 +54,7 @@ export class PluginSecrets {
   }
 
   async ask(method, plugin, params) {
-    if (!this.rpc) throw serviceError("not-ready", `secrets/v1 ${method}: Fuyu's credential store is not connected`);
+    if (!this.rpc) throw serviceError("not-ready", `secrets/v1 ${method}: the app's credential store is not connected`);
     try {
       return await this.rpc.call(RUST[method], { plugin, ...params });
     } catch (error) {

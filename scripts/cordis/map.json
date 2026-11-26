@@ -3,7 +3,6 @@
   "trees": [
     { "from": "packages/plugin-base", "to": "packages/tauri-cordis", "paths": ["src", "test", "examples"] },
     { "from": "packages/plugin-cli", "to": "packages/cli", "paths": ["src", "test"] },
-    { "from": "packages/create-plugin", "to": "packages/create-plugin", "paths": ["src", "test", "template"] },
     { "from": "packages/plugin-manifest", "to": "packages/manifest", "paths": ["src", "test"] },
     { "from": "packages/plugin-market", "to": "packages/market", "paths": ["src", "test"] },
     { "from": "packages/plugin-review", "to": "packages/review", "paths": ["src", "test"] },
@@ -17,7 +16,14 @@
     "packages/plugin-base/test/app-routing.test.mjs",
     "packages/plugin-base/test/island-control.test.mjs",
     "packages/plugin-base/test/settings-open.test.mjs",
-    "packages/plugin-base/test/settings-setup.test.mjs"
+    "packages/plugin-base/test/settings-setup.test.mjs",
+    "packages/plugin-base/test/services.test.mjs",
+    "packages/plugin-base/test/protocol-rust.test.mjs",
+    "packages/plugin-cli/src/app/",
+    "packages/plugin-cli/test/mcp.test.mjs",
+    "packages/plugin-cli/test/build-services.test.mjs",
+    "packages/plugin-cli/test/cli-sdk-alias.test.mjs",
+    "packages/plugin-review/src/app/"
   ],
   "names": [
     ["@fuyu/plugin-base", "tauri-cordis"],
@@ -29,6 +35,12 @@
     ["plugin_base_macros", "tauri_cordis_macros"],
     ["plugin_base", "tauri_cordis"],
     ["plugin-base-macros", "tauri-cordis-macros"]
+  ],
+  "words": [
+    ["TixXin/fuyu", "TixXin/tauri-cordis"],
+    ["fuyu-plugin", "tauri-cordis-plugin"],
+    ["浮屿", "宿主应用"],
+    ["fuyu", "cordis"]
   ],
   "vendor": {
     "dir": "packages/tauri-cordis/vendor/cordis",
@@ -46,7 +58,9 @@
     "packages/tauri-cordis/src/app/host.d.mts": "scripts/cordis/app/plugin-base/host.d.mts",
     "packages/tauri-cordis/src/app/client.mjs": "scripts/cordis/app/plugin-base/client.mjs",
     "packages/tauri-cordis/src/app/client.d.mts": "scripts/cordis/app/plugin-base/client.d.mts",
-    "packages/tauri-cordis/src/app/context.d.mts": "scripts/cordis/app/plugin-base/context.d.mts"
+    "packages/tauri-cordis/src/app/context.d.mts": "scripts/cordis/app/plugin-base/context.d.mts",
+    "packages/cli/src/app/commands.mjs": "scripts/cordis/app/plugin-cli/commands.mjs",
+    "packages/review/src/app/data.mjs": "scripts/cordis/app/plugin-review/data.mjs"
   },
   "namesAllowedIn": ["/test/fixtures/"]
 }

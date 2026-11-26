@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createServiceProxy } from "@fuyu/plugin-base/client";
-import { defineService } from "@fuyu/plugin-services";
+import { defineService } from "@fuyu/plugin-base/services";
 
 const echoV1 = defineService("demo.echo/v1", { methods: { echo: true, slow: { timeoutMs: 5000 }, stream: { progress: true } }, events: { said: true } });
 
