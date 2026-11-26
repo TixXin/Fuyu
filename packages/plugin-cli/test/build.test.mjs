@@ -115,7 +115,7 @@ test("the shared module list comes from @fuyu/plugin-base/protocol, and the list
   const imports = [...island.matchAll(/from "([^"]*__shared[^"]*)";/g)].map((match) => match[1]);
   const installed = ["fuyu-plugin://localhost/packages/@a/b/dist/island.js", "fuyu-plugin://localhost/packages/b/dist/island.js", "http://fuyu-plugin.localhost/packages/@a/b/dist/island.js"];
   for (const base of installed) {
-    assert.deepEqual(imports.map((path) => new URL(path, base).pathname).sort(), ["/__shared/fuyu-plugin.js", "/__shared/react-jsx-runtime.js", "/__shared/react.js"], base);
+    assert.deepEqual(imports.map((path) => new URL(path, base).pathname).sort(), ["/__shared/fuyu-plugin.js", "/__shared/react-jsx-runtime.js", "/__shared/react.js"].sort(), base);
   }
   assert.equal(sharedPath("dist/pages/settings.js", "__shared/react.js", 0), "../../__shared/react.js");
   assert.equal(sharedPath("dist/pages/settings.js", "__shared/react.js"), "/__shared/react.js");
@@ -191,15 +191,3 @@ test("a build only empties a folder that holds an earlier build", async () => {
   await build(dir);
 });
 
-test("host code resolves @fuyu/plugin-services from the CLI's sibling package when node_modules is absent", async () => {
-  const dir = copyFixture("hello", (root) => {
-    writeFileSync(
-      join(root, "src", "host.ts"),
-      'import { timersV1 } from "@fuyu/plugin-services";\nexport const service = timersV1.name;\nexport function apply() {}\n',
-    );
-  });
-  const built = await build(dir);
-  const hostCode = read(built.outDir, "dist/host.js");
-  assert.match(hostCode, /timers\/v1/);
-  assert.doesNotMatch(hostCode, /from "@fuyu\/plugin-services"/);
-});

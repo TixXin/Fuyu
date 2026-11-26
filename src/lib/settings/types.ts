@@ -3,7 +3,7 @@ import type { CalendarSettingValues } from "./calendarSettings";
 import type { GlassSettingValues } from "./glassSettings";
 import type { NotchRimSettingValues } from "./notchRimSettings";
 import type { NotchRingSettingValues } from "./notchRingSettings";
-import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "./lyricsSettings";
+import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill, TaskbarLyricsContent, TaskbarLyricsIdle } from "./lyricsSettings";
 import type { TodoProject } from "../todo-projects/prefix";
 
 export type TranslationTarget = "window" | "island";
@@ -178,6 +178,9 @@ export type IslandSettings = CalendarSettingValues &
   lyricsKaraokeGlow: boolean;
   lyricsKaraokeFollow: boolean;
   lyricsCoverColor: boolean;
+  lyricsTaskbar: boolean;
+  lyricsTaskbarContent: TaskbarLyricsContent;
+  lyricsTaskbarIdle: TaskbarLyricsIdle;
   mailEnabled: boolean;
   agentTitleEnabled: boolean;
   agentTitleMode: AgentTitleMode;

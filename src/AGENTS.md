@@ -15,6 +15,7 @@ src/
 │   ├── onboarding/          # 新手引导（?window=onboarding）：透明遮罩压暗屏幕、照亮真岛，旁边的卡片分幕讲解（有哪几幕、各在什么情况下出现，看 `OnboardingWindow.tsx` 的 `ACTS` 和它下面的筛选）；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开；引导开着时岛放演示内容（island/useOnboardingDemo.ts）
 │   ├── tray-menu/           # 托盘卡片（?window=tray-menu）：点托盘 / 菜单栏图标弹出的卡片，以及岛收起态的右键菜单（IslandMenuCard），几种布局、Agent / 媒体 / 会议块、功能按钮和卡片偏好（窗口的创建和定位在 src-tauri/src/tray_menu/）
 │   ├── drag-grid/           # 拖岛时的中线辅助线（?window=drag-grid）：只画横竖两条线，状态由 Rust 经 api.ts 推来
+│   ├── taskbar-lyrics/      # Win11 任务栏上的歌词条（?window=taskbar-lyrics）：收岛的音乐 runner 推来的数据（features/media/taskbar/），挂到任务栏、按任务栏状态显示或隐藏；按钮经事件转回岛执行
 │   ├── plugin-window/       # 第 3 版插件的独立窗口（?window=plugin-window，实验能力 windows/v1）：overlay 带宿主受控护栏标题条（显示插件名与关闭按钮），渲染 plugin-window.view/v1 插槽
 │   └── translation/         # 快捷翻译窗口
 ├── features/                # 业务领域，每个领域自包含

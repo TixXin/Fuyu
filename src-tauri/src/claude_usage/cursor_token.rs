@@ -45,9 +45,34 @@ fn decrypt_with_keychain(blob: &[u8]) -> Option<String> {
     })
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+fn decrypt_with_keychain(blob: &[u8]) -> Option<String> {
+    let path = std::path::PathBuf::from(std::env::var_os("APPDATA")?).join("Cursor").join("Local State");
+    let state: serde_json::Value = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
+    let wrapped = STANDARD.decode(state["os_crypt"]["encrypted_key"].as_str()?).ok()?;
+    let key = crate::win32::dpapi::unprotect(wrapped.strip_prefix(b"DPAPI")?)?;
+    decrypt_gcm(blob, &key)
+}
+
+#[cfg(all(not(target_os = "macos"), not(windows)))]
 fn decrypt_with_keychain(_blob: &[u8]) -> Option<String> {
     None
+}
+
+#[cfg(any(windows, test))]
+pub(super) fn decrypt_gcm(blob: &[u8], key: &[u8]) -> Option<String> {
+    use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit};
+    const NONCE_LEN: usize = 12;
+    const TAG_LEN: usize = 16;
+    let payload = blob.strip_prefix(b"v10")?;
+    if payload.len() <= NONCE_LEN + TAG_LEN {
+        return None;
+    }
+    let (nonce, sealed) = payload.split_at(NONCE_LEN);
+    let cipher = Aes256Gcm::new_from_slice(key).ok()?;
+    let plain = cipher.decrypt(&nonce.try_into().ok()?, sealed).ok()?;
+    let token = std::str::from_utf8(&plain).ok()?.trim();
+    usable(token).then(|| token.to_string())
 }
 
 #[cfg(target_os = "macos")]

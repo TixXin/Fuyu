@@ -40,7 +40,11 @@ export function useLineHover() {
   const cellsOf = useWindowCells();
   return (line: UsageLine, now: number): HoverCardLine[] => {
     const name = USAGE_SOURCE_LABELS[line.source];
-    if (!line.usage) return [{ text: name }, { text: creditParts(line.credit, t.agent.usage).full, muted: true }];
+    if (!line.usage) {
+      const plan = line.credit.kind === "credits" ? line.credit.plan : null;
+      const planLine = plan ? [{ text: t.claudeUsage.workbuddyPlan(t.claudeUsage.workbuddyPlans[plan] ?? plan), muted: true }] : [];
+      return [{ text: name }, { text: creditParts(line.credit, t.agent.usage).full, muted: true }, ...planLine];
+    }
     const rows = cellsOf(line.usage).map((cell) => {
       const reset = untilReset(cell.window.resetsAt, now);
       return { text: `${cell.label} ${Math.round(cell.window.used)}%${reset ? ` · ${t.agent.usage.resetsIn(reset)}` : ""}`, color: LEVEL_COLOR[usageLevel(cell.window.used)] };

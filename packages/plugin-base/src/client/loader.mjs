@@ -1,8 +1,7 @@
 import { Context, Service } from "cordis";
 import { HostBridge } from "./bridge.mjs";
-import { PluginIsland } from "./island-service.mjs";
+import { APP_CLIENT_SERVICES } from "../app/client.mjs";
 import { PluginLocale } from "./locale-service.mjs";
-import { PluginSettings } from "./settings-service.mjs";
 import { Slots } from "./slot-service.mjs";
 
 class PluginServices extends Service {
@@ -28,28 +27,13 @@ class PluginServices extends Service {
   }
 }
 
-export function createLoader({
-  registry,
-  base,
-  bridge,
-  connectPlugin = null,
-  openSettings = null,
-  reportSetup = null,
-  island = null,
-  locale = null,
-  importModule = (url) => import(/* @vite-ignore */ url),
-  checkFile = defaultCheck,
-  onStatus,
-}) {
+export function createLoader(options) {
+  const { registry, base, bridge, connectPlugin = null, locale = null, appServices = APP_CLIENT_SERVICES, importModule = (url) => import(/* @vite-ignore */ url), checkFile = defaultCheck, onStatus } = options;
+  const appNames = appServices.map((entry) => entry.name);
+  const installApp = (ctx) => appServices.map((entry) => ctx.plugin(entry.service, entry.options(options)));
   const root = new Context();
-  const ready = Promise.all([
-    root.plugin(Slots, registry),
-    root.plugin(PluginSettings, { open: openSettings, setup: reportSetup }),
-    root.plugin(PluginIsland, { control: island }),
-    root.plugin(PluginLocale, locale),
-    bridge ? root.plugin(HostBridge, bridge) : null,
-  ]);
-  const baseInject = bridge ? ["slots", "settings", "island", "locale", "host"] : ["slots", "settings", "island", "locale"];
+  const ready = Promise.all([root.plugin(Slots, registry), ...installApp(root), root.plugin(PluginLocale, locale), bridge ? root.plugin(HostBridge, bridge) : null]);
+  const baseInject = bridge ? ["slots", ...appNames, "locale", "host"] : ["slots", ...appNames, "locale"];
   const loaded = new Map();
   const status = new Map();
 
@@ -69,13 +53,8 @@ export function createLoader({
       return { host: root, inject: baseInject, close: null };
     }
     const isolated = new Context();
-    const tasks = [
-      isolated.plugin(Slots, registry),
-      isolated.plugin(PluginSettings, { open: openSettings, setup: reportSetup }),
-      isolated.plugin(PluginIsland, { control: island }),
-      isolated.plugin(PluginLocale, locale),
-    ];
-    const inject = ["slots", "settings", "island", "locale"];
+    const tasks = [isolated.plugin(Slots, registry), ...installApp(isolated), isolated.plugin(PluginLocale, locale)];
+    const inject = ["slots", ...appNames, "locale"];
     const pluginBridge = scoped.bridge ?? bridge;
     if (pluginBridge) {
       tasks.push(isolated.plugin(HostBridge, pluginBridge));

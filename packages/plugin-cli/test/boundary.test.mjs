@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const ALLOWED = [/^node:/, /^\.\.?\//, /^@fuyu\/plugin-(manifest|market|review)(\/|$)/, /^@fuyu\/plugin-base\/protocol$/, /^esbuild$/];
+const PACKAGES = ["@fuyu/plugin-manifest", "@fuyu/plugin-market", "@fuyu/plugin-review"];
+const allowedPackage = (specifier) => PACKAGES.some((name) => specifier === name || specifier.startsWith(`${name}/`)) || specifier === "@fuyu/plugin-base/protocol";
+const ALLOWED = [/^node:/, /^\.\.?\//, { test: allowedPackage }, /^esbuild$/];
 const HARNESS = "src/shots/harness.mjs";
 const HARNESS_ALLOWED = [/^react$/, /^react-dom\/client$/, /^fuyu-shots:/];
 

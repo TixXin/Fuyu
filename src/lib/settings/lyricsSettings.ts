@@ -19,7 +19,13 @@ export type LyricsSettingValues = {
   lyricsKaraokeGlow: boolean;
   lyricsKaraokeFollow: boolean;
   lyricsCoverColor: boolean;
+  lyricsTaskbar: boolean;
+  lyricsTaskbarContent: TaskbarLyricsContent;
+  lyricsTaskbarIdle: TaskbarLyricsIdle;
 };
+
+export type TaskbarLyricsContent = "both" | "lyrics" | "song";
+export type TaskbarLyricsIdle = "hide" | "icon";
 
 export type LyricsKaraokeFallback = "line" | "none";
 export type LyricsKaraokeFill = "smooth" | "word";
@@ -56,6 +62,9 @@ export const DEFAULT_LYRICS_SETTINGS: LyricsSettingValues = {
   lyricsKaraokeGlow: false,
   lyricsKaraokeFollow: true,
   lyricsCoverColor: false,
+  lyricsTaskbar: false,
+  lyricsTaskbarContent: "both",
+  lyricsTaskbarIdle: "hide",
 };
 
 export function normalizeLyricsSettings(saved: Partial<Record<keyof LyricsSettingValues, unknown>> | null | undefined): LyricsSettingValues {
@@ -79,6 +88,9 @@ export function normalizeLyricsSettings(saved: Partial<Record<keyof LyricsSettin
     lyricsKaraokeGlow: saved?.lyricsKaraokeGlow === true,
     lyricsKaraokeFollow: saved?.lyricsKaraokeFollow !== false,
     lyricsCoverColor: saved?.lyricsCoverColor === true,
+    lyricsTaskbar: saved?.lyricsTaskbar === true,
+    lyricsTaskbarContent: saved?.lyricsTaskbarContent === "lyrics" || saved?.lyricsTaskbarContent === "song" ? saved.lyricsTaskbarContent : "both",
+    lyricsTaskbarIdle: saved?.lyricsTaskbarIdle === "icon" ? "icon" : "hide",
     lyricsOffsetMs: typeof offset === "number" && Number.isFinite(offset) ? Math.round(Math.min(3000, Math.max(-3000, offset)) / 100) * 100 : 0,
   };
 }

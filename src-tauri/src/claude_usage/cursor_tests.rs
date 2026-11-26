@@ -81,6 +81,23 @@ fn safe_storage_tokens_decrypt_with_the_keychain_password() {
 }
 
 #[test]
+fn windows_safe_storage_token_decrypts_with_the_local_state_key() {
+    use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit};
+    use crate::claude_usage::cursor_token::decrypt_gcm;
+    let key = [7u8; 32];
+    let nonce = [9u8; 12];
+    let sealed = Aes256Gcm::new_from_slice(&key).unwrap().encrypt(&nonce.into(), b"eyJ.payload.sig".as_slice()).unwrap();
+    let blob = [b"v10".as_slice(), &nonce, &sealed].concat();
+    assert_eq!(decrypt_gcm(&blob, &key).as_deref(), Some("eyJ.payload.sig"));
+    assert_eq!(decrypt_gcm(&blob, &[8u8; 32]), None);
+    assert_eq!(decrypt_gcm(&blob[..20], &key), None);
+    assert_eq!(decrypt_gcm(&blob[3..], &key), None);
+    let mut tampered = blob.clone();
+    tampered[20] ^= 1;
+    assert_eq!(decrypt_gcm(&tampered, &key), None);
+}
+
+#[test]
 fn membership_becomes_a_plan_label() {
     assert_eq!(plan_label("pro").as_deref(), Some("Pro"));
     assert_eq!(plan_label("\"free_trial\"").as_deref(), Some("Free Trial"));

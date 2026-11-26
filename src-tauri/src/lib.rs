@@ -53,6 +53,8 @@ mod system_widgets;
 mod theme_market;
 #[cfg_attr(not(windows), path = "taskbar_host/unsupported.rs")]
 mod taskbar_host;
+#[cfg_attr(not(windows), path = "taskbar_lyrics/unsupported.rs")]
+mod taskbar_lyrics;
 mod timer;
 #[cfg(any(windows, test))]
 mod toast_notifications;
@@ -342,6 +344,7 @@ pub fn run() {
             tray_menu;
             tray_visibility;
             taskbar_host;
+            taskbar_lyrics;
             system_levels;
             caps_lock;
             system_widgets;

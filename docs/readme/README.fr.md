@@ -194,10 +194,12 @@ Technologies : Tauri 2, React 19 + TypeScript et Rust. Les versions et les mise
 
 ## Communauté
 
-Une question, une idée, ou simplement envie de discuter ? Rejoignez notre [serveur Discord](https://discord.gg/azu5aZFuRY) ou scannez le code pour rejoindre notre groupe d'utilisateurs sur WeChat (surtout en chinois) :
+Une question, une idée, ou simplement envie de discuter ? Rejoignez notre [serveur Discord](https://discord.gg/azu5aZFuRY), notre [groupe QQ (610594458)](https://qm.qq.com/q/EDhCUUcPse), ou scannez les codes pour rejoindre nos groupes d'utilisateurs sur WeChat / QQ (surtout en chinois) :
 
 <p align="center">
-  <img src="../assets/readme/wechat-group.png" alt="Code QR du groupe d'utilisateurs de Fuyu sur WeChat" width="220">
+  <img src="../assets/readme/wechat-group.png" alt="Code QR du groupe d'utilisateurs de Fuyu sur WeChat" height="220">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="../assets/readme/qq-group.png" alt="Code QR du groupe d'utilisateurs de Fuyu sur QQ (610594458)" height="220">
 </p>
 
 ## Contribuer

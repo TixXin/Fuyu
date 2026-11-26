@@ -20,6 +20,7 @@
     "release:share": "node scripts/release/share-card.mjs",
     "plugins:resign": "node scripts/plugins/resign-market.mjs",
     "plugins:keygen": "node scripts/plugins/plugin-signing.mjs keygen",
+    "cordis": "node scripts/cordis/export.mjs",
     "plugin:dev": "node scripts/plugins-v3/dev-official.mjs",
     "tauri": "tauri",
     "test": "node --test \"tests/**/*.test.mjs\" \"packages/*/test/**/*.test.mjs\"",

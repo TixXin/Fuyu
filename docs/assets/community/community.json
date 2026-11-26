@@ -1,13 +1,21 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-19",
+  "updatedAt": "2026-11-25",
   "groups": [
     {
       "id": "wechat-users",
       "platform": "wechat",
       "name": { "zh-CN": "浮屿用户交流群", "en": "Fuyu users" },
       "qr": "wechat-group.png",
-      "expiresAt": "2026-11-25"
+      "expiresAt": "2026-12-02"
+    },
+    {
+      "id": "qq-users",
+      "platform": "qq",
+      "name": { "zh-CN": "Fuyu-浮屿交流群", "en": "Fuyu QQ group" },
+      "qr": "qq-group.png",
+      "number": "610594458",
+      "link": "https://qm.qq.com/q/EDhCUUcPse"
     }
   ]
 }

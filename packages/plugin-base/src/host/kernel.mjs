@@ -5,6 +5,7 @@ import Fs from "@cordisjs/fs";
 import NodeFs from "@cordisjs/fs-node";
 import Loader from "@cordisjs/loader";
 import { Context } from "cordis";
+import { APP_HOST_EXTENSIONS } from "../app/host.mjs";
 import { HOST_SHARED_MODULES } from "../protocol.mjs";
 import { builtinMounts, essentialServices, readBuiltins } from "./builtins.mjs";
 import { Clients } from "./clients.mjs";
@@ -15,12 +16,10 @@ import { ControlledHttp } from "./http.mjs";
 import { recordLogs } from "./logs.mjs";
 import { PluginConfig } from "./plugin-config.mjs";
 import { DEV_WATCHED, watchBuiltins } from "./reload.mjs";
-import { IslandControl } from "./island.mjs";
 import { HostLocale } from "./locale.mjs";
 import { RustBridge } from "./rust.mjs";
 import { PluginSecrets } from "./secrets.mjs";
 import { Services } from "./services.mjs";
-import { SettingsOpener } from "./settings.mjs";
 import { shareModules } from "./share.mjs";
 import { DEV_PREFIX, SOURCE } from "./sources.mjs";
 import { INTERNAL, pluginStatus, trackImportErrors, watchStatus } from "./status.mjs";
@@ -34,7 +33,6 @@ export const PLUGINS_FILE = new URL("./plugins-file.mjs", import.meta.url).href;
 export const HMR = import.meta.resolve("@cordisjs/hmr");
 const REREAD_AFTER_MS = [50, 400];
 const ACTIVE = 2;
-const SETUP_KEPT_STATES = ["loading", "waiting"];
 
 async function watchConfig(ctx, id) {
   const include = [...ctx.loader.entries()].find((entry) => entry.id === id)?.subtree;
@@ -68,7 +66,7 @@ function hostInfo(startedAt, safe, dev) {
   return { pid: process.pid, node: process.versions.node, startedAt, safe, dev, rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, cpuMs: Math.round((cpu.user + cpu.system) / 1000) };
 }
 
-export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, appVersion = null, locale = "zh-CN", apiNames = [], watch = false, dev = false, safe = null, bisect = [], faultLimit, onLog, rpc = null, fetchImpl = globalThis.fetch } = {}) {
+export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, appVersion = null, locale = "zh-CN", apiNames = [], extensions = APP_HOST_EXTENSIONS, watch = false, dev = false, safe = null, bisect = [], faultLimit, onLog, rpc = null, fetchImpl = globalThis.fetch } = {}) {
   if (!dir) throw new Error("startHost needs the directory that holds the plugin configuration");
   const startedAt = Date.now();
   const catalog = builtins ? readBuiltins(builtins) : null;
@@ -99,10 +97,13 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   const secrets = new PluginSecrets({ services });
   secrets.install(ctx);
   if (rpc) secrets.attach(rpc);
-  const settings = new SettingsOpener();
-  settings.install(ctx);
-  const island = new IslandControl();
-  island.install(ctx);
+  const added = extensions.map((extension) => {
+    const instance = extension.create({ dir, dataRoot, services, usage });
+    instance.install?.(ctx);
+    if (rpc) instance.attach?.(rpc);
+    return [extension.name, instance];
+  });
+  const instances = added.map(([, instance]) => instance);
   const hostLocale = new HostLocale(locale);
   hostLocale.install(ctx);
   const http = new ControlledHttp({ fetchImpl });
@@ -130,13 +131,12 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     unreachableClients: () => ctx.clients.unreachable(),
     undeclaredCommands: (plugin) => commands.undeclaredOf(plugin),
     undeclaredNetwork: (plugin) => http.undeclaredOf(plugin),
-    setup: (plugin, state) => {
-      if (state === "running") return settings.setupOf(plugin);
-      if (!SETUP_KEPT_STATES.includes(state)) settings.forget(plugin);
-      return null;
+    statusExtra: (plugin, state) => {
+      const parts = instances.map((instance) => instance.statusOf?.(plugin, state)).filter(Boolean);
+      return parts.length > 0 ? Object.assign({}, ...parts) : null;
     },
     subscribe: (listener) => [
-      settings.watch(listener),
+      ...instances.filter((instance) => typeof instance.watch === "function").map((instance) => instance.watch(listener)),
       services.watch(listener),
       ctx.clients.watch(listener),
       commands.watch(listener),
@@ -158,8 +158,8 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     rustListeners: () => rust.counts(),
     watchClients: (onChange) => ctx.clients.watch(onChange),
     serviceHub: services,
-    settingsOpener: settings,
-    islandControl: island,
+    ...Object.fromEntries(added),
+    extensions: instances,
     locale: hostLocale,
     services: () => services.list(),
     watchServices: (onChange) => services.watch(onChange),

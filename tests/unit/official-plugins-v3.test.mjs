@@ -23,6 +23,7 @@ const OFFICIAL_PLUGINS = [
   "system-monitor",
   "launcher",
   "calculator",
+  "file-search",
 ];
 
 const scratch = mkdtempSync(join(tmpdir(), "fuyu-official-plugins-v3-"));
@@ -71,7 +72,7 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
     const checkResult = await check(dir, { official: true, allowExperimental: false });
     assert.equal(checkResult.ok, true, `${expectedId} check errors: ${JSON.stringify(checkResult.errors)}`);
     assert.deepEqual(checkResult.errors, [], `${expectedId} check errors must be empty`);
-    if (slug === "launcher" || slug === "system-monitor") {
+    if (slug === "launcher" || slug === "system-monitor" || slug === "file-search") {
       assert.ok(
         checkResult.warnings.every((item) => item.code === "review:sensitive"),
         `${expectedId} check warnings must only contain review:sensitive notices, got ${JSON.stringify(checkResult.warnings)}`,

@@ -28,5 +28,5 @@ export type CrashVariant = "island" | "window" | "silent";
 
 export function crashVariant(windowKind: string | null): CrashVariant {
   if (windowKind === null) return "island";
-  return windowKind === "drag-grid" ? "silent" : "window";
+  return windowKind === "drag-grid" || windowKind === "taskbar-lyrics" ? "silent" : "window";
 }

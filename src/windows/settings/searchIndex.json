@@ -1123,12 +1123,12 @@
       "zh-CN": {
         "group": "",
         "title": "WorkBuddy",
-        "description": "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。"
+        "description": "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分，以及 WorkBuddy 本地记下的套餐（如体验版）。剩余额度要登录态联网才查得到，浮屿不读，请在 WorkBuddy 里看。"
       },
       "en": {
         "group": "",
         "title": "WorkBuddy",
-        "description": "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card."
+        "description": "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card, plus the plan WorkBuddy saved locally (such as Free trial). Remaining credits need WorkBuddy's signed-in session, so Fuyu does not read them; check them in WorkBuddy."
       }
     },
     {
@@ -2853,6 +2853,62 @@
           "Note"
         ]
       }
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "任务栏",
+        "title": "在任务栏显示歌词",
+        "description": "在 Windows 11 任务栏的空白处放一条歌词：封面、当前一句歌词和播放按钮，点它打开岛的音乐页。岛也吸附在任务栏时，歌词条排在岛的左边。"
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "Show lyrics on the taskbar",
+        "description": "Puts a lyrics strip in the free space of the Windows 11 taskbar: the cover, the current line and playback buttons. Click it to open the island's music page. When the island is docked to the taskbar too, the strip sits to its left."
+      },
+      "since": "next"
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "任务栏",
+        "title": "显示内容",
+        "options": [
+          "歌词和歌名",
+          "只显示歌词",
+          "只显示歌名"
+        ]
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "Show",
+        "options": [
+          "Lyrics and song",
+          "Lyrics only",
+          "Song only"
+        ]
+      },
+      "since": "next"
+    },
+    {
+      "page": "music",
+      "zh-CN": {
+        "group": "任务栏",
+        "title": "不在播放时",
+        "options": [
+          "隐藏",
+          "只显示图标"
+        ]
+      },
+      "en": {
+        "group": "Taskbar",
+        "title": "When nothing plays",
+        "options": [
+          "Hide",
+          "Icon only"
+        ]
+      },
+      "since": "next"
     },
     {
       "page": "music",

@@ -194,10 +194,12 @@ pnpm tauri build    # собрать установщики
 
 ## Сообщество
 
-Есть вопросы, идеи или просто хотите пообщаться? Присоединяйтесь к нашему [серверу Discord](https://discord.gg/azu5aZFuRY) или отсканируйте код, чтобы вступить в нашу группу пользователей в WeChat (в основном на китайском):
+Есть вопросы, идеи или просто хотите пообщаться? Присоединяйтесь к нашему [серверу Discord](https://discord.gg/azu5aZFuRY), [группе QQ (610594458)](https://qm.qq.com/q/EDhCUUcPse) или отсканируйте коды, чтобы вступить в наши группы пользователей в WeChat / QQ (в основном на китайском):
 
 <p align="center">
-  <img src="../assets/readme/wechat-group.png" alt="QR-код группы пользователей Fuyu в WeChat" width="220">
+  <img src="../assets/readme/wechat-group.png" alt="QR-код группы пользователей Fuyu в WeChat" height="220">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="../assets/readme/qq-group.png" alt="QR-код группы пользователей Fuyu в QQ (610594458)" height="220">
 </p>
 
 ## Как помочь проекту

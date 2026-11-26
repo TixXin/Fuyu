@@ -194,10 +194,12 @@ pnpm tauri build    # インストーラーをビルド
 
 ## ユーザーコミュニティ
 
-困ったこと、アイデア、ちょっとした雑談でも、[Discord サーバー](https://discord.gg/azu5aZFuRY) に参加するか、QR コードを読み取って WeChat グループにどうぞ（主に中国語です）：
+困ったこと、アイデア、ちょっとした雑談でも、[Discord サーバー](https://discord.gg/azu5aZFuRY) や [QQ グループ（610594458）](https://qm.qq.com/q/EDhCUUcPse) に参加するか、QR コードを読み取って WeChat / QQ グループにどうぞ（主に中国語です）：
 
 <p align="center">
-  <img src="../assets/readme/wechat-group.png" alt="Fuyu ユーザーグループの WeChat QR コード" width="220">
+  <img src="../assets/readme/wechat-group.png" alt="Fuyu ユーザーグループの WeChat QR コード" height="220">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="../assets/readme/qq-group.png" alt="Fuyu ユーザーグループの QQ QR コード（610594458）" height="220">
 </p>
 
 ## コントリビュート

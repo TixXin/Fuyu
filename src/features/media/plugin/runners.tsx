@@ -11,6 +11,7 @@ import { coverAccentVariables, useCoverColor } from "../useCoverColor";
 import { useIslandLyrics } from "../useIslandLyrics";
 import { useMediaState } from "../useMediaState";
 import { usePublishTrackArt } from "../usePublishTrackArt";
+import { taskbarLyricsWanted, useTaskbarLyricsFeed } from "../taskbar/useTaskbarLyricsFeed";
 import { demoMediaState } from "./demo";
 import { mediaIsland, useLyricWidgetsShown } from "./islandState";
 import { lyricLineContribution } from "./lyricLine";
@@ -39,7 +40,7 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   const media = useMemo(() => (demoState && live.mediaState.playbackStatus !== "playing" ? { ...live, mediaState: demoState } : live), [demoState, live]);
   const { mediaState, runMediaCommand } = media;
   const lyricWidgets = useLyricWidgetsShown();
-  const { lyrics, lyricLine } = useIslandLyrics(settings, mediaState, { page, barShown: mode === "collapsed" && !isTucked && barText, widget: lyricWidgets });
+  const { lyrics, lyricLine } = useIslandLyrics(settings, mediaState, { page, barShown: mode === "collapsed" && !isTucked && barText, widget: lyricWidgets || taskbarLyricsWanted(settings) });
   const waveformVisible = !isTucked && (mode === "collapsed" || (page === "music" && !lyrics.lines));
   useAudioLevel(
     live.applyAudioLevel,
@@ -53,6 +54,7 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   const sideCover = settings.sideMusicCover;
   const sideLyric = settings.sideHeightMode !== "content" && Boolean(lyricLine?.text);
   usePublishTrackArt(live.mediaState, settings.musicEnabled);
+  useTaskbarLyricsFeed({ settings, mediaState, lyrics, runMediaCommand, openMusic: () => openIslandPage("music") });
   mediaIsland.useProvide(useMemo(() => ({ media, lyrics, lyricLine, sideCover, sideLyric }), [media, lyrics, lyricLine, sideCover, sideLyric]));
   useIslandAction("media.previous", () => void runMediaCommand("media_previous"));
   useIslandAction("media.play-pause", () => void runMediaCommand("media_play_pause"));

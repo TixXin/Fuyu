@@ -194,10 +194,12 @@ pnpm tauri build    # 打包安装程序
 
 ## 用户交流群
 
-用着有问题、有想法，或者只是想聊聊，欢迎加入 [Discord 社区](https://discord.gg/azu5aZFuRY) 或扫码进微信群：
+用着有问题、有想法，或者只是想聊聊，欢迎加入 [Discord 社区](https://discord.gg/azu5aZFuRY)、[QQ 群（610594458）](https://qm.qq.com/q/EDhCUUcPse) 或扫码进微信群 / QQ 群：
 
 <p align="center">
-  <img src="docs/assets/readme/wechat-group.png" alt="浮屿用户交流群的微信二维码" width="220">
+  <img src="docs/assets/readme/wechat-group.png" alt="浮屿用户交流群的微信二维码" height="220">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/assets/readme/qq-group.png" alt="Fuyu-浮屿交流群的 QQ 群二维码（群号 610594458）" height="220">
 </p>
 
 ## 参与贡献

@@ -13,6 +13,7 @@ src-tauri/src/
 ├── tray_mark.rs             # 只在 macOS 上编译：菜单栏用的单色模板图，按 docs/assets/logo/menubar-template.svg 的水母剪影在代码里画
 ├── tray_visibility.rs       # 托盘 / 菜单栏图标显示与否（tray-icon.json，建托盘时页面还没加载所以放原生侧）；隐藏后再次打开浮屿时显示岛并打开设置
 ├── taskbar_host/            # 把窗口挂到 Win11 任务栏上（C154）：窗口所有者设成任务栏、加 NOACTIVATE | TOOLWINDOW；岛的预留槽位另由一个透明原生占位窗口（win32/taskbar_slot.rs）挂在任务栏上，岛的窗口挂在占位窗口下面（dock.rs，每 500ms 跟随任务栏位置、自动隐藏、全屏和 Explorer 重启，发 taskbar-dock-changed）；空白区域和排位的纯计算在 layout.rs，读任务栏在 snapshot.rs；命令 get_taskbar_layout / taskbar_dock / taskbar_undock；Mac 上是 unsupported.rs
+├── taskbar_lyrics/          # 任务栏歌词条窗口 taskbar-lyrics（C154.3）：命令 set_taskbar_lyrics（只在 Win11 建、关时取下并销毁）/ show_taskbar_lyrics（不抢焦点地显示或隐藏）；挂任务栏走 taskbar_host；Mac 上是 unsupported.rs
 ├── island/                  # 主窗口：命令、窗口状态、几何计算、毛玻璃、鼠标穿透（banner_hit.rs：新消息横幅的可点区域）、贴边动画
 ├── wallpaper/               # 读各显示器的桌面壁纸给岛的背景用（get_wallpapers，thumbnail.rs 缩成 JPEG），变了发 wallpaper-changed；Mac 上是 unsupported.rs
 ├── todos/                   # 待办与每日笔记：todos.json 持久化、从旧版 localStorage 迁移、命令与插件/本地接口读写
@@ -41,7 +42,7 @@ src-tauri/src/
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/
 ├── system_levels/           # 音量、亮度变化提示：后台线程读默认输出的音量和静音、屏幕亮度（win32/brightness.rs 的 WMI、win32/monitor_ddc.rs 的 DDC/CI，macos/brightness.rs），变化时发 system-level-changed 事件；命令 get_system_levels / set_system_volume / set_system_brightness 给面板的音量亮度组件
 ├── system_widgets/          # 面板的系统组件：命令 get_system_stats（CPU 占用、内存、网速、电池；CPU 和网速是和上一次调用的差，stats.rs 是纯计算）、launch_quick_app（内置四项 files、terminal、calculator、settings，launch.rs）、quick_app_info / launch_quick_app_path（用户自己加的应用，只认存在的 .exe / .lnk 或 .app 绝对路径，apps.rs）；读数在 win32/、macos/ 的 system_stats.rs
-├── device_events/           # 设备提示：后台线程列出在用的耳机和蓝牙音频输出（win32/audio_outputs.rs）、读蓝牙电量（win32/devnode.rs）和电源（win32/power.rs），变化时发 device-alert 事件；判断规则在 tracker.rs
+├── device_events/           # 设备提示：后台线程列出在用的耳机和蓝牙音频输出（win32/audio_outputs.rs）、读蓝牙电量（win32/devnode.rs）和电源（win32/power.rs）、罗技接收器后面键鼠的电量（logitech/，经 hidapi 发 HID++，两个平台共用），变化时发 device-alert 事件；判断规则在 tracker.rs
 ├── device_use/              # 摄像头、麦克风正在被哪些程序使用（读注册表 CapabilityAccessManager\ConsentStore），打开系统隐私设置；Mac 上整个模块换成 device_use/macos.rs
 ├── mail/                    # 邮箱（命令名仍为 *_qq_mail）：附件（attachments.rs）、命令、每个邮箱一个后台服务（accounts.rs）及其崩溃后重启（supervisor.rs）、IMAP 会话、正文与内嵌图片解析、凭据
 ├── qq_notifications/        # QQ 通知监听；repair-qq-notification-registration.ps1 编入二进制，也可手动运行
@@ -79,7 +80,7 @@ src-tauri/src/
                              # com（COM / WinRT 初始化守卫）、audio、ole（文件拖出）、process / process_times / process_env /
                              # process_memory / process_tree、registry、credentials、dwm、icon、ocr、chinese、screen_capture、
                              # capture_targets、taskbar、taskbar_shell / taskbar_uia（找任务栏、设所有者；UIA 读任务栏按钮和托盘的范围）、taskbar_slot（任务栏里的透明占位窗口，自带消息循环线程）、uia_list / uia_tabs、brightness、
-                             # notification_state（前台是否有全屏程序）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、webview_visibility（窗口隐藏、显示时设 IsVisible，D117）、webview_scale（关掉 WebView2 的缩放自动检测、设 RasterizationScale，D122）、
+                             # notification_state（前台是否有全屏程序）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、webview_visibility（窗口隐藏、显示时设 IsVisible，D117）、webview_scale（关掉 WebView2 的缩放自动检测、设 RasterizationScale，D122）、webview_shared_buffer（PostSharedBufferToScript 共享内存投递截图帧）、
                              # job（插件宿主进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
                              # session（是否锁屏与键鼠空闲时间，和 macos/session.rs 同签名）、session_end（关机注销时先收到 WM_QUERYENDSESSION，插件宿主据此停下、不再重启 node）、audio_outputs（在用的音频输出及类型）、
                              # devnode（设备节点属性：容器、蓝牙电量）、power（电源与电池）、graphics_capture（D3D11 设备与 WGC 显示器采集，帧留在 GPU）、

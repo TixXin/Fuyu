@@ -29,6 +29,10 @@ pub(super) struct Grab {
     pub(super) rgba: Vec<u8>,
 }
 
+pub(super) fn prewarm() {
+    screen_capture::prewarm();
+}
+
 pub(super) fn ensure_access() -> Result<(), String> {
     if screen_capture::has_access() {
         return Ok(());

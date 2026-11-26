@@ -45,6 +45,7 @@ fn empty(err: Option<UsageError>) -> HoverUsage {
         available: None,
         credits: None,
         wallets: Vec::new(),
+        plan: None,
         error: err,
     }
 }
@@ -111,7 +112,10 @@ fn scan_local(now: i64) -> HoverUsage {
     let Some(home) = super::home_dir() else {
         return empty(Some(error(UsageErrorKind::NoSessions, "User home directory is unknown.")));
     };
-    scan_in_roots(&roots(&home), now, local_day_start_ms(now))
+    let roots = roots(&home);
+    let mut usage = scan_in_roots(&roots, now, local_day_start_ms(now));
+    usage.plan = super::workbuddy_plan::read_plan(&roots, now);
+    usage
 }
 
 pub(super) fn scan_in_roots(roots: &[PathBuf], now: i64, day_start_ms: i64) -> HoverUsage {
@@ -143,6 +147,7 @@ pub(super) fn scan_in_roots(roots: &[PathBuf], now: i64, day_start_ms: i64) -> H
             available: None,
             credits: Some(credits),
             wallets: Vec::new(),
+            plan: None,
             error: None,
         },
         None => empty(Some(error(

@@ -2,6 +2,9 @@ import type { Context } from "cordis";
 import type { ManifestIssue, ValidateManifestOptions } from "@fuyu/plugin-manifest";
 import type { LocaleId, LocalizedText, ServiceCallName } from "../protocol.mjs";
 import type { ServiceEntry } from "../services.mjs";
+import type { AppHost, AppPluginStatus } from "../app/host.mjs";
+
+export * from "../app/host.mjs";
 
 export interface LogEntry {
   at: number;
@@ -27,7 +30,7 @@ export interface PluginUsage {
   errors: number;
 }
 
-export interface PluginStatus {
+export interface PluginStatus extends AppPluginStatus {
   id: string;
   name: string;
   state: PluginState;
@@ -44,11 +47,6 @@ export interface PluginStatus {
   disabledServices?: string[];
   provides?: string[];
   replacedServices?: Array<{ service: string; by: string }>;
-  setup?: PluginSetup;
-}
-
-export interface PluginSetup {
-  hint: string | { "zh-CN"?: string; en?: string } | null;
 }
 
 export type PluginSource = "builtin" | "market" | "manual" | "dev" | "file";
@@ -126,6 +124,20 @@ export class RustBridge {
   counts(): Record<string, number>;
 }
 
+export interface HostExtensionInstance {
+  install?(ctx: Context): unknown;
+  attach?(rpc: HostRpc): unknown;
+  attachWindows?(windows: { connected(): string[]; publish(name: string, data: unknown): void }): unknown;
+  windowCall?(method: string, params: any, window: string, plugin: string | null): { value: unknown } | undefined;
+  statusOf?(plugin: string, state: PluginState): Record<string, unknown> | null;
+  watch?(listener: () => void): () => void;
+}
+
+export interface HostExtension {
+  name: string;
+  create(context: { dir: string; dataRoot: string; services: ServiceHub; usage: unknown }): HostExtensionInstance;
+}
+
 export interface HostOptions {
   dir: string;
   config?: string;
@@ -134,6 +146,7 @@ export interface HostOptions {
   appVersion?: string | null;
   locale?: string;
   apiNames?: string[];
+  extensions?: readonly HostExtension[];
   watch?: boolean;
   dev?: boolean;
   safe?: SafeMode | null;
@@ -152,27 +165,7 @@ export declare class HostLocale {
   watch(listener: (locale: LocaleId) => void): () => void;
 }
 
-export interface SettingsOpener {
-  attachWindows(windows: { connected(): string[]; publish(name: string, data: unknown): void }): () => void;
-  open(plugin: string): Promise<void>;
-  setup(plugin: string, state: { needed?: unknown; hint?: unknown } | null | undefined): void;
-  setupOf(plugin: string): PluginSetup | null;
-  forget(plugin: string): void;
-  watch(listener: () => void): () => void;
-}
-
-export interface IslandControlHub {
-  attachWindows(windows: { connected(): string[]; publish(name: string, data: unknown): void }): () => void;
-  request(action: "open" | "collapse", plugin: string, page?: string | null): Promise<unknown>;
-  notify(notice: { pluginId: string } & Record<string, unknown>): Promise<boolean>;
-  settle(params: { id?: unknown; value?: unknown; error?: { code?: unknown; message?: unknown } | null } | null | undefined, window: string): boolean;
-  onNoticeAction(listener: (data: { pluginId: string; action: string }) => void): () => void;
-  noticeAction(params: unknown, window: string): boolean;
-  timeoutMs: number;
-  noticeTimeoutMs: number;
-}
-
-export interface Host {
+export interface Host extends AppHost {
   ctx: Context;
   logs: LogEntry[];
   status(): PluginStatus[];
@@ -186,8 +179,7 @@ export interface Host {
   rustListeners(): Record<string, number>;
   watchClients(onChange: (clients: ClientEntry[]) => void): () => void;
   serviceHub: ServiceHub;
-  settingsOpener: SettingsOpener;
-  islandControl: IslandControlHub;
+  extensions: HostExtensionInstance[];
   locale: HostLocale;
   services(): ServiceEntry[];
   watchServices(onChange: (services: ServiceEntry[]) => void): () => void;
@@ -196,14 +188,6 @@ export interface Host {
 }
 
 export function startHost(options: HostOptions): Promise<Host>;
-export const SETTINGS_OPEN_EVENT: "settings.open";
-export const SETTINGS_OPENER_WINDOW: "island";
-export const SETUP_HINT_MAX: number;
-export function setupHint(hint: unknown): PluginSetup["hint"];
-export const ISLAND_REQUEST_EVENT: "island.request";
-export const ISLAND_WINDOW: "island";
-export const ISLAND_TIMEOUT_MS: number;
-export const ISLAND_NOTICE_TIMEOUT_MS: number;
 export function pluginStatus(ctx: Context, logs?: LogEntry[]): PluginStatus[];
 export const FAULT_LIMIT: FaultLimit;
 export const KINDS: readonly PluginKind[];

@@ -272,8 +272,8 @@ fuyu-plugin dev [文件夹] [--data-dir <文件夹>] [--out <文件夹>] [--once
 签名用 Ed25519。命令按这个顺序找私钥：
 
 1. `--key <文件>`；
-2. 环境变量 `FUYU_PLUGIN_SIGNING_KEY`，值是 PEM 原文（在 CI 里用；旧名 `FLY_ISLAND_PLUGIN_SIGNING_KEY` 也认）；
-3. `~/.fuyu-plugin/signing.key`（没有它而有 `~/.fly-island-plugin/signing.key` 时用后者）。
+2. 环境变量 `FUYU_PLUGIN_SIGNING_KEY`，值是 PEM 原文（在 CI 里用）；
+3. `~/.fuyu-plugin/signing.key`。
 
 **和旧版插件的 `fuyu-plugin` 1.x 是同一个文件、同样的格式**，以前生成过的密钥不用重新生成。Windows 上密钥文件用 DPAPI 按当前 Windows 用户加密，只有这个用户能解开；其他系统存 PEM，权限 `0600`。
 

@@ -9,7 +9,7 @@ import { BuildError, formatIssue } from "./errors.mjs";
 import { icon } from "./icon.mjs";
 import { searchGlyphs } from "./icon/glyphs.mjs";
 import { KEY_ENV, generateSigningKey, loadSigningKey } from "./keys.mjs";
-import { runMcp } from "./mcp.mjs";
+import { APP_COMMANDS } from "./app/commands.mjs";
 import { pack } from "./pack.mjs";
 import { reviewSources } from "./review.mjs";
 import { preview } from "./preview.mjs";
@@ -76,9 +76,7 @@ Commands:
     --data-dir <folder>  plugin host data directory containing plugins.yml
     --once               build and register once without watching
     --clean              remove the dev entry from plugins.yml
-  mcp                  Serve Fuyu's Local API over stdio as an MCP server
-    --config <file>      path to local-api.json
-  version, help
+${Object.values(APP_COMMANDS).flatMap((command) => command.help.map((line) => `${line}\n`)).join("")}  version, help
 
 The signing key comes from --key, else ${KEY_ENV} (the PEM text), else ~/.fuyu-plugin/signing.key.
 Exit codes: 0 done, 1 errors (or a red review), 2 bad arguments.`;
@@ -104,7 +102,7 @@ const OPTIONS = {
   keygen: { key: { type: "string" } },
   sign: { key: { type: "string" }, out: { type: "string" }, commit: { type: "string" }, repository: { type: "string" } },
   dev: { ...BUILD, out: { type: "string" }, "data-dir": { type: "string" }, once: { type: "boolean" }, clean: { type: "boolean" } },
-  mcp: { config: { type: "string" } },
+  ...Object.fromEntries(Object.entries(APP_COMMANDS).map(([name, command]) => [name, command.options])),
 };
 const CONFIG_KEYS = ["shared", "hostExternal", "appModules", "packageDepth", "nodeTarget", "browserTarget"];
 
@@ -292,10 +290,7 @@ const commands = {
     return 0;
   },
 
-  async mcp({ values }, io) {
-    const config = values.config ? resolve(io.cwd, values.config) : undefined;
-    return runMcp({ config, input: io.stdin ?? process.stdin, output: io.stdout });
-  },
+  ...Object.fromEntries(Object.entries(APP_COMMANDS).map(([name, command]) => [name, (parsed, io, out) => command.run(parsed, io, out)])),
 };
 
 export async function run(argv, io = {}) {

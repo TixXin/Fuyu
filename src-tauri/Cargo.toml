@@ -22,6 +22,7 @@ tauri-build = { version = "2", features = [] }
 serde_json = "1"
 
 [dependencies]
+aes-gcm = { version = "0.11", default-features = false, features = ["aes", "alloc"] }
 arboard = "3"
 argon2 = "0.5"
 base64 = "0.22"
@@ -41,6 +42,8 @@ keyring = { version = "4.2", default-features = false, features = ["v1", "window
 mailparse = "0.17"
 native-tls = "0.2"
 quick-xml = "0.39"
+rcgen = { version = "0.14", default-features = false, features = ["ring"] }
+ring = "0.17"
 rrule = "0.14"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "socks"] }
 rgb = "0.8"
@@ -52,6 +55,7 @@ tar = "0.4"
 plugin-base = { path = "crates/plugin-base" }
 sherpa-runtime = { path = "crates/sherpa-runtime" }
 sha2 = "0.10"
+spake2 = "0.4"
 tauri = { version = "2", features = ["macos-private-api", "tray-icon"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
@@ -66,6 +70,7 @@ rqrr = { version = "0.11", default-features = false }
 rusqlite = { version = "0.42", features = ["bundled"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+hidapi = { version = "2.6", default-features = false, features = ["macos-shared-device"] }
 aes = "0.9"
 cbc = "0.2"
 pbkdf2 = { version = "0.13", default-features = false, features = ["hmac"] }
@@ -93,9 +98,10 @@ tauri-nspanel = "2.1"
 
 [target.'cfg(windows)'.dependencies]
 clipboard-win = "5"
+hidapi = { version = "2.6", default-features = false, features = ["windows-native"] }
 pollster = "0.4"
 webview2-com = "0.39"
-windows = { version = "0.62", features = ["ApplicationModel", "Data_Xml_Dom", "Devices_Bluetooth", "Devices_Bluetooth_GenericAttributeProfile", "Devices_Enumeration", "Devices_Power", "Foundation", "Foundation_Collections", "Graphics", "Graphics_Capture", "Graphics_DirectX", "Graphics_DirectX_Direct3D11", "Graphics_Imaging", "Media", "Media_Control", "Networking_Connectivity", "Media_Ocr", "Storage_Streams", "System_Power", "UI_Notifications_Management", "Win32_Devices_DeviceAndDriverInstallation", "Win32_Devices_Display", "Win32_Devices_FunctionDiscovery", "Win32_Devices_Properties", "Win32_Foundation", "Win32_Globalization", "Win32_Graphics_Direct3D", "Win32_Graphics_Direct3D11", "Win32_Graphics_Dwm", "Win32_Graphics_Dxgi", "Win32_Graphics_Dxgi_Common", "Win32_Graphics_Gdi", "Win32_Media_Audio", "Win32_Media_Audio_Endpoints", "Win32_Media_MediaFoundation", "Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Security", "Win32_Security_Credentials", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_DataExchange", "Win32_System_Diagnostics_Debug", "Win32_System_Diagnostics_ToolHelp", "Win32_System_JobObjects", "Win32_System_LibraryLoader", "Win32_System_Memory", "Win32_System_Ole", "Win32_System_Performance", "Win32_System_Power", "Win32_System_ProcessStatus", "Win32_System_Registry", "Win32_System_RemoteDesktop", "Win32_System_SystemInformation", "Win32_System_Threading", "Win32_System_Variant", "Win32_System_Wmi", "Win32_System_WinRT", "Win32_System_WinRT_Direct3D11", "Win32_System_WinRT_Graphics_Capture", "Win32_UI_Accessibility", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Wdk_System_Threading"] }
+windows = { version = "0.62", features = ["ApplicationModel", "Data_Xml_Dom", "Devices_Bluetooth", "Devices_Bluetooth_GenericAttributeProfile", "Devices_Enumeration", "Devices_Power", "Foundation", "Foundation_Collections", "Graphics", "Graphics_Capture", "Graphics_DirectX", "Graphics_DirectX_Direct3D11", "Graphics_Imaging", "Media", "Media_Control", "Networking_Connectivity", "Media_Ocr", "Storage_Streams", "System_Power", "UI_Notifications_Management", "Win32_Devices_DeviceAndDriverInstallation", "Win32_Devices_Display", "Win32_Devices_FunctionDiscovery", "Win32_Devices_Properties", "Win32_Foundation", "Win32_Globalization", "Win32_Graphics_Direct3D", "Win32_Graphics_Direct3D11", "Win32_Graphics_Dwm", "Win32_Graphics_Dxgi", "Win32_Graphics_Dxgi_Common", "Win32_Graphics_Gdi", "Win32_Media_Audio", "Win32_Media_Audio_Endpoints", "Win32_Media_MediaFoundation", "Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Security", "Win32_Security_Cryptography", "Win32_Security_Credentials", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_DataExchange", "Win32_System_Diagnostics_Debug", "Win32_System_Diagnostics_ToolHelp", "Win32_System_JobObjects", "Win32_System_LibraryLoader", "Win32_System_Memory", "Win32_System_Ole", "Win32_System_Performance", "Win32_System_Power", "Win32_System_ProcessStatus", "Win32_System_Registry", "Win32_System_RemoteDesktop", "Win32_System_SystemInformation", "Win32_System_Threading", "Win32_System_Variant", "Win32_System_Wmi", "Win32_System_WinRT", "Win32_System_WinRT_Direct3D11", "Win32_System_WinRT_Graphics_Capture", "Win32_UI_Accessibility", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_Shell_PropertiesSystem", "Win32_UI_WindowsAndMessaging", "Wdk_System_Threading"] }
 windows-future = { version = "0.3", features = ["std"] }
 
 [lints.clippy]

@@ -108,7 +108,7 @@ test("sensitive patterns are yellow", () => {
     "home-dir": "import os from 'node:os';\nexport const home = os.homedir();\n",
     "absolute-path": "export const target = '/Users/me/Library/Keychains';\n",
     "parent-path": "export const target = '../../other-plugin/data.json';\n",
-    "app-data": "export const target = 'Library/Application Support/com.tixxin.fuyu/agent-status.json';\n",
+    "app-data": "export const target = 'Library/Application Support/com.tixxin.fuyu/plugins/@other/data.json';\n",
   };
   for (const [kind, source] of Object.entries(cases)) {
     const dir = variant(`sensitive-${kind}`, (root) => writeFileSync(join(root, "src", "extra.mjs"), source));

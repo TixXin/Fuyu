@@ -101,7 +101,6 @@ export declare const HOST_EXTERNALS: readonly string[];
 export declare const APP_MODULES: readonly string[];
 export declare const INSTALLED_PACKAGE_DEPTH: 3;
 export declare const KEY_ENV: "FUYU_PLUGIN_SIGNING_KEY";
-export declare const LEGACY_KEY_ENV: "FLY_ISLAND_PLUGIN_SIGNING_KEY";
 
 export declare function build(dir: string, options?: BuildOptions): Promise<BuildResult>;
 export declare function pack(dir: string, options?: PackOptions): Promise<PackResult>;

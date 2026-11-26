@@ -8,6 +8,7 @@ mod config;
 pub(crate) mod crypto;
 pub(crate) mod device;
 mod engine;
+pub(crate) mod lan;
 pub(crate) mod layout;
 mod merge;
 pub(crate) mod record;

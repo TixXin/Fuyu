@@ -7,42 +7,43 @@ import ReactDOM, { type RootOptions } from "react-dom/client";
 import "./styles/tokens.css";
 import "./styles/fonts.css";
 import "./styles/base.css";
-import { I18nProvider, loadLocale, preloadI18n } from "./i18n/runtime";
+import { I18nProvider, loadLocale, preloadI18n, preloadScreenshotI18n } from "./i18n/runtime";
 import { WindowCrashBoundary } from "./components/window-crash/WindowCrashBoundary";
 import { closeWindow, crashOutcome, handleCrash, installCrashReporting, openCrashLog, reloadWindow, restartFuyu, retryWindow } from "./lib/crash-report/crashReporter";
 import { summarizeError } from "./lib/crash-report/errorSummary";
 import { CRASH_RELOAD_WINDOW_MS, crashVariant, type CrashOutcome } from "./lib/crash-report/recovery";
-import { loadSettingsFile } from "./lib/settings-backup/loadSettingsFile";
-import { serviceFeaturesForWindow } from "./windowServicesMap";
-import { trackIslandTopEdge } from "./windows/island/topEdge";
-import { trackIslandNotch } from "./windows/island/notch";
-import { trackAutoIslandForm } from "./windows/island/autoIslandForm";
 import { setPluginSettingsOpener } from "./features/plugin-kernel/settingsOpener";
-import { openPluginSettingsWindow } from "./windows/settings/api";
-import { installWindowFont } from "./lib/theme/windowFont";
+import { prefetchScreenshot } from "./features/screenshot/frame/api";
 
 blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
 installCrashReporting();
 if (import.meta.hot) void import("./devCompileError");
-const serviceModules = import.meta.glob("./features/*/plugin/services.ts");
 
 async function loadWindowServices(kind: string | null): Promise<void> {
-  const features = serviceFeaturesForWindow(kind);
-  await Promise.all(
-    features.map((feature) => {
-      const load = serviceModules[`./features/${feature}/plugin/services.ts`];
-      return load ? load() : Promise.resolve();
-    }),
-  );
+  const { loadWindowServicesFor } = await import("./windowServicesLoader");
+  await loadWindowServicesFor(kind);
+}
+
+async function installFont(): Promise<void> {
+  const { installWindowFont } = await import("./lib/theme/windowFont");
+  installWindowFont();
+}
+
+async function syncSettingsFile(): Promise<void> {
+  const { loadSettingsFile } = await import("./lib/settings-backup/loadSettingsFile");
+  await loadSettingsFile();
 }
 
 const windowKind = new URLSearchParams(window.location.search).get("window");
-setPluginSettingsOpener(openPluginSettingsWindow);
+if (windowKind === "screenshot") prefetchScreenshot();
+setPluginSettingsOpener((plugin) =>
+  import("./windows/settings/api").then((module) => module.openPluginSettingsWindow(plugin)),
+);
 
 if (windowKind === null) {
-  trackIslandTopEdge();
-  trackIslandNotch();
-  trackAutoIslandForm();
+  void import("./windows/island/topEdge").then((module) => module.trackIslandTopEdge());
+  void import("./windows/island/notch").then((module) => module.trackIslandNotch());
+  void import("./windows/island/autoIslandForm").then((module) => module.trackAutoIslandForm());
   if (import.meta.env.DEV) void import("./windows/island/devFrameProbe");
 }
 
@@ -106,6 +107,10 @@ async function loadWindow(): Promise<ReactNode> {
       const { PluginWindowApp } = await import("./windows/plugin-window/PluginWindowApp");
       return <PluginWindowApp />;
     }
+    case "taskbar-lyrics": {
+      const { TaskbarLyricsWindow } = await import("./windows/taskbar-lyrics/TaskbarLyricsWindow");
+      return <TaskbarLyricsWindow />;
+    }
     case "side": {
       const [{ TodosGate }, { SideDockWindow }] = await Promise.all([
         import("./features/todos/TodosGate"),
@@ -165,15 +170,29 @@ function renderWindow(content: ReactNode, failure?: CrashOutcome & { message: st
   );
 }
 
-void Promise.all([
-  loadWindowServices(windowKind),
-  loadWindow(),
-  loadSettingsFile(),
-  preloadI18n(loadLocale(), windowKind),
-]).then(([, content]) => {
-  installWindowFont();
+const startup =
+  windowKind === "screenshot"
+    ? Promise.all([loadWindow(), preloadScreenshotI18n(loadLocale())]).then(([content]) => ({ content, applyFont: null as (() => void) | null }))
+    : Promise.all([
+        loadWindowServices(windowKind),
+        loadWindow(),
+        syncSettingsFile(),
+        preloadI18n(loadLocale(), windowKind),
+        import("./lib/theme/windowFont"),
+      ]).then(([, content, , , fontModule]) => ({ content, applyFont: fontModule.installWindowFont }));
+
+void startup.then(({ content, applyFont }) => {
+  applyFont?.();
   renderWindow(content);
   markMounted();
+  if (windowKind === "screenshot") {
+    window.setTimeout(() => {
+      void preloadI18n(loadLocale(), windowKind);
+      void installFont();
+      void loadWindowServices(windowKind);
+      void syncSettingsFile();
+    }, 250);
+  }
 }).catch(async (error: unknown) => {
   console.error("Failed to start the window", error);
   const outcome = crashOutcome("startup", error);

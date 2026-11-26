@@ -83,10 +83,8 @@ export interface Bridge {
 
 export function createBridge(call: (method: string, params?: unknown) => Promise<unknown>): Bridge;
 
-export interface IslandControl {
-  open(plugin: string, page?: string): Promise<void>;
-  collapse(plugin: string): Promise<boolean>;
-}
+export type * from "../app/client.mjs";
+import type { AppClientService, AppLoaderOptions } from "../app/client.mjs";
 
 export interface ScopedPluginConnection {
   bridge?: Bridge;
@@ -120,13 +118,11 @@ export function createLoader(options: {
   bridge?: Bridge;
   connectPlugin?: ((entry: ClientEntry) => ScopedPluginConnection | null) | null;
   base: string;
-  openSettings?: ((plugin: string) => Promise<void> | void) | null;
-  reportSetup?: ((plugin: string, state: { needed: boolean; hint?: unknown }) => Promise<unknown> | void) | null;
-  island?: IslandControl | null;
+  appServices?: readonly AppClientService[];
   locale?: LocaleStore | null;
   importModule?: (url: string) => Promise<any>;
   checkFile?: (url: string) => Promise<void>;
   onStatus?: (status: Map<string, ClientStatus>) => void;
-}): ClientLoader;
+} & AppLoaderOptions & Record<string, unknown>): ClientLoader;
 export { createServiceProxy, type ServiceCall, type ServiceEventMessage, type ServiceProxy } from "./services.mjs";
 export { createWindowServices, type WindowProvideOptions, type WindowServices } from "./window-services.mjs";

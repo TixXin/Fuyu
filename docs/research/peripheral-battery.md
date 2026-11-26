@@ -57,6 +57,7 @@
 - **接收器**：两个系统都用 `hidapi` crate（MIT）直接发 HID++，按 0x1004（UNIFIED_BATTERY）→ 0x1000（BATTERY_STATUS）→ 0x1001（BATTERY_VOLTAGE，要自己换算）的顺序探测；老设备再试 HID++ 1.0 寄存器 0x07 / 0x0D。Windows 上只打开厂商用法页（0xFF00 一类）的集合，鼠标、键盘集合被系统独占打不开，也不需要。macOS 上只匹配厂商用法页，不要匹配整个设备，避免触发「输入监控」权限（见详细 4）。Solaar 是 GPL-2.0，只看它的文档和协议说明，不抄代码。
 - **Windows 兜底**：HOGP 设备 GATT 读不到（AccessDenied 或超时）时，读设备节点属性 `{104EA319-…},2`。
 - 接收器的后续任务：C88（#420），https://github.com/TixXin/fuyu/blob/main/docs/tasks/C/C88.md
+- **C88 的实现（2026-11-25）**：只做 HID++ 2.0，按 0x1004 → 0x1000 探测；0x1001（电压）和 HID++ 1.0 寄存器（很老的 Unifying 设备）没做，这类设备不显示。一律发 20 字节长报告（0x11），Bolt / Lightspeed 只认长报告；Windows 上短报告集合里回来的 HID++ 1.0 错误（关机、没配对的设备号）读不到，靠 250 ms 超时判定，之后 2 分钟不再问。软件 ID 用 0x0B，只认这个软件 ID 的应答，不吃 Options+ / G HUB 的应答。0x1004 没给百分比时按电量档位折成 100 / 60 / 20 / 5。开发机没有接收器，未实测。
 
 ## 详细
 

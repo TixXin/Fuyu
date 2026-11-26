@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createServiceProxy, createWindowServices, HostCallError } from "@fuyu/plugin-base/client";
-import { defineService } from "@fuyu/plugin-services";
+import { defineService } from "@fuyu/plugin-base/services";
 
 const echoV1 = defineService("demo.echo/v1", { methods: { echo: true, slow: { timeoutMs: 40 }, stream: { progress: true } }, events: { said: true } });
 const otherV1 = defineService("demo.other/v1", { methods: { ping: true } });

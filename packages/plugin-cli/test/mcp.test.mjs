@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { PassThrough } from "node:stream";
 import { test } from "node:test";
 import { run } from "../src/cli.mjs";
-import { TOOLS, defaultLocalApiConfigPath, handleMessage, localApiClient, runMcp } from "../src/mcp.mjs";
+import { TOOLS, defaultLocalApiConfigPath, handleMessage, localApiClient, runMcp } from "../src/app/mcp.mjs";
 
 test("mcp lists read and write tools and handles initialize/ping", async () => {
   const init = await handleMessage({ id: 1, method: "initialize", params: { protocolVersion: "2025-06-18" } }, async () => null);

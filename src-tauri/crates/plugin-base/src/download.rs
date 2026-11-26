@@ -209,7 +209,7 @@ fn client(download: &NodeDownload) -> Result<reqwest::blocking::Client, Download
     let mut builder = reqwest::blocking::Client::builder()
         .connect_timeout(download.connect_timeout)
         .timeout(download.read_timeout)
-        .user_agent(concat!("Fuyu-plugin-base/", env!("CARGO_PKG_VERSION")));
+        .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")));
     if let Some(proxy) = &download.proxy {
         let usable = reqwest::Proxy::all(proxy).map_err(|error| DownloadError::Sources(vec![Attempt { url: redact_proxy(proxy), reason: scrub(&format!("not a usable proxy: {}", error.without_url()), Some(proxy)) }]))?;
         builder = builder.proxy(usable);

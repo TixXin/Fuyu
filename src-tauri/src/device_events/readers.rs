@@ -156,7 +156,9 @@ pub(super) fn read_peripherals() -> Vec<Peripheral> {
     let _apartment = ComApartment::multithreaded().ok();
     let gatt = ble_battery::connected_devices();
     let survey = Survey::take();
-    merge_peripherals(survey.system_peripherals(), survey.gatt_peripherals(gatt))
+    let mut found = merge_peripherals(survey.system_peripherals(), survey.gatt_peripherals(gatt));
+    found.extend(super::logitech::read_peripherals());
+    found
 }
 
 pub(super) fn power_source() -> (Option<bool>, Option<u8>) {

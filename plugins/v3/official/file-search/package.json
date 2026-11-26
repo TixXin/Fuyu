@@ -1,0 +1,84 @@
+{
+  "name": "@fuyu/file-search",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Press a shortcut and search every file on your computer by name: Everything on Windows, Spotlight on macOS.",
+  "keywords": [
+    "文件搜索",
+    "搜索文件",
+    "找文件",
+    "Everything",
+    "Spotlight",
+    "file search",
+    "find file",
+    "search files"
+  ],
+  "license": "MIT",
+  "author": "TixXin",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev --official",
+    "build": "fuyu-plugin build --official",
+    "check": "fuyu-plugin check --official --market",
+    "package": "fuyu-plugin pack --official",
+    "typecheck": "tsc",
+    "lint": "eslint ."
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "文件搜索",
+      "en": "File search"
+    },
+    "description": {
+      "zh-CN": "按快捷键按文件名搜索电脑上的文件：Windows 用 Everything，macOS 用 Spotlight。",
+      "en": "Press a shortcut and search every file on your computer by name: Everything on Windows, Spotlight on macOS."
+    },
+    "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "输入即出结果，回车打开，旁边的按钮打开所在文件夹",
+          "en": "Results as you type; Enter opens a file, the button beside it opens its folder"
+        }
+      }
+    ],
+    "categories": [
+      "productivity",
+      "utilities"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js"
+    },
+    "inject": {
+      "optional": [
+        "island"
+      ]
+    },
+    "slots": [
+      "island.page/v1"
+    ],
+    "commands": [
+      {
+        "id": "open",
+        "title": {
+          "zh-CN": "打开文件搜索",
+          "en": "Open File search"
+        },
+        "keybinding": "Ctrl+Alt+F"
+      }
+    ],
+    "network": [
+      "www.voidtools.com"
+    ]
+  }
+}

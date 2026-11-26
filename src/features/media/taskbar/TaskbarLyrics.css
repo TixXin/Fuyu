@@ -1,0 +1,118 @@
+.taskbar-lyrics {
+  --taskbar-lyrics-ink: rgba(var(--overlay-rgb, 255, 255, 255), 0.95);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100vw;
+  height: 100vh;
+  padding: 4px 2px;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: var(--taskbar-lyrics-ink);
+  font-size: 12px;
+  user-select: none;
+}
+
+.taskbar-lyrics button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+}
+
+.taskbar-lyrics__body,
+.taskbar-lyrics__idle,
+.taskbar-lyrics__button {
+  border-radius: 4px;
+}
+
+.taskbar-lyrics__body:hover,
+.taskbar-lyrics__idle:hover,
+.taskbar-lyrics__button:not(:disabled):hover {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
+}
+
+.taskbar-lyrics__body:active,
+.taskbar-lyrics__idle:active,
+.taskbar-lyrics__button:not(:disabled):active {
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.05);
+}
+
+.taskbar-lyrics__idle {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.taskbar-lyrics__body {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 100%;
+  padding: 0 6px;
+  text-align: left;
+}
+
+.taskbar-lyrics__cover {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+}
+
+.taskbar-lyrics__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.taskbar-lyrics__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.taskbar-lyrics__line,
+.taskbar-lyrics__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskbar-lyrics__line {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.taskbar-lyrics__sub {
+  color: rgba(var(--overlay-rgb, 255, 255, 255), 0.62);
+  font-size: 11px;
+}
+
+.taskbar-lyrics__controls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: 100%;
+}
+
+.taskbar-lyrics__button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 100%;
+}
+
+.taskbar-lyrics__button:disabled {
+  opacity: 0.35;
+}

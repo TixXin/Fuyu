@@ -39,6 +39,16 @@ struct Request {
     leave: Leave,
 }
 
+pub(crate) fn prewarm() {
+    if !has_access() {
+        return;
+    }
+    std::thread::spawn(|| {
+        let handler = RcBlock::new(|_content: *mut SCShareableContent, _error: *mut NSError| {});
+        unsafe { SCShareableContent::getShareableContentExcludingDesktopWindows_onScreenWindowsOnly_completionHandler(false, true, &handler) };
+    });
+}
+
 pub(crate) fn capture(rect: (f64, f64, f64, f64), scale: f64, leave: Leave) -> Option<Shot> {
     if rect.2 <= 0.0 || rect.3 <= 0.0 || !scale.is_finite() || scale <= 0.0 {
         return None;
@@ -159,6 +169,43 @@ fn keeps(window: &SCWindow, left: &[u32]) -> bool {
     owner.is_some_and(|app| is_own(unsafe { app.processID() })) && !left.contains(&unsafe { window.windowID() })
 }
 
+pub(crate) fn bgra_to_rgba(bytes: &[u8], width: usize, height: usize, row: usize) -> Option<Vec<u8>> {
+    let row_bytes = width.checked_mul(4)?;
+    let needed = row.checked_mul(height)?;
+    if width == 0 || height == 0 || row < row_bytes || bytes.len() < needed {
+        return None;
+    }
+    let mut rgba = vec![0u8; row_bytes.checked_mul(height)?];
+    for (out, line) in rgba.chunks_exact_mut(row_bytes).zip(bytes.chunks_exact(row)) {
+        bgra_row_to_rgba(&line[..row_bytes], out);
+    }
+    Some(rgba)
+}
+
+#[cfg(target_endian = "little")]
+fn bgra_row_to_rgba(src: &[u8], dst: &mut [u8]) {
+    let (src_head, src_words, src_tail) = unsafe { src.align_to::<u32>() };
+    let (dst_head, dst_words, dst_tail) = unsafe { dst.align_to_mut::<u32>() };
+    if src_head.is_empty() && src_tail.is_empty() && dst_head.is_empty() && dst_tail.is_empty() && src_words.len() == dst_words.len() {
+        for (out, &px) in dst_words.iter_mut().zip(src_words.iter()) {
+            *out = (px & 0x0000_ff00) | ((px & 0x00ff_0000) >> 16) | ((px & 0x0000_00ff) << 16) | 0xff00_0000;
+        }
+        return;
+    }
+    bgra_row_to_rgba_scalar(src, dst);
+}
+
+#[cfg(not(target_endian = "little"))]
+fn bgra_row_to_rgba(src: &[u8], dst: &mut [u8]) {
+    bgra_row_to_rgba_scalar(src, dst);
+}
+
+fn bgra_row_to_rgba_scalar(src: &[u8], dst: &mut [u8]) {
+    for (pixel, &[blue, green, red, _]) in dst.as_chunks_mut::<4>().0.iter_mut().zip(src.as_chunks::<4>().0) {
+        *pixel = [red, green, blue, 255];
+    }
+}
+
 fn to_rgba(image: &CGImage) -> Option<Shot> {
     let (width, height) = (CGImage::width(Some(image)), CGImage::height(Some(image)));
     let row = CGImage::bytes_per_row(Some(image));
@@ -167,16 +214,8 @@ fn to_rgba(image: &CGImage) -> Option<Shot> {
     }
     let provider = CGImage::data_provider(Some(image))?;
     let data = CGDataProvider::data(Some(&provider))?;
-    let bytes = data.to_vec();
-    if bytes.len() < row * height {
-        return None;
-    }
-    let mut rgba = vec![0u8; width * height * 4];
-    for (out, line) in rgba.chunks_exact_mut(width * 4).zip(bytes.chunks_exact(row)) {
-        for (pixel, &[blue, green, red, _]) in out.as_chunks_mut::<4>().0.iter_mut().zip(line[..width * 4].as_chunks::<4>().0) {
-            *pixel = [red, green, blue, 255];
-        }
-    }
+    let bytes = unsafe { data.as_bytes_unchecked() };
+    let rgba = bgra_to_rgba(bytes, width, height, row)?;
     Some(Shot { width: u32::try_from(width).ok()?, height: u32::try_from(height).ok()?, rgba })
 }
 
@@ -188,7 +227,7 @@ fn to_rgba_alpha(image: &CGImage) -> Option<Shot> {
     }
     let provider = CGImage::data_provider(Some(image))?;
     let data = CGDataProvider::data(Some(&provider))?;
-    let bytes = data.to_vec();
-    let rgba = crate::screenshot::window_shadow::unpremultiply_bgra_to_rgba(&bytes, width, height, row)?;
+    let bytes = unsafe { data.as_bytes_unchecked() };
+    let rgba = crate::screenshot::window_shadow::unpremultiply_bgra_to_rgba(bytes, width, height, row)?;
     Some(Shot { width: u32::try_from(width).ok()?, height: u32::try_from(height).ok()?, rgba })
 }

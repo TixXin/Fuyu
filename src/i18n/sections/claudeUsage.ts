@@ -35,6 +35,9 @@ export type ClaudeUsageText = {
   noUsage: Record<"codex" | "antigravity" | "glm" | "kimi" | "cursor" | "workbuddy" | "dsh", string>;
   windowNames: Record<string, string>;
   workbuddyCredits: (today: number, sevenDay: number, total: number, totalTokens: number) => string;
+  workbuddyPlan: (plan: string) => string;
+  workbuddyPlans: Record<string, string>;
+  workbuddyQuotaHint: string;
   dshWallet: (currency: string, total: string, toppedUp: string, granted: string) => string;
   dshEmpty: string;
   planErrors: Record<AgentUsageErrorKind, string>;
@@ -161,6 +164,20 @@ export const zhCN: ClaudeUsageText = {
     }
     return `今日已用 ${formatCredit(today)} 积分 · 7 天 ${formatCredit(sevenDay)} 积分（累计 ${formatCredit(total)}）`;
   },
+  workbuddyPlan: (plan) => `套餐：${plan}`,
+  workbuddyPlans: {
+    free: "体验版",
+    pro_trial: "专业版试用",
+    pro: "专业版",
+    youth: "青春版",
+    advanced: "进阶版",
+    flagship: "旗舰版",
+    buddyonevip: "BuddyOne 会员",
+    ultimate: "至尊版",
+    exclusive: "专属版",
+    enterprise: "企业版",
+  },
+  workbuddyQuotaHint: "剩余额度只在 WorkBuddy 客户端登录后可查（账户 → 积分），浮屿读不到",
   dshWallet: (currency, total, toppedUp, granted) => {
     const sym = currencySymbol(currency);
     return hasNonZeroAmount(granted)
@@ -256,7 +273,7 @@ export const zhCN: ClaudeUsageText = {
     kimiHint: "每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Claude Code 已配好 Kimi（settings.json 里的 ANTHROPIC_BASE_URL 指向 kimi.com 或 moonshot.cn）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给 Kimi，不回到界面。",
     kimiHintMac: "每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Claude Code 已配好 Kimi（settings.json 里的 ANTHROPIC_BASE_URL 指向 kimi.com 或 moonshot.cn）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在钥匙串里。Key 只发给 Kimi，不回到界面。",
     cursorHint: "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写；macOS 上登录是加密的，第一次会弹窗请你允许读取钥匙串里的「Cursor Safe Storage」），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。",
-    workbuddyHint: "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。",
+    workbuddyHint: "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分，以及 WorkBuddy 本地记下的套餐（如体验版）。剩余额度要登录态联网才查得到，浮屿不读，请在 WorkBuddy 里看。",
     dshHint: "只读本机 DeepSeek Harness 的 .credentials.yaml（仅在官方默认路由下生效，凭据只在内存中使用，不进圆环），每分钟最多一次查询官方账户或 API 余额并在悬停卡片中显示。",
     show: "环和悬停卡片显示",
     used: "已用",
@@ -354,6 +371,20 @@ export const en: ClaudeUsageText = {
     }
     return `Today ${formatCredit(today)} credits · 7d ${formatCredit(sevenDay)} (${formatCredit(total)} total)`;
   },
+  workbuddyPlan: (plan) => `Plan: ${plan}`,
+  workbuddyPlans: {
+    free: "Free trial",
+    pro_trial: "Pro trial",
+    pro: "Pro",
+    youth: "Youth",
+    advanced: "Advanced",
+    flagship: "Flagship",
+    buddyonevip: "BuddyOne VIP",
+    ultimate: "Ultimate",
+    exclusive: "Exclusive",
+    enterprise: "Enterprise",
+  },
+  workbuddyQuotaHint: "Remaining credits are only shown inside the signed-in WorkBuddy app (Account → Credits); Fuyu cannot read them",
   dshWallet: (currency, total, toppedUp, granted) => {
     const sym = currencySymbol(currency);
     return hasNonZeroAmount(granted)
@@ -449,7 +480,7 @@ export const en: ClaudeUsageText = {
     kimiHint: "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits. If Claude Code already runs on Kimi (ANTHROPIC_BASE_URL in its settings.json points to kimi.com or moonshot.cn), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Kimi only and never back to the window.",
     kimiHintMac: "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits. If Claude Code already runs on Kimi (ANTHROPIC_BASE_URL in its settings.json points to kimi.com or moonshot.cn), its key is used and you don't need to paste one; a key saved below wins and lives in the keychain. The key goes to Kimi only and never back to the window.",
     cursorHint: "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten; on macOS the login is encrypted, so the first time macOS asks you to allow reading “Cursor Safe Storage” from the Keychain) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage.",
-    workbuddyHint: "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card.",
+    workbuddyHint: "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card, plus the plan WorkBuddy saved locally (such as Free trial). Remaining credits need WorkBuddy's signed-in session, so Fuyu does not read them; check them in WorkBuddy.",
     dshHint: "Reads DeepSeek Harness's local .credentials.yaml (official default routes only; credentials stay in Rust memory, not shown as a ring) to query the official wallet balance at most once a minute for the hover card.",
     show: "Rings and card show",
     used: "Used",

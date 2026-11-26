@@ -316,8 +316,8 @@ fn exit_reason(child: &mut Child, within: Duration) -> Option<String> {
 fn check_protocol(ready: Value) -> Result<Value, String> {
     match ready.get("protocol").and_then(Value::as_u64) {
         Some(PROTOCOL) => Ok(ready),
-        Some(other) => Err(format!("the plugin host speaks protocol {other}, but Fuyu only speaks protocol {PROTOCOL}; the host and the app do not match")),
-        None => Err(format!("the plugin host did not say which protocol it speaks; Fuyu only speaks protocol {PROTOCOL}")),
+        Some(other) => Err(format!("the plugin host speaks protocol {other}, but this app only speaks protocol {PROTOCOL}; the host and the app do not match")),
+        None => Err(format!("the plugin host did not say which protocol it speaks; this app only speaks protocol {PROTOCOL}")),
     }
 }
 

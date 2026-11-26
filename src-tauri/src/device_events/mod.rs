@@ -1,6 +1,7 @@
 #[cfg_attr(target_os = "macos", path = "readers_macos.rs")]
 mod readers;
 mod batteries;
+mod logitech;
 mod peripherals;
 mod tracker;
 
