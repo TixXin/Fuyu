@@ -124,11 +124,15 @@ test("settings keep valid stocks only, without duplicates, and fall back to defa
     stocks: [{ id: "1.600519", name: "贵州茅台" }, { id: "1.600519" }, { id: "nope" }, null],
     refreshSeconds: 7,
     colorScheme: "greenUp",
+    layout: "tiles",
   });
   assert.deepEqual(settings.stocks, [{ id: "1.600519", code: "600519", name: "贵州茅台", kind: "" }]);
   assert.equal(settings.refreshSeconds, 30);
   assert.equal(settings.colorScheme, "greenUp");
+  assert.equal(settings.layout, "tiles");
   assert.equal(settings.showInBar, true);
+  assert.equal(normalizeSettings({ layout: "unknown" }).layout, "split");
+  assert.equal(normalizeSettings({}).layout, "split");
 });
 
 function fakeContext(dataDir) {

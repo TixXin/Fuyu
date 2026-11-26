@@ -3,6 +3,7 @@
   height: 82px;
   min-width: 0;
   color: var(--fuyu-plugin-accent);
+  cursor: crosshair;
 }
 
 .fuyu-stock__chart.is-up { color: var(--fuyu-stock-up); }
@@ -27,6 +28,11 @@
   stroke-width: 1;
 }
 
+.fuyu-stock__crosshair {
+  stroke: var(--fuyu-plugin-text-muted);
+  stroke-width: 1;
+}
+
 .fuyu-stock__end-dot {
   fill: currentColor;
 }
@@ -45,6 +51,26 @@
 .fuyu-stock__chart-hi { top: 2px; left: 2px; }
 .fuyu-stock__chart-lo { bottom: 2px; left: 2px; }
 .fuyu-stock__chart-ref { bottom: 2px; right: 2px; }
+
+.fuyu-stock__chart-tip {
+  position: absolute;
+  top: 2px;
+  padding: 2px 6px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: 5px;
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(6px);
+}
+
+.fuyu-stock__chart-tip.is-right {
+  transform: translateX(calc(-100% - 6px));
+}
 
 .fuyu-stock__range-fallback {
   display: flex;
@@ -110,3 +136,16 @@
 
 .fuyu-stock__mini-spark.is-up { color: var(--fuyu-stock-up); }
 .fuyu-stock__mini-spark.is-down { color: var(--fuyu-stock-down); }
+
+.fuyu-stock__area-spark {
+  display: block;
+  width: 100%;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-stock__area-spark.is-up { color: var(--fuyu-stock-up); }
+.fuyu-stock__area-spark.is-down { color: var(--fuyu-stock-down); }
+
+.fuyu-stock__area-empty {
+  width: 100%;
+}

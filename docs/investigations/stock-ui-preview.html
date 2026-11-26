@@ -1,0 +1,2163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>股票插件 UI 重新设计 · 五套方案交互预览</title>
+<style>
+:root {
+  --font-ui: "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --doc-bg: #0b0c10;
+  --doc-card: #14161c;
+  --doc-card-2: #1a1d25;
+  --doc-line: rgba(255, 255, 255, 0.08);
+  --doc-t1: rgba(248, 246, 240, 0.96);
+  --doc-t2: rgba(248, 246, 240, 0.68);
+  --doc-t3: rgba(248, 246, 240, 0.46);
+  --accent: #74d6ff;
+  --ok: #35e985;
+  --warn: #ffd166;
+  --danger: #ff6b7a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--doc-t1);
+  background: var(--doc-bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+svg.ic {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 11px 24px;
+  background: rgba(11, 12, 16, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--doc-line);
+}
+.topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.topbar-title h1 {
+  font-size: 14.5px;
+  font-weight: 650;
+  margin: 0;
+}
+.topbar-title .badge {
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: rgba(116, 214, 255, 0.14);
+  color: var(--accent);
+  font-weight: 600;
+}
+.topbar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.topbar nav a {
+  text-decoration: none;
+  color: var(--doc-t2);
+  font-size: 12.5px;
+  padding: 4px 9px;
+  border-radius: 99px;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.topbar nav a:hover { background: rgba(255, 255, 255, 0.08); color: var(--doc-t1); }
+.topbar nav a.rec { color: var(--accent); }
+.topbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-left: auto;
+}
+.ctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--doc-t3);
+}
+.seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--doc-line);
+  gap: 2px;
+}
+.seg button {
+  padding: 3px 8px;
+  border-radius: 6.5px;
+  font-size: 11.5px;
+  color: var(--doc-t2);
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.seg button:hover { color: var(--doc-t1); }
+.seg button[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--doc-t1);
+  font-weight: 600;
+}
+.tick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 550;
+  color: var(--doc-t2);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--doc-line);
+  transition: all 140ms var(--ease);
+}
+.tick-btn:hover { color: var(--doc-t1); background: rgba(255, 255, 255, 0.1); }
+.tick-btn[aria-pressed="true"] {
+  color: #06202c;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.tick-btn .pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+main {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 26px 24px 104px;
+}
+.intro {
+  color: var(--doc-t2);
+  max-width: 960px;
+  margin: 0 0 18px;
+}
+.intro b { color: var(--doc-t1); }
+.problems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0 0 38px;
+}
+.problems div {
+  background: var(--doc-card);
+  border: 1px solid var(--doc-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: var(--doc-t2);
+}
+.problems b {
+  display: block;
+  color: var(--doc-t1);
+  margin-bottom: 3px;
+  font-size: 13px;
+}
+
+section.opt {
+  margin: 0 0 56px;
+  scroll-margin-top: 76px;
+}
+.opt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+}
+.opt-head .letter {
+  font: 700 12.5px var(--font-mono);
+  color: #06202c;
+  background: var(--accent);
+  border-radius: 7px;
+  padding: 2px 8px;
+}
+.opt-head .letter.alt {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--doc-t1);
+}
+.opt-head h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+}
+.opt-head .rec-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(53, 233, 133, 0.14);
+  color: var(--ok);
+  font-weight: 600;
+}
+.opt-head .tag-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--doc-t2);
+  font-weight: 550;
+}
+.pick-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--doc-t1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 140ms var(--ease);
+}
+.pick-btn:hover { background: rgba(116, 214, 255, 0.18); border-color: rgba(116, 214, 255, 0.45); color: var(--accent); }
+.pick-btn.picked { background: var(--accent); color: #051e2a; border-color: var(--accent); }
+.opt-head p {
+  margin: 0;
+  color: var(--doc-t2);
+  flex-basis: 100%;
+  font-size: 13px;
+}
+.opt-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.notes {
+  flex: 1 1 260px;
+  min-width: 250px;
+  background: var(--doc-card);
+  border: 1px solid var(--doc-line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 12.5px;
+  color: var(--doc-t2);
+}
+.notes h3 {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--doc-t3);
+  margin: 12px 0 5px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.notes h3:first-child { margin-top: 0; }
+.notes ul { margin: 0; padding-left: 16px; }
+.notes li { margin: 3px 0; }
+.notes .good { color: var(--ok); font-weight: 600; }
+.notes .trade { color: var(--warn); font-weight: 600; }
+.try {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--doc-line);
+  font-size: 12px;
+  color: var(--doc-t3);
+}
+
+.stage {
+  flex: none;
+  padding: 0 22px 22px;
+  border-radius: 18px;
+  background: radial-gradient(120% 130% at 18% 0%, #242d3e 0%, #141821 52%, #0c0e13 100%);
+  border: 1px solid var(--doc-line);
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+  overflow-x: auto;
+}
+body.light .stage {
+  background: radial-gradient(120% 130% at 18% 0%, #f0efe9 0%, #dce4f0 55%, #c7d1e1 100%);
+}
+
+.island {
+  --bg: #030305;
+  --fg1: rgba(248, 246, 242, 0.96);
+  --fg2: rgba(248, 246, 242, 0.66);
+  --fg3: rgba(248, 246, 242, 0.44);
+  --s04: rgba(255, 255, 255, 0.04);
+  --s06: rgba(255, 255, 255, 0.065);
+  --s09: rgba(255, 255, 255, 0.095);
+  --s14: rgba(255, 255, 255, 0.14);
+  --bd: rgba(255, 255, 255, 0.08);
+  --bd-strong: rgba(255, 255, 255, 0.14);
+  --acc: #6bd4ff;
+  --acc-soft: rgba(107, 212, 255, 0.15);
+  --on-acc: #051d29;
+  --up: #ff5c6a;
+  --up-bg: rgba(255, 92, 106, 0.16);
+  --up-bd: rgba(255, 92, 106, 0.28);
+  --down: #2ed573;
+  --down-bg: rgba(46, 213, 115, 0.15);
+  --down-bd: rgba(46, 213, 115, 0.28);
+  --flat: rgba(248, 246, 242, 0.54);
+  --flat-bg: rgba(255, 255, 255, 0.08);
+  --live: #2ed573;
+  container-type: inline-size;
+  width: 800px;
+  height: 312px;
+  border-radius: 0 0 26px 26px;
+  background: var(--bg);
+  color: var(--fg1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 20px 52px rgba(0, 0, 0, 0.62);
+  transition: width 240ms var(--ease);
+  font-variant-numeric: tabular-nums;
+}
+body.w-mid .island { width: 560px; }
+body.w-narrow .island { width: 380px; height: 348px; }
+
+body.light .island {
+  --bg: #f6f7fa;
+  --fg1: rgba(18, 20, 26, 0.94);
+  --fg2: rgba(18, 20, 26, 0.64);
+  --fg3: rgba(18, 20, 26, 0.44);
+  --s04: rgba(18, 20, 26, 0.036);
+  --s06: rgba(18, 20, 26, 0.058);
+  --s09: rgba(18, 20, 26, 0.086);
+  --s14: rgba(18, 20, 26, 0.13);
+  --bd: rgba(18, 20, 26, 0.085);
+  --bd-strong: rgba(18, 20, 26, 0.16);
+  --acc: #0a7cd1;
+  --acc-soft: rgba(10, 124, 209, 0.12);
+  --on-acc: #ffffff;
+  --up: #d92d3f;
+  --up-bg: rgba(217, 45, 63, 0.11);
+  --up-bd: rgba(217, 45, 63, 0.24);
+  --down: #128a49;
+  --down-bg: rgba(18, 138, 73, 0.11);
+  --down-bd: rgba(18, 138, 73, 0.24);
+  --flat: rgba(18, 20, 26, 0.50);
+  --flat-bg: rgba(18, 20, 26, 0.07);
+  --live: #169c54;
+  box-shadow: 0 0 0 1px rgba(18, 20, 26, 0.1), 0 18px 46px rgba(0, 0, 0, 0.2);
+}
+
+body.green-up .island {
+  --up: #2ed573;
+  --up-bg: rgba(46, 213, 115, 0.15);
+  --up-bd: rgba(46, 213, 115, 0.28);
+  --down: #ff5c6a;
+  --down-bg: rgba(255, 92, 106, 0.16);
+  --down-bd: rgba(255, 92, 106, 0.28);
+}
+body.light.green-up .island {
+  --up: #128a49;
+  --up-bg: rgba(18, 138, 73, 0.11);
+  --up-bd: rgba(18, 138, 73, 0.24);
+  --down: #d92d3f;
+  --down-bg: rgba(217, 45, 63, 0.11);
+  --down-bd: rgba(217, 45, 63, 0.24);
+}
+
+.ibar {
+  flex: none;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 22px 0 24px;
+  gap: 8px;
+  position: relative;
+}
+.ibar .brand {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-right: 4px;
+  opacity: 0.9;
+}
+.ibar-icons {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--fg2);
+  font-size: 13.5px;
+}
+.ibar-more {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--s09);
+  color: var(--fg1);
+}
+.ibar-notch {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 196px;
+  height: 36px;
+  border-radius: 0 0 14px 14px;
+  border: 1px solid var(--bd);
+  border-top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--fg3);
+  background: var(--bg);
+}
+body.w-narrow .ibar-notch { width: 110px; }
+body.w-narrow .ibar-icons .hide-n { display: none; }
+.ibar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--fg2);
+  font-size: 13.5px;
+}
+.page-arrow {
+  position: absolute;
+  top: 56%;
+  transform: translateY(-50%);
+  color: var(--fg3);
+  font-size: 14px;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.page-arrow.l { left: 6px; }
+.page-arrow.r { right: 6px; }
+
+.ibody {
+  flex: 1;
+  min-height: 0;
+  padding: 6px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.s-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 22px;
+}
+.s-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--fg2);
+}
+.s-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 3px rgba(46, 213, 115, 0.18);
+  flex: none;
+}
+.s-counts {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--s06);
+  border: 1px solid var(--bd);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.s-counts .u { color: var(--up); }
+.s-counts .d { color: var(--down); }
+.s-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.sample-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--acc-soft);
+  color: var(--acc);
+  border: 1px solid color-mix(in srgb, var(--acc) 32%, transparent);
+  transition: opacity 150ms var(--ease);
+}
+body.custom-mode .sample-pill { display: none; }
+.icon-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg2);
+  background: transparent;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.icon-btn:hover { background: var(--s09); color: var(--fg1); }
+
+.c-up { color: var(--up); }
+.c-down { color: var(--down); }
+.c-flat { color: var(--flat); }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.pill.up { background: var(--up-bg); color: var(--up); border: 1px solid var(--up-bd); }
+.pill.down { background: var(--down-bg); color: var(--down); border: 1px solid var(--down-bd); }
+.pill.flat { background: var(--flat-bg); color: var(--flat); border: 1px solid var(--bd); }
+
+.mkt-tag {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--s09);
+  color: var(--fg2);
+  letter-spacing: 0.03em;
+}
+
+.flash-up { animation: flashUp 520ms ease; }
+.flash-down { animation: flashDown 520ms ease; }
+@keyframes flashUp {
+  0% { background-color: var(--up-bg); }
+  100% { background-color: transparent; }
+}
+@keyframes flashDown {
+  0% { background-color: var(--down-bg); }
+  100% { background-color: transparent; }
+}
+
+.a-split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.92fr);
+  gap: 12px;
+}
+@container (max-width: 520px) {
+  .a-split { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 8px; }
+  .a-focus-stats { display: none !important; }
+  .a-chart-wrap { height: 58px !important; }
+}
+.a-focus {
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 11px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.a-focus-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.a-focus-id { min-width: 0; }
+.a-focus-name {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.a-focus-code {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--fg3);
+  font-family: var(--font-mono);
+}
+.a-focus-price-box {
+  text-align: right;
+  flex: none;
+}
+.a-focus-price {
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.a-focus-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.a-chart-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 68px;
+  margin: 8px 0 6px;
+  cursor: crosshair;
+}
+.a-chart-wrap svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.a-hover-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--bd-strong);
+  color: var(--fg1);
+  opacity: 0;
+  transition: opacity 100ms ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+}
+.a-focus-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding-top: 7px;
+  border-top: 1px solid var(--bd);
+}
+.a-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.a-stat span { font-size: 10px; color: var(--fg3); }
+.a-stat b { font-size: 11.5px; font-weight: 600; color: var(--fg2); }
+
+.a-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 2px;
+}
+.a-row {
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr) 48px auto 62px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px 6px 7px;
+  border-radius: 10px;
+  background: var(--s04);
+  border: 1px solid transparent;
+  text-align: left;
+  transition: background 120ms var(--ease), border-color 120ms var(--ease);
+}
+.a-row:hover { background: var(--s06); }
+.a-row.active {
+  background: var(--s09);
+  border-color: var(--bd-strong);
+}
+.a-bar {
+  width: 3px;
+  height: 22px;
+  border-radius: 99px;
+}
+.a-bar.up { background: var(--up); }
+.a-bar.down { background: var(--down); }
+.a-bar.flat { background: var(--flat); }
+.a-row-name {
+  min-width: 0;
+}
+.a-row-name b {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.a-row-name small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--fg3);
+  font-family: var(--font-mono);
+  margin-top: 1px;
+}
+.a-row-price {
+  font-size: 12.5px;
+  font-weight: 650;
+  text-align: right;
+}
+
+.b-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+@container (max-width: 580px) {
+  .b-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); }
+}
+.b-tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: 13px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 9px 11px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  transition: transform 140ms var(--ease), border-color 140ms var(--ease), background 140ms var(--ease);
+}
+.b-tile:hover {
+  background: var(--s06);
+  border-color: var(--bd-strong);
+}
+.b-tile.active {
+  border-color: var(--acc);
+  background: var(--s09);
+}
+.b-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.b-tile.up::before { background: radial-gradient(90% 90% at 100% 100%, var(--up-bg), transparent 72%); }
+.b-tile.down::before { background: radial-gradient(90% 90% at 100% 100%, var(--down-bg), transparent 72%); }
+.b-tile-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+.b-tile-title { min-width: 0; }
+.b-tile-title b {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.b-tile-title small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--fg3);
+  font-family: var(--font-mono);
+}
+.b-tile-mid {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 2px;
+}
+.b-tile-price {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.b-tile-chg {
+  font-size: 11px;
+  font-weight: 600;
+}
+.b-tile-spark {
+  position: relative;
+  z-index: 1;
+  height: 24px;
+  margin-top: 2px;
+}
+.b-tile-spark svg { width: 100%; height: 100%; display: block; }
+
+.c-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.c-strip {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+@container (max-width: 520px) {
+  .c-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .c-strip .c-idx:nth-child(3) { display: none; }
+}
+.c-idx {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--s06);
+  border: 1px solid var(--bd);
+  min-width: 0;
+}
+.c-idx-l {
+  min-width: 0;
+}
+.c-idx-l b {
+  display: block;
+  font-size: 11px;
+  color: var(--fg2);
+  font-weight: 600;
+  line-height: 1.15;
+}
+.c-idx-l strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.c-idx-r {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex: none;
+}
+.c-idx-r span { font-size: 11px; font-weight: 650; }
+.c-cols {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 10px;
+  align-content: start;
+  overflow-y: auto;
+}
+@container (max-width: 520px) {
+  .c-cols { grid-template-columns: 1fr; }
+}
+.c-item {
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr) 44px auto 60px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 6px;
+  border-radius: 9px;
+  background: var(--s04);
+  border: 1px solid transparent;
+  text-align: left;
+  transition: background 120ms var(--ease), border-color 120ms var(--ease);
+}
+.c-item:hover { background: var(--s06); }
+.c-item.active { background: var(--s09); border-color: var(--bd-strong); }
+.c-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  font-size: 11px;
+  color: var(--fg2);
+}
+.c-foot b { color: var(--fg1); font-weight: 600; }
+.c-foot-vals {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+.d-top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.d-tabs {
+  display: inline-flex;
+  gap: 3px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--s06);
+  border: 1px solid var(--bd);
+}
+.d-tabs button {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--fg2);
+  font-weight: 550;
+}
+.d-tabs button.on {
+  background: var(--s14);
+  color: var(--fg1);
+  font-weight: 650;
+}
+.d-table {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  background: var(--s04);
+  overflow: hidden;
+}
+.d-thead, .d-tr {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.35fr) 74px 86px 72px 78px minmax(110px, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+}
+@container (max-width: 640px) {
+  .d-thead, .d-tr { grid-template-columns: minmax(100px, 1.3fr) 58px 74px 72px; }
+  .d-col-chg, .d-col-rng { display: none !important; }
+}
+.d-thead {
+  height: 26px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--fg3);
+  border-bottom: 1px solid var(--bd);
+  background: var(--s04);
+  flex: none;
+}
+.d-thead span.r, .d-tr .r { text-align: right; }
+.d-tbody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.d-tr {
+  height: 36px;
+  border-bottom: 1px solid color-mix(in srgb, var(--bd) 65%, transparent);
+  width: 100%;
+  text-align: left;
+  transition: background 110ms var(--ease);
+}
+.d-tr:last-child { border-bottom: 0; }
+.d-tr:hover { background: var(--s06); }
+.d-tr.active { background: var(--s09); }
+.d-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.d-name-cell b {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.d-name-cell small {
+  font-size: 10px;
+  color: var(--fg3);
+  font-family: var(--font-mono);
+}
+.d-price { font-size: 12.5px; font-weight: 650; }
+.d-chg { font-size: 11.5px; font-weight: 600; }
+.d-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--fg3);
+  font-family: var(--font-mono);
+}
+.d-track {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--s09);
+  position: relative;
+}
+.d-dot {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.d-dot.up { background: var(--up); box-shadow: 0 0 0 2px var(--up-bg); }
+.d-dot.down { background: var(--down); box-shadow: 0 0 0 2px var(--down-bg); }
+
+.e-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.e-cards {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+@container (max-width: 600px) {
+  .e-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .e-card:nth-child(n+3) { display: none; }
+}
+.e-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--s04);
+  border: 1px solid var(--bd);
+  padding: 12px 13px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  transition: transform 160ms var(--ease), border-color 140ms var(--ease), background 140ms var(--ease);
+}
+.e-card:hover { transform: translateY(-1px); background: var(--s06); border-color: var(--bd-strong); }
+.e-card.active { border-color: var(--acc); }
+.e-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.e-card-head b {
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.e-card-code {
+  font-size: 10.5px;
+  color: var(--fg3);
+  font-family: var(--font-mono);
+  margin-top: 1px;
+}
+.e-card-pct {
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-top: 6px;
+}
+.e-card-price {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg2);
+  margin-top: 2px;
+}
+.e-card-chart {
+  height: 58px;
+  margin: 8px -13px 0;
+}
+.e-card-chart svg { width: 100%; height: 100%; display: block; }
+.e-card-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--fg3);
+  padding-top: 5px;
+  border-top: 1px solid var(--bd);
+}
+.e-pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.e-pager button {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--s06);
+  border: 1px solid var(--bd);
+  color: var(--fg2);
+}
+.e-pager button.on {
+  background: var(--s14);
+  color: var(--fg1);
+  font-weight: 600;
+}
+
+.bar-section {
+  margin: 12px 0 48px;
+  background: var(--doc-card);
+  border: 1px solid var(--doc-line);
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+.bar-section h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.bar-section p {
+  margin: 0 0 14px;
+  color: var(--doc-t2);
+  font-size: 12.5px;
+}
+.bar-demos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 26px;
+  align-items: center;
+}
+.bar-demo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bar-demo-item small {
+  font-size: 11.5px;
+  color: var(--doc-t3);
+}
+.collapsed-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 99px;
+  background: #050507;
+  color: #f8f6f2;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+body.light .collapsed-pill {
+  background: #f8f9fc;
+  color: #16181f;
+  border-color: rgba(18, 20, 26, 0.12);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+.collapsed-pill .sep { opacity: 0.25; }
+.collapsed-pill .up { color: #ff5c6a; font-weight: 650; }
+.collapsed-pill .down { color: #2ed573; font-weight: 650; }
+body.green-up .collapsed-pill .up { color: #2ed573; }
+body.green-up .collapsed-pill .down { color: #ff5c6a; }
+
+.compare-wrap {
+  background: var(--doc-card);
+  border: 1px solid var(--doc-line);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+.compare-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.compare-wrap th, .compare-wrap td {
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--doc-line);
+  vertical-align: top;
+}
+.compare-wrap th {
+  font-size: 11.5px;
+  color: var(--doc-t3);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.025);
+}
+.compare-wrap tr:last-child td { border-bottom: 0; }
+.compare-wrap td b { color: var(--doc-t1); }
+
+.choice-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px 9px 18px;
+  border-radius: 99px;
+  background: rgba(20, 23, 31, 0.94);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(116, 214, 255, 0.35);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+  font-size: 12.5px;
+  color: var(--doc-t1);
+}
+.choice-dock .copy-btn {
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--accent);
+  color: #051e2a;
+  font-weight: 650;
+  font-size: 12px;
+}
+.choice-dock.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <h1>股票插件 UI 方案对比</h1>
+    <span class="badge">@fuyu/stock</span>
+  </div>
+  <nav>
+    <a href="#opt-a" class="rec">A · 左图右表</a>
+    <a href="#opt-b">B · 6 格瓷砖</a>
+    <a href="#opt-c">C · 指数条 + 双栏</a>
+    <a href="#opt-d">D · 终端表格</a>
+    <a href="#opt-e">E · 极简竖卡</a>
+    <a href="#collapsed">收起条</a>
+    <a href="#compare">横向对比</a>
+  </nav>
+  <div class="topbar-controls">
+    <div class="ctl">
+      <span>岛屿</span>
+      <div class="seg" role="group" aria-label="岛屿外观">
+        <button data-theme="dark" aria-pressed="true">深色</button>
+        <button data-theme="light" aria-pressed="false">浅色</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>宽度</span>
+      <div class="seg" role="group" aria-label="岛屿宽度">
+        <button data-width="wide" aria-pressed="true">宽 800</button>
+        <button data-width="mid" aria-pressed="false">中 560</button>
+        <button data-width="narrow" aria-pressed="false">窄 380</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>配色</span>
+      <div class="seg" role="group" aria-label="涨跌配色">
+        <button data-color="red-up" aria-pressed="true">红涨绿跌</button>
+        <button data-color="green-up" aria-pressed="false">绿涨红跌</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>状态</span>
+      <div class="seg" role="group" aria-label="示例状态">
+        <button data-sample="sample" aria-pressed="true">示例态</button>
+        <button data-sample="custom" aria-pressed="false">已自定义</button>
+      </div>
+    </div>
+    <button class="tick-btn" id="tickBtn" aria-pressed="false">
+      <span class="pulse"></span>模拟跳价
+    </button>
+  </div>
+</header>
+
+<main>
+  <p class="intro">
+    浮屿展开态是一个 <b>宽 800px × 矮 312px</b> 的横屏容器（扣除顶栏后内容区约 <b>752 × 246px</b>）。旧版单列列表会把中间 500px 全部空成纯黑，且垂直只能挤下 3.5 只股。下面按 <b>5 种完全不同的信息架构</b> 放进 1:1 真实岛屿框里，所有卡片/行都可直接点击交互，顶部可切换深浅岛、宽度、红绿习惯与示例态。
+  </p>
+
+  <div class="problems">
+    <div><b>横向空间零浪费</b>按 800px 宽屏设计，彻底消除旧版左右两头贴边、中间大块黑洞的问题。</div>
+    <div><b>示例提示零占行高</b>去掉 40px 独立蓝灰横幅，改为顶栏内联 <code>示例 · 自定义 ›</code> 胶囊，释放垂直空间。</div>
+    <div><b>真实分时数据驱动</b>已验证腾讯 <code>web.ifzq.gtimg.cn</code> 可稳定拿 A/港/美股日内分钟走势，全部方案都能真机落地。</div>
+    <div><b>窄岛响应式兼容</b>顶部切到「中 560 / 窄 380」可直接查看窄岛自动折行或堆叠效果。</div>
+  </div>
+
+  <section class="opt" id="opt-a">
+    <div class="opt-head">
+      <span class="letter">A</span>
+      <h2>左分时焦点 + 右自选列表（Master-Detail 看板）</h2>
+      <span class="rec-pill">当前 DEV 岛已上线 · 综合推荐</span>
+      <button class="pick-btn" data-pick="方案 A（左图右表 Master-Detail）">选这个方案</button>
+      <p>对标 Apple Stocks 桌面大组件 + 富途迷你看盘 + 浮屿系统监控。左侧展示当前焦点股的大号价格、日内分时面积图与开高低收，右侧高密度列 5 只自选 + 迷你走势，点右侧任意一行切换左侧大图。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage">
+        <div class="island" id="island-a"></div>
+      </div>
+      <aside class="notes">
+        <h3>优点</h3>
+        <ul>
+          <li><span class="good">最贴合浮屿宽屏比例</span>，左侧分时图把宽岛视觉撑满，右侧列表一眼看全 5 只。</li>
+          <li><span class="good">兼顾“扫一眼”和“看细节”</span>：不用跳出浮屿就能看分时走势、昨收虚线与日内高低。</li>
+          <li>和系统监控面板的“左图表 + 右排行”构图一致，整岛设计语言最统一。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li><span class="trade">一次只看 1 只详细走势</span>，看其他股需要点一下右侧列表。</li>
+        </ul>
+        <div class="try">试一试：点击右侧任意一只股票切换焦点；把鼠标移到左侧分时曲线上，可悬停查看任意分钟价格与涨跌幅。</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="opt" id="opt-b">
+    <div class="opt-head">
+      <span class="letter alt">B</span>
+      <h2>6 格行情瓷砖网格（3×2 全景瓷砖）</h2>
+      <span class="tag-pill">多股同屏 · 零点击扫完</span>
+      <button class="pick-btn" data-pick="方案 B（3×2 行情瓷砖网格）">选这个方案</button>
+      <p>对标桌面小组件看板与富途多股瓷砖。6 张等权卡片铺满 3×2 网格，每张卡自带大号价格、涨跌胶囊和底部渐变分时折线，不点鼠标也能一眼扫完 6 只核心标的。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage">
+        <div class="island" id="island-b"></div>
+      </div>
+      <aside class="notes">
+        <h3>优点</h3>
+        <ul>
+          <li><span class="good">零交互成本</span>：展开岛 0.5 秒内同时看清 6 只股的涨跌颜色、价格和走势形态。</li>
+          <li><span class="good">视觉最饱满</span>：微弱涨跌色底晕让红绿氛围一目了然，不会显得空荡。</li>
+          <li>中/窄岛自然折成 2×3 网格，适配非常丝滑。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li><span class="trade">不显示今开/最高/最低/昨收</span>，偏向轻量快速盯盘而非深度看盘。</li>
+          <li>自选超过 6 只时需要滚动或翻页。</li>
+        </ul>
+        <div class="try">试一试：点击任意瓷砖高亮聚焦；开启顶栏「模拟跳价」观察多卡片同时闪动的效果。</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="opt" id="opt-c">
+    <div class="opt-head">
+      <span class="letter alt">C</span>
+      <h2>顶部大盘指数条 + 双栏自选列表</h2>
+      <span class="tag-pill">高容量 · 一屏 9–11 只</span>
+      <button class="pick-btn" data-pick="方案 C（顶部指数条 + 双栏自选）">选这个方案</button>
+      <p>对标同花顺 / 雪球极简桌面小窗。顶部一条固定 3 个核心大盘指数（上证 / 恒生 / 纳指），下方两列并排紧凑列表，一屏轻松塞下 8 只自选股，底部单行显示选中股的开高低收。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage">
+        <div class="island" id="island-c"></div>
+      </div>
+      <aside class="notes">
+        <h3>优点</h3>
+        <ul>
+          <li><span class="good">同屏标的数最多</span>：3 个指数 + 8 只个股一屏全显，完全不用滚。</li>
+          <li><span class="good">符合国内看盘肌肉记忆</span>：先瞄大盘情绪，再扫个股列表。</li>
+          <li>底部一条状态栏按需展示选中标的的今开/最高/最低/昨收，不占版面。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li><span class="trade">没有大号分时面积图</span>，仅有行内 44px 迷你趋势折线。</li>
+        </ul>
+        <div class="try">试一试：点击任意一行个股，看底部详情条即时切换该股的今开、最高、最低、昨收。</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="opt" id="opt-d">
+    <div class="opt-head">
+      <span class="letter alt">D</span>
+      <h2>极客终端表格式（Bloomberg / Raycast 专业风）</h2>
+      <span class="tag-pill">专业盯盘 · 字段最全</span>
+      <button class="pick-btn" data-pick="方案 D（终端表格专业风）">选这个方案</button>
+      <p>去掉厚重卡片，用冷静的金融表格把 800px 横向铺满 6 个对齐列：标的、日内分时微图、最新价、涨跌额、涨跌幅、日内振幅区间滑轨，并带市场筛选标签（全部 / A 股 / 港股 / 美股）。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage">
+        <div class="island" id="island-d"></div>
+      </div>
+      <aside class="notes">
+        <h3>优点</h3>
+        <ul>
+          <li><span class="good">横向信息密度与专业感拉满</span>：一行的「日内振幅滑轨」直接看出当前价接近全天最高还是最低。</li>
+          <li><span class="good">内置按市场快速过滤</span>，自选股多（10+ 只）时找票最快。</li>
+          <li>对齐极度工整，等宽数字视觉节奏非常干净。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li><span class="trade">偏工具/极客气质</span>，情感化与大字视觉冲击弱于 A / B / E。</li>
+        </ul>
+        <div class="try">试一试：点击表头上方的「全部 / A股 / 港股 / 美股」筛选按钮切换列表。</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="opt" id="opt-e">
+    <div class="opt-head">
+      <span class="letter alt">E</span>
+      <h2>大数字极简竖卡流（Apple / Linear 极简美学）</h2>
+      <span class="tag-pill">颜值克制 · 强视觉冲击</span>
+      <button class="pick-btn" data-pick="方案 E（大数字极简竖卡流）">选这个方案</button>
+      <p>4 张大留白竖卡横向一字排开，突出超大号涨跌幅与半卡面积分时图，把噪音减到最少。超过 4 只自选时用顶栏极简分组页签（1-4 / 5-8）一键切页。</p>
+    </div>
+    <div class="opt-row">
+      <div class="stage">
+        <div class="island" id="island-e"></div>
+      </div>
+      <aside class="notes">
+        <h3>优点</h3>
+        <ul>
+          <li><span class="good">视觉最克制、最像原生苹果小组件</span>，超大号涨跌幅远看也能秒读。</li>
+          <li>每张卡都有完整面积分时图，比 B 的小折线更有曲线美感。</li>
+        </ul>
+        <h3>取舍</h3>
+        <ul>
+          <li><span class="trade">一屏只放 4 只</span>，自选多时需要翻页。</li>
+        </ul>
+        <div class="try">试一试：点击右上角页码「1–4 / 5–8」切换展示后 4 只美港股。</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="bar-section" id="collapsed">
+    <h2>收起态顶栏（Collapsed Bar）顺手对比</h2>
+    <p>展开面板之外，岛屿收起时股票插件也会在胶囊里轮播显示一只置顶/当前股：</p>
+    <div class="bar-demos">
+      <div class="bar-demo-item">
+        <small>样式 1 · 简洁胶囊（当前版）</small>
+        <div class="collapsed-pill">
+          <span>贵州茅台</span>
+          <b>1465.19</b>
+          <span class="down">-0.65%</span>
+        </div>
+      </div>
+      <div class="bar-demo-item">
+        <small>样式 2 · 带迷你趋势折线 + 涨跌双标</small>
+        <div class="collapsed-pill">
+          <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><path d="M1 9 L5 7 L9 8 L14 4 L19 5 L23 2" stroke="#ff5c6a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>腾讯控股</span>
+          <span class="up">+2.02%</span>
+          <span class="sep">|</span>
+          <span>苹果</span>
+          <span class="up">+0.43%</span>
+        </div>
+      </div>
+      <div class="bar-demo-item">
+        <small>样式 3 · 大盘 + 涨跌计数速览</small>
+        <div class="collapsed-pill">
+          <span>上证 3475.46</span>
+          <span class="down">-0.03%</span>
+          <span class="sep">·</span>
+          <span class="up">↑5</span>
+          <span class="down">↓3</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <h2 style="font-size:17px;margin:0 0 12px;">五套方案横向对比</h2>
+    <div class="compare-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>方案</th>
+            <th>同屏数量</th>
+            <th>分时大图</th>
+            <th>核心亮点</th>
+            <th>最适合谁</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>A · 左图右表</b></td>
+            <td>1 焦点 + 5 列表</td>
+            <td>有（带悬停查价 + 昨收虚线）</td>
+            <td>宽岛黄金分割，兼顾总览与分时细节</td>
+            <td>既想看分时走势又想盯几只核心股</td>
+          </tr>
+          <tr>
+            <td><b>B · 6 格瓷砖</b></td>
+            <td>6 只等权</td>
+            <td>每卡微型面积走势</td>
+            <td>零点击一扫全盘，视觉饱满有氛围</td>
+            <td>同时盯 4–6 只股、只想瞟一眼涨跌</td>
+          </tr>
+          <tr>
+            <td><b>C · 指数条 + 双栏</b></td>
+            <td>3 指数 + 8 个股</td>
+            <td>行内微图 + 底部详情条</td>
+            <td>同屏容量最大，先看大盘再看个股</td>
+            <td>自选股多（8–15 只）、习惯传统行情软件</td>
+          </tr>
+          <tr>
+            <td><b>D · 终端表格</b></td>
+            <td>6 行可见 + 市场筛选</td>
+            <td>列内走势 + 日内振幅滑轨</td>
+            <td>字段最全、跨市场过滤、极度工整</td>
+            <td>重度盯盘 / 量化 / 喜欢专业终端审美</td>
+          </tr>
+          <tr>
+            <td><b>E · 极简竖卡</b></td>
+            <td>4 只 / 页</td>
+            <td>4 张大面积曲线卡</td>
+            <td>超大号涨跌幅、高颜值克制留白</td>
+            <td>自选精简（3–4 只）、重视整体设计美感</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="choice-dock hidden" id="choiceDock">
+  <span id="choiceText">已标记偏好</span>
+  <button class="copy-btn" id="copyChoice">复制给助手</button>
+</div>
+
+<script>
+const STOCKS = [
+  {
+    code: "000001", market: "SH", name: "上证指数", price: 3475.46, preClose: 3476.47,
+    open: 3478.10, high: 3491.22, low: 3464.08,
+    pts: [3478.1,3481.4,3485.0,3482.7,3488.3,3491.2,3487.5,3483.1,3479.8,3474.2,3471.0,3466.5,3464.1,3468.8,3472.4,3476.9,3473.5,3475.1,3477.8,3474.9,3475.46]
+  },
+  {
+    code: "600519", market: "SH", name: "贵州茅台", price: 1465.19, preClose: 1474.84,
+    open: 1476.00, high: 1481.50, low: 1458.20,
+    pts: [1476.0,1479.2,1481.5,1478.4,1473.0,1470.6,1472.1,1469.0,1464.5,1461.2,1458.2,1460.8,1463.9,1467.2,1464.0,1462.5,1466.1,1464.8,1463.7,1465.19]
+  },
+  {
+    code: "00700", market: "HK", name: "腾讯控股", price: 344.20, preClose: 337.40,
+    open: 339.00, high: 346.60, low: 337.80,
+    pts: [339.0,338.2,337.8,339.6,341.0,340.4,342.2,343.8,343.1,344.5,345.9,346.6,345.2,344.0,344.8,345.6,344.9,343.7,344.6,344.20]
+  },
+  {
+    code: "AAPL", market: "US", name: "苹果", price: 229.85, preClose: 228.87,
+    open: 228.40, high: 231.12, low: 227.60,
+    pts: [228.4,227.9,227.6,228.2,229.1,229.6,228.9,229.4,230.2,230.9,231.1,230.5,229.8,230.1,230.6,229.7,229.4,230.0,229.6,229.85]
+  },
+  {
+    code: "NVDA", market: "US", name: "英伟达", price: 141.62, preClose: 136.94,
+    open: 138.20, high: 143.10, low: 137.45,
+    pts: [138.2,137.5,138.8,139.6,140.2,139.7,141.1,142.0,141.4,142.6,143.1,142.4,141.8,142.2,141.3,140.9,141.5,142.1,141.4,141.62]
+  },
+  {
+    code: "300750", market: "SZ", name: "宁德时代", price: 256.40, preClose: 251.18,
+    open: 252.00, high: 259.30, low: 250.80,
+    pts: [252.0,250.8,251.5,253.2,254.6,254.0,255.8,257.1,258.5,259.3,258.2,257.4,256.1,256.9,257.6,256.8,255.9,256.2,256.7,256.40]
+  },
+  {
+    code: "09988", market: "HK", name: "阿里巴巴", price: 96.35, preClose: 97.60,
+    open: 97.20, high: 98.10, low: 95.40,
+    pts: [97.2,98.1,97.6,96.9,96.5,96.8,96.1,95.7,95.4,95.9,96.2,96.0,96.6,96.4,95.9,96.2,96.5,96.1,96.4,96.35]
+  },
+  {
+    code: "TSLA", market: "US", name: "特斯拉", price: 332.80, preClose: 322.15,
+    open: 325.00, high: 336.40, low: 323.90,
+    pts: [325.0,323.9,326.1,328.4,327.6,330.2,331.8,333.5,335.1,336.4,334.9,333.6,332.0,333.2,334.0,332.5,331.9,333.1,332.4,332.80]
+  }
+];
+
+const INDICES = [
+  { name: "上证指数", price: 3475.46, preClose: 3476.47, pts: [3478,3485,3491,3483,3474,3464,3472,3476,3475.46] },
+  { name: "恒生指数", price: 20842.10, preClose: 20598.60, pts: [20610,20645,20710,20690,20760,20820,20885,20810,20842.1] },
+  { name: "纳斯达克", price: 19124.55, preClose: 19002.40, pts: [19015,18990,19040,19075,19060,19110,19150,19108,19124.55] }
+];
+
+const TIMES = [
+  "09:30","09:45","10:00","10:15","10:30","10:45","11:00","11:15","11:30",
+  "13:00","13:15","13:30","13:45","14:00","14:15","14:30","14:40","14:50","14:55","15:00"
+];
+
+const state = {
+  focusA: 2,
+  focusB: 2,
+  focusC: 2,
+  focusD: 0,
+  marketD: "ALL",
+  pageE: 0,
+  focusE: 2,
+  ticking: false,
+  picked: null
+};
+
+function dirOf(item) {
+  const diff = item.price - item.preClose;
+  if (Math.abs(diff) < 0.0001) return "flat";
+  return diff > 0 ? "up" : "down";
+}
+
+function fmtPrice(v) {
+  return v >= 1000 ? v.toFixed(2) : v.toFixed(2);
+}
+
+function fmtDiff(item) {
+  const d = item.price - item.preClose;
+  return (d > 0 ? "+" : "") + d.toFixed(2);
+}
+
+function fmtPct(item) {
+  const p = ((item.price - item.preClose) / item.preClose) * 100;
+  return (p > 0 ? "+" : "") + p.toFixed(2) + "%";
+}
+
+function counts() {
+  let up = 0, down = 0;
+  for (const s of STOCKS) {
+    const d = dirOf(s);
+    if (d === "up") up++;
+    else if (d === "down") down++;
+  }
+  return { up, down };
+}
+
+function strokeColor(dir) {
+  if (dir === "up") return "var(--up)";
+  if (dir === "down") return "var(--down)";
+  return "var(--flat)";
+}
+
+function sparkSVG(pts, dir, w = 48, h = 18, area = false, idSuffix = "") {
+  const min = Math.min(...pts);
+  const max = Math.max(...pts);
+  const span = max - min || 1;
+  const padY = 2;
+  const coords = pts.map((v, i) => {
+    const x = (i / (pts.length - 1)) * w;
+    const y = h - padY - ((v - min) / span) * (h - padY * 2);
+    return [x, y];
+  });
+  const d = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(" ");
+  const col = strokeColor(dir);
+  let fill = "";
+  if (area) {
+    const gid = `g-${idSuffix}-${Math.random().toString(36).slice(2, 7)}`;
+    const areaD = `${d} L${w} ${h} L0 ${h} Z`;
+    fill = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${col}" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="${col}" stop-opacity="0.01"/>
+    </linearGradient></defs><path d="${areaD}" fill="url(#${gid})"/>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${fill}<path d="${d}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function islandChrome(bodyHtml) {
+  return `
+    <div class="ibar">
+      <span class="brand">Fuyu</span>
+      <div class="ibar-icons">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>
+        <svg class="ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <svg class="ic hide-n" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg>
+        <svg class="ic hide-n" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span class="ibar-more hide-n">··· +6</span>
+      </div>
+      <div class="ibar-notch">DEV</div>
+      <div class="ibar-right">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <svg class="ic hide-n" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/></svg>
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+    </div>
+    <span class="page-arrow l">‹</span>
+    <span class="page-arrow r">›</span>
+    <div class="ibody">${bodyHtml}</div>
+  `;
+}
+
+function statusHeader(extraRight = "") {
+  const { up, down } = counts();
+  return `
+    <div class="s-bar">
+      <div class="s-meta">
+        <span class="s-dot"></span>
+        <span>交易中 · 14:58 更新</span>
+        <span class="s-counts"><span class="u">↑${up}</span><span class="d">↓${down}</span></span>
+      </div>
+      <div class="s-actions">
+        ${extraRight}
+        <button class="sample-pill" title="打开设置自定义自选股">示例 · 自定义 ›</button>
+        <button class="icon-btn" title="刷新行情"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></button>
+        <button class="icon-btn" title="管理自选股"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      </div>
+    </div>
+  `;
+}
+
+function renderA() {
+  const s = STOCKS[state.focusA];
+  const d = dirOf(s);
+  const col = strokeColor(d);
+  const pts = s.pts;
+  const allV = [...pts, s.preClose];
+  const min = Math.min(...allV);
+  const max = Math.max(...allV);
+  const span = max - min || 1;
+  const W = 380, H = 92, padY = 8;
+  const coords = pts.map((v, i) => [
+    (i / (pts.length - 1)) * W,
+    H - padY - ((v - min) / span) * (H - padY * 2)
+  ]);
+  const lineD = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(" ");
+  const areaD = `${lineD} L${W} ${H} L0 ${H} Z`;
+  const preY = H - padY - ((s.preClose - min) / span) * (H - padY * 2);
+  const last = coords[coords.length - 1];
+
+  const listHtml = STOCKS.slice(0, 5).map((item, idx) => {
+    const idir = dirOf(item);
+    return `
+      <button class="a-row ${idx === state.focusA ? "active" : ""}" data-a-idx="${idx}">
+        <span class="a-bar ${idir}"></span>
+        <span class="a-row-name">
+          <b>${item.name}</b>
+          <small><span class="mkt-tag">${item.market}</span>${item.code}</small>
+        </span>
+        ${sparkSVG(item.pts, idir, 48, 16, false)}
+        <span class="a-row-price c-${idir}">${fmtPrice(item.price)}</span>
+        <span class="pill ${idir}">${fmtPct(item)}</span>
+      </button>
+    `;
+  }).join("");
+
+  const html = statusHeader() + `
+    <div class="a-split">
+      <div class="a-focus">
+        <div class="a-focus-top">
+          <div class="a-focus-id">
+            <div class="a-focus-name">${s.name}</div>
+            <div class="a-focus-code"><span class="mkt-tag">${s.market}</span>${s.code}</div>
+          </div>
+          <div class="a-focus-price-box">
+            <div class="a-focus-price c-${d}">${fmtPrice(s.price)}</div>
+            <div class="a-focus-delta">
+              <span class="c-${d}">${fmtDiff(s)}</span>
+              <span class="pill ${d}">${fmtPct(s)}</span>
+            </div>
+          </div>
+        </div>
+        <div class="a-chart-wrap" id="aChartWrap">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="aGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${col}" stop-opacity="0.30"/>
+                <stop offset="100%" stop-color="${col}" stop-opacity="0.01"/>
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="${preY.toFixed(1)}" x2="${W}" y2="${preY.toFixed(1)}" stroke="currentColor" stroke-opacity="0.22" stroke-dasharray="3 3" stroke-width="1"/>
+            <path d="${areaD}" fill="url(#aGrad)"/>
+            <path d="${lineD}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.4" fill="${col}"/>
+            <line id="aCrossX" x1="0" y1="0" x2="0" y2="${H}" stroke="currentColor" stroke-opacity="0" stroke-width="1" stroke-dasharray="2 2"/>
+            <circle id="aCrossDot" cx="0" cy="0" r="3.6" fill="${col}" opacity="0"/>
+          </svg>
+          <div class="a-hover-tip" id="aHoverTip"></div>
+        </div>
+        <div class="a-focus-stats">
+          <div class="a-stat"><span>今开</span><b>${fmtPrice(s.open)}</b></div>
+          <div class="a-stat"><span>最高</span><b class="c-up">${fmtPrice(s.high)}</b></div>
+          <div class="a-stat"><span>最低</span><b class="c-down">${fmtPrice(s.low)}</b></div>
+          <div class="a-stat"><span>昨收</span><b>${fmtPrice(s.preClose)}</b></div>
+        </div>
+      </div>
+      <div class="a-list">${listHtml}</div>
+    </div>
+  `;
+
+  const el = document.getElementById("island-a");
+  el.innerHTML = islandChrome(html);
+  el.querySelectorAll("[data-a-idx]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.focusA = Number(btn.dataset.aIdx);
+      renderA();
+    });
+  });
+
+  const wrap = document.getElementById("aChartWrap");
+  const crossX = document.getElementById("aCrossX");
+  const crossDot = document.getElementById("aCrossDot");
+  const tip = document.getElementById("aHoverTip");
+  if (wrap && crossX && crossDot && tip) {
+    wrap.addEventListener("mousemove", e => {
+      const rect = wrap.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const idx = Math.round(ratio * (pts.length - 1));
+      const [cx, cy] = coords[idx];
+      const val = pts[idx];
+      const pct = ((val - s.preClose) / s.preClose) * 100;
+      crossX.setAttribute("x1", cx.toFixed(1));
+      crossX.setAttribute("x2", cx.toFixed(1));
+      crossX.setAttribute("stroke-opacity", "0.35");
+      crossDot.setAttribute("cx", cx.toFixed(1));
+      crossDot.setAttribute("cy", cy.toFixed(1));
+      crossDot.setAttribute("opacity", "1");
+      tip.textContent = `${TIMES[idx] || "14:58"}  ${val.toFixed(2)} (${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%)`;
+      const tx = Math.min(rect.width - 138, Math.max(4, ratio * rect.width - 64));
+      tip.style.left = tx + "px";
+      tip.style.opacity = "1";
+    });
+    wrap.addEventListener("mouseleave", () => {
+      crossX.setAttribute("stroke-opacity", "0");
+      crossDot.setAttribute("opacity", "0");
+      tip.style.opacity = "0";
+    });
+  }
+}
+
+function renderB() {
+  const tiles = STOCKS.slice(0, 6).map((item, idx) => {
+    const d = dirOf(item);
+    return `
+      <button class="b-tile ${d} ${idx === state.focusB ? "active" : ""}" data-b-idx="${idx}">
+        <div class="b-tile-top">
+          <div class="b-tile-title">
+            <b>${item.name}</b>
+            <small><span class="mkt-tag">${item.market}</span>${item.code}</small>
+          </div>
+          <span class="pill ${d}">${fmtPct(item)}</span>
+        </div>
+        <div class="b-tile-mid">
+          <span class="b-tile-price c-${d}">${fmtPrice(item.price)}</span>
+          <span class="b-tile-chg c-${d}">${fmtDiff(item)}</span>
+        </div>
+        <div class="b-tile-spark">${sparkSVG(item.pts, d, 180, 24, true, "b" + idx)}</div>
+      </button>
+    `;
+  }).join("");
+
+  const el = document.getElementById("island-b");
+  el.innerHTML = islandChrome(statusHeader() + `<div class="b-grid">${tiles}</div>`);
+  el.querySelectorAll("[data-b-idx]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.focusB = Number(btn.dataset.bIdx);
+      renderB();
+    });
+  });
+}
+
+function renderC() {
+  const stripHtml = INDICES.map((ix, i) => {
+    const d = dirOf(ix);
+    return `
+      <div class="c-idx">
+        <div class="c-idx-l">
+          <b>${ix.name}</b>
+          <strong class="c-${d}">${ix.price.toFixed(2)}</strong>
+        </div>
+        <div class="c-idx-r">
+          <span class="c-${d}">${fmtPct(ix)}</span>
+          <div style="width:46px;height:13px">${sparkSVG(ix.pts, d, 46, 13, false)}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const listHtml = STOCKS.map((item, idx) => {
+    const d = dirOf(item);
+    return `
+      <button class="c-item ${idx === state.focusC ? "active" : ""}" data-c-idx="${idx}">
+        <span class="a-bar ${d}"></span>
+        <span class="a-row-name">
+          <b>${item.name}</b>
+          <small><span class="mkt-tag">${item.market}</span>${item.code}</small>
+        </span>
+        ${sparkSVG(item.pts, d, 44, 15, false)}
+        <span class="a-row-price c-${d}">${fmtPrice(item.price)}</span>
+        <span class="pill ${d}">${fmtPct(item)}</span>
+      </button>
+    `;
+  }).join("");
+
+  const sel = STOCKS[state.focusC];
+  const html = statusHeader() + `
+    <div class="c-wrap">
+      <div class="c-strip">${stripHtml}</div>
+      <div class="c-cols">${listHtml}</div>
+      <div class="c-foot">
+        <span>选中：<b>${sel.name}</b> <span class="mkt-tag">${sel.market}</span> ${sel.code}</span>
+        <div class="c-foot-vals">
+          <span>开 ${fmtPrice(sel.open)}</span>
+          <span class="c-up">高 ${fmtPrice(sel.high)}</span>
+          <span class="c-down">低 ${fmtPrice(sel.low)}</span>
+          <span>昨 ${fmtPrice(sel.preClose)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const el = document.getElementById("island-c");
+  el.innerHTML = islandChrome(html);
+  el.querySelectorAll("[data-c-idx]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.focusC = Number(btn.dataset.cIdx);
+      renderC();
+    });
+  });
+}
+
+function renderD() {
+  const tabs = [
+    { id: "ALL", label: "全部" },
+    { id: "CN", label: "A 股" },
+    { id: "HK", label: "港股" },
+    { id: "US", label: "美股" }
+  ];
+  const filtered = STOCKS.filter(s => {
+    if (state.marketD === "ALL") return true;
+    if (state.marketD === "CN") return s.market === "SH" || s.market === "SZ";
+    return s.market === state.marketD;
+  });
+
+  const tabsHtml = `<div class="d-tabs">${tabs.map(t =>
+    `<button class="${t.id === state.marketD ? "on" : ""}" data-d-tab="${t.id}">${t.label}</button>`
+  ).join("")}</div>`;
+
+  const rowsHtml = filtered.map((item, idx) => {
+    const d = dirOf(item);
+    const span = item.high - item.low || 1;
+    const pos = Math.max(6, Math.min(94, ((item.price - item.low) / span) * 100));
+    return `
+      <button class="d-tr ${idx === state.focusD ? "active" : ""}" data-d-idx="${idx}">
+        <span class="d-name-cell">
+          <span class="mkt-tag">${item.market}</span>
+          <b>${item.name}</b>
+          <small>${item.code}</small>
+        </span>
+        <span>${sparkSVG(item.pts, d, 70, 16, false)}</span>
+        <span class="d-price r c-${d}">${fmtPrice(item.price)}</span>
+        <span class="d-chg r c-${d} d-col-chg">${fmtDiff(item)}</span>
+        <span class="r"><span class="pill ${d}">${fmtPct(item)}</span></span>
+        <span class="d-range d-col-rng">
+          <span>${item.low.toFixed(0)}</span>
+          <span class="d-track"><span class="d-dot ${d}" style="left:${pos.toFixed(1)}%"></span></span>
+          <span>${item.high.toFixed(0)}</span>
+        </span>
+      </button>
+    `;
+  }).join("");
+
+  const html = statusHeader(tabsHtml) + `
+    <div class="d-table">
+      <div class="d-thead">
+        <span>标的</span>
+        <span>日内分时</span>
+        <span class="r">最新价</span>
+        <span class="r d-col-chg">涨跌额</span>
+        <span class="r">涨跌幅</span>
+        <span class="d-col-rng">日内振幅区间</span>
+      </div>
+      <div class="d-tbody">${rowsHtml}</div>
+    </div>
+  `;
+
+  const el = document.getElementById("island-d");
+  el.innerHTML = islandChrome(html);
+  el.querySelectorAll("[data-d-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.marketD = btn.dataset.dTab;
+      state.focusD = 0;
+      renderD();
+    });
+  });
+  el.querySelectorAll("[data-d-idx]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.focusD = Number(btn.dataset.dIdx);
+      renderD();
+    });
+  });
+}
+
+function renderE() {
+  const start = state.pageE * 4;
+  const slice = STOCKS.slice(start, start + 4);
+  const pagerHtml = `
+    <div class="e-pager">
+      <button class="${state.pageE === 0 ? "on" : ""}" data-e-page="0">1–4</button>
+      <button class="${state.pageE === 1 ? "on" : ""}" data-e-page="1">5–8</button>
+    </div>
+  `;
+  const cardsHtml = slice.map((item, i) => {
+    const idx = start + i;
+    const d = dirOf(item);
+    return `
+      <button class="e-card ${idx === state.focusE ? "active" : ""}" data-e-idx="${idx}">
+        <div>
+          <div class="e-card-head">
+            <b>${item.name}</b>
+            <span class="mkt-tag">${item.market}</span>
+          </div>
+          <div class="e-card-code">${item.code}</div>
+          <div class="e-card-pct c-${d}">${fmtPct(item)}</div>
+          <div class="e-card-price">${fmtPrice(item.price)} <span class="c-${d}" style="font-size:11px;margin-left:3px">${fmtDiff(item)}</span></div>
+        </div>
+        <div>
+          <div class="e-card-chart">${sparkSVG(item.pts, d, 170, 56, true, "e" + idx)}</div>
+          <div class="e-card-foot">
+            <span>开 ${fmtPrice(item.open)}</span>
+            <span>昨 ${fmtPrice(item.preClose)}</span>
+          </div>
+        </div>
+      </button>
+    `;
+  }).join("");
+
+  const el = document.getElementById("island-e");
+  el.innerHTML = islandChrome(statusHeader(pagerHtml) + `<div class="e-wrap"><div class="e-cards">${cardsHtml}</div></div>`);
+  el.querySelectorAll("[data-e-page]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.pageE = Number(btn.dataset.ePage);
+      renderE();
+    });
+  });
+  el.querySelectorAll("[data-e-idx]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.focusE = Number(btn.dataset.eIdx);
+      renderE();
+    });
+  });
+}
+
+function renderAll() {
+  renderA();
+  renderB();
+  renderC();
+  renderD();
+  renderE();
+}
+
+document.querySelectorAll("[data-theme]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-theme]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+    document.body.classList.toggle("light", btn.dataset.theme === "light");
+  });
+});
+
+document.querySelectorAll("[data-width]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-width]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+    document.body.classList.remove("w-mid", "w-narrow");
+    if (btn.dataset.width === "mid") document.body.classList.add("w-mid");
+    if (btn.dataset.width === "narrow") document.body.classList.add("w-narrow");
+  });
+});
+
+document.querySelectorAll("[data-color]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-color]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+    document.body.classList.toggle("green-up", btn.dataset.color === "green-up");
+  });
+});
+
+document.querySelectorAll("[data-sample]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-sample]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+    document.body.classList.toggle("custom-mode", btn.dataset.sample === "custom");
+  });
+});
+
+let tickTimer = null;
+const tickBtn = document.getElementById("tickBtn");
+tickBtn.addEventListener("click", () => {
+  state.ticking = !state.ticking;
+  tickBtn.setAttribute("aria-pressed", String(state.ticking));
+  if (state.ticking) {
+    tickTimer = setInterval(() => {
+      for (const s of STOCKS) {
+        const step = (Math.random() - 0.49) * s.preClose * 0.0028;
+        s.price = Math.max(0.01, +(s.price + step).toFixed(2));
+        s.high = Math.max(s.high, s.price);
+        s.low = Math.min(s.low, s.price);
+        s.pts = [...s.pts.slice(1), s.price];
+      }
+      renderAll();
+    }, 1400);
+  } else if (tickTimer) {
+    clearInterval(tickTimer);
+    tickTimer = null;
+  }
+});
+
+const dock = document.getElementById("choiceDock");
+const choiceText = document.getElementById("choiceText");
+const copyChoice = document.getElementById("copyChoice");
+document.querySelectorAll("[data-pick]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const label = btn.dataset.pick;
+    state.picked = label;
+    document.querySelectorAll("[data-pick]").forEach(b => {
+      const on = b === btn;
+      b.classList.toggle("picked", on);
+      b.textContent = on ? "已选中 ✓" : "选这个方案";
+    });
+    choiceText.textContent = `当前选中：${label}`;
+    dock.classList.remove("hidden");
+  });
+});
+
+copyChoice.addEventListener("click", async () => {
+  if (!state.picked) return;
+  const text = `股票插件 UI 我选 ${state.picked}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    copyChoice.textContent = "已复制 ✓";
+    setTimeout(() => { copyChoice.textContent = "复制给助手"; }, 1400);
+  } catch {
+    copyChoice.textContent = "请直接回复方案字母";
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>

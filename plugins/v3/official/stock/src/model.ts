@@ -1,6 +1,7 @@
 export type Market = "cn" | "hk" | "us" | "other";
 export type ColorScheme = "redUp" | "greenUp";
 export type BarMode = "rotate" | "fixed";
+export type LayoutMode = "split" | "tiles" | "dual" | "table" | "cards";
 export type SourceId = "eastmoney" | "tencent";
 
 export interface StockItem {
@@ -13,6 +14,7 @@ export interface StockItem {
 export interface StockSettings {
   stocks: StockItem[];
   sample: boolean;
+  layout: LayoutMode;
   refreshSeconds: number;
   colorScheme: ColorScheme;
   showInBar: boolean;
@@ -59,6 +61,7 @@ export type AddResult = { ok: true; stock: StockItem } | { ok: false; reason: "i
 
 export const REFRESH_OPTIONS = [15, 30, 60, 120, 300] as const;
 export const BAR_SECONDS_OPTIONS = [3, 5, 8, 10] as const;
+export const LAYOUT_OPTIONS: readonly LayoutMode[] = ["split", "tiles", "dual", "table", "cards"] as const;
 export const MAX_STOCKS = 20;
 export const SOFT_REFRESH_MS = 10_000;
 
@@ -68,11 +71,13 @@ export const SAMPLE_STOCKS: readonly StockItem[] = [
   { id: "116.00700", code: "00700", name: "腾讯控股", kind: "港股" },
   { id: "105.AAPL", code: "AAPL", name: "苹果", kind: "美股" },
   { id: "105.NVDA", code: "NVDA", name: "英伟达", kind: "美股" },
+  { id: "0.300750", code: "300750", name: "宁德时代", kind: "深A" },
 ];
 
 export const DEFAULT_SETTINGS: StockSettings = {
   stocks: [],
   sample: false,
+  layout: "split",
   refreshSeconds: 30,
   colorScheme: "redUp",
   showInBar: true,
@@ -146,6 +151,7 @@ export function normalizeSettings(raw: unknown, base: StockSettings = DEFAULT_SE
   return {
     stocks,
     sample: stocks.length > 0 && flag(src.sample, base.sample),
+    layout: pick(src.layout, LAYOUT_OPTIONS, base.layout),
     refreshSeconds: pick(src.refreshSeconds, REFRESH_OPTIONS, base.refreshSeconds as (typeof REFRESH_OPTIONS)[number]),
     colorScheme: pick(src.colorScheme, ["redUp", "greenUp"] as const, base.colorScheme),
     showInBar: flag(src.showInBar, base.showInBar),

@@ -35,7 +35,7 @@ const BACKOFF_SECONDS = [60, 120, 300, 600];
 const HOLIDAY_RECHECK_MS = 30 * 60_000;
 const MAX_SLEEP_MS = 6 * 60 * 60_000;
 const TREND_TTL_MS = 2 * 60_000;
-const PREFETCH_TRENDS = 6;
+const PREFETCH_TRENDS = 8;
 
 type SetupApi = { settings?: { setup?: (state: PluginSetupState) => Promise<void> | void } };
 type HttpApi = { http?: { fetch?: HttpFetch } };

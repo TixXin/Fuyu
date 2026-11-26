@@ -20,8 +20,9 @@
 
 **自选股**：搜索添加、上移下移、删除。列表是空的时候，浮屿「设置 → 插件」里这个插件会标出「待设置」（需要较新的浮屿）。
 
-**颜色**
+**外观与布局**
 
+- **页面样式**：左图右表（默认）/ 瓷砖网格 / 顶栏双列 / 终端表格 / 极简竖卡。
 - **涨跌颜色**：红涨绿跌（默认）/ 绿涨红跌。
 
 **刷新**
@@ -67,8 +68,9 @@ Your stock watchlist on the island: A-share, Hong Kong and US quotes take turns 
 
 **Watchlist**: search and add, move up and down, remove. While it is empty, Fuyu's Settings → Plugins marks the plugin as needing setup (newer Fuyu versions).
 
-**Colors**
+**Appearance**
 
+- **Page layout**: Split chart (default) / Tile grid / Strip & 2-col / Data table / Minimal cards.
 - **Up and down**: red up, green down (default) / green up, red down.
 
 **Refresh**

@@ -1,5 +1,13 @@
 # 更新记录 · Changelog
 
+## 1.3.0
+
+- 新增 5 套可切换的岛页布局（默认「左图右表」，可在设置 → 插件 → 自选股 → 外观与布局里自由切换）：左图右表（分时看板）、瓷砖网格（3×2）、顶栏双列（置顶条 + 双栏列表 + 底部开高低收）、终端表格（含市场筛选与日内振幅滑轨）、极简竖卡（4 联大数字曲线卡）。
+- 「左图右表」分时图支持鼠标悬停十字线查看任意节点价格与涨跌幅；首次安装示例自选股扩至 6 只（补入宁德时代），各布局比例更均衡。
+
+- Added 5 switchable island layouts in Settings → Plugins → Stocks → Appearance (defaulting to Split chart): Split chart (Master-Detail), Tile grid (3×2), Strip & 2-col (top highlight strip + 2-column list + OHLC footer), Data table (with market filters and intraday range track), and Minimal cards (4-up area-chart cards with pager).
+- Added hover crosshair & price readout on the Split chart intraday curve, and expanded the default sample watchlist to 6 items for balanced grids.
+
 ## 1.2.0
 
 - 重做宽岛布局为「左图右表」分时看板（对标 Apple Stocks 与桌面迷你看盘，适配窄屏自动堆叠）：左侧展示选中股票的大号现价、实时分时折线渐变面积图、昨收虚线基准线与今开/最高/最低/昨收指标，右侧展示高密度自选列表与行内微型走势线，点击任意一只实时切换左侧分时。
