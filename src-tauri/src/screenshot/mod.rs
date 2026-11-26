@@ -30,6 +30,8 @@ pub(crate) mod window_shadow;
 #[cfg(test)]
 mod tests;
 
+use std::sync::Arc;
+
 use tauri::{AppHandle, Emitter, WebviewWindow};
 
 pub(crate) use output::is_screenshot_file;
@@ -61,6 +63,7 @@ use session::{OverlaySession, PixelRect};
 use targets::LocalTarget;
 
 pub(crate) fn init(app: &AppHandle) {
+    capture::prewarm();
     hotkeys::init(app);
     background::register(app);
     output::prune_at_start(app);
@@ -173,9 +176,41 @@ pub fn screenshot_session(window: WebviewWindow) -> Option<OverlaySession> {
 #[tauri::command]
 pub async fn screenshot_frame(window: WebviewWindow) -> Result<tauri::ipc::Response, String> {
     wait_for_capture().await;
-    session::frame(window.label())
-        .map(tauri::ipc::Response::new)
-        .ok_or_else(|| "No screenshot is open.".to_string())
+    let Some((id, width, height, rgba)) = session::frame_with_meta(window.label()) else {
+        return Err("No screenshot is open.".to_string());
+    };
+    if deliver_shared_frame(&window, id, width, height, &rgba).await {
+        return Ok(tauri::ipc::Response::new(Vec::new()));
+    }
+    Ok(tauri::ipc::Response::new(Arc::unwrap_or_clone(rgba)))
+}
+
+#[cfg(windows)]
+async fn deliver_shared_frame(
+    window: &WebviewWindow,
+    id: u64,
+    width: u32,
+    height: u32,
+    rgba: &Arc<Vec<u8>>,
+) -> bool {
+    let window = window.clone();
+    let rgba = Arc::clone(rgba);
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::win32::webview_shared_buffer::post_rgba(&window, id, width, height, rgba).is_ok()
+    })
+    .await
+    .unwrap_or(false)
+}
+
+#[cfg(not(windows))]
+async fn deliver_shared_frame(
+    _window: &WebviewWindow,
+    _id: u64,
+    _width: u32,
+    _height: u32,
+    _rgba: &Arc<Vec<u8>>,
+) -> bool {
+    false
 }
 
 async fn wait_for_capture() {

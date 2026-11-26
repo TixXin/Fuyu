@@ -370,3 +370,42 @@ fn a_kept_screenshot_is_copied_out_of_the_history_and_only_kept_files_are_handed
     assert!(kept_file(&dir, &folder(&dir).join("missing.png").display().to_string()).is_err());
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[cfg(target_os = "macos")]
+#[test]
+fn macos_bgra_to_rgba_swaps_channels_across_padded_rows_and_unaligned_slices() {
+    use crate::macos::screen_capture::bgra_to_rgba;
+
+    let width = 5;
+    let height = 3;
+    let row = 28;
+    let mut padded = vec![0xaa_u8; 1 + row * height];
+    for y in 0..height {
+        for x in 0..width {
+            let offset = 1 + y * row + x * 4;
+            let b = (x * 17 + y * 5) as u8;
+            let g = (x * 31 + y * 11) as u8;
+            let r = (x * 43 + y * 19) as u8;
+            padded[offset..offset + 4].copy_from_slice(&[b, g, r, 0x10]);
+        }
+    }
+    let unaligned = &padded[1..];
+    let mut aligned = vec![0_u8; row * height];
+    aligned.copy_from_slice(unaligned);
+
+    let out_aligned = bgra_to_rgba(&aligned, width, height, row).expect("aligned convert");
+    let out_unaligned = bgra_to_rgba(unaligned, width, height, row).expect("unaligned convert");
+    assert_eq!(out_aligned, out_unaligned);
+    for y in 0..height {
+        for x in 0..width {
+            let at = (y * width + x) * 4;
+            let b = (x * 17 + y * 5) as u8;
+            let g = (x * 31 + y * 11) as u8;
+            let r = (x * 43 + y * 19) as u8;
+            assert_eq!(&out_aligned[at..at + 4], &[r, g, b, 255]);
+        }
+    }
+    assert_eq!(bgra_to_rgba(&aligned[..row * height - 1], width, height, row), None);
+    assert_eq!(bgra_to_rgba(&aligned, 0, height, row), None);
+    assert_eq!(bgra_to_rgba(&aligned, width, height, width * 4 - 4), None);
+}

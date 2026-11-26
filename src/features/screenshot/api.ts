@@ -50,13 +50,7 @@ export function startScreenshot(mode: ScreenshotMode) {
   return invoke<void>("screenshot_start", { mode });
 }
 
-export function getScreenshotSession() {
-  return invoke<ScreenshotSession | null>("screenshot_session");
-}
-
-export function getScreenshotFrame() {
-  return invoke<ArrayBuffer>("screenshot_frame");
-}
+export { getScreenshotFrame, getScreenshotSession } from "./frame/api";
 
 export function getScreenshotTargets() {
   return invoke<Target[]>("screenshot_targets");

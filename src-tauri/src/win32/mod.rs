@@ -57,6 +57,7 @@ pub(crate) mod webview_crash;
 pub(crate) mod webview_drop;
 pub(crate) mod webview_memory;
 pub(crate) mod webview_scale;
+pub(crate) mod webview_shared_buffer;
 pub(crate) mod webview_visibility;
 pub(crate) mod win_key_hook;
 pub(crate) mod window;

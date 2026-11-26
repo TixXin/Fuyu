@@ -15,6 +15,8 @@ pub(super) struct Grab {
     pub(super) rgba: Vec<u8>,
 }
 
+pub(super) fn prewarm() {}
+
 pub(super) fn ensure_access() -> Result<(), String> {
     Ok(())
 }
