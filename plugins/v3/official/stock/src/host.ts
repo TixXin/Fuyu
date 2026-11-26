@@ -5,8 +5,10 @@ import { isSessionTime, looksLikeHoliday, nextOpenAt, watchedMarkets } from "./m
 import {
   MAX_STOCKS,
   METHODS,
+  SAMPLE_STOCKS,
   SOFT_REFRESH_MS,
   TOPICS,
+  initialSettings,
   isQuoteId,
   marketOf,
   moveItem,
@@ -19,8 +21,9 @@ import {
   type SourceId,
   type StockSettings,
   type StockState,
+  type TrendSeries,
 } from "./model.ts";
-import { fetchQuotes, searchStocks, type HttpFetch } from "./sources.ts";
+import { fetchQuotes, fetchTrend, searchStocks, type HttpFetch } from "./sources.ts";
 import { SETUP_HINT } from "./text.ts";
 
 export const name = "@fuyu/stock";
@@ -31,6 +34,8 @@ const CACHE_FILE = "cache.json";
 const BACKOFF_SECONDS = [60, 120, 300, 600];
 const HOLIDAY_RECHECK_MS = 30 * 60_000;
 const MAX_SLEEP_MS = 6 * 60 * 60_000;
+const TREND_TTL_MS = 2 * 60_000;
+const PREFETCH_TRENDS = 8;
 
 type SetupApi = { settings?: { setup?: (state: PluginSetupState) => Promise<void> | void } };
 type HttpApi = { http?: { fetch?: HttpFetch } };
@@ -79,8 +84,10 @@ export function apply(ctx: Context) {
     return httpFetch ? httpFetch(input, init) : fetch(input, init);
   };
 
-  let settings: StockSettings = normalizeSettings(readJson(join(ctx.dataDir, CONFIG_FILE)));
+  let settings: StockSettings = initialSettings(readJson(join(ctx.dataDir, CONFIG_FILE)));
   const quotes = loadCache(readJson(join(ctx.dataDir, CACHE_FILE)));
+  const trends = new Map<string, TrendSeries>();
+  const pendingTrends = new Map<string, Promise<TrendSeries | null>>();
   let source: SourceId | null = null;
   let updatedAt: number | null = null;
   let failures = 0;
@@ -88,6 +95,10 @@ export function apply(ctx: Context) {
   let nextAt: number | null = null;
   let running: Promise<StockState> | null = null;
   let stopTimer: (() => Promise<void>) | null = null;
+  let disposed = false;
+  (ctx as unknown as { on?: (event: string, fn: () => void) => void }).on?.("dispose", () => {
+    disposed = true;
+  });
 
   const quotesOf = (market: Market) => settings.stocks.filter((stock) => marketOf(stock.id) === market).map((stock) => quotes.get(stock.id));
 
@@ -111,14 +122,24 @@ export function apply(ctx: Context) {
   const snapshot = (): StockState => {
     const at = Date.now();
     const shown: Record<string, Quote> = {};
+    const shownTrends: Record<string, TrendSeries> = {};
     for (const stock of settings.stocks) {
       const quote = quotes.get(stock.id);
       if (quote) shown[stock.id] = quote;
+      const series = trends.get(stock.id);
+      if (series) shownTrends[stock.id] = series;
     }
-    return { settings, quotes: shown, status: feed(at).status, source, updatedAt, nextAt, loading, at };
+    return { settings, quotes: shown, trends: shownTrends, status: feed(at).status, source, updatedAt, nextAt, loading, at };
   };
 
-  const publish = () => ctx.clients.publish(TOPICS.state, snapshot());
+  const publish = () => {
+    if (disposed) return;
+    try {
+      ctx.clients.publish(TOPICS.state, snapshot());
+    } catch {
+      return;
+    }
+  };
 
   const persist = () => {
     writeJson(ctx.dataDir, CONFIG_FILE, settings);
@@ -131,13 +152,47 @@ export function apply(ctx: Context) {
       stopTimer = null;
     }
     nextAt = null;
+    if (disposed) return;
     const { delay } = feed(Date.now());
     if (delay === null) return;
     nextAt = Date.now() + delay;
-    stopTimer = ctx.setTimeout(() => {
+    try {
+      stopTimer = ctx.setTimeout(() => {
+        stopTimer = null;
+        void refresh();
+      }, delay);
+    } catch {
       stopTimer = null;
-      void refresh();
-    }, delay);
+    }
+  }
+
+  function ensureTrend(id: string, force = false): Promise<TrendSeries | null> {
+    if (!isQuoteId(id)) return Promise.resolve(null);
+    const existing = trends.get(id);
+    if (!force && existing && Date.now() - existing.updatedAt < TREND_TTL_MS) {
+      return Promise.resolve(existing);
+    }
+    const inflight = pendingTrends.get(id);
+    if (inflight) return inflight;
+    const task = fetchTrend(fetcher, id)
+      .then((series) => {
+        if (series && !disposed) {
+          trends.set(id, series);
+          publish();
+        }
+        return series;
+      })
+      .finally(() => {
+        pendingTrends.delete(id);
+      });
+    pendingTrends.set(id, task);
+    return task;
+  }
+
+  function prefetchTrends(ids: readonly string[]) {
+    for (const id of ids.slice(0, PREFETCH_TRENDS)) {
+      void ensureTrend(id, false);
+    }
   }
 
   async function runRefresh(): Promise<StockState> {
@@ -153,10 +208,12 @@ export function apply(ctx: Context) {
       const result = await fetchQuotes(fetcher, ids);
       for (const quote of result.quotes) quotes.set(quote.id, quote);
       for (const id of [...quotes.keys()]) if (!ids.includes(id)) quotes.delete(id);
+      for (const id of [...trends.keys()]) if (!ids.includes(id)) trends.delete(id);
       source = result.source;
       updatedAt = Date.now();
       failures = 0;
       writeJson(ctx.dataDir, CACHE_FILE, { quotes: [...quotes.values()] });
+      prefetchTrends(ids);
     } catch {
       failures += 1;
     } finally {
@@ -202,14 +259,14 @@ export function apply(ctx: Context) {
     if (!stock) return { ok: false, reason: "invalid" };
     if (settings.stocks.some((item) => item.id === stock.id)) return { ok: false, reason: "duplicate" };
     if (settings.stocks.length >= MAX_STOCKS) return { ok: false, reason: "full" };
-    settings = { ...settings, stocks: [...settings.stocks, stock] };
+    settings = { ...settings, stocks: [...settings.stocks, stock], sample: false };
     persist();
     void refresh();
     return { ok: true, stock };
   });
 
   ctx.clients.handle(METHODS.removeStock, async (params?: { id?: unknown }) => {
-    settings = { ...settings, stocks: settings.stocks.filter((stock) => stock.id !== params?.id) };
+    settings = { ...settings, stocks: settings.stocks.filter((stock) => stock.id !== params?.id), sample: false };
     quotes.delete(String(params?.id));
     persist();
     schedule();
@@ -221,14 +278,26 @@ export function apply(ctx: Context) {
     const from = Number(params?.from);
     const to = Number(params?.to);
     if (Number.isInteger(from) && Number.isInteger(to)) {
-      settings = { ...settings, stocks: moveItem(settings.stocks, from, to) };
+      settings = { ...settings, stocks: moveItem(settings.stocks, from, to), sample: false };
       persist();
       publish();
     }
     return snapshot();
   });
 
+  ctx.clients.handle(METHODS.restoreSample, async () => {
+    settings = { ...settings, stocks: SAMPLE_STOCKS.map((stock) => ({ ...stock })), sample: true };
+    persist();
+    return refresh();
+  });
+
   ctx.clients.handle(METHODS.refresh, async (params?: { soft?: unknown }) => refresh(params?.soft === true));
+
+  ctx.clients.handle(METHODS.getTrend, async (params?: { id?: unknown; force?: unknown }) => {
+    const id = typeof params?.id === "string" ? params.id : "";
+    await ensureTrend(id, params?.force === true);
+    return snapshot();
+  });
 
   ctx.commands.register("refresh", () => refresh(), {
     title: { "zh-CN": "立即刷新行情", en: "Refresh quotes now" },

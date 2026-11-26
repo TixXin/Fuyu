@@ -340,15 +340,15 @@ export function SideDockWindow() {
                           </button>
                         </div>
                       )}
-                      {settings.pageArrows && (
-                        <SideDockPageArrows
-                          dockPages={dockPages}
-                          currentId={currentEntry?.id ?? null}
-                          labelFor={labelFor}
-                          onSelectPage={selectPage}
-                        />
-                      )}
                     </div>
+                    {settings.pageArrows && (
+                      <SideDockPageArrows
+                        dockPages={dockPages}
+                        currentId={currentEntry?.id ?? null}
+                        labelFor={labelFor}
+                        onSelectPage={selectPage}
+                      />
+                    )}
                   </div>
                 </section>
               )}

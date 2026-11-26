@@ -1,7 +1,7 @@
 use std::{
     sync::{mpsc, Mutex, PoisonError},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tauri::{AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, Monitor, Position, Size, WebviewWindow};
 
@@ -13,9 +13,22 @@ use crate::island::screen;
 use crate::macos::{apps, input};
 
 const FOCUS_SETTLE: Duration = Duration::from_millis(120);
+const BLUR_GRACE: Duration = Duration::from_millis(250);
 const PIN_GRIP: i32 = 24;
 
 static TARGET_APP: Mutex<Option<i32>> = Mutex::new(None);
+static LAST_OPENED: Mutex<Option<Instant>> = Mutex::new(None);
+
+fn mark_opened() {
+    *LAST_OPENED.lock().unwrap_or_else(PoisonError::into_inner) = Some(Instant::now());
+}
+
+fn within_blur_grace() -> bool {
+    LAST_OPENED
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .is_some_and(|opened| opened.elapsed() < BLUR_GRACE)
+}
 
 fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
     app.get_webview_window(WINDOW_LABEL)
@@ -89,6 +102,7 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
     }
     let _ = window.emit_to(WINDOW_LABEL, OPENED_EVENT, ());
     let _ = window.emit_to(crate::onboarding_window::WINDOW_LABEL, OPENED_EVENT, ());
+    mark_opened();
     let handle = app.clone();
     let shown = app.run_on_main_thread(move || {
         let Ok(window) = popup_window(&handle) else {
@@ -105,6 +119,7 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
         }
         let webview: &tauri::Webview = window.as_ref();
         let _ = webview.set_focus();
+        mark_opened();
     });
     shown.map_err(|error| error.to_string())
 }
@@ -118,6 +133,27 @@ pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     }
     let handle = app.clone();
     app.run_on_main_thread(move || {
+        if !crate::macos::island_panel::hide_panel(&handle, WINDOW_LABEL) {
+            if let Ok(window) = popup_window(&handle) {
+                let _ = window.hide();
+            }
+        }
+    })
+    .map_err(|error| error.to_string())
+}
+
+pub(super) fn hide_on_blur(app: &AppHandle) -> Result<(), String> {
+    if within_blur_grace() || app.get_webview_window(WINDOW_LABEL).is_none() {
+        return Ok(());
+    }
+    let handle = app.clone();
+    app.run_on_main_thread(move || {
+        if within_blur_grace() || crate::macos::island_panel::is_panel_key(&handle, WINDOW_LABEL) {
+            return;
+        }
+        super::preview_window::hide(&handle, false);
+        super::background::schedule_preview_close_after_popup(&handle);
+        super::background::popup_hidden(&handle);
         if !crate::macos::island_panel::hide_panel(&handle, WINDOW_LABEL) {
             if let Ok(window) = popup_window(&handle) {
                 let _ = window.hide();
@@ -199,7 +235,7 @@ pub(super) fn paste(app: &AppHandle, id: &str, options: PasteOptions) -> Result<
     if !settings.popup_pinned {
         hide_before_paste(app);
     }
-    let outcome = paste_into(app, target, settings.auto_paste, options.enter);
+    let outcome = paste_into(app, target, settings.auto_paste, options.enter, settings.popup_pinned);
     super::copy_notice::notify_paste(id, outcome);
     Ok(outcome == PasteOutcome::Sent)
 }
@@ -211,7 +247,7 @@ pub(super) fn paste_text(app: &AppHandle, text: &str, enter: bool) -> Result<(),
     if !settings.popup_pinned {
         hide_before_paste(app);
     }
-    paste_into(app, target_for_paste(settings.popup_pinned), settings.auto_paste, enter);
+    paste_into(app, target_for_paste(settings.popup_pinned), settings.auto_paste, enter, settings.popup_pinned);
     Ok(())
 }
 
@@ -230,7 +266,22 @@ fn outcome(target: Option<i32>, auto_paste: bool, can_post_keys: impl FnOnce() -
     }
 }
 
-fn paste_into(app: &AppHandle, target: Option<i32>, auto_paste: bool, enter: bool) -> PasteOutcome {
+#[cfg(debug_assertions)]
+fn debug_focus_snapshot(app: &AppHandle) -> (bool, Option<String>) {
+    let (tx, rx) = mpsc::sync_channel(1);
+    if app
+        .run_on_main_thread(move || {
+            let _ = tx.send(crate::macos::island_panel::debug_app_focus_state());
+        })
+        .is_ok()
+    {
+        rx.recv_timeout(Duration::from_millis(100)).unwrap_or((false, None))
+    } else {
+        (false, None)
+    }
+}
+
+fn paste_into(app: &AppHandle, target: Option<i32>, auto_paste: bool, enter: bool, pinned: bool) -> PasteOutcome {
     let result = outcome(target, auto_paste, input::can_post_keys);
     match result {
         PasteOutcome::NoTarget => eprintln!("clipboard paste: no app was recorded when the window opened, so it was only copied"),
@@ -250,7 +301,7 @@ fn paste_into(app: &AppHandle, target: Option<i32>, auto_paste: bool, enter: boo
         let (tx, rx) = mpsc::sync_channel(1);
         let main = handle.clone();
         let queued = handle.run_on_main_thread(move || {
-            let _ = tx.send(crate::macos::island_panel::hand_key_back_to(&main, WINDOW_LABEL, target));
+            let _ = tx.send(crate::macos::island_panel::release_panel_key_for_paste(&main, WINDOW_LABEL, target, pinned));
         });
         let activated = match queued {
             Ok(()) => rx.recv_timeout(Duration::from_millis(500)).unwrap_or_else(|_| apps::activate_main_window(target)),
@@ -261,9 +312,19 @@ fn paste_into(app: &AppHandle, target: Option<i32>, auto_paste: bool, enter: boo
             return;
         }
         thread::sleep(FOCUS_SETTLE);
+        #[cfg(debug_assertions)]
+        let (fuyu_active, fuyu_key) = debug_focus_snapshot(&handle);
         input::send_paste_shortcut();
         #[cfg(debug_assertions)]
-        eprintln!("clipboard paste: sent ⌘V to pid {target} ({})", apps::display_name(target).unwrap_or_default());
+        eprintln!(
+            "clipboard paste: sent ⌘V to pid {target} ({}) [front={:?} ax={} post={} fuyu_active={} fuyu_key={:?}]",
+            apps::display_name(target).unwrap_or_default(),
+            apps::frontmost_pid(),
+            crate::macos::accessibility::is_trusted(),
+            input::can_post_keys(),
+            fuyu_active,
+            fuyu_key,
+        );
         if enter {
             thread::sleep(FOCUS_SETTLE);
             input::send_enter();

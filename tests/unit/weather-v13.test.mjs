@@ -212,7 +212,7 @@ test("weather v1.3 host: multi-city, controlled http, opt-in AQI, offline unit s
     settings: { setup: async (state) => void reports.push(state) },
   });
   apply(ctx);
-  assert.deepEqual(reports, [{ needed: true, hint: { "zh-CN": "选一个城市", en: "Pick a city" } }]);
+  assert.equal(reports.at(-1).needed, false);
 
   const hangzhou = {
     id: coordsId(30.2937, 120.1614),

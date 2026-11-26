@@ -54,7 +54,16 @@ test("Eastmoney batch quotes: ids join market and code, a suspended stock has no
 test("Tencent fallback reads the numbers after the code, and its local times land on the right instant", () => {
   const ids = ["1.600519", "116.00700", "105.AAPL"];
   const quotes = Object.fromEntries(parseTencent(TENCENT_BODY, ids).map((quote) => [quote.id, quote]));
-  assert.deepEqual(quotes["1.600519"], { id: "1.600519", price: 1464.02, change: -10.82, percent: -0.73, time: at("2026-11-26T09:45:39+08:00") });
+  assert.deepEqual(quotes["1.600519"], {
+    id: "1.600519",
+    price: 1464.02,
+    change: -10.82,
+    percent: -0.73,
+    time: at("2026-11-26T09:45:39+08:00"),
+    open: 1470,
+    high: 1470,
+    preClose: 1474.84,
+  });
   assert.equal(quotes["116.00700"].time, at("2026-11-26T09:30:40+08:00"));
   assert.equal(quotes["116.00700"].percent, 1.07);
   assert.equal(quotes["105.AAPL"].time, at("2026-11-25T16:00:02-05:00"));
@@ -115,11 +124,15 @@ test("settings keep valid stocks only, without duplicates, and fall back to defa
     stocks: [{ id: "1.600519", name: "贵州茅台" }, { id: "1.600519" }, { id: "nope" }, null],
     refreshSeconds: 7,
     colorScheme: "greenUp",
+    layout: "tiles",
   });
   assert.deepEqual(settings.stocks, [{ id: "1.600519", code: "600519", name: "贵州茅台", kind: "" }]);
   assert.equal(settings.refreshSeconds, 30);
   assert.equal(settings.colorScheme, "greenUp");
+  assert.equal(settings.layout, "tiles");
   assert.equal(settings.showInBar, true);
+  assert.equal(normalizeSettings({ layout: "unknown" }).layout, "split");
+  assert.equal(normalizeSettings({}).layout, "split");
 });
 
 function fakeContext(dataDir) {
@@ -146,12 +159,19 @@ test("offline keeps the last quotes and backs off; with every market closed noth
   };
   const { ctx, call, timers } = fakeContext(join(scratch, "offline"));
   apply(ctx);
-  await call(METHODS.addStock, { stock: { id: "1.600519", code: "600519", name: "贵州茅台", kind: "沪A" } });
-  let state = await call(METHODS.refresh);
+  let state = await call(METHODS.getState);
+  assert.equal(state.settings.sample, true);
+  assert.ok(state.settings.stocks.length > 0);
+  for (const stock of [...state.settings.stocks]) {
+    if (stock.id !== "1.600519") await call(METHODS.removeStock, { id: stock.id });
+  }
+  state = await call(METHODS.refresh);
+  assert.equal(state.settings.sample, false);
   assert.equal(state.status, "live");
   assert.equal(state.quotes["1.600519"].price, 1464.73);
   assert.equal(timers.at(-1), 30_000);
 
+  const countBeforeOffline = requests;
   globalThis.fetch = async () => {
     throw new TypeError("fetch failed");
   };
@@ -167,7 +187,7 @@ test("offline keeps the last quotes and backs off; with every market closed noth
   assert.equal(state.status, "closed");
   assert.equal(state.quotes["1.600519"].price, 1464.73);
   assert.equal(timers.at(-1), 6 * 60 * 60_000);
-  assert.equal(requests, 1);
+  assert.equal(requests, countBeforeOffline);
 });
 
 test("the stock plugin passes the official market check with no warnings", async () => {

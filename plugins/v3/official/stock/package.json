@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/stock",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "type": "module",
   "description": "Your watchlist on the island: A-share, Hong Kong and US quotes take turns on the bar, the page lists them all.",
   "keywords": [
@@ -100,7 +100,8 @@
     "network": [
       "push2.eastmoney.com",
       "searchapi.eastmoney.com",
-      "qt.gtimg.cn"
+      "qt.gtimg.cn",
+      "web.ifzq.gtimg.cn"
     ]
   }
 }

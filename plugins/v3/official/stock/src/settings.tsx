@@ -1,6 +1,15 @@
 import type { Context } from "@fuyu/plugin-base";
 import type { ReactNode } from "react";
-import { BAR_SECONDS_OPTIONS, METHODS, REFRESH_OPTIONS, type BarMode, type ColorScheme, type StockSettings } from "./model.ts";
+import {
+  BAR_SECONDS_OPTIONS,
+  LAYOUT_OPTIONS,
+  METHODS,
+  REFRESH_OPTIONS,
+  type BarMode,
+  type ColorScheme,
+  type LayoutMode,
+  type StockSettings,
+} from "./model.ts";
 import { StockList } from "./settingsStocks.tsx";
 import { text } from "./text.ts";
 import { useStocks } from "./useStocks.ts";
@@ -68,6 +77,8 @@ const SCHEMES: readonly (readonly [ColorScheme, string])[] = [
   ["greenUp", text.greenUp],
 ];
 
+const LAYOUTS: readonly (readonly [LayoutMode, string])[] = LAYOUT_OPTIONS.map((mode) => [mode, text.layouts[mode]] as const);
+
 const BAR_MODES: readonly (readonly [BarMode, string])[] = [
   ["rotate", text.barRotate],
   ["fixed", text.barFixed],
@@ -83,7 +94,8 @@ export default function apply(ctx: Context) {
         <Group title={text.watchlistTitle} hint={text.watchlistHint}>
           <StockList stocks={settings.stocks} invoke={invoke} search={search} addStock={addStock} />
         </Group>
-        <Group title={text.colorsTitle}>
+        <Group title={text.colorsTitle} hint={text.layoutHint}>
+          <Segmented label={text.layoutLabel} value={settings.layout} options={LAYOUTS} onChange={(layout) => patch({ layout })} />
           <Segmented label={text.colorScheme} value={settings.colorScheme} options={SCHEMES} onChange={(colorScheme) => patch({ colorScheme })} />
         </Group>
         <Group title={text.refreshTitle} hint={text.refreshHint}>

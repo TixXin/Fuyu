@@ -25,7 +25,7 @@ src-tauri/src/
 ├── ssh_tunnel/              # SSH 代理隧道（第 3 版内置插件 ssh-tunnel，background.rs 把本地代理探测和反向隧道登记成后台 tunnels，关掉插件就停）：ssh-tunnels.json（config.rs），每台主机一条常驻 ssh -R、作业对象、退避重连（tunnel.rs），服务器端口占用检查，本地代理端口自动检测（local_proxy.rs）
 ├── cc_connect/              # cc-connect 手机连接（第 3 版内置插件 cc-connect，background.rs 把看护线程登记成后台 runner，关掉插件就停）：找程序（插件设置 → 正在运行 → PATH → 岛下载的 → C/D 盘 Program Files，locate.rs）、下载并核对发布包（install.rs）、只读会话列表（chats.rs）、检查机器人 token（bots.rs）、往 config.toml 追加项目（config_file.rs）、飞书扫码（feishu.rs）、看护岛启动的 cc-connect（runner.rs）、经 cc-connect send 发消息
 ├── system/                  # 开机自启（注册表；从 MSIX 包启动时改用 StartupTask，msix.rs 判断是不是商店版，D116）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
-├── sync/                    # 跨设备同步：每台设备只写自己的远端目录、读全部再在本地逐条合并（engine.rs、merge.rs、clock.rs 的 HLC），后端是文件夹（backend_folder.rs）和 WebDAV（webdav/），端到端加密（crypto/），各类数据在 categories/（待办、设置、片段、链接、剪贴板收藏）；数据文件见 docs/architecture/data-storage.md
+├── sync/                    # 跨设备同步：每台设备只写自己的远端目录、读全部再在本地逐条合并（engine.rs、merge.rs、clock.rs 的 HLC），后端是文件夹（backend_folder.rs）、WebDAV（webdav/）和局域网直连（lan/：配对、钉证书的 TLS、mDNS、剪贴板互传），端到端加密（crypto/），各类数据在 categories/（待办、设置、片段、链接、剪贴板收藏）；数据文件见 docs/architecture/data-storage.md
 ├── theme_market.rs          # 设置 → 主题市场：经下载镜像读 TixXin/fuyu-plugins 的 themes.json（命令 get_theme_market）
 ├── rename_migration/        # 改名迁移（D17）：首次启动时把改名前的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装；各处旧名兼容的清单见 docs/architecture/contracts.md「改名兼容（D17）」
 ├── uninstall_cleanup.rs     # 卸载前清理：带卸载参数启动时 lib.rs 先走这里（maybe_run_from_args），同步移除 Agent 钩子、凭据和受管的数据文件后直接退出，不建 WebView、不占单实例锁

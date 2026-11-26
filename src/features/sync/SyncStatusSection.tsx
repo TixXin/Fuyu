@@ -61,7 +61,9 @@ export function SyncStatusSection({
   const { locale } = useLocale();
   const errorText = useErrorText();
   const text = t.sync;
-  const isWebdav = activeSyncBackend(status) === "webdav";
+  const backendKind = activeSyncBackend(status);
+  const isWebdav = backendKind === "webdav";
+  const isLan = backendKind === "lan";
   const active = isSyncActive(status);
   const phaseCopy = isWebdav && status.phase === "folderMissing"
     ? text.status.webdavUnavailable
@@ -72,7 +74,7 @@ export function SyncStatusSection({
   const formattedLast = status.lastSyncAt
     ? text.status.lastSynced(new Date(status.lastSyncAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }))
     : active ? text.status.neverSynced : null;
-  const location = isWebdav ? status.webdav?.url ?? null : status.folder;
+  const location = isLan ? null : isWebdav ? status.webdav?.url ?? null : status.folder;
   const encrypted = (status.encryption?.state ?? "off") !== "off";
   const errorDetail = actionError !== null
     ? errorText(actionError)
@@ -104,7 +106,7 @@ export function SyncStatusSection({
               {formattedLast ? <span>{formattedLast}</span> : null}
               {status.devices.length > 0 ? <span>{text.status.devices(status.devices.length)}</span> : null}
               {location ? <span className="sync-status__location" title={location}>{location}</span> : null}
-              {active ? <span>{encrypted ? text.status.encrypted : text.status.notEncrypted}</span> : null}
+              {active ? <span>{isLan ? text.status.lanLink : encrypted ? text.status.encrypted : text.status.notEncrypted}</span> : null}
             </span>
             {status.skippedFiles.length > 0 ? (
               <span className="sync-status__warn">{text.status.skippedFiles(status.skippedFiles.length)}</span>

@@ -2,7 +2,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         mpsc::{self, Receiver, RecvTimeoutError, Sender},
-        Mutex, MutexGuard, OnceLock, PoisonError,
+        Arc, Mutex, MutexGuard, OnceLock, PoisonError,
     },
     thread,
     time::{Duration, Instant},
@@ -23,6 +23,7 @@ use super::{
     config::{self, SyncBackendKind, SyncCategory, SyncConfig, WebdavConfig},
     crypto::{self, DataKey},
     device,
+    lan::store::LanBackend,
     layout::DeviceInfo,
     round::{Clockwork, Options, Round, RoundResult},
     status::{EncryptionState, SyncPhase, SyncStatus},
@@ -125,7 +126,7 @@ fn work(receiver: &Receiver<Wake>) {
     }
 }
 
-fn device_name() -> String {
+pub(super) fn device_name() -> String {
     #[cfg(target_os = "macos")]
     if let Ok(output) = std::process::Command::new("scutil").args(["--get", "ComputerName"]).output() {
         let name = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -267,6 +268,21 @@ impl Engine {
                 let taken = backend.take_last_error();
                 (out, taken)
             }
+            SyncBackendKind::Lan => {
+                let host = match super::lan::runtime::start(&self.home, &device_id, &me.name, Arc::new(wake_now)) {
+                    Ok(host) => host,
+                    Err(error) => {
+                        self.fail_round(&config, has_pw, has_enc, error);
+                        return;
+                    }
+                };
+                let backend = LanBackend::new(&self.home, &device_id, Some(host));
+                let out = self.run_with_backend(&config, &backend, &me, options, unlocked_key.as_ref());
+                if backend.wrote() {
+                    backend.poke_peers();
+                }
+                (out, None)
+            }
         };
 
         let now = clock::wall_ms();
@@ -345,6 +361,10 @@ pub(super) fn open_backend(config: &SyncConfig) -> Result<Box<dyn Backend>, User
                 &password,
             )?))
         }
+        SyncBackendKind::Lan => Err(UserError::new(
+            "sync.lanNoEncryption",
+            "The local network link is already encrypted; end-to-end encryption is for sync folders and WebDAV.",
+        )),
     }
 }
 
@@ -356,6 +376,12 @@ pub(super) fn instance() -> Result<&'static Engine, UserError> {
 
 fn engine() -> Result<&'static Engine, UserError> {
     instance()
+}
+
+fn wake_now() {
+    if let Some(engine) = ENGINE.get() {
+        wake(engine, Wake::Now);
+    }
 }
 
 fn wake(engine: &Engine, wake: Wake) {
@@ -382,6 +408,9 @@ fn apply_saved_config(engine: &Engine, previous: &SyncConfig, next: SyncConfig) 
     }
     config::save(&engine.home, &next).map_err(UserError::from)?;
     drop(running);
+    if next.active_backend() != SyncBackendKind::Lan {
+        super::lan::runtime::stop();
+    }
     let has_pw = webdav::secret::has_password();
     let has_enc = crypto::keychain::has_data_key();
     let updated = engine.update(|status| status.configure(&next, has_pw, has_enc));
@@ -426,6 +455,27 @@ pub(crate) fn configure(
     }
     .normalized();
     apply_saved_config(engine, &previous, next)
+}
+
+pub(crate) fn configure_lan(categories: Vec<SyncCategory>, optional_groups: Vec<String>) -> Result<SyncStatus, UserError> {
+    let engine = engine()?;
+    let previous = config::load(&engine.home);
+    let next = SyncConfig {
+        version: previous.version,
+        backend: Some(SyncBackendKind::Lan),
+        folder: previous.folder.clone(),
+        webdav: previous.webdav.clone(),
+        categories,
+        optional_groups,
+    }
+    .normalized();
+    let device_id = device::id().map_err(UserError::from)?;
+    super::lan::runtime::start(&engine.home, &device_id, &device_name(), Arc::new(wake_now))?;
+    apply_saved_config(engine, &previous, next)
+}
+
+pub(crate) fn lan_home() -> Result<PathBuf, UserError> {
+    Ok(engine()?.home.clone())
 }
 
 pub(super) fn resolve_webdav_password_for_saved(

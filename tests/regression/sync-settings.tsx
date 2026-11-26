@@ -20,6 +20,7 @@ const { calls } = harness;
 
 const { SyncSettingsPage } = await import("../../src/windows/settings/SyncSettingsPage");
 const { renderGuideFixture } = await import("./syncGuideFixture");
+const { checkLanSection } = await import("./syncLanChecks");
 
 const messages: string[] = [];
 const check = (condition: unknown, message: string) => {
@@ -389,6 +390,7 @@ try {
   check(guideFixture.querySelectorAll(".sync-guide__step").length === 3 && overflowing(guideFixture).length === 0 && guideFixture.scrollWidth <= 340,
     "The setup guide fits a 340px narrow container");
 
+  await checkLanSection(wide.parentElement!, harness.getStatus(), { check, settle, setInputValue, overflowing, calls });
   results.textContent = messages.join("\n");
   document.documentElement.dataset.testResult = "passed";
 } catch (error) {

@@ -130,6 +130,10 @@ pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+pub(super) fn hide_on_blur(app: &AppHandle) -> Result<(), String> {
+    hide(app)
+}
+
 pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
     let window = popup_window(app)?;
     if !window.is_visible().unwrap_or(false) {

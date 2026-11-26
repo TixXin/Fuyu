@@ -1,4 +1,5 @@
 mod agents;
+pub(crate) use agents::find_command;
 mod background;
 mod bots;
 mod chats;

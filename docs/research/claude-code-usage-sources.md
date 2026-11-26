@@ -49,6 +49,35 @@ CodexBar 还有第五条路：在伪终端里跑 `claude` 解析 `/usage` 的输
 - [CodexBar 的 Claude 文档](https://raw.githubusercontent.com/steipete/CodexBar/main/docs/claude.md)：App 按 OAuth → CLI 伪终端 → 网页接口的顺序兜底，网页接口用 Safari / Chrome / Firefox 的 cookie 或手动粘贴的 `sessionKey`。
 - [ccusage](https://www.mintlify.com/ryoppippi/ccusage/api/commands/blocks)：按 JSONL 算 5 小时块，上限是用户给的参数或历史最大值，不是官方的。
 
+## 桌面端（2026-11-25 补充）
+
+> 问题：用户只用 Claude 桌面端的 Code 页，Agent 页顶部 Claude 额度 17 小时没更新，提示说要终端里的 Claude Code 跑才同步。范围：本机 Claude 桌面端 7.37 和它自带的 Claude Code 2.1.331，GitHub 上的同类项目。
+
+### 本机查到的
+
+| 来源 | 新不新 | 结论 |
+|---|---|---|
+| 状态栏 `rate_limits` | 桌面端走 Agent SDK，不跑 `statusLine` | 不更新 |
+| 钥匙串「Claude Code-credentials」 | 桌面端用自己的登录（`CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH=1`），不刷新 CLI 这份令牌；实测已过期 6 小时 | 只用桌面端时拿去调 OAuth 接口也是过期 |
+| `~/.claude.json` 的 `cachedUsageUtilization` | Claude Code 每次调用量接口（`/usage`、SDK 的 `get_usage`、VS Code 的额度条）时写，和接口返回同样的内容，带 `fetchedAtMs`、`accountUuid` | 便宜、带重置时间，但不定期，本机停在 18 小时前；适合当一个「谁新用谁」的本地来源 |
+| 桌面端的 `plan-usage-history.json` | 桌面端后台每 5–15 分钟查一次 `claude.ai/api/organizations/{org}/usage` 并追加，但 24 小时没打开托盘菜单就暂停（日志 `[plan-usage] background poll paused: tray not opened recently`）；只有百分比，没有重置时间 | 不可靠，不用 |
+| 会话记录、钩子输入 | 都没有额度；给钩子加 `rate_limits` 的需求是 [#84904](https://github.com/anthropics/claude-code/issues/84904)，还开着 | 不可用 |
+| **让 Claude Code 自己查**：`claude -p --input-format stream-json --output-format stream-json --verbose`，往 stdin 写 `{"type":"control_request","request_id":"…","request":{"subtype":"get_usage","skip_behaviors":true}}` | 回 `control_response`，`response.response.rate_limits` 和 OAuth 接口同样的内容；本机 3–7 秒，令牌过期时 Claude Code 自己刷新并写回钥匙串；不发对话、不花额度、不留会话记录 | **采用**。不加 `--settings '{"disableAllHooks":true}'` 会触发 SessionStart 钩子（实测），所以必须加 |
+
+### 别的项目
+
+- 读 Claude Code 令牌：TokenEater、Claude-Usage-Tracker、ClaudeBar 调 `/usr/bin/security find-generic-password -s "Claude Code-credentials" -w`。CodexBar 的文档说这样也会弹窗，而且 Claude Code 每次 `security add-generic-password -U` 重写条目都会让「始终允许」失效，所以默认不读、要用户同意。Usage4Claude 用 Claude Code 的 client id 自己走一遍 OAuth 登录，完全不碰它的令牌。
+- 读 `cachedUsageUtilization`：coding_agent_account_manager、aqua5230/usage（核对 `accountUuid`）；tokentelemetry 嫌它不定期，故意不用。
+- 读 `plan-usage-history.json`：fly-island 上游（`claude_desktop_usage.rs`）、leeguooooo/claude-code-usage-bar 的 `cs hud`、aqua5230/usage（还读桌面端 Chromium 缓存里的用量响应）。
+- 让 CLI 查 `get_usage`：SylphxAI/anyagents（`native_quota.rs`）；SDK 流里的 `rate_limit_event` 有 humanlayer 在用。2.1.318 前在第一条消息前返回 `rate_limits: null`，设了 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` 也返回 null。
+- 限流：OAuth 用量接口约 5 次就 429，CodexBar 没有 `Retry-After` 时冷却 5 分钟，桌面端自己约 5 分钟一次；我们的补查至少隔 15 分钟。
+
+### 做法（2026-11-25 落地）
+
+1. 本地来源多一个 `cachedUsageUtilization`，和状态栏、claude-hud 比谁新（`claude_usage/cached.rs`）。
+2. 都旧了时补查先跑本机 Claude Code 的 `get_usage`（PATH 里的 `claude`，没有就用桌面端 `claude-code/<最新版本>/` 下自带的那份），失败再走原来的 OAuth 接口（`claude_usage/cli.rs`、`fallback.rs`）。岛自己仍不读钥匙串，B94 的「不弹窗」不变。
+3. 不读 `plan-usage-history.json`，不走 `security` 命令。
+
 ## 来源
 
 - https://code.claude.com/docs/en/statusline
@@ -63,3 +92,5 @@ CodexBar 还有第五条路：在伪终端里跑 `claude` 解析 `/usage` 的输
 - https://www.mintlify.com/ryoppippi/ccusage/api/commands/blocks
 - 上面正文里列出的 claudeissues.com issue 镜像（GitHub 原帖编号相同）
 - 本机：`~/.vibe-island/bin/vibe-island-statusline`、`~/.vibe-island/cache/`（2026-11-23 查看）
+- 桌面端补充：https://github.com/steipete/CodexBar/blob/main/docs/keychain-prompts.md、https://github.com/AThevon/TokenEater、https://github.com/hamed-elfayome/Claude-Usage-Tracker、https://github.com/tddworks/ClaudeBar、https://github.com/f-is-h/Usage4Claude、https://github.com/flyl1u/fly-island/blob/main/src-tauri/src/agent_status/claude_desktop_usage.rs、https://github.com/aqua5230/usage、https://github.com/Dicklesworthstone/coding_agent_account_manager、https://github.com/SylphxAI/anyagents/blob/main/crates/anyagents-harness-claude/src/native_quota.rs、https://github.com/anthropics/claude-code/issues/84904、https://github.com/anthropics/claude-code/issues/30930
+- 本机（2026-11-25）：`~/Library/Application Support/Claude/`（`plan-usage-history.json`、`claude-code/2.1.331/`）、`~/Library/Logs/Claude/main.log`、`~/.claude.json`

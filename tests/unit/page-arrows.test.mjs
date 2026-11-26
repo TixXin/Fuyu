@@ -37,6 +37,23 @@ test("modifier combinations stay with the shortcuts that own them", () => {
   }
 });
 
+test("in the panel tab turns to the next page and shift tab to the previous one", () => {
+  assert.equal(pageArrowAction(key("Tab"), true), "next");
+  assert.equal(pageArrowAction(key("Tab", { shiftKey: true }), true), "previous");
+  assert.equal(pageArrowAction(key("Tab"), false), null);
+  for (const modifier of ["altKey", "ctrlKey", "metaKey"]) {
+    assert.equal(pageArrowAction(key("Tab", { [modifier]: true }), true), null, modifier);
+  }
+});
+
+test("tab turns the page from a list or tab strip but not out of a filled text box", () => {
+  const inList = { closest: (selector) => (selector === EDITABLE_TARGET ? null : { tagName: "DIV", textContent: "" }) };
+  assert.equal(pageArrowTargetAllows("next", "Tab", inList), true);
+  assert.equal(pageArrowTargetAllows("next", "ArrowRight", inList), false);
+  assert.equal(pageArrowTargetAllows("next", "Tab", focusedIn(textarea(""))), true);
+  assert.equal(pageArrowTargetAllows("previous", "Tab", focusedIn(textarea("hello"))), false);
+});
+
 test("a held key turns only one page", () => {
   assert.equal(pageArrowAction(key("ArrowRight", { repeat: true }), true), null);
 });

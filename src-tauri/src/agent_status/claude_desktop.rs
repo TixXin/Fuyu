@@ -31,7 +31,7 @@ type DesktopCache = HashMap<PathBuf, (SystemTime, Option<DesktopSession>)>;
 
 static CACHE: Mutex<Option<DesktopCache>> = Mutex::new(None);
 
-pub(super) fn app_dir(home_dir: &Path) -> PathBuf {
+pub(crate) fn app_dir(home_dir: &Path) -> PathBuf {
     let base = if cfg!(target_os = "macos") {
         home_dir.join("Library").join("Application Support")
     } else if cfg!(windows) {

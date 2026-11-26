@@ -40,7 +40,12 @@ export function esCandidates(everythingExe: string | null, host: EverythingEnv =
   return [...existing, "es.exe"];
 }
 
-export function classifyEs(query: string, outcome: RunOutcome, everythingExe: string | null): SearchResult {
+export function classifyEs(
+  query: string,
+  outcome: RunOutcome,
+  everythingExe: string | null,
+  limit: number = RESULT_LIMIT,
+): SearchResult {
   const result = emptyResult(query, "everything");
   result.canStart = everythingExe !== null;
   if (outcome.missing) {
@@ -61,8 +66,8 @@ export function classifyEs(query: string, outcome: RunOutcome, everythingExe: st
     result.message = outcome.stderr.trim() || `es.exe exit ${outcome.code}`;
     return result;
   }
-  result.hits = toHits(outcome.lines, "win32", RESULT_LIMIT);
-  result.truncated = outcome.truncated || outcome.lines.filter((line) => line.trim()).length > RESULT_LIMIT;
+  result.hits = toHits(outcome.lines, "win32", limit);
+  result.truncated = outcome.truncated || outcome.lines.filter((line) => line.trim()).length > limit;
   return result;
 }
 
@@ -70,13 +75,19 @@ export async function searchEverything(
   query: string,
   run: Omit<RunOptions, "maxLines">,
   host: EverythingEnv = defaultEnv,
+  limit: number = RESULT_LIMIT,
 ): Promise<SearchResult> {
   if (esTerms(query).length === 0) return emptyResult(query, "everything");
   const everythingExe = findEverythingExe(host);
   let last: RunOutcome | null = null;
   for (const es of esCandidates(everythingExe, host)) {
-    last = await runLines(es, esArgs(query), { ...run, maxLines: RESULT_LIMIT + 1 });
+    last = await runLines(es, esArgs(query, limit), { ...run, maxLines: limit + 1 });
     if (!last.missing) break;
   }
-  return classifyEs(query, last ?? { lines: [], code: null, missing: true, timedOut: false, truncated: false, stderr: "" }, everythingExe);
+  return classifyEs(
+    query,
+    last ?? { lines: [], code: null, missing: true, timedOut: false, truncated: false, stderr: "" },
+    everythingExe,
+    limit,
+  );
 }

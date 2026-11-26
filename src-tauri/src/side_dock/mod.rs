@@ -181,6 +181,8 @@ fn ensure_hover_watcher(app: &AppHandle) {
                 }
                 if inside != state.inside {
                     let _ = handle.emit_to(edge.label(), HOVER_EVENT, HoverPayload { edge, inside });
+                    #[cfg(target_os = "macos")]
+                    crate::macos::island_panel::set_hover_key_look(&handle, edge.label(), inside);
                 }
                 if let Ok(mut map) = runtime_map().lock() {
                     if let Some(entry) = map.get_mut(&edge) {

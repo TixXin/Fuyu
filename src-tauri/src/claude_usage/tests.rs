@@ -1,7 +1,7 @@
 use super::source::{
     fetch_api, https_entry, iso_from_unix_seconds, parse_access_token, parse_api_usage,
     parse_retry_after, pick_proxy, proxy_label, proxy_url, resolve_proxy, scutil_https_proxy, status_error, unix_ms,
-    Limits,
+    Keychain, Limits,
 };
 use super::*;
 
@@ -373,7 +373,7 @@ fn requests_are_gated_by_flight_cooldown_and_manual_gap() {
 #[ignore = "Calls api.anthropic.com with this account's Claude Code login through the proxy"]
 fn live_usage_endpoint() {
     let now_ms = unix_ms(SystemTime::now());
-    let limits = tauri::async_runtime::block_on(fetch_api(resolve_proxy(None).as_deref(), now_ms))
+    let limits = tauri::async_runtime::block_on(fetch_api(resolve_proxy(None).as_deref(), Keychain::Read, now_ms))
         .unwrap_or_else(|error| panic!("{:?}: {}", error.kind, error.message));
     println!(
         "five_hour={:?} seven_day={:?}",
@@ -430,4 +430,12 @@ fn the_stale_check_is_on_unless_turned_off() {
     assert!(super::fallback::allowed(&config(serde_json::json!({}))));
     assert!(super::fallback::allowed(&config(serde_json::json!({ "askWhenStale": true }))));
     assert!(!super::fallback::allowed(&config(serde_json::json!({ "askWhenStale": false }))));
+}
+
+#[test]
+fn no_proxy_stops_before_reading_the_login() {
+    for keychain in [Keychain::Read, Keychain::Skip] {
+        let error = tauri::async_runtime::block_on(fetch_api(None, keychain, 0)).err();
+        assert_eq!(error.map(|error| error.kind), Some(UsageErrorKind::NoProxy));
+    }
 }

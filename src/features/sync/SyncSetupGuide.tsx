@@ -8,6 +8,7 @@ import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { useErrorText, useTranslation } from "../../i18n";
 import type { SyncStatus } from "./api";
 import { SYNC_BACKENDS, type SyncBackendId } from "./syncBackends";
+import { SyncLanSection } from "./SyncLanSection";
 import { SyncWebdavSection } from "./SyncWebdavSection";
 import "./SyncSetupGuide.css";
 
@@ -97,25 +98,31 @@ export function SyncSetupGuide({
                 </SettingsLinkButton>
               }
             />
+          ) : method === "lan" ? (
+            <SyncGuideStep index={2} state="current" title={text.lanTitle} description={text.lanHint}>
+              <SyncLanSection status={status} busy={busy} />
+            </SyncGuideStep>
           ) : (
             <SyncGuideStep index={2} state="current" title={text.webdavTitle} description={text.webdavHint}>
               <SyncWebdavSection status={status} busy={busy} onSaveWebdav={onSaveWebdav} onStopSync={onStopSync} />
             </SyncGuideStep>
           )}
-          <SyncGuideStep
-            index={3}
-            state="next"
-            title={text.encryptionTitle}
-            description={text.encryptionHint}
-            control={
-              <SettingsSwitch
-                id={switchId}
-                checked={wantEncryption}
-                ariaLabel={text.encryptionTitle}
-                onChange={onWantEncryption}
-              />
-            }
-          />
+          {method === "lan" ? null : (
+            <SyncGuideStep
+              index={3}
+              state="next"
+              title={text.encryptionTitle}
+              description={text.encryptionHint}
+              control={
+                <SettingsSwitch
+                  id={switchId}
+                  checked={wantEncryption}
+                  ariaLabel={text.encryptionTitle}
+                  onChange={onWantEncryption}
+                />
+              }
+            />
+          )}
         </ol>
         {error !== null ? <p className="sync-status__error" role="alert">{errorText(error)}</p> : null}
         <p className="sync-guide__later">{text.later}</p>

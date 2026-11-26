@@ -44,6 +44,6 @@
 
 ## 进度
 
-E79 分几步做，每步一个提交：映射表和脚本 → 浮屿专有的部分（岛、设置窗口）从基座挪出去 → 默认值去掉浮屿名字 → 把 tauri-cordis 的 `replacedByThirdParty` 搬回浮屿 → 在 tauri-cordis 里写入导出结果、补 CI 一致性检查。做完之前 `pnpm cordis check` 会报差异，这是预期的。
+E79 分几步做，每步一个提交：映射表和脚本 → 浮屿专有的部分（岛、设置窗口）从基座挪出去 → 默认值去掉浮屿名字 → 把 tauri-cordis 的 `replacedByThirdParty` 搬回浮屿 → 在 tauri-cordis 里写入导出结果、补 CI 一致性检查。已全部做完（2026-11-26）：tauri-cordis 0.3.0（TixXin/tauri-cordis#2）就是这份导出，npm 和 crates.io 都已发布；tauri-cordis 的 `.fuyu-export.json` 记着导出来源的浮屿提交，它的 CI `export` 任务在那个提交上重新导出并逐字节比对。以后改了受管目录，在浮屿提交合入后跑 `pnpm cordis write --cordis ../tauri-cordis`，更新 `.fuyu-export.json`，在 tauri-cordis 提 PR。
 
 tauri-cordis 0.2.0 的 `replacedByThirdParty` 没有搬回来（2026-11-25 核实）：它在合并配置时就把被替换的内置服务写进 `disabledServices`，不管替换它的插件有没有真的跑起来。浮屿的做法是运行时让出（`host/services.mjs` 的 `enter`/`leave`）：第三方插件真的提供了服务，内置的才让出；插件停了、被二分或安全模式挡下、启动失败，内置的都还在；状态里的 `replacedServices`、`disabledServices` 按实际情况报。把那段搬进来试过，`replaces.test.mjs` 挂 3 个（被二分挡下、启动失败、停掉后交还）。导出后 tauri-cordis 换成浮屿的做法，0.3.0 的更新说明要写这条行为变化。

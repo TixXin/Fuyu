@@ -14,7 +14,7 @@ import {
   uvLevel,
   weekdayOf,
 } from "./format.ts";
-import { ConditionIcon, RefreshIcon, SunriseIcon, SunsetIcon, WeatherIcon } from "./icons.tsx";
+import { ChevronIcon, ConditionIcon, RefreshIcon, SettingsIcon, SunriseIcon, SunsetIcon, WeatherIcon } from "./icons.tsx";
 import { currentLocale } from "./locale.ts";
 import { PAGE_TITLE, problemText, textFor } from "./text.ts";
 import { formatTemp, type WeatherForecast, type WeatherState } from "./types.ts";
@@ -55,7 +55,7 @@ export default function apply(ctx: Context) {
   const openPage = islandOpener(ctx);
 
   function WeatherPage() {
-    const { state, error, refresh, selectCity } = useWeather(ctx);
+    const { state, error, refresh, selectCity, restoreSample } = useWeather(ctx);
     const locale = currentLocale();
     const copy = textFor(locale);
     const { config, activeCityId, place, forecast, aqi, sourceUsed, fallbackFrom, loading, problem, fetchedAt } = state;
@@ -68,11 +68,16 @@ export default function apply(ctx: Context) {
           <div className="fuyu-weather__empty">
             <strong className="fuyu-weather__title">{copy.emptyTitle}</strong>
             <p className="fuyu-weather__note">{openSettings ? copy.emptyBody : copy.emptyNoButton}</p>
-            {openSettings && (
-              <button type="button" className="fuyu-weather__button" onClick={openSettings}>
-                {copy.goSettings}
+            <div className="fuyu-weather__empty-actions">
+              {openSettings && (
+                <button type="button" className="fuyu-weather__button" onClick={openSettings}>
+                  {copy.goSettings}
+                </button>
+              )}
+              <button type="button" className="fuyu-weather__secondary" onClick={restoreSample}>
+                {copy.loadSample}
               </button>
-            )}
+            </div>
           </div>
         </div>
       );
@@ -127,17 +132,40 @@ export default function apply(ctx: Context) {
               {loading ? copy.loading : stale ? copy.stale : updated ? copy.updatedAt(updated) : ""}
             </span>
           </div>
-          <button
-            type="button"
-            className="fuyu-weather__icon-button"
-            disabled={loading}
-            onClick={refresh}
-            title={copy.refresh}
-            aria-label={copy.refresh}
-          >
-            <RefreshIcon />
-          </button>
+          <div className="fuyu-weather__actions">
+            <button
+              type="button"
+              className="fuyu-weather__icon-button"
+              disabled={loading}
+              onClick={refresh}
+              title={copy.refresh}
+              aria-label={copy.refresh}
+            >
+              <RefreshIcon />
+            </button>
+            {openSettings && (
+              <button
+                type="button"
+                className="fuyu-weather__icon-button"
+                onClick={openSettings}
+                title={copy.settingsTip}
+                aria-label={copy.settingsTip}
+              >
+                <SettingsIcon />
+              </button>
+            )}
+          </div>
         </div>
+
+        {config.sample && openSettings && (
+          <div className="fuyu-weather__sample">
+            <span className="fuyu-weather__sample-text">{copy.sampleNotice}</span>
+            <button type="button" className="fuyu-weather__sample-btn" onClick={openSettings}>
+              <span>{copy.changeCity}</span>
+              <ChevronIcon size={12} />
+            </button>
+          </div>
+        )}
 
         {forecast && (
           <>

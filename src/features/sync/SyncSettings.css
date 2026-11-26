@@ -473,3 +473,26 @@
   padding: 0 16px 12px;
   min-width: 0;
 }
+
+.sync-lan__join {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.sync-lan__code-input {
+  width: 9ch;
+}
+
+.sync-lan__code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 18px;
+  letter-spacing: 0.2em;
+}
+
+.sync-lan__hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}

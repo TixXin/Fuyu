@@ -36,6 +36,7 @@ export interface WeatherConfig {
   city: string;
   cities: SavedCity[];
   activeCityId: string;
+  sample?: boolean;
   weatherSource: WeatherSourceId;
   autoFallback: boolean;
   units: TemperatureUnit;
@@ -209,13 +210,51 @@ function resolveCities(raw: Raw, base: WeatherConfig): { cities: SavedCity[]; ci
   return { cities, city, activeCityId };
 }
 
+export const SAMPLE_CITY_ZH: SavedCity = {
+  id: "30.2741,120.1551",
+  query: "杭州",
+  name: "杭州",
+  region: "浙江",
+  country: "中国",
+  countryCode: "CN",
+  timezone: "Asia/Shanghai",
+  nmcStationId: "58457",
+  latitude: 30.2741,
+  longitude: 120.1551,
+};
+
+export const SAMPLE_CITY_EN: SavedCity = {
+  id: "37.7749,-122.4194",
+  query: "San Francisco",
+  name: "San Francisco",
+  region: "California",
+  country: "United States",
+  countryCode: "US",
+  timezone: "America/Los_Angeles",
+  latitude: 37.7749,
+  longitude: -122.4194,
+};
+
+export function sampleCityFor(zh: boolean): SavedCity {
+  return zh ? { ...SAMPLE_CITY_ZH } : { ...SAMPLE_CITY_EN };
+}
+
 export function normalizeConfig(raw: Raw, base: WeatherConfig = DEFAULT_CONFIG): WeatherConfig {
   const { cities, city, activeCityId } = resolveCities(raw, base);
+  const sample =
+    cities.length === 0
+      ? false
+      : typeof raw.sample === "boolean"
+        ? raw.sample
+        : Array.isArray(raw.cities) || typeof raw.city === "string"
+          ? false
+          : Boolean(base.sample);
   return {
     version: CONFIG_VERSION,
     city,
     cities,
     activeCityId,
+    ...(sample ? { sample: true } : {}),
     weatherSource: pick(raw.weatherSource, WEATHER_SOURCES, base.weatherSource),
     autoFallback: flag(raw.autoFallback, base.autoFallback),
     units: pick(raw.units, ["celsius", "fahrenheit"], base.units),
@@ -237,6 +276,18 @@ export function normalizeConfig(raw: Raw, base: WeatherConfig = DEFAULT_CONFIG):
     quietStart: clock(raw.quietStart, base.quietStart),
     quietEnd: clock(raw.quietEnd, base.quietEnd),
     refreshMinutes: raw.refreshMinutes === undefined ? base.refreshMinutes : refreshMinutes(raw.refreshMinutes),
+  };
+}
+
+export function initialConfig(raw: unknown, zh: boolean): WeatherConfig {
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return configFromStored(raw);
+  const city = sampleCityFor(zh);
+  return {
+    ...DEFAULT_CONFIG,
+    city: city.query,
+    cities: [city],
+    activeCityId: city.id,
+    sample: true,
   };
 }
 

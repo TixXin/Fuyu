@@ -12,7 +12,7 @@
 
 ## 怎么用
 
-1. 打开设置里的自选股，在搜索框里输入代码（`600519`、`00700`、`AAPL`）、名称（「茅台」「腾讯」）或拼音首字母（`gzmt`），点「搜索」，在结果里点「添加」。支持 A 股、港股、美股、指数和 ETF，最多 20 只。
+1. 首次安装自带一组示例自选股，展开岛即可直接查看行情；点击页面右上角设置按钮或顶部「去自定义」横条，即可在设置里按代码（`600519`、`00700`、`AAPL`）、名称或拼音首字母搜索并管理自选股（支持 A 股、港股、美股、指数和 ETF，最多 20 只）。
 2. 用每行右边的箭头调整顺序：收起条按这个顺序轮流显示，「只显示第一只」时显示排第一的。
 3. 展开岛切到「自选股」页看完整列表，想马上更新就点「刷新」。插件还带一个命令「立即刷新行情」，可以在「设置 → 插件」的插件详情里给它设快捷键。
 
@@ -20,8 +20,9 @@
 
 **自选股**：搜索添加、上移下移、删除。列表是空的时候，浮屿「设置 → 插件」里这个插件会标出「待设置」（需要较新的浮屿）。
 
-**颜色**
+**外观与布局**
 
+- **页面样式**：左图右表（默认）/ 瓷砖网格 / 顶栏双列 / 终端表格 / 极简竖卡。
 - **涨跌颜色**：红涨绿跌（默认）/ 绿涨红跌。
 
 **刷新**
@@ -40,7 +41,7 @@
 
 - **什么时候联网**：只在自选股所在的市场开盘时按上面的间隔刷新（北京时间 A 股 9:15–11:30、13:00–15:00，港股 9:30–12:00、13:00–16:10，美股按纽约时间 9:30–16:00，自动跟夏令时）。全部休市时不联网，到下一个开盘时间再醒；启动和打开页面时各取一次，显示最近的收盘价。插件不知道各交易所的节假日，开盘半小时后行情还停在前一天的，就当今天休市，改成 30 分钟查一次。
 - **断网时**：保留上次的行情，页面写「暂时取不到行情」，按 1、2、5、10 分钟重试，不弹错误。
-- **数据来源**：行情和搜索来自东方财富（`push2.eastmoney.com`、`searchapi.eastmoney.com`），取不到时改用腾讯（`qt.gtimg.cn`）。都是这些网站自己网页用的公开接口，不登录、不带你的账号；每次刷新一个请求，取全部自选股。行情可能有延时，每只的行情时间在页面上悬停可以看到；仅供参考，不构成投资建议。
+- **数据来源**：行情和搜索来自东方财富（`push2.eastmoney.com`、`searchapi.eastmoney.com`），取不到时改用腾讯（`qt.gtimg.cn`）；日内分时走势来自腾讯（`web.ifzq.gtimg.cn`）与东方财富（`push2.eastmoney.com`）双源互备。都是公开接口，不登录、不带你的账号；行情可能有延时，仅供参考，不构成投资建议。
 - 自选股和设置只保存在本机的插件数据目录里。
 
 ---
@@ -59,7 +60,7 @@ Your stock watchlist on the island: A-share, Hong Kong and US quotes take turns 
 
 ### How to use it
 
-1. Open Stocks in the settings and search by code (`600519`, `00700`, `AAPL`), name or pinyin initials (`gzmt`), then click Add next to a result. A-shares, Hong Kong and US stocks, indexes and ETFs are supported, up to 20.
+1. Fresh installs start with a sample watchlist so quotes show up right away. Click the settings icon in the header or the "Customize" banner to search by code (`600519`, `00700`, `AAPL`), name or pinyin initials and manage up to 20 A-share, Hong Kong and US stocks, indexes and ETFs.
 2. Use the arrows on each row to reorder: the collapsed bar goes through them in this order, and "First one only" shows the top one.
 3. Expand the island and open the Stocks page for the full list; click Refresh to update right away. The plugin also has a "Refresh quotes now" command; give it a shortcut in the plugin's details under Settings → Plugins.
 
@@ -67,8 +68,9 @@ Your stock watchlist on the island: A-share, Hong Kong and US quotes take turns 
 
 **Watchlist**: search and add, move up and down, remove. While it is empty, Fuyu's Settings → Plugins marks the plugin as needing setup (newer Fuyu versions).
 
-**Colors**
+**Appearance**
 
+- **Page layout**: Split chart (default) / Tile grid / Strip & 2-col / Data table / Minimal cards.
 - **Up and down**: red up, green down (default) / green up, red down.
 
 **Refresh**

@@ -1,14 +1,62 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { METHODS, emptyResult, type SearchResult } from "./model.ts";
+import { DEFAULT_SETTINGS, METHODS, TOPICS, emptyResult, type FileSearchState, type SearchResult } from "./model.ts";
 
 const DEBOUNCE_MS = 140;
+
+const EMPTY_STATE: FileSearchState = {
+  settings: DEFAULT_SETTINGS,
+  backend: "none",
+  recent: [],
+  lastQuery: "",
+  homeDir: "",
+  at: 0,
+};
 
 function errorText(reason: unknown): string {
   return reason instanceof Error ? reason.message : String(reason);
 }
 
-export function useFileSearch(ctx: Context, query: string) {
+export function useFileSearchState(ctx: Context) {
+  const [state, setState] = useState<FileSearchState>(EMPTY_STATE);
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const take = useCallback((next: FileSearchState) => {
+    setState((prev) => (next.at >= prev.at ? next : prev));
+  }, []);
+
+  useEffect(() => {
+    const off = ctx.host.on(TOPICS.state, take);
+    ctx.host.call<FileSearchState>(METHODS.getState).then(
+      (next) => {
+        if (next && typeof next === "object" && next.settings) take(next);
+        setReady(true);
+      },
+      () => {
+        setReady(true);
+      },
+    );
+    return () => {
+      void off();
+    };
+  }, [ctx, take]);
+
+  const setSettings = useCallback(
+    (patch: Partial<FileSearchState["settings"]>) => {
+      setError(null);
+      ctx.host
+        .call<FileSearchState>(METHODS.setSettings, patch)
+        .then(take)
+        .catch((reason: unknown) => setError(errorText(reason)));
+    },
+    [ctx, take],
+  );
+
+  return { state, ready, error, setSettings };
+}
+
+export function useFileSearch(ctx: Context, query: string, scopeKey: string) {
   const [result, setResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +94,7 @@ export function useFileSearch(ctx: Context, query: string) {
         });
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [ctx, query, nonce]);
+  }, [ctx, query, nonce, scopeKey]);
 
   const retry = useCallback(() => setNonce((value) => value + 1), []);
 

@@ -46,9 +46,15 @@ export function fileImageLabel(item: ClipboardHistoryItem, formatBytes: (bytes: 
 }
 
 export const OTHER_DEVICE_SOURCE = "fuyu:other-device";
+export const LAN_DEVICE_SOURCE = "fuyu:lan-device";
+
+export function isOtherDeviceSource(path: string | undefined): boolean {
+  return path === OTHER_DEVICE_SOURCE || path === LAN_DEVICE_SOURCE;
+}
 
 export function sourceName(item: ClipboardHistoryItem, appName: string, screenshot = appName, otherDevice?: string): string | undefined {
   if (item.source?.path === OTHER_DEVICE_SOURCE) return otherDevice ?? item.source.name;
+  if (item.source?.path === LAN_DEVICE_SOURCE) return item.source.name || otherDevice;
   const name = item.source?.name;
   if (!name || !OWN_SOURCE.test(name)) return name;
   return item.kind === "image" ? screenshot : appName;

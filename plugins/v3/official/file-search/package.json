@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/file-search",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Press a shortcut and search every file on your computer by name: Everything on Windows, Spotlight on macOS.",
   "keywords": [
@@ -57,15 +57,18 @@
     ],
     "host": "dist/host.js",
     "client": {
-      "island": "dist/island.js"
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
     },
     "inject": {
       "optional": [
-        "island"
+        "island",
+        "settings"
       ]
     },
     "slots": [
-      "island.page/v1"
+      "island.page/v1",
+      "settings.section/v1"
     ],
     "commands": [
       {

@@ -150,19 +150,21 @@
       "zh-CN": {
         "group": "设置跨设备同步",
         "title": "选同步方式",
-        "description": "同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV",
+        "description": "同步文件夹（网盘、Syncthing、NAS 的文件夹）、WebDAV，或同一网络里两台电脑直连",
         "options": [
           "同步文件夹",
-          "WebDAV"
+          "WebDAV",
+          "局域网"
         ]
       },
       "en": {
         "group": "Set up cross-device sync",
         "title": "Choose how to sync",
-        "description": "A synced folder (cloud drive, Syncthing, NAS) or WebDAV",
+        "description": "A synced folder (cloud drive, Syncthing, NAS), WebDAV, or two computers on the same network",
         "options": [
           "Sync folder",
-          "WebDAV"
+          "WebDAV",
+          "LAN"
         ]
       }
     },
@@ -2025,14 +2027,15 @@
       "page": "shortcutsIsland",
       "zh-CN": {
         "group": "页面切换",
-        "title": "方向键翻页和展开收起",
-        "description": "面板里 ← → 翻页，↑ 收起（内容滚动过时先回到顶部）；岛有焦点时 ↓ 或回车展开。输入框里有字时不生效"
+        "title": "方向键 / Tab 翻页和展开收起",
+        "description": "面板里 ← → 或 Tab / Shift+Tab 翻页，↑ 收起（内容滚动过时先回到顶部）；岛有焦点时 ↓ 或回车展开。输入框里有字时不生效"
       },
       "en": {
         "group": "Page switching",
-        "title": "Arrow keys turn pages and open or close",
-        "description": "In the panel, ← → turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it"
-      }
+        "title": "Arrow keys and Tab turn pages and open or close",
+        "description": "In the panel, ← → or Tab / Shift+Tab turn pages and ↑ closes it (scrolling back to the top first). ↓ or Enter opens the island while it has focus. Not while a text box has text in it"
+      },
+      "since": "next"
     },
     {
       "page": "shortcutsIsland",
@@ -4683,12 +4686,12 @@
       "zh-CN": {
         "group": "显示口径与直连查询",
         "title": "Claude Code：直接向 Anthropic 查询",
-        "description": "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。"
+        "description": "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。Mac 上 Claude Code 把令牌存在钥匙串里，打开后系统会弹一次授权，选「始终允许」；拒绝后这次运行不再问，关掉再打开这个开关可以重试。"
       },
       "en": {
         "group": "Display and direct query",
         "title": "Claude Code: ask Anthropic directly",
-        "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
+        "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too. On a Mac, Claude Code keeps the token in the Keychain, so macOS asks once when you turn this on: choose Always Allow. If you deny it, the island stops asking until you switch this off and on again."
       }
     },
     {
@@ -4696,12 +4699,12 @@
       "zh-CN": {
         "group": "显示口径与直连查询",
         "title": "Claude Code：额度旧了时补查一次",
-        "description": "状态栏和 claude-hud 的额度都超过 30 分钟没更新或已过重置时间时，用同一个只读令牌经代理向 Anthropic 查一次，至少隔 15 分钟，失败时退避到 2 小时。关掉后只显示「已过期」，不联网。"
+        "description": "状态栏、claude-hud 和 Claude Code 自己缓存的额度都超过 30 分钟没更新或已过重置时间时补查一次，至少隔 15 分钟，失败时退避到 2 小时；只用 Claude 桌面端（不跑状态栏）时也靠它更新。补查先在后台运行本机的 Claude Code（PATH 里的 claude，没有就用桌面端自带的那份）问它的用量：登录和令牌由 Claude Code 自己处理，不花额度、不留会话、不触发钩子，Mac 上也不弹钥匙串授权。找不到 Claude Code 时，再用 ~/.claude/.credentials.json 里的只读令牌经代理向 Anthropic 查。关掉后只显示「已过期」，不联网。"
       },
       "en": {
         "group": "Display and direct query",
         "title": "Claude Code: check once when usage goes stale",
-        "description": "When both the status line and claude-hud readings are over 30 minutes old or past their reset time, ask Anthropic once with the same read-only token through the proxy: at most every 15 minutes, backing off to 2 hours on failure. Off shows \"Expired\" instead and never goes online."
+        "description": "When the status line, claude-hud and Claude Code's own cached reading are all over 30 minutes old or past their reset time, check once: at most every 15 minutes, backing off to 2 hours on failure. This is also what keeps usage current when you only use the Claude desktop app, which has no status line. The check runs this computer's Claude Code in the background (claude on the PATH, or the copy bundled with the desktop app) and asks it for the usage: Claude Code handles its own login and token, spends no usage, leaves no session, runs no hooks and never brings up a Keychain prompt on a Mac. Without Claude Code it asks Anthropic through the proxy with the read-only token in ~/.claude/.credentials.json. Off shows \"Expired\" instead and never goes online."
       }
     },
     {

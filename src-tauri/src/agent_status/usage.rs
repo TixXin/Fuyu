@@ -149,7 +149,28 @@ fn unix_now_ms() -> i64 {
 }
 
 pub(super) fn read_local(home_dir: &Path, app_dir: Option<&Path>) -> Option<AgentUsage> {
-    newest(app_dir.and_then(super::claude_statusline::read_usage), read_usage(home_dir))
+    let cached = crate::claude_usage::cached_usage(home_dir).map(from_api);
+    newest(newest(app_dir.and_then(super::claude_statusline::read_usage), read_usage(home_dir)), cached)
+}
+
+pub(super) fn from_api(api: ClaudeUsage) -> AgentUsage {
+    AgentUsage {
+        updated_at: api.updated_at.and_then(|ms| i64::try_from(ms).ok()),
+        five_hour: api_window(api.five_hour),
+        seven_day: api_window(api.seven_day),
+        models: Vec::new(),
+        plan: None,
+        source: UsageSource::Api,
+        error: api.error,
+    }
+}
+
+fn api_window(limit: Option<crate::claude_usage::UsageWindow>) -> Option<UsageWindow> {
+    limit.map(|limit| UsageWindow {
+        name: String::new(),
+        used: limit.percent.clamp(0.0, 100.0),
+        resets_at: limit.resets_at.as_deref().and_then(parse_timestamp_ms),
+    })
 }
 
 pub(super) fn newest(first: Option<AgentUsage>, second: Option<AgentUsage>) -> Option<AgentUsage> {
@@ -173,13 +194,6 @@ pub(super) fn needs_fallback(local: Option<&AgentUsage>, now_ms: i64) -> bool {
 
 pub(super) fn merge(hud: Option<AgentUsage>, api: Option<ClaudeUsage>) -> Option<AgentUsage> {
     let Some(api) = api else { return hud };
-    let window = |limit: Option<crate::claude_usage::UsageWindow>| {
-        limit.map(|limit| UsageWindow {
-            name: String::new(),
-            used: limit.percent.clamp(0.0, 100.0),
-            resets_at: limit.resets_at.as_deref().and_then(parse_timestamp_ms),
-        })
-    };
     let api_at = api.updated_at.and_then(|ms| i64::try_from(ms).ok());
     let api_newer = api_at.is_some_and(|api_at| {
         hud.as_ref().is_none_or(|hud| hud.updated_at.is_none_or(|hud_at| api_at >= hud_at))
@@ -191,8 +205,8 @@ pub(super) fn merge(hud: Option<AgentUsage>, api: Option<ClaudeUsage>) -> Option
     };
     if api_newer {
         usage.updated_at = api_at;
-        usage.five_hour = window(api.five_hour);
-        usage.seven_day = window(api.seven_day);
+        usage.five_hour = api_window(api.five_hour);
+        usage.seven_day = api_window(api.seven_day);
         usage.source = UsageSource::Api;
     }
     usage.error = api.error;

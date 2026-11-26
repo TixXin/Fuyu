@@ -92,6 +92,7 @@ export const METHODS = {
   removeCity: "removeCity",
   setPrimaryCity: "setPrimaryCity",
   selectCity: "selectCity",
+  restoreSample: "restoreSample",
 } as const;
 
 export const TOPICS = {

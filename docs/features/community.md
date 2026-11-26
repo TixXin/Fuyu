@@ -45,9 +45,23 @@
 
 `qr`、`number`、`link` 至少要有一个，否则这一条不显示。`version` 不是 `1` 时整份不认，加新字段不用改版本号（旧应用忽略不认识的字段）。
 
-## 每周换微信群二维码
+## 换微信群二维码
 
 微信截图上写的「X 月 Y 日前有效」，`expiresAt` 填 Y 的前一天。
+
+### 浮汐每晚自动换（默认）
+
+浮汐（[TixXin/Fuxi](https://github.com/TixXin/Fuxi)，服务器上一直在线的微信 bot，在群里）每晚自动换，代码在浮汐的 `bridge/fuxi_bridge/groupqr.py`，细节见浮汐的 `docs/group-qr.md`：
+
+- 微信每次打开「群二维码」都给一条新链接，有效期是打开那天往后 7 天。浮汐每晚 0 点（浮汐设置「换码时间」）打开一次，截二维码小窗解码；新码有效期比仓库里的晚就换，所以仓库里的码一直还剩 6 天以上。
+- `docs/assets/community/wechat-group.png`（应用读）：裁出的纯二维码，白底黑码 480×480，应用自己在码下面写有效期。`docs/assets/readme/wechat-group.png`（README 用）：同一个码，上面加「群聊：浮屿用户交流群」，下面加「有效期至 YYYY-MM-DD」。`expiresAt` 按新码的有效期填，同时改 `updatedAt`。
+- 用 API 建 `community/wechat-qr-*` 分支、开 PR，再用管理员 token 直接 squash 合并，**不跑 CI**：`ci.yml` 对只改这三个文件的推送和 PR 用 `paths-ignore` 跳过，PR 上没有 `check`，靠管理员绕过规则集合并。浮汐合并前自己核对过 JSON 能读、图能解出同一个链接。所以 `main` 上每天会多一个只改这三个文件的提交。
+- 换失败每天最多私聊维护者一次。浮汐文件传输助手里 `/换码` 看状态，`/换码 预演` 只截图把 README 版的图发过来、不提交，`/换码 立即` 马上检查。
+- 配置：浮汐设置「换码群」填群名；服务器 `.env` 的 `FUXI_GITHUB_QR_TOKEN` 是维护者账号的细粒度 token，只授权本仓库，Contents 和 Pull requests 读写。
+
+自动换不了（群超 200 人、浮汐不在群里、微信界面改版）时按下面手动换。
+
+### 手动换
 
 1. 在微信里打开群二维码截图。用户把截图发给会话就行，会话来做下面几步。
 2. 只裁出二维码，不带上面的群成员头像，转成白底黑码（截图是深色模式时要反色）。截图 966×1476 的深色版这样裁：
@@ -59,7 +73,7 @@
    尺寸不同就按截图调 `crop`（宽:高:左:上）；浅色截图去掉 `negate`。裁完打开看一眼，再确认能扫出来（macOS 上可以用 CoreImage 的 `CIDetector` 读出 `https://weixin.qq.com/g/...`）。
 3. 改 `community.json` 的 `expiresAt` 和 `updatedAt`。
 4. `pnpm test` 里的 `community-groups` 会检查这份 JSON 读得出、图片都在。
-5. 提交这两个文件，再 `pnpm mq:land`：要合入 `main` 才生效。
+5. 提交这几个文件：和别的提交一起 `pnpm mq:land` 照常跑 CI；只有这几个文件的 PR 不跑 CI，用 `gh pr merge --admin --squash` 合并。要合入 `main` 才生效。
 
 群超过 200 人后微信不能再扫码进群，到时改用企业微信的群活码或「加我拉你进群」的个人码，换图片和名字就行，代码不用动。
 

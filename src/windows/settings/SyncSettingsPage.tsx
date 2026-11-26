@@ -8,7 +8,7 @@ import { SyncOptionalSection } from "../../features/sync/SyncOptionalSection";
 import { SyncSetupGuide } from "../../features/sync/SyncSetupGuide";
 import { SyncStatusSection } from "../../features/sync/SyncStatusSection";
 import { SYNC_SECURITY_SECTIONS } from "../../features/sync/syncBackends";
-import { isSyncActive } from "../../features/sync/syncState";
+import { activeSyncBackend, isSyncActive } from "../../features/sync/syncState";
 import { useSyncSettings } from "../../features/sync/useSyncSettings";
 import "../../features/sync/SyncSettings.css";
 
@@ -17,6 +17,7 @@ export function SyncSettingsPage() {
   const [wantEncryption, setWantEncryption] = useState(false);
   const [managing, setManaging] = useState(false);
   const active = isSyncActive(sync.status);
+  const lan = activeSyncBackend(sync.status) === "lan";
 
   if (!active && managing) setManaging(false);
   if (!sync.loaded) return null;
@@ -51,7 +52,7 @@ export function SyncSettingsPage() {
         onStopSync={() => void sync.stopCurrentSync(false)}
         onManage={() => setManaging((open) => !open)}
       />
-      {managing ? (
+      {managing || lan ? (
         <SyncBackendSection
           status={sync.status}
           busy={sync.busy}
@@ -68,7 +69,7 @@ export function SyncSettingsPage() {
       />
       {SYNC_SECURITY_SECTIONS.map((entry) =>
         entry.id === "encryption" ? (
-          <SyncEncryptionSection key={entry.id} status={sync.status} busy={sync.busy} startOpen={wantEncryption} />
+          lan ? null : <SyncEncryptionSection key={entry.id} status={sync.status} busy={sync.busy} startOpen={wantEncryption} />
         ) : entry.component ? (
           <entry.component key={entry.id} status={sync.status} busy={sync.busy} />
         ) : null,

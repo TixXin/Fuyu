@@ -1,5 +1,7 @@
 mod antigravity;
 mod background;
+mod cached;
+mod cli;
 mod cursor;
 mod cursor_token;
 mod dsh;
@@ -14,6 +16,7 @@ mod workbuddy_plan;
 mod tests;
 
 pub(crate) use background::init;
+pub(crate) use cached::read as cached_usage;
 pub(crate) use fallback::usage as fallback_usage;
 use serde::Serialize;
 use source::{FetchError, Limits};
@@ -151,6 +154,7 @@ pub(crate) fn start(config: UsageConfig) -> Result<(), String> {
             return Ok(());
         }
     }
+    source::allow_keychain_again();
     let (sender, receiver) = mpsc::channel();
     let thread = thread::Builder::new()
         .name("claude-usage".into())
@@ -245,7 +249,7 @@ async fn refresh(manual: bool) {
     let in_flight = InFlight;
     let now_ms = source::unix_ms(SystemTime::now());
     let proxy = source::resolve_proxy(config.proxy.as_deref());
-    let api = source::fetch_api(proxy.as_deref(), now_ms).await;
+    let api = source::fetch_api(proxy.as_deref(), source::Keychain::Read, now_ms).await;
     {
         let mut state = state();
         if state.poller.is_some() {

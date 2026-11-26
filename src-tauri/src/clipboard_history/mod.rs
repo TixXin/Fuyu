@@ -586,7 +586,7 @@ pub(crate) fn hide_on_blur(app: &AppHandle) -> Result<(), String> {
         popup::note_target(app);
         return Ok(());
     }
-    popup::hide(app)
+    popup::hide_on_blur(app)
 }
 
 #[tauri::command]

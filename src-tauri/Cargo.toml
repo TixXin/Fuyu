@@ -40,11 +40,13 @@ imgref = "1.11"
 lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "native-tls", "builder", "hostname"] }
 keyring = { version = "4.2", default-features = false, features = ["v1", "windows-native-keyring-store"] }
 mailparse = "0.17"
+mdns-sd = "0.22"
 native-tls = "0.2"
 quick-xml = "0.39"
 rcgen = { version = "0.14", default-features = false, features = ["ring"] }
 ring = "0.17"
 rrule = "0.14"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "socks"] }
 rgb = "0.8"
 semver = "1"

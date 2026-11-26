@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Context } from "@fuyu/plugin-base";
 import { messagesV1 } from "@fuyu/plugin-services";
+import { currentLocale } from "./locale.ts";
 import {
   MAX_ITEMS,
   METHODS,
@@ -14,6 +15,7 @@ import {
   normalizeSettings,
   normalizeStored,
   resolveDateDraft,
+  sampleItems,
   sanitizeBackground,
   toView,
   togglePin,
@@ -31,6 +33,9 @@ export const inject = { clients: null, settings: { required: false } };
 const SETUP_HINT = { "zh-CN": "添加一个日期", en: "Add a date" };
 
 function readStored(file: string): StoredCountdown {
+  if (!existsSync(file)) {
+    return { ...normalizeStored(null), items: sampleItems(currentLocale() === "zh-CN"), sample: true };
+  }
   try {
     return normalizeStored(JSON.parse(readFileSync(file, "utf8")));
   } catch {
@@ -58,12 +63,12 @@ export function apply(ctx: Context) {
   }
 
   function settings(): CountdownSettings {
-    const { items: _items, reminded: _reminded, ...rest } = stored;
+    const { items: _items, reminded: _reminded, sample: _sample, ...rest } = stored;
     return rest;
   }
 
   function snapshot(): CountdownSnapshot {
-    return { items: stored.items.map(toView), settings: settings(), at: Date.now() };
+    return { items: stored.items.map(toView), settings: settings(), sample: Boolean(stored.sample), at: Date.now() };
   }
 
   function reportSetup() {
@@ -130,6 +135,7 @@ export function apply(ctx: Context) {
         backgroundDataUrl: null,
       },
     ];
+    delete stored.sample;
     quiet(id);
     return commit();
   });
@@ -137,6 +143,7 @@ export function apply(ctx: Context) {
   ctx.clients.handle(METHODS.update, (params?: ItemDraft & { id?: string }) => {
     const id = idOf(params);
     stored.items = stored.items.map((item) => (item.id === id ? applyDraft(item, params ?? {}) : item));
+    delete stored.sample;
     quiet(id);
     return commit();
   });
@@ -144,16 +151,19 @@ export function apply(ctx: Context) {
   ctx.clients.handle(METHODS.remove, (params?: { id?: string }) => {
     const id = idOf(params);
     stored.items = stored.items.filter((item) => item.id !== id);
+    delete stored.sample;
     return commit();
   });
 
   ctx.clients.handle(METHODS.pin, (params?: { id?: string }) => {
     stored.items = togglePin(stored.items, idOf(params));
+    delete stored.sample;
     return commit();
   });
 
   ctx.clients.handle(METHODS.move, (params?: { id?: string; to?: number }) => {
     stored.items = moveItem(stored.items, idOf(params), Number(params?.to));
+    delete stored.sample;
     return commit();
   });
 
@@ -164,6 +174,7 @@ export function apply(ctx: Context) {
     stored.items = stored.items.map((item) =>
       item.id === id ? { ...item, backgroundDataUrl: bg, bgRev: bg ? Date.now() : null } : item,
     );
+    delete stored.sample;
     return commit();
   });
 
@@ -173,7 +184,18 @@ export function apply(ctx: Context) {
   });
 
   ctx.clients.handle(METHODS.setSettings, (params?: Partial<CountdownSettings>) => {
-    stored = { ...normalizeSettings(params, settings()), items: stored.items, reminded: stored.reminded };
+    stored = {
+      ...normalizeSettings(params, settings()),
+      items: stored.items,
+      reminded: stored.reminded,
+      ...(stored.sample ? { sample: true } : {}),
+    };
+    return commit();
+  });
+
+  ctx.clients.handle(METHODS.restoreSample, () => {
+    stored.items = sampleItems(currentLocale() === "zh-CN");
+    stored.sample = true;
     return commit();
   });
 

@@ -9,13 +9,16 @@ import {
 import { SYNC_BACKENDS } from "../../src/features/sync/syncBackends.ts";
 import { en, zhCN } from "../../src/i18n/sections/sync.ts";
 
-test("sync backends list includes both folder and webdav with localized labels", () => {
+test("sync backends list folder, webdav and the local network link with localized labels", () => {
   assert.deepEqual(
     SYNC_BACKENDS.map((entry) => entry.id),
-    ["folder", "webdav"],
+    ["folder", "webdav", "lan"],
   );
   assert.equal(zhCN.backend.methods.webdav, "WebDAV");
   assert.equal(en.backend.methods.webdav, "WebDAV");
+  assert.equal(zhCN.backend.methods.lan, "局域网");
+  assert.equal(en.backend.methods.lan, "LAN");
+  assert.equal(activeSyncBackend({ ...DEFAULT_SYNC_STATUS, backend: "lan", folder: "/old/folder" }), "lan");
 });
 
 test("saved WebDAV password can be reused only when URL and username still match", () => {

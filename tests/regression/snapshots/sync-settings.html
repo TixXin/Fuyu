@@ -75,6 +75,9 @@
                     <button aria-pressed="false" class="settings-choice__option" type="button">
                       WebDAV
                     </button>
+                    <button aria-pressed="false" class="settings-choice__option" type="button">
+                      局域网
+                    </button>
                   </div>
                 </div>
               </div>
@@ -731,6 +734,9 @@
                     <button aria-pressed="false" class="settings-choice__option" type="button">
                       WebDAV
                     </button>
+                    <button aria-pressed="false" class="settings-choice__option" type="button">
+                      局域网
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1326,7 +1332,7 @@
                           选同步方式
                         </span>
                         <span class="settings-row__description">
-                          同步文件夹（网盘、Syncthing、NAS 的文件夹）或 WebDAV
+                          同步文件夹（网盘、Syncthing、NAS 的文件夹）、WebDAV，或同一网络里两台电脑直连
                         </span>
                       </div>
                       <div class="settings-row__control">
@@ -1336,6 +1342,9 @@
                           </button>
                           <button aria-pressed="false" class="settings-choice__option" type="button">
                             WebDAV
+                          </button>
+                          <button aria-pressed="false" class="settings-choice__option" type="button">
+                            局域网
                           </button>
                         </div>
                       </div>
@@ -1399,6 +1408,117 @@
             </p>
           </div>
         </section>
+      </div>
+      <div style="width: 340px; display: grid; gap: 8px">
+        <div class="settings-row">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <span class="settings-row__title">
+                <span class="sync-webdav__label">
+                  <span>
+                    本机
+                  </span>
+                  <span class="sync-badge sync-badge--ok">
+                    正在使用
+                  </span>
+                </span>
+              </span>
+              <span class="settings-row__description">
+                识别码 ABCD-1234 · 端口 47321
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <span class="settings-row__title">
+                配对码
+              </span>
+              <span class="settings-row__description">
+                在另一台电脑上输入，118 秒内有效
+              </span>
+            </div>
+            <div class="settings-row__control">
+              <div class="sync-folder-actions">
+                <strong class="sync-lan__code">
+                  482913
+                </strong>
+                <button class="settings-link-button" type="button">
+                  取消
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <span class="settings-row__title">
+                输入另一台的配对码
+              </span>
+              <span class="settings-row__description">
+                在另一台电脑上点「显示配对码」，再在这里填它的地址和配对码
+              </span>
+            </div>
+          </div>
+          <div class="sync-lan__join">
+            <input aria-label="对方地址" autocomplete="off" class="settings-input settings-input--mono" placeholder="例如 192.168.1.20" spellcheck="false" value="192.168.1.20:47321">
+            <input aria-label="配对码" autocomplete="off" class="settings-input settings-input--mono sync-lan__code-input" inputmode="numeric" maxlength="6" placeholder="6 位数字" spellcheck="false" value="">
+            <button class="sync-status__button sync-status__button--primary" disabled="" type="button">
+              <span>
+                配对
+              </span>
+            </button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <span class="settings-row__title">
+                已配对的电脑
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="settings-row settings-row--indent" data-search="off">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <span class="settings-row__title">
+                Windows PC
+              </span>
+              <span class="settings-row__description">
+                识别码 FFFF-FFFF · 192.168.1.20:47321
+              </span>
+            </div>
+            <div class="settings-row__control">
+              <button class="settings-link-button settings-link-button--danger" type="button">
+                移除
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row__main">
+            <div class="settings-row__text">
+              <label class="settings-row__title" for="_id28_">
+                剪贴板互传
+              </label>
+              <span class="settings-row__description">
+                复制的文字自动发到已配对的电脑，进对方的剪贴板历史。只发文字，密码、隐私和敏感内容不发；两台都要打开
+              </span>
+            </div>
+            <div class="settings-row__control">
+              <span class="settings-switch">
+                <input id="_id28_" role="switch" type="checkbox">
+                <span aria-hidden="true" class="settings-switch__track"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <p class="sync-lan__hint">
+          Windows 第一次打开时会弹出防火墙提示，请点「允许」并勾选专用网络。连不上时看看网络是不是被设成了「公用」，或路由器开了 AP 隔离。
+        </p>
       </div>
     </div>
   </main>

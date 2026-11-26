@@ -1,5 +1,15 @@
 # 更新记录 · Changelog
 
+## 1.1.0
+
+- 未输入搜索词时默认展示桌面、下载与文档中最近修改的文件（支持直接回车打开或定位到文件夹），并提供 PDF / 文档 / 图片 / 笔记 / 表格一键快捷筛选胶囊。
+- 新增设置页与页内快捷设置入口，支持配置结果数量上限（20 / 50 / 100）、macOS Spotlight 搜索范围、是否显示最近文件、是否保留上次搜索词以及打开后自动收起。
+- 重新设计岛页 UI：按文件类型分色显示徽章、高亮匹配关键字、缩短主目录路径，并在底部提供快捷键提示栏。
+
+- Shows recently modified files from Desktop, Downloads and Documents before typing (ready for Enter to open or reveal), plus one-click quick filter chips (PDF, Docs, Images, Notes, Sheets).
+- Added a Settings section and a quick settings button next to the search box for max results (20 / 50 / 100), macOS Spotlight scope, recent files toggle, query memory, and auto-collapse.
+- Redesigned the island UI with color-coded file-type badges, highlighted query matches, shortened `~` paths, and a keyboard shortcut footer.
+
 ## 1.0.0
 
 第一版。

@@ -38,6 +38,7 @@ export type AlarmSnapshot = {
   ringing: RingingAlarm | null;
   snoozed: SnoozedAlarm | null;
   settings: AlarmSettings;
+  sample?: boolean;
   at: number;
 };
 
@@ -65,7 +66,31 @@ export const METHODS = {
   dismiss: "alarm:dismiss",
   snooze: "alarm:snooze",
   setSettings: "alarm:set-settings",
+  restoreSample: "alarm:restore-sample",
 } as const;
+
+export function sampleAlarms(zh: boolean, tone: AlarmTone = "chime"): AlarmItem[] {
+  return [
+    {
+      id: "sample-morning",
+      time: "08:30",
+      label: zh ? "工作日早起" : "Morning wake-up",
+      days: [1, 2, 3, 4, 5],
+      tone,
+      enabled: false,
+      lastFiredMinute: null,
+    },
+    {
+      id: "sample-evening",
+      time: "18:30",
+      label: zh ? "下班休息" : "Wrap up work",
+      days: [1, 2, 3, 4, 5],
+      tone,
+      enabled: false,
+      lastFiredMinute: null,
+    },
+  ];
+}
 
 export function isValidTime(value: string): boolean {
   if (!/^\d{2}:\d{2}$/.test(value)) return false;

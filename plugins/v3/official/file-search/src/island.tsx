@@ -1,49 +1,39 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { ClockIcon, CloseIcon, FileSearchIcon, FolderIcon, SearchIcon, SettingsIcon } from "./icons.tsx";
 import { islandApi } from "./island-api.ts";
-import { METHODS, RESULT_LIMIT, type FileHit } from "./model.ts";
+import { METHODS, extensionOf, fileKindOf, shortenFolder, type FileHit } from "./model.ts";
 import { Notice } from "./notice.tsx";
 import { PAGE_TITLE, text } from "./text.ts";
-import { useFileSearch } from "./useFileSearch.ts";
+import { useFileSearch, useFileSearchState } from "./useFileSearch.ts";
 import "./styles.css";
-
-function FileSearchIcon({ size = 16, strokeWidth = 2 }: { size?: number | string; strokeWidth?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
-      <path d="M14 2v5a1 1 0 0 0 1 1h5" />
-      <circle cx="11.5" cy="14.5" r="2.5" />
-      <path d="M13.3 16.3 15 18" />
-    </svg>
-  );
-}
-
-function FolderIcon() {
-  return (
-    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-    </svg>
-  );
-}
-
-function extensionOf(name: string): string {
-  const dot = name.lastIndexOf(".");
-  if (dot <= 0 || dot === name.length - 1) return "";
-  return name.slice(dot + 1, dot + 5).toUpperCase();
-}
 
 function isMacLike(): boolean {
   return typeof navigator !== "undefined" && /Mac/i.test(navigator.userAgent || "");
+}
+
+type SettingsOpener = { settings?: { open?: () => unknown } };
+
+function settingsOpener(ctx: Context): (() => unknown) | null {
+  const holder = (ctx as unknown as SettingsOpener).settings;
+  const open = holder?.open;
+  return typeof open === "function" ? () => open.call(holder) : null;
+}
+
+function HighlightName({ name, query }: { name: string; query: string }) {
+  const clean = query.trim();
+  if (!clean) return <>{name}</>;
+  const lower = name.toLowerCase();
+  const needle = clean.toLowerCase();
+  const idx = lower.indexOf(needle);
+  if (idx < 0) return <>{name}</>;
+  return (
+    <>
+      {name.slice(0, idx)}
+      <mark className="fuyu-file-search__mark">{name.slice(idx, idx + needle.length)}</mark>
+      {name.slice(idx + needle.length)}
+    </>
+  );
 }
 
 interface PageProps {
@@ -51,18 +41,27 @@ interface PageProps {
 }
 
 export default function apply(ctx: Context) {
+  const openSettings = settingsOpener(ctx);
+
   function FileSearchPage(props?: PageProps) {
     const [query, setQuery] = useState("");
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef<HTMLInputElement | null>(null);
     const itemRefs = useRef<Array<HTMLLIElement | null>>([]);
-    const { result, loading, error, retry, call } = useFileSearch(ctx, query);
+    const restoredRef = useRef(false);
+    const { state } = useFileSearchState(ctx);
+    const scopeKey = `${state.settings.resultLimit}:${state.settings.macScope}`;
+    const { result, loading, error, retry, call } = useFileSearch(ctx, query, scopeKey);
     const isExpanded = !props?.mode || props.mode === "expanded";
     const mac = isMacLike();
-    const hits: FileHit[] = result?.status === "ok" ? result.hits : [];
+    const searching = query.trim().length > 0;
+    const recentHits = state.settings.showRecent ? state.recent : [];
+    const hits: FileHit[] = searching ? (result?.status === "ok" ? result.hits : []) : recentHits;
     const activeIndex = hits.length === 0 ? -1 : Math.max(0, Math.min(selectedIndex, hits.length - 1));
 
     useEffect(() => {
+      if (restoredRef.current) return;
+      restoredRef.current = true;
       let alive = true;
       ctx.host.call<string>(METHODS.lastQuery).then(
         (previous) => {
@@ -94,7 +93,7 @@ export default function apply(ctx: Context) {
 
     const act = async (hit: FileHit, reveal: boolean) => {
       const ok = await call(reveal ? METHODS.reveal : METHODS.open, { path: hit.path });
-      if (!ok) return;
+      if (!ok || !state.settings.autoCollapse) return;
       const collapse = islandApi(ctx)?.collapse;
       try {
         if (collapse) await collapse();
@@ -125,10 +124,75 @@ export default function apply(ctx: Context) {
       }
     };
 
-    const searching = query.trim().length > 0;
+    const toggleQuick = (q: string) => {
+      setQuery((prev) => (prev.trim().toLowerCase() === q.toLowerCase() ? "" : q));
+      setSelectedIndex(0);
+      inputRef.current?.focus();
+    };
+
+    const revealLabel = mac ? text.revealMac : text.reveal;
+    const renderList = (items: readonly FileHit[], highlightQuery: string) => (
+      <ul className="fuyu-file-search__list" role="listbox" aria-label={text.title}>
+        {items.map((hit, index) => {
+          const selected = index === activeIndex;
+          const ext = hit.isDir ? "" : extensionOf(hit.name);
+          const kind = fileKindOf(hit);
+          const folder = shortenFolder(hit.folder, state.homeDir);
+          return (
+            <li
+              key={hit.path}
+              ref={(node) => {
+                itemRefs.current[index] = node;
+              }}
+              role="option"
+              aria-selected={selected}
+              className={selected ? "fuyu-file-search__row is-active" : "fuyu-file-search__row"}
+              onMouseEnter={() => setSelectedIndex(index)}
+            >
+              <button type="button" className="fuyu-file-search__item" title={hit.path} onClick={() => void act(hit, false)}>
+                <span className={`fuyu-file-search__badge is-${kind}`} aria-hidden="true">
+                  {ext || <FolderIcon size={13} />}
+                </span>
+                <span className="fuyu-file-search__main">
+                  <span className="fuyu-file-search__name">
+                    <HighlightName name={hit.name} query={highlightQuery} />
+                  </span>
+                  {folder && <span className="fuyu-file-search__folder">{folder}</span>}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="fuyu-file-search__reveal"
+                aria-label={revealLabel}
+                title={revealLabel}
+                onClick={() => void act(hit, true)}
+              >
+                <FolderIcon size={14} />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    );
+
     let body: ReactNode;
     if (!searching) {
-      body = <p className="fuyu-file-search__empty">{mac ? text.typeToSearchMac : text.typeToSearch}</p>;
+      if (recentHits.length > 0) {
+        body = (
+          <div className="fuyu-file-search__section">
+            <div className="fuyu-file-search__section-head">
+              <span className="fuyu-file-search__section-title">
+                <ClockIcon size={12} />
+                <span>{text.recentTitle}</span>
+              </span>
+              <span className="fuyu-file-search__count">{recentHits.length}</span>
+            </div>
+            {renderList(recentHits, "")}
+          </div>
+        );
+      } else {
+        body = <p className="fuyu-file-search__empty">{mac ? text.typeToSearchMac : text.typeToSearch}</p>;
+      }
     } else if (!result) {
       body = <p className="fuyu-file-search__empty">{text.searching}</p>;
     } else if (result.status !== "ok") {
@@ -143,86 +207,105 @@ export default function apply(ctx: Context) {
     } else if (hits.length === 0) {
       body = <p className="fuyu-file-search__empty">{loading ? text.searching : text.noResults}</p>;
     } else {
-      const revealLabel = mac ? text.revealMac : text.reveal;
       body = (
         <>
-          <ul className="fuyu-file-search__list" role="listbox" aria-label={text.title}>
-            {hits.map((hit, index) => {
-              const selected = index === activeIndex;
-              const ext = extensionOf(hit.name);
-              return (
-                <li
-                  key={hit.path}
-                  ref={(node) => {
-                    itemRefs.current[index] = node;
-                  }}
-                  role="option"
-                  aria-selected={selected}
-                  className={selected ? "fuyu-file-search__row fuyu-file-search__row--active" : "fuyu-file-search__row"}
-                  onMouseEnter={() => setSelectedIndex(index)}
-                >
-                  <button type="button" className="fuyu-file-search__item" title={hit.path} onClick={() => void act(hit, false)}>
-                    <span className="fuyu-file-search__badge" aria-hidden="true">
-                      {ext || <FolderIcon />}
-                    </span>
-                    <span className="fuyu-file-search__main">
-                      <span className="fuyu-file-search__name">{hit.name}</span>
-                      <span className="fuyu-file-search__folder">{hit.folder}</span>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className="fuyu-file-search__reveal"
-                    aria-label={revealLabel}
-                    title={revealLabel}
-                    onClick={() => void act(hit, true)}
-                  >
-                    <FolderIcon />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          {result.truncated && <p className="fuyu-file-search__muted">{text.more(RESULT_LIMIT)}</p>}
+          {renderList(hits, query)}
+          {result.truncated && <p className="fuyu-file-search__muted">{text.more(state.settings.resultLimit)}</p>}
         </>
       );
     }
 
     return (
       <div className="fuyu-file-search">
-        <div className="fuyu-file-search__input-wrap">
-          <FileSearchIcon size={14} />
-          <input
-            ref={inputRef}
-            type="text"
-            autoFocus
-            className="fuyu-file-search__input"
-            value={query}
-            placeholder={text.placeholder}
-            aria-label={text.placeholder}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setSelectedIndex(0);
-            }}
-            onKeyDown={onKeyDown}
-          />
-          {query.length > 0 && (
+        <div className="fuyu-file-search__bar">
+          <div className="fuyu-file-search__input-wrap">
+            <span className="fuyu-file-search__lead-icon" aria-hidden="true">
+              <SearchIcon size={14} />
+            </span>
+            <input
+              ref={inputRef}
+              type="text"
+              autoFocus
+              className="fuyu-file-search__input"
+              value={query}
+              placeholder={text.placeholder}
+              aria-label={text.placeholder}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setSelectedIndex(0);
+              }}
+              onKeyDown={onKeyDown}
+            />
+            {query.length > 0 && (
+              <button
+                type="button"
+                className="fuyu-file-search__clear"
+                aria-label={text.clearSearch}
+                title={text.clearSearch}
+                onClick={() => {
+                  setQuery("");
+                  setSelectedIndex(0);
+                  inputRef.current?.focus();
+                }}
+              >
+                <CloseIcon size={11} />
+              </button>
+            )}
+          </div>
+          {openSettings && (
             <button
               type="button"
-              className="fuyu-file-search__clear"
-              aria-label={text.clearSearch}
-              title={text.clearSearch}
-              onClick={() => {
-                setQuery("");
-                setSelectedIndex(0);
-                inputRef.current?.focus();
-              }}
+              className="fuyu-file-search__settings-btn"
+              title={text.settingsTip}
+              aria-label={text.settingsTip}
+              onClick={() => void openSettings()}
             >
-              ×
+              <SettingsIcon size={14} />
             </button>
           )}
         </div>
+
+        <div className="fuyu-file-search__filters">
+          {text.quickFilters.map((chip) => {
+            const active = query.trim().toLowerCase() === chip.query;
+            return (
+              <button
+                key={chip.query}
+                type="button"
+                className={active ? `fuyu-file-search__filter is-${chip.kind} is-on` : `fuyu-file-search__filter is-${chip.kind}`}
+                onClick={() => toggleQuick(chip.query)}
+              >
+                <span className="fuyu-file-search__filter-dot" aria-hidden="true" />
+                <span>{chip.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {body}
+
+        {hits.length > 0 && (
+          <div className="fuyu-file-search__foot">
+            <span className="fuyu-file-search__hints">
+              <span className="fuyu-file-search__hint">
+                <kbd>↵</kbd>
+                {text.keyOpen}
+              </span>
+              <span className="fuyu-file-search__hint">
+                <kbd>{mac ? "⌘↵" : "Ctrl↵"}</kbd>
+                {mac ? text.keyRevealMac : text.keyReveal}
+              </span>
+              <span className="fuyu-file-search__hint">
+                <kbd>↑↓</kbd>
+                {text.keyMove}
+              </span>
+            </span>
+            {searching && result && (
+              <span className="fuyu-file-search__count">{text.countLabel(hits.length, result.truncated)}</span>
+            )}
+          </div>
+        )}
+
         {error && <p className="fuyu-file-search__muted">{error}</p>}
       </div>
     );

@@ -36,6 +36,20 @@ pub fn add_clipboard_history_text(text: String) -> Result<ClipboardHistorySnapsh
     service.snapshot()
 }
 
+pub(crate) fn add_from_device(text: String, device: &str) -> Result<(), String> {
+    let service = service()?;
+    if !service.snapshot()?.settings.enabled || looks_like_secret(&text) {
+        return Ok(());
+    }
+    let capture = ClipboardCapture::Text {
+        hash: hash_bytes([b"text:", text.as_bytes()].concat().as_slice()),
+        preview: preview_text(&text),
+        text,
+        html: None,
+    };
+    service.insert_capture(capture, Some(super::privacy::lan_device_source(device)), false)
+}
+
 #[tauri::command]
 pub fn pause_clipboard_capture(minutes: Option<u32>) -> Result<ClipboardHistorySnapshot, String> {
     let minutes = minutes.map(|minutes| minutes.clamp(1, 24 * 60));

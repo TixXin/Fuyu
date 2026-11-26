@@ -43,6 +43,7 @@ mod tests;
 mod session_scan;
 mod sessions;
 pub(crate) use sessions::parse_timestamp_ms;
+pub(crate) use claude_desktop::app_dir as claude_desktop_dir;
 mod title;
 mod tmux;
 mod todo_list;

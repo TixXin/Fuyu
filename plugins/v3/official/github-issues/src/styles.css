@@ -1,7 +1,9 @@
 .fuyu-gh-issues {
+  --fuyu-gh-open: light-dark(#15803d, #4ade80);
+  --fuyu-gh-pr: light-dark(#7c3aed, #a78bfa);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   padding: 10px;
   font-family: var(--fuyu-plugin-font);
@@ -12,39 +14,78 @@
 .fuyu-gh-issues__empty {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   gap: 8px;
-  padding: 12px;
+  padding: 18px 14px;
+  border: 1px solid var(--fuyu-plugin-border);
   border-radius: var(--fuyu-plugin-radius);
   background: var(--fuyu-plugin-surface);
 }
 
-.fuyu-gh-issues__go {
-  padding: 4px 12px;
-  border: none;
+.fuyu-gh-issues__empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--fuyu-plugin-accent) 14%, var(--fuyu-plugin-surface));
+  color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-gh-issues__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.fuyu-gh-issues__go,
+.fuyu-gh-issues__secondary {
+  padding: 5px 12px;
   border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-accent);
-  color: var(--fuyu-plugin-on-accent);
   font: inherit;
   font-size: 12px;
   cursor: pointer;
 }
 
+.fuyu-gh-issues__go {
+  border: none;
+  background: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-on-accent);
+  font-weight: 500;
+}
+
+.fuyu-gh-issues__secondary {
+  border: 1px solid var(--fuyu-plugin-border);
+  background: transparent;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-gh-issues__secondary:hover {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
 .fuyu-gh-issues__toolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   min-width: 0;
 }
 
-.fuyu-gh-issues__spacer {
-  flex: 1;
+.fuyu-gh-issues__summary {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .fuyu-gh-issues__input {
   flex: 1;
   min-width: 0;
-  padding: 5px 8px;
+  padding: 5px 9px;
   border: 1px solid var(--fuyu-plugin-border);
   border-radius: var(--fuyu-plugin-radius);
   background: var(--fuyu-plugin-surface);
@@ -58,48 +99,104 @@
   border-color: var(--fuyu-plugin-accent);
 }
 
-.fuyu-gh-issues__refresh,
-.fuyu-gh-issues__more {
+.fuyu-gh-issues__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
-  padding: 3px 10px;
-  border: 1px solid var(--fuyu-plugin-border);
+}
+
+.fuyu-gh-issues__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  cursor: pointer;
+}
+
+.fuyu-gh-issues__icon-btn:hover:not(:disabled) {
+  border-color: var(--fuyu-plugin-border);
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-gh-issues__icon-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.fuyu-gh-issues__sample {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--fuyu-plugin-accent) 30%, var(--fuyu-plugin-border));
+  border-radius: var(--fuyu-plugin-radius);
+  background: color-mix(in srgb, var(--fuyu-plugin-accent) 10%, var(--fuyu-plugin-surface));
+  font-size: 11.5px;
+}
+
+.fuyu-gh-issues__sample-text {
+  color: var(--fuyu-plugin-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-gh-issues__sample-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-on-accent);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fuyu-gh-issues__more {
+  align-self: flex-start;
+  padding: 2px 7px;
+  border: none;
   border-radius: var(--fuyu-plugin-radius);
   background: transparent;
   color: var(--fuyu-plugin-text-secondary);
   font: inherit;
   font-size: 12px;
-  white-space: nowrap;
   cursor: pointer;
 }
 
-.fuyu-gh-issues__refresh:hover,
 .fuyu-gh-issues__more:hover {
   background: var(--fuyu-plugin-surface-hover);
   color: var(--fuyu-plugin-text);
 }
 
-.fuyu-gh-issues__refresh:disabled {
-  cursor: default;
-  opacity: 0.6;
-}
-
-.fuyu-gh-issues__more {
-  align-self: flex-start;
-  border: none;
-  padding: 2px 6px;
-}
-
 .fuyu-gh-issues__groups {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  max-height: 296px;
   min-width: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .fuyu-gh-issues__group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
 }
 
@@ -109,6 +206,7 @@
   justify-content: space-between;
   gap: 8px;
   min-width: 0;
+  padding: 0 2px;
 }
 
 .fuyu-gh-issues__repo {
@@ -123,7 +221,11 @@
 
 .fuyu-gh-issues__badge {
   flex-shrink: 0;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--fuyu-plugin-surface-hover);
   font-size: 11px;
+  font-weight: 500;
   color: var(--fuyu-plugin-text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -139,11 +241,11 @@
 
 .fuyu-gh-issues__row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
   gap: 8px;
   min-width: 0;
-  padding: 6px 8px;
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--fuyu-plugin-border) 60%, transparent);
   border-radius: var(--fuyu-plugin-radius);
   background: var(--fuyu-plugin-surface);
   color: var(--fuyu-plugin-text);
@@ -151,11 +253,26 @@
 }
 
 .fuyu-gh-issues__row:hover {
+  border-color: var(--fuyu-plugin-border);
   background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-gh-issues__dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--fuyu-gh-open);
+}
+
+.fuyu-gh-issues__dot.is-pr {
+  background: var(--fuyu-gh-pr);
 }
 
 .fuyu-gh-issues__row-main {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
@@ -163,6 +280,7 @@
 
 .fuyu-gh-issues__row-title {
   min-width: 0;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -187,11 +305,13 @@
 }
 
 .fuyu-gh-issues__tag {
-  padding: 0 4px;
-  border: 1px solid var(--fuyu-plugin-border);
+  padding: 0 5px;
   border-radius: 4px;
+  background: color-mix(in srgb, var(--fuyu-gh-pr) 16%, transparent);
+  color: var(--fuyu-gh-pr);
   font-size: 10px;
-  line-height: 14px;
+  font-weight: 600;
+  line-height: 15px;
 }
 
 .fuyu-gh-issues__comments {
@@ -199,6 +319,9 @@
   flex-shrink: 0;
   align-items: center;
   gap: 3px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--fuyu-plugin-surface-hover);
   color: var(--fuyu-plugin-text-muted);
   font-size: 11px;
   font-variant-numeric: tabular-nums;

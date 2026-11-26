@@ -1,20 +1,18 @@
 import type { Context } from "@fuyu/plugin-base";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ArrowIcon, StockIcon } from "./icons.tsx";
 import {
   METHODS,
   displayCode,
-  formatChange,
   formatPercent,
   formatPrice,
   trendOf,
   type ColorScheme,
-  type Quote,
-  type StockItem,
-  type StockState,
 } from "./model.ts";
-import { PAGE_TITLE, clock, quoteClock, text } from "./text.ts";
+import { PAGE_TITLE, text } from "./text.ts";
 import { useStocks } from "./useStocks.ts";
+import { SplitView, TilesView, type ViewProps } from "./views.tsx";
+import { CardsView, DualView, TableView } from "./viewsMore.tsx";
 import "./styles.css";
 
 const PAGE_ID = "@fuyu/stock";
@@ -31,50 +29,17 @@ function schemeClass(scheme: ColorScheme): string {
   return scheme === "greenUp" ? " is-green-up" : "";
 }
 
-function Row({ stock, quote, now }: { stock: StockItem; quote: Quote | undefined; now: number }) {
-  const trend = trendOf(quote);
-  const tip = quote?.time ? `${stock.name} · ${text.quoteTime(quoteClock(quote.time, now))}` : stock.name;
-  return (
-    <li className={`fuyu-stock__row is-${trend}`} title={tip}>
-      <span className="fuyu-stock__who">
-        <span className="fuyu-stock__name">{stock.name}</span>
-        <span className="fuyu-stock__code">{displayCode(stock)}</span>
-      </span>
-      {quote && quote.price !== null ? (
-        <>
-          <span className="fuyu-stock__price">
-            <span>{formatPrice(quote.price)}</span>
-            <span className="fuyu-stock__change">{formatChange(quote.change, quote.price)}</span>
-          </span>
-          <span className="fuyu-stock__pill">{formatPercent(quote.percent)}</span>
-        </>
-      ) : (
-        <span className="fuyu-stock__none">{text.noQuote}</span>
-      )}
-    </li>
-  );
-}
-
-function StatusLine({ state }: { state: StockState }) {
-  const parts: string[] = [];
-  const label = text.status[state.status];
-  if (label) parts.push(label);
-  if (state.updatedAt) parts.push(text.updated(clock(state.updatedAt)));
-  return (
-    <span className={`fuyu-stock__status is-${state.status}`}>
-      <span className="fuyu-stock__dot" />
-      <span className="fuyu-stock__status-text">{parts.join(" · ")}</span>
-    </span>
-  );
-}
-
 export default function apply(ctx: Context) {
   const openSettings = settingsOpener(ctx);
 
   function StockPage() {
     const { state, ready, error, invoke } = useStocks(ctx);
+    const [selectedId, setSelectedId] = useState<string>("");
+    const gradId = useId();
     const opened = useRef(false);
     const { settings } = state;
+
+    const activeStock = settings.stocks.find((item) => item.id === selectedId) ?? settings.stocks[0] ?? null;
 
     useEffect(() => {
       if (!ready || opened.current) return;
@@ -82,38 +47,66 @@ export default function apply(ctx: Context) {
       if (settings.refreshOnOpen && settings.stocks.length > 0) invoke(METHODS.refresh, { soft: true });
     }, [ready, settings.refreshOnOpen, settings.stocks.length, invoke]);
 
+    useEffect(() => {
+      if (!ready || !activeStock) return;
+      if (!state.trends?.[activeStock.id]) {
+        invoke(METHODS.getTrend, { id: activeStock.id });
+      }
+    }, [ready, activeStock, state.trends, invoke]);
+
     if (!ready) return <div className="fuyu-stock" />;
 
-    if (settings.stocks.length === 0) {
+    if (settings.stocks.length === 0 || !activeStock) {
       return (
         <div className="fuyu-stock">
           <div className="fuyu-stock__empty">
+            <span className="fuyu-stock__empty-icon" aria-hidden="true">
+              <StockIcon size={20} />
+            </span>
             <p className="fuyu-stock__note">{openSettings ? text.noStocks : `${text.noStocks} ${text.noStocksHint}`}</p>
-            {openSettings && (
-              <button type="button" className="fuyu-stock__go" onClick={() => void openSettings()}>
-                {text.goSettings}
+            <div className="fuyu-stock__empty-actions">
+              {openSettings && (
+                <button type="button" className="fuyu-stock__go" onClick={() => void openSettings()}>
+                  {text.goSettings}
+                </button>
+              )}
+              <button type="button" className="fuyu-stock__secondary" onClick={() => invoke(METHODS.restoreSample)}>
+                {text.loadSample}
               </button>
-            )}
+            </div>
           </div>
         </div>
       );
     }
 
-    const now = Date.now();
+    const viewProps: ViewProps = {
+      state,
+      activeStock,
+      now: Date.now(),
+      gradId,
+      onSelect: setSelectedId,
+      onRefresh: () => invoke(METHODS.refresh),
+      onOpenSettings: openSettings,
+    };
+
+    const renderView = () => {
+      switch (settings.layout) {
+        case "tiles":
+          return <TilesView {...viewProps} />;
+        case "dual":
+          return <DualView {...viewProps} />;
+        case "table":
+          return <TableView {...viewProps} />;
+        case "cards":
+          return <CardsView {...viewProps} />;
+        default:
+          return <SplitView {...viewProps} />;
+      }
+    };
+
     return (
       <div className={`fuyu-stock${schemeClass(settings.colorScheme)}`}>
-        <div className="fuyu-stock__toolbar">
-          <StatusLine state={state} />
-          <button type="button" className="fuyu-stock__refresh" disabled={state.loading} onClick={() => invoke(METHODS.refresh)}>
-            {state.loading ? text.refreshing : text.refresh}
-          </button>
-        </div>
-        <ul className="fuyu-stock__list">
-          {settings.stocks.map((stock) => (
-            <Row key={stock.id} stock={stock} quote={state.quotes[stock.id]} now={now} />
-          ))}
-        </ul>
-        {state.source && <p className="fuyu-stock__foot">{text.sourceNote(text.source[state.source])}</p>}
+        {renderView()}
         {error && <p className="fuyu-stock__note">{error}</p>}
       </div>
     );

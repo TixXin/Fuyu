@@ -160,11 +160,12 @@ test("host: add checks the repo exists, follows renames (301) and registers the 
   assert.equal(seen.length, soft, "opening the page right after a refresh does not fetch again");
 });
 
-test("host: reports that a repository is still needed, and stops once one is added", async () => {
+test("host: fresh install seeds a sample repository, replacing on add and asking once cleared", async () => {
   globalThis.fetch = async (input) => {
     const url = String(input);
     if (url.endsWith("/repos/acme/web-app")) return reply(200, { full_name: "acme/web-app" });
     if (url.includes("/repos/acme/web-app/issues")) return reply(200, []);
+    if (url.includes("/repos/TixXin/fuyu/issues")) return reply(200, []);
     throw new Error(`unexpected ${url}`);
   };
   const emptyDir = (label) => {
@@ -176,7 +177,7 @@ test("host: reports that a repository is still needed, and stops once one is add
   const reports = [];
   const { ctx, call } = fakeContext(emptyDir("setup"), { setup: async (state) => void reports.push(state) });
   apply(ctx);
-  assert.deepEqual(reports, [{ needed: true, hint: { "zh-CN": "添加要关注的仓库", en: "Add a repository to follow" } }]);
+  assert.equal(reports.at(-1).needed, false, "fresh install starts with a sample repo");
 
   assert.deepEqual(await call(METHODS.addRepo, { repo: "acme/web-app" }), { ok: true, repo: "acme/web-app" });
   assert.equal(reports.at(-1).needed, false, "with a repository in the list nothing is missing");
@@ -194,9 +195,9 @@ test("host: reports that a repository is still needed, and stops once one is add
   await new Promise((resolve) => setImmediate(resolve));
 });
 
-test("manifest: GitHub Issues in both languages, 1.1.0, refresh command wired, check passes", async () => {
+test("manifest: GitHub Issues in both languages, 1.2.0, refresh command wired, check passes", async () => {
   const manifest = JSON.parse(readFileSync(join(PLUGIN_DIR, "package.json"), "utf8"));
-  assert.equal(manifest.version, "1.1.0");
+  assert.equal(manifest.version, "1.2.0");
   assert.deepEqual(manifest.fuyu.displayName, { "zh-CN": "GitHub Issues", en: "GitHub Issues" });
   assert.equal(manifest.description, manifest.fuyu.description.en);
   assert.ok(manifest.fuyu.inject.required.includes("commands"));
