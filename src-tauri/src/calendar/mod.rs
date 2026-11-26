@@ -270,7 +270,14 @@ async fn read_source(
     Ok((events_from_feeds(source, &feeds, from, to), calendars))
 }
 
-async fn read_all(sources: &mut [CalendarSource]) -> (CalendarSnapshot, bool) {
+async fn secret_of(id: &str, retry: bool) -> Result<Option<String>, UserError> {
+    let id = id.to_string();
+    tauri::async_runtime::spawn_blocking(move || sources::read_secret(&id, retry))
+        .await
+        .unwrap_or_else(|error| Err(UserError::new("internal", "Something went wrong inside the island.").detail(error)))
+}
+
+async fn read_all(sources: &mut [CalendarSource], retry: bool) -> (CalendarSnapshot, bool) {
     let now = Local::now();
     let (from, to) = window(now);
     let mut snapshot = CalendarSnapshot {
@@ -282,7 +289,7 @@ async fn read_all(sources: &mut [CalendarSource]) -> (CalendarSnapshot, bool) {
     };
     let mut changed = false;
     for source in sources.iter_mut() {
-        let result = match sources::read_secret(&source.id) {
+        let result = match secret_of(&source.id, retry).await {
             Ok(Some(secret)) => {
                 let (source_from, source_to) = window_for(source, now);
                 read_source(source, &secret, source_from, source_to).await
@@ -332,7 +339,7 @@ async fn read_events(dir: &std::path::Path, refresh: bool) -> Result<CalendarSna
             return Ok(cached.snapshot.clone());
         }
     }
-    let (snapshot, changed) = read_all(&mut sources).await;
+    let (snapshot, changed) = read_all(&mut sources, refresh).await;
     if changed {
         let _ = sources::write(dir, &sources);
     }
