@@ -197,6 +197,7 @@ export function createProxyFetch(baseFetch = globalThis.fetch) {
     const redirectMode = init?.redirect ?? (input instanceof Request ? input.redirect : "follow");
     const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
     let headers = collectHeaders(init?.headers, input instanceof Request ? input.headers : undefined);
+    if (!headers["user-agent"]) headers["user-agent"] = "Fuyu";
     let bodyBuf = init?.body !== undefined
       ? await normalizeBody(init.body)
       : input instanceof Request && method !== "GET" && method !== "HEAD"
@@ -211,7 +212,11 @@ export function createProxyFetch(baseFetch = globalThis.fetch) {
       const response = await sendOnce(proxy, currentUrl, method, headers, bodyBuf, signal);
       const location = response.headers.get("location");
       const isRedirect = [301, 302, 303, 307, 308].includes(response.status) && Boolean(location);
-      if (!isRedirect || redirectMode === "manual") return response;
+      if (!isRedirect || redirectMode === "manual") {
+        Object.defineProperty(response, "url", { value: currentUrl.toString() });
+        if (redirects > 0) Object.defineProperty(response, "redirected", { value: true });
+        return response;
+      }
       if (redirectMode === "error") throw new TypeError("redirect mode is set to error");
       if (redirects === MAX_REDIRECTS) throw new TypeError("maximum redirect count reached");
       const nextUrl = new URL(location, currentUrl);
