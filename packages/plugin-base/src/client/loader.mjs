@@ -1,8 +1,8 @@
 import { Context, Service } from "cordis";
 import { HostBridge } from "./bridge.mjs";
-import { PluginIsland } from "./island-service.mjs";
+import { PluginIsland } from "../app/island-service.mjs";
 import { PluginLocale } from "./locale-service.mjs";
-import { PluginSettings } from "./settings-service.mjs";
+import { PluginSettings } from "../app/settings-service.mjs";
 import { Slots } from "./slot-service.mjs";
 
 class PluginServices extends Service {

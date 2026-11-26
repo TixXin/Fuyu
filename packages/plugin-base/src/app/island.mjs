@@ -1,7 +1,7 @@
-import { pluginId } from "./clients.mjs";
-import { kindOf } from "./gate.mjs";
-import { entryOf, installInjectableAccessor } from "./owner.mjs";
-import { serviceError } from "./services.mjs";
+import { pluginId } from "../host/clients.mjs";
+import { kindOf } from "../host/gate.mjs";
+import { entryOf, installInjectableAccessor } from "../host/owner.mjs";
+import { serviceError } from "../host/services.mjs";
 
 export const ISLAND_REQUEST_EVENT = "island.request";
 export const ISLAND_WINDOW = "island";

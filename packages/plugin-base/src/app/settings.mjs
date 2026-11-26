@@ -1,6 +1,6 @@
-import { pluginId } from "./clients.mjs";
-import { installInjectableAccessor } from "./owner.mjs";
-import { serviceError } from "./services.mjs";
+import { pluginId } from "../host/clients.mjs";
+import { installInjectableAccessor } from "../host/owner.mjs";
+import { serviceError } from "../host/services.mjs";
 
 export const SETTINGS_OPEN_EVENT = "settings.open";
 export const SETTINGS_OPENER_WINDOW = "island";
