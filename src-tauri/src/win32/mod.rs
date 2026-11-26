@@ -14,6 +14,7 @@ pub(crate) mod desktop;
 pub(crate) mod desktop_duplication;
 pub(crate) mod message_box;
 pub(crate) mod devnode;
+pub(crate) mod dpapi;
 pub(crate) mod dwm;
 pub(crate) mod graphics_capture;
 pub(crate) mod hotkey;
