@@ -1,4 +1,5 @@
 #!/bin/sh
+[ "$FUYU_AGENT_STATUS" = off ] && exit 0
 provider=$1
 event=$2
 case "$provider" in codex|claudeCode) ;; *) exit 0 ;; esac

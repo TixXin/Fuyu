@@ -175,6 +175,7 @@ function buildToolInput(req, recentCalls) {
 }
 
 export function apply(ctx) {
+  if (process.env.FUYU_AGENT_STATUS === "off") return;
   if (!ctx || typeof ctx.on !== "function" || typeof ctx.inject !== "function" || typeof ctx.effect !== "function") {
     return;
   }

@@ -238,6 +238,14 @@ export type SettingsAgentText = {
     promptPlaceholder: string;
     remove: (value: string) => string;
   };
+  silentLaunch: {
+    title: string;
+    hint: string;
+    shellLabel: string;
+    shells: { sh: string; powershell: string; node: string };
+    copy: string;
+    copied: string;
+  };
   replyMarker: {
     title: string;
     toggle: string;
@@ -529,14 +537,22 @@ export const zhCN: SettingsAgentText = {
   },
   filters: {
     title: "隐藏会话",
-    hint: "符合任一条的会话在岛上完全不出现：Agent 页、会话数、收起条标题、提醒和音效都不算它。目录规则也隐藏它的子目录；文字规则匹配会话标题（没有标题时是第一句提示词）或最近一句提示词，不分大小写。",
+    hint: "符合任一条的会话在岛上完全不出现：Agent 页、会话数、收起条标题、提醒和音效都不算它。目录规则也隐藏它的子目录，可以用 * 代表任意字符，例如 */agy-title-* 能藏住每次换一个临时目录的脚本会话；文字规则匹配会话标题（没有标题时是第一句提示词）或最近一句提示词，不分大小写。",
     kinds: { folder: "所在目录", prompt: "标题或提示词包含" },
     kindLabel: "规则类型",
     add: "添加规则",
     addButton: "添加",
-    folderPlaceholder: "例如 E:\\Projects\\scratch",
+    folderPlaceholder: "例如 E:\\Projects\\scratch 或 */agy-title-*",
     promptPlaceholder: "例如 /loop",
     remove: (value) => `删除规则「${value}」`,
+  },
+  silentLaunch: {
+    title: "静默启动",
+    hint: "给脚本和插件在后台起的一次性代理（例如 agy -p、claude -p、codex exec）用：启动时带上环境变量 FUYU_AGENT_STATUS=off，浮屿的钩子见到它就直接退出，这个会话不提醒、不响、不点亮状态灯。Antigravity 这类只靠钩子上报会话的，整条不进列表；Claude Code、Codex 的会话浮屿还会从会话文件里读到，要列表里也不显示，再加一条上面的隐藏规则。只对之后启动的进程生效。",
+    shellLabel: "写法",
+    shells: { sh: "bash / zsh", powershell: "PowerShell", node: "Node.js" },
+    copy: "复制",
+    copied: "已复制",
   },
   replyMarker: {
     title: "回复状态标记",
@@ -829,14 +845,22 @@ export const en: SettingsAgentText = {
   },
   filters: {
     title: "Hide sessions",
-    hint: "Sessions matching any rule do not show on the island at all: not on the Agent page, in the session count or the collapsed title, nor in alerts and sounds. A folder rule hides its subfolders too; a text rule matches the session's title (its first prompt when it has none) or latest prompt, ignoring case.",
+    hint: "Sessions matching any rule do not show on the island at all: not on the Agent page, in the session count or the collapsed title, nor in alerts and sounds. A folder rule hides its subfolders too and takes * for any characters, so */agy-title-* hides script sessions that get a new temp folder each run; a text rule matches the session's title (its first prompt when it has none) or latest prompt, ignoring case.",
     kinds: { folder: "In folder", prompt: "Title or prompt contains" },
     kindLabel: "Rule type",
     add: "Add a rule",
     addButton: "Add",
-    folderPlaceholder: "e.g. E:\\Projects\\scratch",
+    folderPlaceholder: "e.g. E:\\Projects\\scratch or */agy-title-*",
     promptPlaceholder: "e.g. /loop",
     remove: (value) => `Remove the rule \"${value}\"`,
+  },
+  silentLaunch: {
+    title: "Silent launch",
+    hint: "For one-off agents that scripts and plugins start in the background (such as agy -p, claude -p or codex exec): start them with the environment variable FUYU_AGENT_STATUS=off and Fuyu's hooks quit at once, so the session raises no alert, plays no sound and lights no status light. Agents that report sessions only through hooks, like Antigravity, stay off the list entirely; Fuyu still reads Claude Code and Codex sessions from their session files, so add a hide rule above to keep those off the list too. It applies to processes started from then on.",
+    shellLabel: "Syntax",
+    shells: { sh: "bash / zsh", powershell: "PowerShell", node: "Node.js" },
+    copy: "Copy",
+    copied: "Copied",
   },
   replyMarker: {
     title: "Reply status marker",

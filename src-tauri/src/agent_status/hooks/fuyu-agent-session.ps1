@@ -10,6 +10,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($env:FUYU_AGENT_STATUS -eq "off") { exit 0 }
+
 if ($Provider -eq "claudeCode" -and $env:CURSOR_VERSION) { exit 0 }
 
 function Get-StatusDirectory {

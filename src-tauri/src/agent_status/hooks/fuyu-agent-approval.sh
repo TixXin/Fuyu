@@ -1,4 +1,5 @@
 #!/bin/sh
+[ "$FUYU_AGENT_STATUS" = off ] && exit 0
 agent=${1:-codex}
 [ "$agent" = claudeCode ] && [ -n "$CURSOR_VERSION" ] && exit 0
 case "$agent" in

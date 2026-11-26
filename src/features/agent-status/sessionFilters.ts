@@ -10,11 +10,25 @@ export function folderKey(path: string) {
   return path.trim().replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
 }
 
+function folderPattern(folder: string) {
+  const body = folder.split("*").map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*");
+  return new RegExp(`^${body}(?:/.*)?$`);
+}
+
+export function similarFolderPattern(cwd: string | null | undefined) {
+  const name = cwd?.trim().split(/[\\/]+/).filter(Boolean).pop();
+  const parts = name?.match(/^(.*[-_.])([A-Za-z0-9]{5,})$/);
+  if (!parts) return null;
+  const random = /[A-Za-z]/.test(parts[2]) && (/\d/.test(parts[2]) || (/[a-z]/.test(parts[2]) && /[A-Z]/.test(parts[2])));
+  return random ? `*/${parts[1]}*` : null;
+}
+
 export function matchesFilter(session: Pick<AgentSessionSummary, "cwd" | "title" | "lastPrompt">, filter: SessionFilter) {
   if (filter.kind === "folder") {
     if (!session.cwd) return false;
     const cwd = folderKey(session.cwd);
     const folder = folderKey(filter.value);
+    if (folder.includes("*")) return folder.replace(/[*/]/g, "") !== "" && folderPattern(folder).test(cwd);
     return folder !== "" && (cwd === folder || cwd.startsWith(`${folder}/`));
   }
   const text = filter.value.trim().toLowerCase();

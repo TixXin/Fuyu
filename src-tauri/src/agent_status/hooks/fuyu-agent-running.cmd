@@ -1,5 +1,6 @@
 @echo off
 setlocal
+if /I "%FUYU_AGENT_STATUS%"=="off" exit /b 0
 
 set "PROVIDER=%~1"
 if /I "%PROVIDER%"=="codex" goto known

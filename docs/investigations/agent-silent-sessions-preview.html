@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>静默会话与「隐藏会话」增强设计预览</title>
+<style>
+:root{
+  --motion-ease:cubic-bezier(0.2,0.8,0.2,1);
+  --motion-ease-out:cubic-bezier(0.22,1,0.36,1);
+  --motion-ease-in-out:cubic-bezier(0.45,0,0.55,1);
+  --motion-fast:120ms;
+  --motion-base:160ms;
+  --motion-medium:240ms;
+  --motion-slow:420ms;
+  --pg:#f3f3f5;
+  --pg2:#ffffff;
+  --pg3:rgba(0,0,0,.04);
+  --ink:#1c1c1f;
+  --ink2:#5b5b63;
+  --ink3:#8a8a93;
+  --rule:#e2e2e7;
+  --acc:#0a7cff;
+  --acc-soft:rgba(10,124,255,.1);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --pg:#0c0d0f;
+    --pg2:#1d1d20;
+    --pg3:rgba(255,255,255,.05);
+    --ink:#ececf0;
+    --ink2:#a9a9b2;
+    --ink3:#7a7a83;
+    --rule:#2c2c31;
+    --acc:#4ea1ff;
+    --acc-soft:rgba(78,161,255,.14);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--ink);font-size:14px;line-height:1.55}
+main{max-width:1180px;margin:0 auto;padding:0 16px 132px}
+h1{font-size:24px;margin:26px 0 6px;letter-spacing:-.01em}
+h2{font-size:19px;margin:46px 0 6px;padding-top:16px;border-top:1px solid var(--rule);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h2 .grow{flex:1;min-width:220px}
+p{color:var(--ink2);margin:6px 0}
+.sub{color:var(--ink3);margin:0 0 14px;max-width:920px}
+ul.notes{color:var(--ink2);margin:10px 0 0;padding-left:20px;font-size:13.5px;display:grid;gap:4px}
+ul.notes b{color:var(--ink)}
+.pick{border:1px solid var(--rule);background:var(--pg2);color:var(--ink);border-radius:8px;padding:5px 14px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background var(--motion-fast) var(--motion-ease),border-color var(--motion-fast) var(--motion-ease),color var(--motion-fast) var(--motion-ease)}
+.pick:hover{border-color:var(--acc)}
+section.picked .pick{background:var(--acc);border-color:var(--acc);color:#fff}
+section.picked h2{color:var(--acc)}
+.rec-pill{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:99px;background:var(--acc-soft);color:var(--acc);vertical-align:1px;margin-left:6px}
+
+.top-controls{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin:14px 0 0;padding:10px 14px;background:var(--pg2);border:1px solid var(--rule);border-radius:12px}
+.ctrl-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ctrl-group .lab{font-size:12.5px;color:var(--ink3);margin-right:2px}
+.pill-btn{border:1px solid var(--rule);background:var(--pg);color:var(--ink2);border-radius:99px;padding:4px 11px;font:inherit;font-size:12.5px;cursor:pointer;transition:background var(--motion-fast) var(--motion-ease),border-color var(--motion-fast) var(--motion-ease),color var(--motion-fast) var(--motion-ease)}
+.pill-btn:hover{color:var(--ink)}
+.pill-btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
+
+.en-inline{display:inline;margin-left:6px;font-size:11px;font-weight:400;color:rgba(248,246,240,.42);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.en-block{display:block;margin-top:2px;font-size:11px;color:rgba(248,246,240,.4);line-height:1.4}
+.page-en .en-inline{color:var(--ink3)}
+[data-lang="zh"] .en-inline,[data-lang="zh"] .en-block,[data-lang="en"] .en-inline,[data-lang="en"] .en-block{display:none}
+
+.demo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+@media (max-width:920px){.demo-grid{grid-template-columns:minmax(0,1fr)}}
+.demo-col{background:radial-gradient(120% 90% at 50% 0,#232b36,#14161a);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0;color:rgba(248,246,240,.94)}
+.demo-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.demo-head strong{font-size:13px;color:rgba(248,246,240,.95)}
+.demo-head span{font-size:11.5px;color:rgba(248,246,240,.5)}
+.demo-bar-mini{align-self:center;display:inline-flex;align-items:center;gap:8px;max-width:100%;height:30px;padding:0 11px;background:#000;border-radius:99px;border:1px solid rgba(255,255,255,.1);box-shadow:0 6px 18px rgba(0,0,0,.35);font-size:12px;color:rgba(241,240,246,.88);min-width:0}
+.demo-bar-mini .b-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.demo-bar-mini .b-ring{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;background:rgba(255,255,255,.1)}
+.demo-bar-mini .b-ring.noisy{background:rgba(255,159,67,.2);color:#ff9f43}
+.demo-bar-mini .b-ring.clean{background:rgba(53,233,133,.18);color:#35e985}
+
+.isl{background:#000;border-radius:14px;color:rgba(241,240,246,.92);position:relative;border:1px solid rgba(255,255,255,.09);box-shadow:0 12px 32px rgba(0,0,0,.45);min-width:0;overflow:hidden}
+.isl-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px 6px;border-bottom:1px solid rgba(255,255,255,.07);flex-wrap:wrap}
+.isl-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.isl-tab{padding:2px 8px;border-radius:99px;font-size:11px;color:rgba(241,240,246,.54);background:transparent}
+.isl-tab.on{background:rgba(255,255,255,.11);color:rgba(241,240,246,.95);font-weight:600}
+.isl-meta{font-size:11px;color:rgba(241,240,246,.45)}
+.s-list{list-style:none;margin:0;padding:6px;display:grid;gap:2px;min-width:0}
+.s-sec{padding:4px 6px 2px;font-size:10.5px;font-weight:600;color:rgba(241,240,246,.46);letter-spacing:.02em}
+.s-row{display:flex;align-items:flex-start;gap:9px;padding:7px 8px;border-radius:9px;min-width:0;position:relative;transition:background var(--motion-base) var(--motion-ease)}
+.s-row:hover,.s-row.active-menu{background:rgba(241,240,246,.075);box-shadow:inset 0 0 0 1px rgba(241,240,246,.09)}
+.s-row.done{align-items:center;padding-block:5px}
+.s-dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:5px}
+.s-row.done .s-dot{margin-top:0}
+.s-dot.run{background:#59b8ff;box-shadow:0 0 8px rgba(89,184,255,.55)}
+.s-dot.wait{background:#ffbe3d;box-shadow:0 0 8px rgba(255,190,61,.55)}
+.s-dot.ok{background:#35e985;opacity:.75}
+.s-main{flex:1;min-width:0;display:grid;gap:2px}
+.s-line1{display:flex;align-items:center;gap:6px;min-width:0}
+.s-proj{flex:none;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:1px 6px;border-radius:5px;background:rgba(241,240,246,.11);color:rgba(241,240,246,.86);font-size:11px;font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.s-proj.norm{font-family:inherit;background:rgba(116,214,255,.15);color:#8adfff}
+.s-row.done .s-proj{opacity:.78;font-weight:500}
+.s-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:rgba(241,240,246,.95)}
+.s-row.done .s-title{font-weight:400;color:rgba(241,240,246,.66)}
+.s-sub{display:flex;align-items:center;gap:6px;min-width:0;font-size:11px;color:rgba(241,240,246,.5)}
+.s-sub span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s-tail{flex:none;display:inline-flex;align-items:center;gap:5px;margin-left:auto}
+.s-age{font-size:11px;color:rgba(241,240,246,.42);white-space:nowrap;font-variant-numeric:tabular-nums}
+.s-more{all:unset;cursor:pointer;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:rgba(241,240,246,.6);transition:background var(--motion-fast) var(--motion-ease),color var(--motion-fast) var(--motion-ease)}
+.s-more:hover,.s-more.on{background:rgba(241,240,246,.14);color:#fff}
+.s-more-fold{padding:4px 8px 6px 25px;font-size:11px;color:rgba(241,240,246,.42)}
+.u-ic{width:14px;height:14px;display:block;flex:none}
+
+.menu-pop-stage{display:grid;grid-template-columns:196px minmax(0,1fr);gap:10px;padding:10px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.08);align-items:start}
+@media (max-width:560px){.menu-pop-stage{grid-template-columns:minmax(0,1fr)}}
+.row-menu-mock{display:grid;gap:1px;padding:5px;color:rgba(241,240,246,.88);background:#08090b;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.5),inset 0 0 0 1px rgba(241,240,246,.13);font-size:12px;min-width:0}
+.rm-sep{height:1px;background:rgba(241,240,246,.09);margin:3px 4px}
+.rm-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:27px;padding:2px 8px;border-radius:7px;cursor:pointer;min-width:0;transition:background var(--motion-fast) var(--motion-ease),color var(--motion-fast) var(--motion-ease)}
+.rm-item:hover{background:rgba(241,240,246,.08)}
+.rm-item.hi{background:rgba(116,214,255,.15);color:#8fe0ff;font-weight:600}
+.rm-item svg{flex:none;opacity:.82}
+.rm-item span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.sim-panel{background:#0b0c0f;border-radius:12px;padding:11px 12px;box-shadow:0 12px 32px rgba(0,0,0,.55),inset 0 0 0 1px rgba(116,214,255,.26);display:grid;gap:8px;min-width:0;animation:fadeOnly var(--motion-base) var(--motion-ease-out) backwards}
+@keyframes fadeOnly{from{opacity:0}to{opacity:1}}
+.sim-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sim-head b{font-size:12.5px;color:rgba(248,246,240,.96)}
+.sim-cwd{font-size:11px;color:rgba(241,240,246,.45);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.sim-opts{display:grid;gap:6px;min-width:0}
+.sim-opt{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);cursor:pointer;min-width:0;transition:border-color var(--motion-fast) var(--motion-ease),background var(--motion-fast) var(--motion-ease)}
+.sim-opt:hover{background:rgba(255,255,255,.055)}
+.sim-opt.on{border-color:rgba(116,214,255,.55);background:rgba(116,214,255,.08)}
+.sim-ck{flex:none;width:15px;height:15px;margin-top:2px;border-radius:4px;border:1.5px solid rgba(241,240,246,.38);display:grid;place-items:center;font-size:10px;font-weight:700;color:#06202c;transition:background var(--motion-fast) var(--motion-ease),border-color var(--motion-fast) var(--motion-ease)}
+.sim-opt.on .sim-ck{background:#74d6ff;border-color:#74d6ff}
+.sim-body{flex:1;min-width:0;display:grid;gap:2px}
+.sim-kind{font-size:11.5px;color:rgba(248,246,240,.9);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sim-val{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:#8fe0ff;background:rgba(116,214,255,.11);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+.sim-sub{font-size:11px;color:rgba(241,240,246,.46)}
+.sim-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:4px;border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap}
+.sim-est{font-size:11.5px;color:rgba(241,240,246,.72)}
+.sim-est b{color:#74d6ff;font-variant-numeric:tabular-nums}
+.sim-acts{display:flex;gap:6px;align-items:center}
+.btn-ghost{all:unset;cursor:pointer;padding:4px 10px;border-radius:7px;font-size:12px;color:rgba(241,240,246,.68);background:rgba(255,255,255,.06);transition:background var(--motion-fast) var(--motion-ease),color var(--motion-fast) var(--motion-ease)}
+.btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn-pri{all:unset;cursor:pointer;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:600;background:#74d6ff;color:#06202c;transition:opacity var(--motion-fast) var(--motion-ease)}
+.btn-pri:disabled{opacity:.4;cursor:default}
+
+.noise-banner{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 6px 2px;padding:7px 10px;border-radius:9px;background:rgba(116,214,255,.1);border:1px solid rgba(116,214,255,.28);font-size:11.5px;color:rgba(248,246,240,.9)}
+.noise-banner .grow{flex:1;min-width:160px}
+.noise-banner code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#8fe0ff}
+
+.win{
+  --w-bg:#131416;
+  --w-side:#1b1c20;
+  --w-card:rgba(255,255,255,.045);
+  --w-line:rgba(255,255,255,.075);
+  --t1:rgba(248,246,240,.96);
+  --t2:rgba(248,246,240,.68);
+  --t3:rgba(248,246,240,.46);
+  --a06:rgba(255,255,255,.06);
+  --a10:rgba(255,255,255,.1);
+  --wacc:#74d6ff;
+  --on-acc:#06202c;
+  --lo:#35e985;
+  --mid:#ff9f43;
+  --hi:#ff6b5f;
+  width:100%;
+  max-width:1080px;
+  min-height:620px;
+  margin:14px auto 0;
+  display:flex;
+  background:var(--w-bg);
+  color:var(--t1);
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  font-size:13px;
+  line-height:1.45;
+}
+.side{flex:none;width:184px;margin:8px;border-radius:12px;background:var(--w-side);padding:44px 8px 8px;position:relative}
+.side::before{content:"";position:absolute;left:14px;top:14px;width:11px;height:11px;border-radius:50%;background:#ff5f57;box-shadow:18px 0 0 #febc2e,36px 0 0 #28c840}
+.side .search{height:30px;border-radius:8px;background:var(--a06);color:var(--t3);display:flex;align-items:center;padding:0 10px;margin-bottom:8px;font-size:12.5px}
+.side .g{color:var(--t1);padding:7px 8px;font-weight:600;margin-top:4px}
+.side .i{display:block;width:100%;text-align:left;border:0;background:transparent;font:inherit;color:var(--t2);padding:6px 8px 6px 26px;border-radius:8px;cursor:pointer;transition:background var(--motion-fast) var(--motion-ease),color var(--motion-fast) var(--motion-ease)}
+.side .i:hover{background:var(--a06);color:var(--t1)}
+.side .i.on{background:var(--wacc);color:var(--on-acc);font-weight:600}
+.mob-nav{display:none;gap:6px;padding:10px 16px 0;flex-wrap:wrap}
+@media (max-width:820px){
+  .side{display:none}
+  .mob-nav{display:flex}
+}
+.content{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.chead{flex:none;padding:18px 24px 0;border-bottom:1px solid var(--w-line)}
+@media (max-width:560px){.chead{padding:14px 16px 0}}
+.chead h3{margin:0 0 12px;font-size:20px}
+.tabs{display:flex;gap:22px;overflow-x:auto}
+.tabs button{all:unset;cursor:pointer;padding:0 2px 9px;color:var(--t3);white-space:nowrap;transition:color var(--motion-fast) var(--motion-ease)}
+.tabs button:hover{color:var(--t2)}
+.tabs button.on{color:var(--t1);font-weight:600;box-shadow:inset 0 -2px 0 var(--wacc)}
+.tabs button .new{display:inline-block;margin-left:5px;font-size:10px;padding:0 5px;border-radius:99px;background:rgba(116,214,255,.16);color:var(--wacc);font-weight:600;vertical-align:1px}
+.scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px 24px 32px;scrollbar-width:thin;scrollbar-color:var(--a10) transparent}
+@media (max-width:560px){.scroll{padding:12px 14px 26px}}
+
+.gh{display:flex;align-items:center;gap:10px;margin:18px 2px 8px;font-weight:600;font-size:13px;flex-wrap:wrap}
+.gh:first-child{margin-top:2px}
+.gh .grow{flex:1;min-width:120px}
+.gh small{font-weight:400;color:var(--t3);font-size:12px}
+.card{background:var(--w-card);border:1px solid var(--w-line);border-radius:12px;overflow:hidden;min-width:0}
+.row{display:flex;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--w-line);min-width:0;flex-wrap:wrap}
+.row:first-child{border-top:0}
+.row .txt{flex:1 1 200px;min-width:0}
+.row .t{font-size:13px;color:var(--t1)}
+.row .d{font-size:11.5px;color:var(--t3);margin-top:2px}
+.row.col{flex-direction:column;align-items:stretch;gap:9px}
+.row-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;min-width:0}
+.foot{font-size:11.5px;color:var(--t3);margin:7px 4px 0;line-height:1.55}
+.foot button.link-inline,.link-btn{all:unset;cursor:pointer;color:var(--wacc);font-weight:500;font-size:12.5px;padding:3px 6px;border-radius:6px;white-space:nowrap;transition:background var(--motion-fast) var(--motion-ease)}
+.foot button.link-inline{padding:0 2px;font-size:11.5px;white-space:normal}
+.link-btn:hover:not(:disabled),.foot button.link-inline:hover{background:rgba(255,255,255,.08)}
+.link-btn:disabled{opacity:.42;cursor:default}
+
+.sw{flex:none;width:36px;height:21px;border-radius:99px;background:rgba(255,255,255,.18);position:relative;cursor:pointer;border:0;padding:0;transition:background var(--motion-base) var(--motion-ease)}
+.sw::after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform var(--motion-base) var(--motion-ease)}
+.sw.on{background:var(--wacc)}
+.sw.on::after{transform:translateX(15px)}
+
+.seg{flex:none;display:inline-flex;flex-wrap:wrap;background:var(--a06);border-radius:8px;padding:2px;gap:2px;max-width:100%}
+.seg button{all:unset;cursor:pointer;padding:4px 10px;border-radius:6px;color:var(--t2);font-size:12px;white-space:nowrap;transition:background var(--motion-base) var(--motion-ease),color var(--motion-base) var(--motion-ease)}
+.seg button:hover{color:var(--t1)}
+.seg button.on{background:rgba(255,255,255,.14);color:var(--t1);font-weight:600}
+
+.rule-left{min-width:0;flex:1 1 180px;display:inline-flex;align-items:center;gap:8px}
+.rule-left svg{flex:none;color:var(--t3)}
+.rule-val{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12.5px;color:var(--t1);overflow-wrap:anywhere;min-width:0}
+.rule-val.text-kind{font-family:inherit}
+.rule-right{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
+.badge{flex:none;padding:2px 8px;color:var(--t3);background:var(--a06);border-radius:99px;font-size:11px;line-height:1.4;white-space:nowrap}
+.badge.wild{color:#8fe0ff;background:rgba(116,214,255,.12)}
+.badge.hit{cursor:pointer;color:var(--lo);background:rgba(53,233,133,.12);border:0;font:inherit;font-size:11px}
+.badge.hit.zero{color:var(--t3);background:var(--a06);cursor:default}
+.rm-x{display:inline-grid;place-items:center;width:24px;height:24px;padding:0;color:var(--t3);background:none;border:0;border-radius:99px;cursor:pointer;transition:background var(--motion-fast) var(--motion-ease),color var(--motion-fast) var(--motion-ease)}
+.rm-x:hover{color:var(--t1);background:rgba(255,255,255,.08)}
+
+.filter-form{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}
+.s-input{flex:1 1 200px;min-width:0;height:34px;padding:0 12px;color:var(--t1);background:var(--a06);border:1px solid transparent;border-radius:8px;outline:none;font:inherit;font-size:13px;transition:background var(--motion-fast) var(--motion-ease),border-color var(--motion-fast) var(--motion-ease)}
+.s-input:hover{background:rgba(255,255,255,.085)}
+.s-input:focus{border-color:rgba(116,214,255,.65)}
+.s-input.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12px}
+.s-input::placeholder{color:var(--t3)}
+.live-match{font-size:11.5px;color:var(--t2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.live-match.warn{color:var(--mid)}
+.live-match.good{color:var(--lo)}
+.hit-drawer{width:100%;padding:7px 10px;border-radius:8px;background:rgba(0,0,0,.26);font-size:11.5px;color:var(--t2);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+
+.code-block{min-width:0;display:grid;border-top:1px solid var(--w-line);background:rgba(0,0,0,.2)}
+.code-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 12px 7px 14px;border-bottom:1px solid rgba(255,255,255,.055);flex-wrap:wrap}
+.code-lab{display:inline-flex;align-items:center;gap:6px;color:var(--t3);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px}
+.code-pre{min-width:0;margin:0;padding:11px 14px;overflow-x:auto;color:var(--t1);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.7;white-space:pre;user-select:text}
+.fold-trigger{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--w-line);color:var(--t2);font-size:12.5px;transition:background var(--motion-fast) var(--motion-ease),color var(--motion-fast) var(--motion-ease)}
+.fold-trigger:hover{background:rgba(255,255,255,.035);color:var(--t1)}
+
+.copy-table-wrap{overflow-x:auto;margin-top:12px;background:var(--pg2);border:1px solid var(--rule);border-radius:12px}
+table.copy-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+table.copy-tbl th,table.copy-tbl td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--rule);vertical-align:top}
+table.copy-tbl tr:last-child td{border-bottom:0}
+table.copy-tbl th{color:var(--ink3);font-weight:600;font-size:12px;background:var(--pg3)}
+table.copy-tbl code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:var(--acc)}
+
+.summary{position:sticky;bottom:0;z-index:20;margin:36px -16px 0;padding:12px 16px;background:color-mix(in srgb,var(--pg) 90%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--rule);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.summary code{flex:1 1 260px;min-width:0;overflow-x:auto;white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--pg2);border:1px solid var(--rule);border-radius:8px;padding:6px 10px;color:var(--ink)}
+.summary button.act{border:0;background:var(--acc);color:#fff;border-radius:8px;padding:7px 14px;font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+
+@media (prefers-reduced-motion:reduce){
+  .sim-panel{animation:none}
+  .sw,.sw::after,.pick,.pill-btn,.s-row,.s-more,.rm-item,.sim-opt,.sim-ck,.btn-ghost,.btn-pri,.side .i,.tabs button,.seg button,.rm-x,.s-input,.fold-trigger,.link-btn{transition:none}
+}
+</style>
+</head>
+<body data-lang="bi">
+<main>
+  <h1>静默会话与「隐藏会话」增强设计预览</h1>
+  <p class="sub">解决 <code>agy-title</code> 等工具在随机临时目录反复跑一次性会话刷满 Agent 列表的问题：在现有「隐藏会话」和会话行 <code>⋯</code> 菜单基础上，补齐 <b>环境变量静默启动</b>、<b>目录通配符</b>、<b>「隐藏类似会话…」面板</b> 与可选的 <b>系统临时目录开关</b>。</p>
+
+  <div class="top-controls">
+    <div class="ctrl-group">
+      <span class="lab">文案对照：</span>
+      <button type="button" class="pill-btn on" data-lang-btn="bi">中文 + 英文对照</button>
+      <button type="button" class="pill-btn" data-lang-btn="zh">仅中文</button>
+      <button type="button" class="pill-btn" data-lang-btn="en">English 窄宽预览</button>
+    </div>
+    <div class="ctrl-group">
+      <span class="lab">示例系统：</span>
+      <button type="button" class="pill-btn on" data-os-btn="mac">macOS (/var/folders/…/T)</button>
+      <button type="button" class="pill-btn" data-os-btn="win">Windows (AppData\Local\Temp)</button>
+    </div>
+  </div>
+
+  <section id="sec-island">
+    <h2><span class="grow" id="h-island">岛上 Agent 页：规则生效前后对比 &amp; 行菜单「隐藏类似会话…」</span></h2>
+    <p id="p-island">左边是刷屏现场与点开某条 <code>agy-title-xxxx</code> 的 <code>⋯</code> 菜单和「隐藏类似会话…」建议小面板（可直接勾选并点「隐藏」应用到下方设置窗）；右边是规则生效后的列表与收起条状态。</p>
+    <div class="demo-grid" id="islandCompare"></div>
+  </section>
+
+  <section id="sec-A" data-opt="A">
+    <h2>
+      <span class="grow">方案 A：只留现有「隐藏会话」一组（通配符 + 折叠的静默启动说明）</span>
+      <button type="button" class="pick" data-pick="A">选这个</button>
+    </h2>
+    <ul class="notes">
+      <li><b>改动最轻</b>：不拆新分组、不加「隐藏临时目录」开关，只把「所在目录」升级为支持 <code>*</code> 通配符，并在卡片末行放一个可展开的 <code>FUYU_AGENT_STATUS=off</code> 说明。</li>
+      <li><b>零存储迁移</b>：复用 <code>fuyu-agent-session-filters</code> 的 <code>{ kind: "folder" | "prompt", value }</code>，含 <code>*</code> 时按路径通配（仍含子目录）。</li>
+      <li><b>取舍</b>：脚本作者找 <code>FUYU_AGENT_STATUS=off</code> 需要多点一次展开；遇到别的临时目录脚本时，要先在岛上点一次「隐藏类似会话…」。</li>
+    </ul>
+    <div class="win" id="winA"></div>
+  </section>
+
+  <section id="sec-B" data-opt="B" class="picked">
+    <h2>
+      <span class="grow">方案 B：拆成「隐藏会话」+「静默启动」两组，配临时目录开关与行菜单面板<span class="rec-pill">推荐</span></span>
+      <button type="button" class="pick" data-pick="B">已选这个</button>
+    </h2>
+    <ul class="notes">
+      <li><b>职责清楚</b>：「隐藏会话」面向用户在岛上事后过滤（含默认关闭的「隐藏系统临时目录里的会话」快捷开关 + 通配符规则）；「静默启动」面向脚本/插件作者从源头跳过钩子，设置搜索也能直接搜到 <code>FUYU_AGENT_STATUS</code>。</li>
+      <li><b>两端都能治本</b>：改不了第三方插件源码时，开「隐藏系统临时目录」或点「隐藏类似会话…」立即生效；自己维护的 <code>agy-title</code> 加上 <code>FUYU_AGENT_STATUS=off</code> 后连钩子进程都直接退出。</li>
+      <li><b>取舍</b>：「会话列表」页底部多一组代码块卡片（约 150px 高）；临时目录开关默认关，避免用户在 <code>/tmp/demo</code> 手开调试会话时以为钩子坏了。</li>
+    </ul>
+    <div class="win" id="winB"></div>
+  </section>
+
+  <section id="sec-C" data-opt="C">
+    <h2>
+      <span class="grow">方案 C：岛上主动提示高频临时会话 + 规则实时命中数，「静默启动」放去连接页</span>
+      <button type="button" class="pick" data-pick="C">选这个</button>
+    </h2>
+    <ul class="notes">
+      <li><b>防误杀 + 免翻菜单</b>：每条规则旁显示「命中 N 条」（点开能看藏了哪些会话），输入框实时提示将匹配几条（输单个 <code>*</code> 时提醒会藏掉全部会话）；岛上短时间出现 ≥3 条相似临时目录会话时自动给一行轻提示。</li>
+      <li><b>按受众分放</b>：把开发者用的「静默启动」放进「Agent → 连接与扩展」（与回复状态标记、编辑器扩展同页），「外观 → 会话列表」底下只留一行链接跳过去（点窗口里的链接或左侧栏可切换看两页）。</li>
+      <li><b>取舍</b>：多一套相似临时会话检测与规则命中计数状态，实现复杂度比方案 B 高一档。</li>
+    </ul>
+    <div class="win" id="winC"></div>
+  </section>
+
+  <section id="sec-copy">
+    <h2><span class="grow">新增与改动文案中英对照表（i18n）</span></h2>
+    <div class="copy-table-wrap">
+      <table class="copy-tbl">
+        <thead>
+          <tr><th>位置 / Key</th><th>中文（zhCN）</th><th>英文（en）</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>agent.sessions.menu.hideSimilar</code></td><td>隐藏类似会话…</td><td>Hide similar sessions…</td></tr>
+          <tr><td><code>agent.sessions.similar.title</code></td><td>隐藏类似会话</td><td>Hide similar sessions</td></tr>
+          <tr><td><code>agent.sessions.similar.folderMatch</code></td><td>所在目录匹配 <code>{pattern}</code></td><td>In folder matching <code>{pattern}</code></td></tr>
+          <tr><td><code>agent.sessions.similar.promptMatch</code></td><td>标题或提示词包含 <code>{text}</code></td><td>Title or prompt contains <code>{text}</code></td></tr>
+          <tr><td><code>agent.sessions.similar.exactFolder</code></td><td>只隐藏这一个目录</td><td>Only this exact folder</td></tr>
+          <tr><td><code>agent.sessions.similar.estimate</code></td><td>会隐藏当前列表里 {count} 条会话</td><td>Hides {count} sessions now listed</td></tr>
+          <tr><td><code>agent.sessions.similar.apply</code></td><td>隐藏 {count} 条</td><td>Hide {count}</td></tr>
+          <tr><td><code>settings.agent.filters.hideTemp</code></td><td>隐藏系统临时目录里的会话</td><td>Hide sessions in system temp folders</td></tr>
+          <tr><td><code>settings.agent.filters.hideTempHint</code></td><td>不列出在 /tmp、$TMPDIR（macOS 的 /var/folders/…/T）和 Windows Temp 下启动的会话。</td><td>Leave out sessions started in /tmp, $TMPDIR (/var/folders/…/T on macOS) or Windows Temp.</td></tr>
+          <tr><td><code>settings.agent.filters.folderPlaceholder</code></td><td>例如 E:\Projects\scratch 或 */agy-title-*</td><td>e.g. ~/Projects/scratch or */agy-title-*</td></tr>
+          <tr><td><code>settings.agent.filters.hint</code></td><td>符合任一条的会话在岛上完全不出现：Agent 页、会话数、收起条标题、提醒和音效都不算它。目录规则支持 * 通配任意字符（如 */agy-title-*），也隐藏它的子目录；文字规则匹配会话标题或最近一句提示词，不分大小写。</td><td>Sessions matching any rule do not show on the island at all: not on the Agent page, in the session count or the collapsed title, nor in alerts and sounds. Folder rules accept * as a wildcard (e.g. */agy-title-*) and hide subfolders too; text rules match the title or latest prompt, ignoring case.</td></tr>
+          <tr><td><code>settings.agent.silentLaunch.title</code></td><td>静默启动</td><td>Silent launch</td></tr>
+          <tr><td><code>settings.agent.silentLaunch.summary</code></td><td>带着环境变量 FUYU_AGENT_STATUS=off 启动的代理进程，浮屿钩子直接退出，不上报也不记录。</td><td>When an agent starts with FUYU_AGENT_STATUS=off, Fuyu's hooks exit right away without reporting or recording it.</td></tr>
+          <tr><td><code>settings.agent.silentLaunch.hint</code></td><td>适合脚本、插件或定时任务在后台调用 CLI（如 agy -p、claude -p）；子进程会继承这个环境变量。</td><td>For scripts, plugins or scheduled jobs that call a CLI in the background (such as agy -p or claude -p); child processes inherit it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="summary">
+    <div class="ctrl-group">
+      <span class="lab">附加决定：</span>
+      <button type="button" class="pill-btn on" id="togTempOpt">保留「隐藏系统临时目录」开关（默认关）</button>
+    </div>
+    <code id="sumCode"></code>
+    <button type="button" class="act" id="copySumBtn">复制选择</button>
+  </div>
+</main>
+
+<script>
+const PROMPT_AGY = "你是 Antigravity 会话标题编辑器。只依据输入 JSON 返回一行纯文本标题，不要解释";
+
+const STATE = {
+  lang: "bi",
+  os: "mac",
+  picked: "B",
+  keepTempSwitch: true,
+  hideTempOn: false,
+  filters: [
+    { kind: "folder", value: "*/agy-title-*" }
+  ],
+  simTarget: "hTE0sa",
+  simChecked: { folderWild: true, prompt: false, exact: false },
+  appliedDemo: true,
+  bannerDismissed: false,
+  foldAOpen: true,
+  shell: "sh",
+  copiedKey: "",
+  winCTab: "agentSessions",
+  openHitIdx: 0,
+  draftKind: "folder",
+  draftVal: "*/agy-title-*"
+};
+
+const ICONS = {
+  claude: `<svg class="u-ic" width="14" height="14" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#d97757"/><path d="M8 3.5v9M3.5 8h9M4.8 4.8l6.4 6.4M11.2 4.8l-6.4 6.4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  agy: `<svg class="u-ic" width="14" height="14" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#4c8bf5"/><text x="8" y="11.6" font-size="9.5" font-weight="700" text-anchor="middle" fill="#fff" font-family="system-ui">A</text></svg>`,
+  codex: `<svg class="u-ic" width="14" height="14" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#fff"/><circle cx="8" cy="8" r="3.6" fill="none" stroke="#000" stroke-width="1.6"/><circle cx="8" cy="8" r="1.2" fill="#000"/></svg>`,
+  folder: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`,
+  prompt: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/></svg>`,
+  term: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>`,
+  x: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
+  dots: `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>`,
+  win: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20"/></svg>`,
+  openDir: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>`,
+  copy: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`,
+  hash: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>`,
+  arch: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>`,
+  eyeOff: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`,
+  filter: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`
+};
+
+function esc(str) {
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function tx(zh, en, block = false) {
+  if (STATE.lang === "en") return esc(en);
+  if (STATE.lang === "zh") return `<span title="${esc(en)}">${esc(zh)}</span>`;
+  return block
+    ? `${esc(zh)}<span class="en-block">${esc(en)}</span>`
+    : `${esc(zh)}<span class="en-inline">${esc(en)}</span>`;
+}
+
+function txPlain(zh, en) {
+  return STATE.lang === "en" ? en : zh;
+}
+
+function tempBase() {
+  return STATE.os === "mac" ? "/var/folders/xx/T" : "C:\\Users\\x\\AppData\\Local\\Temp";
+}
+
+function scratchSample() {
+  return STATE.os === "mac" ? "~/Projects/scratch" : "E:\\Projects\\scratch";
+}
+
+function buildSessions() {
+  const base = tempBase();
+  const sep = STATE.os === "mac" ? "/" : "\\";
+  const projBase = STATE.os === "mac" ? "/Users/tixxin/Projects" : "E:\\Projects";
+  const ids = ["hTE0sa", "9kP2mQ", "4xR8vL", "wN3c7B", "pL5v1Z", "mK8d2Q", "tY6n0R", "bC4j9W", "zX2f7H", "qV1s5M", "nB7g3K", "dF9r4J"];
+  const list = [
+    {
+      id: "fuxi-main",
+      provider: "claude",
+      proj: "Fuxi",
+      cwd: `${projBase}${sep}Fuxi`,
+      title: "[开发] 浮汐群反馈流与掉线重登开发",
+      sub: STATE.lang === "en" ? "Calling Edit · running 4m 12s" : "正在调用 Edit · 已运行 4 分 12 秒",
+      age: STATE.lang === "en" ? "now" : "刚刚",
+      phase: "run",
+      normal: true
+    },
+    {
+      id: "agy-4xR8vL",
+      provider: "agy",
+      proj: "agy-title-4xR8vL",
+      cwd: `${base}${sep}agy-title-4xR8vL`,
+      title: PROMPT_AGY,
+      sub: STATE.lang === "en" ? "Gemini Flash · generating title" : "Gemini Flash · 正在生成标题",
+      age: STATE.lang === "en" ? "2s" : "2 秒",
+      phase: "run",
+      normal: false
+    },
+    {
+      id: "fuyu-fix",
+      provider: "codex",
+      proj: "Fuyu",
+      cwd: `${projBase}${sep}Fuyu`,
+      title: STATE.lang === "en" ? "Fix edge tuck clipping on secondary display" : "修副屏贴边收起时的阴影裁切",
+      sub: "",
+      age: STATE.lang === "en" ? "18m" : "18 分钟前",
+      phase: "ok",
+      normal: true
+    }
+  ];
+  for (const suffix of ids) {
+    if (suffix === "4xR8vL") continue;
+    list.push({
+      id: `agy-${suffix}`,
+      provider: "agy",
+      proj: `agy-title-${suffix}`,
+      cwd: `${base}${sep}agy-title-${suffix}`,
+      title: PROMPT_AGY,
+      sub: "",
+      age: suffix === "hTE0sa" ? (STATE.lang === "en" ? "just now" : "刚刚") : (STATE.lang === "en" ? "1m ago" : "1 分钟前"),
+      phase: "ok",
+      normal: false
+    });
+  }
+  return list;
+}
+
+function normPath(p) {
+  return p.trim().replaceAll("\\", "/").replace(/\/+$/, "").toLowerCase();
+}
+
+function isTempPath(cwd) {
+  const n = normPath(cwd);
+  return n.startsWith("/tmp/") || n === "/tmp" || (n.includes("/var/folders/") && n.includes("/t/")) || n.includes("/appdata/local/temp/");
+}
+
+function matchFolderRule(cwd, ruleVal) {
+  const c = normPath(cwd);
+  const f = normPath(ruleVal);
+  if (!c || !f) return false;
+  if (!f.includes("*")) {
+    return c === f || c.startsWith(`${f}/`);
+  }
+  const regSrc = f.split("*").map((seg) => seg.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*");
+  const rx = new RegExp(`^${regSrc}(?:/.*)?$`);
+  return rx.test(c);
+}
+
+function matchesSingleFilter(session, filter) {
+  if (filter.kind === "folder") return matchFolderRule(session.cwd, filter.value);
+  const q = filter.value.trim().toLowerCase();
+  return q !== "" && session.title.toLowerCase().includes(q);
+}
+
+function effectiveHidden(session, useTempToggle) {
+  if (useTempToggle && STATE.hideTempOn && isTempPath(session.cwd)) return true;
+  return STATE.filters.some((f) => matchesSingleFilter(session, f));
+}
+
+function simCandidateRules() {
+  const base = tempBase();
+  const sep = STATE.os === "mac" ? "/" : "\\";
+  const exactPath = `${base}${sep}agy-title-${STATE.simTarget}`;
+  const list = [];
+  if (STATE.simChecked.folderWild) list.push({ kind: "folder", value: "*/agy-title-*" });
+  if (STATE.simChecked.prompt) list.push({ kind: "prompt", value: "Antigravity 会话标题编辑器" });
+  if (STATE.simChecked.exact) list.push({ kind: "folder", value: exactPath });
+  return list;
+}
+
+function codeSnippet(shell) {
+  if (shell === "ps") {
+    return `$env:FUYU_AGENT_STATUS = "off"\nagy -p "${PROMPT_AGY.slice(0, 26)}…"`;
+  }
+  if (shell === "node") {
+    return `spawn("agy", ["-p", prompt], {\n  env: { ...process.env, FUYU_AGENT_STATUS: "off" },\n});`;
+  }
+  return `FUYU_AGENT_STATUS=off agy -p "${PROMPT_AGY.slice(0, 26)}…"`;
+}
+
+function copyText(text, key) {
+  const done = () => {
+    STATE.copiedKey = key;
+    renderAll();
+    setTimeout(() => {
+      if (STATE.copiedKey === key) {
+        STATE.copiedKey = "";
+        renderAll();
+      }
+    }, 1400);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, done);
+  } else {
+    done();
+  }
+}
+
+function renderSessionRow(s, withMenuBtn) {
+  const suffix = s.id.startsWith("agy-") ? s.id.slice(4) : "";
+  const menuActive = withMenuBtn && suffix === STATE.simTarget;
+  const dotCls = s.phase === "run" ? "run" : "ok";
+  const projCls = s.normal ? "s-proj norm" : "s-proj";
+  const moreBtn = withMenuBtn
+    ? `<button type="button" class="s-more ${menuActive ? "on" : ""}" data-menu-suffix="${esc(suffix)}" title="${esc(txPlain("更多操作", "More actions"))}">${ICONS.dots}</button>`
+    : "";
+  if (s.phase !== "run") {
+    return `<li class="s-row done ${menuActive ? "active-menu" : ""}">
+      <span class="s-dot ${dotCls}"></span>
+      <span class="${projCls}">${esc(s.proj)}</span>
+      <span class="s-title">${esc(s.title)}</span>
+      <span class="s-tail">${ICONS[s.provider]}<span class="s-age">${esc(s.age)}</span>${moreBtn}</span>
+    </li>`;
+  }
+  return `<li class="s-row ${menuActive ? "active-menu" : ""}">
+    <span class="s-dot ${dotCls}"></span>
+    <div class="s-main">
+      <div class="s-line1">
+        <span class="${projCls}">${esc(s.proj)}</span>
+        <span class="s-title">${esc(s.title)}</span>
+        <span class="s-tail">${ICONS[s.provider]}<span class="s-age">${esc(s.age)}</span>${moreBtn}</span>
+      </div>
+      ${s.sub ? `<div class="s-sub"><span>${esc(s.sub)}</span></div>` : ""}
+    </div>
+  </li>`;
+}
+
+function renderIslandCompare() {
+  const all = buildSessions();
+  const base = tempBase();
+  const sep = STATE.os === "mac" ? "/" : "\\";
+  const exactPath = `${base}${sep}agy-title-${STATE.simTarget}`;
+  const cands = simCandidateRules();
+  const simMatchCount = all.filter((s) => cands.some((f) => matchesSingleFilter(s, f))).length;
+  const shownAfter = all.filter((s) => !effectiveHidden(s, true));
+  const hiddenCount = all.length - shownAfter.length;
+
+  const beforeRun = all.filter((s) => s.phase === "run");
+  const beforeDone = all.filter((s) => s.phase !== "run");
+
+  const leftHTML = `
+    <div class="demo-col">
+      <div class="demo-head">
+        <strong>${tx("生效前：一次性会话占满列表", "Before: flooded by one-off sessions")}</strong>
+        <span>${esc(txPlain(`共 ${all.length} 条（12 条是 agy-title）`, `${all.length} total (12 from agy-title)`))}</span>
+      </div>
+      <div class="demo-bar-mini">
+        <span class="s-dot run" style="margin:0"></span>
+        ${ICONS.agy}
+        <span class="b-txt">agy-title-4xR8vL · ${esc(PROMPT_AGY.slice(0, 18))}…</span>
+        <span class="b-ring noisy">2</span>
+      </div>
+      <div class="isl">
+        <div class="isl-top">
+          <div class="isl-tabs">
+            <span class="isl-tab on">${esc(txPlain("全部", "All"))} 14</span>
+            <span class="isl-tab">${esc(txPlain("运行中", "Running"))} 2</span>
+            <span class="isl-tab">${esc(txPlain("已完成", "Done"))} 12</span>
+          </div>
+          <span class="isl-meta">${esc(txPlain("点 ⋯ → 隐藏类似会话…", "⋯ → Hide similar sessions…"))}</span>
+        </div>
+        <ul class="s-list">
+          <li class="s-sec">${esc(txPlain("进行中 · 2", "Active · 2"))}</li>
+          ${beforeRun.map((s) => renderSessionRow(s, !s.normal)).join("")}
+          <li class="s-sec">${esc(txPlain("最近完成 · 12", "Completed · 12"))}</li>
+          ${renderSessionRow(beforeDone[0], false)}
+          ${renderSessionRow(beforeDone[1], true)}
+          ${renderSessionRow(beforeDone[2], true)}
+          <li class="s-more-fold">${esc(txPlain("… 还有 9 条 agy-title-xxxxxx 临时目录会话", "… plus 9 more agy-title-xxxxxx temp sessions"))}</li>
+        </ul>
+        <div class="menu-pop-stage">
+          <div class="row-menu-mock" role="menu" aria-label="Session menu">
+            <button type="button" class="rm-item">${ICONS.win}<span>${esc(txPlain("跳到窗口", "Go to window"))}</span></button>
+            <button type="button" class="rm-item">${ICONS.openDir}<span>${esc(txPlain("在文件夹中显示", "Show in folder"))}</span></button>
+            <button type="button" class="rm-item">${ICONS.copy}<span>${esc(txPlain("复制路径", "Copy path"))}</span></button>
+            <button type="button" class="rm-item">${ICONS.hash}<span>${esc(txPlain("复制会话 id", "Copy session id"))}</span></button>
+            <button type="button" class="rm-item">${ICONS.arch}<span>${esc(txPlain("归档", "Archive"))}</span></button>
+            <div class="rm-sep"></div>
+            <button type="button" class="rm-item">${ICONS.eyeOff}<span>${esc(txPlain("隐藏这个目录的会话", "Hide sessions in this folder"))}</span></button>
+            <button type="button" class="rm-item hi" title="Hide similar sessions…">${ICONS.filter}<span>${esc(txPlain("隐藏类似会话…", "Hide similar sessions…"))}</span></button>
+          </div>
+          <div class="sim-panel">
+            <div class="sim-head">
+              <b>${tx("隐藏类似会话", "Hide similar sessions")}</b>
+              <span class="sim-cwd" title="${esc(exactPath)}">${esc(exactPath)}</span>
+            </div>
+            <div class="sim-opts">
+              <div class="sim-opt ${STATE.simChecked.folderWild ? "on" : ""}" data-sim="folderWild">
+                <span class="sim-ck">${STATE.simChecked.folderWild ? "✓" : ""}</span>
+                <div class="sim-body">
+                  <div class="sim-kind">${tx("所在目录匹配", "In folder matching")} <span class="sim-val">*/agy-title-*</span></div>
+                  <div class="sim-sub">${esc(txPlain("自动把随机后缀换成 * · 当前命中 12 条", "Wildcard from random temp suffix · matches 12"))}</div>
+                </div>
+              </div>
+              <div class="sim-opt ${STATE.simChecked.prompt ? "on" : ""}" data-sim="prompt">
+                <span class="sim-ck">${STATE.simChecked.prompt ? "✓" : ""}</span>
+                <div class="sim-body">
+                  <div class="sim-kind">${tx("标题或提示词包含", "Title or prompt contains")} <span class="sim-val">Antigravity 会话标题编辑器</span></div>
+                  <div class="sim-sub">${esc(txPlain("提取自首句提示词 · 当前命中 12 条", "Extracted from opening prompt · matches 12"))}</div>
+                </div>
+              </div>
+              <div class="sim-opt ${STATE.simChecked.exact ? "on" : ""}" data-sim="exact">
+                <span class="sim-ck">${STATE.simChecked.exact ? "✓" : ""}</span>
+                <div class="sim-body">
+                  <div class="sim-kind">${tx("只隐藏这一个目录", "Only this exact folder")}</div>
+                  <div class="sim-sub">${esc(txPlain("仅命中 1 条（下次换新临时目录仍会出现）", "Matches 1 only (new temp dirs will still appear)"))}</div>
+                </div>
+              </div>
+            </div>
+            <div class="sim-foot">
+              <span class="sim-est">${STATE.lang === "en" ? `Hides <b>${simMatchCount}</b> sessions now listed` : `会隐藏当前列表里 <b>${simMatchCount}</b> 条会话`}</span>
+              <div class="sim-acts">
+                <button type="button" class="btn-ghost" data-act="clear-rules">${esc(txPlain("清空规则试看", "Clear rules"))}</button>
+                <button type="button" class="btn-pri" data-act="apply-sim" ${simMatchCount === 0 ? "disabled" : ""}>${esc(txPlain(`隐藏 ${simMatchCount} 条`, `Hide ${simMatchCount}`))}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const afterRun = shownAfter.filter((s) => s.phase === "run");
+  const afterDone = shownAfter.filter((s) => s.phase !== "run");
+
+  const rightHTML = `
+    <div class="demo-col">
+      <div class="demo-head">
+        <strong>${tx("生效后：当前过滤规则下的实况", "After: live list with active rules")}</strong>
+        <span>${esc(txPlain(`已静默隐藏 ${hiddenCount} 条 · 提醒和音效均不触发`, `${hiddenCount} hidden · excluded from alerts & sounds`))}</span>
+      </div>
+      <div class="demo-bar-mini">
+        <span class="s-dot run" style="margin:0"></span>
+        ${ICONS.claude}
+        <span class="b-txt">Fuxi · [开发] 浮汐群反馈流与掉线重登开发</span>
+        <span class="b-ring clean">${afterRun.length}</span>
+      </div>
+      <div class="isl" style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <div class="isl-top">
+            <div class="isl-tabs">
+              <span class="isl-tab on">${esc(txPlain("全部", "All"))} ${shownAfter.length}</span>
+              <span class="isl-tab">${esc(txPlain("运行中", "Running"))} ${afterRun.length}</span>
+              <span class="isl-tab">${esc(txPlain("已完成", "Done"))} ${afterDone.length}</span>
+            </div>
+            <span class="isl-meta">${hiddenCount > 0 ? esc(txPlain("✓ 不计会话数、不弹完成提醒", "✓ Excluded from count & alerts")) : esc(txPlain("当前未命中隐藏规则", "No rules matched yet"))}</span>
+          </div>
+          <ul class="s-list">
+            ${afterRun.length ? `<li class="s-sec">${esc(txPlain(`进行中 · ${afterRun.length}`, `Active · ${afterRun.length}`))}</li>${afterRun.map((s) => renderSessionRow(s, false)).join("")}` : ""}
+            ${afterDone.length ? `<li class="s-sec">${esc(txPlain(`最近完成 · ${afterDone.length}`, `Completed · ${afterDone.length}`))}</li>${afterDone.slice(0, 5).map((s) => renderSessionRow(s, false)).join("")}${afterDone.length > 5 ? `<li class="s-more-fold">${esc(txPlain(`… 还有 ${afterDone.length - 5} 条`, `… ${afterDone.length - 5} more`))}</li>` : ""}` : ""}
+            ${shownAfter.length === 0 ? `<li class="s-more-fold" style="padding:26px 12px;text-align:center">${esc(txPlain("全部会话都被当前规则隐藏了（可在下方删掉过宽的规则）", "All sessions hidden by current rules"))}</li>` : ""}
+          </ul>
+        </div>
+        <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025);font-size:11.5px;color:rgba(241,240,246,.58);display:flex;flex-direction:column;gap:5px">
+          <div><b style="color:rgba(248,246,240,.9)">${esc(txPlain("当前生效来源：", "Active filters:"))}</b> ${
+            [
+              ...(STATE.hideTempOn ? [txPlain("系统临时目录开关", "System temp folders toggle")] : []),
+              ...STATE.filters.map((f) => `${f.kind === "folder" ? txPlain("目录", "Folder") : txPlain("提示词", "Prompt")}「${f.value}」`)
+            ].join(" · ") || txPlain("无（点左边的「隐藏 12 条」或在下方设置窗里添加）", "None (click Hide on the left or add a rule below)")
+          }</div>
+          <div style="color:rgba(241,240,246,.42)">${esc(txPlain("若插件作者在 agy-title 里加上 FUYU_AGENT_STATUS=off，钩子在进程侧直接退出，连规则都不用配。", "With FUYU_AGENT_STATUS=off set by the plugin author, hooks exit immediately before reaching Fuyu."))}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("islandCompare").innerHTML = leftHTML + rightHTML;
+}
+
+function renderSidebar(activeEntry, clickableC) {
+  const mkItem = (id, zh, en) => {
+    const on = activeEntry === id;
+    return `<button type="button" class="i ${on ? "on" : ""}" ${clickableC ? `data-c-nav="${id}"` : ""}>${esc(txPlain(zh, en))}</button>`;
+  };
+  return `<div class="side">
+    <div class="search">⌕ ${esc(txPlain("搜索设置", "Search settings"))}</div>
+    <div class="g">${esc(txPlain("基础", "Basics"))}</div>
+    ${mkItem("general", "通用", "General")}
+    ${mkItem("appearance", "外观", "Appearance")}
+    <div class="g">${esc(txPlain("功能", "Features"))}</div>
+    ${mkItem("todos", "待办", "Todos")}
+    ${mkItem("messages", "消息", "Messages")}
+    <div class="g">AI Agent</div>
+    ${mkItem("agents", "Agent", "Agent")}
+    ${mkItem("agentAppearance", "外观", "Appearance")}
+    ${mkItem("agentAlerts", "提醒", "Alerts")}
+    ${mkItem("agentRemote", "SSH 远程", "SSH remote")}
+    <div class="g">${esc(txPlain("扩展", "Extensions"))}</div>
+    ${mkItem("plugins", "插件", "Plugins")}
+  </div>`;
+}
+
+function renderContextTopRows() {
+  return `
+    <div class="gh">${esc(txPlain("会话列表", "Session list"))}<small>${esc(txPlain("上方的既有分组（折叠示意）", "Existing groups above (abbreviated)"))}</small></div>
+    <div class="card">
+      <div class="row">
+        <div class="txt"><div class="t">${esc(txPlain("列出多久内的会话", "List sessions from the last"))}</div></div>
+        <span style="color:var(--t2);font-size:12.5px">${esc(txPlain("最近 24 小时 ⌄", "24 hours ⌄"))}</span>
+      </div>
+      <div class="row">
+        <div class="txt"><div class="t">${esc(txPlain("隐藏已退出的会话", "Hide sessions that have quit"))}</div></div>
+        <button type="button" class="sw on" aria-label="Hide quit"></button>
+      </div>
+    </div>
+  `;
+}
+
+function renderCodeSection(copyIdPrefix) {
+  const shOpts = [
+    ["sh", "bash / zsh"],
+    ["ps", "PowerShell"],
+    ["node", "Node.js"]
+  ];
+  const code = codeSnippet(STATE.shell);
+  const cKey = `${copyIdPrefix}-${STATE.shell}`;
+  const copied = STATE.copiedKey === cKey;
+  return `
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="code-lab">${ICONS.term}<span>FUYU_AGENT_STATUS=off · ${shOpts.find((x) => x[0] === STATE.shell)[1]}</span></span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="seg">
+            ${shOpts.map(([k, l]) => `<button type="button" data-shell="${k}" class="${STATE.shell === k ? "on" : ""}">${l}</button>`).join("")}
+          </div>
+          <button type="button" class="link-btn" data-copy-code="${esc(cKey)}">${esc(copied ? txPlain("✓ 已复制", "✓ Copied") : txPlain("复制", "Copy"))}</button>
+        </div>
+      </div>
+      <pre class="code-pre">${esc(code)}</pre>
+    </div>
+  `;
+}
+
+function renderRuleRows(withHitPreview) {
+  const all = buildSessions();
+  if (STATE.filters.length === 0) {
+    return `<div class="row"><div class="txt"><div class="d">${esc(txPlain("还没有隐藏规则。可在下方添加，或在岛上会话行的 ⋯ 菜单里选「隐藏类似会话…」。", "No rules yet. Add one below, or pick \"Hide similar sessions…\" from a session's ⋯ menu."))}</div></div></div>`;
+  }
+  return STATE.filters.map((f, idx) => {
+    const isFolder = f.kind === "folder";
+    const isWild = isFolder && f.value.includes("*");
+    const matched = all.filter((s) => matchesSingleFilter(s, f));
+    const kindLabel = isFolder
+      ? (isWild ? txPlain("所在目录 · 通配", "In folder · wildcard") : txPlain("所在目录", "In folder"))
+      : txPlain("标题或提示词包含", "Title or prompt contains");
+    const hitBadge = withHitPreview
+      ? `<button type="button" class="badge hit ${matched.length === 0 ? "zero" : ""}" data-hit-idx="${idx}">${esc(txPlain(`命中 ${matched.length} 条`, `${matched.length} matched`))}${matched.length > 0 ? (STATE.openHitIdx === idx ? " ▴" : " ▾") : ""}</button>`
+      : "";
+    const drawer = withHitPreview && STATE.openHitIdx === idx && matched.length > 0
+      ? `<div class="hit-drawer">${esc(txPlain("当前隐藏：", "Currently hiding: "))}${matched.slice(0, 5).map((m) => esc(m.proj)).join("、")}${matched.length > 5 ? esc(txPlain(` 等 ${matched.length} 条`, ` and ${matched.length - 5} more`)) : ""}</div>`
+      : "";
+    return `<div class="row">
+      <span class="rule-left">
+        ${isFolder ? ICONS.folder : ICONS.prompt}
+        <span class="rule-val ${isFolder ? "" : "text-kind"}">${esc(f.value)}</span>
+      </span>
+      <span class="rule-right">
+        ${hitBadge}
+        <span class="badge ${isWild ? "wild" : ""}">${esc(kindLabel)}</span>
+        <button type="button" class="rm-x" data-rm-idx="${idx}" aria-label="Remove">${ICONS.x}</button>
+      </span>
+      ${drawer}
+    </div>`;
+  }).join("");
+}
+
+function renderAddRuleRow(idSuffix, withLivePreview) {
+  const isFolder = STATE.draftKind === "folder";
+  const ph = isFolder
+    ? txPlain(`例如 ${scratchSample()} 或 */agy-title-*`, `e.g. ${scratchSample()} or */agy-title-*`)
+    : txPlain("例如 /loop 或 会话标题编辑器", "e.g. /loop or session title");
+  let previewHTML = "";
+  if (withLivePreview && STATE.draftVal.trim()) {
+    const all = buildSessions();
+    const hits = all.filter((s) => matchesSingleFilter(s, { kind: STATE.draftKind, value: STATE.draftVal }));
+    const hitsNormal = hits.some((s) => s.normal);
+    if (hitsNormal) {
+      previewHTML = `<div class="live-match warn">${esc(txPlain(`⚠ 这个规则较宽，会同时隐藏正常项目（含 Fuxi 等共 ${hits.length} 条）`, `⚠ Broad pattern: matches ${hits.length} sessions including Fuxi`))}</div>`;
+    } else if (hits.length > 0) {
+      previewHTML = `<div class="live-match good">${esc(txPlain(`✓ 将匹配当前列表里的 ${hits.length} 条临时会话（不影响正常项目）`, `✓ Matches ${hits.length} noise sessions now listed`))}</div>`;
+    } else {
+      previewHTML = `<div class="live-match">${esc(txPlain("当前列表里暂无命中，之后符合的会话会自动隐藏", "0 currently listed; future matching sessions will be hidden"))}</div>`;
+    }
+  }
+  return `<div class="row col">
+    <div class="row-head">
+      <span class="t">${tx("添加规则", "Add a rule")}</span>
+      <div class="seg" role="radiogroup">
+        <button type="button" data-draft-kind="folder" class="${isFolder ? "on" : ""}">${esc(txPlain("所在目录", "In folder"))}</button>
+        <button type="button" data-draft-kind="prompt" class="${!isFolder ? "on" : ""}">${esc(txPlain("标题或提示词包含", "Title or prompt contains"))}</button>
+      </div>
+    </div>
+    <form class="filter-form" data-add-form="${idSuffix}">
+      <input class="s-input ${isFolder ? "mono" : ""}" data-draft-input="${idSuffix}" value="${esc(STATE.draftVal)}" placeholder="${esc(ph)}" aria-label="Rule pattern">
+      <button type="submit" class="link-btn" ${STATE.draftVal.trim() ? "" : "disabled"}>${esc(txPlain("添加", "Add"))}</button>
+    </form>
+    ${previewHTML}
+  </div>`;
+}
+
+function filterFootnote(extraLinkC) {
+  const zh = "符合任一条的会话在岛上完全不出现：Agent 页、会话数、收起条标题、提醒和音效都不算它。目录规则支持 * 通配任意字符（如 */agy-title-*），也隐藏它的子目录；文字规则匹配会话标题或最近一句提示词，不分大小写。";
+  const en = "Sessions matching any rule do not show on the island at all: not on the Agent page, in the session count or the collapsed title, nor in alerts and sounds. Folder rules accept * as a wildcard (e.g. */agy-title-*) and hide subfolders too; text rules match the title or latest prompt, ignoring case.";
+  const jump = extraLinkC
+    ? ` <button type="button" class="link-inline" data-c-nav="agents">${esc(txPlain("脚本或插件作者？去「连接与扩展」查看静默启动环境变量 ›", "Writing a script or plugin? See Silent launch under Connection ›"))}</button>`
+    : "";
+  return `<div class="foot">${tx(zh, en, true)}${jump}</div>`;
+}
+
+function renderTempSwitchRow() {
+  if (!STATE.keepTempSwitch) return "";
+  return `<div class="row">
+    <div class="txt">
+      <div class="t">${tx("隐藏系统临时目录里的会话", "Hide sessions in system temp folders")}</div>
+      <div class="d">${tx("不列出在 /tmp、$TMPDIR（macOS 的 /var/folders/…/T）和 Windows Temp 下启动的会话", "Leave out sessions started in /tmp, $TMPDIR (/var/folders/…/T on macOS) or Windows Temp", true)}</div>
+    </div>
+    <button type="button" class="sw ${STATE.hideTempOn ? "on" : ""}" data-act="tog-temp" aria-pressed="${STATE.hideTempOn}"></button>
+  </div>`;
+}
+
+function renderWinA() {
+  document.getElementById("winA").innerHTML = `
+    ${renderSidebar("agentAppearance", false)}
+    <div class="content">
+      <div class="chead">
+        <h3>${esc(txPlain("外观", "Appearance"))}</h3>
+        <div class="tabs">
+          <button type="button">${esc(txPlain("状态灯与标题", "Light and title"))}</button>
+          <button type="button" class="on">${esc(txPlain("会话列表", "Session list"))}</button>
+          <button type="button">${esc(txPlain("用量与会话环", "Usage and session rings"))}</button>
+        </div>
+      </div>
+      <div class="scroll">
+        ${renderContextTopRows()}
+        <div class="gh"><span>${tx("隐藏会话", "Hide sessions")}</span></div>
+        <div class="card">
+          ${renderRuleRows(false)}
+          ${renderAddRuleRow("A", false)}
+          <button type="button" class="fold-trigger" data-act="fold-a">
+            <span>${tx("脚本或插件启动时不让浮屿记录（FUYU_AGENT_STATUS=off）", "Skip Fuyu hooks when launching from a script (FUYU_AGENT_STATUS=off)")}</span>
+            <span>${STATE.foldAOpen ? "▴" : "▾"}</span>
+          </button>
+          ${STATE.foldAOpen ? `
+            <div class="row" style="border-top:0;padding-top:2px;padding-bottom:8px">
+              <div class="txt"><div class="d">${tx("带着 FUYU_AGENT_STATUS=off 启动的代理进程，钩子直接退出，不上报也不写记录。", "Agents started with FUYU_AGENT_STATUS=off exit Fuyu's hooks right away without reporting.", true)}</div></div>
+            </div>
+            ${renderCodeSection("A")}
+          ` : ""}
+        </div>
+        ${filterFootnote(false)}
+      </div>
+    </div>
+  `;
+}
+
+function renderWinB() {
+  document.getElementById("winB").innerHTML = `
+    ${renderSidebar("agentAppearance", false)}
+    <div class="content">
+      <div class="chead">
+        <h3>${esc(txPlain("外观", "Appearance"))}</h3>
+        <div class="tabs">
+          <button type="button">${esc(txPlain("状态灯与标题", "Light and title"))}</button>
+          <button type="button" class="on">${esc(txPlain("会话列表", "Session list"))}</button>
+          <button type="button">${esc(txPlain("用量与会话环", "Usage and session rings"))}</button>
+        </div>
+      </div>
+      <div class="scroll">
+        ${renderContextTopRows()}
+        <div class="gh"><span>${tx("隐藏会话", "Hide sessions")}</span></div>
+        <div class="card">
+          ${renderTempSwitchRow()}
+          ${renderRuleRows(false)}
+          ${renderAddRuleRow("B", false)}
+        </div>
+        ${filterFootnote(false)}
+
+        <div class="gh">
+          <span>${tx("静默启动", "Silent launch")}</span>
+          <small>${esc(txPlain("给脚本、插件与定时任务用", "For scripts, plugins & cron jobs"))}</small>
+        </div>
+        <div class="card">
+          <div class="row">
+            <div class="txt">
+              <div class="t">${tx("按进程跳过浮屿钩子", "Skip Fuyu hooks per process")}</div>
+              <div class="d">${tx("带着环境变量 FUYU_AGENT_STATUS=off 启动的代理进程，浮屿钩子直接退出，不上报也不记录。", "When an agent starts with FUYU_AGENT_STATUS=off, Fuyu's hooks exit right away without reporting or recording it.", true)}</div>
+            </div>
+          </div>
+          ${renderCodeSection("B")}
+        </div>
+        <div class="foot">${tx("适合 agy-title、claude -p、评测流水线等在后台频繁拉起 CLI 的场景；子进程会自动继承该环境变量。", "Ideal for agy-title, claude -p or background pipelines that spawn CLIs repeatedly; child processes inherit the variable.", true)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderWinC() {
+  const onSessionsTab = STATE.winCTab === "agentSessions";
+  const bannerPreview = !STATE.bannerDismissed
+    ? `<div class="gh"><span>${tx("岛上自动识别横幅（仅当短时间出现 ≥3 条同前缀临时会话时出现）", "On-island smart banner (shown when ≥3 similar temp sessions appear)")}</span></div>
+      <div class="isl" style="padding:4px 4px 6px;margin-bottom:6px">
+        <div class="noise-banner">
+          <span class="grow">${tx("发现 12 条相似的临时目录会话", "12 similar temp-folder sessions")} <code>*/agy-title-*</code></span>
+          <button type="button" class="btn-pri" data-act="c-quick-hide">${esc(txPlain("隐藏这一类", "Hide these"))}</button>
+          <button type="button" class="btn-ghost" data-act="c-dismiss-banner">${esc(txPlain("忽略", "Dismiss"))}</button>
+        </div>
+      </div>`
+    : "";
+
+  const bodyHTML = onSessionsTab
+    ? `
+      ${bannerPreview}
+      ${renderContextTopRows()}
+      <div class="gh"><span>${tx("隐藏会话", "Hide sessions")}</span><small>${esc(txPlain("规则旁实时显示命中数，防通配符误杀", "Live match count prevents overly broad wildcards"))}</small></div>
+      <div class="card">
+        ${renderTempSwitchRow()}
+        ${renderRuleRows(true)}
+        ${renderAddRuleRow("C", true)}
+      </div>
+      ${filterFootnote(true)}
+    `
+    : `
+      <div class="gh">${esc(txPlain("回复状态标记", "Reply status marker"))}<small>${esc(txPlain("上方既有分组（折叠示意）", "Existing group above (abbreviated)"))}</small></div>
+      <div class="card">
+        <div class="row">
+          <div class="txt"><div class="t">${esc(txPlain("让 AI 代理在回复末尾标出在等什么（推荐打开）", "Have agents mark what they wait for at the end of each reply"))}</div></div>
+          <button type="button" class="sw on" aria-label="Reply marker"></button>
+        </div>
+      </div>
+      <div class="gh">${esc(txPlain("编辑器扩展", "Editor extension"))}</div>
+      <div class="card">
+        <div class="row">
+          <div class="txt"><div class="t">VS Code · Cursor</div></div>
+          <span class="badge">${esc(txPlain("已安装", "Installed"))}</span>
+        </div>
+      </div>
+      <div class="gh">
+        <span>${tx("静默启动", "Silent launch")}</span>
+        <span class="grow"></span>
+        <button type="button" class="link-btn" data-c-nav="agentSessions">${esc(txPlain("‹ 返回「会话列表 · 隐藏会话」", "‹ Back to Hide sessions"))}</button>
+      </div>
+      <div class="card">
+        <div class="row">
+          <div class="txt">
+            <div class="t">${tx("用环境变量跳过浮屿钩子", "Skip Fuyu hooks via environment variable")}</div>
+            <div class="d">${tx("带着环境变量 FUYU_AGENT_STATUS=off 启动的代理进程，浮屿钩子直接退出，不上报也不记录。", "When an agent starts with FUYU_AGENT_STATUS=off, Fuyu's hooks exit right away without reporting or recording it.", true)}</div>
+          </div>
+        </div>
+        ${renderCodeSection("C")}
+      </div>
+      <div class="foot">${tx("适合脚本、插件或定时任务在后台调用 CLI（如 agy -p、claude -p）；子进程会继承这个环境变量。", "For scripts, plugins or scheduled jobs that call a CLI in the background (such as agy -p or claude -p); child processes inherit it.", true)}</div>
+    `;
+
+  document.getElementById("winC").innerHTML = `
+    ${renderSidebar(onSessionsTab ? "agentAppearance" : "agents", true)}
+    <div class="content">
+      <div class="mob-nav">
+        <button type="button" class="pill-btn ${onSessionsTab ? "on" : ""}" data-c-nav="agentSessions">${esc(txPlain("外观 → 会话列表", "Appearance → Session list"))}</button>
+        <button type="button" class="pill-btn ${!onSessionsTab ? "on" : ""}" data-c-nav="agents">${esc(txPlain("Agent → 连接与扩展", "Agent → Connection"))}</button>
+      </div>
+      <div class="chead">
+        <h3>${esc(onSessionsTab ? txPlain("外观", "Appearance") : "Agent")}</h3>
+        <div class="tabs">
+          ${onSessionsTab ? `
+            <button type="button">${esc(txPlain("状态灯与标题", "Light and title"))}</button>
+            <button type="button" class="on">${esc(txPlain("会话列表", "Session list"))}</button>
+            <button type="button">${esc(txPlain("用量与会话环", "Usage and session rings"))}</button>
+          ` : `
+            <button type="button">${esc(txPlain("钩子与代理", "Hooks and agents"))}</button>
+            <button type="button" class="on">${esc(txPlain("连接与扩展", "Connection"))}<span class="new">${esc(txPlain("静默启动在这", "Silent launch"))}</span></button>
+            <button type="button">${esc(txPlain("审批", "Approvals"))}</button>
+          `}
+        </div>
+      </div>
+      <div class="scroll">${bodyHTML}</div>
+    </div>
+  `;
+}
+
+function renderSummaryAndPicks() {
+  document.querySelectorAll("section[data-opt]").forEach((sec) => {
+    const isPicked = sec.dataset.opt === STATE.picked;
+    sec.classList.toggle("picked", isPicked);
+    const btn = sec.querySelector(".pick");
+    if (btn) btn.textContent = isPicked ? txPlain("已选这个", "Selected") : txPlain("选这个", "Pick this");
+  });
+  const togBtn = document.getElementById("togTempOpt");
+  togBtn.classList.toggle("on", STATE.keepTempSwitch);
+  togBtn.textContent = STATE.keepTempSwitch
+    ? txPlain("保留「隐藏系统临时目录」开关（默认关）", "Include \"Hide system temp folders\" toggle (default off)")
+    : txPlain("不放「隐藏系统临时目录」开关（只靠通配符）", "Omit \"Hide system temp folders\" toggle");
+
+  const descMap = {
+    A: "方案 A（单组「隐藏会话」+ 通配符 + 折叠静默启动说明 + 行菜单「隐藏类似会话…」）",
+    B: "方案 B（「隐藏会话」+「静默启动」双分组 + 通配符 + 行菜单「隐藏类似会话…」）",
+    C: "方案 C（岛内相似临时会话提示 + 规则实时命中数 +「静默启动」放连接页）"
+  };
+  const tempNote = STATE.picked === "A"
+    ? "不加临时目录开关"
+    : (STATE.keepTempSwitch ? "含「隐藏系统临时目录里的会话」开关（默认关）" : "不加临时目录开关");
+  const summaryText = `静默会话方案：选 ${descMap[STATE.picked]}；${tempNote}；环境变量 FUYU_AGENT_STATUS=off`;
+  document.getElementById("sumCode").textContent = summaryText;
+  const copyBtn = document.getElementById("copySumBtn");
+  copyBtn.textContent = STATE.copiedKey === "sum" ? txPlain("✓ 已复制", "✓ Copied") : txPlain("复制选择", "Copy choice");
+}
+
+function renderAll(preserveFocusId) {
+  document.body.dataset.lang = STATE.lang;
+  renderIslandCompare();
+  renderWinA();
+  renderWinB();
+  renderWinC();
+  renderSummaryAndPicks();
+  if (preserveFocusId) {
+    const inp = document.querySelector(`[data-draft-input="${preserveFocusId}"]`);
+    if (inp) {
+      inp.focus();
+      const len = inp.value.length;
+      inp.setSelectionRange(len, len);
+    }
+  }
+}
+
+function addFilterRule(kind, value) {
+  const clean = value.trim();
+  if (!clean) return;
+  const key = `${kind}:${kind === "folder" ? normPath(clean) : clean.toLowerCase()}`;
+  const exists = STATE.filters.some((f) => `${f.kind}:${f.kind === "folder" ? normPath(f.value) : f.value.toLowerCase()}` === key);
+  if (!exists) STATE.filters.push({ kind, value: clean });
+}
+
+document.addEventListener("click", (e) => {
+  const langBtn = e.target.closest("[data-lang-btn]");
+  if (langBtn) {
+    STATE.lang = langBtn.dataset.langBtn;
+    document.querySelectorAll("[data-lang-btn]").forEach((b) => b.classList.toggle("on", b === langBtn));
+    renderAll();
+    return;
+  }
+  const osBtn = e.target.closest("[data-os-btn]");
+  if (osBtn) {
+    STATE.os = osBtn.dataset.osBtn;
+    document.querySelectorAll("[data-os-btn]").forEach((b) => b.classList.toggle("on", b === osBtn));
+    renderAll();
+    return;
+  }
+  const pickBtn = e.target.closest("[data-pick]");
+  if (pickBtn) {
+    STATE.picked = pickBtn.dataset.pick;
+    renderSummaryAndPicks();
+    return;
+  }
+  if (e.target.closest("#togTempOpt")) {
+    STATE.keepTempSwitch = !STATE.keepTempSwitch;
+    renderAll();
+    return;
+  }
+  if (e.target.closest("#copySumBtn")) {
+    copyText(document.getElementById("sumCode").textContent, "sum");
+    return;
+  }
+  const menuBtn = e.target.closest("[data-menu-suffix]");
+  if (menuBtn) {
+    STATE.simTarget = menuBtn.dataset.menuSuffix;
+    renderIslandCompare();
+    return;
+  }
+  const simOpt = e.target.closest("[data-sim]");
+  if (simOpt) {
+    const k = simOpt.dataset.sim;
+    STATE.simChecked[k] = !STATE.simChecked[k];
+    renderIslandCompare();
+    return;
+  }
+  const actEl = e.target.closest("[data-act]");
+  if (actEl) {
+    const act = actEl.dataset.act;
+    if (act === "apply-sim") {
+      simCandidateRules().forEach((r) => addFilterRule(r.kind, r.value));
+      renderAll();
+    } else if (act === "clear-rules") {
+      STATE.filters = [];
+      STATE.hideTempOn = false;
+      renderAll();
+    } else if (act === "tog-temp") {
+      STATE.hideTempOn = !STATE.hideTempOn;
+      renderAll();
+    } else if (act === "fold-a") {
+      STATE.foldAOpen = !STATE.foldAOpen;
+      renderWinA();
+    } else if (act === "c-quick-hide") {
+      addFilterRule("folder", "*/agy-title-*");
+      STATE.bannerDismissed = true;
+      renderAll();
+    } else if (act === "c-dismiss-banner") {
+      STATE.bannerDismissed = true;
+      renderWinC();
+    }
+    return;
+  }
+  const shellBtn = e.target.closest("[data-shell]");
+  if (shellBtn) {
+    STATE.shell = shellBtn.dataset.shell;
+    renderAll();
+    return;
+  }
+  const copyCodeBtn = e.target.closest("[data-copy-code]");
+  if (copyCodeBtn) {
+    copyText(codeSnippet(STATE.shell), copyCodeBtn.dataset.copyCode);
+    return;
+  }
+  const rmBtn = e.target.closest("[data-rm-idx]");
+  if (rmBtn) {
+    const idx = Number(rmBtn.dataset.rmIdx);
+    STATE.filters = STATE.filters.filter((_, i) => i !== idx);
+    if (STATE.openHitIdx === idx) STATE.openHitIdx = -1;
+    renderAll();
+    return;
+  }
+  const hitBtn = e.target.closest("[data-hit-idx]");
+  if (hitBtn) {
+    const idx = Number(hitBtn.dataset.hitIdx);
+    STATE.openHitIdx = STATE.openHitIdx === idx ? -1 : idx;
+    renderWinC();
+    return;
+  }
+  const kindBtn = e.target.closest("[data-draft-kind]");
+  if (kindBtn) {
+    STATE.draftKind = kindBtn.dataset.draftKind;
+    STATE.draftVal = STATE.draftKind === "folder" ? "*/agy-title-*" : "Antigravity 会话标题编辑器";
+    renderAll();
+    return;
+  }
+  const cNav = e.target.closest("[data-c-nav]");
+  if (cNav) {
+    const target = cNav.dataset.cNav;
+    if (target === "agents" || target === "agentSessions" || target === "agentAppearance") {
+      STATE.winCTab = target === "agents" ? "agents" : "agentSessions";
+      renderWinC();
+    }
+  }
+});
+
+document.addEventListener("input", (e) => {
+  const inp = e.target.closest("[data-draft-input]");
+  if (!inp) return;
+  STATE.draftVal = inp.value;
+  renderAll(inp.dataset.draftInput);
+});
+
+document.addEventListener("submit", (e) => {
+  const form = e.target.closest("[data-add-form]");
+  if (!form) return;
+  e.preventDefault();
+  addFilterRule(STATE.draftKind, STATE.draftVal);
+  STATE.draftVal = "";
+  renderAll(form.dataset.addForm);
+});
+
+renderAll();
+</script>
+</body>
+</html>
