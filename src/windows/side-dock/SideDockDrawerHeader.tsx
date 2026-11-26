@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, type WheelEvent } from "react";
-import { ChevronLeft, ChevronRight, Pin, PinOff, Settings, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, PanelLeftClose, PanelRightClose, Pin, PinOff, Settings } from "lucide-react";
 import type { IslandText } from "../../i18n/sections/island";
 import type { IslandPagesLayout } from "../../lib/settings/islandPages";
-import type { SideDockHeaderStyle } from "../../lib/settings/sideDocks";
+import type { SideDockEdge, SideDockHeaderStyle } from "../../lib/settings/sideDocks";
 import { openSettingsWindow } from "../settings/api";
 import type { IslandPage } from "../island/types";
 import { usePageHoverSwitch } from "../island/usePageHoverSwitch";
@@ -11,6 +11,7 @@ import { useSideDockPill } from "./useSideDockPill";
 import "./SideDockDrawerHeader.css";
 
 type SideDockDrawerHeaderProps = {
+  edge: SideDockEdge;
   dockPages: readonly SideDockPageEntry[];
   currentEntry: SideDockPageEntry | null;
   pageLayout: IslandPagesLayout;
@@ -30,6 +31,7 @@ type SideDockDrawerHeaderProps = {
 };
 
 export function SideDockDrawerHeader({
+  edge,
   dockPages,
   currentEntry,
   pageLayout,
@@ -146,9 +148,10 @@ export function SideDockDrawerHeader({
           type="button"
           className="side-dock-drawer__action"
           aria-label={text.closeAria}
+          title={text.closeAria}
           onClick={onDismiss}
         >
-          <X size={14} strokeWidth={1.6} />
+          {edge === "left" ? <PanelLeftClose size={14} strokeWidth={1.6} /> : <PanelRightClose size={14} strokeWidth={1.6} />}
         </button>
       </div>
     </header>
