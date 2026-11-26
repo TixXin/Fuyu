@@ -37,7 +37,7 @@
 | 3 | [C93](/docs/tasks/0-archive/C/C93.md) | WebDAV：坚果云、Nextcloud、群晖；凭据进钥匙串；处理坚果云的特殊行为；限制请求频率 | C92 |
 | 4 | [C94](/docs/tasks/0-archive/C/C94.md) | 端到端加密（可选、默认关）：口令、恢复密钥、重置远端 | C92 |
 | 5 | [C95](/docs/tasks/0-archive/C/C95.md) | 剪贴板收藏同步（默认关）：只同步文字，按内容 hash 去重，敏感条目不传；以后再考虑图片 | C92 |
-| 6 | [C96](/docs/tasks/C/C96.md) | 局域网直连 / 剪贴板互传：mDNS 发现、配对码、TLS；排在 Mac 有正式签名的包之后 | C92；Mac 签名（G1.12） |
+| 6 | [C96](/docs/tasks/0-archive/C/C96.md) | 局域网直连 / 剪贴板互传：mDNS 发现、配对码、TLS；排在 Mac 有正式签名的包之后 | C92；Mac 签名（G1.12） |
 
 S3 兼容等有用户要时再建任务。到时先评估 Apache OpenDAL，看它值不值得替换手写的 WebDAV。
 
