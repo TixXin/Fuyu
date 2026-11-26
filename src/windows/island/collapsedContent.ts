@@ -3,6 +3,7 @@ import { holdFitWidth } from "./collapsedFitStore.ts";
 const OPEN_BUTTON = "island__open-button";
 const CENTER_SLOT = ".island__center-slot";
 const FIT_ITEM = "[data-fit-item]";
+const BAR_UNIT = "data-bar-unit";
 
 export type CollapsedContentParts = {
   padStart: number;
@@ -38,8 +39,21 @@ function inFlow(element: Element): element is HTMLElement {
   return position !== "absolute" && position !== "fixed";
 }
 
+function flowChildren(parent: Element): HTMLElement[] {
+  const out: HTMLElement[] = [];
+  for (const child of parent.children) {
+    if (!(child instanceof HTMLElement)) continue;
+    if (child.hasAttribute(BAR_UNIT)) {
+      out.push(...flowChildren(child));
+      continue;
+    }
+    if (inFlow(child)) out.push(child);
+  }
+  return out;
+}
+
 export function measureCollapsedContent(bar: HTMLElement) {
-  const children = [...bar.children].filter(inFlow);
+  const children = flowChildren(bar);
   const openIndex = children.findIndex((child) => child.classList.contains(OPEN_BUTTON));
   if (openIndex < 0) return 0;
   const style = getComputedStyle(bar);

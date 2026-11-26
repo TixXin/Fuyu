@@ -130,12 +130,12 @@ const sameSet = (a: ReadonlySet<string>, b: ReadonlySet<string>) => a.size === b
 const sameState = (a: CollapsedOverflowState, b: CollapsedOverflowState) =>
   a.fitting === b.fitting && a.chip === b.chip && a.wing === b.wing && sameSet(a.shelved, b.shelved) && sameSet(a.moved, b.moved);
 
-export function useOverflowHold(fitting: boolean) {
+export function useOverflowHold(fitting: boolean, id = HOLD_ID) {
   useEffect(() => {
     if (!fitting) return;
-    collapsedFit.report(HOLD_ID, HOLD_WIDTH);
-    return () => collapsedFit.drop(HOLD_ID);
-  }, [fitting]);
+    collapsedFit.hold(id, HOLD_WIDTH);
+    return () => collapsedFit.drop(id);
+  }, [fitting, id]);
 }
 
 export type CollapsedOverflowOptions = { auto: boolean; forceChip: boolean; maxWing: number };

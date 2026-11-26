@@ -16,12 +16,16 @@ export function fitTotal(widths: Iterable<number>) {
 
 export function createCollapsedFit() {
   const held = new Map<string, number>();
+  const holds = new Set<string>();
   const listeners = new Set<() => void>();
   let total = 0;
+  let heldFlag = false;
   const publish = () => {
     const next = fitTotal(held.values());
-    if (next === total) return;
+    const nextHeld = holds.size > 0;
+    if (next === total && nextHeld === heldFlag) return;
     total = next;
+    heldFlag = nextHeld;
     for (const listener of listeners) listener();
   };
   return {
@@ -32,10 +36,21 @@ export function createCollapsedFit() {
       held.set(id, next);
       publish();
     },
+    hold(id: string, width: number) {
+      const added = !holds.has(id);
+      holds.add(id);
+      const before = held.get(id);
+      const next = holdFitWidth(before, width, 0);
+      if (next !== before) held.set(id, next);
+      if (added || next !== before) publish();
+    },
     drop(id: string) {
-      if (held.delete(id)) publish();
+      const droppedWidth = held.delete(id);
+      const droppedHold = holds.delete(id);
+      if (droppedWidth || droppedHold) publish();
     },
     total: () => total,
+    isHeld: () => heldFlag,
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => {
