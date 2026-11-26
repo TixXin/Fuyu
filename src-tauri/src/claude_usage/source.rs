@@ -63,17 +63,74 @@ fn credentials_path() -> Option<PathBuf> {
 const KEYCHAIN_SERVICE: &str = "Claude Code-credentials";
 
 #[cfg(target_os = "macos")]
+static KEYCHAIN_GAVE_UP: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[cfg(target_os = "macos")]
+pub(super) fn allow_keychain_again() {
+    KEYCHAIN_GAVE_UP.store(false, std::sync::atomic::Ordering::SeqCst);
+}
+
+#[cfg(not(target_os = "macos"))]
+pub(super) fn allow_keychain_again() {}
+
+#[cfg(target_os = "macos")]
 async fn keychain_credentials() -> Option<String> {
-    let user = std::env::var("USER").ok().filter(|user| !user.is_empty())?;
-    tauri::async_runtime::spawn_blocking(move || keyring::Entry::new(KEYCHAIN_SERVICE, &user).ok()?.get_password().ok())
-        .await
-        .ok()
-        .flatten()
+    use std::sync::atomic::Ordering;
+    if KEYCHAIN_GAVE_UP.load(Ordering::SeqCst) {
+        return None;
+    }
+    let user = std::env::var("USER").ok().filter(|user| !user.is_empty());
+    let text = match user {
+        Some(user) => tauri::async_runtime::spawn_blocking(move || keyring::Entry::new(KEYCHAIN_SERVICE, &user).ok()?.get_password().ok())
+            .await
+            .ok()
+            .flatten(),
+        None => None,
+    };
+    if text.is_none() {
+        KEYCHAIN_GAVE_UP.store(true, Ordering::SeqCst);
+    }
+    text
 }
 
 #[cfg(not(target_os = "macos"))]
 async fn keychain_credentials() -> Option<String> {
     None
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) enum Keychain {
+    Read,
+    Skip,
+}
+
+async fn read_credentials(keychain: Keychain) -> Result<String, FetchError> {
+    let path = credentials_path().ok_or_else(|| {
+        FetchError::new(
+            UsageErrorKind::NoCredentials,
+            "The user profile folder is unknown.",
+        )
+    })?;
+    let error = match std::fs::read_to_string(&path) {
+        Ok(text) => return Ok(text),
+        Err(error) => error,
+    };
+    let missing = || {
+        FetchError::new(
+            UsageErrorKind::NoCredentials,
+            format!("Could not read {}: {error}", path.display()),
+        )
+    };
+    if !cfg!(target_os = "macos") {
+        return Err(missing());
+    }
+    if keychain == Keychain::Skip {
+        return Err(FetchError::new(
+            UsageErrorKind::NoCredentials,
+            "Claude Code keeps its login in the macOS Keychain, which the stale check never reads; turn on asking Anthropic directly to allow it.",
+        ));
+    }
+    keychain_credentials().await.ok_or_else(missing)
 }
 
 pub(super) fn parse_access_token(text: &str, now_ms: u64) -> Result<String, FetchError> {
@@ -222,30 +279,16 @@ fn request_error(error: reqwest::Error, proxy: &str) -> String {
     )
 }
 
-pub(super) async fn fetch_api(proxy: Option<&str>, now_ms: u64) -> Result<Limits, FetchError> {
+pub(super) async fn fetch_api(proxy: Option<&str>, keychain: Keychain, now_ms: u64) -> Result<Limits, FetchError> {
     let network = UsageErrorKind::Network;
-    let path = credentials_path().ok_or_else(|| {
-        FetchError::new(
-            UsageErrorKind::NoCredentials,
-            "The user profile folder is unknown.",
-        )
-    })?;
-    let text = match std::fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) => keychain_credentials().await.ok_or_else(|| {
-            FetchError::new(
-                UsageErrorKind::NoCredentials,
-                format!("Could not read {}: {error}", path.display()),
-            )
-        })?,
-    };
-    let token = parse_access_token(&text, now_ms)?;
     let proxy = proxy.ok_or_else(|| {
         FetchError::new(
             UsageErrorKind::NoProxy,
             "No proxy: set one in the plugin, HTTPS_PROXY or the system proxy settings.",
         )
     })?;
+    let text = read_credentials(keychain).await?;
+    let token = parse_access_token(&text, now_ms)?;
     let proxy = proxy_url(proxy)?;
     let label = proxy_label(&proxy);
     let proxy_setting = reqwest::Proxy::all(proxy)

@@ -63,7 +63,7 @@ pub(crate) async fn usage(stale: bool) -> Option<ClaudeUsage> {
             .map(str::to_string);
         let proxy = source::resolve_proxy(configured.as_deref());
         let now_ms = source::unix_ms(SystemTime::now());
-        let result = source::fetch_api(proxy.as_deref(), now_ms).await;
+        let result = source::fetch_api(proxy.as_deref(), source::Keychain::Skip, now_ms).await;
         let mut state = state();
         state.in_flight = false;
         match result {
