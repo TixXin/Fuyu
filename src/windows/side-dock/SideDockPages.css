@@ -40,7 +40,7 @@
   width: 100%;
 }
 
-.side-dock-drawer__body > *,
+.side-dock-drawer__body > :not(.sd-page-arrow):not([data-page-switch-overlay]),
 .side-dock-drawer__body > .plugin-slot > * {
   min-width: 0;
   width: 100%;
