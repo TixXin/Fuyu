@@ -12,6 +12,7 @@ pub(crate) enum Request {
     List { dir: String },
     Read { path: String },
     PushClip { item: serde_json::Value },
+    Poke,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

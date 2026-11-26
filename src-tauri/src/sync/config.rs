@@ -11,6 +11,7 @@ pub enum SyncBackendKind {
     Off,
     Folder,
     Webdav,
+    Lan,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -120,6 +121,7 @@ impl SyncConfig {
             {
                 SyncBackendKind::Webdav
             }
+            Some(SyncBackendKind::Lan) => SyncBackendKind::Lan,
             Some(_) => SyncBackendKind::Off,
             None => {
                 if self.folder.is_some() {
@@ -150,6 +152,7 @@ impl SyncConfig {
             {
                 SyncBackendKind::Webdav
             }
+            Some(SyncBackendKind::Lan) => SyncBackendKind::Lan,
             Some(_) => SyncBackendKind::Off,
             None if self.folder.is_some() => SyncBackendKind::Folder,
             None => SyncBackendKind::Off,
@@ -164,6 +167,7 @@ impl SyncConfig {
                 .webdav
                 .as_ref()
                 .map(|webdav| format!("webdav:{}|{}", webdav.url, webdav.username)),
+            SyncBackendKind::Lan => Some("lan".into()),
         }
     }
 

@@ -6,7 +6,9 @@ pub(crate) mod host;
 pub(crate) mod identity;
 pub(crate) mod pairing;
 pub(crate) mod peers;
+pub(crate) mod runtime;
 pub(crate) mod server;
+pub(crate) mod store;
 pub(crate) mod tls;
 pub(crate) mod wire;
 #[cfg(test)]

@@ -16,6 +16,7 @@ pub(crate) trait Serve: Send + Sync {
     fn read(&self, path: &str) -> Result<Option<Vec<u8>>, String>;
     fn clip(&self, from: &Peer, item: serde_json::Value) -> Result<(), String>;
     fn paired(&self, _peer: &Peer) {}
+    fn poke(&self) {}
 }
 
 pub(crate) struct Host {
@@ -71,6 +72,17 @@ impl Host {
         if peers::remember_address(&mut peers, fingerprint, address) {
             let _ = peers::save(&self.peers_dir, &peers);
         }
+    }
+
+    pub(crate) fn remember_device(&self, device_id: &str, address: &str) -> bool {
+        let mut peers = locked(&self.peers);
+        let Some(fingerprint) = peers.iter().find(|peer| peer.device_id == device_id).map(|peer| peer.fingerprint.clone()) else {
+            return false;
+        };
+        if peers::remember_address(&mut peers, &fingerprint, address) {
+            let _ = peers::save(&self.peers_dir, &peers);
+        }
+        true
     }
 
     pub(crate) fn open_pairing(&self, now: Instant) -> Result<(String, u64), String> {

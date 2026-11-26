@@ -130,6 +130,10 @@ fn serve_peer(host: &Host, tls: &mut Tls, peer: &Peer) -> io::Result<()> {
             Request::List { dir } => host.serve.list(&dir).map(|entries| Reply::Entries { entries }),
             Request::Read { path } => host.serve.read(&path).map(|bytes| Reply::Data { bytes: bytes.as_deref().map(encode_bytes) }),
             Request::PushClip { item } => host.serve.clip(peer, item).map(|()| Reply::Done),
+            Request::Poke => {
+                host.serve.poke();
+                Ok(Reply::Done)
+            }
             Request::PairStart { .. } | Request::PairConfirm { .. } => Ok(Reply::Refused { reason: reason::BAD_REQUEST.into() }),
         };
         write_frame(tls, &reply.unwrap_or_else(|_| Reply::Refused { reason: reason::FAILED.into() }))?;

@@ -32,7 +32,7 @@ pub(crate) type SyncRecords = (Vec<serde_json::Value>, Vec<Tombstone>);
 pub use config::SyncCategory;
 pub use status::SyncStatus;
 
-pub(crate) const LOCAL_FILES: [&str; 3] = [device::FILE_NAME, config::FILE_NAME, base::DIR_NAME];
+pub(crate) const LOCAL_FILES: [&str; 6] = [device::FILE_NAME, config::FILE_NAME, base::DIR_NAME, lan::peers::FILE_NAME, lan::store::STORE_DIR, lan::store::CACHE_DIR];
 
 pub(crate) fn init(app: &tauri::AppHandle) -> Result<(), String> {
     use tauri::Manager;

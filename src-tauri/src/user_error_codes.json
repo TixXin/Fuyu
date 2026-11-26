@@ -308,6 +308,8 @@
   "sync.cryptoNewerVersion",
   "sync.cryptoRandom",
   "sync.cryptoWrapFailed",
+  "sync.lanListen",
+  "sync.lanNoEncryption",
   "sync.migrationIo",
   "sync.needBackendFirst",
   "sync.newerVersion",
