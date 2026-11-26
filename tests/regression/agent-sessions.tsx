@@ -184,6 +184,7 @@ async function runChecks() {
 
     await render("both", { view: "split" });
     check(document.querySelector(".agent-view--split") && document.querySelector(".agent-split__detail")?.textContent?.includes("设置界面完善思路"), "B（双栏工作台）：左栏索引 + 右栏实时详情");
+    check(getComputedStyle(document.querySelector(".agent-view--split")!).display === "grid", "B（双栏工作台）：样式表按顺序生效，左右两栏并排而不是上下堆叠");
     const splitItems = [...document.querySelectorAll<HTMLButtonElement>(".agent-split__item")];
     await act(async () => { splitItems[1].click(); });
     check(document.querySelector(".agent-split__detail")?.textContent?.includes("恢复 Windows 发布机环境"), "B（双栏工作台）：点击左栏立即切换右栏详情");
@@ -191,6 +192,7 @@ async function runChecks() {
     await render("both", { view: "bento", cardEffects: "sparkle" });
     check(document.querySelector(".agent-bento__spotlight") && document.querySelectorAll(".agent-bento__card").length === 1 && document.querySelectorAll(".agent-bento__done").length === 1, "C（双列卡片）：紧急项横跨置顶，运行中卡片与已完成双列排布");
     check(document.querySelectorAll(".agent-card--sparkle > .agent-card__band").length >= 2, "C（双列卡片）：支持粒子流苏光效");
+    check([...document.querySelectorAll<HTMLElement>(".agent-sessions__list--bento .agent-card")].every((card) => card.scrollHeight <= card.clientHeight + 1), "C（双列卡片）：卡片高度随内容伸展，内容不被固定高度截断");
 
     await render("both", { view: "projects" });
     check(document.querySelectorAll(".agent-projects__head").length === 3, "D（项目指挥台）：按项目文件夹收纳分组");
