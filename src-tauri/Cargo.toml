@@ -42,6 +42,8 @@ keyring = { version = "4.2", default-features = false, features = ["v1", "window
 mailparse = "0.17"
 native-tls = "0.2"
 quick-xml = "0.39"
+rcgen = { version = "0.14", default-features = false, features = ["ring"] }
+ring = "0.17"
 rrule = "0.14"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "socks"] }
 rgb = "0.8"
@@ -53,6 +55,7 @@ tar = "0.4"
 plugin-base = { path = "crates/plugin-base" }
 sherpa-runtime = { path = "crates/sherpa-runtime" }
 sha2 = "0.10"
+spake2 = "0.4"
 tauri = { version = "2", features = ["macos-private-api", "tray-icon"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
