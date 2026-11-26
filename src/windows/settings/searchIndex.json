@@ -1578,6 +1578,20 @@
     {
       "page": "behavior",
       "zh-CN": {
+        "group": "展开",
+        "title": "记住上次退出时的面板页面",
+        "description": "下次展开面板时回到上次收起或退出前停留的页面，而不是每次都回到 Fuyu 首页"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Remember last panel page",
+        "description": "Reopen the page you were on before closing the panel or quitting, instead of returning to the Fuyu page each time"
+      },
+      "since": "next"
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
         "group": "开合动画",
         "title": "动画曲线",
         "description": "鼠标移到格子上就演一次，点一下选用"

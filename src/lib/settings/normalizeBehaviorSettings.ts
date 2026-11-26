@@ -74,6 +74,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
       ? clamp(Math.round(settings.hoverSwitchDelayMs), MIN_HOVER_SWITCH_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS)
       : DEFAULT_SETTINGS.hoverSwitchDelayMs,
     wheelSwitchPage: settings?.wheelSwitchPage === true,
+    rememberLastPage: settings?.rememberLastPage === true,
     fuyuTabIcon: settings?.fuyuTabIcon === true,
     minimizeAction: settings?.minimizeAction === "tuck" ? "tuck" : "tray",
     tuckedHoverAction: settings?.tuckedHoverAction === "expand" ? "expand" : "reveal",
@@ -90,6 +91,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     pagePreviousShortcut: normalizePageCycleShortcut(settings?.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT),
     islandLayerShortcut: chosenIslandLayerShortcut(settings),
     islandLayerShortcutChosen: settings?.islandLayerShortcutChosen === true,
+    islandExpandShortcut: typeof settings?.islandExpandShortcut === "string" ? settings.islandExpandShortcut.trim() : "",
     todoEnabled: settings?.todoEnabled !== false,
     musicEnabled: settings?.musicEnabled !== false,
     agentStatusEnabled: settings?.agentStatusEnabled !== false,

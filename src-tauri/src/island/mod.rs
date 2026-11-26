@@ -17,6 +17,9 @@ pub(crate) mod drag_grid_window;
 mod drag_hint;
 mod drag_passthrough;
 mod edge;
+#[cfg_attr(target_os = "macos", path = "expand_hotkey_macos.rs")]
+mod expand_hotkey;
+pub(crate) mod expand_shortcut;
 mod geometry;
 mod hover_linger;
 pub(crate) mod layer;
@@ -468,6 +471,21 @@ pub(crate) fn main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
         .ok_or_else(|| "Main island window was not found.".to_string())
 }
 
+pub(super) fn prepare_for_shortcut(app: &AppHandle) {
+    USER_HIDDEN_ISLAND.store(false, Ordering::SeqCst);
+    layer::bring_front(app);
+    mutate_window_state(|state| {
+        state.is_dimmed = false;
+        *state
+    });
+    if let Ok(window) = main_window(app) {
+        #[cfg(not(target_os = "macos"))]
+        let _ = window.show();
+        focus::focus_island_for_shortcut(&window);
+    }
+    crate::tray::refresh_now(app);
+}
+
 pub(crate) fn show_island(app: &AppHandle) -> Result<(), String> {
     USER_HIDDEN_ISLAND.store(false, Ordering::SeqCst);
     layer::bring_front(app);
@@ -606,6 +624,8 @@ macro_rules! tauri_commands {
             crate::island::layer::get_island_layer_shortcut_problem,
             crate::island::layer::get_island_layer,
             crate::island::layer::toggle_island_layer,
+            crate::island::expand_shortcut::set_island_expand_shortcut,
+            crate::island::expand_shortcut::get_island_expand_shortcut_problem,
         ] $($rest)*)
     };
 }

@@ -123,6 +123,7 @@ export type IslandSettings = CalendarSettingValues &
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
   wheelSwitchPage: boolean;
+  rememberLastPage: boolean;
   fuyuTabIcon: boolean;
   minimizeAction: MinimizeAction;
   tuckedHoverAction: TuckedHoverAction;
@@ -139,6 +140,7 @@ export type IslandSettings = CalendarSettingValues &
   pagePreviousShortcut: string;
   islandLayerShortcut: string;
   islandLayerShortcutChosen: boolean;
+  islandExpandShortcut: string;
   todoEnabled: boolean;
   musicEnabled: boolean;
   agentStatusEnabled: boolean;

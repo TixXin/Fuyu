@@ -124,6 +124,9 @@ if (!automated) {
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
     check(commandKeybindingCalls.length === 1 && commandKeybindingCalls[0].plugin === "dev.example.todo-sync" && commandKeybindingCalls[0].command === "sync-now" && commandKeybindingCalls[0].keybinding === "",
       "Turning a plugin shortcut off saves an empty shortcut for that command");
+    const islandShortcutGroup = [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.querySelector(".settings-group__title")?.textContent === "岛屿");
+    const islandShortcutLabels = [...(islandShortcutGroup?.querySelectorAll(".shortcut-control__meta span") ?? [])].map((span) => span.textContent ?? "").join("|");
+    check(islandShortcutLabels === "展开 / 收起面板|切换岛的上下层", "Settings > Shortcuts lists both expand/collapse panel and island layer shortcuts under Island");
     const finder = element<HTMLButtonElement>("button[aria-label='按键查询']");
     await act(async () => { finder.click(); });
     await act(async () => { finder.dispatchEvent(new KeyboardEvent("keydown", { key: "t", ctrlKey: true, altKey: true, bubbles: true })); });
@@ -139,6 +142,9 @@ if (!automated) {
     const leaveSwitch = () => settingRow("鼠标移开后自动收起")?.querySelector<HTMLInputElement>("input");
     check(leaveSwitch()?.checked === false && !settingRow("鼠标移开后收起前等待"), "Click mode offers close-on-leave, off by default without the delay slider");
     await act(async () => { leaveSwitch()!.click(); }); check(leaveSwitch()?.checked === true && Boolean(settingRow("鼠标移开后收起前等待")) && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { clickCollapseOnLeave?: boolean }).clickCollapseOnLeave === true, "Turning close-on-leave on saves it and shows the collapse delay slider"); await act(async () => { leaveSwitch()!.click(); });
+    const rememberPageSwitch = () => settingRow("记住上次退出时的面板页面")?.querySelector<HTMLInputElement>("input");
+    check(rememberPageSwitch()?.checked === false, "Remember last panel page starts off by default");
+    await act(async () => { rememberPageSwitch()!.click(); }); check(rememberPageSwitch()?.checked === true && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { rememberLastPage?: boolean }).rememberLastPage === true, "Turning remember last panel page on saves it"); await act(async () => { rememberPageSwitch()!.click(); });
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps");
     await openPage("musicLyrics");
