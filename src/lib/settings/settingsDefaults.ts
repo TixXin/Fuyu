@@ -83,7 +83,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   autoTuckRetract: true,
   autoTuckRetractDelayMs: DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS,
   revealOnMessage: true,
-  messageNotice: "panel",
+  messageNotice: "banner",
   messagePanelSeconds: 8,
   expandTrigger: "hover",
   previewAutoExpandMs: 0,
