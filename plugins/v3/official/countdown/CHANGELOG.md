@@ -1,5 +1,13 @@
 # 更新记录 · Changelog
 
+## 1.3.0
+
+- 首次安装自带示例倒数日（元旦、农历春节与今年已过天数），装完即见完整效果；清空列表后支持一键载入示例。
+- 升级岛页视觉设计：优化主卡片渐变质感与行内天数徽章，在主卡片右上角新增快捷设置入口，示例模式下顶部展示「去自定义」横条。
+
+- Fresh installs start with sample dates (New Year's Day, Lunar New Year / Mid-Year, and days this year); empty state also offers one-click sample restore.
+- Refined the island UI with a sharper hero card, pill day badges, a quick settings button on the hero card, and a "Customize" banner for sample dates.
+
 ## 1.2.0
 
 - 选择日期支持公历 / 农历切换：可按农历年、月（含闰月）、日选择倒数日与纪念日，并实时显示对应公历日期。

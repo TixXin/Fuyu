@@ -1,7 +1,7 @@
 import type { Context } from "@fuyu/plugin-base";
-import { CalendarIcon, ChevronIcon } from "./icons.tsx";
+import { CalendarIcon, ChevronIcon, SettingsIcon } from "./icons.tsx";
 import { barLabel, formatItemDate, heroLabel, rowLabel } from "./labels.ts";
-import { barItem, pageView, readingOf, type CountdownItem, type CountdownSettings } from "./model.ts";
+import { METHODS, barItem, pageView, readingOf, type CountdownItem, type CountdownSettings } from "./model.ts";
 import { PAGE_TITLE, text } from "./text.ts";
 import { useBackground, useCountdown, useToday } from "./useCountdown.ts";
 import "./styles.css";
@@ -15,11 +15,24 @@ function settingsOpener(ctx: Context): (() => unknown) | null {
   return typeof open === "function" ? () => open.call((ctx as unknown as SettingsOpener).settings) : null;
 }
 
-function Hero({ ctx, item, at, settings }: { ctx: Context; item: CountdownItem; at: number; settings: CountdownSettings }) {
-  const background = useBackground(ctx, item.id, item.bgRev);
+function Hero({
+  item,
+  at,
+  settings,
+  background,
+  onSettings,
+}: {
+  item: CountdownItem;
+  at: number;
+  settings: CountdownSettings;
+  background: string | null;
+  onSettings: (() => unknown) | null;
+}) {
   const reading = readingOf(item, at);
   const dim = reading.type === "past" && settings.pastMode === "dim";
-  const className = ["fuyu-countdown__hero", background ? "fuyu-countdown__hero--image" : "", dim ? "is-dim" : ""].filter(Boolean).join(" ");
+  const className = ["fuyu-countdown__hero", background ? "fuyu-countdown__hero--image" : "", dim ? "is-dim" : ""]
+    .filter(Boolean)
+    .join(" ");
   return (
     <div className={className} style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="fuyu-countdown__hero-shade">
@@ -27,7 +40,20 @@ function Hero({ ctx, item, at, settings }: { ctx: Context; item: CountdownItem; 
           <span className="fuyu-countdown__hero-title">{item.title}</span>
           {settings.showDate && <span className="fuyu-countdown__hero-date">{formatItemDate(item, at)}</span>}
         </div>
-        <span className="fuyu-countdown__hero-days">{heroLabel(reading)}</span>
+        <div className="fuyu-countdown__hero-right">
+          <span className="fuyu-countdown__hero-days">{heroLabel(reading)}</span>
+          {onSettings && (
+            <button
+              type="button"
+              className="fuyu-countdown__hero-edit"
+              title={text.settingsTip}
+              aria-label={text.settingsTip}
+              onClick={() => void onSettings()}
+            >
+              <SettingsIcon size={13} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -36,11 +62,12 @@ function Hero({ ctx, item, at, settings }: { ctx: Context; item: CountdownItem; 
 function Row({ item, at, settings }: { item: CountdownItem; at: number; settings: CountdownSettings }) {
   const reading = readingOf(item, at);
   const dim = reading.type === "past" && settings.pastMode === "dim";
+  const kindClass = reading.type === "today" ? " is-today" : reading.type === "day" ? " is-anniv" : "";
   return (
     <li className={dim ? "fuyu-countdown__row is-dim" : "fuyu-countdown__row"}>
       <span className="fuyu-countdown__row-title">{item.title}</span>
       {settings.showDate && <span className="fuyu-countdown__row-date">{formatItemDate(item, at, false)}</span>}
-      <span className="fuyu-countdown__row-days">{rowLabel(reading)}</span>
+      <span className={`fuyu-countdown__row-days${kindClass}`}>{rowLabel(reading)}</span>
     </li>
   );
 }
@@ -49,15 +76,25 @@ export default function apply(ctx: Context) {
   const openSettings = settingsOpener(ctx);
 
   function CountdownPage() {
-    const { state, error } = useCountdown(ctx);
+    const { state, error, invoke } = useCountdown(ctx);
     const at = useToday();
     const { settings } = state;
     const view = pageView(state.items, settings, at);
+    const heroBg = useBackground(ctx, view.hero?.id ?? null, view.hero?.bgRev ?? null);
     return (
       <div className="fuyu-countdown">
+        {state.sample && openSettings && view.hero && (
+          <div className="fuyu-countdown__sample">
+            <span className="fuyu-countdown__sample-text">{text.sampleNotice}</span>
+            <button type="button" className="fuyu-countdown__sample-btn" onClick={() => void openSettings()}>
+              <span>{text.customize}</span>
+              <ChevronIcon size={12} />
+            </button>
+          </div>
+        )}
         {view.hero ? (
           <>
-            <Hero ctx={ctx} item={view.hero} at={at} settings={settings} />
+            <Hero item={view.hero} at={at} settings={settings} background={heroBg} onSettings={openSettings} />
             {view.rows.length > 0 && (
               <ul className="fuyu-countdown__list">
                 {view.rows.map((item) => (
@@ -68,12 +105,20 @@ export default function apply(ctx: Context) {
           </>
         ) : (
           <div className="fuyu-countdown__empty">
+            <span className="fuyu-countdown__empty-icon" aria-hidden="true">
+              <CalendarIcon size={20} />
+            </span>
             <p className="fuyu-countdown__note">{openSettings ? text.noItems : text.empty}</p>
-            {openSettings && (
-              <button type="button" className="fuyu-countdown__go" onClick={() => void openSettings()}>
-                {text.goSettings}
+            <div className="fuyu-countdown__empty-actions">
+              {openSettings && (
+                <button type="button" className="fuyu-countdown__go" onClick={() => void openSettings()}>
+                  {text.goSettings}
+                </button>
+              )}
+              <button type="button" className="fuyu-countdown__secondary" onClick={() => invoke(METHODS.restoreSample)}>
+                {text.loadSample}
               </button>
-            )}
+            </div>
           </div>
         )}
         {view.hero && (openSettings || view.hidden > 0) && (

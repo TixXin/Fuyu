@@ -1,12 +1,13 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useEffect, useRef, useState } from "react";
-import { ArrowIcon, StockIcon } from "./icons.tsx";
+import { ArrowIcon, ChevronIcon, RefreshIcon, SettingsIcon, StockIcon } from "./icons.tsx";
 import {
   METHODS,
   displayCode,
   formatChange,
   formatPercent,
   formatPrice,
+  marketBadge,
   trendOf,
   type ColorScheme,
   type Quote,
@@ -31,19 +32,35 @@ function schemeClass(scheme: ColorScheme): string {
   return scheme === "greenUp" ? " is-green-up" : "";
 }
 
+function summaryCounts(stocks: readonly StockItem[], quotes: Record<string, Quote>): { up: number; down: number } {
+  let up = 0;
+  let down = 0;
+  for (const stock of stocks) {
+    const trend = trendOf(quotes[stock.id]);
+    if (trend === "up") up += 1;
+    else if (trend === "down") down += 1;
+  }
+  return { up, down };
+}
+
 function Row({ stock, quote, now }: { stock: StockItem; quote: Quote | undefined; now: number }) {
   const trend = trendOf(quote);
   const tip = quote?.time ? `${stock.name} · ${text.quoteTime(quoteClock(quote.time, now))}` : stock.name;
+  const hasQuote = Boolean(quote && quote.price !== null);
   return (
     <li className={`fuyu-stock__row is-${trend}`} title={tip}>
+      <span className="fuyu-stock__accent" aria-hidden="true" />
       <span className="fuyu-stock__who">
         <span className="fuyu-stock__name">{stock.name}</span>
-        <span className="fuyu-stock__code">{displayCode(stock)}</span>
+        <span className="fuyu-stock__sub">
+          <span className="fuyu-stock__mkt">{marketBadge(stock)}</span>
+          <span className="fuyu-stock__code">{stock.code.replace(/_/g, ".")}</span>
+        </span>
       </span>
-      {quote && quote.price !== null ? (
+      {hasQuote && quote ? (
         <>
           <span className="fuyu-stock__price">
-            <span>{formatPrice(quote.price)}</span>
+            <span className="fuyu-stock__num">{formatPrice(quote.price)}</span>
             <span className="fuyu-stock__change">{formatChange(quote.change, quote.price)}</span>
           </span>
           <span className="fuyu-stock__pill">{formatPercent(quote.percent)}</span>
@@ -60,10 +77,17 @@ function StatusLine({ state }: { state: StockState }) {
   const label = text.status[state.status];
   if (label) parts.push(label);
   if (state.updatedAt) parts.push(text.updated(clock(state.updatedAt)));
+  const counts = summaryCounts(state.settings.stocks, state.quotes);
   return (
     <span className={`fuyu-stock__status is-${state.status}`}>
       <span className="fuyu-stock__dot" />
-      <span className="fuyu-stock__status-text">{parts.join(" · ")}</span>
+      <span className="fuyu-stock__status-text">{parts.join(" · ") || text.title}</span>
+      {(counts.up > 0 || counts.down > 0) && (
+        <span className="fuyu-stock__tally">
+          {counts.up > 0 && <span className="fuyu-stock__tally-up">{`↑${counts.up}`}</span>}
+          {counts.down > 0 && <span className="fuyu-stock__tally-down">{`↓${counts.down}`}</span>}
+        </span>
+      )}
     </span>
   );
 }
@@ -88,12 +112,20 @@ export default function apply(ctx: Context) {
       return (
         <div className="fuyu-stock">
           <div className="fuyu-stock__empty">
+            <span className="fuyu-stock__empty-icon" aria-hidden="true">
+              <StockIcon size={20} />
+            </span>
             <p className="fuyu-stock__note">{openSettings ? text.noStocks : `${text.noStocks} ${text.noStocksHint}`}</p>
-            {openSettings && (
-              <button type="button" className="fuyu-stock__go" onClick={() => void openSettings()}>
-                {text.goSettings}
+            <div className="fuyu-stock__empty-actions">
+              {openSettings && (
+                <button type="button" className="fuyu-stock__go" onClick={() => void openSettings()}>
+                  {text.goSettings}
+                </button>
+              )}
+              <button type="button" className="fuyu-stock__secondary" onClick={() => invoke(METHODS.restoreSample)}>
+                {text.loadSample}
               </button>
-            )}
+            </div>
           </div>
         </div>
       );
@@ -104,15 +136,47 @@ export default function apply(ctx: Context) {
       <div className={`fuyu-stock${schemeClass(settings.colorScheme)}`}>
         <div className="fuyu-stock__toolbar">
           <StatusLine state={state} />
-          <button type="button" className="fuyu-stock__refresh" disabled={state.loading} onClick={() => invoke(METHODS.refresh)}>
-            {state.loading ? text.refreshing : text.refresh}
-          </button>
+          <div className="fuyu-stock__actions">
+            <button
+              type="button"
+              className="fuyu-stock__icon-btn"
+              disabled={state.loading}
+              title={state.loading ? text.refreshing : text.refresh}
+              aria-label={state.loading ? text.refreshing : text.refresh}
+              onClick={() => invoke(METHODS.refresh)}
+            >
+              <RefreshIcon size={14} />
+            </button>
+            {openSettings && (
+              <button
+                type="button"
+                className="fuyu-stock__icon-btn"
+                title={text.settingsTip}
+                aria-label={text.settingsTip}
+                onClick={() => void openSettings()}
+              >
+                <SettingsIcon size={14} />
+              </button>
+            )}
+          </div>
         </div>
+
+        {settings.sample && openSettings && (
+          <div className="fuyu-stock__sample">
+            <span className="fuyu-stock__sample-text">{text.sampleNotice}</span>
+            <button type="button" className="fuyu-stock__sample-btn" onClick={() => void openSettings()}>
+              <span>{text.manage}</span>
+              <ChevronIcon size={12} />
+            </button>
+          </div>
+        )}
+
         <ul className="fuyu-stock__list">
           {settings.stocks.map((stock) => (
             <Row key={stock.id} stock={stock} quote={state.quotes[stock.id]} now={now} />
           ))}
         </ul>
+
         {state.source && <p className="fuyu-stock__foot">{text.sourceNote(text.source[state.source])}</p>}
         {error && <p className="fuyu-stock__note">{error}</p>}
       </div>

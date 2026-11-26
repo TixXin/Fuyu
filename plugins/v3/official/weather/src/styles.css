@@ -75,6 +75,13 @@
   color: var(--fuyu-plugin-warning);
 }
 
+.fuyu-weather__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .fuyu-weather__icon-button {
   display: inline-flex;
   flex-shrink: 0;
@@ -83,7 +90,7 @@
   width: 26px;
   height: 26px;
   padding: 0;
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--fuyu-plugin-radius);
   background: transparent;
   color: var(--fuyu-plugin-text-secondary);
@@ -91,8 +98,44 @@
 }
 
 .fuyu-weather__icon-button:hover:not(:disabled) {
+  border-color: var(--fuyu-plugin-border);
   background: var(--fuyu-plugin-surface-hover);
   color: var(--fuyu-plugin-text);
+}
+
+.fuyu-weather__sample {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--fuyu-plugin-accent) 30%, var(--fuyu-plugin-border));
+  border-radius: var(--fuyu-plugin-radius);
+  background: color-mix(in srgb, var(--fuyu-plugin-accent) 10%, var(--fuyu-plugin-surface));
+  font-size: 11.5px;
+}
+
+.fuyu-weather__sample-text {
+  color: var(--fuyu-plugin-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-weather__sample-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-on-accent);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .fuyu-weather__icon-button:disabled {
@@ -356,29 +399,12 @@
   background: linear-gradient(90deg, light-dark(#38bdf8, #38bdf8), light-dark(#f59e0b, #fbbf24));
 }
 
-.fuyu-weather-ico.is-clear {
-  color: light-dark(#d97706, #fbbf24);
-}
-
-.fuyu-weather-ico.is-night {
-  color: light-dark(#4f46e5, #a5b4fc);
-}
-
-.fuyu-weather-ico.is-partly {
-  color: light-dark(#0284c7, #7dd3fc);
-}
-
-.fuyu-weather-ico.is-rain {
-  color: light-dark(#0284c7, #38bdf8);
-}
-
-.fuyu-weather-ico.is-snow {
-  color: light-dark(#0891b2, #a5f3fc);
-}
-
-.fuyu-weather-ico.is-storm {
-  color: var(--fuyu-plugin-warning);
-}
+.fuyu-weather-ico.is-clear { color: light-dark(#d97706, #fbbf24); }
+.fuyu-weather-ico.is-night { color: light-dark(#4f46e5, #a5b4fc); }
+.fuyu-weather-ico.is-partly { color: light-dark(#0284c7, #7dd3fc); }
+.fuyu-weather-ico.is-rain { color: light-dark(#0284c7, #38bdf8); }
+.fuyu-weather-ico.is-snow { color: light-dark(#0891b2, #a5f3fc); }
+.fuyu-weather-ico.is-storm { color: var(--fuyu-plugin-warning); }
 
 .fuyu-weather__button {
   max-width: 100%;
@@ -398,6 +424,28 @@
   color: var(--fuyu-plugin-text-muted);
   background: var(--fuyu-plugin-surface-hover);
   cursor: default;
+}
+
+.fuyu-weather__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.fuyu-weather__secondary {
+  padding: 5px 12px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fuyu-weather__secondary:hover {
+  background: var(--fuyu-plugin-surface-hover);
 }
 
 .fuyu-weather__note {
@@ -428,24 +476,8 @@
   white-space: nowrap;
 }
 
-.fuyu-weather-bar__cond {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.fuyu-weather-bar__notch-icon {
-  display: none;
-  align-items: center;
-}
-
-.island__notch-wing .fuyu-weather-bar {
-  padding: 1px 4px;
-}
-
-.island__notch-wing .fuyu-weather-bar__cond {
-  display: none;
-}
-
-.island__notch-wing .fuyu-weather-bar__notch-icon {
-  display: inline-flex;
-}
+.fuyu-weather-bar__cond { overflow: hidden; text-overflow: ellipsis; }
+.fuyu-weather-bar__notch-icon { display: none; align-items: center; }
+.island__notch-wing .fuyu-weather-bar { padding: 1px 4px; }
+.island__notch-wing .fuyu-weather-bar__cond { display: none; }
+.island__notch-wing .fuyu-weather-bar__notch-icon { display: inline-flex; }

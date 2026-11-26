@@ -1,6 +1,6 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useEffect, useRef, useState } from "react";
-import { CommentIcon, IssuesIcon } from "./icons.tsx";
+import { ChevronIcon, CommentIcon, IssuesIcon, RefreshIcon, SettingsIcon } from "./icons.tsx";
 import {
   FILTER_THRESHOLD,
   METHODS,
@@ -42,6 +42,7 @@ function Row({ item, settings, at }: { item: IssueItem; settings: IssuesSettings
   return (
     <li>
       <a href={item.url} target="_blank" rel="noreferrer" className="fuyu-gh-issues__row" title={item.title}>
+        <span className={item.pull ? "fuyu-gh-issues__dot is-pr" : "fuyu-gh-issues__dot"} aria-hidden="true" />
         <span className="fuyu-gh-issues__row-main">
           <span className="fuyu-gh-issues__row-title">{item.title}</span>
           <span className="fuyu-gh-issues__row-meta">
@@ -75,7 +76,9 @@ function Group({ group, settings, keyword, at }: { group: RepoGroup; settings: I
     <div className="fuyu-gh-issues__group">
       <div className="fuyu-gh-issues__group-head">
         <span className="fuyu-gh-issues__repo">{group.repo}</span>
-        {group.loaded && !group.error && <span className="fuyu-gh-issues__badge">{text.count(group.items.length, group.more)}</span>}
+        {group.loaded && !group.error && (
+          <span className="fuyu-gh-issues__badge">{text.count(group.items.length, group.more)}</span>
+        )}
       </div>
       {note ? (
         <p className="fuyu-gh-issues__note">{note}</p>
@@ -119,12 +122,20 @@ export default function apply(ctx: Context) {
       return (
         <div className="fuyu-gh-issues">
           <div className="fuyu-gh-issues__empty">
+            <span className="fuyu-gh-issues__empty-icon" aria-hidden="true">
+              <IssuesIcon size={20} />
+            </span>
             <p className="fuyu-gh-issues__note">{openSettings ? text.noRepos : `${text.noRepos} ${text.noReposHint}`}</p>
-            {openSettings && (
-              <button type="button" className="fuyu-gh-issues__go" onClick={() => void openSettings()}>
-                {text.goSettings}
+            <div className="fuyu-gh-issues__empty-actions">
+              {openSettings && (
+                <button type="button" className="fuyu-gh-issues__go" onClick={() => void openSettings()}>
+                  {text.goSettings}
+                </button>
+              )}
+              <button type="button" className="fuyu-gh-issues__secondary" onClick={() => invoke(METHODS.restoreSample)}>
+                {text.loadSample}
               </button>
-            )}
+            </div>
           </div>
         </div>
       );
@@ -143,12 +154,43 @@ export default function apply(ctx: Context) {
               onChange={(event) => setFilter(event.target.value)}
             />
           ) : (
-            <span className="fuyu-gh-issues__spacer" />
+            <span className="fuyu-gh-issues__summary">{text.barTitle(total)}</span>
           )}
-          <button type="button" className="fuyu-gh-issues__refresh" disabled={state.loading} onClick={() => invoke(METHODS.refresh)}>
-            {state.loading ? text.refreshing : text.refresh}
-          </button>
+          <div className="fuyu-gh-issues__actions">
+            <button
+              type="button"
+              className="fuyu-gh-issues__icon-btn"
+              disabled={state.loading}
+              title={state.loading ? text.refreshing : text.refresh}
+              aria-label={state.loading ? text.refreshing : text.refresh}
+              onClick={() => invoke(METHODS.refresh)}
+            >
+              <RefreshIcon size={14} />
+            </button>
+            {openSettings && (
+              <button
+                type="button"
+                className="fuyu-gh-issues__icon-btn"
+                title={text.settingsTip}
+                aria-label={text.settingsTip}
+                onClick={() => void openSettings()}
+              >
+                <SettingsIcon size={14} />
+              </button>
+            )}
+          </div>
         </div>
+
+        {settings.sample && openSettings && (
+          <div className="fuyu-gh-issues__sample">
+            <span className="fuyu-gh-issues__sample-text">{text.sampleNotice}</span>
+            <button type="button" className="fuyu-gh-issues__sample-btn" onClick={() => void openSettings()}>
+              <span>{text.customize}</span>
+              <ChevronIcon size={12} />
+            </button>
+          </div>
+        )}
+
         <div className="fuyu-gh-issues__groups">
           {state.groups.map((group) => (
             <Group key={group.repo} group={group} settings={settings} keyword={showFilter ? keyword : ""} at={at} />

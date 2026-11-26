@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/stock",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Your watchlist on the island: A-share, Hong Kong and US quotes take turns on the bar, the page lists them all.",
   "keywords": [

@@ -1,5 +1,13 @@
 # 更新记录 · Changelog
 
+## 1.2.0
+
+- 首次安装预置 2 个默认关闭的示例闹钟（不会误响），装完即看完整列表效果；清空后支持一键载入示例。
+- 重新设计岛页 UI：顶栏显示下一次响铃时间、折叠式「新建」按钮与快捷设置图标按钮；每行换用拨动开关并优化时间字号与卡片层次。
+
+- Fresh installs include 2 sample alarms switched off by default (never ring unexpectedly); empty state offers one-click sample restore.
+- Redesigned the island UI with a next-alarm header, collapsible "New" composer, quick Settings button, pill toggle switches, and crisper alarm cards.
+
 ## 1.1.1
 
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。

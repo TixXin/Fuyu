@@ -146,12 +146,19 @@ test("offline keeps the last quotes and backs off; with every market closed noth
   };
   const { ctx, call, timers } = fakeContext(join(scratch, "offline"));
   apply(ctx);
-  await call(METHODS.addStock, { stock: { id: "1.600519", code: "600519", name: "贵州茅台", kind: "沪A" } });
-  let state = await call(METHODS.refresh);
+  let state = await call(METHODS.getState);
+  assert.equal(state.settings.sample, true);
+  assert.ok(state.settings.stocks.length > 0);
+  for (const stock of [...state.settings.stocks]) {
+    if (stock.id !== "1.600519") await call(METHODS.removeStock, { id: stock.id });
+  }
+  state = await call(METHODS.refresh);
+  assert.equal(state.settings.sample, false);
   assert.equal(state.status, "live");
   assert.equal(state.quotes["1.600519"].price, 1464.73);
   assert.equal(timers.at(-1), 30_000);
 
+  const countBeforeOffline = requests;
   globalThis.fetch = async () => {
     throw new TypeError("fetch failed");
   };
@@ -167,7 +174,7 @@ test("offline keeps the last quotes and backs off; with every market closed noth
   assert.equal(state.status, "closed");
   assert.equal(state.quotes["1.600519"].price, 1464.73);
   assert.equal(timers.at(-1), 6 * 60 * 60_000);
-  assert.equal(requests, 1);
+  assert.equal(requests, countBeforeOffline);
 });
 
 test("the stock plugin passes the official market check with no warnings", async () => {

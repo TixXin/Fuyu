@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Context } from "@fuyu/plugin-base";
 import { messagesV1, remindersV1 } from "@fuyu/plugin-services";
@@ -13,6 +13,7 @@ import {
   normalizeAlarms,
   normalizeDraft,
   normalizeSnoozed,
+  sampleAlarms,
   shouldFireAlarm,
   type AlarmItem,
   type AlarmSnapshot,
@@ -34,9 +35,20 @@ type Stored = {
   settings: AlarmSettings;
   snoozed: SnoozedAlarm | null;
   lastSeenAt: number | null;
+  sample?: boolean;
 };
 
-function readStored(file: string): Stored {
+function readStored(file: string, zh: boolean): Stored {
+  if (!existsSync(file)) {
+    const settings = settingsFromStored(null);
+    return {
+      alarms: sampleAlarms(zh, settings.defaultTone),
+      settings,
+      snoozed: null,
+      lastSeenAt: null,
+      sample: true,
+    };
+  }
   let raw: Record<string, unknown> | null = null;
   try {
     const parsed = JSON.parse(readFileSync(file, "utf8")) as unknown;
@@ -45,11 +57,13 @@ function readStored(file: string): Stored {
     raw = null;
   }
   const settings = settingsFromStored(raw);
+  const alarms = normalizeAlarms(raw?.alarms, settings.defaultTone);
   return {
-    alarms: normalizeAlarms(raw?.alarms, settings.defaultTone),
+    alarms,
     settings,
     snoozed: normalizeSnoozed(raw?.snoozed),
     lastSeenAt: typeof raw?.lastSeenAt === "number" && Number.isFinite(raw.lastSeenAt) ? raw.lastSeenAt : null,
+    ...(raw?.sample === true && alarms.length > 0 ? { sample: true } : {}),
   };
 }
 
@@ -59,8 +73,8 @@ export function apply(ctx: Context) {
   const messages = ctx.services.get(messagesV1);
   const reminders = ctx.services.get(remindersV1);
   const stateFile = join(ctx.dataDir, "alarms.json");
-  const stored = readStored(stateFile);
   const zh = currentLocale() === "zh-CN";
+  const stored = readStored(stateFile, zh);
 
   let ringing: RingingAlarm | null = null;
   let lastChimeAt = 0;
@@ -75,7 +89,7 @@ export function apply(ctx: Context) {
   }
 
   function snapshot(at = Date.now()): AlarmSnapshot {
-    return { alarms: stored.alarms, ringing, snoozed: stored.snoozed, settings: stored.settings, at };
+    return { alarms: stored.alarms, ringing, snoozed: stored.snoozed, settings: stored.settings, sample: Boolean(stored.sample), at };
   }
 
   function publish(at = Date.now()) {
@@ -230,6 +244,7 @@ export function apply(ctx: Context) {
     if (!draft || stored.alarms.length >= MAX_ALARMS) return snapshot();
     return mutate(() => {
       stored.alarms.push({ id: randomUUID(), ...draft, enabled: true, lastFiredMinute: null });
+      delete stored.sample;
       sortAlarms(stored.alarms);
     });
   });
@@ -246,6 +261,7 @@ export function apply(ctx: Context) {
         alarm.enabled = true;
         alarm.lastFiredMinute = null;
       }
+      delete stored.sample;
       sortAlarms(stored.alarms);
     });
   });
@@ -258,6 +274,7 @@ export function apply(ctx: Context) {
         alarm.enabled = !alarm.enabled;
         if (alarm.enabled) alarm.lastFiredMinute = null;
       }
+      delete stored.sample;
     });
   });
 
@@ -267,8 +284,16 @@ export function apply(ctx: Context) {
       stored.alarms = stored.alarms.filter((item) => item.id !== id);
       if (ringing?.id === id) ringing = null;
       if (stored.snoozed?.alarm.id === id) stored.snoozed = null;
+      delete stored.sample;
     });
   });
+
+  ctx.clients.handle(METHODS.restoreSample, () =>
+    mutate(() => {
+      stored.alarms = sampleAlarms(zh, stored.settings.defaultTone);
+      stored.sample = true;
+    }),
+  );
 
   ctx.clients.handle(METHODS.dismiss, dismiss);
   ctx.clients.handle(METHODS.snooze, snooze);

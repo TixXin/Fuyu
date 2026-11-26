@@ -48,12 +48,13 @@ export type CountdownSettings = {
 export type CountdownSnapshot = {
   items: CountdownItem[];
   settings: CountdownSettings;
+  sample?: boolean;
   at: number;
 };
 
 export type Reminded = { day: string; ids: string[] };
 
-export type StoredCountdown = CountdownSettings & { items: StoredItem[]; reminded: Reminded };
+export type StoredCountdown = CountdownSettings & { items: StoredItem[]; reminded: Reminded; sample?: boolean };
 
 export type ItemDraft = {
   title?: unknown;
@@ -85,6 +86,7 @@ export const METHODS = {
   setBackground: "countdown:set-background",
   background: "countdown:background",
   setSettings: "countdown:set-settings",
+  restoreSample: "countdown:restore-sample",
 } as const;
 
 export const DEFAULT_SETTINGS: CountdownSettings = {
@@ -205,7 +207,84 @@ export function normalizeStored(raw: unknown): StoredCountdown {
     day: typeof rawReminded?.day === "string" ? rawReminded.day : "",
     ids: Array.isArray(rawReminded?.ids) ? rawReminded.ids.filter((id): id is string => typeof id === "string") : [],
   };
-  return { ...normalizeSettings(source), items, reminded };
+  return { ...normalizeSettings(source), items, reminded, ...(source.sample === true && items.length > 0 ? { sample: true } : {}) };
+}
+
+export function sampleItems(zh: boolean, at: number = Date.now()): StoredItem[] {
+  const year = new Date(at).getFullYear();
+  if (zh) {
+    const lunarNewYear = resolveDateDraft({ calendar: "lunar", lunar: { year, month: 1, day: 1 } });
+    return [
+      {
+        id: "sample-new-year",
+        title: "元旦",
+        date: `${year}-01-01`,
+        pinned: true,
+        kind: "countdown",
+        repeat: true,
+        bgRev: null,
+        backgroundDataUrl: null,
+      },
+      ...(lunarNewYear
+        ? [
+            {
+              id: "sample-spring-festival",
+              title: "春节",
+              date: lunarNewYear.date,
+              calendar: "lunar" as const,
+              lunar: lunarNewYear.lunar,
+              pinned: false,
+              kind: "countdown" as const,
+              repeat: true,
+              bgRev: null,
+              backgroundDataUrl: null,
+            },
+          ]
+        : []),
+      {
+        id: "sample-this-year",
+        title: `${year} 年已过`,
+        date: `${year}-01-01`,
+        pinned: false,
+        kind: "anniversary",
+        repeat: false,
+        bgRev: null,
+        backgroundDataUrl: null,
+      },
+    ];
+  }
+  return [
+    {
+      id: "sample-new-year",
+      title: "New Year's Day",
+      date: `${year}-01-01`,
+      pinned: true,
+      kind: "countdown",
+      repeat: true,
+      bgRev: null,
+      backgroundDataUrl: null,
+    },
+    {
+      id: "sample-mid-year",
+      title: "Mid-Year Check-in",
+      date: `${year}-07-01`,
+      pinned: false,
+      kind: "countdown",
+      repeat: true,
+      bgRev: null,
+      backgroundDataUrl: null,
+    },
+    {
+      id: "sample-this-year",
+      title: `Days in ${year}`,
+      date: `${year}-01-01`,
+      pinned: false,
+      kind: "anniversary",
+      repeat: false,
+      bgRev: null,
+      backgroundDataUrl: null,
+    },
+  ];
 }
 
 export function toView(item: StoredItem): CountdownItem {

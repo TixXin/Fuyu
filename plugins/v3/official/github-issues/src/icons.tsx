@@ -45,3 +45,32 @@ export function XIcon() {
     </Svg>
   );
 }
+
+export function RefreshIcon({ size = 14 }: { size?: number }) {
+  return (
+    <Svg size={size}>
+      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+      <path d="M16 16h5v5" />
+    </Svg>
+  );
+}
+
+export function SettingsIcon({ size = 14 }: { size?: number }) {
+  return (
+    <Svg size={size}>
+      <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+      <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </Svg>
+  );
+}
+
+export function ChevronIcon({ size = 12 }: { size?: number }) {
+  return (
+    <Svg size={size}>
+      <path d="m9 18 6-6-6-6" />
+    </Svg>
+  );
+}

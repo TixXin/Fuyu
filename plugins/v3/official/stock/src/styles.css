@@ -1,17 +1,22 @@
 .fuyu-stock,
 .fuyu-stock-chip {
-  --fuyu-stock-up: light-dark(#d4363f, #ff6b72);
-  --fuyu-stock-down: light-dark(#1f9a55, #3ccf7f);
-  --fuyu-stock-up-bg: light-dark(#fbe3e4, #4a2328);
-  --fuyu-stock-down-bg: light-dark(#dcf3e5, #1d3b2a);
+  --fuyu-stock-up: light-dark(#d93842, #ff6b72);
+  --fuyu-stock-down: light-dark(#159652, #38d382);
+  --fuyu-stock-up-bg: light-dark(#fdebec, #3c1c21);
+  --fuyu-stock-down-bg: light-dark(#e5f7ed, #163425);
+  --fuyu-stock-up-bd: light-dark(#f6c5c8, #6b2b33);
+  --fuyu-stock-down-bd: light-dark(#b7e8cd, #24573c);
+  --fuyu-stock-live: light-dark(#16a34a, #4ade80);
 }
 
 .fuyu-stock.is-green-up,
 .fuyu-stock-chip.is-green-up {
-  --fuyu-stock-up: light-dark(#1f9a55, #3ccf7f);
-  --fuyu-stock-down: light-dark(#d4363f, #ff6b72);
-  --fuyu-stock-up-bg: light-dark(#dcf3e5, #1d3b2a);
-  --fuyu-stock-down-bg: light-dark(#fbe3e4, #4a2328);
+  --fuyu-stock-up: light-dark(#159652, #38d382);
+  --fuyu-stock-down: light-dark(#d93842, #ff6b72);
+  --fuyu-stock-up-bg: light-dark(#e5f7ed, #163425);
+  --fuyu-stock-down-bg: light-dark(#fdebec, #3c1c21);
+  --fuyu-stock-up-bd: light-dark(#b7e8cd, #24573c);
+  --fuyu-stock-down-bd: light-dark(#f6c5c8, #6b2b33);
 }
 
 .fuyu-stock {
@@ -23,52 +28,6 @@
   font-family: var(--fuyu-plugin-font);
   font-size: 13px;
   color: var(--fuyu-plugin-text);
-}
-
-.fuyu-stock__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-}
-
-.fuyu-stock__note {
-  margin: 0;
-  font-size: 12px;
-  color: var(--fuyu-plugin-text-secondary);
-}
-
-.fuyu-stock__go,
-.fuyu-stock__refresh {
-  flex: none;
-  padding: 4px 12px;
-  border: none;
-  border-radius: var(--fuyu-plugin-radius);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.fuyu-stock__go {
-  background: var(--fuyu-plugin-accent);
-  color: var(--fuyu-plugin-on-accent);
-}
-
-.fuyu-stock__refresh {
-  background: var(--fuyu-plugin-surface);
-  color: var(--fuyu-plugin-text);
-}
-
-.fuyu-stock__refresh:hover:not(:disabled) {
-  background: var(--fuyu-plugin-surface-hover);
-}
-
-.fuyu-stock__refresh:disabled {
-  cursor: default;
-  color: var(--fuyu-plugin-text-muted);
 }
 
 .fuyu-stock__toolbar {
@@ -92,6 +51,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .fuyu-stock__dot {
@@ -103,104 +63,313 @@
 }
 
 .fuyu-stock__status.is-live .fuyu-stock__dot {
-  background: var(--fuyu-plugin-accent);
+  background: var(--fuyu-stock-live);
 }
 
 .fuyu-stock__status.is-offline .fuyu-stock__dot {
   background: var(--fuyu-plugin-warning);
 }
 
-.fuyu-stock__list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.fuyu-stock__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+.fuyu-stock__tally {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: var(--fuyu-plugin-radius);
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 999px;
   background: var(--fuyu-plugin-surface);
+  border: 1px solid var(--fuyu-plugin-border);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.fuyu-stock__who {
+.fuyu-stock__tally-up {
+  color: var(--fuyu-stock-up);
+}
+
+.fuyu-stock__tally-down {
+  color: var(--fuyu-stock-down);
+}
+
+.fuyu-stock__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fuyu-stock__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  cursor: pointer;
+}
+
+.fuyu-stock__icon-btn:hover:not(:disabled) {
+  border-color: var(--fuyu-plugin-border);
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-stock__icon-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.fuyu-stock__sample {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--fuyu-plugin-accent) 30%, var(--fuyu-plugin-border));
+  border-radius: var(--fuyu-plugin-radius);
+  background: color-mix(in srgb, var(--fuyu-plugin-accent) 10%, var(--fuyu-plugin-surface));
+  font-size: 11.5px;
 }
 
-.fuyu-stock__name,
-.fuyu-stock__code {
+.fuyu-stock__sample-text {
+  color: var(--fuyu-plugin-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.fuyu-stock__sample-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-on-accent);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fuyu-stock__list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 292px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.fuyu-stock__row {
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px 7px 8px;
+  border: 1px solid color-mix(in srgb, var(--fuyu-plugin-border) 65%, transparent);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-stock__row:hover {
+  background: var(--fuyu-plugin-surface-hover);
+  border-color: var(--fuyu-plugin-border);
+}
+
+.fuyu-stock__accent {
+  width: 3px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--fuyu-plugin-border);
+}
+
+.fuyu-stock__row.is-up .fuyu-stock__accent {
+  background: var(--fuyu-stock-up);
+}
+
+.fuyu-stock__row.is-down .fuyu-stock__accent {
+  background: var(--fuyu-stock-down);
+}
+
+.fuyu-stock__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .fuyu-stock__name {
+  font-size: 13px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-stock__sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fuyu-stock__mkt {
+  flex-shrink: 0;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text-muted);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 15px;
 }
 
 .fuyu-stock__code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 11px;
   color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .fuyu-stock__price {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  gap: 1px;
   font-variant-numeric: tabular-nums;
+}
+
+.fuyu-stock__num {
+  font-size: 13.5px;
+  font-weight: 600;
 }
 
 .fuyu-stock__change {
   font-size: 11px;
+  opacity: 0.88;
 }
 
 .fuyu-stock__pill {
-  min-width: 64px;
-  padding: 3px 6px;
+  min-width: 68px;
+  padding: 4px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
   border-radius: var(--fuyu-plugin-radius);
   background: var(--fuyu-plugin-surface-hover);
   color: var(--fuyu-plugin-text-secondary);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   text-align: right;
 }
 
 .fuyu-stock__none {
-  grid-column: 2 / 4;
+  grid-column: 3 / 5;
   font-size: 12px;
   color: var(--fuyu-plugin-text-muted);
 }
 
 .fuyu-stock__row.is-up .fuyu-stock__change,
-.fuyu-stock__row.is-up .fuyu-stock__price {
+.fuyu-stock__row.is-up .fuyu-stock__num {
   color: var(--fuyu-stock-up);
 }
 
 .fuyu-stock__row.is-down .fuyu-stock__change,
-.fuyu-stock__row.is-down .fuyu-stock__price {
+.fuyu-stock__row.is-down .fuyu-stock__num {
   color: var(--fuyu-stock-down);
 }
 
 .fuyu-stock__row.is-up .fuyu-stock__pill {
+  border-color: var(--fuyu-stock-up-bd);
   background: var(--fuyu-stock-up-bg);
   color: var(--fuyu-stock-up);
 }
 
 .fuyu-stock__row.is-down .fuyu-stock__pill {
+  border-color: var(--fuyu-stock-down-bd);
   background: var(--fuyu-stock-down-bg);
   color: var(--fuyu-stock-down);
 }
 
+.fuyu-stock__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 18px 14px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-stock__empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--fuyu-plugin-accent) 14%, var(--fuyu-plugin-surface));
+  color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-stock__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.fuyu-stock__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-stock__go,
+.fuyu-stock__secondary {
+  flex: none;
+  padding: 5px 12px;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fuyu-stock__go {
+  border: none;
+  background: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-on-accent);
+  font-weight: 500;
+}
+
+.fuyu-stock__secondary {
+  border: 1px solid var(--fuyu-plugin-border);
+  background: transparent;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-stock__secondary:hover {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
 .fuyu-stock__foot {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: 11px;
   color: var(--fuyu-plugin-text-muted);
 }
@@ -216,8 +385,7 @@
 }
 
 .fuyu-stock-chip__name {
-  min-width: 3em;
-  max-width: 6em;
+  max-width: 5.5em;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -228,7 +396,7 @@
 }
 
 .fuyu-stock-chip__pct {
-  min-width: 4.2em;
+  font-weight: 600;
   text-align: right;
 }
 
@@ -240,4 +408,8 @@
 .fuyu-stock-chip.is-down .fuyu-stock-chip__pct,
 .fuyu-stock-chip.is-down svg {
   color: var(--fuyu-stock-down);
+}
+
+.island__notch-wing .fuyu-stock-chip__price {
+  display: none;
 }

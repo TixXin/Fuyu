@@ -7,6 +7,7 @@ import {
   DEFAULT_SETTINGS,
   MAX_REPOS,
   METHODS,
+  SAMPLE_REPOS,
   SOFT_REFRESH_MS,
   TOPICS,
   effectiveMinutes,
@@ -42,7 +43,7 @@ interface CachedRepo {
 function loadSettings(dir: string): IssuesSettings {
   try {
     const file = join(dir, CONFIG_FILE);
-    if (!existsSync(file)) return { ...DEFAULT_SETTINGS };
+    if (!existsSync(file)) return { ...DEFAULT_SETTINGS, repos: [...SAMPLE_REPOS], sample: true };
     return normalizeSettings(JSON.parse(readFileSync(file, "utf8")));
   } catch {
     return { ...DEFAULT_SETTINGS };
@@ -79,6 +80,10 @@ export function apply(ctx: Context) {
   let running: Promise<IssuesState> | null = null;
   let lastRefresh = 0;
   let stopTimer: (() => Promise<void>) | null = null;
+  let disposed = false;
+  (ctx as unknown as { on?: (event: string, fn: () => void) => void }).on?.("dispose", () => {
+    disposed = true;
+  });
 
   const rateExhausted = (): boolean => Boolean(rate && rate.remaining <= 0 && rate.resetUnix * 1000 > Date.now());
   const cacheKey = (repo: string) => repo.toLowerCase();
@@ -99,7 +104,14 @@ export function apply(ctx: Context) {
     at: Date.now(),
   });
 
-  const publish = () => ctx.clients.publish(TOPICS.state, snapshot());
+  const publish = () => {
+    if (disposed) return;
+    try {
+      ctx.clients.publish(TOPICS.state, snapshot());
+    } catch {
+      return;
+    }
+  };
 
   const reportRepos = () => reportSetup(ctx, { needed: settings.repos.length === 0, hint: SETUP_HINT });
 
@@ -256,8 +268,9 @@ export function apply(ctx: Context) {
   ctx.clients.handle(METHODS.addRepo, async (params?: { repo?: unknown }): Promise<AddRepoResult> => {
     const parsed = typeof params?.repo === "string" ? parseRepo(params.repo) : null;
     if (!parsed) return { ok: false, reason: "format" };
-    if (settings.repos.some((repo) => sameRepo(repo, parsed))) return { ok: false, reason: "duplicate" };
-    if (settings.repos.length >= MAX_REPOS) return { ok: false, reason: "full" };
+    const baseRepos = settings.sample ? [] : settings.repos;
+    if (baseRepos.some((repo) => sameRepo(repo, parsed))) return { ok: false, reason: "duplicate" };
+    if (baseRepos.length >= MAX_REPOS) return { ok: false, reason: "full" };
     let info;
     try {
       info = await fetchRepoInfo(parsed);
@@ -269,8 +282,8 @@ export function apply(ctx: Context) {
     if (isRateLimited(info.status, rate)) return { ok: false, reason: "rate" };
     if (info.status !== 200) return { ok: false, reason: "failed", message: info.errorMessage ?? `HTTP ${info.status}` };
     const repo = info.fullName && parseRepo(info.fullName) ? info.fullName : parsed;
-    if (settings.repos.some((item) => sameRepo(item, repo))) return { ok: false, reason: "duplicate" };
-    settings = { ...settings, repos: [...settings.repos, repo] };
+    if (baseRepos.some((item) => sameRepo(item, repo))) return { ok: false, reason: "duplicate" };
+    settings = { ...settings, repos: [...baseRepos, repo], sample: false };
     persist();
     syncSchedule();
     publish();
@@ -283,12 +296,19 @@ export function apply(ctx: Context) {
 
   ctx.clients.handle(METHODS.removeRepo, async (params?: { repo?: unknown }) => {
     const target = typeof params?.repo === "string" ? params.repo : "";
-    settings = { ...settings, repos: settings.repos.filter((repo) => repo !== target) };
+    settings = { ...settings, repos: settings.repos.filter((repo) => repo !== target), sample: false };
     cache.delete(cacheKey(target));
     persist();
     syncSchedule();
     publish();
     return snapshot();
+  });
+
+  ctx.clients.handle(METHODS.restoreSample, async () => {
+    settings = { ...settings, repos: [...SAMPLE_REPOS], sample: true };
+    persist();
+    syncSchedule();
+    return refreshAll();
   });
 
   ctx.clients.handle(METHODS.refresh, async (params?: { soft?: unknown }) => refreshAll(params?.soft === true));

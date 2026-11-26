@@ -1,5 +1,15 @@
 # 更新记录 · Changelog
 
+## 1.1.0
+
+- 首次安装自带一组示例自选股（上证指数、贵州茅台、腾讯控股、苹果、英伟达），装完即可看行情；列表为空时也支持一键载入示例。
+- 岛页顶部增加快捷设置入口，示例模式下顶部展示「去自定义」横条，一键直达设置修改自选股。
+- 重新设计岛页 UI：增加涨跌计数摘要、市场标签（SH / SZ / HK / US）、左侧涨跌指示条与更清晰的涨跌幅徽章，超长列表支持滚动。
+
+- Fresh installs start with a sample watchlist (SSE Composite, Moutai, Tencent, Apple, NVIDIA); empty state also offers one-click sample restore.
+- Added a quick settings button in the island header plus a "Customize" sample bar that jumps straight to settings.
+- Redesigned the island UI with an up/down tally, market tags (SH / SZ / HK / US), left trend accent bars, sharper percentage pills, and scrollable overflow.
+
 ## 1.0.0
 
 第一版。

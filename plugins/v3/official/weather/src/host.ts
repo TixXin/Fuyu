@@ -2,7 +2,7 @@ import { join } from "node:path";
 import type { Context, HttpFetch, PluginSetupState } from "@fuyu/plugin-base";
 import { messagesV1 } from "@fuyu/plugin-services";
 import { EXTREME_QUIET_MS, extremeDecision } from "./alerts.ts";
-import { MAX_CITIES, configFromStored, normalizeConfig, type SavedCity, type WeatherConfig } from "./config.ts";
+import { MAX_CITIES, initialConfig, normalizeConfig, sampleCityFor, type SavedCity, type WeatherConfig } from "./config.ts";
 import { clockOfIso, convertForecastUnits, formatClock, formatWind, systemUses12Hour, uses12Hour } from "./format.ts";
 import { searchPlacesMulti } from "./geocoding.ts";
 import { currentLocale } from "./locale.ts";
@@ -56,11 +56,15 @@ export function apply(ctx: Context) {
   const messages = ctx.services.get(messagesV1);
   const fetcher = resolveFetcher(ctx);
 
-  let config = configFromStored(readJson<unknown>(join(ctx.dataDir, CONFIG_FILE)));
+  let config = initialConfig(readJson<unknown>(join(ctx.dataDir, CONFIG_FILE)), currentLocale() === "zh-CN");
   const store = loadCacheStore(readJson<unknown>(join(ctx.dataDir, CACHE_FILE)));
   let loading = false;
   let problem: WeatherProblem | null = null;
   let stopTimer: (() => Promise<void>) | null = null;
+  let disposed = false;
+  (ctx as unknown as { on?: (event: string, fn: () => void) => void }).on?.("dispose", () => {
+    disposed = true;
+  });
 
   const primaryCity = (): SavedCity | null => config.cities[0] ?? null;
   const activeCity = (): SavedCity | null =>
@@ -92,7 +96,14 @@ export function apply(ctx: Context) {
     };
   };
 
-  const publish = () => ctx.clients.publish(TOPICS.state, snapshot());
+  const publish = () => {
+    if (disposed) return;
+    try {
+      ctx.clients.publish(TOPICS.state, snapshot());
+    } catch {
+      return;
+    }
+  };
   const saveConfigFile = () => writeJson(ctx.dataDir, CONFIG_FILE, config);
   const saveCacheFile = () => writeJson(ctx.dataDir, CACHE_FILE, store);
 
@@ -164,7 +175,7 @@ export function apply(ctx: Context) {
     const oldId = city.id;
     const nextCities = config.cities.map((item) => (item.id === oldId ? upgraded : item));
     const nextActive = config.activeCityId === oldId ? upgraded.id : config.activeCityId;
-    config = normalizeConfig({ cities: nextCities, activeCityId: nextActive }, config);
+    config = normalizeConfig({ cities: nextCities, activeCityId: nextActive, sample: config.sample }, config);
     if (oldId !== upgraded.id && store.entries[oldId] && !store.entries[upgraded.id]) {
       store.entries[upgraded.id] = store.entries[oldId];
       delete store.entries[oldId];
@@ -304,14 +315,15 @@ export function apply(ctx: Context) {
   async function addCity(place: WeatherPlace | undefined): Promise<WeatherState> {
     if (!place || typeof place.latitude !== "number" || typeof place.longitude !== "number") return snapshot();
     const entry = placeToSaved(place);
-    const existing = config.cities.find((item) => item.id === entry.id);
+    const baseCities = config.sample ? [] : config.cities;
+    const existing = baseCities.find((item) => item.id === entry.id);
     if (existing) {
-      config = normalizeConfig({ activeCityId: existing.id }, config);
+      config = normalizeConfig({ activeCityId: existing.id, sample: false }, config);
       saveConfigFile();
       return updateCity(existing, false);
     }
-    if (config.cities.length >= MAX_CITIES) return snapshot();
-    config = normalizeConfig({ cities: [...config.cities, entry], activeCityId: entry.id }, config);
+    if (baseCities.length >= MAX_CITIES) return snapshot();
+    config = normalizeConfig({ cities: [...baseCities, entry], activeCityId: entry.id, sample: false }, config);
     saveConfigFile();
     reportCity();
     syncSchedule();
@@ -366,6 +378,15 @@ export function apply(ctx: Context) {
     return updateCity(active, true);
   }
 
+  async function restoreSample(): Promise<WeatherState> {
+    const city = sampleCityFor(currentLocale() === "zh-CN");
+    config = normalizeConfig({ cities: [city], activeCityId: city.id, sample: true }, config);
+    saveConfigFile();
+    reportCity();
+    syncSchedule();
+    return updateCity(city, true);
+  }
+
   ctx.clients.handle(METHODS.getState, async () => snapshot());
   ctx.clients.handle(METHODS.setConfig, async (params?: Partial<WeatherConfig>) => setConfig(params));
   ctx.clients.handle(METHODS.refresh, async () => refreshAll());
@@ -376,6 +397,7 @@ export function apply(ctx: Context) {
   ctx.clients.handle(METHODS.removeCity, async (params?: { id?: string }) => removeCity(params?.id));
   ctx.clients.handle(METHODS.setPrimaryCity, async (params?: { id?: string }) => setPrimaryCity(params?.id));
   ctx.clients.handle(METHODS.selectCity, async (params?: { id?: string }) => selectCity(params?.id));
+  ctx.clients.handle(METHODS.restoreSample, async () => restoreSample());
 
   ctx.commands.register("refresh", () => refreshAll(), {
     title: { "zh-CN": "立即刷新天气", en: "Refresh weather now" },

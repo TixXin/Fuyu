@@ -1,4 +1,4 @@
-import type { FileHit, SearchResult } from "../src/model.ts";
+import { DEFAULT_SETTINGS, type FileHit, type FileSearchState, type SearchResult } from "../src/model.ts";
 
 const QUERY = "季度报告";
 
@@ -14,6 +14,15 @@ const files: [name: string, folder: string][] = [
 
 const hits: FileHit[] = files.map(([name, folder]) => ({ path: `${folder}\\${name}`, name, folder }));
 
+const state: FileSearchState = {
+  settings: DEFAULT_SETTINGS,
+  backend: "everything",
+  recent: hits.slice(0, 5),
+  lastQuery: QUERY,
+  homeDir: "",
+  at: Date.parse("2026-11-26T10:24:00"),
+};
+
 const result: SearchResult = {
   query: QUERY,
   status: "ok",
@@ -27,6 +36,7 @@ const result: SearchResult = {
 export default {
   host: {
     calls: {
+      getState: state,
       lastQuery: QUERY,
       search: result,
     },

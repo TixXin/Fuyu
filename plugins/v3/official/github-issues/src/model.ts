@@ -2,6 +2,7 @@ export type SortKey = "updated" | "created" | "comments";
 
 export interface IssuesSettings {
   repos: string[];
+  sample?: boolean;
   perRepo: number;
   sort: SortKey;
   labels: string;
@@ -56,6 +57,8 @@ export const FETCH_PAGE = 50;
 export const FILTER_THRESHOLD = 10;
 export const SOFT_REFRESH_MS = 60_000;
 
+export const SAMPLE_REPOS: readonly string[] = ["TixXin/fuyu"];
+
 export const DEFAULT_SETTINGS: IssuesSettings = {
   repos: [],
   perRepo: 10,
@@ -76,6 +79,7 @@ export const METHODS = {
   setSettings: "setSettings",
   addRepo: "addRepo",
   removeRepo: "removeRepo",
+  restoreSample: "restoreSample",
   refresh: "refresh",
 } as const;
 
@@ -146,8 +150,10 @@ export function normalizeSettings(raw: unknown, base: IssuesSettings = DEFAULT_S
   let repos = base.repos;
   if (Array.isArray(src.repos)) repos = normalizeRepos(src.repos);
   else if (typeof src.reposText === "string") repos = parseReposText(src.reposText);
+  const sample = repos.length > 0 && flag(src.sample, Boolean(base.sample));
   return {
     repos,
+    ...(sample ? { sample: true } : {}),
     perRepo: pick(src.perRepo, PER_REPO_OPTIONS, base.perRepo as (typeof PER_REPO_OPTIONS)[number]),
     sort: pick(src.sort, SORT_OPTIONS, base.sort),
     labels: "labels" in src ? normalizeLabels(src.labels) : base.labels,

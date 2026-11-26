@@ -194,7 +194,7 @@ test("countdown host: backgrounds are fetched on demand, not broadcast; full lis
   assert.throws(() => call(METHODS.add, { title: "One too many", date: "2027-01-01" }), /At most/);
 });
 
-test("countdown setup: a fresh install needs a date, and stops needing one once a date is there", () => {
+test("countdown setup: a fresh install seeds sample dates, and deleting all asks for a date", () => {
   const dataDir = join(scratch, "setup");
   mkdirSync(dataDir, { recursive: true });
   const { ctx, call } = fakeContext(dataDir, []);
@@ -202,10 +202,19 @@ test("countdown setup: a fresh install needs a date, and stops needing one once 
   ctx.settings = { setup: async (state) => void reports.push(state) };
   apply(ctx);
 
-  assert.equal(reports.at(-1)?.needed, true, "no dates on start");
+  const initial = call(METHODS.snapshot);
+  assert.equal(initial.sample, true, "fresh install starts with sample dates");
+  assert.ok(initial.items.length >= 2);
+  assert.equal(reports.at(-1)?.needed, false, "sample dates satisfy initial display");
+
+  for (const entry of [...initial.items]) {
+    call(METHODS.remove, { id: entry.id });
+  }
+  assert.equal(reports.at(-1).needed, true, "removing all dates asks for one");
   assert.equal(Boolean(reports.at(-1).hint["zh-CN"] && reports.at(-1).hint.en), true);
 
   const added = call(METHODS.add, { title: "Trip", date: "2026-12-01" });
+  assert.equal(added.sample, false);
   assert.equal(reports.at(-1).needed, false, "a date was added");
 
   call(METHODS.remove, { id: added.items[0].id });
@@ -243,6 +252,7 @@ test("countdown lunar support: solar/lunar conversion, yearly lunar repeat, anni
 
   const dataDir = join(scratch, "lunar-host");
   mkdirSync(dataDir, { recursive: true });
+  writeFileSync(join(dataDir, "countdown.json"), JSON.stringify({ items: [] }));
   const { ctx, call } = fakeContext(dataDir, []);
   apply(ctx);
   const added = call(METHODS.add, {
@@ -266,7 +276,7 @@ test("countdown lunar support: solar/lunar conversion, yearly lunar repeat, anni
 test("countdown manifest: Day counter in English, same id, check passes", async () => {
   const manifest = JSON.parse(readFileSync(join(PLUGIN_DIR, "package.json"), "utf8"));
   assert.equal(manifest.name, "@fuyu/countdown");
-  assert.equal(manifest.version, "1.2.0");
+  assert.equal(manifest.version, "1.3.0");
   assert.equal(manifest.fuyu.displayName.en, "Day counter");
   assert.equal(manifest.fuyu.displayName["zh-CN"], "倒数日");
   assert.equal(manifest.description, manifest.fuyu.description.en);

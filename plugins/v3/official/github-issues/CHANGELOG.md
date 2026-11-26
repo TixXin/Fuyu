@@ -1,5 +1,13 @@
 # 更新记录 · Changelog
 
+## 1.2.0
+
+- 首次安装默认关注示例仓库（`TixXin/fuyu`），装完即看真实 issue 列表；添加第一个自定义仓库时自动替换示例，清空后支持一键恢复示例。
+- 重新设计岛页 UI：顶栏改用紧凑的刷新与快捷设置图标按钮，示例模式提供「更换仓库」横条；每条 issue 增加状态点、PR 语义标签与更清晰的评论数徽章。
+
+- Fresh installs start with a sample repository (`TixXin/fuyu`); adding your first repository replaces it automatically, and the empty state offers one-click sample restore.
+- Redesigned the island UI with compact Refresh and quick Settings icon buttons, a "Change repo" banner for sample mode, status dots, PR badges, and cleaner comment pills.
+
 ## 1.1.0
 
 中英文都叫 GitHub Issues；仓库在设置里按列表管理，岛上每行只留标题、编号、更新时间和评论数。

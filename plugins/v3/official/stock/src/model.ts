@@ -12,6 +12,7 @@ export interface StockItem {
 
 export interface StockSettings {
   stocks: StockItem[];
+  sample: boolean;
   refreshSeconds: number;
   colorScheme: ColorScheme;
   showInBar: boolean;
@@ -49,8 +50,17 @@ export const BAR_SECONDS_OPTIONS = [3, 5, 8, 10] as const;
 export const MAX_STOCKS = 20;
 export const SOFT_REFRESH_MS = 10_000;
 
+export const SAMPLE_STOCKS: readonly StockItem[] = [
+  { id: "1.000001", code: "000001", name: "上证指数", kind: "指数" },
+  { id: "1.600519", code: "600519", name: "贵州茅台", kind: "沪A" },
+  { id: "116.00700", code: "00700", name: "腾讯控股", kind: "港股" },
+  { id: "105.AAPL", code: "AAPL", name: "苹果", kind: "美股" },
+  { id: "105.NVDA", code: "NVDA", name: "英伟达", kind: "美股" },
+];
+
 export const DEFAULT_SETTINGS: StockSettings = {
   stocks: [],
+  sample: false,
   refreshSeconds: 30,
   colorScheme: "redUp",
   showInBar: true,
@@ -67,6 +77,7 @@ export const METHODS = {
   addStock: "addStock",
   removeStock: "removeStock",
   moveStock: "moveStock",
+  restoreSample: "restoreSample",
   refresh: "refresh",
 } as const;
 
@@ -121,6 +132,7 @@ export function normalizeSettings(raw: unknown, base: StockSettings = DEFAULT_SE
   }
   return {
     stocks,
+    sample: stocks.length > 0 && flag(src.sample, base.sample),
     refreshSeconds: pick(src.refreshSeconds, REFRESH_OPTIONS, base.refreshSeconds as (typeof REFRESH_OPTIONS)[number]),
     colorScheme: pick(src.colorScheme, ["redUp", "greenUp"] as const, base.colorScheme),
     showInBar: flag(src.showInBar, base.showInBar),
@@ -129,6 +141,22 @@ export function normalizeSettings(raw: unknown, base: StockSettings = DEFAULT_SE
     barPrice: flag(src.barPrice, base.barPrice),
     refreshOnOpen: flag(src.refreshOnOpen, base.refreshOnOpen),
   };
+}
+
+export function initialSettings(raw: unknown): StockSettings {
+  if (raw && typeof raw === "object" && Array.isArray((raw as Record<string, unknown>).stocks)) {
+    return normalizeSettings(raw);
+  }
+  const base = normalizeSettings(raw);
+  return { ...base, stocks: SAMPLE_STOCKS.map((stock) => ({ ...stock })), sample: true };
+}
+
+export function marketBadge(stock: StockItem): string {
+  const market = marketOf(stock.id);
+  if (market === "cn") return cnExchange(stock.id).toUpperCase();
+  if (market === "hk") return "HK";
+  if (market === "us") return "US";
+  return stock.kind.slice(0, 4).toUpperCase() || "MKT";
 }
 
 export function moveItem<T>(list: readonly T[], from: number, to: number): T[] {

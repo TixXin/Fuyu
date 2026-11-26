@@ -5,8 +5,10 @@ import { isSessionTime, looksLikeHoliday, nextOpenAt, watchedMarkets } from "./m
 import {
   MAX_STOCKS,
   METHODS,
+  SAMPLE_STOCKS,
   SOFT_REFRESH_MS,
   TOPICS,
+  initialSettings,
   isQuoteId,
   marketOf,
   moveItem,
@@ -79,7 +81,7 @@ export function apply(ctx: Context) {
     return httpFetch ? httpFetch(input, init) : fetch(input, init);
   };
 
-  let settings: StockSettings = normalizeSettings(readJson(join(ctx.dataDir, CONFIG_FILE)));
+  let settings: StockSettings = initialSettings(readJson(join(ctx.dataDir, CONFIG_FILE)));
   const quotes = loadCache(readJson(join(ctx.dataDir, CACHE_FILE)));
   let source: SourceId | null = null;
   let updatedAt: number | null = null;
@@ -88,6 +90,10 @@ export function apply(ctx: Context) {
   let nextAt: number | null = null;
   let running: Promise<StockState> | null = null;
   let stopTimer: (() => Promise<void>) | null = null;
+  let disposed = false;
+  (ctx as unknown as { on?: (event: string, fn: () => void) => void }).on?.("dispose", () => {
+    disposed = true;
+  });
 
   const quotesOf = (market: Market) => settings.stocks.filter((stock) => marketOf(stock.id) === market).map((stock) => quotes.get(stock.id));
 
@@ -118,7 +124,14 @@ export function apply(ctx: Context) {
     return { settings, quotes: shown, status: feed(at).status, source, updatedAt, nextAt, loading, at };
   };
 
-  const publish = () => ctx.clients.publish(TOPICS.state, snapshot());
+  const publish = () => {
+    if (disposed) return;
+    try {
+      ctx.clients.publish(TOPICS.state, snapshot());
+    } catch {
+      return;
+    }
+  };
 
   const persist = () => {
     writeJson(ctx.dataDir, CONFIG_FILE, settings);
@@ -131,13 +144,18 @@ export function apply(ctx: Context) {
       stopTimer = null;
     }
     nextAt = null;
+    if (disposed) return;
     const { delay } = feed(Date.now());
     if (delay === null) return;
     nextAt = Date.now() + delay;
-    stopTimer = ctx.setTimeout(() => {
+    try {
+      stopTimer = ctx.setTimeout(() => {
+        stopTimer = null;
+        void refresh();
+      }, delay);
+    } catch {
       stopTimer = null;
-      void refresh();
-    }, delay);
+    }
   }
 
   async function runRefresh(): Promise<StockState> {
@@ -202,14 +220,14 @@ export function apply(ctx: Context) {
     if (!stock) return { ok: false, reason: "invalid" };
     if (settings.stocks.some((item) => item.id === stock.id)) return { ok: false, reason: "duplicate" };
     if (settings.stocks.length >= MAX_STOCKS) return { ok: false, reason: "full" };
-    settings = { ...settings, stocks: [...settings.stocks, stock] };
+    settings = { ...settings, stocks: [...settings.stocks, stock], sample: false };
     persist();
     void refresh();
     return { ok: true, stock };
   });
 
   ctx.clients.handle(METHODS.removeStock, async (params?: { id?: unknown }) => {
-    settings = { ...settings, stocks: settings.stocks.filter((stock) => stock.id !== params?.id) };
+    settings = { ...settings, stocks: settings.stocks.filter((stock) => stock.id !== params?.id), sample: false };
     quotes.delete(String(params?.id));
     persist();
     schedule();
@@ -221,11 +239,17 @@ export function apply(ctx: Context) {
     const from = Number(params?.from);
     const to = Number(params?.to);
     if (Number.isInteger(from) && Number.isInteger(to)) {
-      settings = { ...settings, stocks: moveItem(settings.stocks, from, to) };
+      settings = { ...settings, stocks: moveItem(settings.stocks, from, to), sample: false };
       persist();
       publish();
     }
     return snapshot();
+  });
+
+  ctx.clients.handle(METHODS.restoreSample, async () => {
+    settings = { ...settings, stocks: SAMPLE_STOCKS.map((stock) => ({ ...stock })), sample: true };
+    persist();
+    return refresh();
   });
 
   ctx.clients.handle(METHODS.refresh, async (params?: { soft?: unknown }) => refresh(params?.soft === true));

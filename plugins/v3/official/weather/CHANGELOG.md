@@ -1,5 +1,13 @@
 # 更新记录 · Changelog
 
+## 1.5.0
+
+- 首次安装自带示例城市（中文为杭州，英文为旧金山），装完即看天气；在设置里添加第一个城市时自动替换示例城市，清空后支持一键恢复示例。
+- 岛页顶部新增快捷设置入口，并在示例城市模式下显示「更换城市」快捷横条，一键直达设置管理城市。
+
+- Fresh installs start with a sample city (Hangzhou in Chinese, San Francisco in English); adding your first city replaces the sample automatically, and the empty state can restore the sample in one click.
+- Added a quick settings button in the island header and a "Change city" banner while viewing the sample city.
+
 ## 1.4.0
 
 多免费数据源切换与自动故障切换，补齐中国县区地名搜索并修复设置页输入卡死。

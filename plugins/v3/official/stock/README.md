@@ -12,7 +12,7 @@
 
 ## 怎么用
 
-1. 打开设置里的自选股，在搜索框里输入代码（`600519`、`00700`、`AAPL`）、名称（「茅台」「腾讯」）或拼音首字母（`gzmt`），点「搜索」，在结果里点「添加」。支持 A 股、港股、美股、指数和 ETF，最多 20 只。
+1. 首次安装自带一组示例自选股，展开岛即可直接查看行情；点击页面右上角设置按钮或顶部「去自定义」横条，即可在设置里按代码（`600519`、`00700`、`AAPL`）、名称或拼音首字母搜索并管理自选股（支持 A 股、港股、美股、指数和 ETF，最多 20 只）。
 2. 用每行右边的箭头调整顺序：收起条按这个顺序轮流显示，「只显示第一只」时显示排第一的。
 3. 展开岛切到「自选股」页看完整列表，想马上更新就点「刷新」。插件还带一个命令「立即刷新行情」，可以在「设置 → 插件」的插件详情里给它设快捷键。
 
@@ -59,7 +59,7 @@ Your stock watchlist on the island: A-share, Hong Kong and US quotes take turns 
 
 ### How to use it
 
-1. Open Stocks in the settings and search by code (`600519`, `00700`, `AAPL`), name or pinyin initials (`gzmt`), then click Add next to a result. A-shares, Hong Kong and US stocks, indexes and ETFs are supported, up to 20.
+1. Fresh installs start with a sample watchlist so quotes show up right away. Click the settings icon in the header or the "Customize" banner to search by code (`600519`, `00700`, `AAPL`), name or pinyin initials and manage up to 20 A-share, Hong Kong and US stocks, indexes and ETFs.
 2. Use the arrows on each row to reorder: the collapsed bar goes through them in this order, and "First one only" shows the top one.
 3. Expand the island and open the Stocks page for the full list; click Refresh to update right away. The plugin also has a "Refresh quotes now" command; give it a shortcut in the plugin's details under Settings → Plugins.
 

@@ -11,9 +11,17 @@
 
 ## 怎么用
 
-1. 按 `Ctrl+Alt+F`，输入文件名的一部分，结果随输入出来（最多列 50 个）。
-2. 用 ↑ ↓ 选择，Enter 打开文件；Ctrl+Enter（macOS 上 ⌘+Enter）或者点右边的文件夹按钮，打开它所在的文件夹并选中它。打开后岛会收起。
-3. Esc 清空搜索。再次打开时保留上次的搜索词并全选，直接打字就能换。
+1. 按 `Ctrl+Alt+F` 打开「文件搜索」页：输入前会直接列出桌面、下载与文档中最近修改的文件，也可以点上方 **PDF / 文档 / 图片 / 笔记 / 表格** 快捷筛选胶囊直接检索。
+2. 输入文件名的一部分，结果随输入出现（默认最多 50 个，可在设置调整）；用 ↑ ↓ 选择，Enter 打开文件，Ctrl+Enter（macOS 上 ⌘+Enter）或右边文件夹按钮打开所在文件夹并选中。
+3. Esc 清空搜索。点搜索框右侧的设置按钮可直达本插件设置。
+
+## 设置
+
+- **Spotlight 搜索范围**（仅 macOS）：用户目录（默认）/ 桌面与文档 / 全盘。
+- **结果数量上限**：20 / 50（默认）/ 100。
+- **输入前显示最近文件**：默认开，展示桌面、下载与文档中最近修改的文件。
+- **重新打开时保留上次搜索词**：默认开。
+- **打开文件后自动收起悬浮岛**：默认开。
 
 ## Windows：要装 Everything
 
@@ -55,9 +63,17 @@ Press a shortcut and search every file on your computer by name: Everything on W
 
 ### How to use it
 
-1. Press `Ctrl+Alt+F` and type part of a file name; results appear as you type (up to 50).
-2. Use ↑ ↓ to pick one and Enter to open it. Ctrl+Enter (⌘+Enter on macOS) or the folder button on the right opens the folder that holds it, with the file selected. The island collapses afterwards.
-3. Esc clears the search. Next time the page opens it keeps your last search, selected, so typing replaces it.
+1. Press `Ctrl+Alt+F` to open "File search": before typing, it shows recently modified files from Desktop, Downloads and Documents, plus one-click filter chips (**PDF / Docs / Images / Notes / Sheets**).
+2. Type part of a file name; results appear as you type (up to 50 by default, configurable). Use ↑ ↓ to select, Enter to open, Ctrl+Enter (⌘+Enter on macOS) or the folder button to reveal in folder.
+3. Esc clears the search. Click the settings icon beside the search box to open plugin settings.
+
+### Settings
+
+- **Spotlight scope** (macOS only): Home folder (default) / Desktop & Docs / Whole Mac.
+- **Max results**: 20 / 50 (default) / 100.
+- **Show recent files before typing**: on by default.
+- **Remember the last search**: on by default.
+- **Collapse the island after opening a file**: on by default.
 
 ### Windows: needs Everything
 

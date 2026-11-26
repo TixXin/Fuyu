@@ -135,9 +135,9 @@ test("E66.9 rain alert: lead time, quiet hours, cool-down", () => {
   assert.deepEqual(rainDecision(raining, config, at(14)), { kind: "raining" });
 });
 
-test("E66.9 weather host: packed 1.4.0 runs in startHost with v1 config migration and refresh command", async () => {
+test("E66.9 weather host: packed 1.5.0 runs in startHost with v1 config migration and refresh command", async () => {
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });
-  assert.equal(packed.manifest.version, "1.4.0");
+  assert.equal(packed.manifest.version, "1.5.0");
   assert.deepEqual(packed.manifest.fuyu.commands.map((item) => item.id), ["refresh"]);
   assert.ok(packed.manifest.fuyu.slots.includes("island.widget/v1"));
   assert.ok(packed.manifest.fuyu.network.includes("air-quality-api.open-meteo.com"));
@@ -207,10 +207,11 @@ test("weather host: tolerates older Fuyu without ctx.settings or ctx.http", asyn
   const reports = [];
   const { ctx, call } = fakeContext("setup", { setup: async (state) => void reports.push(state) });
   apply(ctx);
-  assert.deepEqual(reports, [{ needed: true, hint: { "zh-CN": "选一个城市", en: "Pick a city" } }]);
+  assert.equal(reports.at(-1).needed, false, "fresh install starts with a sample city");
 
   const set = await call("setConfig", { city: "杭州" });
   assert.equal(set.config.city, "杭州");
+  assert.equal(Boolean(set.config.sample), false);
   assert.equal(reports.at(-1).needed, false, "with a city nothing is missing");
 
   await call("setConfig", { city: "" });

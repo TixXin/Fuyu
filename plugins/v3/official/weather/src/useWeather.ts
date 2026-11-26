@@ -90,6 +90,7 @@ export function useWeather(ctx: Context) {
   const removeCity = useCallback((id: string) => callState(METHODS.removeCity, { id }), [callState]);
   const setPrimaryCity = useCallback((id: string) => callState(METHODS.setPrimaryCity, { id }), [callState]);
   const selectCity = useCallback((id: string) => callState(METHODS.selectCity, { id }), [callState]);
+  const restoreSample = useCallback(() => callState(METHODS.restoreSample), [callState]);
 
   return {
     state,
@@ -101,5 +102,6 @@ export function useWeather(ctx: Context) {
     removeCity,
     setPrimaryCity,
     selectCity,
+    restoreSample,
   };
 }
