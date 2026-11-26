@@ -82,6 +82,21 @@
   - [x] **第 4 步：GIF**（[C41.11.4](/docs/tasks/0-archive/C/C41.11.4.md)，2026-11-14；录屏模式里按 `G` 切换；MP4 照常编码到临时文件，编码线程每 1/15 秒挑一帧交给 GIF 线程，GIF 线程从显卡读回内存、交给 gifski（它自己缩到 960 宽），队列满了丢帧；结束后删掉临时 MP4。实测 1920×1080 录 3 秒：960×540、32 帧）：另一路低帧率（默认 15 fps）、限宽的帧拷回内存交给 gifski 的编码线程。
   - [x] **第 5 步：设置和文档**（[C41.11.5](/docs/tasks/0-archive/C/C41.11.5.md)，2026-11-14；设置存在 `fuyu-screenshot-settings.record`，截图窗口在结束录屏选区时用请求头带给原生侧）：帧率、画质、声音、默认格式、快捷键；功能说明、契约、platforms.md。
 
+### 第四版（[C150](/docs/tasks/0-archive/C/C150.md)）
+
+- [x] **独占全屏截屏回退 WGC**（[C150.1](/docs/tasks/0-archive/C/C150.1.md)）：前台独占全屏或 GDI 截出纯黑（`screenshot/blank.rs`）时改走 WGC 取帧（`win32/graphics_capture.rs` `grab_screen`）。
+- [x] **冻结画面首帧直达与提速**（[C150.2](/docs/tasks/0-archive/C/C150.2.md)）：Windows 改走 WebView2 `PostSharedBufferToScript` 共享内存直传，省去 21–33 MB 自定义协议 IPC 流复制（旧驱动或失败时自动回退原 IPC `Response`）；Rust 侧 `session::open` 并发抓屏、建窗与枚举窗口（抓完即唤醒 `CAPTURED`，等抓屏完成才显示选区窗口）；Mac `ScreenCaptureKit` 零拷贝读取 `CGDataProvider` + 对齐 `u32` BGRA→RGBA（4K 9.22 ms → 2.38 ms）；前端打包剔除开发期全量翻译、`main.tsx` 顶层预取会话与帧数据并用 `useLayoutEffect` 首轮同步绘制画布。Mac 4K（3840×2160）release 离线包真实选区窗口从原先无抓屏 300.5 ms 降至 131.7–150.5 ms（空载 131.7–151.7 ms）。
+- [x] **已画标注选中编辑**（[C150.3](/docs/tasks/0-archive/C/C150.3.md)）：不选工具时点击已有标注选中，支持拖动移动、四角及端点调尺寸、工具栏改颜色与粗细、双击文字再编辑、`Delete` 删除及撤销/重做。
+- [x] **贴图增强**（[C150.4](/docs/tasks/0-archive/C/C150.4.md)）：贴图窗口支持就地标注、本机文字识别（`O`）、90° 旋转（`1`/`2`）、水平/垂直翻转（`3`/`4`）、缩成小方块（双击/`M`）、退出时保存并在下次启动恢复（`screenshot-pins/`）。
+- [x] **模糊、直线与聚光灯工具**（[C150.5](/docs/tasks/0-archive/C/C150.5.md)）：工具栏新增模糊（`B`）、直线（`L` + `Shift` 吸附 45°）、多区域聚光灯（`S`）。
+- [x] **延时截图**（[C150.6](/docs/tasks/0-archive/C/C150.6.md)）：支持 3 / 5 / 10 秒延时后冻结屏幕，岛上展示可取消倒计时，托盘/岛剪刀右键及快捷键可触发。
+- [x] **二维码识别**（[C150.7](/docs/tasks/0-archive/C/C150.7.md)）：选区后本机 `rqrr` 解码二维码，有结果时在工具栏列出文本与可打开的网页链接。
+- [x] **单窗口透明背景与阴影导出**（[C150.8](/docs/tasks/0-archive/C/C150.8.md)）：单击选中窗口时可勾选导出透明背景 + 圆角阴影 PNG，支持复制、保存和贴图（Windows 按窗口抓取后叠加柔和双层阴影，Mac 走 ScreenCaptureKit 单窗口抓取）。
+- [x] **截图历史按图内文字搜索**（[C150.9](/docs/tasks/0-archive/C/C150.9.md)）：后台本机 OCR 写入 `.words.json`，岛上截图历史页支持关键词过滤并高亮缩略图上的命中位置。
+- [x] **发给 Agent 附带指令与来源**（[C150.10](/docs/tasks/0-archive/C/C150.10.md)）：卡片发给 Agent 时可写指令并自动附上截图时的前台进程名、窗口标题和浏览器网址（可在设置开关）。
+- [x] **放进今日笔记与建成待办**（[C150.11](/docs/tasks/0-archive/C/C150.11.md)）：`todos` 内置宿主注册 `screenshotActions` 动作，从截图卡片和历史卡片直接写入今日笔记或带图新建待办。
+- [x] **官方图床示例插件**（[C150.12](/docs/tasks/0-archive/C/C150.12.md)）：`plugins/v3/official/image-host` 通过 `ctx.screenshotActions.register` 对接 S3 兼容对象存储上传并复制链接，并将来源上下文公开进插件文档。
+
 ## 不做
 
 - 上传图床：ShareX 已经做得很好，浮屿的用户更需要的是发给 Agent 和文件中转。
@@ -95,7 +110,6 @@
 ## 风险
 
 - **混合 DPI 和多显示器**最容易出错，第 1 步就要在真的两块不同缩放的屏上测，不能只在一块屏上看。
-- **选区窗口显示的速度**：常驻隐藏的 WebView2 显示一张 4K 截图要多久，第 1 步量一下；超过约 150ms 就改成原生端先画一层冻结图。
-  - 2026-11-13 实测（3072×1728，一块屏）：抓屏 release 约 45–90 ms；把 2100 万字节的画面经 IPC 传进页面再 `putImageData` 要 260–380 ms（debug），原来要画完才显示窗口，按下快捷键后明显要等。改成收到会话就显示窗口（压暗层、提示、辅助线先出来，冻结图还没到时透出的就是同一刻的真实屏幕），画面随后补上；取色、放大镜和带标注的完成要等画面画好。显示前的等待从 260–380 ms 降到 20–40 ms。`CAPTUREBLT` 去掉与否量不出稳定差别，保留。
+- **选区窗口显示的速度**：WebView2 显示一张 4K 截图的时间最初实测（3072×1728）仅自定义协议 IPC 传 2100 万字节 + `putImageData` 就要 260–380 ms（debug），后来先在 D124 改成不常驻隐藏选区窗口以回收 50–80 MB 空闲内存，再在 2026-11（[C150.2](/docs/tasks/0-archive/C/C150.2.md)）把抓屏/建窗/窗口枚举改成并行、Mac 改零拷贝 `CGDataProvider` + `u32` BGRA→RGBA、Windows 改 WebView2 `PostSharedBufferToScript` 共享内存直传、前端入口去掉全量字典包并在 `main.tsx` 秒起预取后用 `useLayoutEffect` 首轮绘制画布：Mac release 4K 选区窗口实测从无抓屏 300.5 ms 降到 131.7–150.5 ms（含放大镜就绪）。
 - **独占全屏的游戏**截不到或截出黑屏（GDI 和 DXGI 都可能），第一版只保证普通窗口和无边框全屏。2026-11 起（C150.1）：前台是 D3D 独占全屏时先用录屏的 WGC 管线（`win32/graphics_capture.rs` 的 `grab_screen`）取一帧，GDI 截出整块纯黑时也再用 WGC 取一帧（判断在 `screenshot/blank.rs`），普通桌面仍只走 GDI。
 - **隐私**：截图里常有密码和聊天记录。只存本机、自动清理，发给 Agent 前用户要明确点一下。
