@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-26",
+  "updatedAt": "2026-11-27",
   "groups": [
     {
       "id": "wechat-users",
       "platform": "wechat",
       "name": { "zh-CN": "浮屿用户交流群", "en": "Fuyu users" },
       "qr": "wechat-group.png",
-      "expiresAt": "2026-12-02"
+      "expiresAt": "2026-12-03"
     },
     {
       "id": "qq-users",
