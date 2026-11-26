@@ -42,7 +42,7 @@ src-tauri/src/
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/
 ├── system_levels/           # 音量、亮度变化提示：后台线程读默认输出的音量和静音、屏幕亮度（win32/brightness.rs 的 WMI、win32/monitor_ddc.rs 的 DDC/CI，macos/brightness.rs），变化时发 system-level-changed 事件；命令 get_system_levels / set_system_volume / set_system_brightness 给面板的音量亮度组件
 ├── system_widgets/          # 面板的系统组件：命令 get_system_stats（CPU 占用、内存、网速、电池；CPU 和网速是和上一次调用的差，stats.rs 是纯计算）、launch_quick_app（内置四项 files、terminal、calculator、settings，launch.rs）、quick_app_info / launch_quick_app_path（用户自己加的应用，只认存在的 .exe / .lnk 或 .app 绝对路径，apps.rs）；读数在 win32/、macos/ 的 system_stats.rs
-├── device_events/           # 设备提示：后台线程列出在用的耳机和蓝牙音频输出（win32/audio_outputs.rs）、读蓝牙电量（win32/devnode.rs）和电源（win32/power.rs），变化时发 device-alert 事件；判断规则在 tracker.rs
+├── device_events/           # 设备提示：后台线程列出在用的耳机和蓝牙音频输出（win32/audio_outputs.rs）、读蓝牙电量（win32/devnode.rs）和电源（win32/power.rs）、罗技接收器后面键鼠的电量（logitech/，经 hidapi 发 HID++，两个平台共用），变化时发 device-alert 事件；判断规则在 tracker.rs
 ├── device_use/              # 摄像头、麦克风正在被哪些程序使用（读注册表 CapabilityAccessManager\ConsentStore），打开系统隐私设置；Mac 上整个模块换成 device_use/macos.rs
 ├── mail/                    # 邮箱（命令名仍为 *_qq_mail）：附件（attachments.rs）、命令、每个邮箱一个后台服务（accounts.rs）及其崩溃后重启（supervisor.rs）、IMAP 会话、正文与内嵌图片解析、凭据
 ├── qq_notifications/        # QQ 通知监听；repair-qq-notification-registration.ps1 编入二进制，也可手动运行

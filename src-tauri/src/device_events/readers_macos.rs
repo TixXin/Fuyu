@@ -150,7 +150,9 @@ pub(super) fn read_peripherals() -> Vec<Peripheral> {
         let extra = access_readings(&readings, bluetooth_access::classic_batteries(), ble_battery::ble_batteries());
         readings.extend(extra);
     }
-    merge_peripherals(bluetooth::connected_devices(), readings)
+    let mut found = merge_peripherals(bluetooth::connected_devices(), readings);
+    found.extend(super::logitech::read_peripherals());
+    found
 }
 
 pub(super) fn power_source() -> (Option<bool>, Option<u8>) {
