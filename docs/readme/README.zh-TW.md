@@ -193,10 +193,12 @@ pnpm tauri build    # 打包安裝程式
 
 ## 使用者交流群組
 
-使用上有問題、有想法，或者只是想聊聊，歡迎加入 [Discord 社群](https://discord.gg/azu5aZFuRY) 或掃描 QR Code 加入微信群組：
+使用上有問題、有想法，或者只是想聊聊，歡迎加入 [Discord 社群](https://discord.gg/azu5aZFuRY)、[QQ 群組（610594458）](https://qm.qq.com/q/EDhCUUcPse) 或掃描 QR Code 加入微信群組 / QQ 群組：
 
 <p align="center">
-  <img src="../assets/readme/wechat-group.png" alt="浮嶼使用者交流群組的微信 QR Code" width="220">
+  <img src="../assets/readme/wechat-group.png" alt="浮嶼使用者交流群組的微信 QR Code" height="220">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="../assets/readme/qq-group.png" alt="Fuyu-浮嶼交流群的 QQ 群組 QR Code（群號 610594458）" height="220">
 </p>
 
 ## 參與貢獻

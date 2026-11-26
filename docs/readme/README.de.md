@@ -194,10 +194,12 @@ Technik: Tauri 2, React 19 + TypeScript und Rust. Versionen und Updates in der A
 
 ## Community
 
-Fragen, Ideen oder einfach Lust zu plaudern? Tritt unserem [Discord-Server](https://discord.gg/azu5aZFuRY) bei oder scanne den Code, um unserer WeChat-Nutzergruppe beizutreten (überwiegend auf Chinesisch):
+Fragen, Ideen oder einfach Lust zu plaudern? Tritt unserem [Discord-Server](https://discord.gg/azu5aZFuRY) oder unserer [QQ-Gruppe (610594458)](https://qm.qq.com/q/EDhCUUcPse) bei, oder scanne die Codes für unsere WeChat- / QQ-Nutzergruppen (überwiegend auf Chinesisch):
 
 <p align="center">
-  <img src="../assets/readme/wechat-group.png" alt="QR-Code der WeChat-Nutzergruppe von Fuyu" width="220">
+  <img src="../assets/readme/wechat-group.png" alt="QR-Code der WeChat-Nutzergruppe von Fuyu" height="220">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="../assets/readme/qq-group.png" alt="QR-Code der QQ-Nutzergruppe von Fuyu (610594458)" height="220">
 </p>
 
 ## Mitmachen

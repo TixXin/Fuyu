@@ -196,10 +196,12 @@ Built with Tauri 2, React 19 + TypeScript and Rust. Releases and in-app updates 
 
 ## Community
 
-Questions, ideas, or just want to chat? Join our [Discord server](https://discord.gg/azu5aZFuRY), or scan to join our WeChat user group (mostly in Chinese):
+Questions, ideas, or just want to chat? Join our [Discord server](https://discord.gg/azu5aZFuRY), [QQ group (610594458)](https://qm.qq.com/q/EDhCUUcPse), or scan to join our WeChat / QQ user groups (mostly in Chinese):
 
 <p align="center">
-  <img src="../assets/readme/wechat-group.png" alt="QR code of the Fuyu WeChat user group" width="220">
+  <img src="../assets/readme/wechat-group.png" alt="QR code of the Fuyu WeChat user group" height="220">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="../assets/readme/qq-group.png" alt="QR code of the Fuyu QQ user group (610594458)" height="220">
 </p>
 
 ## Contributing
