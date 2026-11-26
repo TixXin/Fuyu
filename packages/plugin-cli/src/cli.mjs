@@ -9,7 +9,7 @@ import { BuildError, formatIssue } from "./errors.mjs";
 import { icon } from "./icon.mjs";
 import { searchGlyphs } from "./icon/glyphs.mjs";
 import { KEY_ENV, generateSigningKey, loadSigningKey } from "./keys.mjs";
-import { runMcp } from "./mcp.mjs";
+import { runMcp } from "./app/mcp.mjs";
 import { pack } from "./pack.mjs";
 import { reviewSources } from "./review.mjs";
 import { preview } from "./preview.mjs";
