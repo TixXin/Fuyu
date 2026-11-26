@@ -47,6 +47,12 @@
 
 **用量**：没有接口。每条记录的 `providerData.rawUsage.credit` 是单次消耗的积分，剩余额度要用户自己填 [11]。用量环不做。
 
+**套餐与剩余额度**（2026-11-25 追加，B75，#853；本机 WorkBuddy AI 桌面版实测，国内版按同一份代码推断，未实测）：
+
+- **套餐类型有本地明文**：`<配置目录>/storage/skeleton/account-snapshot.json`，结构 `{"primary": {"version": 1, "uid", "nickname", "type": "personal" | "enterprise" | "ioa", "editionType", "isPro", "isAdmin", "savedAt"}}`，不含凭据。WorkBuddy 自己只认 4 KB 以内、`savedAt` 30 天内的快照。`editionType` 在客户端里的取值是 `free`（体验版，旧数据可能是 `experience`）、`pro_trial`、`pro`、`youth`、`advanced`、`flagship`、`buddyonevip`、`ultimate`、`exclusive`；本机体验版账号是 `free`、`isPro: false`。
+- **剩余额度只有联网接口**：个人账号 `POST /billing/meter/get-user-resource-summary`（返回 `Packages[]` 的 `PackageCode`、`CycleTotalCapacity`、`CycleRemainCapacity`、`CycleUsedCapacity`，以及 `SubscriptionPackageCode`、`SubscriptionPackageName`、`IsPaidUser`；客户端把各包相加得「剩余 / 总额」），明细在 `get-user-resource-paid-packages` / `get-user-resource-free-packages`；企业账号 `POST /v2/billing/meter/get-enterprise-user-usage`（`limit_num`、`used_num`，`-1` 为不限）。结果只在内存里，磁盘上没有缓存（搜过配置目录全部 JSON、`workbuddy.db` 与 `local_storage/`）。本地 `workbuddy.db` 的 `session_usage.credit_json` 只记每个会话消耗的积分；`wb-product-config.json` 里的 `credits: "x1.33"` 是模型倍率，不是余额。
+- **请求要登录令牌**：`Authorization: Bearer <token>`，令牌由 WorkBuddy 自己的凭据保护加密存放（配置目录的 `keyblob` 加一把对称密钥，旧版用 Electron `safeStorage`），并被它的文件保护列为受保护路径。浮屿不破解别家刻意加密的凭据，所以只显示套餐名和本地已用积分，不画剩余额度圆环；剩余额度请用户在 WorkBuddy「账户 → 积分」里看。WorkBuddy 以后把额度写进本地文件或开放本地接口时再接圆环。
+
 ### Antigravity
 
 **三个产品**：App、IDE、CLI（替代了 Gemini CLI）。数据目录分别是 `~/.gemini/antigravity`、`~/.gemini/antigravity-ide`、`~/.gemini/antigravity-cli` [1]。

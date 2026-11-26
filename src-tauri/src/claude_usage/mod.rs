@@ -9,6 +9,7 @@ mod plan;
 mod plan_config;
 mod source;
 mod workbuddy;
+mod workbuddy_plan;
 #[cfg(test)]
 mod tests;
 
@@ -100,6 +101,7 @@ pub struct HoverUsage {
     pub available: Option<bool>,
     pub credits: Option<WorkbuddyCredits>,
     pub wallets: Vec<DshWallet>,
+    pub plan: Option<String>,
     pub error: Option<UsageError>,
 }
 

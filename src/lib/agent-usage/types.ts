@@ -54,5 +54,6 @@ export type HoverUsage = {
   available: boolean | null;
   credits: WorkbuddyCredits | null;
   wallets: DshWallet[];
+  plan?: string | null;
   error: AgentUsageError | null;
 };

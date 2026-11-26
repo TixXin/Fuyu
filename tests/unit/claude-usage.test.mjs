@@ -269,6 +269,25 @@ test("WorkBuddy and DSH format hover-only credits and wallet balances, and expla
   );
   assert.deepEqual(texts(wbNoLogs), ["WorkBuddy", zhCN.workbuddyErrors.noSessions]);
 
+  const wbTrial = hoverProviderLines(
+    {
+      provider: "workbuddy",
+      updatedAt: null,
+      source: "workbuddy",
+      available: null,
+      credits: null,
+      wallets: [],
+      plan: "free",
+      error: { kind: "noSessions", message: "" },
+    },
+    wb,
+    NOW,
+    zhCN,
+  );
+  assert.deepEqual(texts(wbTrial), ["WorkBuddy", "套餐：体验版", zhCN.workbuddyErrors.noSessions, zhCN.workbuddyQuotaHint]);
+  assert.ok(!texts(wbTrial).some((line) => line.includes("%")));
+  assert.equal(texts(hoverProviderLines({ provider: "workbuddy", updatedAt: null, source: null, available: null, credits: null, wallets: [], plan: "newtier", error: null }, wb, NOW, en))[1], "Plan: newtier");
+
   const dshOk = hoverProviderLines(
     {
       provider: "dsh",

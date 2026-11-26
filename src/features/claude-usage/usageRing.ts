@@ -137,6 +137,7 @@ export function hoverProviderLines(
     return lines;
   }
   if (provider.id === "workbuddy") {
+    if (item.plan) lines.push({ text: text.workbuddyPlan(text.workbuddyPlans[item.plan] ?? item.plan) });
     if (item.credits) {
       lines.push({
         text: text.workbuddyCredits(item.credits.today, item.credits.sevenDay, item.credits.total, item.credits.totalTokens),
@@ -150,6 +151,7 @@ export function hoverProviderLines(
     } else {
       lines.push({ text: text.noUsage.workbuddy, muted: true });
     }
+    if (item.plan) lines.push({ text: text.workbuddyQuotaHint, muted: true });
     return lines;
   }
 

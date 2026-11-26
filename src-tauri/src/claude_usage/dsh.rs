@@ -64,6 +64,7 @@ fn empty(err: Option<UsageError>) -> HoverUsage {
         available: None,
         credits: None,
         wallets: Vec::new(),
+        plan: None,
         error: err,
     }
 }
@@ -336,6 +337,7 @@ pub(super) fn parse_api_balance(text: &str, now: i64) -> Result<HoverUsage, Usag
         available: Some(available),
         credits: None,
         wallets,
+        plan: None,
         error: None,
     })
 }
@@ -386,6 +388,7 @@ pub(super) fn parse_account_summary(text: &str, now: i64) -> Result<HoverUsage, 
         available: Some(available),
         credits: None,
         wallets,
+        plan: None,
         error: None,
     })
 }

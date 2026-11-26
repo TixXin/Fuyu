@@ -43,13 +43,13 @@ export const USAGE_SOURCE_ICONS: Record<AgentUsageSource, string> = { ...Object.
 
 export const PLAN_SOURCES: readonly AgentUsageSource[] = ["glm", "kimi"];
 
-export type CreditFigures = { kind: "credits"; today: number; sevenDay: number } | { kind: "balance"; currency: string; total: string };
+export type CreditFigures = { kind: "credits"; today: number; sevenDay: number; plan?: string | null } | { kind: "balance"; currency: string; total: string };
 
 export type UsageLine = { source: AgentUsageSource; usage: AgentUsage; credit?: undefined } | { source: CreditSource; credit: CreditFigures; usage?: undefined };
 
 export function creditFigures(usage: HoverUsage | undefined): CreditFigures | null {
   if (!usage) return null;
-  if (usage.credits) return { kind: "credits", today: usage.credits.today, sevenDay: usage.credits.sevenDay };
+  if (usage.credits) return { kind: "credits", today: usage.credits.today, sevenDay: usage.credits.sevenDay, ...(usage.plan ? { plan: usage.plan } : {}) };
   const wallet = usage.wallets[0];
   return wallet ? { kind: "balance", currency: wallet.currency, total: wallet.total } : null;
 }
