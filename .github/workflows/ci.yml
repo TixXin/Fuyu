@@ -3,7 +3,15 @@ name: CI
 on:
   push:
     branches: [main, 'try/**']
+    paths-ignore:
+      - docs/assets/community/community.json
+      - docs/assets/community/wechat-group.png
+      - docs/assets/readme/wechat-group.png
   pull_request:
+    paths-ignore:
+      - docs/assets/community/community.json
+      - docs/assets/community/wechat-group.png
+      - docs/assets/readme/wechat-group.png
   merge_group:
 
 # Pull requests and try/ branches (pnpm mq:try) only need their newest push checked. Every commit
