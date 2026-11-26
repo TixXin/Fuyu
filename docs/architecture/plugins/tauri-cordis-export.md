@@ -24,6 +24,18 @@
 - `overrides`：tauri-cordis 里要换成另一份内容的文件（例如默认值），值是浮屿仓库里那份内容的路径。
 - `namesAllowedIn`：允许出现浮屿名字的路径片段（测试夹具）。
 
+## 浮屿专有的部分放在 `src/app/`
+
+基座里只有浮屿才有的概念（岛、设置窗口）放在各包的 `src/app/`，整个目录在 `fuyuOnly` 里，不导出；tauri-cordis 里的 `src/app/` 由 `overrides` 换成 [`scripts/cordis/app/`](../../../scripts/cordis/app/) 下的中性版本（空的扩展列表、空的类型）。通用代码只经这几个文件接到浮屿那层：
+
+| 文件 | 浮屿里是什么 | 通用代码怎么用 |
+|---|---|---|
+| `plugin-base/src/app/host.mjs` | `APP_HOST_EXTENSIONS`：设置窗口（`settingsOpener`）和岛（`islandControl`）两个宿主扩展，以及它们的常量 | `startHost({ extensions })` 的默认值。每个扩展 `{ name, create() }` 造出一个实例：`install(ctx)` 装上注入项，`attach(rpc)`、`attachWindows(windows)` 接 Rust 和窗口，`windowCall(method, params, window, plugin)` 认领窗口调用（返回 `{ value }`，不认领返回 `undefined`），`statusOf(plugin, state)` 往插件状态里加字段，`watch(listener)` 在这些字段变化时通知。实例挂在宿主对象上，键是 `name` |
+| `plugin-base/src/app/client.mjs` | `APP_CLIENT_SERVICES`：窗口里的 `ctx.settings`、`ctx.island` | `createLoader({ appServices })` 的默认值。每项 `{ name, service, options(loaderOptions) }`，装进每个插件的上下文并加进 `inject` |
+| `plugin-base/src/app/*.d.mts` | `AppContext`（`ctx.settings`、`ctx.island` 的类型）、`AppHost`、`AppPluginStatus`、`AppLoaderOptions` | 通用类型 `extends` 它们 |
+
+浮屿专有、只测这一层的测试（`island-control`、`settings-*`、`app-routing`）也列在 `fuyuOnly`。
+
 ## 进度
 
 E79 分几步做，每步一个提交：映射表和脚本 → 浮屿专有的部分（岛、设置窗口）从基座挪出去 → 默认值去掉浮屿名字 → 把 tauri-cordis 的 `replacedByThirdParty` 搬回浮屿 → 在 tauri-cordis 里写入导出结果、补 CI 一致性检查。做完之前 `pnpm cordis check` 会报差异，这是预期的。

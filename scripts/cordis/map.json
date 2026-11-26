@@ -12,7 +12,13 @@
     { "from": "vendor/cordis", "to": "packages/tauri-cordis/vendor/cordis", "paths": ["LICENSE", "core", "fs", "fs-node", "hmr", "include", "loader"] }
   ],
   "skip": ["node_modules", ".DS_Store"],
-  "fuyuOnly": [],
+  "fuyuOnly": [
+    "packages/plugin-base/src/app/",
+    "packages/plugin-base/test/app-routing.test.mjs",
+    "packages/plugin-base/test/island-control.test.mjs",
+    "packages/plugin-base/test/settings-open.test.mjs",
+    "packages/plugin-base/test/settings-setup.test.mjs"
+  ],
   "names": [
     ["@fuyu/plugin-base", "tauri-cordis"],
     ["@fuyu/plugin-manifest", "@tauri-cordis/manifest"],
@@ -35,6 +41,12 @@
       "@cordisjs/fs-node": "fs-node"
     }
   },
-  "overrides": {},
+  "overrides": {
+    "packages/tauri-cordis/src/app/host.mjs": "scripts/cordis/app/plugin-base/host.mjs",
+    "packages/tauri-cordis/src/app/host.d.mts": "scripts/cordis/app/plugin-base/host.d.mts",
+    "packages/tauri-cordis/src/app/client.mjs": "scripts/cordis/app/plugin-base/client.mjs",
+    "packages/tauri-cordis/src/app/client.d.mts": "scripts/cordis/app/plugin-base/client.d.mts",
+    "packages/tauri-cordis/src/app/context.d.mts": "scripts/cordis/app/plugin-base/context.d.mts"
+  },
   "namesAllowedIn": ["/test/fixtures/"]
 }

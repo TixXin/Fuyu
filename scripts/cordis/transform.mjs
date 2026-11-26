@@ -99,7 +99,8 @@ export function brokenImports(files) {
       if (!specifier.startsWith(".") || !/(\.m?js|\/[^./]+)$/.test(specifier)) continue;
       const target = posix.normalize(posix.join(posix.dirname(path), specifier));
       if (/\/(test|tests|examples)\//.test(`/${path}`) && !files.has(target)) continue;
-      if (!files.has(target) && !files.has(`${target}.mjs`) && !files.has(`${target}/index.mjs`)) broken.push({ path, specifier });
+      const candidates = [target, `${target}.mjs`, `${target}/index.mjs`, target.replace(/\.mjs$/, ".d.mts")];
+      if (!candidates.some((candidate) => files.has(candidate))) broken.push({ path, specifier });
     }
   }
   return broken;

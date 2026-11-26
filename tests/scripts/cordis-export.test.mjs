@@ -20,7 +20,7 @@ function withRepo(run) {
   }
 }
 
-const map = { ...loadMap(), fuyuOnly: ["packages/plugin-base/src/host/island.mjs"] };
+const map = { ...loadMap(), fuyuOnly: ["packages/plugin-base/src/host/island.mjs"], overrides: {} };
 
 test("the export lays Fuyu's files out the way tauri-cordis 0.2.0 does", () => {
   withRepo((root) => {
@@ -70,5 +70,14 @@ test("writing the export makes the checkout match it and removes managed files F
     assert.deepEqual(compare(files, cordis, map), { differs: [], missing: [], extra: [] });
     assert.equal(existsSync(path.join(cordis, "packages/market/src/old.mjs")), false);
     assert.equal(readFileSync(path.join(cordis, "packages/market/README.md"), "utf8"), "kept\n");
+  });
+});
+
+test("an override puts tauri-cordis's own copy of a Fuyu-only file in the export, unchanged", () => {
+  withRepo((root) => {
+    put(root, "packages/plugin-base/src/host/island.mjs", 'export const APP = "fuyu";\n');
+    put(root, "neutral/island.mjs", 'export const APP = "@fuyu/plugin-base";\n');
+    const files = exportFiles(root, { ...map, overrides: { "packages/tauri-cordis/src/host/island.mjs": "neutral/island.mjs" } });
+    assert.equal(files.get("packages/tauri-cordis/src/host/island.mjs").toString("utf8"), 'export const APP = "@fuyu/plugin-base";\n');
   });
 });

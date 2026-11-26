@@ -77,7 +77,7 @@ function undeclaredOf(entry, services, clients, commands, network) {
   return listed.length ? Object.fromEntries(listed) : null;
 }
 
-export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, setup } = {}) {
+export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, statusExtra } = {}) {
   const report = usage?.();
   const provided = services?.() ?? [];
   const windows = clients?.() ?? [];
@@ -112,14 +112,14 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, u
       const written = Array.isArray(entry.options.disabledServices) ? entry.options.disabledServices.filter((s) => typeof s === "string") : [];
       const disabledServices = [...new Set([...written, ...replacedServices.map((item) => item.service)])];
       if (disabledServices.length > 0) extra.disabledServices = disabledServices;
-      const pending = setup?.(status.id, status.state);
-      if (pending) extra.setup = pending;
+      const more = statusExtra?.(status.id, status.state);
+      if (more) Object.assign(extra, more);
       return { ...status, ...extra };
     });
 }
 
-export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, setup, subscribe } = {}) {
-  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, setup });
+export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, statusExtra, subscribe } = {}) {
+  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, statusExtra });
   let last = JSON.stringify(read());
   let timer = null;
   const check = () => {

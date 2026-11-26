@@ -6,6 +6,7 @@ export const SETTINGS_OPEN_EVENT = "settings.open";
 export const SETTINGS_OPENER_WINDOW = "island";
 export const SETUP_HINT_MAX = 80;
 const HINT_LOCALES = ["zh-CN", "en"];
+const SETUP_KEPT_STATES = ["loading", "waiting"];
 
 const cleanText = (value) => (typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, SETUP_HINT_MAX) : "");
 
@@ -73,6 +74,20 @@ export class SettingsOpener {
 
   forget(plugin) {
     this.setup(plugin, null);
+  }
+
+  statusOf(plugin, state) {
+    if (state === "running") {
+      const setup = this.setupOf(plugin);
+      return setup ? { setup } : null;
+    }
+    if (!SETUP_KEPT_STATES.includes(state)) this.forget(plugin);
+    return null;
+  }
+
+  windowCall(method, params, window, plugin) {
+    if (method !== "settings.setup") return undefined;
+    return { value: plugin ? this.setup(plugin, { ...params, plugin }) : this.setup(params?.plugin, params) };
   }
 
   watch(listener) {

@@ -54,6 +54,14 @@ function stop(code) {
 
 const rpc = connect({ input: process.stdin, write, onClose: () => stop(0) });
 
+function extensionCall(method, params, window, plugin) {
+  for (const extension of host.extensions) {
+    const handled = extension.windowCall?.(method, params, window, plugin);
+    if (handled) return handled;
+  }
+  return null;
+}
+
 function stray(kind, error) {
   const plugin = host ? blame(host.ctx, error) : null;
   const entry = { at: Date.now(), type: "error", name: plugin ?? "host", plugin, text: `${kind} ${plugin ? `in plugin ${plugin}` : "outside any plugin"}: ${String(error?.stack ?? error)}` };
@@ -120,8 +128,8 @@ try {
           }
           return host.ctx.clients.call(plugin, params?.method, params?.params, window);
         }
-        if (method === "island.open" || method === "island.collapse") return host.islandControl.request(method.slice("island.".length), plugin, params?.page);
-        if (method === "settings.setup") return host.settingsOpener.setup(plugin, { ...params, plugin });
+        const handled = extensionCall(method, params, window, plugin);
+        if (handled) return handled.value;
         if (SERVICE_CALLS.includes(method)) return host.serviceHub.windowCall(method, params, window, plugin);
         throw Object.assign(new Error(`plugin ${plugin} cannot call host method ${method}`), { code: "forbidden" });
       }
@@ -129,10 +137,8 @@ try {
       if (method === "host") return host.info();
       if (method === "bisect") return host.bisect(params?.off);
       if (method === "plugin.call") return host.ctx.clients.call(params?.plugin, params?.method, params?.params, window);
-      if (method === "island.open" || method === "island.collapse") return host.islandControl.request(method.slice("island.".length), params?.plugin, params?.page);
-      if (method === "settings.setup") return host.settingsOpener.setup(params?.plugin, params);
-      if (method === "island.result") return host.islandControl.settle(params, window);
-      if (method === "island.noticeAction") return host.islandControl.noticeAction(params, window);
+      const handled = extensionCall(method, params, window, null);
+      if (handled) return handled.value;
       if (SERVICE_CALLS.includes(method)) return host.serviceHub.windowCall(method, params, window);
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },
@@ -147,8 +153,7 @@ try {
   host.watchServices((services) => windows.publish("services", services));
   host.locale.watch((locale) => windows.publish("locale", { locale }));
   host.serviceHub.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
-  host.settingsOpener.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data, { privilegedOnly: true }) });
-  host.islandControl.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data, { privilegedOnly: true }) });
+  for (const extension of host.extensions) extension.attachWindows?.({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data, { privilegedOnly: true }) });
   host.ctx.clients.onMessage((message) => windows.publish("plugin", message, { plugin: message.plugin }));
   tellRust(host.clients());
   rpc.notify("ready", {

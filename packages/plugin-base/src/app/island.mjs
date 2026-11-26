@@ -98,6 +98,14 @@ export class IslandControl {
     return true;
   }
 
+  windowCall(method, params, window, plugin) {
+    if (method === "island.open" || method === "island.collapse") return { value: this.request(method.slice("island.".length), plugin ?? params?.plugin, params?.page) };
+    if (plugin) return undefined;
+    if (method === "island.result") return { value: this.settle(params, window) };
+    if (method === "island.noticeAction") return { value: this.noticeAction(params, window) };
+    return undefined;
+  }
+
   finish(id, value, error) {
     const call = this.pending.get(id);
     if (!call) return false;
