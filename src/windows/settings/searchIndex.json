@@ -196,13 +196,13 @@
       "page": "theme",
       "zh-CN": {
         "group": "主题",
-        "title": "一键换配色",
-        "description": "前四套同时换掉深色、浅色两套颜色和透明度：默认是装好时的黑色岛屿，配色是浅色时切回深色；另外三套是浅色，配色是深色时切到浅色。磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。后面几套是液态玻璃，只换材质，颜色不变。之后还可以在下面接着调。"
+        "title": "内置主题",
+        "description": "前十二套是风格各异的完整主题，同时调好材质、深浅配色、字体、圆角与透明度（跟随系统时保持自动切换）。后面五套液态玻璃只换材质，颜色与圆角不变。之后还可以在下面继续微调。"
       },
       "en": {
         "group": "Themes",
-        "title": "Color sets",
-        "description": "The first four replace both the dark and light colors and the opacity. Default is the black island you started with; light colors switch back to dark. The other three are light; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. The rest are liquid glass: they change the material and keep your colors. You can keep adjusting below."
+        "title": "Built-in themes",
+        "description": "The first twelve are complete themes with tuned material, dark & light colors, font, corners and opacity (Follow system stays on). The five liquid glass cards change only the material. You can keep adjusting below."
       }
     },
     {

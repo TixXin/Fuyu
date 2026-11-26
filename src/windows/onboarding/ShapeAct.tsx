@@ -26,7 +26,7 @@ export function ShapeAct({
 }) {
   const t = useTranslation();
   const text = t.onboarding.shape;
-  const activeBuiltin = settings.appearanceMode === "classic" ? builtinThemeInUse(settings) : null;
+  const activeBuiltin = builtinThemeInUse(settings);
   const isPixelJelly = settings.jellyfishStyle !== "vector";
 
   const applyTheme = (id: BuiltinThemeId) => {
@@ -86,9 +86,9 @@ export function ShapeAct({
         <button
           type="button"
           role="radio"
-          aria-checked={settings.appearanceMode === "liquidGlass"}
+          aria-checked={settings.appearanceMode === "liquidGlass" && activeBuiltin === null}
           data-theme-preset="liquidGlass"
-          className={settings.appearanceMode === "liquidGlass" ? "shape-act__theme shape-act__theme--active" : "shape-act__theme"}
+          className={settings.appearanceMode === "liquidGlass" && activeBuiltin === null ? "shape-act__theme shape-act__theme--active" : "shape-act__theme"}
           onClick={applyGlass}
         >
           <span className="shape-act__swatch shape-act__swatch--glass">
