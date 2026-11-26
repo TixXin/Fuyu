@@ -10,6 +10,7 @@ import { createBundleInstaller } from "./marketBundles.mjs";
 import { fetchVerifiedIndex } from "./marketIndex.mjs";
 import { createMarketInstaller } from "./marketInstall.mjs";
 import { createMarketMedia } from "./marketMedia.mjs";
+import { readSignedCachedIndex, reconcileOfficialMarketFlags } from "./marketOfficialMigration.mjs";
 import { refreshRevocations } from "./marketRevocations.mjs";
 import { createMarketDownloader } from "./marketSources.mjs";
 import {
@@ -138,6 +139,18 @@ export function createMarketService(options = {}) {
       return snapshot();
     },
 
+    reconcileOfficial: async () => {
+      const state = readState(dataDir);
+      const doc = readSignedCachedIndex(dataDir, trust, nowFn());
+      const migrated = reconcileOfficialMarketFlags({ pluginsDir, doc, trustedAuthors: state.trustedAuthors });
+      if (migrated.length > 0) {
+        await Promise.resolve();
+        if (onConfigChanged) await onConfigChanged();
+        notifyChanged();
+      }
+      return migrated;
+    },
+
     refresh: async (params = {}) => {
       const shouldAutoUpdate = !isObject(params) || params.autoUpdate !== false;
       const state = readState(dataDir);
@@ -153,6 +166,7 @@ export function createMarketService(options = {}) {
       mkdirSync(dataDir, { recursive: true });
       writeFileSync(join(dataDir, INDEX_FILE), indexText, "utf8");
       writeFileSync(join(dataDir, INDEX_SIG_FILE), `${JSON.stringify(indexSig, null, 2)}\n`, "utf8");
+      const migratedOfficial = reconcileOfficialMarketFlags({ pluginsDir, doc: opened.doc, trustedAuthors: state.trustedAuthors });
 
       let nextRevokedDisabled = { ...state.revokedDisabled };
       let disabledCount = 0;
@@ -199,7 +213,7 @@ export function createMarketService(options = {}) {
         lastSource: downloader.last() ?? state.lastSource,
         autoUpdated: mergeAutoUpdated(readState(dataDir).autoUpdated, upgraded, toTimestamp(now)),
       });
-      if ((disabledCount > 0 || upgraded.length > 0) && onConfigChanged) await onConfigChanged();
+      if ((disabledCount > 0 || upgraded.length > 0 || migratedOfficial.length > 0) && onConfigChanged) await onConfigChanged();
       notifyChanged();
       const next = snapshot();
       void media.refreshed(opened.doc, next.plugins);

@@ -11,6 +11,7 @@ export function apply(ctx, options = {}) {
   const safeOptions = typeof options === "object" && options !== null ? options : {};
   const pluginsDir = safeOptions.pluginsDir ?? dirname(dirname(ctx.dataDir));
   const market = provideMarketService(ctx, safeOptions);
+  void market.reconcileOfficial().catch(() => undefined);
   const silentRefresh = () => {
     void market.refresh().catch(() => undefined);
   };

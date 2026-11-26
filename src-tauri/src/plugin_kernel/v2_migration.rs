@@ -408,6 +408,9 @@ pub(crate) fn append_market_entry(text: &str, v3_id: &str, disabled: bool) -> Re
     }
     let eol = if text.contains("\r\n") { "\r\n" } else { "\n" };
     let mut entry_lines = vec![format!("- id: \"{v3_id}\""), "  source: market".to_owned()];
+    if v3_id.starts_with("@fuyu/") {
+        entry_lines.push("  official: true".to_owned());
+    }
     if disabled {
         entry_lines.push("  disabled: true".to_owned());
     }

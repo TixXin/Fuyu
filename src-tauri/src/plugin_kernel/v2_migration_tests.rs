@@ -183,8 +183,8 @@ fn guides_installed_v3_official_packages_into_plugins_yml_preserving_switch() {
     assert!(yml_contains_id(&yml, "@fuyu/pomodoro"));
     assert!(yml_contains_id(&yml, "@fuyu/todo-ring"));
     let normalized = yml.replace("\r\n", "\n");
-    assert!(normalized.contains("- id: \"@fuyu/pomodoro\"\n  source: market\n"));
-    assert!(normalized.contains("- id: \"@fuyu/todo-ring\"\n  source: market\n  disabled: true\n"));
+    assert!(normalized.contains("- id: \"@fuyu/pomodoro\"\n  source: market\n  official: true\n"));
+    assert!(normalized.contains("- id: \"@fuyu/todo-ring\"\n  source: market\n  official: true\n  disabled: true\n"));
 
     let pomo = snapshot.official.iter().find(|p| p.v2_id == "dev.focusd.pomodoro").unwrap();
     assert!(pomo.installed_in_v3);
@@ -228,9 +228,11 @@ fn detects_third_party_folder_plugins_and_dismisses_once_per_target() {
 #[test]
 fn append_market_entry_handles_empty_and_idempotent_inputs() {
     let from_empty = append_market_entry("[]\n", "@fuyu/weather", false).unwrap();
-    assert_eq!(from_empty, "- id: \"@fuyu/weather\"\n  source: market\n");
+    assert_eq!(from_empty, "- id: \"@fuyu/weather\"\n  source: market\n  official: true\n");
     let second = append_market_entry(&from_empty, "@fuyu/weather", false).unwrap();
     assert_eq!(second, from_empty);
+    let third_party = append_market_entry("[]\n", "@someone/clock", false).unwrap();
+    assert_eq!(third_party, "- id: \"@someone/clock\"\n  source: market\n");
 }
 
 #[test]
