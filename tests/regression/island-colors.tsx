@@ -25,7 +25,7 @@ const swatches: Swatch[] = [
     tone,
     background: BUILTIN_THEMES[id][tone].islandBackgroundColor,
     ink: BUILTIN_THEMES[id][tone].inkColor,
-    opacity: BUILTIN_THEMES[id].opacity,
+    opacity: BUILTIN_THEMES[id].glass ? Math.min(BUILTIN_THEMES[id].opacity, BUILTIN_THEMES[id].glass.glassIntensity) : BUILTIN_THEMES[id].opacity,
   }))),
   { id: "custom-dark", label: "custom ink · dark", tone: "dark", background: "#030303", ink: "#ffd9a0", opacity: 100 },
 ];
@@ -43,7 +43,12 @@ function SwatchView({ swatch }: { swatch: Swatch }) {
     width: 220,
   } as CSSProperties;
   return (
-    <div className={isLightIsland(swatch.background) ? "island-light" : undefined} style={style} data-swatch={swatch.id}>
+    <div
+      className={isLightIsland(swatch.background) ? "island-light" : undefined}
+      style={style}
+      data-swatch={swatch.id}
+      data-custom-dark={swatch.tone === "dark" && swatch.ink ? "1" : undefined}
+    >
       <span data-level="1" style={{ color: "var(--text-1)", fontSize: 14 }}>{swatch.label}</span>
       <span data-level="2" style={{ color: "var(--text-2)" }}>周报交给龙虾写 · 还剩 3 件</span>
       <span data-level="3" style={{ color: "var(--text-3)", fontSize: 12 }}>8 分钟后 · 周会</span>
@@ -135,7 +140,7 @@ async function runChecks() {
 
     const custom = document.querySelector<HTMLElement>('[data-swatch="custom-dark"] [data-level="1"]')!;
     check(getComputedStyle(custom).color === "rgba(255, 217, 160, 0.96)", "A custom ink colours the text levels");
-    const auto = document.querySelector<HTMLElement>('[data-swatch="greyWhite-light"]')!;
+    const auto = document.querySelector<HTMLElement>('[data-swatch="default-light"]')!;
     check(getComputedStyle(auto).getPropertyValue("--island-ink-rgb").trim() === "24, 24, 30", "Auto ink stays as before on a light island");
 
     for (const id of BUILTIN_THEME_IDS) {
@@ -144,7 +149,7 @@ async function runChecks() {
     }
     const old = normalizeSettings({ darkBackgroundColor: "#030303", lightBackgroundColor: "#f2f2f5" });
     check(old.darkInkColor === "" && old.lightInkColor === "" && old.inkColor === "", "Settings saved before C33.9 read as auto ink");
-    const system = withBuiltinTheme({ ...DEFAULT_SETTINGS, themeMode: "system" }, "frostedWarm" satisfies BuiltinThemeId);
+    const system = withBuiltinTheme({ ...DEFAULT_SETTINGS, themeMode: "system" }, "warmPaper" satisfies BuiltinThemeId);
     check(system.themeMode === "system", "Following the system stays on");
 
     const probe = document.createElement("div");
@@ -162,7 +167,9 @@ async function runChecks() {
     check(Boolean(fillTransition) && startFill[0] === 0 && midFill[0] > 0 && midFill[0] < 242,
       `Switching palette interpolates the island shell fill smoothly (${startFill[0]} -> ${Math.round(midFill[0])} -> 242)`);
 
-    if (automated) document.querySelector<HTMLElement>('[data-swatch="custom-dark"]')!.hidden = true;
+    if (automated) {
+      for (const node of document.querySelectorAll<HTMLElement>("[data-custom-dark]")) node.hidden = true;
+    }
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

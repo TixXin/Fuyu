@@ -1,0 +1,2070 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>内置主题重做 · 完整风格组合预览（C120 / #887）</title>
+<style>
+  @font-face {
+    font-family: "Fusion Pixel";
+    src: url("../../src/assets/fonts/fusion-pixel-12px-proportional-zh_hans.otf.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+  }
+
+  :root {
+    --ui-font: "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+    --ui-mono: "JetBrains Mono", "SF Mono", "Cascadia Mono", ui-monospace, Consolas, monospace;
+    --page-bg: #0c0d12;
+    --page-surface: #14161e;
+    --page-surface-2: #1b1e29;
+    --page-line: rgba(255, 255, 255, 0.085);
+    --page-line-strong: rgba(255, 255, 255, 0.16);
+    --page-t1: rgba(244, 246, 252, 0.96);
+    --page-t2: rgba(244, 246, 252, 0.72);
+    --page-t3: rgba(244, 246, 252, 0.48);
+    --page-accent: #74d6ff;
+    --ok: #35e985;
+    --warn: #ffd166;
+    --bad: #ff6b7a;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    color-scheme: dark;
+  }
+
+  body.ui-light {
+    --page-bg: #eef1f6;
+    --page-surface: #ffffff;
+    --page-surface-2: #f4f6fa;
+    --page-line: rgba(18, 24, 38, 0.09);
+    --page-line-strong: rgba(18, 24, 38, 0.18);
+    --page-t1: rgba(18, 24, 38, 0.94);
+    --page-t2: rgba(18, 24, 38, 0.7);
+    --page-t3: rgba(18, 24, 38, 0.48);
+    --page-accent: #0a7fd1;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--ui-font);
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--page-t1);
+    background: var(--page-bg);
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 92px;
+  }
+
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 0; background: none; padding: 0; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 9px 18px;
+    background: color-mix(in srgb, var(--page-bg) 86%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--page-line);
+  }
+  .topbar__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 4px;
+  }
+  .topbar__brand h1 {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .topbar__badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--page-accent) 16%, transparent);
+    color: var(--page-accent);
+    white-space: nowrap;
+  }
+  .topbar__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-left: auto;
+  }
+  .ctl {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    color: var(--page-t3);
+  }
+  .seg {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--page-t1) 5%, transparent);
+    border: 1px solid var(--page-line);
+  }
+  .seg button {
+    padding: 2.5px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    color: var(--page-t2);
+    transition: background 140ms var(--ease), color 140ms var(--ease);
+  }
+  .seg button:hover { color: var(--page-t1); }
+  .seg button[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--page-accent) 20%, var(--page-surface));
+    color: var(--page-t1);
+    font-weight: 600;
+  }
+
+  main {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px 22px 48px;
+  }
+
+  .hero {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .hero__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px 18px;
+  }
+  .hero h2 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .hero p {
+    margin: 4px 0 0;
+    color: var(--page-t2);
+    max-width: 920px;
+    font-size: 13.5px;
+  }
+  .warn-banner {
+    display: none;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: #ffd9a0;
+    background: rgba(255, 179, 71, 0.12);
+    border: 1px solid rgba(255, 179, 71, 0.28);
+  }
+  .warn-banner.show { display: block; }
+
+  details.merge-note {
+    background: var(--page-surface);
+    border: 1px solid var(--page-line);
+    border-radius: 14px;
+    padding: 10px 16px;
+  }
+  details.merge-note summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--page-t1);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  details.merge-note summary::-webkit-details-marker { display: none; }
+  details.merge-note summary span.sub {
+    color: var(--page-t3);
+    font-weight: 400;
+    font-size: 12px;
+  }
+  .merge-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 12.5px;
+  }
+  .merge-table th,
+  .merge-table td {
+    text-align: left;
+    padding: 6px 10px;
+    border-top: 1px solid var(--page-line);
+    vertical-align: top;
+  }
+  .merge-table th {
+    color: var(--page-t3);
+    font-weight: 600;
+    border-top: 0;
+  }
+  .merge-table code {
+    font-family: var(--ui-mono);
+    font-size: 11.5px;
+    background: color-mix(in srgb, var(--page-t1) 7%, transparent);
+    padding: 1px 5px;
+    border-radius: 5px;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+    gap: 18px;
+  }
+  @media (max-width: 660px) {
+    .gallery { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--page-surface);
+    border: 1px solid var(--page-line);
+    border-radius: 18px;
+    padding: 14px 16px 16px;
+    transition: border-color 180ms var(--ease), box-shadow 180ms var(--ease);
+  }
+  .card.selected {
+    border-color: color-mix(in srgb, var(--page-accent) 55%, var(--page-line));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--page-accent) 26%, transparent);
+  }
+  .card.hidden { display: none; }
+
+  .card__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px 12px;
+  }
+  .card__id-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+  .pick-btn {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+    border-radius: 7px;
+    border: 1.5px solid var(--page-line-strong);
+    display: grid;
+    place-items: center;
+    color: transparent;
+    background: color-mix(in srgb, var(--page-t1) 3%, transparent);
+    transition: background 140ms var(--ease), border-color 140ms var(--ease), color 140ms var(--ease);
+  }
+  .card.selected .pick-btn {
+    background: var(--page-accent);
+    border-color: var(--page-accent);
+    color: #06202c;
+  }
+  .card__titles {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+  }
+  .card__name-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .card__num {
+    font-family: var(--ui-mono);
+    font-size: 11px;
+    color: var(--page-t3);
+  }
+  .name-input {
+    background: color-mix(in srgb, var(--page-t1) 5%, transparent);
+    border: 1px solid transparent;
+    border-radius: 7px;
+    padding: 2px 7px;
+    font-size: 14.5px;
+    font-weight: 650;
+    width: 108px;
+    color: var(--page-t1);
+    transition: border-color 140ms, background 140ms;
+  }
+  .name-input--en {
+    width: 134px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--page-t2);
+  }
+  .name-input:hover,
+  .name-input:focus {
+    outline: none;
+    background: color-mix(in srgb, var(--page-t1) 8%, transparent);
+    border-color: var(--page-line-strong);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 550;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--page-t1) 7%, transparent);
+    color: var(--page-t2);
+    white-space: nowrap;
+  }
+  .pill--rec {
+    background: rgba(53, 233, 133, 0.14);
+    color: #5ee69c;
+  }
+  body.ui-light .pill--rec {
+    background: rgba(24, 148, 82, 0.12);
+    color: #157943;
+  }
+  .pill--glass {
+    background: color-mix(in srgb, var(--page-accent) 16%, transparent);
+    color: var(--page-accent);
+  }
+  .card__desc {
+    margin: 0;
+    color: var(--page-t2);
+    font-size: 12.5px;
+  }
+  .card__origin {
+    color: var(--page-t3);
+    font-size: 11.5px;
+  }
+
+  .card__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mini-btn {
+    padding: 3px 9px;
+    border-radius: 7px;
+    font-size: 11.5px;
+    color: var(--page-t2);
+    background: color-mix(in srgb, var(--page-t1) 6%, transparent);
+    border: 1px solid var(--page-line);
+    transition: background 140ms, color 140ms;
+  }
+  .mini-btn:hover {
+    background: color-mix(in srgb, var(--page-t1) 11%, transparent);
+    color: var(--page-t1);
+  }
+
+  /* Stage & Wallpapers */
+  .stage-wrap {
+    display: grid;
+    gap: 10px;
+  }
+  .stage-wrap.dual {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: 720px) {
+    .stage-wrap.dual { grid-template-columns: 1fr; }
+  }
+
+  .desk-stage {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid var(--page-line);
+    padding: 0 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-height: 298px;
+    container-type: inline-size;
+    transition: background 240ms var(--ease);
+  }
+  .stage-wrap.only-collapsed .desk-stage {
+    min-height: 86px;
+    padding-bottom: 18px;
+  }
+  .stage-wrap.only-collapsed .island-exp,
+  .stage-wrap.only-collapsed .stage-hint-btn { display: none; }
+
+  /* Wallpapers */
+  .desk-stage[data-wall="split"] {
+    background:
+      radial-gradient(circle at 22% 28%, rgba(88, 128, 255, 0.34), transparent 52%),
+      radial-gradient(circle at 80% 70%, rgba(255, 190, 130, 0.34), transparent 52%),
+      linear-gradient(108deg, #131b2e 0 49.8%, #d7e2f2 50.2% 100%);
+  }
+  .desk-stage[data-wall="dark-aurora"] {
+    background:
+      radial-gradient(50% 70% at 18% 24%, rgba(108, 72, 255, 0.52), transparent 72%),
+      radial-gradient(45% 65% at 78% 20%, rgba(36, 198, 218, 0.45), transparent 70%),
+      radial-gradient(55% 75% at 52% 96%, rgba(255, 108, 162, 0.32), transparent 70%),
+      linear-gradient(155deg, #101526, #090b12);
+  }
+  .desk-stage[data-wall="dark-grid"] {
+    background-color: #161820;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      radial-gradient(60% 70% at 50% 10%, rgba(116, 214, 255, 0.14), transparent 70%);
+    background-size: 22px 22px, 22px 22px, 100% 100%;
+  }
+  .desk-stage[data-wall="light-sky"] {
+    background:
+      radial-gradient(45% 65% at 20% 20%, rgba(132, 200, 255, 0.65), transparent 70%),
+      radial-gradient(45% 65% at 82% 28%, rgba(208, 180, 255, 0.55), transparent 70%),
+      radial-gradient(55% 70% at 50% 95%, rgba(154, 240, 216, 0.55), transparent 72%),
+      linear-gradient(160deg, #e7effa, #d5e2f2);
+  }
+  .desk-stage[data-wall="light-warm"] {
+    background:
+      radial-gradient(45% 65% at 22% 22%, rgba(255, 198, 146, 0.62), transparent 70%),
+      radial-gradient(50% 70% at 80% 70%, rgba(255, 226, 178, 0.68), transparent 70%),
+      linear-gradient(155deg, #f6efe4, #e9dfd0);
+  }
+  .desk-stage[data-wall="pure-black"] { background: #000000; }
+  .desk-stage[data-wall="pure-white"] { background: #ffffff; }
+
+  /* Subtle background desktop window hint behind glass */
+  .desk-mock-win {
+    position: absolute;
+    inset: 22px 14px auto;
+    height: 170px;
+    border-radius: 10px;
+    pointer-events: none;
+    opacity: 0.45;
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .desk-stage[data-wall="pure-black"] .desk-mock-win,
+  .desk-stage[data-wall="pure-white"] .desk-mock-win {
+    display: none;
+  }
+  .desk-mock-win .blk {
+    flex: 1;
+    border-radius: 7px;
+    background: linear-gradient(135deg, rgba(120, 175, 255, 0.32), rgba(255, 140, 190, 0.24));
+  }
+  .desk-mock-win .blk2 {
+    width: 36%;
+    border-radius: 7px;
+    background: linear-gradient(135deg, rgba(90, 235, 180, 0.28), rgba(255, 200, 100, 0.22));
+  }
+
+  .stage-badge {
+    position: absolute;
+    left: 10px;
+    bottom: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.46);
+    backdrop-filter: blur(8px);
+    z-index: 4;
+  }
+  .stage-hint-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.42);
+    backdrop-filter: blur(8px);
+    z-index: 4;
+  }
+  .stage-hint-btn:hover { background: rgba(0, 0, 0, 0.65); }
+
+  /* Authentic Fuyu Island shell in stage */
+  .isl {
+    --corner-shape: squircle;
+    --r: 24px;
+    --r-col: calc(var(--r) * 22 / 30);
+    --fillet: 8px;
+    --fill: #030303;
+    --ink-rgb: 241, 240, 246;
+    --t1: rgba(var(--ink-rgb), 0.96);
+    --t2: rgba(var(--ink-rgb), 0.68);
+    --t3: rgba(var(--ink-rgb), 0.54);
+    --task-color: #ffffff;
+    --pulse: #3ae489;
+    --pulse-bright: 160%;
+    --accent: #74d6ff;
+    --font: var(--ui-font);
+    --fscale: 1;
+    --glass-blur: 24px;
+    --glass-sat: 1.8;
+    --glass-str: 0.3;
+    --glass-rim-w: 1.5px;
+    --glass-noise: 0.03;
+    --glass-blob-scale: 1;
+    --glass-dur: 23s;
+    --c1: #74d6ff;
+    --c2: #a88cff;
+    --c3: #3ae489;
+    --a06: rgba(255, 255, 255, 0.06);
+    --a09: rgba(255, 255, 255, 0.09);
+    --a12: rgba(255, 255, 255, 0.12);
+    --a16: rgba(255, 255, 255, 0.16);
+    --edge-line: rgba(255, 255, 255, 0.09);
+    --agent-run: #3d8bff;
+    --agent-idle: #35e985;
+    --agent-wait: #ff9f43;
+    --light-needs: #ff453a;
+    --light-turn: #ffd60a;
+    --light-done: #8e8e93;
+
+    position: relative;
+    isolation: isolate;
+    color: var(--t1);
+    background: var(--fill);
+    font-family: var(--font);
+    opacity: var(--whole-opacity, 1);
+    box-shadow: inset 0 0 0 1px var(--edge-line), 0 10px 26px rgba(0, 0, 0, 0.28);
+    corner-shape: var(--corner-shape);
+    z-index: 2;
+    transition: transform 340ms var(--ease);
+  }
+  .isl.is-light {
+    --a06: rgba(24, 24, 30, 0.05);
+    --a09: rgba(24, 24, 30, 0.07);
+    --a12: rgba(24, 24, 30, 0.1);
+    --a16: rgba(24, 24, 30, 0.14);
+    --edge-line: rgba(24, 24, 30, 0.1);
+    --agent-idle: #1b7f46;
+    --agent-wait: #b7791f;
+    --light-needs: #c0283f;
+    --light-turn: #9a6700;
+    box-shadow: inset 0 0 0 1px var(--edge-line), 0 10px 24px rgba(18, 24, 38, 0.12);
+  }
+
+  .isl.font-pixel {
+    font-weight: 400;
+    -webkit-font-smoothing: none;
+  }
+
+  .isl__inner-clip {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    corner-shape: inherit;
+    overflow: hidden;
+  }
+
+  /* Concave top fillet ears matching IslandTopEdge.css */
+  .isl__ear {
+    position: absolute;
+    top: 0;
+    width: var(--fillet);
+    height: var(--fillet);
+    pointer-events: none;
+    background: var(--fill);
+  }
+  .isl__ear--l {
+    left: calc(-1 * var(--fillet));
+    -webkit-mask: radial-gradient(circle var(--fillet) at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+    mask: radial-gradient(circle var(--fillet) at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+  }
+  .isl__ear--r {
+    right: calc(-1 * var(--fillet));
+    -webkit-mask: radial-gradient(circle var(--fillet) at 100% 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+    mask: radial-gradient(circle var(--fillet) at 100% 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+  }
+
+  .isl--glass {
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  }
+  .isl--glass.is-light {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 0 0 1px rgba(24, 24, 30, 0.08), 0 10px 24px rgba(18, 24, 38, 0.14);
+  }
+  .isl--glass:not(.is-light) {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 12px 28px rgba(0, 0, 0, 0.34);
+  }
+
+  .isl__glass-flow,
+  .isl__glass-noise,
+  .isl__glass-sheen,
+  .isl__glass-spec,
+  .isl__glass-rim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    corner-shape: inherit;
+  }
+  .isl__glass-flow {
+    overflow: hidden;
+    opacity: calc(0.52 * min(1, var(--glass-str) / 0.65));
+    z-index: 0;
+  }
+  .isl__glass-flow i {
+    position: absolute;
+    width: calc(85% * var(--glass-blob-scale));
+    aspect-ratio: 1;
+    border-radius: 50%;
+    animation: themeBlobA var(--glass-dur) ease-in-out infinite alternate;
+  }
+  .isl__glass-flow i:nth-child(1) {
+    left: -24%; top: -58%;
+    background: radial-gradient(closest-side, var(--c1), transparent);
+  }
+  .isl__glass-flow i:nth-child(2) {
+    left: 34%; top: -38%;
+    background: radial-gradient(closest-side, var(--c2), transparent);
+    animation-name: themeBlobB;
+  }
+  .isl__glass-flow i:nth-child(3) {
+    left: 10%; top: 18%;
+    background: radial-gradient(closest-side, var(--c3), transparent);
+    animation-duration: calc(var(--glass-dur) * 1.2);
+  }
+  .isl--still .isl__glass-flow i { animation-play-state: paused; }
+  @keyframes themeBlobA { to { transform: translate(35%, 24%) scale(1.22); } }
+  @keyframes themeBlobB { to { transform: translate(-38%, 20%) scale(0.86); } }
+
+  .isl__glass-noise {
+    z-index: 1;
+    opacity: var(--glass-noise);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .isl__glass-sheen {
+    z-index: 1;
+    overflow: hidden;
+  }
+  .isl__glass-sheen::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 -160%;
+    width: 260%;
+    background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.22) 45%, transparent 58%);
+    mix-blend-mode: overlay;
+    animation: themeSheen 10s ease-in-out infinite alternate;
+  }
+  @keyframes themeSheen { to { transform: translateX(68%); } }
+
+  .isl__glass-spec {
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 220ms;
+    background: radial-gradient(140px 100px at var(--mx, 50%) var(--my, 15%), rgba(255, 255, 255, 0.28), transparent 72%);
+  }
+  .desk-stage:hover .isl__glass-spec { opacity: 1; }
+  .isl.is-light .isl__glass-spec { mix-blend-mode: soft-light; }
+
+  @property --rim-ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  .isl__glass-rim {
+    z-index: 3;
+    padding: var(--glass-rim-w);
+    background: conic-gradient(from var(--rim-ang), var(--c1), var(--c2), rgba(255, 255, 255, 0.58), var(--c3), var(--c1));
+    opacity: 0.78;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: themeRimSpin 9s linear infinite;
+  }
+  .isl--still .isl__glass-rim { animation-play-state: paused; }
+  @keyframes themeRimSpin { to { --rim-ang: 360deg; } }
+
+  /* Collapsed bar */
+  .island-col {
+    width: min(86cqw, 300px);
+    height: 36px;
+    border-radius: 0 0 var(--r-col) var(--r-col);
+    flex: none;
+  }
+  .island-col__body {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 0 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: calc(12.5px * var(--fscale));
+    font-weight: 600;
+  }
+  .isl.font-pixel .island-col__body { font-weight: 400; }
+  .col-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: none;
+    background: var(--pulse);
+    box-shadow: 0 0 10px var(--pulse);
+    filter: brightness(var(--pulse-bright));
+  }
+  .col-brand {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    border-radius: 3px;
+    display: grid;
+    place-items: center;
+    background: #d97757;
+    color: #fff;
+  }
+  .col-task {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--task-color);
+  }
+  .col-ring {
+    width: 19px;
+    height: 19px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--agent-run) 42%, transparent);
+    color: var(--agent-run);
+    font-size: 10px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Expanded panel */
+  .island-exp {
+    --u: calc(min(94cqw, 520px) / 520);
+    width: calc(520 * var(--u));
+    border-radius: var(--r);
+    flex: none;
+  }
+  .stage-wrap.dual .island-exp {
+    --u: calc(min(96cqw, 360px) / 340);
+    width: calc(340 * var(--u));
+  }
+  .stage-wrap.dual .desk-stage {
+    min-height: 296px;
+    padding: 0 10px 42px;
+  }
+  .island-exp.morph-bounce {
+    animation: cardMorphBounce 440ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes cardMorphBounce {
+    0% { transform: scale(0.94, 0.84); opacity: 0.72; }
+    55% { transform: scale(1.015, 1.02); opacity: 1; }
+    100% { transform: none; }
+  }
+  .island-exp__body {
+    position: relative;
+    z-index: 2;
+    padding: calc(12 * var(--u)) calc(18 * var(--u)) calc(15 * var(--u));
+    display: grid;
+    gap: calc(9 * var(--u));
+    font-size: calc(12 * var(--u) * var(--fscale));
+  }
+  .exp-header {
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    height: calc(30 * var(--u));
+  }
+  .exp-dots {
+    display: flex;
+    align-items: center;
+    gap: calc(7 * var(--u));
+    color: var(--t2);
+  }
+  .exp-dot {
+    width: calc(11 * var(--u));
+    height: calc(11 * var(--u));
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .exp-actions {
+    margin-left: auto;
+    display: flex;
+    gap: calc(6 * var(--u));
+  }
+  .exp-btn {
+    width: calc(26 * var(--u));
+    height: calc(26 * var(--u));
+    border-radius: 50%;
+    background: var(--a09);
+    color: var(--t2);
+    display: grid;
+    place-items: center;
+  }
+  .exp-btn svg {
+    width: calc(12 * var(--u));
+    height: calc(12 * var(--u));
+  }
+  .exp-usage {
+    display: flex;
+    align-items: center;
+    gap: calc(7 * var(--u));
+    color: var(--t3);
+    font-size: calc(11.5 * var(--u) * var(--fscale));
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .exp-usage b { font-weight: 650; }
+  .u-low { color: var(--agent-idle); }
+  .u-mid { color: var(--agent-wait); }
+  .u-sep { width: 1px; height: calc(10 * var(--u)); background: var(--a16); }
+
+  .exp-list { display: grid; gap: calc(4 * var(--u)); }
+  .exp-row {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(9 * var(--u));
+    padding: calc(5 * var(--u)) 0;
+  }
+  .row-dot {
+    width: calc(7 * var(--u));
+    height: calc(7 * var(--u));
+    border-radius: 50%;
+    margin-top: calc(5 * var(--u));
+    flex: none;
+    background: var(--light-done);
+  }
+  .exp-row.needs .row-dot { background: var(--light-needs); box-shadow: 0 0 calc(8 * var(--u)) rgba(255, 69, 58, 0.72); }
+  .exp-row.turn .row-dot { background: var(--light-turn); box-shadow: 0 0 calc(8 * var(--u)) rgba(255, 214, 10, 0.55); }
+  .row-main { min-width: 0; flex: 1; display: grid; gap: calc(3 * var(--u)); }
+  .row-top {
+    display: flex;
+    align-items: center;
+    gap: calc(6 * var(--u));
+    min-width: 0;
+  }
+  .row-title {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--t1);
+    font-size: calc(13.5 * var(--u) * var(--fscale));
+    font-weight: 600;
+  }
+  .isl.font-pixel .row-title { font-weight: 400; }
+  .exp-row.done .row-title { color: var(--t2); }
+  .row-chip {
+    flex: none;
+    padding: calc(1.5 * var(--u)) calc(6 * var(--u));
+    border-radius: calc(5 * var(--u));
+    background: var(--a12);
+    color: var(--t2);
+    font-size: calc(10.5 * var(--u) * var(--fscale));
+  }
+  .row-state {
+    flex: none;
+    font-size: calc(11.5 * var(--u) * var(--fscale));
+    color: var(--t3);
+  }
+  .exp-row.needs .row-state { color: var(--light-needs); }
+  .exp-row.turn .row-state { color: var(--light-turn); }
+  .row-tool {
+    font-family: var(--ui-mono);
+    font-size: calc(12 * var(--u) * var(--fscale));
+    color: var(--t3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .row-tool span { color: var(--agent-run); }
+
+  /* Spec & Contrast Bar */
+  .specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .spec-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    padding: 3px 8px;
+    border-radius: 7px;
+    background: var(--page-surface-2);
+    border: 1px solid var(--page-line);
+    color: var(--page-t2);
+  }
+  .spec-tag b { color: var(--page-t1); font-weight: 600; }
+
+  .swatches-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 14px;
+    padding-top: 8px;
+    border-top: 1px solid var(--page-line);
+    font-size: 11.5px;
+  }
+  .palette-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .tone-swatches {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--page-t3);
+  }
+  .swatch-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(128, 128, 128, 0.35);
+    display: inline-block;
+  }
+  .wcag-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .wcag-pill {
+    font-family: var(--ui-mono);
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(53, 233, 133, 0.12);
+    color: #65e8a2;
+  }
+  body.ui-light .wcag-pill {
+    background: rgba(24, 148, 82, 0.12);
+    color: #137640;
+  }
+  .wcag-pill.warn {
+    background: rgba(255, 209, 102, 0.14);
+    color: var(--warn);
+  }
+  .wcag-pill.bad {
+    background: rgba(255, 107, 122, 0.14);
+    color: var(--bad);
+  }
+
+  /* C119 Settings Grid Preview */
+  .c119-section {
+    margin-top: 34px;
+    background: var(--page-surface);
+    border: 1px solid var(--page-line);
+    border-radius: 18px;
+    padding: 18px 20px;
+  }
+  .c119-section__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 14px;
+  }
+  .c119-section h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 650;
+  }
+  .c119-section p {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: var(--page-t2);
+  }
+  .c119-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  @media (max-width: 780px) {
+    .c119-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .c119-card {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    padding: 8px 8px 10px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--page-t1) 4%, transparent);
+    border: 1px solid var(--page-line);
+  }
+  .c119-art {
+    height: 64px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background: linear-gradient(115deg, #2b4a7a 0 50%, #c9d6e8 50% 100%);
+  }
+  .c119-mini-isl {
+    width: 104px;
+    height: 44px;
+    margin-top: 6px;
+    padding: 7px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+  .c119-mini-isl i { width: 5px; height: 5px; border-radius: 50%; display: block; }
+  .c119-mini-isl b { height: 3px; border-radius: 2px; display: block; }
+  .c119-mini-isl b:last-child { width: 62%; opacity: 0.55; }
+  .c119-label { font-size: 13px; font-weight: 600; padding: 0 4px; }
+  .c119-hint { font-size: 11.5px; color: var(--page-t3); padding: 0 4px; line-height: 1.35; }
+
+  /* Sticky Bottom Decision Bar */
+  .decision-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 10px 22px;
+    background: color-mix(in srgb, var(--page-bg) 90%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--page-line-strong);
+  }
+  .decision-bar__summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    min-width: 0;
+    flex: 1;
+  }
+  .decision-bar__count {
+    font-weight: 650;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .decision-bar__names {
+    font-size: 12px;
+    color: var(--page-t2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .decision-bar__btns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    padding: 6px 14px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    font-weight: 600;
+    background: var(--page-accent);
+    color: #06202c;
+    transition: opacity 140ms;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost {
+    padding: 5px 11px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--page-t2);
+    background: color-mix(in srgb, var(--page-t1) 6%, transparent);
+    border: 1px solid var(--page-line);
+  }
+  .btn-ghost:hover {
+    color: var(--page-t1);
+    background: color-mix(in srgb, var(--page-t1) 11%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .isl__glass-flow i,
+    .isl__glass-sheen::before,
+    .isl__glass-rim { animation: none !important; }
+    .island-exp.morph-bounce { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar__brand">
+    <h1>内置主题重做画廊</h1>
+    <span class="topbar__badge">C120 · #887</span>
+  </div>
+  <div class="topbar__controls">
+    <div class="ctl">
+      <span>壁纸</span>
+      <div class="seg" id="wallSeg">
+        <button type="button" data-wall="split" aria-pressed="true">深浅对半</button>
+        <button type="button" data-wall="dark-aurora">深色极光</button>
+        <button type="button" data-wall="dark-grid">深色网格</button>
+        <button type="button" data-wall="light-sky">浅色晴空</button>
+        <button type="button" data-wall="light-warm">浅色暖桌</button>
+        <button type="button" data-wall="pure-black">纯黑</button>
+        <button type="button" data-wall="pure-white">纯白</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>系统主题</span>
+      <div class="seg" id="toneSeg">
+        <button type="button" data-tone="dual" aria-pressed="true">深浅并排</button>
+        <button type="button" data-tone="rec">各按推荐</button>
+        <button type="button" data-tone="dark">全深色</button>
+        <button type="button" data-tone="light">全浅色</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>形态</span>
+      <div class="seg" id="morphSeg">
+        <button type="button" data-morph="both" aria-pressed="true">折叠 + 展开</button>
+        <button type="button" data-morph="collapsed">只看折叠</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span>筛选</span>
+      <div class="seg" id="filterSeg">
+        <button type="button" data-filter="all" aria-pressed="true">全部 12</button>
+        <button type="button" data-filter="rec">推荐 8</button>
+        <button type="button" data-filter="classic">经典</button>
+        <button type="button" data-filter="glass">液态玻璃</button>
+        <button type="button" data-filter="picked">已勾选</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <div class="seg" id="pageThemeSeg">
+        <button type="button" data-ui="dark" aria-pressed="true">暗背景页</button>
+        <button type="button" data-ui="light">亮背景页</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero__head">
+      <div>
+        <h2>请挑选这批内置主题的套数与名称</h2>
+        <p>每套主题都是独立完整组合，涵盖<strong>材质</strong>（经典 / 液态玻璃与流动/极光/油膜边/扫光/噪点）、<strong>深浅双色 + Ink + 强调色</strong>、<strong>不透明度</strong>、<strong>圆角形状与半径（含顶部圆角）</strong>以及<strong>字体与字号</strong>。所有色值已按 Fuyu 真实层级透明（深色 96%/68%/54%、浅色 94%/70%/56%）在纯黑、纯白与蓝桌面下验过对比度。点击任意卡片左上角勾选、直接修改框内名字，底部自动生成 C119 4 列设置卡片排布与导出清单。</p>
+      </div>
+    </div>
+    <div class="warn-banner" id="squircleWarn">当前浏览器不支持 CSS <code>corner-shape: squircle</code>，卡片里的「苹果超椭圆」将暂以普通圆角渲染；使用 Edge / Chrome 139+（或 Fuyu 真实 WebView2）可查看真实超椭圆曲率。</div>
+    <details class="merge-note">
+      <summary>
+        <span>现有 4 个内置主题 + 市场 5 套旧主题合并去重说明（点开对照）</span>
+        <span class="sub">旧用户已保存的 default / greyWhite / frostedClear / frostedWarm 设置落地时会保留兼容</span>
+      </summary>
+      <table class="merge-table">
+        <thead>
+          <tr><th>原有主题来源</th><th>当前状态与问题</th><th>C120 合并与去重去向</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>builtin.default</code> + <code>focusd.black</code>（纯黑）</td><td>完全重复，都只是一组黑底绿点默认配置</td><td>合并为 <strong>1 · 曜石默认</strong>（#030303 / #f2f2f5），市场下架 <code>focusd.black</code></td></tr>
+          <tr><td><code>builtin.greyWhite</code>（灰白）</td><td>只是浅灰变体，圆角/字体/亮点和默认完全相同</td><td>升级为 <strong>2 · 素灰陶瓷</strong>（哑光工业灰 + 18px 锐利方角 + 信号橙）</td></tr>
+          <tr><td><code>builtin.frostedClear</code>（透白磨砂）</td><td>仅靠 86% 半透明填充模拟，与液态玻璃定位撞车</td><td>升级为 <strong>3 · 透冰磨砂</strong>（清冷静态磨砂玻璃 + 冰晶高光边）</td></tr>
+          <tr><td><code>builtin.frostedWarm</code> + <code>focusd.paper</code>（暖白）</td><td>内置暖白磨砂与市场暖白高度重叠</td><td>合并为 <strong>4 · 暖纸书页</strong>（米白/浓咖双色 + <strong>衬线字体</strong> + 暖墨水色）</td></tr>
+          <tr><td><code>focusd.midnight</code>（午夜蓝）</td><td>仅有单色深蓝，缺乏浅色版本</td><td>升级进内置 <strong>5 · 午夜星蓝</strong>（补齐极地晨蓝浅色 + <strong>圆润字体</strong> + 30px 大圆角），市场下架/标注已内置</td></tr>
+          <tr><td><code>focusd.pixel</code>（像素）</td><td>仅有深色像素，圆角与字体最有辨识度</td><td>升级进内置 <strong>6 · 复古像素</strong>（<strong>Fusion Pixel</strong> + 16px 纯圆角 + 掌机浅色屏），市场下架</td></tr>
+          <tr><td><code>focusd.liquid-glass</code>（液态玻璃）</td><td>与 C104 液态玻璃「预设」重叠且只改单色调</td><td>升级进内置 <strong>7 · 流彩极光</strong>（极光流动 + 油膜边 + 扫光 + 液体形变 + 双色），市场下架</td></tr>
+          <tr><td>新增风格提案（#8 ~ #12）</td><td>补足等宽极客、封面胶片、软萌樱雾、护眼森系、原生云母</td><td>#8 极客终端列为推荐 8 套之一；#9~#12 作为拓展备选任挑</td></tr>
+        </tbody>
+      </table>
+    </details>
+  </section>
+
+  <section class="gallery" id="gallery"></section>
+
+  <section class="c119-section" id="c119Preview">
+    <div class="c119-section__head">
+      <div>
+        <h3>设置页 › 外观「主题」4 列卡片实时排布预览（C119）</h3>
+        <p id="c119Summary">当前选中 8 套，刚好排满 2 行（每行 4 张，后接 C119 的 5 张液态玻璃材质卡或独立预设）。</p>
+      </div>
+    </div>
+    <div class="c119-grid" id="c119Grid"></div>
+  </section>
+</main>
+
+<footer class="decision-bar">
+  <div class="decision-bar__summary">
+    <span class="decision-bar__count" id="pickCount">已选 8 / 12 套</span>
+    <span class="decision-bar__names" id="pickNames"></span>
+  </div>
+  <div class="decision-bar__btns">
+    <button type="button" class="btn-ghost" id="btnResetRec">恢复推荐 8 套</button>
+    <button type="button" class="btn-ghost" id="btnPickAll">全选 12 套</button>
+    <button type="button" class="btn-ghost" id="btnClear">清空</button>
+    <button type="button" class="btn-primary" id="btnCopy">复制选择结果（贴回对话）</button>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+const FONT_STACKS = {
+  system: '"SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif',
+  rounded: 'ui-rounded, "SF Pro Rounded", "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif',
+  serif: '"Songti SC", "STSong", "Noto Serif CJK SC", "SimSun", Georgia, serif',
+  mono: '"JetBrains Mono", "Cascadia Code", "SF Mono", ui-monospace, "Cascadia Mono", Consolas, "Microsoft YaHei UI", monospace',
+  pixel: '"Fusion Pixel", "Microsoft YaHei", sans-serif',
+};
+
+const FONT_LABELS = {
+  system: "系统默认",
+  rounded: "圆润",
+  serif: "衬线",
+  mono: "等宽",
+  pixel: "像素",
+};
+
+const MORPH_LABELS = { smooth: "平滑", soft: "轻弹", liquid: "液体" };
+const GLASS_STYLE_LABELS = { static: "静态磨砂", flow: "慢流动", aurora: "极光流彩", shader: "着色器" };
+
+const THEMES = [
+  {
+    id: "default",
+    num: "01",
+    zh: "曜石默认",
+    en: "Obsidian",
+    recommended: true,
+    origin: "原内置默认 + 市场纯黑合并",
+    desc: "装机默认纯黑与素净浅灰基准，与 Mac 刘海及深色边框自然融为一体。",
+    tone: "dark",
+    appearanceMode: "classic",
+    opacity: 100,
+    islandOpacity: 100,
+    fontFamily: "system",
+    fontScale: 100,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 24,
+    topFilletRadius: 8,
+    accentMode: "default",
+    accentColor: "#74d6ff",
+    pulseBrightness: 160,
+    dark: { islandBackgroundColor: "#030303", taskTextColor: "#ffffff", pulseColor: "#3ae489", inkColor: "" },
+    light: { islandBackgroundColor: "#f2f2f5", taskTextColor: "#1c1c1f", pulseColor: "#1f9d55", inkColor: "" },
+    glass: null,
+  },
+  {
+    id: "swissChalk",
+    num: "02",
+    zh: "素灰陶瓷",
+    en: "Swiss Chalk",
+    recommended: true,
+    origin: "原内置「灰白」升级",
+    desc: "博朗工业极简风：哑光石墨/陶瓷灰、利落 18px 方角、信号橙高亮。",
+    tone: "light",
+    appearanceMode: "classic",
+    opacity: 96,
+    islandOpacity: 100,
+    fontFamily: "system",
+    fontScale: 98,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 18,
+    topFilletRadius: 4,
+    accentMode: "pick",
+    accentColor: "#e05a33",
+    pulseBrightness: 110,
+    dark: { islandBackgroundColor: "#1d1f24", taskTextColor: "#f2f3f6", pulseColor: "#ff6b3d", inkColor: "#eceef2" },
+    light: { islandBackgroundColor: "#e6e8ec", taskTextColor: "#18191d", pulseColor: "#c8431b", inkColor: "#18191d" },
+    glass: null,
+  },
+  {
+    id: "arcticFrost",
+    num: "03",
+    zh: "透冰磨砂",
+    en: "Arctic Frost",
+    recommended: true,
+    origin: "原内置「透白磨砂」升级",
+    desc: "清冷通透的冰晶磨砂玻璃，搭配 1px 冰蓝描边与镜面高光，透壁纸不刺眼。",
+    tone: "light",
+    appearanceMode: "liquidGlass",
+    opacity: 86,
+    islandOpacity: 100,
+    fontFamily: "system",
+    fontScale: 100,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 26,
+    topFilletRadius: 10,
+    accentMode: "pick",
+    accentColor: "#0c87cc",
+    pulseBrightness: 115,
+    dark: { islandBackgroundColor: "#0d1622", taskTextColor: "#f4f8ff", pulseColor: "#5cd6ff", inkColor: "#f0f6ff" },
+    light: { islandBackgroundColor: "#f4f8fd", taskTextColor: "#101826", pulseColor: "#03649e", inkColor: "#101826" },
+    glass: {
+      glassStyle: "static", glassColorSource: "accent", glassColor1: "", glassColor2: "", glassColor3: "",
+      glassColorStrength: 22, glassFlowSpeed: 0, glassBlobScale: 100, glassFlowWhen: "expanded",
+      glassRim: true, glassRimWidth: 1, glassSheen: false, glassSpecular: true, glassMorph: "smooth",
+      glassContrastGuard: true, glassBackdrop: "wallpaper", glassBlur: 22, glassSaturation: 185, glassNoise: 2, glassIntensity: 79,
+    },
+  },
+  {
+    id: "warmPaper",
+    num: "04",
+    zh: "暖纸书页",
+    en: "Warm Paper",
+    recommended: true,
+    origin: "原内置「暖白磨砂」+ 市场「暖白」合并",
+    desc: "书卷社论风：温润米纸与浓咖双色、衬线字体放大 103%、暖棕墨水文字。",
+    tone: "light",
+    appearanceMode: "classic",
+    opacity: 92,
+    islandOpacity: 100,
+    fontFamily: "serif",
+    fontScale: 103,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 20,
+    topFilletRadius: 6,
+    accentMode: "pick",
+    accentColor: "#c96730",
+    pulseBrightness: 100,
+    dark: { islandBackgroundColor: "#1e1915", taskTextColor: "#f7efe1", pulseColor: "#f29f58", inkColor: "#f5ecdc" },
+    light: { islandBackgroundColor: "#f6efe2", taskTextColor: "#2a2118", pulseColor: "#b84f1d", inkColor: "#2a2118" },
+    glass: null,
+  },
+  {
+    id: "midnightIndigo",
+    num: "05",
+    zh: "午夜星蓝",
+    en: "Midnight Indigo",
+    recommended: true,
+    origin: "市场「午夜蓝」补齐双色升级",
+    desc: "深海军蓝配极地晨蓝浅色版，30px 饱满超椭圆胶囊与圆润字体。",
+    tone: "dark",
+    appearanceMode: "classic",
+    opacity: 96,
+    islandOpacity: 100,
+    fontFamily: "rounded",
+    fontScale: 100,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 30,
+    topFilletRadius: 12,
+    accentMode: "pick",
+    accentColor: "#2e7ee8",
+    pulseBrightness: 115,
+    dark: { islandBackgroundColor: "#0d182e", taskTextColor: "#e6efff", pulseColor: "#5eb4ff", inkColor: "#dde9ff" },
+    light: { islandBackgroundColor: "#eaf1fc", taskTextColor: "#11203b", pulseColor: "#1d6ce0", inkColor: "#11203b" },
+    glass: null,
+  },
+  {
+    id: "retroPixel",
+    num: "06",
+    zh: "复古像素",
+    en: "Retro Pixel",
+    recommended: true,
+    origin: "市场「像素」补齐双色升级",
+    desc: "Fusion Pixel 点阵像素字、16px 纯正圆角与 2px 顶角，CRT 荧光绿与复古掌机屏。",
+    tone: "dark",
+    appearanceMode: "classic",
+    opacity: 100,
+    islandOpacity: 100,
+    fontFamily: "pixel",
+    fontScale: 100,
+    islandCornerShape: "round",
+    islandCornerRadius: 16,
+    topFilletRadius: 2,
+    accentMode: "pick",
+    accentColor: "#1d9440",
+    pulseBrightness: 125,
+    dark: { islandBackgroundColor: "#0c130f", taskTextColor: "#ebffe8", pulseColor: "#6cff6b", inkColor: "#dcfcd7" },
+    light: { islandBackgroundColor: "#e8edd6", taskTextColor: "#172315", pulseColor: "#1d8532", inkColor: "#172315" },
+    glass: null,
+  },
+  {
+    id: "liquidAurora",
+    num: "07",
+    zh: "流彩极光",
+    en: "Liquid Aurora",
+    recommended: true,
+    origin: "市场「液态玻璃」升级完整主题",
+    desc: "流动极光三色光斑、1.5px 彩虹油膜边、扫光与液体形变，32px 大超椭圆。",
+    tone: "dark",
+    appearanceMode: "liquidGlass",
+    opacity: 84,
+    islandOpacity: 100,
+    fontFamily: "rounded",
+    fontScale: 100,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 32,
+    topFilletRadius: 12,
+    accentMode: "pick",
+    accentColor: "#178ed4",
+    pulseBrightness: 130,
+    dark: { islandBackgroundColor: "#0a1320", taskTextColor: "#f5f9ff", pulseColor: "#6ce5ff", inkColor: "#f1f7ff" },
+    light: { islandBackgroundColor: "#f0f6fc", taskTextColor: "#101b2d", pulseColor: "#0263a1", inkColor: "#101b2d" },
+    glass: {
+      glassStyle: "aurora", glassColorSource: "custom", glassColor1: "#5bc8ff", glassColor2: "#9d7bff", glassColor3: "#3be8b0",
+      glassColorStrength: 58, glassFlowSpeed: 100, glassBlobScale: 115, glassFlowWhen: "always",
+      glassRim: true, glassRimWidth: 1.5, glassSheen: true, glassSpecular: true, glassMorph: "liquid",
+      glassContrastGuard: true, glassBackdrop: "native", glassBlur: 28, glassSaturation: 205, glassNoise: 3, glassIntensity: 79,
+    },
+  },
+  {
+    id: "monoTerminal",
+    num: "08",
+    zh: "极客终端",
+    en: "Mono Terminal",
+    recommended: true,
+    origin: "全新风格",
+    desc: "等宽代码字体 96% 紧凑比例、0px 锐利顶角挂边，灵感来自 Tokyo Night 与高亮 IDE。",
+    tone: "dark",
+    appearanceMode: "classic",
+    opacity: 96,
+    islandOpacity: 100,
+    fontFamily: "mono",
+    fontScale: 96,
+    islandCornerShape: "round",
+    islandCornerRadius: 16,
+    topFilletRadius: 0,
+    accentMode: "pick",
+    accentColor: "#4d7df2",
+    pulseBrightness: 110,
+    dark: { islandBackgroundColor: "#121520", taskTextColor: "#dce5f7", pulseColor: "#7aa2f7", inkColor: "#d8e1f2" },
+    light: { islandBackgroundColor: "#edf1f7", taskTextColor: "#182030", pulseColor: "#2b5cd9", inkColor: "#182030" },
+    glass: null,
+  },
+  {
+    id: "amberVinyl",
+    num: "09",
+    zh: "黑胶琥珀",
+    en: "Amber Vinyl",
+    recommended: false,
+    origin: "全新风格（拓展备选）",
+    desc: "跟专辑封面取色的磨砂玻璃 + 6% 胶片颗粒噪点 + 扫光，搭配衬线体与暖金亮点。",
+    tone: "dark",
+    appearanceMode: "liquidGlass",
+    opacity: 88,
+    islandOpacity: 100,
+    fontFamily: "serif",
+    fontScale: 100,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 22,
+    topFilletRadius: 6,
+    accentMode: "pick",
+    accentColor: "#ba6d10",
+    pulseBrightness: 120,
+    dark: { islandBackgroundColor: "#15100d", taskTextColor: "#f9efe0", pulseColor: "#f5b041", inkColor: "#f7ecda" },
+    light: { islandBackgroundColor: "#f7efe1", taskTextColor: "#21170f", pulseColor: "#944f06", inkColor: "#21170f" },
+    glass: {
+      glassStyle: "static", glassColorSource: "cover", glassColor1: "#f59e0b", glassColor2: "#d97706", glassColor3: "#fb7185",
+      glassColorStrength: 36, glassFlowSpeed: 0, glassBlobScale: 100, glassFlowWhen: "expanded",
+      glassRim: false, glassRimWidth: 1.5, glassSheen: true, glassSpecular: true, glassMorph: "smooth",
+      glassContrastGuard: true, glassBackdrop: "wallpaper", glassBlur: 38, glassSaturation: 145, glassNoise: 6, glassIntensity: 80,
+    },
+  },
+  {
+    id: "sakuraCloud",
+    num: "10",
+    zh: "樱雾云朵",
+    en: "Sakura Cloud",
+    recommended: false,
+    origin: "全新风格（拓展备选）",
+    desc: "34px 超大柔角与 102% 圆润字号，粉桃轻弹慢流动玻璃配深梅与奶霜浅色。",
+    tone: "light",
+    appearanceMode: "liquidGlass",
+    opacity: 88,
+    islandOpacity: 100,
+    fontFamily: "rounded",
+    fontScale: 102,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 34,
+    topFilletRadius: 12,
+    accentMode: "pick",
+    accentColor: "#db4682",
+    pulseBrightness: 110,
+    dark: { islandBackgroundColor: "#21131b", taskTextColor: "#fcecf2", pulseColor: "#ff7eb6", inkColor: "#fae9f0" },
+    light: { islandBackgroundColor: "#fcf0f5", taskTextColor: "#2a1520", pulseColor: "#c22764", inkColor: "#2a1520" },
+    glass: {
+      glassStyle: "flow", glassColorSource: "custom", glassColor1: "#f472b6", glassColor2: "#fb923c", glassColor3: "#c084fc",
+      glassColorStrength: 28, glassFlowSpeed: 65, glassBlobScale: 110, glassFlowWhen: "expanded",
+      glassRim: true, glassRimWidth: 1, glassSheen: false, glassSpecular: true, glassMorph: "soft",
+      glassContrastGuard: true, glassBackdrop: "wallpaper", glassBlur: 34, glassSaturation: 170, glassNoise: 2, glassIntensity: 80,
+    },
+  },
+  {
+    id: "mossForest",
+    num: "11",
+    zh: "松林苔藓",
+    en: "Moss Forest",
+    recommended: false,
+    origin: "全新风格（拓展备选）",
+    desc: "低饱和森林松绿与抹茶浅白，柔和护眼、长时间挂在屏幕顶部不抢注意力。",
+    tone: "dark",
+    appearanceMode: "classic",
+    opacity: 95,
+    islandOpacity: 100,
+    fontFamily: "system",
+    fontScale: 100,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 26,
+    topFilletRadius: 10,
+    accentMode: "pick",
+    accentColor: "#289c66",
+    pulseBrightness: 105,
+    dark: { islandBackgroundColor: "#0f1c16", taskTextColor: "#e7f3ec", pulseColor: "#57d996", inkColor: "#e2efe8" },
+    light: { islandBackgroundColor: "#ecf4ee", taskTextColor: "#14241b", pulseColor: "#1c8550", inkColor: "#14241b" },
+    glass: null,
+  },
+  {
+    id: "micaStudio",
+    num: "12",
+    zh: "云母浅霜",
+    en: "Mica Studio",
+    recommended: false,
+    origin: "全新风格（拓展备选）",
+    desc: "重模糊（52px）低饱和（135%）原生透窗云母质感，桌面融感最克制的办公主题。",
+    tone: "light",
+    appearanceMode: "liquidGlass",
+    opacity: 86,
+    islandOpacity: 100,
+    fontFamily: "system",
+    fontScale: 100,
+    islandCornerShape: "squircle",
+    islandCornerRadius: 24,
+    topFilletRadius: 8,
+    accentMode: "pick",
+    accentColor: "#397de0",
+    pulseBrightness: 100,
+    dark: { islandBackgroundColor: "#14181e", taskTextColor: "#f0f4fa", pulseColor: "#6bb8ff", inkColor: "#edf1f7" },
+    light: { islandBackgroundColor: "#f4f6f9", taskTextColor: "#161a22", pulseColor: "#2267cc", inkColor: "#161a22" },
+    glass: {
+      glassStyle: "static", glassColorSource: "accent", glassColor1: "", glassColor2: "", glassColor3: "",
+      glassColorStrength: 10, glassFlowSpeed: 0, glassBlobScale: 100, glassFlowWhen: "expanded",
+      glassRim: true, glassRimWidth: 1, glassSheen: false, glassSpecular: true, glassMorph: "smooth",
+      glassContrastGuard: true, glassBackdrop: "native", glassBlur: 52, glassSaturation: 135, glassNoise: 3, glassIntensity: 81,
+    },
+  },
+];
+
+const state = {
+  wall: "split",
+  tone: "dual",
+  morph: "both",
+  filter: "all",
+  ui: "dark",
+  picked: new Set(THEMES.filter((t) => t.recommended).map((t) => t.id)),
+  names: Object.fromEntries(THEMES.map((t) => [t.id, { zh: t.zh, en: t.en }])),
+};
+
+const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const rgbaStr = (h, a) => `rgba(${hexRgb(h).join(", ")}, ${a})`;
+const over = (top, a, bot) => top.map((v, i) => v * a + bot[i] * (1 - a));
+const lum = (rgb) => {
+  const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]);
+};
+const contrast = (a, b) => {
+  const [h, l] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (h + 0.05) / (l + 0.05);
+};
+
+function wallProbeColors(wall) {
+  switch (wall) {
+    case "pure-black": return [[0, 0, 0]];
+    case "pure-white": return [[255, 255, 255]];
+    case "dark-aurora": return [[16, 21, 38], [52, 68, 120]];
+    case "dark-grid": return [[22, 24, 32]];
+    case "light-sky": return [[213, 226, 242], [231, 239, 250]];
+    case "light-warm": return [[233, 223, 208], [246, 239, 228]];
+    case "split":
+    default:
+      return [[19, 27, 46], [215, 226, 242]];
+  }
+}
+
+function measureThemeContrast(theme, tone, probes) {
+  const c = theme[tone];
+  const bg = hexRgb(c.islandBackgroundColor);
+  const ink = c.inkColor ? hexRgb(c.inkColor) : (tone === "light" ? [24, 24, 30] : [241, 240, 246]);
+  const task = hexRgb(c.taskTextColor);
+  const alpha = (theme.appearanceMode === "liquidGlass" ? Math.min(theme.opacity, theme.glass.glassIntensity) : theme.opacity) / 100;
+  const a1 = tone === "dark" ? 0.96 : 0.94;
+  const a2 = tone === "dark" ? 0.68 : 0.70;
+  const a3 = tone === "dark" ? 0.54 : 0.56;
+  let min1 = 99, min2 = 99, min3 = 99, minTask = 99;
+  for (const desk of probes) {
+    const bd = over(bg, alpha, desk);
+    min1 = Math.min(min1, contrast(over(ink, a1, bd), bd));
+    min2 = Math.min(min2, contrast(over(ink, a2, bd), bd));
+    min3 = Math.min(min3, contrast(over(ink, a3, bd), bd));
+    minTask = Math.min(minTask, contrast(task, bd));
+  }
+  const ok = min1 >= 4.5 && min2 >= 4.5 && min3 >= 3.0 && minTask >= 4.5;
+  return { t1: min1, t2: min2, t3: min3, task: minTask, ok };
+}
+
+function claudeSvg() {
+  return `<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 2v12M2 8h12M3.8 3.8l8.4 8.4M12.2 3.8l-8.4 8.4"/></svg>`;
+}
+
+function iconGear() {
+  return `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.77 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`;
+}
+function iconBell() {
+  return `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`;
+}
+function iconMinus() {
+  return `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>`;
+}
+
+function glassPaletteFor(theme, tone) {
+  const g = theme.glass;
+  if (!g) return ["#74d6ff", "#9d7bff", "#3ae489"];
+  if (g.glassColorSource === "custom" && g.glassColor1) {
+    return [g.glassColor1, g.glassColor2 || g.glassColor1, g.glassColor3 || g.glassColor1];
+  }
+  if (g.glassColorSource === "cover") {
+    return tone === "dark" ? ["#e28b3b", "#c95d46", "#f0b85b"] : ["#c76d24", "#a84432", "#d98e2b"];
+  }
+  const base = theme.accentMode === "pick" ? theme.accentColor : (tone === "dark" ? "#74d6ff" : "#0a7fd1");
+  return [base, "#8c9eff", "#3cd0b0"];
+}
+
+function islandVars(theme, tone) {
+  const c = theme[tone];
+  const isGlass = theme.appearanceMode === "liquidGlass";
+  const alpha = isGlass ? Math.min(theme.opacity, theme.glass.glassIntensity) / 100 : theme.opacity / 100;
+  const inkRgb = c.inkColor ? hexRgb(c.inkColor).join(", ") : (tone === "light" ? "24, 24, 30" : "241, 240, 246");
+  const accent = theme.accentMode === "pick" ? theme.accentColor : (tone === "dark" ? "#74d6ff" : "#0a7fd1");
+  const g = theme.glass;
+  const pal = glassPaletteFor(theme, tone);
+  const parts = [
+    `--corner-shape: ${theme.islandCornerShape}`,
+    `--r: ${theme.islandCornerRadius}px`,
+    `--fillet: ${theme.topFilletRadius}px`,
+    `--fill: ${rgbaStr(c.islandBackgroundColor, alpha)}`,
+    `--ink-rgb: ${inkRgb}`,
+    `--task-color: ${c.taskTextColor}`,
+    `--pulse: ${c.pulseColor}`,
+    `--pulse-bright: ${theme.pulseBrightness}%`,
+    `--accent: ${accent}`,
+    `--font: ${FONT_STACKS[theme.fontFamily]}`,
+    `--fscale: ${theme.fontScale / 100}`,
+    `--whole-opacity: ${theme.islandOpacity / 100}`,
+  ];
+  if (isGlass && g) {
+    parts.push(
+      `--glass-blur: ${Math.max(8, Math.round(g.glassBlur * 0.72))}px`,
+      `--glass-sat: ${g.glassSaturation / 100}`,
+      `--glass-str: ${g.glassColorStrength / 100}`,
+      `--glass-rim-w: ${g.glassRimWidth}px`,
+      `--glass-noise: ${g.glassNoise / 100}`,
+      `--glass-blob-scale: ${g.glassBlobScale / 100}`,
+      `--glass-dur: ${(23 / Math.max(0.4, (g.glassFlowSpeed || 100) / 100)).toFixed(1)}s`,
+      `--c1: ${pal[0]}`,
+      `--c2: ${pal[1]}`,
+      `--c3: ${pal[2]}`,
+    );
+  }
+  return parts.join("; ");
+}
+
+function glassLayersHtml(theme) {
+  if (theme.appearanceMode !== "liquidGlass" || !theme.glass) return "";
+  const g = theme.glass;
+  return `
+    ${g.glassColorStrength > 0 ? `<span class="isl__glass-flow"><i></i><i></i><i></i></span>` : ""}
+    ${g.glassNoise > 0 ? `<span class="isl__glass-noise"></span>` : ""}
+    ${g.glassSheen ? `<span class="isl__glass-sheen"></span>` : ""}
+    ${g.glassSpecular ? `<span class="isl__glass-spec"></span>` : ""}
+    ${g.glassRim ? `<span class="isl__glass-rim"></span>` : ""}
+  `;
+}
+
+function renderStage(theme, tone, wall, compactDual) {
+  const isGlass = theme.appearanceMode === "liquidGlass";
+  const still = isGlass && theme.glass && (theme.glass.glassStyle === "static" || theme.glass.glassFlowSpeed === 0);
+  const islCls = [
+    "isl",
+    tone === "light" ? "is-light" : "",
+    isGlass ? "isl--glass" : "",
+    still ? "isl--still" : "",
+    theme.fontFamily === "pixel" ? "font-pixel" : "",
+  ].filter(Boolean).join(" ");
+  const styleAttr = islandVars(theme, tone);
+  const layers = glassLayersHtml(theme);
+  const ears = theme.topFilletRadius > 0 ? `<span class="isl__ear isl__ear--l"></span><span class="isl__ear isl__ear--r"></span>` : "";
+  const toneName = tone === "dark" ? "深色" : "浅色";
+  const recTag = theme.tone === tone ? " · 主推" : "";
+  const morphLabel = isGlass && theme.glass ? MORPH_LABELS[theme.glass.glassMorph] : "弹出";
+
+  return `
+    <div class="desk-stage" data-wall="${wall}">
+      <div class="desk-mock-win" aria-hidden="true"><div class="blk"></div><div class="blk2"></div></div>
+
+      <div class="${islCls} island-col" style="${styleAttr}">
+        ${ears}
+        <div class="isl__inner-clip">
+          ${layers}
+          <div class="island-col__body">
+            <span class="col-pulse"></span>
+            <span class="col-brand">${claudeSvg()}</span>
+            <span class="col-task">Fuyu · 设置页切换动画</span>
+            <span class="col-ring">1</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="${islCls} island-exp" style="${styleAttr}">
+        <div class="isl__inner-clip">
+          ${layers}
+          <div class="island-exp__body">
+            <div class="exp-header">
+              <div class="exp-dots">
+                <span class="exp-dot"></span>
+                <span class="exp-dot"></span>
+                <span class="exp-dot"></span>
+                <span class="exp-dot"></span>
+              </div>
+              <div class="exp-actions">
+                <span class="exp-btn">${iconBell()}</span>
+                <span class="exp-btn">${iconGear()}</span>
+                <span class="exp-btn">${iconMinus()}</span>
+              </div>
+            </div>
+            <div class="exp-usage">
+              <span class="col-brand">${claudeSvg()}</span>
+              <span>5 小时 <b class="u-low">4%</b></span>
+              <span class="u-sep"></span>
+              <span>7 天 <b class="u-mid">59%</b></span>
+              ${compactDual ? "" : `<span>· 4天16时重置</span>`}
+            </div>
+            <div class="exp-list">
+              <div class="exp-row needs">
+                <span class="row-dot"></span>
+                <div class="row-main">
+                  <div class="row-top">
+                    <span class="row-title">Fuyu · 主题对比度校验</span>
+                    ${compactDual ? "" : `<span class="row-chip">Opus</span>`}
+                    <span class="row-state">待确认 · 1m</span>
+                  </div>
+                  <div class="row-tool"><span>PowerShell</span> pnpm test:changed</div>
+                </div>
+              </div>
+              <div class="exp-row turn">
+                <span class="row-dot"></span>
+                <div class="row-main">
+                  <div class="row-top">
+                    <span class="row-title">notes · 整理周报大纲</span>
+                    <span class="row-state">等你回复</span>
+                  </div>
+                </div>
+              </div>
+              <div class="exp-row done">
+                <span class="row-dot"></span>
+                <div class="row-main">
+                  <div class="row-top">
+                    <span class="row-title">api-server · 修复登录超时</span>
+                    <span class="row-state">16m</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <span class="stage-badge">${toneName}${recTag}</span>
+      <button type="button" class="stage-hint-btn" data-bounce-btn>演一下「${morphLabel}」</button>
+    </div>
+  `;
+}
+
+function cardMatchesFilter(theme) {
+  if (state.filter === "rec") return theme.recommended;
+  if (state.filter === "classic") return theme.appearanceMode === "classic";
+  if (state.filter === "glass") return theme.appearanceMode === "liquidGlass";
+  if (state.filter === "picked") return state.picked.has(theme.id);
+  return true;
+}
+
+function renderSpecs(theme) {
+  const isGlass = theme.appearanceMode === "liquidGlass";
+  const g = theme.glass;
+  const matText = isGlass ? `液态玻璃 · ${GLASS_STYLE_LABELS[g.glassStyle]}` : "经典材质";
+  const opText = `底色 ${theme.opacity}%${theme.islandOpacity < 100 ? ` · 整岛 ${theme.islandOpacity}%` : ""}`;
+  const fontText = `${FONT_LABELS[theme.fontFamily]} · ${theme.fontScale}%`;
+  const cornerText = `${theme.islandCornerShape === "squircle" ? "Squircle" : "Round"} ${theme.islandCornerRadius}px · 顶角 ${theme.topFilletRadius}px`;
+  const tags = [
+    `<span class="spec-tag">材质 <b>${matText}</b></span>`,
+    `<span class="spec-tag">透明 <b>${opText}</b></span>`,
+    `<span class="spec-tag">字体 <b>${fontText}</b></span>`,
+    `<span class="spec-tag">圆角 <b>${cornerText}</b></span>`,
+  ];
+  if (isGlass && g) {
+    const extras = [
+      `强度 ${g.glassIntensity}%`,
+      `模糊 ${g.glassBlur}px`,
+      `饱和 ${g.glassSaturation}%`,
+      g.glassNoise > 0 ? `噪点 ${g.glassNoise}%` : null,
+      g.glassRim ? `油膜边 ${g.glassRimWidth}px` : null,
+      g.glassSheen ? "扫光" : null,
+      g.glassColorSource === "cover" ? "跟封面取色" : null,
+      `形变 ${MORPH_LABELS[g.glassMorph]}`,
+    ].filter(Boolean).join(" · ");
+    tags.push(`<span class="spec-tag">玻璃 <b>${extras}</b></span>`);
+  }
+  return tags.join("");
+}
+
+function renderSwatches(theme) {
+  const showSwatch = (tone) => {
+    const c = theme[tone];
+    const ink = c.inkColor || (tone === "light" ? "#18181e" : "#f1f0f6");
+    const acc = theme.accentMode === "pick" ? theme.accentColor : (tone === "dark" ? "#74d6ff" : "#0a7fd1");
+    return `
+      <span class="tone-swatches">
+        <span>${tone === "dark" ? "深" : "浅"}</span>
+        <i class="swatch-dot" style="background:${c.islandBackgroundColor}" title="背景 ${c.islandBackgroundColor}"></i>
+        <i class="swatch-dot" style="background:${c.taskTextColor}" title="任务字 ${c.taskTextColor}"></i>
+        <i class="swatch-dot" style="background:${ink}" title="主墨色 ${c.inkColor || "自动"}"></i>
+        <i class="swatch-dot" style="background:${c.pulseColor}" title="亮点 ${c.pulseColor}"></i>
+        <i class="swatch-dot" style="background:${acc}" title="强调色 ${acc}"></i>
+      </span>
+    `;
+  };
+  const probes = wallProbeColors(state.wall);
+  const cd = measureThemeContrast(theme, "dark", probes);
+  const cl = measureThemeContrast(theme, "light", probes);
+  const wExtreme = [
+    measureThemeContrast(theme, "dark", [[0, 0, 0], [255, 255, 255]]),
+    measureThemeContrast(theme, "light", [[0, 0, 0], [255, 255, 255]]),
+  ];
+  const clsFor = (res) => (res.ok ? "wcag-pill" : (res.t1 >= 4.5 && res.t3 >= 3.0 ? "wcag-pill warn" : "wcag-pill bad"));
+  return `
+    <div class="palette-group">
+      ${showSwatch("dark")}
+      ${showSwatch("light")}
+    </div>
+    <div class="wcag-bar" title="对比度按当前壁纸与极端纯黑/纯白壁纸下 T1(96%/94%) · T2(68%/70%) · T3(54%/56%) 计算">
+      <span class="${clsFor(cd)}">深 T2 ${cd.t2.toFixed(1)} · T3 ${cd.t3.toFixed(1)} ${cd.ok ? "✓" : "!"}</span>
+      <span class="${clsFor(cl)}">浅 T2 ${cl.t2.toFixed(1)} · T3 ${cl.t3.toFixed(1)} ${cl.ok ? "✓" : "!"}</span>
+      <span class="wcag-pill" title="极端纯黑+纯白双壁纸最弱层级">${wExtreme.every((x) => x.ok) ? "黑白极端全过 AA ✓" : "极端壁纸需保底"}</span>
+    </div>
+  `;
+}
+
+function renderGallery() {
+  const gallery = document.getElementById("gallery");
+  gallery.innerHTML = THEMES.map((theme) => {
+    const picked = state.picked.has(theme.id);
+    const hidden = !cardMatchesFilter(theme);
+    const name = state.names[theme.id];
+    const stageClass = [
+      "stage-wrap",
+      state.tone === "dual" ? "dual" : "",
+      state.morph === "collapsed" ? "only-collapsed" : "",
+    ].filter(Boolean).join(" ");
+    const tones = state.tone === "dual"
+      ? ["dark", "light"]
+      : state.tone === "rec"
+        ? [theme.tone]
+        : [state.tone];
+    const stagesHtml = tones.map((tone) => renderStage(theme, tone, state.wall, state.tone === "dual")).join("");
+
+    return `
+      <article class="card ${picked ? "selected" : ""} ${hidden ? "hidden" : ""}" data-id="${theme.id}">
+        <div class="card__head">
+          <div class="card__id-group">
+            <button type="button" class="pick-btn" data-pick="${theme.id}" aria-pressed="${picked}" title="勾选或取消入选这批内置主题">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <div class="card__titles">
+              <div class="card__name-row">
+                <span class="card__num">#${theme.num}</span>
+                <input class="name-input" data-name-zh="${theme.id}" value="${name.zh}" aria-label="中文名称" />
+                <input class="name-input name-input--en" data-name-en="${theme.id}" value="${name.en}" aria-label="英文名称" />
+                ${theme.recommended ? `<span class="pill pill--rec">推荐</span>` : ""}
+                <span class="pill ${theme.appearanceMode === "liquidGlass" ? "pill--glass" : ""}">${theme.appearanceMode === "liquidGlass" ? "液态玻璃" : "经典"}</span>
+              </div>
+              <p class="card__desc">${theme.desc} <span class="card__origin">（${theme.origin}）</span></p>
+            </div>
+          </div>
+        </div>
+        <div class="${stageClass}">${stagesHtml}</div>
+        <div class="specs">${renderSpecs(theme)}</div>
+        <div class="swatches-bar">${renderSwatches(theme)}</div>
+      </article>
+    `;
+  }).join("");
+
+  renderDecisionAndC119();
+}
+
+function renderDecisionAndC119() {
+  const pickedThemes = THEMES.filter((t) => state.picked.has(t.id));
+  document.getElementById("pickCount").textContent = `已选 ${pickedThemes.length} / ${THEMES.length} 套`;
+  document.getElementById("pickNames").textContent = pickedThemes.map((t) => state.names[t.id].zh).join(" · ") || "未选择任何主题";
+
+  const rows = Math.ceil(pickedThemes.length / 4);
+  const rem = pickedThemes.length % 4;
+  const layoutNote = pickedThemes.length === 0
+    ? "尚未勾选任何主题；请在上方卡片左上角勾选。"
+    : `共 ${pickedThemes.length} 张卡片 · 每行 4 张排成 ${rows} 行${rem === 0 ? "（刚好对齐整行）" : `（末行 ${rem} 张）`}。`;
+  document.getElementById("c119Summary").textContent = layoutNote;
+
+  document.getElementById("c119Grid").innerHTML = pickedThemes.map((t) => {
+    const tone = t.tone;
+    const c = t[tone];
+    const isGlass = t.appearanceMode === "liquidGlass";
+    const alpha = (isGlass ? Math.min(t.opacity, t.glass.glassIntensity) : t.opacity) / 100;
+    const ink = c.inkColor || (tone === "light" ? "#18181e" : "#f1f0f6");
+    const n = state.names[t.id];
+    return `
+      <div class="c119-card">
+        <div class="c119-art">
+          <div class="c119-mini-isl" style="
+            background: ${rgbaStr(c.islandBackgroundColor, alpha)};
+            border-radius: ${Math.min(18, Math.round(t.islandCornerRadius * 0.55))}px;
+            corner-shape: ${t.islandCornerShape};
+            font-family: ${FONT_STACKS[t.fontFamily]};
+            ${isGlass ? `backdrop-filter: blur(${Math.round(t.glass.glassBlur / 3)}px) saturate(160%);` : ""}
+          ">
+            <i style="background:${c.pulseColor}"></i>
+            <b style="background:${rgbaStr(ink, 0.72)}"></b>
+            <b style="background:${rgbaStr(ink, 0.42)}"></b>
+          </div>
+        </div>
+        <div class="c119-label" style="font-family:${FONT_STACKS[t.fontFamily]}">${n.zh} / ${n.en}</div>
+        <div class="c119-hint">${isGlass ? "液态玻璃" : "经典"} · ${FONT_LABELS[t.fontFamily]} · ${t.islandCornerRadius}px</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function setupControls() {
+  const bindSeg = (id, key, attr, after) => {
+    const el = document.getElementById(id);
+    el.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      state[key] = btn.dataset[attr];
+      for (const b of el.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b === btn));
+      if (after) after();
+      else renderGallery();
+    });
+  };
+
+  bindSeg("wallSeg", "wall", "wall");
+  bindSeg("toneSeg", "tone", "tone");
+  bindSeg("morphSeg", "morph", "morph");
+  bindSeg("filterSeg", "filter", "filter");
+  bindSeg("pageThemeSeg", "ui", "ui", () => {
+    document.body.classList.toggle("ui-light", state.ui === "light");
+  });
+
+  const gallery = document.getElementById("gallery");
+  gallery.addEventListener("click", (e) => {
+    const pick = e.target.closest("[data-pick]");
+    if (pick) {
+      const id = pick.dataset.pick;
+      if (state.picked.has(id)) state.picked.delete(id);
+      else state.picked.add(id);
+      renderGallery();
+      return;
+    }
+    const bounceBtn = e.target.closest("[data-bounce-btn]");
+    if (bounceBtn) {
+      const exp = bounceBtn.closest(".desk-stage")?.querySelector(".island-exp");
+      if (exp) {
+        exp.classList.remove("morph-bounce");
+        void exp.offsetWidth;
+        exp.classList.add("morph-bounce");
+      }
+    }
+  });
+
+  gallery.addEventListener("input", (e) => {
+    const zh = e.target.dataset.nameZh;
+    const en = e.target.dataset.nameEn;
+    if (zh) {
+      state.names[zh].zh = e.target.value;
+      renderDecisionAndC119();
+    } else if (en) {
+      state.names[en].en = e.target.value;
+      renderDecisionAndC119();
+    }
+  });
+
+  gallery.addEventListener("mousemove", (e) => {
+    const stage = e.target.closest(".desk-stage");
+    if (!stage) return;
+    for (const spec of stage.querySelectorAll(".isl__glass-spec")) {
+      const rect = spec.getBoundingClientRect();
+      spec.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+      spec.style.setProperty("--my", `${e.clientY - rect.top}px`);
+    }
+  });
+
+  document.getElementById("btnResetRec").addEventListener("click", () => {
+    state.picked = new Set(THEMES.filter((t) => t.recommended).map((t) => t.id));
+    renderGallery();
+  });
+  document.getElementById("btnPickAll").addEventListener("click", () => {
+    state.picked = new Set(THEMES.map((t) => t.id));
+    renderGallery();
+  });
+  document.getElementById("btnClear").addEventListener("click", () => {
+    state.picked.clear();
+    renderGallery();
+  });
+
+  document.getElementById("btnCopy").addEventListener("click", async () => {
+    const picked = THEMES.filter((t) => state.picked.has(t.id));
+    const lines = [
+      `## C120 内置主题拍板（共 ${picked.length} 套）`,
+      "",
+      ...picked.map((t, idx) => {
+        const n = state.names[t.id];
+        return `${idx + 1}. \`${t.id}\`：**${n.zh}** / **${n.en}**（${t.appearanceMode === "liquidGlass" ? "液态玻璃" : "经典"} · ${FONT_LABELS[t.fontFamily]} · ${t.islandCornerShape} ${t.islandCornerRadius}px）`;
+      }),
+    ];
+    const btn = document.getElementById("btnCopy");
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      btn.textContent = "已复制选择结果 ✓";
+      setTimeout(() => { btn.textContent = "复制选择结果（贴回对话）"; }, 2400);
+    } catch {
+      prompt("复制下面的内容贴回对话：", lines.join("\n"));
+    }
+  });
+}
+
+if (!CSS.supports("corner-shape", "squircle")) {
+  document.getElementById("squircleWarn").classList.add("show");
+}
+
+setupControls();
+renderGallery();
+</script>
+</body>
+</html>

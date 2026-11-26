@@ -60,7 +60,7 @@ export function detectDevPluginsDir({ dir, lane, platform = process.platform, en
   return devPluginsDir({ lane: "1", platform, env, home });
 }
 
-export function restoreMarketEntry(ymlFile, id) {
+export function restoreMarketEntry(ymlFile, id, { official = String(id).startsWith("@fuyu/") } = {}) {
   mkdirSync(dirname(ymlFile), { recursive: true });
   const raw = existsSync(ymlFile) ? readFileSync(ymlFile, "utf8").replace(/\r\n/g, "\n") : "";
   const trimmed = raw.trim();
@@ -69,6 +69,7 @@ export function restoreMarketEntry(ymlFile, id) {
       ? []
       : stripEntryBlock(raw.split("\n"), id).filter((line, idx, arr) => !(idx === arr.length - 1 && line === ""));
   const entryLines = [`- id: ${JSON.stringify(String(id))}`, "  source: market"];
+  if (official) entryLines.push("  official: true");
   writeFileSync(ymlFile, `${[...baseLines, ...entryLines].join("\n")}\n`, "utf8");
   return ymlFile;
 }
@@ -100,7 +101,7 @@ async function main(argv) {
   if (values.market) {
     const manifest = readManifest(target.dir);
     const id = String(manifest.name ?? "");
-    restoreMarketEntry(ymlFile, id);
+    restoreMarketEntry(ymlFile, id, { official: target.official });
     console.log(`[plugin:dev] restored ${id} to source: market in ${ymlFile}`);
     return;
   }

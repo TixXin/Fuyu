@@ -50,3 +50,7 @@
 :root[data-island-edge="bottom"][data-island-taskbar="placed"] .island--collapsed {
   --island-hover-grow-y: 0px !important;
 }
+
+:root[data-island-edge="bottom"][data-island-taskbar="placed"] .island-hover-card {
+  box-shadow: none;
+}

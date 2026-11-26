@@ -12,6 +12,7 @@ import type { PluginNotificationsController } from "../../src/features/messages/
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
+import { HIDE_TOOLTIP_EVENT } from "../../src/components/IconButtonTooltip";
 import { useFixtureLines } from "./islandLines";
 import { animationsDone, until } from "./pollUntil";
 
@@ -65,6 +66,7 @@ const dockTo = (edge: "top" | "bottom") => {
 };
 const set = (next: Partial<State>) => act(async () => { change(next); });
 const outerShadows = (value: string) => value === "none" ? [] : value.split(/,(?![^(]*\))/).filter((shadow) => !shadow.includes("inset") && !/rgba\(0, 0, 0, 0\)/.test(shadow) && /[1-9][\d.]*px/.test(shadow));
+const hoverCard = () => document.querySelector<HTMLElement>(".island-hover-card");
 const glassShown = () => getComputedStyle(document.querySelector(".island__glass")!).display !== "none";
 const settled = (ready: () => boolean) => until(() => animationsDone(stage()) && ready());
 const results = document.getElementById("results")!;
@@ -102,6 +104,12 @@ async function runChecks() {
     await settled(() => island().classList.contains("island--glass-rim"));
     check(outerShadows(getComputedStyle(island()).boxShadow).length > 0 && glassShown(), "不在任务栏上时，收起的玻璃岛照旧有外阴影和玻璃层");
 
+    const pulse = document.querySelector<HTMLElement>(".island__pulse")!;
+    pulse.setAttribute("title", "CPU 12% · 内存 50%");
+    pulse.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, clientX: pulse.getBoundingClientRect().left + 4 }));
+    await until(() => hoverCard() !== null);
+    check(outerShadows(getComputedStyle(hoverCard()!).boxShadow).length > 0, "不在任务栏上时，悬浮提示照旧有外阴影");
+
     document.documentElement.dataset.islandTaskbar = "placed";
     await set({ taskbarClear: true });
     await settled(() => stage().classList.contains("stage--taskbar-clear"));
@@ -110,6 +118,7 @@ async function runChecks() {
     check(clear.backgroundImage === "none" && clear.backgroundColor === "rgba(0, 0, 0, 0)", "任务栏上透明的岛没有底色和玻璃渐变");
     check(!glassShown(), "任务栏上透明的岛不画液态玻璃层");
     check(getComputedStyle(island(), "::after").display === "none" && getComputedStyle(island(), "::before").display === "none", "任务栏上透明的岛不画流光边和描边");
+    check(getComputedStyle(hoverCard()!).boxShadow === "none", "任务栏上透明的岛，悬浮提示没有阴影");
 
     await set({ taskbarClear: false });
     await settled(() => !stage().classList.contains("stage--taskbar-clear"));
@@ -117,7 +126,12 @@ async function runChecks() {
     island().style.setProperty("--island-hover-lift", "1");
     check(outerShadows(getComputedStyle(island()).boxShadow).length === 0, "任务栏上跟随主题的岛没有外阴影，悬停抬起也没有");
     check(glassShown(), "任务栏上跟随主题的岛保留玻璃层");
+    check(getComputedStyle(hoverCard()!).boxShadow === "none", "任务栏上跟随主题的岛，悬浮提示也没有阴影");
     island().style.setProperty("--island-hover-lift", restingLift || "0");
+
+    window.dispatchEvent(new Event(HIDE_TOOLTIP_EVENT));
+    delete pulse.dataset.tooltip;
+    await until(() => hoverCard() === null);
 
     await set({ expanded: true });
     await settled(() => near(island().getBoundingClientRect().height, 306));

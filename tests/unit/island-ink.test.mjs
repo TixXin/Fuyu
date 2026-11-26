@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { BUILTIN_THEME_IDS, BUILTIN_THEMES, builtinThemeInUse, withBuiltinTheme } from "../../src/lib/theme/builtinThemes.ts";
+import { GLASS_SETTING_KEYS } from "../../src/lib/settings/glassSettings.ts";
 import { DEFAULT_SETTINGS, normalizeSettings, THEME_SETTING_KEYS } from "../../src/lib/settings/settings.ts";
 import { buildTheme, parseTheme } from "../../src/lib/theme/theme.ts";
 import { autoInkHex, inkVariables, resolveThemeColors, surfaceThemeColors } from "../../src/lib/theme/themeMode.ts";
@@ -41,20 +42,67 @@ test("ink is kept per set, defaults to auto and travels with themes", () => {
   assert.ok(lightInkColor && darkInkColor === "" && inkColor === "#2a2118");
 });
 
-test("built-in sets apply both tones, keep following the system, and are recognised", () => {
+test("built-in themes carry full style sets, keep following the system, and detect tweaks", () => {
+  assert.equal(BUILTIN_THEME_IDS.length, 12);
   for (const id of BUILTIN_THEME_IDS) {
-    const applied = withBuiltinTheme({ ...DEFAULT_SETTINGS, appearanceMode: "liquidGlass" }, id);
-    assert.equal(applied.appearanceMode, "classic");
-    assert.equal(applied.opacity, BUILTIN_THEMES[id].opacity);
-    assert.equal(applied.themeMode, BUILTIN_THEMES[id].tone);
-    assert.equal(applied.lightBackgroundColor, BUILTIN_THEMES[id].light.islandBackgroundColor);
-    assert.equal(applied.darkBackgroundColor, BUILTIN_THEMES[id].dark.islandBackgroundColor);
-    assert.equal(builtinThemeInUse(normalizeSettings(applied)), id);
+    const theme = BUILTIN_THEMES[id];
+    const start = { ...DEFAULT_SETTINGS, appearanceMode: theme.appearanceMode === "classic" ? "liquidGlass" : "classic" };
+    const applied = withBuiltinTheme({ ...start }, id);
+    const saved = normalizeSettings(applied);
+    assert.equal(saved.appearanceMode, theme.appearanceMode);
+    assert.equal(saved.opacity, theme.opacity);
+    assert.equal(saved.islandOpacity, theme.islandOpacity);
+    assert.equal(saved.fontFamily, theme.fontFamily);
+    assert.equal(saved.fontScale, theme.fontScale);
+    assert.equal(saved.islandCornerShape, theme.islandCornerShape);
+    assert.equal(saved.islandCornerRadius, theme.islandCornerRadius);
+    assert.equal(saved.topFilletRadius, theme.topFilletRadius);
+    assert.equal(saved.accentMode, theme.accentMode);
+    assert.equal(saved.accentColor, theme.accentColor);
+    assert.equal(saved.pulseBrightness, theme.pulseBrightness);
+    assert.equal(saved.themeMode, theme.tone);
+    assert.equal(saved.lightBackgroundColor, theme.light.islandBackgroundColor);
+    assert.equal(saved.darkBackgroundColor, theme.dark.islandBackgroundColor);
+    if (theme.appearanceMode === "liquidGlass") {
+      assert.ok(theme.glass, `${id} defines glass settings`);
+      assert.equal(saved.glassIntensity, theme.glass.glassIntensity);
+      for (const key of GLASS_SETTING_KEYS) {
+        assert.equal(saved[key], theme.glass[key], `${id} keeps ${key}`);
+      }
+    }
+    assert.equal(builtinThemeInUse(saved), id);
   }
-  assert.equal(withBuiltinTheme({ ...DEFAULT_SETTINGS, themeMode: "system" }, "greyWhite").themeMode, "system");
+  assert.equal(withBuiltinTheme({ ...DEFAULT_SETTINGS, themeMode: "system" }, "swissChalk").themeMode, "system");
   assert.equal(builtinThemeInUse(DEFAULT_SETTINGS), "default", "a fresh install reads as the default set, not custom");
-  const back = withBuiltinTheme(withBuiltinTheme(DEFAULT_SETTINGS, "frostedWarm"), "default");
-  assert.equal(back.themeMode, "dark", "going back to the default set from a light set turns the colors dark again");
+  const back = withBuiltinTheme(withBuiltinTheme(DEFAULT_SETTINGS, "liquidAurora"), "default");
+  assert.equal(back.themeMode, "dark", "going back to the default set from another theme turns the colors dark again");
+  assert.equal(back.appearanceMode, "classic");
+  assert.equal(back.fontFamily, "system");
+  assert.equal(back.islandCornerRadius, DEFAULT_SETTINGS.islandCornerRadius);
   assert.equal(builtinThemeInUse(normalizeSettings(back)), "default");
-  assert.equal(builtinThemeInUse({ ...withBuiltinTheme(DEFAULT_SETTINGS, "frostedClear"), opacity: 70 }), null);
+  assert.equal(builtinThemeInUse({ ...withBuiltinTheme(DEFAULT_SETTINGS, "arcticFrost"), opacity: 70 }), null);
+  assert.equal(builtinThemeInUse({ ...withBuiltinTheme(DEFAULT_SETTINGS, "arcticFrost"), glassBlur: 30 }), null);
+  assert.equal(builtinThemeInUse({ ...withBuiltinTheme(DEFAULT_SETTINGS, "warmPaper"), fontFamily: "system" }), null);
+  assert.equal(builtinThemeInUse({ ...withBuiltinTheme(DEFAULT_SETTINGS, "monoTerminal"), topFilletRadius: 8 }), null);
+  assert.equal(builtinThemeInUse({ ...withBuiltinTheme(DEFAULT_SETTINGS, "swissChalk"), accentColor: "#112233" }), null);
+});
+
+test("legacy saved settings from pre-C120 built-in themes keep their exact appearance", () => {
+  const legacyPresets = [
+    { opacity: 100, themeMode: "light", lightBackgroundColor: "#e4e5e9", lightTextColor: "#1c1c21", lightPulseColor: "#1f9d55", lightInkColor: "", darkBackgroundColor: "#1d1e22", darkTextColor: "#ececf0", darkPulseColor: "#3ae489", darkInkColor: "" },
+    { opacity: 86, themeMode: "light", lightBackgroundColor: "#fafbfd", lightTextColor: "#16171c", lightPulseColor: "#16904c", lightInkColor: "", darkBackgroundColor: "#15161a", darkTextColor: "#f4f5f8", darkPulseColor: "#3ae489", darkInkColor: "" },
+    { opacity: 90, themeMode: "light", lightBackgroundColor: "#f7f1e6", lightTextColor: "#2a2118", lightPulseColor: "#2f8f4e", lightInkColor: "#2a2118", darkBackgroundColor: "#1f1b17", darkTextColor: "#f5ecdc", darkPulseColor: "#7fdc8c", darkInkColor: "" },
+  ];
+  for (const saved of legacyPresets) {
+    const loaded = normalizeSettings(saved);
+    assert.equal(loaded.opacity, saved.opacity);
+    assert.equal(loaded.themeMode, saved.themeMode);
+    assert.equal(loaded.lightBackgroundColor, saved.lightBackgroundColor);
+    assert.equal(loaded.lightTextColor, saved.lightTextColor);
+    assert.equal(loaded.lightInkColor, saved.lightInkColor);
+    assert.equal(loaded.darkBackgroundColor, saved.darkBackgroundColor);
+    assert.equal(loaded.appearanceMode, "classic");
+    assert.equal(loaded.fontFamily, "system");
+    assert.equal(builtinThemeInUse(loaded), null);
+  }
 });

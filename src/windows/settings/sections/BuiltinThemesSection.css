@@ -19,13 +19,20 @@
   margin-top: 6px;
   padding: 7px 10px;
   background: var(--builtin-fill);
-  border-radius: 12px;
+  border-radius: var(--builtin-radius, 12px);
+  corner-shape: var(--builtin-corner-shape, squircle);
   box-shadow: inset 0 0 0 1px rgba(var(--builtin-ink), 0.1), 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
 .builtin-theme-art--glass .builtin-theme-art__island {
   backdrop-filter: blur(var(--builtin-blur, 0px)) saturate(160%);
   box-shadow: inset 0 0 0 1px rgba(var(--overlay-rgb, 255, 255, 255), 0.45), 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.builtin-theme-art--rim .builtin-theme-art__island {
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--builtin-accent, var(--color-accent)) 68%, rgba(var(--overlay-rgb, 255, 255, 255), 0.55)),
+    0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
 .builtin-theme-art__island i {

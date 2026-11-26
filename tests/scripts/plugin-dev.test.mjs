@@ -44,7 +44,7 @@ test("detectDevPluginsDir picks the most recently updated lane and honors explic
   assert.equal(detectDevPluginsDir({ platform: "darwin", env: {}, home, lane: "3" }), join(home, "Library", "Application Support", "com.tixxin.fuyu.lane-3", "plugins-v3"));
 });
 
-test("restoreMarketEntry switches a dev entry back to source: market while keeping other entries", () => {
+test("restoreMarketEntry switches a dev entry back to source: market with official: true only for @fuyu plugins", () => {
   const yml = join(scratch, "plugins.yml");
   writeFileSync(
     yml,
@@ -54,15 +54,22 @@ test("restoreMarketEntry switches a dev entry back to source: market while keepi
       '- id: "@fuyu/weather"',
       "  source: dev",
       '  path: "/tmp/fuyu-plugin-dev/weather"',
+      '- id: "@someone/clock"',
+      "  source: dev",
+      '  path: "/tmp/fuyu-plugin-dev/clock"',
       '- id: "@fuyu/world-clock"',
       "  source: market",
+      "  official: true",
       "",
     ].join("\n"),
   );
   restoreMarketEntry(yml, "@fuyu/weather");
+  restoreMarketEntry(yml, "@someone/clock");
   const next = readFileSync(yml, "utf8");
-  assert.match(next, /- id: "@fuyu\/weather"\n  source: market\n/);
+  assert.match(next, /- id: "@fuyu\/weather"\n  source: market\n  official: true\n/);
+  assert.match(next, /- id: "@someone\/clock"\n  source: market\n/);
+  assert.doesNotMatch(next, /- id: "@someone\/clock"\n  source: market\n  official: true/);
   assert.doesNotMatch(next, /source: dev/);
-  assert.match(next, /- id: "@fuyu\/world-clock"\n  source: market/);
+  assert.match(next, /- id: "@fuyu\/world-clock"\n  source: market\n  official: true/);
   assert.match(next, /- id: messages/);
 });

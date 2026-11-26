@@ -250,7 +250,10 @@ export function AgentSessionsPanel({
                   model={showModel ? modelLabel(session.model, shownEffort(session.provider, session.effort, effortLabels)) : null}
                   count={count}
                   icon={icon}
-                  onOpen={() => focus(session)}
+                  onOpen={() => {
+                    focus(session);
+                    reveal?.dismiss?.(shown.key);
+                  }}
                   onOpenAgentPage={onOpenAgentPage}
                   statusInBand={statusInBand}
                 />

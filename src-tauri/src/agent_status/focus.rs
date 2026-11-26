@@ -278,9 +278,8 @@ pub(super) fn focus_session(
     let (folder, ancestors) = cwd.map(folder_names).unwrap_or_default();
     let hints = SessionHints { folder: folder.as_deref(), ancestors: &ancestors, title, is_codex };
     let is_workbuddy = provider == workbuddy::PROVIDER;
-    let app_link_sent = (is_workbuddy && open_workbuddy_session(session_id, &mut log))
-        || (provider == claude_code::PROVIDER && open_claude_desktop_session(session_id, &mut log));
-    let mut steps = FocusSteps { has_chain: !chain.is_empty(), app_link_sent, ..FocusSteps::default() };
+    let workbuddy_link_sent = is_workbuddy && open_workbuddy_session(session_id, &mut log);
+    let mut steps = FocusSteps { has_chain: !chain.is_empty(), app_link_sent: workbuddy_link_sent, ..FocusSteps::default() };
     let focused = window_focus::focus_session_window(&hints, &chain, &prefer_apps).or_else(|| {
         steps.wezterm_selected = wezterm::activate_pane(None, tty.as_deref(), title);
         steps.wezterm_selected.then(|| window_focus::focus_session_window(&hints, &chain, &wezterm::prefer_apps()))?
@@ -288,7 +287,9 @@ pub(super) fn focus_session(
     if steps.wezterm_selected {
         log.note("wezterm-tab=selected");
     }
-    let focused = focused.or_else(|| is_workbuddy.then(|| wake_workbuddy(&hints, &prefer_apps, app_link_sent, &mut log))?);
+    let focused = focused.or_else(|| is_workbuddy.then(|| wake_workbuddy(&hints, &prefer_apps, workbuddy_link_sent, &mut log))?);
+    let app_link_sent = workbuddy_link_sent || (provider == claude_code::PROVIDER && open_claude_desktop_session(session_id, &mut log));
+    steps.app_link_sent = app_link_sent;
     let Some(focused) = focused else {
         if app_link_sent {
             log.finish(app_dir, "app link sent, window not up yet");

@@ -15,6 +15,7 @@ export type AlertedSession = AlertedNotice & {
   rowHeight: number;
   measure: (rowHeight: number) => void;
   openAgentPage?: () => void;
+  dismiss?: (key: string) => void;
 };
 
 export type AgentAlerts = {
@@ -165,6 +166,10 @@ export function useAgentAlerts({ sessions, kinds, dwell, canAlert, isOpenOnAgent
     commit(NO_NOTICES);
   }, [commit, stopAuto]);
 
+  const dismiss = useCallback((key: string) => {
+    refresh(noticesRef.current.filter((entry) => entry.key !== key), Date.now());
+  }, [refresh]);
+
   const showTest = useCallback((alerts: readonly AgentAlert[]): TestNoticeOutcome => {
     const current = latest.current;
     const blocked = testNoticeBlock(noticesRef.current, current.canAlert, current.isCollapsed);
@@ -182,6 +187,6 @@ export function useAgentAlerts({ sessions, kinds, dwell, canAlert, isOpenOnAgent
   return useMemo(() => {
     const stack = sortNotices(notices).map(({ key, kind, session }): AlertedNotice => ({ key, kind, session }));
     const top = stack[0];
-    return { alerted: top ? { ...top, rowHeight, measure: setRowHeight, openAgentPage } : null, stack, showTest, dismissTest };
-  }, [notices, rowHeight, openAgentPage, showTest, dismissTest]);
+    return { alerted: top ? { ...top, rowHeight, measure: setRowHeight, openAgentPage, dismiss } : null, stack, showTest, dismissTest };
+  }, [notices, rowHeight, openAgentPage, dismiss, showTest, dismissTest]);
 }
