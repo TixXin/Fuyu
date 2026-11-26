@@ -29,6 +29,10 @@ struct PeersFile {
     peers: Vec<Peer>,
 }
 
+pub(crate) fn now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |elapsed| u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX))
+}
+
 pub(crate) fn clean_name(name: &str) -> String {
     name.chars().filter(|ch| !ch.is_control()).take(MAX_NAME).collect::<String>().trim().to_string()
 }
