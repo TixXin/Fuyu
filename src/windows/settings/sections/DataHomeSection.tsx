@@ -35,7 +35,9 @@ export function DataHomeSection({ onMoved, onNote }: { onMoved: (from: string, t
   }, []);
 
   if (!home) return null;
-  const locked = home.source === "env" || home.source === "appData";
+  const locked = home.source === "env" || home.source === "portable" || home.source === "appData";
+  const canReset = !locked && home.home !== home.defaultHome;
+  const description = home.source === "env" ? text.fromEnv : home.source === "portable" ? text.portable : home.portableBlocked ? text.portableBlocked(home.portableBlocked) : undefined;
   const userHome = isMacOS ? userHomeOf(home.defaultHome) : null;
 
   const requestMove = (path: string | null) => {
@@ -72,14 +74,14 @@ export function DataHomeSection({ onMoved, onNote }: { onMoved: (from: string, t
   return (
     <SettingsFolderRow
       title={text.title}
-      description={locked && home.source === "env" ? text.fromEnv : undefined}
+      description={description}
       value={draft}
       readOnly={locked}
       ariaLabel={text.folderLabel}
       revealPath={home.home}
       revealLabel={isMacOS ? text.revealMac : text.reveal}
       browseTitle={text.title}
-      resetLabel={home.home !== home.defaultHome ? text.useDefault : undefined}
+      resetLabel={canReset ? text.useDefault : undefined}
       onChange={(next) => {
         setDraft(next);
         setPending(null);
@@ -90,7 +92,7 @@ export function DataHomeSection({ onMoved, onNote }: { onMoved: (from: string, t
         setDraft(shortened);
         requestMove(shortened);
       }}
-      onReset={home.home !== home.defaultHome ? () => requestMove(null) : undefined}
+      onReset={canReset ? () => requestMove(null) : undefined}
       extraControl={!locked ? <SettingsLinkButton onClick={() => requestMove(draft)}>{text.change}</SettingsLinkButton> : null}
     >
       {pending ? (

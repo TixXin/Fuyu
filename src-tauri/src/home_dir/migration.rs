@@ -85,6 +85,15 @@ pub(crate) fn before_start(app_data: &Path, home: &Path) -> io::Result<()> {
     result
 }
 
+pub(crate) fn before_portable_start(home: &Path) -> io::Result<()> {
+    if home.join(STATE_FILE).exists() {
+        return Ok(());
+    }
+    fs::create_dir_all(home)?;
+    let fresh = !has_island_data(home);
+    write_state(home, &State { at: now_ms(), hooks: fresh, todos: true, ..State::default() })
+}
+
 pub(crate) fn legacy_todo_dir() -> Option<PathBuf> {
     std::env::var_os("USERPROFILE").map(|profile| PathBuf::from(profile).join("Documents").join("FocuSD"))
 }

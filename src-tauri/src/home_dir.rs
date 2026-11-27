@@ -15,18 +15,22 @@ pub(crate) use migration::{has_island_data, TODO_DIR};
 
 pub(crate) const ENV: &str = "FUYU_HOME";
 pub(crate) const POINTER_FILE: &str = "home.json";
+pub(crate) const PORTABLE_MARKER: &str = "fuyu-portable.txt";
+const PORTABLE_DIR: &str = "data";
 const DEFAULT_DIR: &str = ".fuyu";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Source {
     Env,
+    Portable,
     Pointer,
     Default,
     AppData,
 }
 
 static HOME: OnceLock<(PathBuf, Source)> = OnceLock::new();
+static PORTABLE_BLOCKED: OnceLock<PathBuf> = OnceLock::new();
 
 pub(crate) fn fuyu_home<R: Runtime>(paths: &PathResolver<R>) -> tauri::Result<PathBuf> {
     match HOME.get() {
@@ -50,9 +54,12 @@ fn pointed_home(text: &str) -> Option<PathBuf> {
     home.is_absolute().then_some(home)
 }
 
-pub(crate) fn resolve(env: Option<&str>, pointer: Option<&str>, profile: Option<&Path>, app_data: &Path) -> (PathBuf, Source) {
+pub(crate) fn resolve(env: Option<&str>, portable: Option<&Path>, pointer: Option<&str>, profile: Option<&Path>, app_data: &Path) -> (PathBuf, Source) {
     if let Some(home) = env.map(str::trim).filter(|value| !value.is_empty()).map(PathBuf::from).filter(|home| home.is_absolute()) {
         return (home, Source::Env);
+    }
+    if let Some(home) = portable.filter(|home| home.is_absolute()) {
+        return (home.to_path_buf(), Source::Portable);
     }
     if let Some(home) = pointer.and_then(pointed_home) {
         return (home, Source::Pointer);
@@ -61,6 +68,53 @@ pub(crate) fn resolve(env: Option<&str>, pointer: Option<&str>, profile: Option<
         Some(profile) => (profile.join(DEFAULT_DIR), Source::Default),
         None => (app_data.to_path_buf(), Source::AppData),
     }
+}
+
+pub(crate) fn portable_marked(exe_dir: &Path) -> Option<PathBuf> {
+    exe_dir.join(PORTABLE_MARKER).is_file().then(|| exe_dir.join(PORTABLE_DIR))
+}
+
+#[cfg(windows)]
+fn portable_exe_dir() -> Option<PathBuf> {
+    if crate::system::msix::is_packaged() {
+        return None;
+    }
+    std::env::current_exe().ok()?.parent().map(Path::to_path_buf)
+}
+
+#[cfg(not(windows))]
+fn portable_exe_dir() -> Option<PathBuf> {
+    None
+}
+
+pub(crate) fn writable(dir: &Path) -> bool {
+    let probe = dir.join(".fuyu-write-test");
+    let ok = std::fs::create_dir_all(dir).is_ok() && std::fs::write(&probe, b"").is_ok();
+    let _ = std::fs::remove_file(&probe);
+    ok
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum Portable {
+    Off,
+    Ready(PathBuf),
+    Blocked(PathBuf),
+}
+
+pub(crate) fn portable_in(exe_dir: Option<&Path>) -> Portable {
+    match exe_dir.and_then(portable_marked) {
+        None => Portable::Off,
+        Some(home) if writable(&home) => Portable::Ready(home),
+        Some(home) => Portable::Blocked(home),
+    }
+}
+
+pub(crate) fn existing_portable_home() -> Option<PathBuf> {
+    portable_marked(&portable_exe_dir()?).filter(|home| home.is_dir())
+}
+
+pub(crate) fn portable_blocked() -> Option<&'static Path> {
+    PORTABLE_BLOCKED.get().map(PathBuf::as_path)
 }
 
 fn profile() -> Option<PathBuf> {
@@ -85,7 +139,7 @@ pub(crate) fn real_home() -> Option<PathBuf> {
     let app_data = app_data_dir(crate::rename_migration::NEW_IDENTIFIER)?;
     let env = std::env::var(ENV).ok();
     let pointer = std::fs::read_to_string(app_data.join(POINTER_FILE)).ok();
-    Some(resolve(env.as_deref(), pointer.as_deref(), profile().as_deref(), &app_data).0)
+    Some(resolve(env.as_deref(), None, pointer.as_deref(), profile().as_deref(), &app_data).0)
 }
 
 pub(crate) fn installed_island_pid() -> Option<u32> {
@@ -107,8 +161,17 @@ pub(crate) fn init(identifier: &str) {
         (app_data.clone(), Source::AppData)
     } else {
         let env = std::env::var(ENV).ok();
+        let portable = match portable_in(portable_exe_dir().as_deref()) {
+            Portable::Ready(home) => Some(home),
+            Portable::Blocked(home) => {
+                eprintln!("the portable data folder {} is not writable, using the usual data folder", home.display());
+                let _ = PORTABLE_BLOCKED.set(home);
+                None
+            }
+            Portable::Off => None,
+        };
         let pointer = std::fs::read_to_string(app_data.join(POINTER_FILE)).ok();
-        resolve(env.as_deref(), pointer.as_deref(), profile().as_deref(), &app_data)
+        resolve(env.as_deref(), portable.as_deref(), pointer.as_deref(), profile().as_deref(), &app_data)
     };
     if source != Source::AppData {
         if let Some(holder) = lock::conflict(&home) {
@@ -119,7 +182,8 @@ pub(crate) fn init(identifier: &str) {
             std::process::exit(0);
         }
     }
-    let chosen = match migration::before_start(&app_data, &home) {
+    let prepared = if source == Source::Portable { migration::before_portable_start(&home) } else { migration::before_start(&app_data, &home) };
+    let chosen = match prepared {
         Ok(()) => (home, source),
         Err(error) => {
             eprintln!("could not move the data to {} (staying in {} this time): {error}", home.display(), app_data.display());
@@ -160,8 +224,8 @@ pub(crate) use tauri_commands;
 mod tests {
     #[cfg(windows)]
     use super::pointed_home;
-    use super::{resolve, Source};
-    use std::path::Path;
+    use super::{portable_in, portable_marked, resolve, Portable, Source, PORTABLE_MARKER};
+    use std::{fs, path::Path};
 
     const APP_DATA: &str = r"C:\Users\me\AppData\Roaming\com.tixxin.fuyu";
     #[cfg(windows)]
@@ -169,7 +233,7 @@ mod tests {
 
     #[cfg(windows)]
     fn home(env: Option<&str>, pointer: Option<&str>) -> (String, Source) {
-        let (home, source) = resolve(env, pointer, Some(Path::new(PROFILE)), Path::new(APP_DATA));
+        let (home, source) = resolve(env, None, pointer, Some(Path::new(PROFILE)), Path::new(APP_DATA));
         (home.display().to_string(), source)
     }
 
@@ -199,8 +263,46 @@ mod tests {
 
     #[test]
     fn without_a_profile_the_app_data_folder_stays() {
-        let (home, source) = resolve(None, None, None, Path::new(APP_DATA));
+        let (home, source) = resolve(None, None, None, None, Path::new(APP_DATA));
         assert_eq!((home.display().to_string(), source), (APP_DATA.into(), Source::AppData));
+    }
+
+    #[test]
+    fn the_portable_folder_comes_after_the_environment_and_before_the_pointer() {
+        let root = std::env::temp_dir();
+        let env = root.join("env-home");
+        let portable = root.join("portable").join("data");
+        let pointed = root.join("pointed");
+        let pointer = serde_json::json!({ "home": pointed.display().to_string() }).to_string();
+        let profile = root.join("me");
+        let pick = |env: Option<&Path>, portable: Option<&Path>| {
+            let env = env.map(|path| path.display().to_string());
+            resolve(env.as_deref(), portable, Some(&pointer), Some(&profile), Path::new(APP_DATA))
+        };
+        assert_eq!(pick(Some(&env), Some(&portable)), (env.clone(), Source::Env));
+        assert_eq!(pick(None, Some(&portable)), (portable.clone(), Source::Portable));
+        assert_eq!(pick(None, Some(Path::new("data"))), (pointed.clone(), Source::Pointer));
+        assert_eq!(pick(None, None), (pointed, Source::Pointer));
+        assert_eq!(resolve(None, Some(&portable), None, Some(&profile), Path::new(APP_DATA)), (portable, Source::Portable));
+    }
+
+    #[test]
+    fn only_a_marker_next_to_the_exe_turns_on_portable_mode() {
+        let root = std::env::temp_dir().join(format!("fuyu-portable-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        assert_eq!(portable_marked(&root), None);
+        assert_eq!(portable_in(Some(&root)), Portable::Off);
+        assert_eq!(portable_in(None), Portable::Off);
+        fs::write(root.join(PORTABLE_MARKER), "").unwrap();
+        assert_eq!(portable_marked(&root), Some(root.join("data")));
+        assert_eq!(portable_in(Some(&root)), Portable::Ready(root.join("data")));
+        assert!(root.join("data").is_dir());
+        assert!(!root.join("data").join(".fuyu-write-test").exists());
+        fs::remove_dir_all(root.join("data")).unwrap();
+        fs::write(root.join("data"), "a file, not a folder").unwrap();
+        assert_eq!(portable_in(Some(&root)), Portable::Blocked(root.join("data")));
+        let _ = fs::remove_dir_all(&root);
     }
 
     #[cfg(target_os = "macos")]

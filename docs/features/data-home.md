@@ -9,8 +9,9 @@ WebView2 自己的数据（`%LOCALAPPDATA%\com.tixxin.fuyu\EBWebView`，localSto
 按顺序找，用第一个给出绝对路径的：
 
 1. 环境变量 `FUYU_HOME`；
-2. 指针文件 `%APPDATA%\com.tixxin.fuyu\home.json` 里的 `{ "home": "<文件夹>" }`（D30.4 在设置里改家目录时写它；指针文件本身不放进家目录）；
-3. `%USERPROFILE%\.fuyu`。
+2. 便携模式：`fuyu.exe` 同一个文件夹里有 `fuyu-portable.txt` 时，用它旁边的 `data\`（只在 Windows 上、不是商店版时认，见下面「便携模式」）；
+3. 指针文件 `%APPDATA%\com.tixxin.fuyu\home.json` 里的 `{ "home": "<文件夹>" }`（D30.4 在设置里改家目录时写它；指针文件本身不放进家目录）；
+4. `%USERPROFILE%\.fuyu`。
 
 开发版（调试构建，默认身份 `com.tixxin.fuyu.lane-1`，见 workflow.md「开发版和正式版同时开」）不参与，始终用它自己的 `%APPDATA%\com.tixxin.fuyu.lane-<N>`，里面是第一次启动时从这里复制的一份；它只读地读这里的 Agent 钩子产物（`home_dir::agent_home`），不往这里写。设了 `FUYU_DEV_SHARED_IDENTITY=1` 的调试版和正式版一样按上面的顺序找。
 
@@ -40,7 +41,27 @@ Rust 里取目录一律用 `home_dir::fuyu_home(app.path())`，不直接用 `app
 - 新文件夹里没有浮屿的数据就把当前家目录整个复制过去（锁文件、指针文件不复制）；已经有就直接用它的（比如网盘里同步来的）。
 - 在新文件夹的 `home-migration.json` 里记下要重装钩子，写指针文件 `home.json`（改回默认时删掉它），然后提示重启岛屿。旧文件夹不删。
 - 待办 Markdown 的保存目录正好是旧家目录下的 `todo` 时，跟着改成新家目录下的 `todo`。
-- 由环境变量 `FUYU_HOME` 指定时只显示、不能改；lane 预览也不能改。
+- 由环境变量 `FUYU_HOME` 指定、或是便携版时只显示、不能改；lane 预览也不能改。
+
+## 便携模式（免安装版，FB-34）
+
+2026-11-26 起。把 `fuyu.exe` 放进一个自己的文件夹（U 盘、`D:\Tools\Fuyu` 之类），在旁边新建一个空的 `fuyu-portable.txt`（名字固定，内容不看），启动后家目录就是同一个文件夹里的 `data\`。做一份免安装版就是：
+
+1. 从安装版的安装目录（默认 `%LOCALAPPDATA%\Programs\Fuyu`）或 `pnpm build:exe` 产物里拿 `fuyu.exe`，放进一个新文件夹；
+2. 在同一个文件夹里新建空文件 `fuyu-portable.txt`；
+3. 整个文件夹打成 zip 发出去，解压后双击 `fuyu.exe` 即用。zip 打包脚本还没做。
+
+行为：
+
+- 顺序排在 `FUYU_HOME` 之后、`home.json` 之前：设了 `FUYU_HOME` 仍以环境变量为准；便携模式下不读 `home.json`。
+- `data\` 每次启动先试着建、写一个探测文件再删掉。写不进去（例如把便携版放进了 `Program Files`）就照常按指针文件、`~\.fuyu` 找，设置 →「数据文件夹」下面提示「有便携标记但写不进去」，挪到可写的位置重启就好。
+- **第一次进入便携模式不复制别处的数据**，从空白开始：便携版常常放在 U 盘上带走，不该悄悄把本机 `~\.fuyu` 里的剪贴板历史、待办拷进去。要带上原来的数据，先在安装版里退出浮屿，把 `~\.fuyu` 里的东西复制进 `data\` 再启动（里面已有浮屿数据就直接用，钩子会重装一次指到新位置），或用设置备份导出再导入。
+- 设置 →「数据文件夹」显示 `data\` 的路径和「便携版」说明，不能改、不能改回默认（`set_data_home` 返回 `home.portable`）；要换位置就整个搬程序文件夹。
+- 便携版不自动更新（`updater_configured` 返回 `false`）：更新包是安装程序，会装到别处、用回 `~\.fuyu`。手动下载新版 `fuyu.exe` 覆盖即可。
+- 家目录的锁照常生效：同一个 U 盘在两台电脑上同时开会被拦。
+- 不是全部带走：WebView2 的数据（含 `localStorage`，`%LOCALAPPDATA%\com.tixxin.fuyu\EBWebView`）、凭据管理器里的密钥和开机自启的注册表值仍在本机。设置有 `settings.json` 镜像，换电脑后大部分设置能从 `data\` 读回来，API 密钥要重新填。
+- 不启用的情况：开发版 lane（始终用自己的应用数据目录）、Microsoft Store 商店版（MSIX 的安装目录只读）、macOS（标记会落在 `.app` 包里，破坏签名）。
+- 卸载清理（`fuyu.exe --uninstall-cleanup`）也先看自己旁边有没有标记和 `data\`：有就清理那里（按受管文件白名单，不整目录删），所以卸载安装版不会动另一个文件夹里的便携版数据。
 
 ## 两台电脑不能同时用一个家目录（D30.4）
 

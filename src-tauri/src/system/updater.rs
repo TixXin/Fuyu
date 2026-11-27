@@ -34,7 +34,7 @@ fn invalid_proxy(error: impl std::fmt::Display) -> UserError {
 
 #[tauri::command]
 pub fn updater_configured(app: AppHandle) -> bool {
-    if crate::dev_lane::lane().is_some() || super::msix::is_packaged() {
+    if crate::dev_lane::lane().is_some() || super::msix::is_packaged() || crate::home_dir::source() == crate::home_dir::Source::Portable {
         return false;
     }
     app.config()

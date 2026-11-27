@@ -312,6 +312,7 @@ pub(crate) fn maybe_run_from_args() -> bool {
             let pointer = fs::read_to_string(app_data.join(crate::home_dir::POINTER_FILE)).ok();
             crate::home_dir::resolve(
                 env_home.as_deref(),
+                crate::home_dir::existing_portable_home().as_deref(),
                 pointer.as_deref(),
                 profile.as_deref(),
                 &app_data,
@@ -324,6 +325,7 @@ pub(crate) fn maybe_run_from_args() -> bool {
             .filter(|value| !value.is_empty())
             .map(PathBuf::from)
             .filter(|path| path.is_absolute())
+            .or_else(crate::home_dir::existing_portable_home)
             .or_else(|| profile.as_ref().map(|dir| dir.join(".fuyu")))
         {
             Some(home) => home,
