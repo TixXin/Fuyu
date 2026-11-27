@@ -121,8 +121,7 @@
   position: absolute;
   inset: 0 auto 0 -160%;
   width: 260%;
-  background: linear-gradient(115deg, transparent 30%, var(--glass-sheen-color, rgba(var(--overlay-rgb, 255, 255, 255), 0.18)) 45%, transparent 60%);
-  mix-blend-mode: overlay;
+  background: linear-gradient(115deg, transparent 30%, var(--glass-sheen-color, rgba(var(--overlay-rgb, 255, 255, 255), 0.1)) 45%, transparent 60%);
   animation: glassSheen calc(var(--glass-flow-duration, 23s) * 0.48) var(--motion-ease-in-out) infinite alternate;
 }
 
