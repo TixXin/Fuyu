@@ -52,7 +52,7 @@ function GlassIsland({ background, light }: { background: string; light: boolean
   const stageStyle = {
     "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1,
     "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8,
-    "--glass-intensity": settings.glassIntensity / 100, "--glass-panel-blur": `${10 + (settings.glassIntensity / 100) * 9}px`, "--island-background-color": background, "--glass-tint-color": background, "--glass-collapsed-tint-color": background,
+    "--glass-intensity": settings.glassIntensity / 100, "--glass-shadow-alpha": 0.2, "--glass-panel-blur": `${10 + (settings.glassIntensity / 100) * 9}px`, "--island-background-color": background, "--glass-tint-color": background, "--glass-collapsed-tint-color": background,
     ...(light ? { "--island-ink-rgb": "24, 24, 30", "--task-text-color": "#1c1c1f" } : {}),
     ...glassStyle,
   } as CSSProperties;
@@ -71,6 +71,12 @@ function GlassIsland({ background, light }: { background: string; light: boolean
 }
 
 const messages: string[] = [];
+function outerShadow(island: HTMLElement) {
+  const shadow = getComputedStyle(island).boxShadow.split(/,(?![^(]*\))/).find((part) => !part.includes("inset")) ?? "";
+  const [, , blur = 0, spread = 0] = (shadow.match(/-?[\d.]+px/g) ?? []).map(parseFloat);
+  return { blur, spread };
+}
+
 function check(condition: unknown, label: string) {
   if (!condition) throw new Error(label);
   messages.push(`PASS ${label}`);
@@ -130,6 +136,8 @@ async function runChecks() {
     check(islands().every((island) => playState(island) === "paused"), "「只在展开时」下折叠岛不动");
     await set({ expanded: true });
     check(islands().every((island) => playState(island) === "running"), "展开后流动");
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 900)); });
+    check(islands().every((island) => outerShadow(island).blur === 46 && outerShadow(island).spread === 0), "窗口两侧和下方留够时，展开面板的外阴影照旧（模糊 46px、不收缩）");
 
     const scale = 1.15;
     for (const island of islands()) {
@@ -143,6 +151,9 @@ async function runChecks() {
       const room = stage.getBoundingClientRect();
       const fillet = (parseFloat(getComputedStyle(island, "::before").width) - box.width) / 2;
       check(fillet > 8 && box.left - fillet >= room.left - 0.5 && box.right + fillet <= room.right + 0.5, `${tone}：缩放 ${scale} 下最宽的展开岛两侧倒角（${fillet.toFixed(1)}px）还在 820px 窗口里（左 ${(box.left - room.left).toFixed(1)}px，右 ${(room.right - box.right).toFixed(1)}px）`);
+      const { blur, spread } = outerShadow(island);
+      const reach = blur + spread;
+      check(blur > 0 && reach <= Math.min(box.left - room.left, room.right - box.right) + 0.5, `${tone}：缩放 ${scale} 下最宽的展开岛外阴影（模糊 ${blur}px、收缩 ${spread}px）在 820px 窗口边以内淡完，不被切出硬边`);
       stage.setAttribute("style", saved);
     }
 

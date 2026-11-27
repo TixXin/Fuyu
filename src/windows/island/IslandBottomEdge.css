@@ -2,6 +2,10 @@
   align-items: flex-end;
 }
 
+:root[data-island-edge="bottom"] .island--appearance-liquidGlass {
+  --glass-shadow-room-y: 64px;
+}
+
 :root[data-island-edge="bottom"] .island--detached.island--collapsed,
 :root[data-island-edge="bottom"] .island--detached.island--expanded {
   --island-shell-bottom-corner: 0px;

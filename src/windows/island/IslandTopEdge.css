@@ -170,7 +170,7 @@
 :root[data-island-top-edge="attached"] .island--appearance-liquidGlass.island--expanded,
 :root:not([data-island-top-edge]) .island--docked.island--appearance-liquidGlass.island--expanded {
   box-shadow:
-    0 18px 46px rgba(0, 0, 0, var(--glass-shadow-alpha)),
+    0 18px 46px var(--glass-shadow-spread) rgba(0, 0, 0, var(--glass-shadow-alpha)),
     var(--island-edge-lines,
       inset 0 -1px 0 rgba(8, 18, 28, 0.16),
       inset 1px 0 0 rgba(130, 224, 255, var(--glass-cyan-alpha)),
