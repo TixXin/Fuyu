@@ -17,11 +17,11 @@
   </p>
 
   <p>
-    <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://img.shields.io/github/v/release/TixXin/fuyu?label=version&style=flat-square&labelColor=1b1f24&color=3d444d"></a>
-    <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B-3d444d?style=flat-square&labelColor=1b1f24">
-    <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-3d444d?style=flat-square&labelColor=1b1f24">
-    <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-3d444d?style=flat-square&labelColor=1b1f24"></a>
-    <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/TixXin/fuyu?style=flat-square&label=stars&labelColor=1b1f24&color=3d444d"></a>
+    <a href="https://github.com/TixXin/fuyu/releases/latest"><img alt="Version" src="https://flat.badgen.net/github/release/TixXin/fuyu/stable?label=version&color=3d444d&labelColor=1b1f24"></a>
+    <img alt="Platform" src="https://flat.badgen.net/badge/platform/Windows%2010%20%2F%2011%20%7C%20macOS%2015%2B/3d444d?labelColor=1b1f24">
+    <img alt="Tauri" src="https://flat.badgen.net/badge/Tauri/2/3d444d?labelColor=1b1f24">
+    <a href="LICENSE"><img alt="License" src="https://flat.badgen.net/badge/license/AGPL-3.0/3d444d?labelColor=1b1f24"></a>
+    <a href="https://github.com/TixXin/fuyu/stargazers"><img alt="Stars" src="https://flat.badgen.net/github/stars/TixXin/fuyu?label=stars&color=3d444d&labelColor=1b1f24"></a>
   </p>
 
   <p>
