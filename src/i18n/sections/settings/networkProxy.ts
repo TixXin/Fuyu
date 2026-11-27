@@ -6,6 +6,10 @@ export type SettingsNetworkProxyText = {
   modeDirect: string;
   systemDetectedPrefix: string;
   systemNone: string;
+  systemPacPrefix: string;
+  systemWpad: string;
+  systemAutoVia: string;
+  systemAutoDirect: string;
   directHint: string;
   serverLabel: string;
   serverDescription: string;
@@ -44,6 +48,10 @@ export const zhCN: SettingsNetworkProxyText = {
   modeDirect: "不使用代理",
   systemDetectedPrefix: "已检测到系统代理",
   systemNone: "当前未检测到系统代理，将直接连接网络",
+  systemPacPrefix: "已检测到自动配置脚本（PAC）",
+  systemWpad: "系统开启了自动检测代理（WPAD）",
+  systemAutoVia: "访问外网时走",
+  systemAutoDirect: "访问外网时直接连接；邮箱等按目标地址逐个判断",
   directHint: "忽略系统和环境变量中的代理，直接连接网络",
   serverLabel: "代理地址",
   serverDescription: "选择协议并填写主机和端口（支持直接粘贴代理链接）",
@@ -82,6 +90,10 @@ export const en: SettingsNetworkProxyText = {
   modeDirect: "Direct",
   systemDetectedPrefix: "Detected system proxy",
   systemNone: "No system proxy detected; connecting directly",
+  systemPacPrefix: "Detected auto-config script (PAC)",
+  systemWpad: "Automatic proxy detection (WPAD) is on",
+  systemAutoVia: "Internet traffic goes through",
+  systemAutoDirect: "Internet traffic connects directly; mail and other servers are checked one by one",
   directHint: "Ignore system and environment proxy settings and connect directly",
   serverLabel: "Proxy server",
   serverDescription: "Choose a protocol and enter the host and port (pasting a full URL also works)",

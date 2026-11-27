@@ -5,6 +5,7 @@ use keyring::{Entry, Error as KeyringError};
 use serde::{Deserialize, Serialize};
 use tauri::Url;
 
+use super::pac::PacSource;
 use crate::user_error::{credential as cred_err, UserError};
 
 pub(crate) const FILE_NAME: &str = "network-proxy.json";
@@ -57,6 +58,8 @@ pub struct NetworkProxyView {
     pub has_password: bool,
     pub bypass: String,
     pub system_proxy: Option<String>,
+    pub system_pac: Option<String>,
+    pub system_wpad: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -94,9 +97,58 @@ pub(crate) struct ProxyTarget {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct AutoProxy {
+    pub(crate) pac: PacSource,
+    pub(crate) fallback: Option<ProxyTarget>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ResolvedProxy {
     Direct,
     Proxy(ProxyTarget),
+    Auto(AutoProxy),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Hop {
+    Direct,
+    Proxy(String),
+}
+
+impl ResolvedProxy {
+    pub(crate) fn hops_for(&self, host: &str, port: u16) -> Vec<Hop> {
+        self.hops_for_scheme("https", host, port)
+    }
+
+    pub(crate) fn hops_for_scheme(&self, scheme: &str, host: &str, port: u16) -> Vec<Hop> {
+        match self {
+            ResolvedProxy::Direct => vec![Hop::Direct],
+            ResolvedProxy::Proxy(target) => target.hops_for(host),
+            ResolvedProxy::Auto(auto) => {
+                if is_loopback_host(host) {
+                    return vec![Hop::Direct];
+                }
+                auto.hops_from(host, super::pac::resolve(&auto.pac, &super::pac::target_url(scheme, host, port)))
+            }
+        }
+    }
+
+    pub(crate) fn first_proxy_for(&self, scheme: &str, host: &str, port: u16) -> Option<String> {
+        self.hops_for_scheme(scheme, host, port).into_iter().find_map(|hop| match hop {
+            Hop::Proxy(url) => Some(url),
+            Hop::Direct => None,
+        })
+    }
+}
+
+impl AutoProxy {
+    pub(crate) fn hops_from(&self, host: &str, evaluated: Option<Vec<Hop>>) -> Vec<Hop> {
+        match evaluated {
+            Some(hops) if !hops.is_empty() => hops,
+            Some(_) => vec![Hop::Direct],
+            None => self.fallback.as_ref().map_or_else(|| vec![Hop::Direct], |target| target.hops_for(host)),
+        }
+    }
 }
 
 impl ProxyTarget {
@@ -111,6 +163,14 @@ impl ProxyTarget {
             }
         }
         entries.join(",")
+    }
+
+    pub(crate) fn hops_for(&self, host: &str) -> Vec<Hop> {
+        if self.should_bypass(host) {
+            vec![Hop::Direct]
+        } else {
+            vec![Hop::Proxy(self.url.clone())]
+        }
     }
 
     pub(crate) fn should_bypass(&self, host: &str) -> bool {

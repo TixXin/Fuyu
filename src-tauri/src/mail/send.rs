@@ -96,7 +96,7 @@ pub(super) fn deliver(server: &str, email: &str, secret: &str, message: &Message
         Some((host, port)) => (host, port.parse().unwrap_or(SMTPS_PORT)),
         None => (server, SMTPS_PORT),
     };
-    if crate::system::proxy::should_use_proxy_for(host) {
+    if crate::system::proxy::should_use_proxy_for(host, port) {
         return super::smtp_proxy::deliver(host, port, email, secret, message);
     }
     let tls = TlsParameters::new(host.to_string()).map_err(|error| UserError::new("mail.tls", "Could not set up an encrypted connection.").detail(error))?;
@@ -110,7 +110,8 @@ pub(super) fn deliver(server: &str, email: &str, secret: &str, message: &Message
         if error.is_permanent() || error.to_string().contains("535") {
             UserError::new("mail.smtpRefused", "The mail server refused the sign-in or the mail; check that SMTP is on, the authorization code and the recipients.")
         } else {
-            UserError::new("mail.sendFailed", "Sending failed; check the network and try again.").detail(error)
+            let fallback = UserError::new("mail.sendFailed", "Sending failed; check the network and try again.");
+            super::net_error::or_classified(super::net_error::Stage::Tls, &error, &super::net_error::Endpoint { host, port, proxy: None }, fallback)
         }
     })
 }

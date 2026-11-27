@@ -16,6 +16,7 @@ use std::{
 
 use super::client_id::{send_client_id, SharedStream};
 use super::credentials::read_secret;
+use super::net_error::{self, Endpoint, Stage};
 use super::service::Work;
 use super::MailMessage;
 
@@ -53,6 +54,16 @@ impl MailFailure {
             authentication: false,
             error: UserError::new("mail.sync", "Could not sync the mailbox; check the network or try again later.")
                 .detail(step_detail(step, cause)),
+        }
+    }
+
+    pub(super) fn network(step: &str, stage: Stage, cause: &(dyn std::error::Error + 'static), endpoint: &Endpoint) -> Self {
+        match net_error::classify(stage, cause, endpoint) {
+            Some(error) => Self {
+                authentication: false,
+                error: error.detail(step_detail(step, cause)),
+            },
+            None => Self::sync(step, cause),
         }
     }
 
@@ -262,8 +273,11 @@ fn connect(
     secret: &str,
 ) -> Result<(MailSession, TcpStream), MailFailure> {
     let (host, port) = super::credentials::server_address(host);
-    let stream = crate::system::proxy::connect_tcp(host, port, Duration::from_secs(10))
-        .map_err(failed_at("TCP"))?;
+    let connected = crate::system::proxy::connect_tcp_traced(host, port, Duration::from_secs(10)).map_err(|error| {
+        MailFailure::network("TCP", Stage::Connect, &error, &Endpoint { host, port, proxy: None })
+    })?;
+    let endpoint = Endpoint { host, port, proxy: connected.proxy.as_deref() };
+    let stream = connected.stream;
     stream
         .set_read_timeout(Some(IO_TIMEOUT))
         .map_err(failed_at("TCP"))?;
@@ -272,12 +286,15 @@ fn connect(
         .map_err(failed_at("TCP"))?;
     let interrupt = stream.try_clone().map_err(failed_at("TCP"))?;
     let tls = native_tls::TlsConnector::new().map_err(failed_at("TLS"))?;
-    let stream = tls
-        .connect(host, stream)
-        .map_err(failed_at("TLS"))?;
+    let stream = tls.connect(host, stream).map_err(|error| match error {
+        native_tls::HandshakeError::Failure(error) => MailFailure::network("TLS", Stage::Tls, &error, &endpoint),
+        native_tls::HandshakeError::WouldBlock(_) => MailFailure::network("TLS", Stage::Tls, &std::io::Error::from(std::io::ErrorKind::TimedOut), &endpoint),
+    })?;
     let shared = Arc::new(Mutex::new(stream));
     let mut client = imap::Client::new(BoundedStream(SharedStream(shared.clone())));
-    client.read_greeting().map_err(failed_at("GREETING"))?;
+    client
+        .read_greeting()
+        .map_err(|error| MailFailure::network("GREETING", Stage::Greeting, &error, &endpoint))?;
     let mut session = client
         .login(email, secret)
         .map_err(|(error, _)| login_failure(error))?;

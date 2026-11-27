@@ -5,10 +5,13 @@ mod smtp_proxy;
 mod client_id;
 mod content;
 mod credentials;
+mod net_error;
 mod service;
 mod session;
 mod supervisor;
 
+#[cfg(test)]
+mod net_error_tests;
 #[cfg(test)]
 mod tests;
 
