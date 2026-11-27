@@ -23,18 +23,25 @@ if (-not (Test-Path -LiteralPath $nextPath)) { exit 0 }
 $command = ([System.IO.File]::ReadAllText($nextPath, $utf8)).Trim()
 if (-not $command -or $command -like "*fuyu-claude-statusline*") { exit 0 }
 
-$bash = $env:CLAUDE_CODE_GIT_BASH_PATH
-if (-not $bash -or -not (Test-Path -LiteralPath $bash)) {
-  $git = Get-Command git.exe -ErrorAction SilentlyContinue
-  if ($git) {
-    $candidate = Join-Path (Split-Path (Split-Path $git.Source)) "bin\bash.exe"
-    if (Test-Path -LiteralPath $candidate) { $bash = $candidate }
+function Find-GitBash([string]$git) {
+  $candidates = @($env:CLAUDE_CODE_GIT_BASH_PATH)
+  if ($env:EXEPATH) { $candidates += @((Join-Path $env:EXEPATH "bin\bash.exe"), (Join-Path $env:EXEPATH "bash.exe")) }
+  $directory = if ($git) { Split-Path $git } else { "" }
+  for ($level = 0; $directory -and $level -lt 4; $level++) {
+    $candidates += Join-Path $directory "bin\bash.exe"
+    $directory = Split-Path $directory
+  }
+  foreach ($candidate in $candidates) {
+    if ($candidate -and (Test-Path -LiteralPath $candidate -PathType Leaf)) { return $candidate }
   }
 }
 
+$git = Get-Command git.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+$bash = Find-GitBash $(if ($git) { $git.Source } else { "" })
+
 $start = New-Object System.Diagnostics.ProcessStartInfo
 $start.EnvironmentVariables["FUYU_STATUSLINE_NEXT"] = $command
-if ($bash -and (Test-Path -LiteralPath $bash)) {
+if ($bash) {
   $start.FileName = $bash
   $start.Arguments = '-c "eval \"$FUYU_STATUSLINE_NEXT\""'
 } else {
