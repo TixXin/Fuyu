@@ -42,7 +42,7 @@
 
 浮屿专有、只测这一层的测试（`island-control`、`settings-*`、`app-routing`、`mcp`）也列在 `fuyuOnly`。
 
-## 进度
+## 来历（E79，已完成）
 
 E79 分几步做，每步一个提交：映射表和脚本 → 浮屿专有的部分（岛、设置窗口）从基座挪出去 → 默认值去掉浮屿名字 → 把 tauri-cordis 的 `replacedByThirdParty` 搬回浮屿 → 在 tauri-cordis 里写入导出结果、补 CI 一致性检查。已全部做完（2026-11-26）：tauri-cordis 0.3.0（TixXin/tauri-cordis#2）就是这份导出，npm 和 crates.io 都已发布；tauri-cordis 的 `.fuyu-export.json` 记着导出来源的浮屿提交，它的 CI `export` 任务在那个提交上重新导出并逐字节比对。以后改了受管目录，在浮屿提交合入后跑 `pnpm cordis write --cordis ../tauri-cordis`，更新 `.fuyu-export.json`，在 tauri-cordis 提 PR。
 
