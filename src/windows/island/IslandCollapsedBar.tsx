@@ -20,6 +20,7 @@ import { usePillOverflow } from "./usePillOverflow";
 import { usePlaceNewPluginItems } from "./usePlaceNewPluginItems";
 import { useCollapsedItemNames } from "./useCollapsedItemNames";
 import { useCollapsedContent } from "./useCollapsedContent";
+import { useCenterClearance } from "./useCenterClearance";
 import { AlertPopup, NotchAlertLeading, NotchAlertTrailing, useActiveAlert } from "./NotchAlert";
 import { IslandSummary } from "./IslandSummary";
 import { DevWatermark } from "../../components/DevWatermark";
@@ -153,6 +154,7 @@ export function IslandCollapsedBar({
   const rightWingRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   useCollapsedContent(barRef, notch === null);
+  useCenterClearance(barRef, showCenter && notch === null && !isExpanded && !isTucked);
   const leftItems = zone("left");
   const rightItems = zone("right");
   const placed = new Set(saved.map(({ id }) => id));

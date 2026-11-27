@@ -169,6 +169,10 @@
   transform: translateX(-50%);
 }
 
+.island__center-slot[data-crowded] {
+  visibility: hidden;
+}
+
 .island__gauge-slot {
   display: flex;
   flex: 0 0 auto;
