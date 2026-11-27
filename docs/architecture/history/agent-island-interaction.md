@@ -1,10 +1,10 @@
 # Agent 岛上交互：提醒、声音、审批与回答
 
-> 状态：方案，2026-11-06。用户希望岛屿在 Agent 方面做到同类 macOS 刘海岛工具的水平，重点是 **Agent 音效**，以及**会话完成、需要审批或提问时自动弹出面板，直接在岛上处理，不用切回终端**。参考截图在本机 `E:\Projects\design-refs\vibe-island-settings`（12 张设置页、3 张岛上卡片），**不进仓库**。
+> 状态：已完成（B6），归档留作记录；原方案写于 2026-11-06。用户希望岛屿在 Agent 方面做到同类 macOS 刘海岛工具的水平，重点是 **Agent 音效**，以及**会话完成、需要审批或提问时自动弹出面板，直接在岛上处理，不用切回终端**。参考截图在本机 `E:\Projects\design-refs\vibe-island-settings`（12 张设置页、3 张岛上卡片），**不进仓库**。
 >
 > 我们借鉴的是功能和交互逻辑。界面、文案、图标和音效都自己做，不照搬。
 
-任务和进度见 [B6](../../tasks/0-archive/B/B6.md)（`pnpm tasks show B6`），音效选型和实测记录见 [agent-island-interaction-tasks.md](island-interaction-notes.md)。
+任务和进度见 [B6](../../tasks/0-archive/B/B6.md)（`pnpm tasks show B6`），音效选型和实测记录见 [agent-island-interaction-notes.md](../../investigations/agent-island-interaction-notes.md)。
 
 ## 一、参考软件有哪些能力
 
