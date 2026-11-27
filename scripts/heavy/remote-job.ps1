@@ -76,6 +76,13 @@ if ($p.step -eq "run") {
   Set-Content -Path "$job.pid" -Value $PID
   $savedPath = Get-Content -Path "$job.path" -ErrorAction SilentlyContinue
   if ($savedPath) { $env:Path = $savedPath }
+  if (-not (Get-Command sh -ErrorAction SilentlyContinue)) {
+    $gitExe = Get-Command git -ErrorAction SilentlyContinue
+    if ($gitExe) {
+      $gitBin = Join-Path (Split-Path (Split-Path $gitExe.Source)) "usr\bin"
+      if (Test-Path (Join-Path $gitBin "sh.exe")) { $env:Path = "$env:Path;$gitBin" }
+    }
+  }
 }
 
 function Invoke-Git {
