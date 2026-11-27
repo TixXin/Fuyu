@@ -1,6 +1,6 @@
 # 各家 AI 代理的接入现状
 
-岛接了十九家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）、pi（B71）和 Cursor（编辑器 Agent），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十三家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十九家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）、pi（B71）和 Cursor（编辑器 Agent），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。除 Claude Code 和 Codex 外，各家与通用第三方各有一节在后面。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
 各家要声明哪些东西、以后怎么改成描述文件，见 [Agent 接入协议](harness-protocol.md)（B76）。Qoder、CodeBuddy、Qwen Code 已经只有描述文件 `src-tauri/src/agent_status/harnesses/<id>.json`，由 `build.rs` 生成模块（B77）。
 
@@ -87,6 +87,63 @@ Claude Code 和 Codex 是最早接的，很多地方曾把「代理」写死成�
 - **仍按家写的**：审批的 `Agent` 枚举（`agent_approval/decision.rs`，现在有六家；加一家要加一个枚举值、`path` 的一个分支、答复格式和 `AGENTS` 一项；opencode 2.x 的审批不走钩子，由 `agent_approval/opencode.rs` 轮询后台服务、经 `external.rs` 进队列；1.x 由插件 `hooks/fuyu-opencode-plugin.js` POST 到 `/opencode/permission`）、Claude Code 和 Codex 的 JSONL 会话扫描（`session_scan.rs`）、`hooks/` 里的钩子脚本（running、status、approval 认五家）、远程钩子（`remote_setup.rs`，只有 Claude Code 和 Antigravity）、cc-connect 的配置（`cc_connect/config_file.rs`）、推送接管命令（`push/pushText.ts`）、用量环。
 
 接一家新代理：写它自己的模块并声明 `HARNESS`，在 `HARNESSES` 里加一行，前端 `AGENTS` 加一行、`AgentProviderIcon.tsx` 加图标。之后给它补哪项能力，就在它的 `HARNESS` 里填哪个字段，不用改中心文件。
+
+## WorkBuddy（B23.2、B37、B49）
+
+腾讯的 WorkBuddy 桌面版，id `workbuddy`。代码在 `workbuddy.rs`、`workbuddy_focus.rs`。国内版（`~/.workbuddy`）和 WorkBuddy AI（`~/.workbuddy-ai`）会话格式相同，都读，显示成同一家。只有会话格式用真实文件核对过（5.3.8、5.9.3，2026-11-13）；钩子路径、事件、`cmd.exe /d /s /c` 的命令形式和审批回包按社区实测和 WorkBuddy 源码写（官方文档写的是 `~/.codebuddy/settings.json`），钩子还没跟 WorkBuddy 一起跑过（#179）。
+
+| 层 | WorkBuddy |
+|---|---|
+| 会话 | 两个目录的 `projects/<编码目录>/<会话 id>.jsonl`，按 Claude Code 转录的读法（开头几行和末尾 256 KiB、同一个时间窗）。标题依次取最新的 `ai-title`、会话第一条 `<user_query>`、目录；模型是 `providerData.requestModelName`。用户消息、`function_call`、`function_call_result`、`reasoning` 记录算运行中，助手消息算完成；`status: "incomplete"` 的助手消息算失败，错误是 `Interrupted by user` 的除外 |
+| 钩子 | 每个存在的目录写 `settings.json`，Claude Code 格式，每条只写一个 `command` 字符串（不确定 WorkBuddy 认不认 `args`）：`UserPromptSubmit`、`PreToolUse`（`*`）记运行中，`Stop` 记完成，两个 `PermissionRequest` 分别把输入存进 `agent-notifications/workbuddy-*.json`（等你）和跑审批脚本；其余内容不动，不存在的目录不写；钩子状态取两个目录里差的那个。WorkBuddy 只在启动时读这个文件，装完要彻底退出再打开 |
+| 岛上审批 | `/workbuddy/permission-request`，回 Claude Code 的 `hookSpecificOutput.decision`；岛上审批关着时提示留在 WorkBuddy |
+| 判断会话已退出 | 两个目录的 `sessions/<pid>.json`（`pid`、`sessionId`，同 `~/.claude/sessions`）里都没有这个会话，并且没有哪个版本在跑。Windows 认 `WorkBuddy.exe`、`WorkBuddyAI.exe`；Mac 经 LaunchServices 按 bundle id `com.workbuddy.workbuddy-ai` 找到应用，有进程在跑它 `Contents/MacOS/` 下的程序就算在跑（主程序名是通用的 `Electron`）。退出后要几秒到半分钟才算没了。5.3.8 每个会话一条记录，5.9.3 只记宿主进程（`interactive-<pid>`、`prewarm-…`），所以应用开着时它的会话一直列着；两版都装、只开一个时，另一版的会话也不标退出。国内版的 Mac bundle id 没核实，只按候选 `com.tencent.workbuddy` / `com.workbuddy.workbuddy` 认 |
+| 点会话：打开那条会话（A17，#963） | 先发 `<scheme>://chat/<会话 id>`：`~/.workbuddy` 下的会话用 `workbuddy`，`~/.workbuddy-ai` 下的用 `workbuddy-ai`；会话 id 取转录文件名，只认字母、数字和 `-`。WorkBuddy 自己注册了这个 scheme（`setAsDefaultProtocolClient`），没开时链接会启动它，窗口关了会重新打开，Windows 上经 `second-instance` 交给正在跑的实例。链接发出就算命中：不出「只到窗口」提示，3 秒内窗口没出来（还在启动）也不报找不到（`agent-focus.log` 记 `app-link=sent` / `app-link=failed`）。没有会话文件或链接打不开时退回找窗口。WorkBuddy AI 5.11.4 在 Mac 上试过（三条会话来回切、窗口关着、应用没开），Windows 和国内版没试（A19）；细节见 [workbuddy-open-session.md](../../research/workbuddy-open-session.md) |
+| 点会话：找窗口（A16，#862） | 先找正在跑的那个版本的可见窗口，再按所有已知程序名找（`workbuddy`、`workbuddyai`、Mac 上的 `workbuddy ai`）。两版在 Windows 上装出来都是 `WorkBuddy.exe`（WorkBuddy AI 5.11.4 的更新程序找的是 `Uninstall WorkBuddy.exe`），`WorkBuddyAI.exe` 是早先记下的，没核实。关窗口会收进托盘，收起的窗口激活不了，所以 Windows 上岛会再启动一次正在跑的 `WorkBuddy.exe`：WorkBuddy 的单实例处理（`second-instance` → `showOrCreateMainWindow`）会把主窗口显示出来，岛最多等 3 秒再置前（日志记 `wake=shown` / `wake=no-window`）。还是没有窗口时发 `agent-focus-not-found`（`{ provider, sessionId, reason }`），行内说明原因：`notRunning`（没打开）或 `hidden`（收在托盘里没能唤出）。Mac 上整个应用激活，WorkBuddy 会自己显示窗口，没有唤醒这一步。按 Mac 上 WorkBuddy AI 5.11.4 的应用包读出来的，Windows 没试 |
+| 用量（B25、B75） | 没有额度窗口，只有每条记录的积分消耗（`providerData.rawUsage.credit`）。设置 → AI Agent → 用量环里打开 WorkBuddy（默认关）后，离线汇总两个 `projects` 目录今天、7 天和累计的积分，写进用量悬停卡片，不画百分比圆环；B75 起卡片和 Agent 页另显示 `storage/skeleton/account-snapshot.json` 里存的套餐名，并说明剩余积分只能在登录后的 WorkBuddy 里看（来自它的计费接口，令牌被 WorkBuddy 加密，不读） |
+| SSH 远程 | — 只有桌面版，没有 CLI 或服务器版 |
+
+## Antigravity（B23.3、A10）
+
+Google Antigravity（IDE、2.0 桌面版和 `agy` CLI），id `antigravity`。代码在 `antigravity.rs`、`antigravity_focus.rs`、`antigravity_remote.rs`。按官方钩子文档写；2026-11-13 在 Windows 上用 `agy` CLI 1.5.8 跑过钩子（SessionStart、PreInvocation、Stop 都触发，输入字段如下），但没有在岛上看结果，App 和 IDE 没跑（#179）。Mac 上（B67，2026-11-16）用 2.32.1 App 试过：它在插件的 `hooks.json` 之外照旧读 `~/.gemini/config/hooks.json`（别的工具放在 `~/.gemini/config/plugins/` 下的插件组不动），装完后会话在岛上显示标题、模型（`gemini-3.8-flash`，推理强度 high）和运行中的当前工具，`Stop` 后显示完成；Mac 上没试 IDE 和 CLI。
+
+| 层 | Antigravity |
+|---|---|
+| 钩子 | `~/.gemini/config/hooks.json` 写一个 `fuyu` 组，只在 `~/.gemini/antigravity`、`antigravity-ide` 或 `antigravity-cli` 存在时写：`SessionStart`、`PreInvocation` 跑 `fuyu-agent-running.cmd antigravity start\|running`，`Stop` 跑 `… antigravity stop` 和状态脚本（`completed`）；文件里别的组保留。运行脚本把每次输入存成 `agent-antigravity/<running\|stop>-*.json` 并设运行标记 |
+| 不做岛上审批和等你 | 没有 `PermissionRequest` 和 `Notification` 钩子，只有在 Antigravity 自己的策略引擎之前、每次匹配调用都触发的 `PreToolUse`。挂它会拦住只读命令和 `TURBO` 自动执行的会话，岛没开时还有 fail-closed 的风险，所以 2026-11-24 移除了岛上审批（与 Vibe Island、CodeIsland、Clawd on Desk、Ping Island 一致），升级时修复会删掉旧的 `PreToolUse` 条目 |
+| 会话 | 每个 `conversationId` 一条，取最新一次存下的输入：目录取 `cwd`，没有时取 `workspacePaths` 第一项（CLI 写成 `C:/...`）；标题取 `<数据目录>/annotations/<conversationId>.pbtxt`，没有时依次退到转录里第一条 `USER_INPUT`、还没有转录时的 `lastUserInput`、目录（`lastUserInput` 仍作最近提问）；模型取 `modelName`。已归档（`.pbtxt` 里 `archived:true`）和子代理会话（转录以 `SYSTEM_MESSAGE` 开头）跳过。`running` 算运行中（照常 10 分钟后算超时），`stop` 算完成。最近回复是 `transcriptPath` 指向的转录里最后一条 `PLANNER_RESPONSE`（回复标记从这里认）；同一会话的旧输入和超过一天的输入删掉 |
+| SSH 远程（只有 CLI） | 远端有 `~/.gemini/antigravity-cli` 时，远程「安装/修复」写同样的 `fuyu` 组（`SessionStart`、`PreInvocation`、`Stop`），命令是只用 `cat`、`sed`、`mv`、`find` 的内联 `sh`，把输入存成 `~/.fuyu/agent-antigravity/running-<conversationId>.json` 或 `stop-<conversationId>.json`（每个会话一份，超过一天的删掉）；拉取会话时连同对应的 `~/.gemini/antigravity-cli/annotations/<conversationId>.pbtxt` 一起拉回，按本机的读法读。远程会话只在 Agent 页显示运行中和完成，没有远程审批。CLI 在服务器上的 glibc 要求没核实，没在服务器上跑过（#179） |
+| 点会话：IDE 和 CLI | 按会话最新输入里的 `transcriptPath` 挑程序：在 `~/.gemini/antigravity-ide` 下先找 IDE（`Antigravity IDE.exe`、`Antigravity IDE.app`，Linux 上 `antigravity-ide`），在 `~/.gemini/antigravity` 下先找 `antigravity`（2.0 桌面版和改名前的旧版），在 `~/.gemini/antigravity-cli` 下不找程序（CLI 在终端里，走按目录和标题的终端匹配）；没有路径时先试 IDE 的名字，再试 `antigravity`。Windows 上程序有多个窗口时，标题里有会话目录（`workspacePaths` 第一项）的优先；三个名字也算编辑器，程序名没对上时目录匹配照样生效。Mac 上整个应用置前。钩子不记进程号，日志里是 `process=unknown`，并带 `product=ide\|desktop\|cli` 和试过的 `prefer=`。2.0 桌面版按会话切到对话的做法见上面功能矩阵「点会话跳过去」 |
+| 用量（B25） | 设置 → AI Agent → 用量环里打开 Antigravity（默认关）后，Gemini 模型画 5 小时 / 7 天同心双环（`--usage-antigravity`），Claude / GPT 的窗口（`3p-5h`、`3p-weekly`）和档位名写在悬停卡片里。先从 `~/.gemini/{antigravity,antigravity-ide,antigravity-cli}/daemon/*.json`（`pid`、`httpPort`、`csrfToken`，2.35.0 起有，已对照在跑的 `language_server` 核对）找本机的 `language_server`，找不到再退回旧版的 `--csrf_token` 命令行参数和监听端口，经回环调 `RetrieveUserQuotaSummary`、`GetUserStatus`；Antigravity 没开时用 `~/.gemini/jetski-standalone-oauth-token` 或 `~/.gemini/oauth_creds.json` 调 Cloud Code（`retrieveUserQuotaSummary` + `fetchAvailableModels`）。两个接口都没公开，响应认不出或 404 时显示「接口失效」而不是 `0%` |
+| 判断会话已退出 | ✗ |
+
+## DeepSeek Harness（B24、B72.1）
+
+DeepSeek Harness（DSH），id `dsh`。代码在 `dsh.rs`、`dsh_hooks.rs`。做法参考 flyl1u/fly-island 的 DSH 接入；写的时候那台 Windows 上没装 DSH，都没跑过（#179）。
+
+| 层 | DSH |
+|---|---|
+| 目录 | 按「形态和数据位置」表里的顺序找，每个目录只读一次，同一会话在两个目录里只显示一次、以较新的检查点为准。`DSH_HOME`、`DSH_DESKTOP_NEXT_HOME` 去掉首尾空白，`~`、`~/`、`~\` 展开成家目录，相对路径不读；这两个变量只在岛启动时读一次，改了要重启岛。应用里选的目录读这些指针文件：`<AppData>\DSH NEXT\home\desktop-next-location.json` 或 `desktop-next-last-home.json`、`DSH Desktop Beta\home` 下的同名文件，以及 `<AppData>\DSH Desktop\data-directory\state.json` 的 `activeHome`；在应用里改选目录不用重启岛 |
+| 会话 | 每个 `session-<UUID>` 一条，读投影检查点 `storages/session_projcache/sessions/<id>.json`（明文 JSON，不超过 512 KB，更大的跳过）；zstd 压缩的会话日志从不打开，只看在不在，不在的（已删除）跳过。只读检查点第 3–7 版、会话格式第 3–4 版，每行按自己的 `ver` 校验，别的跳过。标题、模型、最近提问和回复来自 `title`、`modelSelection`、`turnOutline` 行，上下文大小来自 `contextPressure`，回复标记从 `turnOutline` 的回复里认 |
+| 插件（钩子和审批） | 「安装/修复」在浮屿数据目录下生成零依赖的原生 Cordis 插件 `dsh-plugin/`（`package.json`、`cordis.patch.yml`、`index.js`），并删掉旧的 `fuyu-dsh-hooks.json`。DSH 家目录还没有自定义 `cordis.patch.yml` 时，写入 `- insert: [{ id: fuyu-island, name: "<路径>/dsh-plugin/index.js" }]`，DSH 的 `app-boot` 会在所有 profile（`desktop`、`web` 等）加载；已有自定义规则又没挂 `fuyu-island` 时不动文件，返回三行 `- insert:` 片段让用户自己加（也可以 `dsh plugin --profile <名字> add <fuyu-home>/dsh-plugin`） |
+| 状态 | 挂了 `fuyu-island` 后，插件监听 `session/event`（`turn/start`、`tool/call`、`turn/end`）和 `session/disposed`，实时亮运行中 / 完成 / 失败，状态灯卡片有 DSH 一行。没挂时只有会话列表有状态：`userQuestions` 里有打开的提问算等你，`turnBoundary` 里有没结束的一轮算运行中（照常 10 分钟后算超时），否则算完成；检查点是成批写的，会比应用慢一点 |
+| 岛上审批 | 插件在 DSH 的 `approval/request` 瀑布上前置一个监听（`ctx.inject(['approval'], ...)`），只在 DSH 真要审批时触发（不靠猜工具名），并配上前面 `tool/call` 的参数，卡片上同时显示命令或文件路径和 DSH 给的理由。POST 到 `/dsh/permission`（旧的 `/dsh/pre-tool-use` 仍收）：允许回 `'allowed-once'`，拒绝回 `'rejected'`；交回终端、2 分钟超时、岛上审批关着或浮屿没开时调 `next()`，交给 DSH 自己的审批框。在 DSH 里取消这一轮（`req.signal` 中止）会马上断开挂起的请求并关掉卡片。卡片等着时会话算等你（`agent-notifications/dsh-approval-<id>.json`） |
+| SSH 远程 | 拉取时也找服务器的 `~/.dsh`、`~/.dsh-beta` 和 `$DSH_HOME`（只认绝对路径，而且要 ssh 的非交互 shell 看得到，例如写在 `~/.bashrc` 开头或 `~/.ssh/environment` 里；只在交互 shell 里 export 的看不到）。会话还有 `session.v3.jsonl.zstd` 或 `session.v4.jsonl.zstd` 日志的检查点整份拉回，`$DSH_HOME` 的放在镜像的 `.dsh-home/` 下。远程会话和本机一样显示运行中、等你和完成；没有远程钩子和审批，没在服务器上跑过（#179） |
+| 点会话跳过去 | ◐ 到在跑的 DSH 桌面版窗口（`DeepSeek Harness.exe`、`DSH Desktop.exe`、`DSH NEXT.exe` 等），没有打开具体对话的链接；dshed 和别的第三方客户端的窗口还认不出 |
+| 用量（B25） | 设置 → AI Agent → 用量环里打开 DeepSeek Harness（默认关）后，在 Rust 内存里读当前 DSH 存储的 `.credentials.yaml`（`cordis*.yml` 改过默认 DeepSeek 端点的存储不读），最多每分钟一次查 `api.deepseek.com/user/balance`（`deepseek-official`）或 `platform.deepseek.com/api/v0/users/get_user_summary`（`deepseek-account`），把钱包余额写进悬停卡片，不画百分比圆环 |
+| 没做 | 分不出会话属于哪个桌面版 |
+
+## opencode（B30、B34）
+
+opencode，id `opencode`。代码在 `opencode.rs`、`opencode_plugin.rs`、`opencode_remote.rs`，审批在 `agent_approval/opencode.rs`。岛只读打开 opencode 自己的 sqlite 库，唯一要装的是给 1.x 的插件。还没有跟真实的 opencode 和岛一起跑过（#179）。
+
+| 层 | opencode |
+|---|---|
+| 会话 | 库的位置和表见「形态和数据位置」；Windows 上也是 `%USERPROFILE%\.local\share\opencode`，不是 `%APPDATA%`。子代理会话和已归档会话不列。显示标题（opencode 默认的 "New session - …" 当没有标题）、模型（variant 放在推理强度的位置）、目录、最近提问和回复，以及运行中 / 完成 / 失败 |
+| 状态灯 | ✗ 没有状态灯一行，只通过 Agent 页的会话计数 |
+| 等你和审批：2.x | 后台服务在跑时才有。岛每 5 秒读一次 `service.json`，没有活着的 opencode 进程占着它时不做别的；服务在跑时每 1.5 秒问一次 `GET /api/session/active`，再问每个运行中会话的 `GET /api/session/:id/permission`，用服务的密码做 Basic 认证，只发往回环的 `http://` 地址；密码只留在 Rust 内存，不写日志、不交给页面。每个挂起的请求都让会话显示等你（`agent-notifications/opencode-permission-<id>.json`，请求没了就删），不管岛上审批开没开。开着时还出卡片：允许回 `once`，拒绝回 `reject` 带理由，「去终端」只关卡片。不做「总是允许」，因为 opencode 会把 `always` 存成这个项目的永久规则。在 opencode 里先回答的，下一次轮询时关卡片；没人点的卡片 2 分钟后关掉，不再出现 |
+| 等你和审批：1.x 插件 | 1.x 没有后台服务，「安装/修复」在装了 opencode 时把 `fuyu-island.js` 写进 opencode 配置目录（`$XDG_CONFIG_HOME/opencode`，默认 `~/.config/opencode`）的 `plugin/`，里面写好岛的数据目录。插件状态（absent / notInstalled / outdated / current）和别家钩子一起上报，但没有状态灯一行，过期了也不提示。1.19.5 的插件类型声明了 `permission.ask`，但 opencode 从不调它，所以插件监听 `event`：收到 `permission.asked` 时写 `agent-notifications/opencode-plugin-<请求 id>.json`（`{"hook_event_name":"PermissionRequest","session_id":…}`，和别家的等你文件同格式），并把请求连同 `cwd` POST 到审批端点的 `/opencode/permission`（端口和令牌读数据目录里的 `agent-approval.json`）。岛回 `{"reply":"once"\|"always"\|"reject","message"?}`，「去终端」、超时或审批关着时回 `{}`；插件用自己的 `client` 把答复交给 opencode。opencode 自己的提示照样出，谁先答算谁：收到 `permission.replied`、`session.idle` 或 `session.error` 时插件丢掉请求、删掉等你文件，卡片关掉。默认导出同时带 `server`（1.x）和空的 `setup`，因为 2.x 也扫这个目录；2.x 会不会安静地加载它还没查。用 1.19.5 对着假端点试过（允许、带理由拒绝、在 opencode 里先答），没跟岛一起试 |
+| 没做 | `opencode --standalone`（2.x）的等你和审批：私有服务的密码只在子进程的 `OPENCODE_PASSWORD` 里，地址只在通往 TUI 的管道上，也不写 `service.json`，真要做得靠 2.x 的服务端插件；在岛上回答提问；用量（只有 OpenCode Go 订阅有额度窗口，#170）；cc-connect |
 
 ## Claude Code 兼容的三家（B48）
 
