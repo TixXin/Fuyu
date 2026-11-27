@@ -1,6 +1,9 @@
 use serde::Serialize;
 use std::{
-    sync::{Condvar, Mutex, MutexGuard, OnceLock, PoisonError},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Condvar, Mutex, MutexGuard, OnceLock, PoisonError,
+    },
     thread,
     time::{Duration, Instant},
 };
@@ -86,13 +89,29 @@ static CONTROL: Mutex<Control> = Mutex::new(Control {
 });
 static WAKE: Condvar = Condvar::new();
 static THREAD: OnceLock<()> = OnceLock::new();
+static IN_SCREENSHOTS: AtomicBool = AtomicBool::new(false);
+static STEPPING: Mutex<()> = Mutex::new(());
 
 fn control() -> MutexGuard<'static, Control> {
     CONTROL.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
+fn stepping() -> MutexGuard<'static, ()> {
+    STEPPING.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
 pub(super) fn wake() {
     WAKE.notify_all();
+}
+
+pub(crate) fn show_in_screenshots(shown: bool) -> bool {
+    if IN_SCREENSHOTS.swap(shown, Ordering::SeqCst) == shown {
+        return false;
+    }
+    wake();
+    drop(stepping());
+    let window = control().window;
+    window != 0 && exclude_from_duplication(HWND(window as *mut _), !shown)
 }
 
 pub(super) fn start(window: HWND, channel: Channel<InvokeResponseBody>, scale: f32) -> GlassCaptureStart {
@@ -101,6 +120,9 @@ pub(super) fn start(window: HWND, channel: Channel<InvokeResponseBody>, scale: f
     }
     if !exclude_from_duplication(window, true) {
         return GlassCaptureStart { started: false, reason: Some(CaptureFailure::Unsupported) };
+    }
+    if IN_SCREENSHOTS.load(Ordering::SeqCst) {
+        exclude_from_duplication(window, false);
     }
     {
         let mut control = control();
@@ -215,6 +237,13 @@ fn run() {
             session.moved_at = Some(Instant::now());
         }
         let fast = fast || session.moved_at.is_some_and(|at| at.elapsed() < MOVE_GRACE);
+        let guard = stepping();
+        if IN_SCREENSHOTS.load(Ordering::SeqCst) {
+            drop(guard);
+            session.release();
+            pause(RETRY);
+            continue;
+        }
         step(&mut session, &job, region, fast);
     }
 }

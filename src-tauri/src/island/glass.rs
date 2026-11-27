@@ -23,6 +23,10 @@ pub(super) fn refresh_glass(_window: &WebviewWindow) {
     glass_capture::wake();
 }
 
+pub(crate) fn show_in_screenshots(shown: bool) -> bool {
+    glass_capture::show_in_screenshots(shown)
+}
+
 pub(super) fn exclude_from_backdrop(window: &WebviewWindow) {
     if let Ok(hwnd) = window.hwnd() {
         crate::win32::desktop_duplication::exclude_from_duplication(hwnd, true);

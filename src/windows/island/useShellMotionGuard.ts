@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { isMacOS } from "../../lib/platform";
+import { MOTION_MEDIUM_MS } from "../../lib/theme/motionTokens";
 
 const SHELL_PROPS = new Set([
   "--island-shell-width",
@@ -15,11 +16,20 @@ function readShell(element: HTMLElement): ShellValues {
   return Object.fromEntries([...SHELL_PROPS].map((property) => [property, style.getPropertyValue(property).trim()]));
 }
 
+function shellTransitions(element: HTMLElement): CSSTransition[] {
+  if (typeof CSSTransition === "undefined") return [];
+  return element.getAnimations().filter((animation): animation is CSSTransition => animation instanceof CSSTransition && SHELL_PROPS.has(animation.transitionProperty));
+}
+
+function remainingMs(animation: Animation) {
+  const left = Number(animation.effect?.getComputedTiming().endTime ?? 0) - Number(animation.currentTime ?? 0);
+  return Number.isFinite(left) ? Math.max(0, left) : 0;
+}
+
 function coverShellTransitions(element: HTMLElement, rest: ShellValues | null): Animation[] {
   const now = document.timeline.currentTime;
   const covers: Animation[] = [];
-  for (const animation of element.getAnimations()) {
-    if (!(animation instanceof CSSTransition) || !SHELL_PROPS.has(animation.transitionProperty)) continue;
+  for (const animation of shellTransitions(element)) {
     const effect = animation.effect;
     if (!(effect instanceof KeyframeEffect)) continue;
     const property = animation.transitionProperty;
@@ -50,27 +60,41 @@ export function useShellMotionGuard(shellRef: RefObject<HTMLElement | null>, mod
 
   useEffect(() => {
     const element = shellRef.current;
-    if (!isMacOS || !element) return;
+    if (!element) return;
+    let settle = 0;
+    const land = () => {
+      for (const cover of covers.current) cover.cancel();
+      covers.current = [];
+      for (const transition of shellTransitions(element)) transition.cancel();
+      if (isMacOS) rest.current = readShell(element);
+    };
     const frame = requestAnimationFrame(() => {
       if (!settled.current) {
         settled.current = true;
-        rest.current = readShell(element);
+        if (isMacOS) rest.current = readShell(element);
         return;
       }
-      for (const cover of covers.current) cover.cancel();
-      const next = coverShellTransitions(element, rest.current);
-      covers.current = next;
-      if (next.length === 0) {
-        rest.current = readShell(element);
-        return;
+      if (isMacOS) {
+        for (const cover of covers.current) cover.cancel();
+        const next = coverShellTransitions(element, rest.current);
+        covers.current = next;
+        if (next.length === 0) rest.current = readShell(element);
+        else {
+          void Promise.all(next.map((cover) => cover.finished)).then(
+            () => {
+              if (covers.current === next) rest.current = readShell(element);
+            },
+            () => {},
+          );
+        }
       }
-      void Promise.all(next.map((cover) => cover.finished)).then(
-        () => {
-          if (covers.current === next) rest.current = readShell(element);
-        },
-        () => {},
-      );
+      const running = [...shellTransitions(element), ...covers.current];
+      if (running.length === 0) return;
+      settle = window.setTimeout(land, Math.max(...running.map(remainingMs)) + MOTION_MEDIUM_MS);
     });
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(settle);
+    };
   }, [shellRef, mode]);
 }

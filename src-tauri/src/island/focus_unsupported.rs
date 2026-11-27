@@ -14,7 +14,7 @@ pub fn release_island_hover_focus() -> Result<bool, String> {
 
 #[tauri::command]
 pub fn island_is_foreground(app: AppHandle) -> Result<bool, String> {
-    main_window(&app)?.is_focused().map_err(|error| error.to_string())
+    Ok(main_window(&app)?.is_focused().map_err(|error| error.to_string())? || crate::screenshot::keeps_island_open())
 }
 
 #[tauri::command]

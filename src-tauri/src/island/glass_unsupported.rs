@@ -19,6 +19,10 @@ pub fn sync_island_glass_frame(_app: AppHandle, _frame: IslandGlassFrame) -> Res
 
 pub(super) fn exclude_from_backdrop(_window: &WebviewWindow) {}
 
+pub(crate) fn show_in_screenshots(_shown: bool) -> bool {
+    false
+}
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GlassCaptureStart {

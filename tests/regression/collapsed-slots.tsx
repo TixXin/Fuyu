@@ -77,6 +77,10 @@ const bar = () => document.querySelector<HTMLElement>(".island__collapsed")!;
 const set = (next: Partial<State>) => act(async () => {
   change(next);
 });
+async function frameUntil(ready: () => boolean) {
+  const deadline = performance.now() + 1500;
+  while (!ready() && performance.now() < deadline) await act(async () => { await new Promise(requestAnimationFrame); });
+}
 async function settle() {
   const deadline = performance.now() + 1500;
   while (bar().querySelector(".island__summary-layer--outgoing, .island__summary-layer--incoming")) {
@@ -130,6 +134,18 @@ async function runChecks() {
       && Math.abs(pattern.left + pattern.width / 2 - (shell.left + shell.width / 2)) < 1
       && Math.abs(pattern.top + pattern.height / 2 - (shell.top + 19)) < 1, "摘要为空时中心图案对准岛的中线，不随左右两侧的宽度偏移");
     check(slot.left >= light.right && slot.right <= gauges.left, "中心槽位在状态灯与右侧元素之间，不压住仪表");
+    const centerSlot = () => bar().querySelector<HTMLElement>(".island__center-slot")!;
+    check(!centerSlot().hasAttribute("data-crowded") && getComputedStyle(centerSlot()).visibility === "visible", "两侧有空位时中心图案照常显示");
+    const wide = (width: number) => set({ task: null, agents: true, count: 2, slots: { center: <span className="test-center">中</span>, gauges: [{ id: "usage:claudeCode", node: <span className="test-gauge" style={{ display: "block", width, height: 20 }} /> }] } });
+    const crowdedNow = () => centerSlot().hasAttribute("data-crowded") && getComputedStyle(centerSlot()).visibility === "hidden";
+    await wide(400);
+    await frameUntil(crowdedNow);
+    const [crowdedSlot, wideGauge] = [box(".island__center-slot"), box(".island__gauge-slot")];
+    check(wideGauge.left < crowdedSlot.right && crowdedNow(),
+      `一侧放满、碰到中线时中心图案让开，不盖在功能项上（仪表左缘 ${Math.round(wideGauge.left)}，图案右缘 ${Math.round(crowdedSlot.right)}）`);
+    await wide(42);
+    await frameUntil(() => !crowdedNow());
+    check(!centerSlot().hasAttribute("data-crowded") && getComputedStyle(centerSlot()).visibility === "visible", "两侧让出空位后中心图案重新显示");
     openedPage = null;
     await act(async () => bar().querySelector<HTMLElement>(".test-center")!.click());
     check(openedPage === "todo", "点中心图案和点小岛一样打开页面");
