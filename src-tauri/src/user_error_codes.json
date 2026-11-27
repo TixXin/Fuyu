@@ -215,6 +215,7 @@
   "pluginsV3.builtinUnknown",
   "pluginsV3.invalidDismissTarget",
   "pluginsV3.migrationSave",
+  "pluginsV3.openFolder",
   "qq.accessFailed",
   "qq.channelNotReady",
   "qq.disabledByPolicy",

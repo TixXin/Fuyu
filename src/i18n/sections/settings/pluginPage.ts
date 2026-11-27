@@ -14,6 +14,7 @@ export type SettingsPluginPageText = {
     checkUpdates: string;
     checkingUpdates: string;
     diagnostics: string;
+    openFolder: string;
     devDocs: string;
   };
   summary: {
@@ -255,6 +256,7 @@ export const zhCN: SettingsPluginPageText = {
     checkUpdates: "检查插件更新",
     checkingUpdates: "正在检查…",
     diagnostics: "运行诊断",
+    openFolder: "打开插件文件夹",
     devDocs: "插件开发文档",
   },
   summary: {
@@ -526,6 +528,7 @@ export const en: SettingsPluginPageText = {
     checkUpdates: "Check for plugin updates",
     checkingUpdates: "Checking…",
     diagnostics: "Diagnostics",
+    openFolder: "Open plugins folder",
     devDocs: "Plugin developer docs",
   },
   summary: {

@@ -258,7 +258,7 @@ try {
   check(opened.includes("head:pluginMarket"), "The header button opens the plugin market");
   await click(within("normal", ".gallery__head .plugin-menu > button"));
   const headItems = [...stage("normal").querySelectorAll<HTMLElement>(".gallery__head [data-menu-item]")];
-  check(headItems.map((item) => item.dataset.menuItem).join() === "install-file,allow-files,check-updates,diagnostics,dev-docs", "The header menu holds install from file, allow files, check updates, diagnostics and developer docs");
+  check(headItems.map((item) => item.dataset.menuItem).join() === "install-file,allow-files,check-updates,open-folder,diagnostics,dev-docs", "The header menu holds install from file, allow files, check updates, open plugins folder, diagnostics and developer docs");
   await click(headItems.find((item) => item.dataset.menuItem === "diagnostics"));
   check(opened.includes("head:pluginDiagnostics"), "and diagnostics opens the diagnostics sub-page");
 

@@ -155,6 +155,7 @@ export type ErrorCode =
   | "pluginsV3.builtinConfigSave"
   | "pluginsV3.invalidDismissTarget"
   | "pluginsV3.migrationSave"
+  | "pluginsV3.openFolder"
   | "translation.urlQuery"
   | "translation.modelLong"
   | "translation.noModel"
@@ -562,6 +563,7 @@ export const zhCN: ErrorsText = {
     "pluginsV3.builtinConfigSave": ({ id }) => `没能保存 ${id} 的设置。`,
     "pluginsV3.invalidDismissTarget": "未知的插件迁移提示目标。",
     "pluginsV3.migrationSave": "没能保存旧版插件迁移状态。",
+    "pluginsV3.openFolder": "无法打开插件文件夹。",
     "translation.urlQuery": "接口地址不能带查询参数。",
     "translation.modelLong": "模型名称过长。",
     "translation.noModel": ({ service }) => `请先在翻译设置中填写${service}的模型名称。`,
@@ -966,6 +968,7 @@ export const en: ErrorsText = {
     "pluginsV3.builtinConfigSave": ({ id }) => `Could not save the settings of ${id}.`,
     "pluginsV3.invalidDismissTarget": "Unknown plugin migration notice target.",
     "pluginsV3.migrationSave": "Could not save the legacy plugin migration state.",
+    "pluginsV3.openFolder": "Could not open the plugins folder.",
     "translation.urlQuery": "The service address cannot have query parameters.",
     "translation.modelLong": "The model name is too long.",
     "translation.noModel": ({ service }) => `Fill in the model name for ${service} in the translation settings first.`,

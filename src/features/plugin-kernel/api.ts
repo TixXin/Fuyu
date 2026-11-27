@@ -49,6 +49,10 @@ export function getPluginHostMemory(): Promise<HostMemory | null> {
   return invoke<HostMemory | null>("get_plugin_host_memory");
 }
 
+export function openPluginsFolder(): Promise<void> {
+  return invoke<void>("open_plugins_folder");
+}
+
 export function exitPluginSafeMode(): Promise<boolean> {
   return invoke<boolean>("exit_plugin_safe_mode");
 }
