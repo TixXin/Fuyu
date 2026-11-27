@@ -4,7 +4,7 @@
 
 各家要声明哪些东西、以后怎么改成描述文件，见 [Agent 接入协议](harness-protocol.md)（B76）。Qoder、CodeBuddy、Qwen Code 已经只有描述文件 `src-tauri/src/agent_status/harnesses/<id>.json`，由 `build.rs` 生成模块（B77）。
 
-核对日期：2026-11-17（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
+核对日期：2026-11-26（按 `main` 上的代码）。这份文档是各家接入细节的唯一来源：[agent-status-hooks.md](../../features/agent-status-hooks.md) 只写用户看得到的行为并链到这里，[contracts.md](../contracts.md) 只记对外契约（文件路径格式、标记格式、命令），每项功能在 Windows / macOS 上做到哪一步只记在 [platforms.md](../platforms.md)。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)。标「未实测」的项都列在实测清单 #179 里。
 
 ## 形态和数据位置
 
@@ -50,6 +50,33 @@
 | 只读桌面 App 的会话 | ◐ Code 页 ✓（正文本来就在 `~/.claude/projects`，标题、模型取 App 里的），Windows 当前版本待复测（#179）；Cowork 不列（独立的 `.claude`，钩子不生效） | ✓ 共用存储；`state_5.sqlite` 列出前几天开的会话，迁移后 rollout 不在的旧会话也列（没有工具、待办、上下文） | ✓ | ◐ 没实测（#179） | ✓ | ✓ 共用库，未实测（#179） |
 
 开发版（`pnpm tauri dev`）读正式版的 Agent 状态；「安装/修复」装的是正式版的钩子（脚本进正式数据目录，审批用正式版的端口和 token，B65），和正式版点的一样；「清除状态」不显示。
+
+## 回复标记写哪个文件
+
+打开「回复状态标记」后，岛在下表的文件末尾追加一段 `<!-- fuyu: reply marker v5 -->` … `<!-- /fuyu: reply marker -->`（标记格式和命令见 [contracts.md](../contracts.md)）。这张表按 `src-tauri/src/agent_status/reply_marker.rs` 的 `PROMPT_FILES` 写，每家的路径在自己模块的 `prompt_files` 里（Qoder、CodeBuddy、Qwen Code 在描述文件的 `promptFiles`）；改了哪家的路径就在同一个提交里改这张表。所在目录不存在（没装这家）就不写、不建目录。环境变量只认绝对路径。
+
+| 代理 | 本机 | SSH 远程（`remote_reply_marker.rs`） |
+|---|---|---|
+| Claude Code | `$CLAUDE_CONFIG_DIR/CLAUDE.md`（默认 `~/.claude`） | 同左 |
+| Codex | `$CODEX_HOME/AGENTS.md`（默认 `~/.codex`） | 同左 |
+| WorkBuddy | `$WORKBUDDY_CONFIG_DIR/CODEBUDDY.md`；没设时 `~/.workbuddy`、`~/.workbuddy-ai` 里存在的各写一份 | — 只有桌面版 |
+| Antigravity | `~/.gemini/GEMINI.md`（有 `~/.gemini/antigravity`、`antigravity-ide` 或 `antigravity-cli` 时） | 远端有 `~/.gemini/antigravity-cli` 时写 `~/.gemini/GEMINI.md` |
+| DSH | 岛读的每个 DSH 家目录下的 `AGENTS.md` | `~/.dsh`、`~/.dsh-beta`、`$DSH_HOME` 下的 `AGENTS.md` |
+| opencode | `$XDG_CONFIG_HOME/opencode/AGENTS.md`（默认 `~/.config/opencode`） | ✗ |
+| Qoder | `~/.qoder/AGENTS.md` 和 `~/.qoder-cn/AGENTS.md`（`QODER_CONFIG_DIR`、`QODERCN_CONFIG_DIR` 优先） | ✗ |
+| CodeBuddy Code | `~/.codebuddy/CODEBUDDY.md`（`CODEBUDDY_CONFIG_DIR` 优先） | ✗ |
+| Qwen Code | `~/.qwen/QWEN.md`（`QWEN_HOME` 优先） | ✗ |
+| TRAE / TRAE CN | ✗ 个人规则文件的路径官方没写 | — |
+| ZCode | `~/.zcode/AGENTS.md` | ✗ |
+| Kimi Code | `$KIMI_CODE_HOME/AGENTS.md`（默认 `~/.kimi-code`） | ✗ |
+| MiMo Code | `<配置>/AGENTS.md`（默认 `~/.config/mimocode`，`XDG_CONFIG_HOME`；设了 `MIMOCODE_HOME` 是它下面的 `config/`） | ✗ |
+| Grok CLI | `~/.grok/rules/fuyu-island.md`（`GROK_HOME` 优先；岛独占的文件，Grok 总会读 `rules/*.md`） | ✗ |
+| GitHub Copilot CLI | `$COPILOT_HOME/copilot-instructions.md`（默认 `~/.copilot`） | ✗ |
+| Droid | `$FACTORY_HOME/AGENTS.md`（默认 `~/.factory`） | ✗ |
+| pi | `$PI_CODING_AGENT_DIR/AGENTS.md`（默认 `~/.pi/agent`） | ✗ |
+| Cursor | ✗ 没有确认过可以独占、又不会盖住用户规则的用户级规则文件 | — |
+
+文件里其他内容不动；软链顺着写进目标，几家指向同一份文件时只写一段，悬空链接报错不动。各家读会话时在最后一条回复末尾认这个字符：各家的转录或会话文件（Claude Code、Codex、WorkBuddy、兼容层三家、Grok、Copilot、Droid、pi、Kimi Code、Cursor、TRAE）、Antigravity 钩子指出的转录、DSH 的 `turnOutline`、opencode 的库（ZCode、MiMo 复用同一读取器）。Claude Code、Codex 以外各家还没在真机上核对过标记的写入和识别（#179）。
 
 ## 为什么后来的几家缺得多
 
@@ -194,6 +221,7 @@ GitHub 的 Copilot CLI，id `copilot`。代码在 `copilot.rs`（会话）和 `c
 | 状态灯 | ✓ `agent-copilot-running.flag` |
 | 等你 | 只靠钩子（落盘文件里没有等待事件） |
 | 岛上审批 | ✓ `/copilot/permission-request`，回 `{behavior, message, interrupt}`；`sessionId`、`toolName`、`toolArgs` 登记成别名，也用来在 Claude Code 路由上认出 Copilot 的请求 |
+| 回复标记 | `~/.copilot/copilot-instructions.md`（`COPILOT_HOME` 优先），未实测（#179） |
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
 
@@ -209,6 +237,7 @@ Factory 的 Droid CLI，id `droid`。代码在 `droid.rs`（会话）和 `droid_
 | 状态灯 | ✓ `agent-droid-running.flag` |
 | 等你 | Notification 的 `permission_prompt`，以及岛上审批挂起时 |
 | 岛上审批 | ✓ `/droid/pre-tool-use`，只拦命令与写改文件工具（`^(Bash\|Execute\|RunCommand\|Edit\|Write\|MultiEdit)$`），回 `hookSpecificOutput.permissionDecision`（`allow` 直接放行跳过确认框 / `deny` 带原因 / `ask` 交回终端） |
+| 回复标记 | `~/.factory/AGENTS.md`（`FACTORY_HOME` 优先），未实测（#179） |
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
 

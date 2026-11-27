@@ -33,7 +33,7 @@ It then updates:
 %USERPROFILE%\.claude\settings.json
 ```
 
-When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` or `%USERPROFILE%\.workbuddy-ai` exists), it also updates `settings.json` in each of them; see [WorkBuddy](#workbuddy). When Qoder, CodeBuddy Code or Qwen Code is installed, it also updates their `settings.json`; see [Qoder, CodeBuddy Code and Qwen Code](#qoder-codebuddy-code-and-qwen-code). When TRAE or TRAE CN is installed, it writes `~/.trae/hooks.json` or `~/.trae-cn/hooks.json`; see [TRAE and TRAE CN](#trae-and-trae-cn). When ZCode or Kimi Code is installed, it updates `~/.zcode/cli/config.json` or `~/.kimi-code/config.toml`; see [ZCode](#zcode) and [Kimi Code](#kimi-code). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity). When DeepSeek Harness is installed, it writes `fuyu-dsh-hooks.json` next to the scripts and tells you what to add to DSH's profile; see [DeepSeek Harness](#deepseek-harness). When opencode is installed, it writes a plugin for opencode 1.x into opencode's config folder; see [opencode](#opencode).
+It also writes the hooks, hooks file or plugin of every other agent found on this computer (an agent whose folder does not exist is skipped). Which file each agent gets is listed per agent in [harnesses.md](../architecture/agent/harnesses.md); the sections below say what each agent needs from you.
 
 The status light card in Settings has one row per agent with hooks, showing whether its hooks are current. An agent that is not on this computer (`absent`) gets no row and never counts as outdated. When an install from before the rename is upgraded, the app reinstalls the hooks of every agent that had them, remote ones included ([rename compatibility](../architecture/contracts.md#改名兼容d17)).
 
@@ -117,7 +117,7 @@ Each session on the Agent page can show where it runs, as the program's own icon
 
 ## Session List Settings
 
-**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for each of Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, opencode, Qoder, CodeBuddy, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code, MiMo Code, Grok CLI, Copilot CLI and Droid; stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`); and whether subagent lists and Claude desktop child sessions start expanded (`agentExpandChildren`, off by default, B69; a row you open or close yourself keeps its state until the switch changes).
+**Settings → AI Agent** also sets, in `fuyu-settings`: how far back the list goes (`agentSessionHours`: 1, 2 (default), 6 or 24 hours, passed to `list_agent_sessions` as `windowHours`); which agents are shown (**显示哪些 Agent**: one switch with its icon for every agent Fuyu reads, the list in [harnesses.md](../architecture/agent/harnesses.md); stored as `agentHiddenProviders`, the ids of the hidden agents, so an agent added later shows by default; the older `agentShowClaudeCode` / `agentShowCodex` settings are carried over; hidden agents also leave the island's running count); only sessions in progress (`agentHideFinished`); per card, the running time (`agentShowElapsed`) and the model (`agentShowModel`); and whether subagent lists and Claude desktop child sessions start expanded (`agentExpandChildren`, off by default, B69; a row you open or close yourself keeps its state until the switch changes).
 
 **Hiding sessions and silent launch.** **Settings → AI Agent → 会话 → 隐藏会话** keeps rules in `fuyu-agent-session-filters` (`{ kind: "folder" | "prompt", value }`): a session matching any rule is left out of the list, the counts, the collapsed title, alerts and sounds. A folder rule covers its subfolders; since 2026-11-26 it also takes `*` for any characters (`*/agy-title-*` covers the temp folder a script makes for each run; a rule of only `*` and `/` matches nothing). A session's ⋯ menu offers **隐藏 agy-title-* 这类目录的会话** when the last folder name ends in a random-looking suffix of 5+ letters and digits after `-`, `_` or `.` (`similarFolderPattern` in `sessionFilters.ts`). For one-off agents a script starts itself (`agy -p`, `claude -p`, `codex exec`), the script can set `FUYU_AGENT_STATUS=off` in the child's environment: every hook script (`.sh`, `.ps1`, `.cmd`) and the opencode, pi and DeepSeek Harness plugins exit at once (the `.ps1` status hook still answers `{"continue":true,"suppressOutput":true}` when asked for a hook response), so no status, waiting notice, approval card or saved session record is written. Agents whose sessions come only from hooks (Antigravity and the like) then never show; Claude Code and Codex sessions are still read from their session files, so a hide rule is needed to keep those off the list. The **静默启动** group under 隐藏会话 shows the bash / PowerShell / Node.js syntax with a copy button.
 
@@ -169,25 +169,9 @@ The status line counts towards the "hooks out of date" check only until it has b
 
 ## Reply Status Marker
 
-**Settings → AI Agent → reply status marker** asks each agent to end every reply with one character (`↩` your turn, `⋯` waiting on a background task, `✓` done), so the Agent page can tell what a finished session waits for. The island appends a marked section (`<!-- fuyu: reply marker v5 -->` … `<!-- /fuyu: reply marker -->`) to the end of each agent's global prompt file, and only where that agent's folder already exists:
+**Settings → AI Agent → reply status marker** asks each agent to end every reply with one character (`↩` your turn, `⋯` waiting on a background task, `✓` done), so the Agent page can tell what a finished session waits for. The island appends a marked section to the end of each agent's global prompt file, and only where that agent's folder already exists; which file each agent gets, here and on SSH remote computers, is in [harnesses.md → 回复标记写哪个文件](../architecture/agent/harnesses.md#回复标记写哪个文件). TRAE and Cursor get none.
 
-| Agent | File |
-|---|---|
-| Claude Code | `$CLAUDE_CONFIG_DIR/CLAUDE.md` (default `~/.claude`) |
-| Codex | `$CODEX_HOME/AGENTS.md` (default `~/.codex`) |
-| WorkBuddy | `CODEBUDDY.md` in `~/.workbuddy` and `~/.workbuddy-ai`, whichever exist (only `$WORKBUDDY_CONFIG_DIR` when set; from WorkBuddy's source, not tested) |
-| Antigravity | `~/.gemini/GEMINI.md` (from Antigravity's docs, not tested; Gemini CLI reads it too) |
-| DeepSeek Harness | `AGENTS.md` in each DSH folder the island reads |
-| opencode | `$XDG_CONFIG_HOME/opencode/AGENTS.md` (default `~/.config/opencode`) |
-| Qoder | `AGENTS.md` in `~/.qoder` and `~/.qoder-cn` |
-| CodeBuddy Code | `~/.codebuddy/CODEBUDDY.md` |
-| Qwen Code | `~/.qwen/QWEN.md` |
-| ZCode | `~/.zcode/AGENTS.md` |
-| Kimi Code | `$KIMI_CODE_HOME/AGENTS.md` (default `~/.kimi-code`) |
-| MiMo Code | `~/.config/mimocode/AGENTS.md` (or `$MIMOCODE_HOME/config`) |
-| Grok CLI | `~/.grok/rules/fuyu-island.md` (a file of its own; Grok reads every `rules/*.md`) |
-
-The rest of each file is kept. A file that is a symlink is written through to its target; when several agents point at the same file it gets one section; a dangling link is reported as an error on the settings page and left alone. Switching the marker off removes the section. Switching it on or off, and **安装/修复**, delete the rules file earlier versions wrote (`~/.claude/rules/fuyu-reply-marker.md`). Each agent's reader looks for the character at the end of the last reply: Claude Code, Codex and WorkBuddy in their transcripts, Antigravity in the transcript its hooks point to, DSH in the `turnOutline` response, opencode in the database. Windows needs Developer Mode to create symlinks; following one has not been tested there.
+The rest of each file is kept. A file that is a symlink is written through to its target; when several agents point at the same file it gets one section; a dangling link is reported as an error on the settings page and left alone. Switching the marker off removes the section. Switching it on or off, and **安装/修复**, delete the rules file earlier versions wrote (`~/.claude/rules/fuyu-reply-marker.md`). Windows needs Developer Mode to create symlinks; following one has not been tested there.
 
 ## Sessions on Other Computers
 
@@ -197,7 +181,7 @@ Settings → AI Agent → **Remote computers** lists the `Host` aliases in `~/.s
 
 The same request also brings back DeepSeek Harness checkpoints and the inputs saved by Antigravity CLI's remote hooks (see [DeepSeek Harness](#deepseek-harness) and [Antigravity](#antigravity)). Unlike transcripts, these are whole JSON files: each is fetched in full, up to 512 KB, and a larger one is skipped. WorkBuddy has only a desktop app, so it has no remote sessions. opencode keeps its sessions in sqlite (`${XDG_DATA_HOME:-~/.local/share}/opencode/opencode.db`, or `$OPENCODE_DB`). When that database changes size or time, the remote script uses `sqlite3` (or Python's `sqlite3` module when the command is missing) to copy the sessions in the time window into `~/.fuyu/opencode-recent.db`: the session rows, each session's last 40 messages plus its first prompt, their text and tool parts without tool output or metadata, and the 1.x todos. That small database is fetched whole like a checkpoint (up to 512 KB) and read with the same code as a local one (`opencode_remote.rs`). With neither tool on the remote, opencode sessions are not listed. The remote service state is unknown, so remote sessions are never marked as exited because the service stopped. There is no plugin, approval or reply marker on the remote side for opencode.
 
-**Install/repair** and the **reply status marker** also act on every computer switched on here (`remote_setup.rs`): the island reads the file over the same SSH, changes it as it changes the local one, and writes it back through a full temporary copy and `cat`, so a dropped connection never cuts the file short. A file that is a symlink is not written, here or there (the link would be cut, or a file kept elsewhere, such as an instructions repository, changed); the result says so, and that file is yours to change. The reply marker is the exception to the symlink rule: on a remote computer it goes into each agent's global prompt file as it does locally (see [Reply Status Marker](#reply-status-marker); `remote_reply_marker.rs`, B35): `${CLAUDE_CONFIG_DIR:-~/.claude}/CLAUDE.md`, `${CODEX_HOME:-~/.codex}/AGENTS.md`, `~/.gemini/GEMINI.md` when the server has `~/.gemini/antigravity-cli`, and `AGENTS.md` in `~/.dsh`, `~/.dsh-beta` and `$DSH_HOME`. One SSH call lists these files and brings their text back. A link is resolved with `readlink -f` and its target written, each target once; a dangling link is left alone and reported under that computer; a missing file is created when its folder exists, and a missing folder is skipped. Environment variables count only when ssh's non-interactive shell sees them. Switching it on or off deletes the rules file earlier versions wrote there (`~/.claude/rules/fuyu-reply-marker.md`, or its name from before the rename). Remote Install/repair brings the section up to date, and deletes the old file, only on a computer that already has the marker (a section in a prompt file, or the old rules file); one that never had it is left alone. opencode sessions are not read remotely yet, so its file is not written there. Remote Install/repair also writes Antigravity CLI's hooks when the server has `~/.gemini/antigravity-cli` (see [Antigravity](#antigravity)). The remote `~/.claude/settings.json` gets only `PermissionRequest`, the waiting `Notification`, `PreCompact` and `PostCompact` hooks (Claude Code only), each saving its input as one file in `~/.fuyu/agent-notifications/`, as the local hook script does in `%APPDATA%\com.tixxin.fuyu\agent-notifications\`; the fetch above brings the folder along and drops files older than a day, and the newest file of each session decides, so two sessions waiting at once both show as waiting, and a compacting remote session shows so. The settings page lists each computer's result under the card.
+**Install/repair** and the **reply status marker** also act on every computer switched on here (`remote_setup.rs`): the island reads the file over the same SSH, changes it as it changes the local one, and writes it back through a full temporary copy and `cat`, so a dropped connection never cuts the file short. A file that is a symlink is not written, here or there (the link would be cut, or a file kept elsewhere, such as an instructions repository, changed); the result says so, and that file is yours to change. The reply marker is the exception to the symlink rule: on a remote computer it goes into each agent's global prompt file as it does locally (see [Reply Status Marker](#reply-status-marker); B35): Claude Code, Codex, Antigravity CLI and DSH, with the paths in [harnesses.md → 回复标记写哪个文件](../architecture/agent/harnesses.md#回复标记写哪个文件). One SSH call lists these files and brings their text back. A link is resolved with `readlink -f` and its target written, each target once; a dangling link is left alone and reported under that computer; a missing file is created when its folder exists, and a missing folder is skipped. Environment variables count only when ssh's non-interactive shell sees them. Switching it on or off deletes the rules file earlier versions wrote there (`~/.claude/rules/fuyu-reply-marker.md`, or its name from before the rename). Remote Install/repair brings the section up to date, and deletes the old file, only on a computer that already has the marker (a section in a prompt file, or the old rules file); one that never had it is left alone. opencode sessions are not read remotely yet, so its file is not written there. Remote Install/repair also writes Antigravity CLI's hooks when the server has `~/.gemini/antigravity-cli` (see [Antigravity](#antigravity)). The remote `~/.claude/settings.json` gets only `PermissionRequest`, the waiting `Notification`, `PreCompact` and `PostCompact` hooks (Claude Code only), each saving its input as one file in `~/.fuyu/agent-notifications/`, as the local hook script does in `%APPDATA%\com.tixxin.fuyu\agent-notifications\`; the fetch above brings the folder along and drops files older than a day, and the newest file of each session decides, so two sessions waiting at once both show as waiting, and a compacting remote session shows so. The settings page lists each computer's result under the card.
 
 **Approvals from a remote computer.** While the approval endpoint runs, Install/repair also writes approval hooks into each remote `~/.claude/settings.json`: `PermissionRequest`, `PreToolUse` for `AskUserQuestion`, and the activity events, as the local install has them, but as commands that read the port file and run `curl -s --noproxy '*' -H "Host: 127.0.0.1:<endpoint port>" … --data-binary @- http://127.0.0.1:<port there>/…`, rather than HTTP hooks, because Claude Code sends HTTP hooks through `http_proxy`, which on a server often leads back out to this computer's proxy with the token and the tool input. Each carries `X-Fuyu-Remote: <alias>` and a token of its own for that computer (a hash of the island's token and the alias), so a token copied from one server is good only for requests claiming that server. The request goes through the reverse forward of the session connection above to the island, which shows the card with the computer's name before the project; **Terminal** on such a card looks for a window by folder and title only. The fallback is the terminal: with no port file (no connection), one written on another node (a home shared by login nodes; the forward listens on one), a refused connection or the island gone, the command exits 1 without output (never 2, which would deny) and Claude Code asks there, as it also does while the card waits. Run Install/repair once after updating from a version without these hooks.
 
@@ -261,6 +245,8 @@ Without the tunnel the requests fail at once and nothing else changes. A remote 
 
 ## WorkBuddy
 
+The per-agent overview of folders and features is in [harnesses.md](../architecture/agent/harnesses.md) ([形态和数据位置](../architecture/agent/harnesses.md#形态和数据位置), [功能矩阵](../architecture/agent/harnesses.md#功能矩阵)); this section keeps the details not yet moved there.
+
 WorkBuddy (Tencent's desktop agent) is listed on the Agent page with its own icon (task B23.2, issue #155). Both editions are read and shown as one agent (B49): the Chinese edition keeps its data in `~/.workbuddy`, WorkBuddy AI in `~/.workbuddy-ai` (the app sets `WORKBUDDY_CONFIG_DIR` to it when it starts its CLI), and the session files have the same format. What is known about both, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
 
 - **Sessions**: `projects/<encoded folder>/<session id>.jsonl` in both folders, read like Claude Code's transcripts (first lines and last 256 KiB, same session window). The title is the newest `ai-title` record, otherwise the first `<user_query>` of the session, otherwise the folder; the model is `providerData.requestModelName`. A turn is running from a user message, a `function_call`, a `function_call_result` or a `reasoning` record, and done at an assistant message; an assistant message with `status: "incomplete"` fails the turn, unless its error is `Interrupted by user`.
@@ -278,6 +264,8 @@ Only the session format was checked against real files (WorkBuddy 5.3.8 and 5.9.
 
 ## Antigravity
 
+The per-agent overview of folders and features is in [harnesses.md](../architecture/agent/harnesses.md) ([形态和数据位置](../architecture/agent/harnesses.md#形态和数据位置), [功能矩阵](../architecture/agent/harnesses.md#功能矩阵)); this section keeps the details not yet moved there.
+
 Google Antigravity (the IDE and the `agy` CLI) is listed on the Agent page with its own icon (task B23.3, issue #155). It was written from Antigravity's hook documentation; on 2026-11-13 the hooks were run with the `agy` CLI 1.5.8 on Windows (SessionStart, PreInvocation and Stop all fired, with the input fields below), but not yet with the island showing the result, nor with the App or IDE, and the approval hook not at all (#179); what is known, with sources, is in [agent-harnesses.md](../research/agent-harnesses.md).
 
 - **Hooks**: **安装/修复** writes a `fuyu` group to `~/.gemini/config/hooks.json`, but only when `~/.gemini/antigravity`, `antigravity-ide` or `antigravity-cli` exists: `SessionStart` and `PreInvocation` run `fuyu-agent-running.cmd antigravity start|running`, and `Stop` runs `... antigravity stop` and the status script (`completed`). Other groups in the file are kept. The running script saves each hook's input in `agent-antigravity\<running|stop>-*.json` and sets the running marker, so Antigravity has its own row in the status light card and lights the island.
@@ -290,6 +278,8 @@ Google Antigravity (the IDE and the `agy` CLI) is listed on the Agent page with 
 - Not done: telling whether a session has quit.
 
 ## DeepSeek Harness
+
+The per-agent overview of folders and features is in [harnesses.md](../architecture/agent/harnesses.md) ([形态和数据位置](../architecture/agent/harnesses.md#形态和数据位置), [功能矩阵](../architecture/agent/harnesses.md#功能矩阵)); this section keeps the details not yet moved there.
 
 DeepSeek Harness (DSH) sessions are listed on the Agent page with DeepSeek's icon (task B24, issue #155). The approach follows flyl1u/fly-island's DSH integration. DSH was not installed on the Windows machine it was written on, so none of this has been run there (#179). Details and sources are in [agent-harnesses.md](../research/agent-harnesses.md).
 
@@ -312,6 +302,8 @@ DeepSeek Harness (DSH) sessions are listed on the Agent page with DeepSeek's ico
 
 ## opencode
 
+The per-agent overview of folders and features is in [harnesses.md](../architecture/agent/harnesses.md) ([形态和数据位置](../architecture/agent/harnesses.md#形态和数据位置), [功能矩阵](../architecture/agent/harnesses.md#功能矩阵)); this section keeps the details not yet moved there.
+
 opencode sessions are listed on the Agent page with opencode's icon (task B30, issue #349). The island opens opencode's own sqlite database read-only; the only thing installed is a plugin for opencode 1.x (below). None of this has been run against a real opencode with the island yet (#179). Details and sources are in [agent-harnesses.md](../research/agent-harnesses.md).
 
 - **Database**: `~/.local/share/opencode/opencode.db` on every system, Windows included (`%USERPROFILE%\.local\share\opencode`, not `%APPDATA%`); `OPENCODE_DB` and `XDG_DATA_HOME` take precedence. opencode 2.x sessions come from `session_v2`, `session_message` and `session_part`, 1.x sessions from `session`, `message` and `part`; the same id in both shows once, from 2.x. Subagent sessions and archived sessions are not listed.
@@ -324,108 +316,49 @@ opencode sessions are listed on the Agent page with opencode's icon (task B30, i
 
 ## MiMo Code
 
-Xiaomi's MiMo Code is a fork of opencode, so the island reads it the same way as opencode 1.x (task B54, issue #530). Not yet run with the island (#179).
-
-- **Sessions**: `~/.local/share/mimocode/mimocode.db` (`MIMOCODE_DB`, or `data/` under `MIMOCODE_HOME`), opened read-only; only the main agent's messages count when the table records which agent wrote them. The same folders are used on Windows and macOS.
-- **Waiting on you and approvals**: **安装/修复** writes the opencode plugin into `~/.config/mimocode/plugin/fuyu-island.js`, posting to `/mimo/permission` and writing `agent-notifications/mimo-plugin-<id>.json`. No status light row, as for opencode.
-- Not read: databases of other release channels (`mimocode-<channel>.db`).
+Xiaomi's MiMo Code is a fork of opencode, so it works like opencode 1.x (task B54, issue #530): **安装/修复** installs the same plugin into MiMo's config folder, which gives waiting on you and approving on the island. Like opencode it has no status light row. Not yet run with the island (#179). Folders, database and plugin: [harnesses.md → MiMo Code](../architecture/agent/harnesses.md#mimo-codeb54).
 
 ## Qoder, CodeBuddy Code and Qwen Code
 
-These three CLIs copy Claude Code's hooks and session folders, so the island reads them through one shared layer (`claude_compat.rs`, B48); each has its own icon and switch on the Agent page. None has been run with the island yet (#179).
+These three CLIs copy Claude Code's hooks and session folders (B48). Each has its own icon, switch and status light row; **安装/修复** writes Fuyu's hooks into each one's `settings.json`, after which sessions light the island, show when they wait on you and can be approved on the island. Clicking a session looks for a terminal by folder and title. None has been run with the island yet (#179). Folders, session formats, events and approval routes: [harnesses.md → Claude Code 兼容的三家](../architecture/agent/harnesses.md#claude-code-兼容的三家b48).
 
-| | Qoder (and Qoder CN) | CodeBuddy Code | Qwen Code |
-|---|---|---|---|
-| Folder | `~/.qoder` (`QODER_CONFIG_DIR`) and `~/.qoder-cn` (`QODERCN_CONFIG_DIR`), both handled | `~/.codebuddy` (`CODEBUDDY_CONFIG_DIR`) | `~/.qwen` (`QWEN_HOME`) |
-| Sessions | `projects/<project>/<id>.jsonl`, Claude Code's format; title from `<id>-session.json` next to it; `agent-*.jsonl` (subagents) skipped | `projects/<project>/<id>.jsonl`, each record wrapped in `{type, uuid, timestamp, payload}` | `projects/<project>/chats/<id>.jsonl`, Gemini-style `parts`; title from the `system` / `custom_title` record (manual or auto) |
-| Hooks | `settings.json`: `UserPromptSubmit`, `PreToolUse`, `Stop`, `StopFailure`, `PermissionRequest` | same | same (a timeout of 1000 or more counts as milliseconds; the island's 150 seconds is unaffected) |
-| Waiting on you | saved `PermissionRequest` input | saved `Notification` input with matcher `permission_prompt` (its auto mode also sends `PermissionRequest` for tools it allows itself) | saved `PermissionRequest` input |
-| Approving on the island | `/qoder/permission-request`, answered in `hookSpecificOutput.decision` | `/codebuddy/permission-request` | `/qwen/permission-request` |
-
-Each has its own row in the status light card (`agent-<id>-running.flag`). Clicking a session looks for a terminal by folder and title. Not done: usage, SSH (all three have Linux CLIs), cc-connect.
-
-**Agents that also run Claude Code's hooks** (Grok CLI and Copilot CLI, B56): each gets its own hooks, so the island also sees their events on the Claude Code routes. A request there whose `transcript_path` lies in that agent's folder, or that carries one of its own field names, is answered `{}` and not shown twice. Claude Code's status light still lights up when such an agent runs Claude Code's hooks, since the script writes the marker without reading the input; to avoid that, turn off Claude hooks in that agent (Grok: `[compat.claude] hooks = false` in `~/.grok/config.toml`).
+**Agents that also run Claude Code's hooks** (Grok CLI and Copilot CLI, B56): the island tells their requests apart from Claude Code's and does not show them twice. Claude Code's status light still lights up when such an agent runs Claude Code's hooks; to avoid that, turn off Claude hooks in that agent (Grok: `[compat.claude] hooks = false` in `~/.grok/config.toml`).
 
 ## Grok CLI
 
-xAI's Grok CLI is listed with its own icon (task B57, issue #544). Checked with Grok 1.0.77 on macOS in headless mode (hook input and session reading); the interactive TUI, waiting and the reply marker are not yet checked (#179).
-
-- **Sessions**: `~/.grok/sessions/<encoded folder>/<session id>/` (or under `GROK_HOME`): `summary.json` for the title, model and reasoning effort, `events.jsonl` for whether a turn runs, ended or waits on a permission prompt (an internal format that may change), `chat_history.jsonl` for the latest prompt, reply and tool call. Non-primary sessions are skipped.
-- **Hooks**: **安装/修复** writes `~/.grok/hooks/fuyu-island.json`, a file of its own (Grok merges the whole folder): `UserPromptSubmit` and `PreToolUse` mark the turn running, `Stop` and `StopCancelled` completed, `StopFailure` failed, and `Notification` with `permission_prompt` saves the input (waiting on you).
-- **No approving on the island**: Grok's docs say a hook's `allow` only means "not blocked", never approval on the user's behalf.
-- Not done: usage (Grok has no local file or public endpoint for it), SSH, cc-connect.
+xAI's Grok CLI is listed with its own icon (task B57, issue #544). **安装/修复** writes a hooks file of its own into `~/.grok/hooks/`, so sessions light the island and show when they wait on a permission prompt. There is no approving on the island: Grok's hooks can only block, never approve on the user's behalf. Checked with Grok 1.0.77 on macOS in headless mode; the interactive TUI, waiting and the reply marker are not yet checked (#179). Details: [harnesses.md → Grok CLI](../architecture/agent/harnesses.md#grok-clib57).
 
 ## GitHub Copilot CLI
 
-Listed with its own icon (task B55, issue #542). Not yet run with the island (#179).
-
-- **Sessions**: `~/.copilot/session-state/<id>/events.jsonl` and `workspace.yaml` (or under `COPILOT_HOME`); the title is `summary` in `workspace.yaml`.
-- **Hooks**: **安装/修复** writes `~/.copilot/hooks/fuyu-island.json`, a file of its own (`version: 1`, `bash` and `powershell` commands, `timeoutSec`). Waiting on you comes only from the hooks, since the session files record no waiting event.
-- **Approving on the island**: `/copilot/permission-request`, answered with `{behavior, message, interrupt}`.
-- Copilot also runs Claude Code's hooks; see the note above on agents that do.
-- Not done: usage, SSH.
+Listed with its own icon (task B55, issue #542). **安装/修复** writes a hooks file of its own into `~/.copilot/hooks/`; sessions light the island, waiting on you comes from the hooks, and requests can be approved on the island. Not yet run with the island (#179). Details: [harnesses.md → GitHub Copilot CLI](../architecture/agent/harnesses.md#github-copilot-clib55).
 
 ## Droid
 
-Factory's Droid is listed with its own icon (task B58, issue #546; island approvals in B72.2, issue #782). Not yet run with the island (#179).
-
-- **Sessions**: `~/.factory/sessions/<project>/<uuid>.jsonl` with `<uuid>.settings.json` for the model and reasoning effort (or under `FACTORY_HOME`).
-- **Hooks**: written into `~/.factory/hooks.json` when it exists (events at the top level), otherwise into `hooks` in `~/.factory/settings.json`, since Droid ignores the latter when the former exists. The user's own hooks stay. Reopen the Droid session after installing.
-- **Approving on the island**: `PreToolUse` (matcher `^(Bash|Execute|RunCommand|Edit|Write|MultiEdit)$`) posts to `/droid/pre-tool-use` and is answered with `hookSpecificOutput.permissionDecision` (`allow` to run without Droid's interactive prompt, `deny` with your reason, or `ask` to hand back to the terminal). Read-only tools are not stopped. Waiting on you comes from `Notification` with `permission_prompt` and while an island approval is pending.
-- Not done: usage, SSH.
+Factory's Droid is listed with its own icon (task B58, issue #546; island approvals in B72.2, issue #782). **安装/修复** adds Fuyu's hooks next to the user's own; reopen the Droid session afterwards. Commands and file edits can be allowed, denied or handed back to the terminal on the island; read-only tools are not stopped. Not yet run with the island (#179). Details: [harnesses.md → Droid](../architecture/agent/harnesses.md#droidb58b722).
 
 ## pi (pi-coding-agent / PiDeck)
 
-`@earendil-works/pi-coding-agent` (CLI `pi` and the `PiDeck` / `PiCove` desktop app) is listed with its own icon (task B71, issue #745). Not yet run with the island (#179).
-
-- **Sessions**: `~/.pi/agent/sessions/<encoded folder>/<ISO>_<session-id>.jsonl` (or under `PI_CODING_AGENT_DIR`): `session` header for `id` and `cwd`, `session_info` for renamed titles, `model_change` and `thinking_level_change` for the model and effort, and `message` for prompts, replies, tool calls (`toolCall` / `toolResult`), token `usage` and the reply status marker. Also mirrored over SSH remote.
-- **Extension (hooks)**: **安装/修复** writes `~/.pi/agent/extensions/fuyu-island.js` when `~/.pi` (or `PI_CODING_AGENT_DIR`) exists. It hooks `session_start`, `agent_start`, `agent_end`, `tool_call` and `session_shutdown` to light the status light (`agent-pi-running.flag` and `agent-status.json`) and record `agent-sessions/<id>.json` for quit detection and window focus.
-- **Approving on the island**: since pi does not prompt on every tool call by default, set `FUYU_PI_APPROVAL=1` to have `tool_call` wait on `/pi/permission` and block denied calls.
-- **Reply marker**: `~/.pi/agent/AGENTS.md`.
-- **Clicking a session** focuses the terminal (or `PiDeck` / `PiCove` when running).
+`@earendil-works/pi-coding-agent` (CLI `pi` and the `PiDeck` / `PiCove` desktop app) is listed with its own icon (task B71, issue #745). **安装/修复** writes an extension into pi's folder that lights the island and records when a session quits. pi does not prompt on every tool call, so approving on the island is opt-in: set `FUYU_PI_APPROVAL=1` in pi's environment. Clicking a session focuses its terminal, or `PiDeck` / `PiCove` when running. Sessions on SSH remote computers are listed too. Not yet run with the island (#179). Details: [harnesses.md → pi](../architecture/agent/harnesses.md#pib71).
 
 ## TRAE and TRAE CN
 
-TRAE IDE's international and Chinese editions are two agents with the same icon: `trae` (`~/.trae`) and `traeCn` (`~/.trae-cn`), each with its own hooks, status light row and switch (task B29, issue #312). TRAE's session database is encrypted, so sessions are pieced together from what the hooks save, as for Antigravity: a session shows up only after the hooks are installed. Neither has been run with the island yet (#179).
+TRAE IDE's international and Chinese editions are two agents with the same icon, each with its own hooks, status light row and switch (task B29, issue #312). TRAE's session database is encrypted, so sessions are pieced together from what the hooks save: a session shows up only after the hooks are installed. Neither has been run with the island yet (#179). Details: [harnesses.md → TRAE 和 TRAE CN](../architecture/agent/harnesses.md#trae-和-trae-cnb29b723).
 
-- **Hooks**: **安装/修复** writes `hooks.json` (Claude Code's grouped format; a top-level `"version": 1` is added when missing) when the folder exists: `UserPromptSubmit`, `PreToolUse` and `PostToolUse` save the input in `agent-trae/` (or `agent-traeCn/`) and mark the turn running, `Stop` saves it and marks it completed, `Notification` saves it in `agent-notifications`. Saved inputs keep the first and last prompt, the latest reply and the newest record of each session, and are deleted after 24 hours.
-- **Sessions**: title from the first prompt; latest prompt, current tool (`tool_name`, the command or file) and the reply after the last prompt. No model, permission mode, to-dos or context tokens, and no quit detection (TRAE sends no session end).
-- **Waiting on you**: `Notification` with `permission_prompt`, `ask_user_question`, `document_review` or `browser_interaction`, and while an island approval is pending.
-- **Approving on the island**: commands, file edits/writes/deletions and MCP tools (`^(RunCommand|Bash|Write|Edit|MultiEdit|StrReplace|CreateFile|DeleteFile|WriteToFile|ReplaceInFile|mcp__.*)$`; read-only tools are not stopped), posted to `/trae/pre-tool-use` or `/traeCn/pre-tool-use` and answered with `hookSpecificOutput.permissionDecision` (`allow`, `deny` with a reason, or `ask` to leave it to TRAE); the main session's `agent_id` is ignored so it is not treated as a subagent (B72.3). When TRAE's tool is set to confirm manually, `allow` does not skip TRAE's own prompt; set TRAE to **Auto Run** so allowing on the island runs directly without a second click in TRAE, denying blocks it, and handing back (`ask`) prompts in TRAE.
-- **Clicking a session** brings up the TRAE or TRAE CN window.
-- **Two things to check in TRAE's settings**: if Hooks run "in the sandbox", the scripts may be unable to write to the island's data folder, so switch to running them locally (the default is not known yet); and if "import Claude Code hooks" is on, the hooks the island installed for Claude Code also run in TRAE and its sessions show up as Claude Code, so turn that switch off.
-- Not done: reply marker (the path of TRAE's personal rules file is not documented), usage, SSH, cc-connect.
+- **Approving on the island**: commands, file edits and MCP tools can be allowed, denied or handed back to TRAE. When TRAE's tool is set to confirm manually, allowing on the island does not skip TRAE's own prompt; set TRAE to **Auto Run** so allowing on the island runs directly.
+- **Two things to check in TRAE's settings**: if Hooks run "in the sandbox", the scripts may be unable to write to the island's data folder, so switch to running them locally; and if "import Claude Code hooks" is on, the hooks the island installed for Claude Code also run in TRAE and its sessions show up as Claude Code, so turn that switch off.
+- Clicking a session brings up the TRAE or TRAE CN window. No reply marker (the path of TRAE's personal rules file is not documented).
 
 ## ZCode
 
-Zhipu's ZCode (desktop app and `zcode` CLI) is listed with its own icon (task B53, issue #529). Its session database uses opencode 1.x's tables, so the island reads it with the opencode reader. Not yet run with the island (#179).
-
-- **Sessions**: `~/.zcode/cli/db/db.sqlite` (or `ZCODE_SESSION_DB_PATH`), opened read-only; title, folder, model, latest prompt and reply, current tool, to-dos and context tokens. Deleted sessions, subagents and workflow subtasks are skipped.
-- **Hooks**: **安装/修复** writes `hooks.events` in `~/.zcode/cli/config.json` (Claude Code's grouped format) and turns `hooks.enabled` on, when `~/.zcode` exists: `UserPromptSubmit` and `PreToolUse` mark the turn running, `Stop` marks it completed, `PermissionRequest` saves the input (waiting on you) and runs the approval script. ZCode reads the hooks when a session starts, so open a new session after installing. Turning hooks off in ZCode's settings shows the hooks as needing repair.
-- **Approving on the island**: `/zcode/permission-request`, answered in Claude Code's `hookSpecificOutput.decision` format.
-- Not done: quit detection, usage, SSH.
+Zhipu's ZCode (desktop app and `zcode` CLI) is listed with its own icon (task B53, issue #529). **安装/修复** writes Fuyu's hooks into ZCode's config and turns its hooks on; open a new session afterwards. Turning hooks off in ZCode's settings shows the hooks as needing repair. Requests can be approved on the island. Not yet run with the island (#179). Details: [harnesses.md → ZCode](../architecture/agent/harnesses.md#zcodeb53).
 
 ## Kimi Code
 
-Moonshot's Kimi Code CLI (the TypeScript `kimi`, data in `~/.kimi-code` or `KIMI_CODE_HOME`) is listed with its own icon (task B52, issue #528). Not yet run with the island (#179).
-
-- **Sessions**: `sessions/<workspace>/<session>/state.json` for the title, rename, latest prompt and folder (archived and child sessions are skipped), and `agents/main/wire.jsonl` for whether a turn is running, the reply, model and current tool.
-- **Hooks**: **安装/修复** appends a marked `[[hooks]]` block to `config.toml`: `UserPromptSubmit` marks the turn running, `Stop` and `Interrupt` mark it completed, `StopFailure` failed, and `PermissionRequest` saves the input (waiting on you). Each entry has only `event`, `command` and `timeout`, since any other field makes Kimi reject the whole file. If `hooks` is an inline array, or the file cannot be read, nothing is written and an error is shown. Open a new session after installing.
-- **No approving on the island**: `PermissionRequest` cannot answer, and `PreToolUse` fires for every tool call before Kimi's own permission check and only accepts deny. When a session waits on you, answer it in the terminal.
-- **Usage**: the existing Kimi usage ring (API key in settings).
-- Not read: the old Python `kimi-cli` (`~/.kimi`), and the runtime inside the Kimi desktop app.
-- Not done: quit detection, SSH, cc-connect.
+Moonshot's Kimi Code CLI (the TypeScript `kimi`) is listed with its own icon (task B52, issue #528). **安装/修复** appends a marked block of hooks to its `config.toml`; open a new session afterwards. If `hooks` is written as an inline array, or the file cannot be read, nothing is written and an error is shown. A session waiting on you shows as such, but it has to be answered in the terminal: Kimi's hooks cannot approve. The usage ring is the existing Kimi one (API key in settings). Not yet run with the island (#179). Details: [harnesses.md → Kimi Code](../architecture/agent/harnesses.md#kimi-codeb52).
 
 ## Cursor
 
-The Cursor editor Agent (Composer) is listed with its own icon. The `agent` CLI store is not read. Not yet tried end to end on the island (#179).
-
-- **Hooks**: **安装/修复** merges entries into `~/.cursor/hooks.json` when `~/.cursor` exists. Only entries whose `command` contains `fuyu-agent-` are added or removed; other hooks stay. `sessionStart` and `beforeSubmitPrompt` mark the light running, `stop` marks it completed, and `sessionEnd` marks it idle. Cursor reloads `hooks.json` on save.
-- **Approving on the island**: `beforeShellExecution` and `beforeMCPExecution` post to `/cursor/permission` and are answered with `{permission: allow|deny|ask}` (a deny includes `user_message` and `agent_message`). The hook timeout is 150 seconds. If the script is missing or the island is not listening, the hook answers `ask`, so Cursor shows its own confirmation instead of treating empty output as a deny. `preToolUse` is not installed: its `ask` is not enforced, and file edits have no blocking before-hook.
-- **Sessions**: the main transcript `~/.cursor/projects/<workspace>/agent-transcripts/<id>/<id>.jsonl`. Titles come from `~/Library/Application Support/Cursor/User/globalStorage/conversation-search.db` (Windows: `%APPDATA%\Cursor\User\globalStorage\conversation-search.db`), then from `~/.cursor/ai-tracking/ai-code-tracking.db`'s `conversation_summaries`, then the first user line. The model and reasoning effort come from `state.vscdb`'s `composerData:<id>` (`modelConfig.modelName`, skipping `default`, and `reasoning_effort`); context tokens come from `contextTokensUsed`. The workspace folder name is matched against real directories. A `turn_ended` line with `error` is a failure; any other `turn_ended` is completed; a trailing user or tool-use line is running. `unfinishedRunAt` on `composerHeaders` or `composerData` keeps the session running.
-- **Waiting on you**: there is no waiting event. A session counts as waiting only while an island approval is pending.
-- **Clicking a session** raises the Cursor window and picks among its windows by folder name. It does not open a specific chat.
-- Not done: reply marker, usage ring, SSH remote (Remote-SSH runs hooks on the remote machine; the CLI `store.db` format is unverified). `state.vscdb` is opened read-only for `composerHeaders` and `composerData` only (values over 1MB are skipped; `hasBlockingPendingActions` is not treated as waiting). Not read: `~/.cursor/chats/**/store.db`.
+The Cursor editor Agent (Composer) is listed with its own icon. **安装/修复** merges Fuyu's entries into `~/.cursor/hooks.json`, keeping other hooks; Cursor reloads it on save. Shell commands and MCP calls can be approved on the island; when the island is not listening, Cursor shows its own confirmation. There is no waiting event: a session counts as waiting only while an island approval is pending. Clicking a session opens it in Cursor's Agents window. The optional usage ring is off by default. No reply marker. Not yet tried end to end on the island (#179). Details: [harnesses.md → Cursor](../architecture/agent/harnesses.md#cursor编辑器-agent).
 
 ## Other Agents
 
