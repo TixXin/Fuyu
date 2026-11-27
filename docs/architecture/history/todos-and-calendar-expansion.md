@@ -3,7 +3,7 @@
 > 日期：2026-11-17
 > 问题：用户反馈浮屿当前的「待办」与「日历」功能偏单薄、设置页几乎没有可配项（「待办和日历的功能太少了，设置里没啥选项」），需对标桌面端与菜单栏 / 灵动岛标杆产品，系统梳理功能差距并给出功能扩充与设置页重设计方案。
 > 搜索范围：Cultured Code（Things 3 官方文档）、TickTick（滴答清单）、Todoist、Raycast（Apple Reminders & Focus）、NotchNook、DynamicLake、Dato、Itsycal、MeetingBar（GitHub `leits/MeetingBar`）、Meeter、Fantastical、Notion Calendar 官方文档，Apple EventKit 与 Microsoft Graph / WinRT `AppointmentStore` 开发文档，以及本仓库 `src/features/todos/`、`src/features/calendar/`、`src-tauri/src/calendar/`、`src-tauri/src/todos/` 源码与设计文档。
-> 关联文档与任务：[docs/design/todos.md](../design/todos.md)、[docs/features/todo-tags.md](../features/todo-tags.md)、[docs/features/calendar.md](../features/calendar.md)、[docs/features/timer.md](../features/timer.md)、[docs/research/settings-window-redesign-v2.md](settings-window-redesign-v2.md)、[C5b](../tasks/C/C5b.md)
+> 关联文档与任务：[docs/design/todos.md](../../design/todos.md)、[docs/features/todo-tags.md](../../features/todo-tags.md)、[docs/features/calendar.md](../../features/calendar.md)、[docs/features/timer.md](../../features/timer.md)、[docs/architecture/history/settings-window-redesign-v2.md](settings-window-redesign-v2.md)、[C5b](../../tasks/C/C5b.md)
 
 ---
 

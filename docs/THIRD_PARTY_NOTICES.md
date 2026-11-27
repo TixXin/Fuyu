@@ -70,3 +70,9 @@ The code in `gate.rs` was rewritten in Rust and changed (address cache, restorin
 - 用于：插件平台的内核（`vendor/cordis/`，`cordis` 4.0.0-rc.13 和五个 `@cordisjs/*` 包在 npm 上的构建产物，本地改动记在 `vendor/README.md`）。开源基座 [tauri-cordis](https://github.com/TixXin/tauri-cordis) 里带的是同一份。
 - License: MIT. The original notice is kept next to the code / 原声明保留在代码旁边：`vendor/cordis/LICENSE`. Source: https://github.com/cordiverse/cordis
 
+
+## ECDICT (skywind3000 / Linwei)
+
+- Used in: the official plugin `@fuyu/ecdict` (`plugins/v3/official/ecdict/assets/ecdict.json`, derived from ECDICT at revision `39cfb9672c0906b63569e0453c2e6abfb9ab182a`). The plugin is installed separately and is not shipped with the app.
+- 用于：官方插件 `@fuyu/ecdict`（`plugins/v3/official/ecdict/assets/ecdict.json`，取自 ECDICT 提交 `39cfb9672c0906b63569e0453c2e6abfb9ab182a`）。插件单独安装，不随应用发布。
+- License: MIT. The original notice is kept next to the plugin / 原声明保留在插件旁边：`plugins/v3/official/ecdict/LICENSE`. Source: https://github.com/skywind3000/ECDICT

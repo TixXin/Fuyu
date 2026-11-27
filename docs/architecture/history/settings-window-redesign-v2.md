@@ -3,7 +3,7 @@
 > **日期**：2026-11-17
 > **问题**：全网调研主流现代桌面效率软件与平台设计规范，盘点浮屿当前全部 23 个侧边栏页面（共 50 个分类与子标签）的交互与视觉痛点，给出完整的设置窗口优化设计与分批实施计划。
 > **搜索范围**：Apple macOS Human Interface Guidelines、Microsoft Windows 11 Fluent 2 设计规范、Nielsen Norman Group（NN/g）复杂设置渐进式披露研究、Raycast、Linear、Cursor、CleanShot X、Paste、Things 3，以及桌面刘海/灵动岛同类工具（Alcove、NotchNook、BoringNotch、DynamicLake）；并逐行审计本仓 `src/windows/settings/` 与 `src/features/*/` 下全部设置源码。
-> **关联文档**：[第 1 轮设置窗口改版分析（2026-11-06）](settings-window-redesign.md) · [已确认的设置窗口约定](/docs/design/settings.md)
+> **关联文档**：[第 1 轮设置窗口改版分析（2026-11-06）](../../research/settings-window-redesign.md) · [已确认的设置窗口约定](/docs/design/settings.md)
 
 ---
 

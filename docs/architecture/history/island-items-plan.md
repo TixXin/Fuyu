@@ -2,7 +2,7 @@
 
 起因（用户，2026-11-19）：「插件安多了后，岛屿上会显示很多内容，但又没有一个地方快捷设置显示或关闭和先后顺序；mac 刘海的情况，多出来的直接就不显示出来了。应该加个选择，比如时间在右上角、歌词展开小面板显示。」
 
-状态：**已定**（用户 2026-11-19：「按建议定」），分四步做，任务 C139。预览页：[island-items-preview.html](island-items-preview.html)。下面标「待定」的几项是当时给用户挑的，结果见「定下来的」。
+状态：**已定**（用户 2026-11-19：「按建议定」），分四步做，任务 C139。预览页：[island-items-preview.html](../../investigations/island-items-preview.html)。下面标「待定」的几项是当时给用户挑的，结果见「定下来的」。
 
 ## 定下来的
 
@@ -22,9 +22,9 @@
 | 计时器和市场插件（天气、世界时钟、系统监控、番茄钟、倒计时、闹钟、待办环、GitHub Issues）经 `island.collapsed/v1` 上岛，不在这张列表里。想不显示只能关掉整个插件 | `src/features/*/plugin/island.tsx`、`plugins/v3/official/*/src/island.tsx` |
 | 存储（`fuyu-collapsed-items`）和排序（`arrangeCollapsedItems`）已经接受任意 id，岛上也按它渲染。缺的是设置窗口拿不到岛上的插件项清单：插槽注册表每个窗口一份 | `src/lib/settings/collapsedItems.ts`、`src/windows/island/collapsedBarItems.tsx` |
 | 刘海形态每侧 56–100 宽（未缩放），去掉内外边距可用约 80，放 2–3 个图标就满。放不下的没有提示 | `src/windows/island/notch.ts`（`NOTCH_WING`、`MAX_NOTCH_WING`） |
-| 刘海形态不放常驻文字（待办、歌词、Agent 标题、会议），只有消息和长提示会在刘海下面多长出一行 | [design/macos.md](../design/macos.md)「刘海」，2026-11-13 定 |
+| 刘海形态不放常驻文字（待办、歌词、Agent 标题、会议），只有消息和长提示会在刘海下面多长出一行 | [design/macos.md](../../design/macos.md)「刘海」，2026-11-13 定 |
 | 非刘海形态收起条最宽 520，超出时先让文字让位，再把项目在右边缘淡出 | `packages/plugin-base/src/index.d.mts` 的 `island.collapsed/v1` 说明 |
-| 中间文字位的先后是写死的：临时提示 > 会议 > 歌词 / Agent（一个开关二选一）> 待办。2026-11-09 定过「不做通用排序」 | [design/collapsed-bar.md](../design/collapsed-bar.md)「收起条显示歌词」 |
+| 中间文字位的先后是写死的：临时提示 > 会议 > 歌词 / Agent（一个开关二选一）> 待办。2026-11-09 定过「不做通用排序」 | [design/collapsed-bar.md](../../design/collapsed-bar.md)「收起条显示歌词」 |
 | 收起的岛上右键没有被占用（全局禁用了浏览器默认菜单） | `src/lib/browserDefaults.ts` |
 
 ## 问题归到三条
@@ -88,7 +88,7 @@
 - `fuyu-collapsed-items`：版本不变，项目多一个可选字段 `shelf: true`（收进小面板），`zone` 仍然只有 left / right。旧版本读到会忽略它，旧版本保存时会丢掉它（退回到在岛上显示），可以接受。
 - 新 key `fuyu-collapsed-text`：文字类内容的顺序、是否显示、刘海屏上的方式。不往旧 key 里塞新的 `zone` 值：旧版本的校验会把整项丢掉。
 - 新 key（不同步、不备份）：岛写给设置窗口的项目清单。
-- 两个要同步的 key 加进同步和备份的清单，写进 [contracts.md](../architecture/contracts.md)。
+- 两个要同步的 key 加进同步和备份的清单，写进 [contracts.md](../contracts.md)。
 - 插件接口：`island.collapsed/v1` 多一个可选的 `label`；市场规则加一条「上岛项目宽度不超过 64，超过的要提供更窄的形态或默认收进小面板」（数值待定）。
 
 ## 分阶段

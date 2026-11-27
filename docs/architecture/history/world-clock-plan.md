@@ -6,7 +6,7 @@
 
 用户原话：「世界时钟插件，需要有完善的设置选项和默认岛上不需要显示时区」。用户截图：设置窗口插件详情的「设置」页只有一行「世界时钟 / 已添加 4 个城市」和一个勾选「在收起条显示关注城市时间」。
 
-预览页（现在和改后并排，设置项可以点着看效果）：[world-clock-preview.html](world-clock-preview.html)。
+预览页（现在和改后并排，设置项可以点着看效果）：[world-clock-preview.html](../../investigations/world-clock-preview.html)。
 
 ## 现状（`plugins/v3/official/world-clock`，1.0.0）
 

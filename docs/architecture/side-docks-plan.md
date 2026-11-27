@@ -1,6 +1,6 @@
 # 屏幕左右侧独立入口（侧边翼 / Side Docks）方案
 
-> 状态：**方向与 6 项问题已确认（2026-11-25，用户确认全部按推荐来）**；Phase 0 交互预览页：[side-docks-preview.html](../investigations/side-docks-preview.html)。参考用户提供的 MagIsland 磁吸岛侧边交互截图，结合浮屿当前主岛形态、侧边吸附（[island-docking-plan.md](island-docking-plan.md)）与插件平台第 3 版（[v3-everything-plugin.md](plugins/v3-everything-plugin.md)）起草。
+> 状态：**方向与 6 项问题已确认（2026-11-25，用户确认全部按推荐来）**；Phase 0 交互预览页：[side-docks-preview.html](../investigations/side-docks-preview.html)。参考用户提供的 MagIsland 磁吸岛侧边交互截图，结合浮屿当前主岛形态、侧边吸附（[island-docking-plan.md](history/island-docking-plan.md)）与插件平台第 3 版（[v3-everything-plugin.md](plugins/v3-everything-plugin.md)）起草。
 
 ## 1. 背景与要解决的问题
 
@@ -23,7 +23,7 @@
 
 ### 1.3 与现有「侧边吸附（C54.1）」的区别
 
-现有 [island-docking-plan.md](island-docking-plan.md) 里的左右侧抽屉，是把**唯一的主岛**整座搬到屏幕左/右边（顶边就没有岛了）。本方案则是**多入口并存**：顶部主岛照常负责强感知与实时状态，同时在屏幕左侧和/或右侧新增独立的**侧边翼（Side Dock）**入口，把顶岛里拥挤的 Tab 分流出来。
+现有 [island-docking-plan.md](history/island-docking-plan.md) 里的左右侧抽屉，是把**唯一的主岛**整座搬到屏幕左/右边（顶边就没有岛了）。本方案则是**多入口并存**：顶部主岛照常负责强感知与实时状态，同时在屏幕左侧和/或右侧新增独立的**侧边翼（Side Dock）**入口，把顶岛里拥挤的 Tab 分流出来。
 
 ---
 
