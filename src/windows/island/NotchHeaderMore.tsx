@@ -46,6 +46,7 @@ export function NotchHeaderMore({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [place, setPlace] = useState<MenuPlace | null>(null);
+  const focusOnOpenRef = useRef(false);
   const open = place !== null;
   const hasActive = items.some((item) => item.active);
   const spotlight = items.find((item) => item.spotlight)?.spotlight;
@@ -57,9 +58,10 @@ export function NotchHeaderMore({
 
   const hide = useCallback(() => setPlace(null), []);
 
-  const show = useCallback(() => {
+  const show = useCallback((focusItem = false) => {
     const trigger = triggerRef.current;
     if (!trigger || !isExpanded) return;
+    focusOnOpenRef.current = focusItem;
     const anchor = trigger.getBoundingClientRect();
     const panel = (trigger.closest(".island__expanded") ?? trigger.closest(".island") ?? trigger).getBoundingClientRect();
     const top = anchor.bottom + MENU_OFFSET;
@@ -88,6 +90,13 @@ export function NotchHeaderMore({
   }, [place]);
 
   useEffect(() => {
+    if (!place || place.left === null || !focusOnOpenRef.current) return;
+    focusOnOpenRef.current = false;
+    const menu = menuRef.current;
+    (menu?.querySelector<HTMLButtonElement>("[aria-current='page']") ?? menu?.querySelector<HTMLButtonElement>("button"))?.focus();
+  }, [place]);
+
+  useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null;
@@ -112,9 +121,10 @@ export function NotchHeaderMore({
     if (event.key === "Escape" && open) {
       event.stopPropagation();
       hide();
-    } else if (event.key === "ArrowDown" && open) {
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
-      menuRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+      if (open) menuRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+      else show(true);
     }
   };
 
@@ -125,11 +135,14 @@ export function NotchHeaderMore({
       triggerRef.current?.focus();
       return;
     }
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
     const buttons = [...(menuRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? [])];
     const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    buttons[(at + (event.key === "ArrowDown" ? 1 : buttons.length - 1)) % Math.max(buttons.length, 1)]?.focus();
+    const last = buttons.length - 1;
+    const down = event.key === "ArrowDown";
+    const next = event.key === "Home" ? 0 : event.key === "End" ? last : at < 0 ? (down ? 0 : last) : (at + (down ? 1 : last)) % buttons.length;
+    buttons[next]?.focus();
   };
 
   return (
@@ -145,7 +158,7 @@ export function NotchHeaderMore({
         onClick={(event) => {
           event.stopPropagation();
           if (open) hide();
-          else show();
+          else show(event.detail === 0);
         }}
         onKeyDown={onTriggerKey}
         {...spotlight}

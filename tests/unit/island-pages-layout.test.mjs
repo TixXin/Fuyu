@@ -3,7 +3,7 @@ import test from "node:test";
 import "./islandPageSlot.mjs";
 import { FUYU_PAGE_ID } from "../../src/lib/settings/customPanels.ts";
 import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/lib/settings/settings.ts";
-import { arrangeIslandPages, moveIslandPage, placeIslandPage, readIslandPages, setIslandPageHidden, setIslandPageIcon } from "../../src/lib/settings/islandPages.ts";
+import { arrangeIslandPages, customPageName, moveIslandPage, placeIslandPage, readIslandPages, resetIslandPageOrder, setIslandPageHidden, setIslandPageIcon, setIslandPageName, setIslandPagePlacement } from "../../src/lib/settings/islandPages.ts";
 import { cycleShortcutPage, headerDotPages, isPageShown, pageForAltDigit, pageShortcutOrder, resolveIslandPage } from "../../src/windows/island/features.ts";
 import { resolveHomePage } from "../../src/windows/island/homePage.ts";
 import { pageSlot } from "../../src/windows/island/slots/pageSlot.ts";
@@ -78,6 +78,27 @@ test("setting a page icon keeps order and hidden, and clearing the last one drop
   assert.deepEqual(setIslandPageIcon(starred, "todo", null), layout);
   assert.deepEqual(setIslandPageHidden(starred, "todo", true).icons, { todo: "star" });
   assert.deepEqual(moveIslandPage(starred, ["timer", "todo"], "todo", -1).icons, { todo: "star" });
+});
+
+test("page names are optional: old data has none, junk is dropped, blanks unset and long names cut to 16 characters", () => {
+  assert.equal("names" in readIslandPages(JSON.stringify({ version: 1, order: ["todo"], hidden: [] })), false);
+  assert.equal("names" in readIslandPages(JSON.stringify({ version: 1, order: [], hidden: [], names: ["Work"] })), false);
+  const long = "一二三四五六七八九十甲乙丙丁戊己庚辛";
+  assert.deepEqual(readIslandPages(JSON.stringify({ version: 1, order: [], hidden: [], names: { todo: "  Work  ", music: 3, calendar: "   ", "": "x", timer: long, "panel:fuyu": "🐟 Home" } })),
+    { order: [], hidden: [], names: { todo: "Work", timer: long.slice(0, 16), "panel:fuyu": "🐟 Home" } });
+  assert.equal(customPageName(undefined, "todo"), undefined);
+  assert.equal(customPageName({ order: [], hidden: [], names: { todo: "Work" } }, "todo"), "Work");
+});
+
+test("naming a page keeps every other field, and clearing the last name drops the map", () => {
+  const layout = { order: ["timer"], hidden: ["music"], icons: { todo: "star" }, placement: { qq: "left" } };
+  const named = setIslandPageName(layout, "panel:fuyu", " Desk ");
+  assert.deepEqual(named, { ...layout, names: { "panel:fuyu": "Desk" } });
+  assert.deepEqual(setIslandPageName(named, "panel:fuyu", "   "), layout);
+  assert.deepEqual(setIslandPageName(named, "panel:fuyu", null), layout);
+  assert.deepEqual(setIslandPageIcon(named, "todo", null).names, { "panel:fuyu": "Desk" });
+  assert.deepEqual(setIslandPagePlacement(named, "qq", "top").names, { "panel:fuyu": "Desk" });
+  assert.deepEqual(resetIslandPageOrder(named), { order: [], hidden: [], icons: { todo: "star" }, names: { "panel:fuyu": "Desk" } });
 });
 
 test("resolveHomePage respects rememberLastPage, urgent popups, hidden Fuyu page and side-docked pages", () => {

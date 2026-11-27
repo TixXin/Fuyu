@@ -1,7 +1,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { useTranslation } from "../../../i18n";
-import { EMPTY_ISLAND_PAGES, placeIslandPage, setIslandPageHidden, type IslandPagesLayout } from "../../../lib/settings/islandPages";
+import { placeIslandPage, resetIslandPageOrder, setIslandPageHidden, type IslandPagesLayout } from "../../../lib/settings/islandPages";
 import { useChipReorder } from "./useChipReorder";
 import type { IslandPageRow } from "./useIslandPageRows";
 
@@ -66,7 +66,7 @@ export function PageStrip({ rows, layout, save, current, onPick, pluginsListed }
       </div>
       {pluginsListed ? null : <p className="settings-section__hint">{text.loading}</p>}
       <div className="layout-chips__actions">
-        <button className="layout-chips__reset" type="button" disabled={!customized} onClick={() => save(layout.icons ? { ...EMPTY_ISLAND_PAGES, icons: layout.icons } : EMPTY_ISLAND_PAGES)}>
+        <button className="layout-chips__reset" type="button" disabled={!customized} onClick={() => save(resetIslandPageOrder(layout))}>
           {text.reset}
         </button>
       </div>

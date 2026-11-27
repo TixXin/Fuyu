@@ -99,8 +99,8 @@ export function SideDockWindow() {
   const stripRailRef = useSideDockPill(stripRef, "y", stripRailKey, instantMotion);
 
   const labelFor = useCallback(
-    (entry: (typeof dockPages)[number]) => sideDockPageLabel(entry, pageLabel, t.island),
-    [pageLabel, t.island],
+    (entry: (typeof dockPages)[number]) => sideDockPageLabel(entry, pageLabel, t.island, pageLayout),
+    [pageLabel, t.island, pageLayout],
   );
 
   const stepPage = useCallback(

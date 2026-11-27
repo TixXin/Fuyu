@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
 import { Image as ImageIcon, Shapes, Smile, Type, X, type LucideIcon } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import type { PanelIconComponent } from "../../../components/island-widget/panelIcons";
-import { FUYU_TEXT_ICON, JELLYFISH_ICON, PAGE_ICON_CHOICES, pageIconComponent } from "../../../components/island-widget/pageIcons";
+import { FUYU_HOME_ICON, FUYU_TEXT_ICON, JELLYFISH_ICON, PAGE_ICON_CHOICES, pageIconComponent } from "../../../components/island-widget/pageIcons";
 import { useTranslation } from "../../../i18n";
 import { FUYU_PAGE_ID } from "../../../lib/settings/customPanels";
 import type { IslandPagesLayout } from "../../../lib/settings/islandPages";
@@ -12,6 +12,7 @@ import { IconSourceTab } from "./page-icon/IconSourceTab";
 import { clipboardImage } from "./page-icon/imageImport";
 import { ImageSourceTab, type ImageDraft, type IncomingImage } from "./page-icon/ImageSourceTab";
 import { PageIconStage } from "./page-icon/PageIconStage";
+import { PageNameRow } from "./PageNameRow";
 import { PAGE_ICON_SOURCES, sourceOf, type PageIconSource } from "./page-icon/pageIconSources";
 import { TextSourceTab } from "./page-icon/TextSourceTab";
 import { DEFAULT_ICON, usePageIconPicker } from "./page-icon/usePageIconPicker";
@@ -74,7 +75,7 @@ export function PageIconPicker({ row, layout, save, legacyJellyfish, nameOf }: P
   };
   const cell = { current, tabbable: current, onPick: pick, onPeek: setPeek };
   const lead = fuyu
-    ? [{ value: FUYU_TEXT_ICON, label: text.text, wide: true }, { value: JELLYFISH_ICON, label: text.jellyfish }]
+    ? [{ value: FUYU_HOME_ICON, label: text.useDefault, caption: text.useDefault }, { value: FUYU_TEXT_ICON, label: text.text, wide: true }, { value: JELLYFISH_ICON, label: text.jellyfish }]
     : [{ value: DEFAULT_ICON, label: text.useDefault, caption: text.useDefault }];
   const shown = draft ? current : peek ?? current;
   const using = sourceOf(current);
@@ -89,6 +90,7 @@ export function PageIconPicker({ row, layout, save, legacyJellyfish, nameOf }: P
 
   return (
     <SettingsGroup title={text.title(row.name)} footer={fuyu ? text.fuyuHint : text.hint}>
+      <PageNameRow row={row} layout={layout} save={save} />
       <div className="page-icon-picker" data-page={row.id}>
         <PageIconStage
           value={shown}

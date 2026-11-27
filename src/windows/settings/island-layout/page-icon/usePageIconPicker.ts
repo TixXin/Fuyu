@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FUYU_TEXT_ICON, JELLYFISH_ICON } from "../../../../components/island-widget/pageIcons";
+import { FUYU_HOME_ICON, FUYU_TEXT_ICON, JELLYFISH_ICON } from "../../../../components/island-widget/pageIcons";
 import { setIslandPageIcon, type IslandPagesLayout } from "../../../../lib/settings/islandPages";
 import {
   loadPageIconImages,
@@ -38,7 +38,7 @@ export function usePageIconPicker({ pageId, fuyu, layout, save, legacyJellyfish 
   }, [undo]);
 
   const choose = useCallback((value: string) => {
-    const keep = value === DEFAULT_ICON || (fuyu && value === FUYU_TEXT_ICON && !legacyJellyfish);
+    const keep = value === DEFAULT_ICON || (fuyu && value === (legacyJellyfish ? JELLYFISH_ICON : FUYU_HOME_ICON));
     save(setIslandPageIcon(layoutRef.current, pageId, keep ? null : value));
     if (!remembered(value)) return;
     setRecent((previous) => {

@@ -50,6 +50,7 @@ export function withPageLayout(
     pageLayout.order.length > 0 ||
     pageLayout.hidden.length > 0 ||
     Object.keys(pageLayout.icons ?? {}).length > 0 ||
+    Object.keys(pageLayout.names ?? {}).length > 0 ||
     Object.keys(pageLayout.placement ?? {}).length > 0;
   const hasSides = enabledSides !== undefined && (enabledSides.left || enabledSides.right);
   if (!hasLayout && !hasSides) return features;

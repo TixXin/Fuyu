@@ -12,6 +12,7 @@ import type { PanelIconComponent } from "./panelIcons";
 
 export const FUYU_TEXT_ICON = "text";
 export const JELLYFISH_ICON = "jellyfish";
+export const FUYU_HOME_ICON = "house";
 
 export const PAGE_ICON_CHOICES: Readonly<Record<string, PanelIconComponent>> = {
   star: Star,
@@ -79,5 +80,5 @@ export function pageIconComponent(name: string | undefined, fallback?: PanelIcon
 }
 
 export function fuyuPageIconName(icons: Readonly<Record<string, string>> | undefined, pageId: string, legacyJellyfish: boolean): string {
-  return icons?.[pageId] ?? (legacyJellyfish ? JELLYFISH_ICON : FUYU_TEXT_ICON);
+  return icons?.[pageId] ?? (legacyJellyfish ? JELLYFISH_ICON : FUYU_HOME_ICON);
 }

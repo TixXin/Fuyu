@@ -4,12 +4,14 @@
 
 ## 先做完再发
 
+状态（2026-11-26）：一篇都还没发，awesome-tauri 没有 PR。
+
 发出去的链接点进来要能立住，下面几条没满足之前不发：
 
 - tauri-cordis 的新 README、文档和示例应用已经合进 `main`，`examples/tauri-app` 照 README 的命令能跑起来。
-- 发一个补丁版本（0.2.1），让 npm 页面带上新的 README 和 `keywords`。npm 上的 README 和关键词只在发版时更新。
-- 仓库设置里上传社交预览图（Settings → General → Social preview），否则链接贴到聊天软件里只有 GitHub 的默认卡片。
-- 打开私下报告漏洞（Settings → Security → Private vulnerability reporting），`SECURITY.md` 指向的入口才存在。
+- ~~发一个补丁版本，让 npm 页面带上新的 README 和 `keywords`~~：0.3.0（E79）已发，npm 页面带上了（2026-11-26 核实）。GitHub Releases 还停在 v0.2.0，发帖前补一个 v0.3.0 的 Release。
+- 仓库设置里上传社交预览图（Settings → General → Social preview），否则链接贴到聊天软件里只有 GitHub 的默认卡片。2026-11-26 还没传。
+- 打开私下报告漏洞（Settings → Security → Private vulnerability reporting），`SECURITY.md` 指向的入口才存在。2026-11-26 还没开。
 - 浮屿的 README 已经链到 tauri-cordis（已做）。
 
 顺序建议：awesome-tauri（留得最久）→ Cordis / Koishi 社区（最对口）→ 文章 → Tauri Discord、Reddit、V2EX 带上文章链接。Hacker News 放最后，等前面有了几条真实反馈再发。

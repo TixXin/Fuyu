@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type WheelEvent } from "react";
+import { useCallback, useRef, type WheelEvent } from "react";
 import { Bot } from "lucide-react";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
@@ -22,7 +22,7 @@ import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
 import { useHeaderSpotlight } from "./usePluginSpotlight";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { useIslandNotch } from "./notch";
-import { useRowOverflow } from "./useRowOverflow";
+import { useHeaderTabFit } from "./useHeaderTabFit";
 import { usePageLabel } from "./usePageLabel";
 import { NotchHeaderMore, type NotchHeaderMoreItem } from "./NotchHeaderMore";
 import { useNotchHeaderSplit } from "./useNotchHeaderSplit";
@@ -98,43 +98,41 @@ export function IslandHeader({
   const startRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);
+  const leadActionsRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
   const moreElRef = useRef<HTMLButtonElement | null>(null);
   const setMoreEl = useCallback((element: HTMLButtonElement | null) => {
     moreElRef.current = element;
   }, []);
   const notch = useIslandNotch();
   const notchHeader = Boolean(notch && !notch.simulated);
-  useRowOverflow(dotsRef, !notchHeader, `${dots.length}|${notchHeader}`);
   const headerRef = useRef<HTMLElement>(null);
   const icons = features.pageLayout?.icons;
   const iconName = (id: string) => (id === FUYU_PAGE_ID ? fuyuPageIconName(icons, id, fuyuTabIcon) : icons?.[id]);
   const iconKey = dots.map((item) => `${item.id}:${iconName(item.id) ?? ""}`).join(",");
-  const notchTabs = [
+  const tabs = [
     ...leading.map((item) => ({ kind: "dot" as const, id: item.id, item })),
     ...(agentsShown ? [{ kind: "agents" as const, id: "agents" as IslandPage }] : []),
     ...trailing.map((item) => ({ kind: "dot" as const, id: item.id, item })),
   ];
-  const notchMetrics = notchTabs.map((entry) => {
+  const tabMetrics = tabs.map((entry) => {
     if (entry.kind === "agents") return { id: entry.id, textIcon: false };
     const chosen = iconName(entry.id);
     const Custom = chosen === FUYU_TEXT_ICON || chosen === JELLYFISH_ICON ? null : pageIconComponent(chosen, entry.item.external ? undefined : entry.item.icon ?? undefined);
     const textIcon = chosen === FUYU_TEXT_ICON || (!Custom && !entry.item.external && entry.item.icon === FuyuTextIcon);
     return { id: entry.id, textIcon };
   });
-  const notchVisibleCount = useNotchHeaderSplit(notchHeader, startRef, titleRef, dotsRef, moreElRef, notchMetrics, iconKey);
-  const visibleNotchTabs = notchHeader ? notchTabs.slice(0, notchVisibleCount) : [];
-  const hiddenNotchTabs = notchHeader ? notchTabs.slice(notchVisibleCount) : [];
-  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${iconKey}`);
+  const notchVisibleCount = useNotchHeaderSplit(notchHeader, startRef, titleRef, dotsRef, moreElRef, tabMetrics, iconKey);
+  const fitRefs = { header: headerRef, title: titleRef, row: dotsRef, more: moreElRef, actions: [leadActionsRef, actionsRef] };
+  const fitKey = [iconKey, showTitle, t.island.appName, ...dots.map((item) => pageLabel(item))].join("|");
+  const fit = useHeaderTabFit(!notchHeader, fitRefs, tabMetrics, leading.length + (agentsShown ? 1 : 0), fitKey);
+  const visibleCount = notchHeader ? notchVisibleCount : fit.visible;
+  const compactTabs = !notchHeader && fit.compact;
+  const visibleTabs = tabs.slice(0, visibleCount);
+  const visibleIds = new Set<string>(visibleTabs.map((entry) => entry.id));
+  const hiddenTabs = tabs.slice(visibleCount);
+  const pillRef = usePagePill(headerRef, dotsRef, `${page}|${showTitle}|${iconKey}|${compactTabs}|${notchHeader ? 0 : hiddenTabs.length}`);
   const AgentsIcon = pageIconComponent(iconName("agents"), Bot) ?? Bot;
-  useEffect(() => {
-    if (notchHeader) return;
-    const row = dotsRef.current;
-    const active = row?.querySelector<HTMLElement>(".dot-button--active");
-    if (!row || !active || row.scrollWidth <= row.clientWidth) return;
-    const left = active.offsetLeft - row.offsetLeft;
-    if (left < row.scrollLeft) row.scrollLeft = left;
-    else if (left + active.offsetWidth > row.scrollLeft + row.clientWidth) row.scrollLeft = left + active.offsetWidth - row.clientWidth;
-  }, [page, dots.length, notchHeader]);
   const buttons: IslandHeaderContext = {
     page,
     features,
@@ -150,13 +148,13 @@ export function IslandHeader({
     isPageEnabled: (target) => isPageEnabled(target, features),
     isPageShown: (target) => isPageShown(target, features),
   };
-  const renderDotIcon = (item: (typeof dots)[number], inMenu = false) => {
+  const renderDotIcon = (item: (typeof dots)[number], inMenu = false, iconOnly = inMenu) => {
     const target: IslandPage = item.id;
     const Icon = item.icon;
     const label = pageLabel(item);
     const chosen = iconName(target);
     const Custom = chosen === FUYU_TEXT_ICON || chosen === JELLYFISH_ICON ? null : pageIconComponent(chosen, item.external ? undefined : Icon ?? undefined);
-    if (chosen === JELLYFISH_ICON || (inMenu && (chosen === FUYU_TEXT_ICON || (!Custom && !item.external && Icon === FuyuTextIcon)))) {
+    if (chosen === JELLYFISH_ICON || (iconOnly && (chosen === FUYU_TEXT_ICON || (!Custom && !item.external && Icon === FuyuTextIcon)))) {
       return <JellyfishMark mood="idle" paused height={inMenu ? 14 : FUYU_TAB_MARK_HEIGHT} />;
     }
     if (Custom) return <Custom size={15} strokeWidth={1.8} absoluteStrokeWidth />;
@@ -183,7 +181,7 @@ export function IslandHeader({
           onPageChange(target);
         }}
       >
-        {renderDotIcon(item)}
+        {renderDotIcon(item, false, compactTabs)}
       </button>
     );
   };
@@ -215,7 +213,7 @@ export function IslandHeader({
   );
 
   const agentsPage = pages.find((item) => item.id === "agents");
-  const hiddenMoreItems: NotchHeaderMoreItem[] = hiddenNotchTabs.map((entry) => {
+  const hiddenMoreItems: NotchHeaderMoreItem[] = hiddenTabs.map((entry) => {
     const shortcut = pageShortcutLabel(features, entry.id, pageDigitModifiers);
     const formattedShortcut = shortcut ? shortcutLabel(shortcut) : null;
     if (entry.kind === "agents") {
@@ -286,7 +284,7 @@ export function IslandHeader({
             </div>
           )}
           <div ref={dotsRef} className="editor-dots" aria-label={t.island.editor}>
-            {visibleNotchTabs.map((entry) => (entry.kind === "agents" ? renderAgentsButton() : renderDot(entry.item)))}
+            {visibleTabs.map((entry) => (entry.kind === "agents" ? renderAgentsButton() : renderDot(entry.item)))}
           </div>
           {hiddenMoreItems.length > 0 && (
             <NotchHeaderMore items={hiddenMoreItems} page={page} isExpanded={isExpanded} buttonRef={setMoreEl} onSelect={onPageChange} />
@@ -294,9 +292,9 @@ export function IslandHeader({
         </>
       ) : (
         <>
-          <div className="island__title">
-            {leading.map(renderDot)}
-            {agentsShown ? renderAgentsButton() : (
+          <div ref={titleRef} className="island__title">
+            {leading.filter((item) => visibleIds.has(item.id)).map(renderDot)}
+            {agentsShown ? visibleIds.has("agents") && renderAgentsButton() : (
               <Bot
                 className={agentStatusIconClassName}
                 size={16}
@@ -305,13 +303,16 @@ export function IslandHeader({
                 aria-label={agentStatusLabel}
               />
             )}
-            {showTitle && <span>{t.island.appName}</span>}
+            {showTitle && !compactTabs && <span>{t.island.appName}</span>}
           </div>
 
           <div ref={dotsRef} className="editor-dots" aria-label={t.island.editor}>
-            {trailing.map(renderDot)}
+            {trailing.filter((item) => visibleIds.has(item.id)).map(renderDot)}
+            {hiddenMoreItems.length > 0 && (
+              <NotchHeaderMore items={hiddenMoreItems} page={page} isExpanded={isExpanded} buttonRef={setMoreEl} onSelect={onPageChange} />
+            )}
           </div>
-          <div className="window-actions window-actions--lead">{leadActions}</div>
+          <div ref={leadActionsRef} className="window-actions window-actions--lead">{leadActions}</div>
         </>
       )}
       </div>
@@ -328,7 +329,7 @@ export function IslandHeader({
         }}
       />
 
-      <div className="window-actions">
+      <div ref={actionsRef} className="window-actions">
         {notchHeader && leadActions}
         <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => TRAILING_HEADER_IDS.has(item.id) && (item.enabled?.(buttons) ?? true))} />
       </div>

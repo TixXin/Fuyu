@@ -1,5 +1,7 @@
 # 屏幕左右侧独立入口（侧边翼 / Side Docks）方案
 
+> 进度（2026-11-26）：Phase 0–2 已随 [C182](/docs/tasks/0-archive/C/C182.md) 合入；Phase 3（原生玻璃、`side-dock.action/v1` 插槽、回归页）是 [C187](/docs/tasks/C/C187.md)，做完后本文移到 `history/`。
+>
 > 状态：**方向与 6 项问题已确认（2026-11-25，用户确认全部按推荐来）**；Phase 0 交互预览页：[side-docks-preview.html](../investigations/side-docks-preview.html)。参考用户提供的 MagIsland 磁吸岛侧边交互截图，结合浮屿当前主岛形态、侧边吸附（[island-docking-plan.md](history/island-docking-plan.md)）与插件平台第 3 版（[v3-everything-plugin.md](plugins/v3-everything-plugin.md)）起草。
 
 ## 1. 背景与要解决的问题

@@ -1,5 +1,6 @@
 export type IslandText = {
   appName: string;
+  homePage: string;
   focusing: (taskTitle: string) => string;
   pendingTodos: (count: number) => string;
   agentSession: (provider: string, title: string) => string;
@@ -101,6 +102,7 @@ export type IslandText = {
 
 export const zhCN: IslandText = {
   appName: "Fuyu",
+  homePage: "首页",
   focusing: (taskTitle) => `正在专注：${taskTitle}`,
   pendingTodos: (count) => `剩余${count}个待办`,
   agentSession: (provider, title) => `${provider} 正在处理：${title}`,
@@ -208,6 +210,7 @@ export const zhCN: IslandText = {
 
 export const en: IslandText = {
   appName: "Fuyu",
+  homePage: "Home",
   focusing: (taskTitle) => `Focusing: ${taskTitle}`,
   pendingTodos: (count) => (count === 1 ? "1 todo left" : `${count} todos left`),
   agentSession: (provider, title) => `${provider} is working on: ${title}`,

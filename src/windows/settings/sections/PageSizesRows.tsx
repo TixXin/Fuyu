@@ -3,7 +3,9 @@ import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { packageLabel } from "../../../features/plugin-kernel/slotTitle";
 import { useTranslation } from "../../../i18n";
 import { FUYU_PAGE_ID } from "../../../lib/settings/customPanels";
+import { customPageName } from "../../../lib/settings/islandPages";
 import type { IslandSettings, PanelPageSize } from "../../../lib/settings/types";
+import { useIslandPages } from "../../../lib/settings/useIslandPages";
 
 type PageSizesRowsProps = {
   pageSizes: IslandSettings["pageSizes"];
@@ -14,9 +16,10 @@ export function PageSizesRows({ pageSizes, onChange }: PageSizesRowsProps) {
   const t = useTranslation();
   const text = t.settings.layout;
   const pages = t.settings.islandPages.page;
+  const { layout } = useIslandPages();
   const entries = Object.entries(pageSizes);
   const name = (page: string) =>
-    page === FUYU_PAGE_ID ? t.island.appName : Object.prototype.hasOwnProperty.call(pages, page) ? pages[page as keyof typeof pages] : packageLabel(page);
+    customPageName(layout, page) ?? (page === FUYU_PAGE_ID ? t.island.homePage : Object.prototype.hasOwnProperty.call(pages, page) ? pages[page as keyof typeof pages] : packageLabel(page));
   const without = (page: string) => Object.fromEntries(entries.filter(([key]) => key !== page));
   const size = ({ width, height }: PanelPageSize) => text.pageSizeValue(width, height);
 

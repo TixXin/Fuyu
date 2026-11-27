@@ -2,6 +2,8 @@
 
 > 日期：2026-11-14。问题：除了现在用的 Tauri，还有哪些桌面框架（只看 Windows 和 macOS）能实现浮屿的「万物皆插件」架构（[v3-everything-plugin.md](../architecture/plugins/v3-everything-plugin.md)），各自的优缺点。范围：三十多个框架和做法，分两路调研，详细材料和全部来源在 [网页技术类](desktop-frameworks-web.md)（75 条来源）和 [原生界面类](desktop-frameworks-native.md)（79 条来源）；Tauri、MyGo、GPUI 用的是之前的调研（[技术可行性](plugin-host-feasibility.md)、[MyGo 和 Tauri](mygo-vs-tauri.md)）。**全部是读文档、源码和别人的测量，没有自己实测**；内存数字口径不一，只能看趋势。
 
+> 2026-11-26 补充：第 3 版落地后原生界面这条路的再评估（含 GPUI 上新出现的 gpui-shell、GPUIX）见 [native-plugin-architecture.md](native-plugin-architecture.md)。
+
 ## 结论
 
 - **没有哪个框架能同时做到全部要求**：运行时加载 JS 插件、插件能改任何界面、常驻后台的插件宿主、悬浮岛窗口、顺手的系统接口、低内存、两个系统都成熟。每条路都要放弃至少一样。

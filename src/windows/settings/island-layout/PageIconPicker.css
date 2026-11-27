@@ -426,3 +426,8 @@
     animation-duration: var(--motion-fast);
   }
 }
+
+.page-name-row__input {
+  width: 180px;
+  max-width: 100%;
+}

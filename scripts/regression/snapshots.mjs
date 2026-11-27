@@ -79,6 +79,7 @@ export const CAPTURE = `(async () => {
       if (a.name === "style") value = cleanStyle(value);
       if (a.name === "style" && anchored(node)) value = anchoredStyle(value);
       if (a.name === "style" && measured(node)) value = measuredStyle(value);
+      if (a.name === "data-dir" && measured(node)) value = "#";
       if (a.name === "class") value = value.split(/\\s+/).filter(Boolean).join(" ");
       return [a.name, value];
     }).filter(([name, value]) => name !== "data-since" && !(name === "style" && value === "")).sort((a, b) => a[0] < b[0] ? -1 : 1);
