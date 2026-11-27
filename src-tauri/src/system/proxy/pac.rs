@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     sync::{Mutex, OnceLock, PoisonError},
     time::{Duration, Instant},
 };
@@ -9,10 +9,15 @@ use tauri::Url;
 use super::config::{redact_url, Hop};
 
 const ROUTE_TTL: Duration = Duration::from_secs(300);
-const FAILURE_TTL: Duration = Duration::from_secs(600);
+const STALE_LIMIT: Duration = Duration::from_secs(3600);
+const SCRIPT_FAILURE_TTL: Duration = Duration::from_secs(30);
+const DISCOVER_FAILURE_TTL: Duration = Duration::from_secs(1800);
 const CACHE_LIMIT: usize = 512;
+const BACKGROUND_LIMIT: usize = 8;
 #[cfg(any(windows, target_os = "macos"))]
-const EVALUATE_TIMEOUT: Duration = Duration::from_secs(8);
+const SCRIPT_TIMEOUT: Duration = Duration::from_secs(5);
+#[cfg(any(windows, target_os = "macos"))]
+const DISCOVER_TIMEOUT: Duration = Duration::from_secs(3);
 #[cfg(target_os = "macos")]
 const WPAD_SCRIPT_URL: &str = "http://wpad/wpad.dat";
 
@@ -29,12 +34,42 @@ impl PacSource {
             PacSource::Discover => None,
         }
     }
+
+    pub(crate) fn failure_ttl(&self) -> Duration {
+        match self {
+            PacSource::Script(_) => SCRIPT_FAILURE_TTL,
+            PacSource::Discover => DISCOVER_FAILURE_TTL,
+        }
+    }
+}
+
+pub(crate) type Evaluator = fn(&PacSource, &str) -> Result<String, String>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Wait {
+    Block,
+    Cached,
+}
+
+impl Wait {
+    pub(crate) fn here() -> Self {
+        if tauri::async_runtime::TokioHandle::try_current().is_ok() {
+            Wait::Cached
+        } else {
+            Wait::Block
+        }
+    }
+
+    fn blocks_for(self, source: &PacSource) -> bool {
+        self == Wait::Block && *source != PacSource::Discover
+    }
 }
 
 #[derive(Default)]
 struct Cache {
     routes: HashMap<(PacSource, String), (Instant, Vec<Hop>)>,
     failures: HashMap<PacSource, Instant>,
+    pending: HashSet<(PacSource, String)>,
 }
 
 static CACHE: OnceLock<Mutex<Cache>> = OnceLock::new();
@@ -71,32 +106,48 @@ pub(crate) fn url_parts(url: &Url) -> Option<(&str, &str, u16)> {
     Some((scheme, url.host_str()?, url.port_or_known_default()?))
 }
 
-pub(crate) fn resolve(source: &PacSource, url: &str) -> Option<Vec<Hop>> {
-    resolve_with(source, url, evaluate)
+pub(crate) fn resolve(source: &PacSource, url: &str, wait: Wait) -> Option<Vec<Hop>> {
+    resolve_or_defer(source, url, wait, evaluate, spawn_background)
 }
 
-pub(crate) fn resolve_with(
+pub(crate) fn resolve_or_defer(
     source: &PacSource,
     url: &str,
-    evaluator: impl FnOnce(&PacSource, &str) -> Result<String, String>,
+    wait: Wait,
+    evaluator: Evaluator,
+    defer: impl FnOnce(&PacSource, &str, Evaluator),
 ) -> Option<Vec<Hop>> {
     let now = Instant::now();
-    let key = (source.clone(), url.to_string());
-    {
+    let stale = {
         let guard = cache();
-        if guard.failures.get(source).is_some_and(|at| now.duration_since(*at) < FAILURE_TTL) {
+        if guard.failures.get(source).is_some_and(|at| now.duration_since(*at) < source.failure_ttl()) {
             return None;
         }
-        if let Some((at, hops)) = guard.routes.get(&key) {
-            if now.duration_since(*at) < ROUTE_TTL {
-                return Some(hops.clone());
-            }
+        match guard.routes.get(&(source.clone(), url.to_string())) {
+            Some((at, hops)) if now.duration_since(*at) < ROUTE_TTL => return Some(hops.clone()),
+            Some((at, hops)) if now.duration_since(*at) < STALE_LIMIT => Some(hops.clone()),
+            _ => None,
         }
+    };
+    if wait.blocks_for(source) {
+        return evaluate_and_store(source, url, evaluator);
     }
-    match evaluator(source, url) {
+    defer(source, url, evaluator);
+    stale
+}
+
+pub(crate) fn evaluate_and_store(
+    source: &PacSource,
+    url: &str,
+    evaluator: Evaluator,
+) -> Option<Vec<Hop>> {
+    let result = evaluator(source, url);
+    let now = Instant::now();
+    let mut guard = cache();
+    guard.pending.remove(&(source.clone(), url.to_string()));
+    match result {
         Ok(raw) => {
             let hops = parse_pac_result(&raw);
-            let mut guard = cache();
             if guard.routes.len() >= CACHE_LIMIT {
                 guard.routes.retain(|_, (at, _)| now.duration_since(*at) < ROUTE_TTL);
                 if guard.routes.len() >= CACHE_LIMIT {
@@ -104,7 +155,7 @@ pub(crate) fn resolve_with(
                 }
             }
             guard.failures.remove(source);
-            guard.routes.insert(key, (now, hops.clone()));
+            guard.routes.insert((source.clone(), url.to_string()), (now, hops.clone()));
             Some(hops)
         }
         Err(error) => {
@@ -112,11 +163,42 @@ pub(crate) fn resolve_with(
                 "[proxy] automatic proxy configuration {} failed: {error}",
                 source.script_label().unwrap_or_else(|| "(WPAD)".to_string())
             );
-            cache().failures.insert(source.clone(), now);
+            guard.failures.insert(source.clone(), now);
             None
         }
     }
 }
+
+fn spawn_background(source: &PacSource, url: &str, evaluator: Evaluator) {
+    let key = (source.clone(), url.to_string());
+    {
+        let mut guard = cache();
+        if guard.pending.len() >= BACKGROUND_LIMIT || !guard.pending.insert(key.clone()) {
+            return;
+        }
+    }
+    let spawned = std::thread::Builder::new().name("proxy-pac".into()).spawn(move || {
+        let _ = evaluate_and_store(&key.0, &key.1, evaluator);
+    });
+    if spawned.is_err() {
+        cache().pending.remove(&(source.clone(), url.to_string()));
+    }
+}
+
+#[cfg(windows)]
+pub(crate) fn watch_network_changes(on_change: fn()) {
+    use windows::Networking::Connectivity::{NetworkInformation, NetworkStatusChangedEventHandler};
+    let handler = NetworkStatusChangedEventHandler::new(move |_| {
+        on_change();
+        Ok(())
+    });
+    if let Err(error) = NetworkInformation::NetworkStatusChanged(&handler) {
+        eprintln!("[proxy] could not watch network changes: {error}");
+    }
+}
+
+#[cfg(not(windows))]
+pub(crate) fn watch_network_changes(_on_change: fn()) {}
 
 pub(crate) fn parse_pac_result(raw: &str) -> Vec<Hop> {
     let mut hops = Vec::new();
@@ -182,16 +264,17 @@ fn evaluate(source: &PacSource, url: &str) -> Result<String, String> {
         PacSource::Script(script) => Some(script.as_str()),
         PacSource::Discover => None,
     };
-    crate::win32::winhttp_proxy::proxy_for_url(script, url, EVALUATE_TIMEOUT)
+    let timeout = if script.is_some() { SCRIPT_TIMEOUT } else { DISCOVER_TIMEOUT };
+    crate::win32::winhttp_proxy::proxy_for_url(script, url, timeout)
 }
 
 #[cfg(target_os = "macos")]
 fn evaluate(source: &PacSource, url: &str) -> Result<String, String> {
-    let script = match source {
-        PacSource::Script(script) => script.as_str(),
-        PacSource::Discover => WPAD_SCRIPT_URL,
+    let (script, timeout) = match source {
+        PacSource::Script(script) => (script.as_str(), SCRIPT_TIMEOUT),
+        PacSource::Discover => (WPAD_SCRIPT_URL, DISCOVER_TIMEOUT),
     };
-    crate::macos::pac::proxy_for_url(script, url, EVALUATE_TIMEOUT)
+    crate::macos::pac::proxy_for_url(script, url, timeout)
 }
 
 #[cfg(not(any(windows, target_os = "macos")))]

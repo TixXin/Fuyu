@@ -5,7 +5,7 @@ use keyring::{Entry, Error as KeyringError};
 use serde::{Deserialize, Serialize};
 use tauri::Url;
 
-use super::pac::PacSource;
+use super::pac::{PacSource, Wait};
 use crate::user_error::{credential as cred_err, UserError};
 
 pub(crate) const FILE_NAME: &str = "network-proxy.json";
@@ -117,10 +117,10 @@ pub(crate) enum Hop {
 
 impl ResolvedProxy {
     pub(crate) fn hops_for(&self, host: &str, port: u16) -> Vec<Hop> {
-        self.hops_for_scheme("https", host, port)
+        self.hops_with("https", host, port, Wait::here())
     }
 
-    pub(crate) fn hops_for_scheme(&self, scheme: &str, host: &str, port: u16) -> Vec<Hop> {
+    pub(crate) fn hops_with(&self, scheme: &str, host: &str, port: u16, wait: Wait) -> Vec<Hop> {
         match self {
             ResolvedProxy::Direct => vec![Hop::Direct],
             ResolvedProxy::Proxy(target) => target.hops_for(host),
@@ -128,13 +128,13 @@ impl ResolvedProxy {
                 if is_loopback_host(host) {
                     return vec![Hop::Direct];
                 }
-                auto.hops_from(host, super::pac::resolve(&auto.pac, &super::pac::target_url(scheme, host, port)))
+                auto.hops_from(host, super::pac::resolve(&auto.pac, &super::pac::target_url(scheme, host, port), wait))
             }
         }
     }
 
-    pub(crate) fn first_proxy_for(&self, scheme: &str, host: &str, port: u16) -> Option<String> {
-        self.hops_for_scheme(scheme, host, port).into_iter().find_map(|hop| match hop {
+    pub(crate) fn first_proxy_for(&self, scheme: &str, host: &str, port: u16, wait: Wait) -> Option<String> {
+        self.hops_with(scheme, host, port, wait).into_iter().find_map(|hop| match hop {
             Hop::Proxy(url) => Some(url),
             Hop::Direct => None,
         })

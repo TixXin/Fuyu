@@ -1,5 +1,6 @@
 use std::{
     cell::Cell,
+    sync::atomic::{AtomicUsize, Ordering},
     io::{Read, Write},
     net::{SocketAddr, TcpListener},
     thread,
@@ -7,7 +8,7 @@ use std::{
 };
 
 use super::config::{AutoProxy, Hop, ProxyTarget, ResolvedProxy};
-use super::pac::{parse_pac_result, resolve_with, target_url, PacSource};
+use super::pac::{evaluate_and_store, parse_pac_result, resolve_or_defer, target_url, Evaluator, PacSource, Wait};
 use super::system_detect::{parse_scutil_config, OsProxyConfig};
 use super::tunnel::{
     connect_fault, connect_hops, connect_status_fault, order_addresses, parse_connect_status, proxy_authenticate_schemes,
@@ -124,31 +125,82 @@ fn auto_proxy_falls_back_to_the_manual_proxy_or_direct_when_pac_fails() {
     assert_eq!(ResolvedProxy::Auto(bare).hops_for("localhost", 993), vec![Hop::Direct]);
 }
 
+static CACHE_CALLS: AtomicUsize = AtomicUsize::new(0);
+static BROKEN_CALLS: AtomicUsize = AtomicUsize::new(0);
+
+fn counted_answer(_: &PacSource, url: &str) -> Result<String, String> {
+    CACHE_CALLS.fetch_add(1, Ordering::SeqCst);
+    Ok(if url.contains("imap") { "PROXY p:1; DIRECT".to_string() } else { "DIRECT".to_string() })
+}
+
+fn counted_failure(_: &PacSource, _: &str) -> Result<String, String> {
+    BROKEN_CALLS.fetch_add(1, Ordering::SeqCst);
+    Err("download failed".to_string())
+}
+
+fn never_called(_: &PacSource, _: &str) -> Result<String, String> {
+    panic!("must not evaluate on the caller's thread")
+}
+
+fn no_defer(_: &PacSource, _: &str, _: Evaluator) {
+    panic!("must not defer")
+}
+
 #[test]
-fn caches_pac_answers_per_target_and_failures_per_script() {
+fn caches_pac_answers_per_target_and_failures_only_briefly_per_script() {
     let source = PacSource::Script("http://cache-test.invalid/proxy.pac".into());
-    let calls = Cell::new(0);
-    let evaluate = |_: &PacSource, url: &str| {
-        calls.set(calls.get() + 1);
-        Ok(if url.contains("imap") { "PROXY p:1; DIRECT".to_string() } else { "DIRECT".to_string() })
-    };
-    let first = resolve_with(&source, "https://imap.cache.test:993/", evaluate);
-    let second = resolve_with(&source, "https://imap.cache.test:993/", evaluate);
-    let other = resolve_with(&source, "https://www.cache.test/", evaluate);
+    let first = resolve_or_defer(&source, "https://imap.cache.test:993/", Wait::Block, counted_answer, no_defer);
+    let second = resolve_or_defer(&source, "https://imap.cache.test:993/", Wait::Block, counted_answer, no_defer);
+    let other = resolve_or_defer(&source, "https://www.cache.test/", Wait::Block, counted_answer, no_defer);
     assert_eq!(first, Some(vec![proxy("http://p:1"), Hop::Direct]));
     assert_eq!(second, first);
     assert_eq!(other, Some(vec![Hop::Direct]));
-    assert_eq!(calls.get(), 2);
+    assert_eq!(CACHE_CALLS.load(Ordering::SeqCst), 2);
 
     let broken = PacSource::Script("http://broken-test.invalid/proxy.pac".into());
-    let failures = Cell::new(0);
-    let fail = |_: &PacSource, _: &str| {
-        failures.set(failures.get() + 1);
-        Err("download failed".to_string())
-    };
-    assert_eq!(resolve_with(&broken, "https://a.test/", fail), None);
-    assert_eq!(resolve_with(&broken, "https://b.test/", fail), None);
-    assert_eq!(failures.get(), 1);
+    assert_eq!(resolve_or_defer(&broken, "https://a.test/", Wait::Block, counted_failure, no_defer), None);
+    assert_eq!(resolve_or_defer(&broken, "https://b.test/", Wait::Block, counted_failure, no_defer), None);
+    assert_eq!(BROKEN_CALLS.load(Ordering::SeqCst), 1);
+    assert_eq!(broken.failure_ttl(), Duration::from_secs(30));
+    assert_eq!(PacSource::Discover.failure_ttl(), Duration::from_secs(1800));
+}
+
+#[test]
+fn wpad_and_async_callers_never_evaluate_on_their_own_thread() {
+    let deferred = Cell::new(0);
+    let defer = |_: &PacSource, _: &str, _: Evaluator| deferred.set(deferred.get() + 1);
+    assert_eq!(resolve_or_defer(&PacSource::Discover, "https://imap.wpad-test.test:993/", Wait::Block, never_called, defer), None);
+    assert_eq!(deferred.get(), 1);
+
+    let source = PacSource::Script("http://async-test.invalid/proxy.pac".into());
+    let url = "https://imap.async.test:993/";
+    let mut handed: Option<Evaluator> = None;
+    assert_eq!(resolve_or_defer(&source, url, Wait::Cached, counted_answer, |_, _, evaluator| handed = Some(evaluator)), None);
+    let evaluator = handed.expect("deferred to the background");
+    assert_eq!(evaluate_and_store(&source, url, evaluator), Some(vec![proxy("http://p:1"), Hop::Direct]));
+    assert_eq!(resolve_or_defer(&source, url, Wait::Cached, never_called, no_defer), Some(vec![proxy("http://p:1"), Hop::Direct]));
+}
+
+fn github_direct_others_proxied(_: &PacSource, url: &str) -> Result<String, String> {
+    Ok(if url.contains("github.com") { "DIRECT".to_string() } else { "PROXY corp-proxy:3128; DIRECT".to_string() })
+}
+
+fn everything_direct(_: &PacSource, _: &str) -> Result<String, String> {
+    Ok("DIRECT".to_string())
+}
+
+#[test]
+fn a_pac_that_sends_github_direct_still_hands_the_plugin_host_a_proxy() {
+    let split = PacSource::Script("http://split-test.invalid/proxy.pac".into());
+    let direct = PacSource::Script("http://direct-test.invalid/proxy.pac".into());
+    for host in ["github.com", "www.google.com", "api.anthropic.com"] {
+        let url = target_url("https", host, 443);
+        let _ = evaluate_and_store(&split, &url, github_direct_others_proxied);
+        let _ = evaluate_and_store(&direct, &url, everything_direct);
+    }
+    let auto = |pac: PacSource| ResolvedProxy::Auto(AutoProxy { pac, fallback: None });
+    assert_eq!(super::sample_proxy(&auto(split), Wait::Cached).as_deref(), Some("http://corp-proxy:3128"));
+    assert_eq!(super::sample_proxy(&auto(direct), Wait::Cached), None);
 }
 
 #[test]

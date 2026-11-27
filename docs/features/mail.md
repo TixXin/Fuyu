@@ -43,8 +43,9 @@
 ## 代理与连接报错
 
 - 收信和发信都按「设置 → 网络代理」连接：HTTP 代理用 `CONNECT` 隧道，SOCKS5 代理按域名转发。「跟随系统」（默认）先看 `HTTPS_PROXY` 等环境变量，再读系统设置：Windows 用 WinHTTP 读当前用户的 IE 代理设置，Mac 读 `scutil --proxy`。
-- 系统配了自动配置脚本（PAC）时，按目标主机逐个求值（Windows `WinHttpGetProxyForUrl`，Mac `CFNetworkExecuteProxyAutoConfigurationURL`；邮箱以 `https://imap.qq.com:993/` 这样的地址交给脚本），结果缓存 5 分钟；脚本下载或执行失败时退回系统里填的手动代理，没有就直连，失败的脚本 10 分钟内不再重试。优先级是 PAC 脚本、手动代理、自动检测（WPAD）：手动代理（如 Clash 写进系统的 `127.0.0.1:7890`）不受 Windows 默认开着的「自动检测设置」影响，只有既没有 PAC 也没有手动代理时才去找 WPAD。PAC 给出多个代理时，连不上前一个就试下一个，最后才按 `DIRECT` 直连。
-- 「设置 → 网络代理」在「跟随系统」下显示检测到的 PAC 地址或 WPAD，以及访问外网（以 `github.com` 为例）实际走的代理；更新、插件下载等不按目标区分的请求也用这个代理，reqwest 发的请求按各自的目标求值。
+- 系统配了自动配置脚本（PAC）时，按目标主机逐个求值（Windows `WinHttpGetProxyForUrl`，Mac `CFNetworkExecuteProxyAutoConfigurationURL`；邮箱以 `https://imap.qq.com:993/` 这样的地址交给脚本），结果缓存 5 分钟，过期后先用旧结果、后台重算。脚本下载或执行失败时退回系统里填的手动代理，没有就直连；失败只记 30 秒（开机时网络或 VPN 还没好，不会一直判成失败），Windows 上网络变化（`NetworkStatusChanged`）时清掉缓存并重新预热。优先级是 PAC 脚本、手动代理、自动检测（WPAD）：手动代理（如 Clash 写进系统的 `127.0.0.1:7890`）不受 Windows 默认开着的「自动检测设置」影响，只有既没有 PAC 也没有手动代理时才去找 WPAD。WPAD 只在后台线程里找（超时 3 秒），找到之前按直连；没找到记 30 分钟，没配代理的普通用户感觉不到。PAC 给出多个代理时，连不上前一个就试下一个，最后才按 `DIRECT` 直连。
+- 在 tokio 线程上（reqwest 的请求、异步命令）只读缓存，缓存里没有就交给后台求值、这一次先按回退走，不在异步线程上同步等 PAC；收发邮件在自己的后台线程上，可以等脚本求值（超时 5 秒）。
+- 「设置 → 网络代理」在「跟随系统」下显示检测到的 PAC 地址或 WPAD，以及访问外网实际走的代理；更新、插件下载、插件宿主这类不按目标区分的请求依次拿 `github.com`、`www.google.com`、`api.anthropic.com` 去问 PAC，用第一个给出的代理，PAC 只让 GitHub 直连时也不会被当成没有代理；reqwest 发的请求按各自的目标求值。
 - 连不上时按原因给出不同的报错（`mail.*`）：找不到服务器（`dns`）、连不上代理（`proxyUnreachable`）、代理要账号密码（`proxyAuth`）或 Windows 域账号（`proxyAuthDomain`，NTLM / Kerberos 暂不支持）、代理不放行邮箱端口（`proxyPortBlocked`，公司代理常只放 443）、代理连不上邮箱服务器（`proxyUpstream`）、代理放行后在加密握手时掐断（`proxyClosed`）、代理回复看不懂（`proxyBadReply`，多半是 HTTP 和 SOCKS5 选反了）、直连时端口不通（`portBlocked`）、直连在加密握手时被重置（`resetDirect`，FB-35：公司防火墙拦 993，常见原因是公司用 PAC 而旧版读不到）、证书不受信任（`tlsCert`，公司 HTTPS 检查设备换了证书）、超时（`timeout`）和断网（`offline`）。其他情况仍是 `mail.sync`，后面附上哪一步失败和系统原话。
 
 ## 保存与恢复
