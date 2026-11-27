@@ -14,7 +14,7 @@ test("the build cache is pruned after every queued job, also when the job fails"
   process.env.FUYU_HEAVY_SLOTS = "1";
   try {
     let pruned = 0;
-    const env = { ...process.env, FUYU_HEAVY: "" };
+    const env = { ...process.env, FUYU_HEAVY: "", FUYU_HEAVY_REMOTE: "off" };
     assert.equal(run(exitWith(3), env, { afterJob: () => { pruned += 1; } }), 3);
     assert.equal(run(exitWith(0), env, { afterJob: () => { pruned += 1; } }), 0);
     assert.equal(pruned, 2);
@@ -35,7 +35,7 @@ test("a job nested inside another queued job leaves pruning to the outer one", (
 
 test("cargo build commands without a target dir default to src-tauri/target/agents", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "heavy-run-"));
-  const baseEnv = { FUYU_HEAVY_DIR: dir, FUYU_HEAVY_SLOTS: "1", FUYU_HEAVY: "" };
+  const baseEnv = { FUYU_HEAVY_DIR: dir, FUYU_HEAVY_SLOTS: "1", FUYU_HEAVY: "", FUYU_HEAVY_REMOTE: "off" };
   try {
     for (const sub of ["build", "test", "check", "clippy", "run"]) {
       let spawnedEnv = null;
@@ -59,7 +59,7 @@ test("cargo build commands without a target dir default to src-tauri/target/agen
 
 test("cargo commands that already specify a target dir keep it unchanged", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "heavy-run-"));
-  const baseEnv = { FUYU_HEAVY_DIR: dir, FUYU_HEAVY_SLOTS: "1", FUYU_HEAVY: "" };
+  const baseEnv = { FUYU_HEAVY_DIR: dir, FUYU_HEAVY_SLOTS: "1", FUYU_HEAVY: "", FUYU_HEAVY_REMOTE: "off" };
   try {
     let envFromVar = null;
     const logsFromVar = [];
@@ -104,7 +104,7 @@ test("cargo commands that already specify a target dir keep it unchanged", () =>
 
 test("tauri build does not get the default agents target dir", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "heavy-run-"));
-  const baseEnv = { FUYU_HEAVY_DIR: dir, FUYU_HEAVY_SLOTS: "1", FUYU_HEAVY: "" };
+  const baseEnv = { FUYU_HEAVY_DIR: dir, FUYU_HEAVY_SLOTS: "1", FUYU_HEAVY: "", FUYU_HEAVY_REMOTE: "off" };
   try {
     for (const cmd of [["--", "tauri", "build"], ["--", "pnpm", "tauri", "build"]]) {
       let spawnedEnv = null;

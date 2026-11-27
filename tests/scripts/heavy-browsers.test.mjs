@@ -85,7 +85,7 @@ test("regression pages do not wait for a Rust build holding every heavy slot", (
       cwd: ROOT,
       encoding: "utf8",
       timeout: 20_000,
-      env: { ...process.env, FUYU_HEAVY: "", FUYU_HEAVY_DIR: dir, FUYU_HEAVY_SLOTS: "1", FUYU_HEAVY_BROWSERS: "2" },
+      env: { ...process.env, FUYU_HEAVY: "", FUYU_HEAVY_REMOTE: "off", FUYU_HEAVY_DIR: dir, FUYU_HEAVY_SLOTS: "1", FUYU_HEAVY_BROWSERS: "2" },
     });
     assert.equal(result.signal, null, "heavy kept waiting for the Rust slot");
     assert.equal(result.status, 0);

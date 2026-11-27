@@ -6,6 +6,7 @@ import { backgroundBuildEnv } from "../build-load.mjs";
 import { pruneMainTarget } from "../prune-build-cache.mjs";
 import { acquireBrowsers, browserCap, isRegression, wantedBrowsers, withBrowsers } from "./browsers.mjs";
 import { acquire, DEFAULT_CARGO_TARGET_DIR, explicitCargoTargetDir, HEAVY_ENV, isCargoBuild, laneOf, queueDir, slotCount } from "./queue.mjs";
+import { remoteConfig, runRemote } from "./remote.mjs";
 
 export function parseArgs(argv) {
   const split = argv.indexOf("--");
@@ -18,11 +19,16 @@ export function parseArgs(argv) {
   return { label: label ?? command.join(" ").slice(0, 60), lane, command };
 }
 
-export function run(argv, env = process.env, { afterJob = () => pruneMainTarget({ quiet: true }), spawn = spawnSync, log = console.log } = {}) {
+export function run(argv, env = process.env, { afterJob = () => pruneMainTarget({ quiet: true }), spawn = spawnSync, log = console.log, remote = runRemote } = {}) {
   const { label, lane, command } = parseArgs(argv);
   if (!command.length) {
     console.error("用法：pnpm heavy [--label <名字>] [--lane <构建目录>] -- <命令…>");
     return 2;
+  }
+  const remoteHost = env[HEAVY_ENV] === "1" ? null : remoteConfig(env);
+  if (remoteHost) {
+    const code = remote(argv, remoteHost, { env, log });
+    if (code !== null) return code;
   }
   const defaultTarget = isCargoBuild(command) && !explicitCargoTargetDir(command, env);
   if (defaultTarget) {
