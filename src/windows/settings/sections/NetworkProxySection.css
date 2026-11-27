@@ -12,6 +12,7 @@
   color: var(--color-text);
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   font-size: 11.5px;
+  overflow-wrap: anywhere;
 }
 
 .network-proxy__endpoint {

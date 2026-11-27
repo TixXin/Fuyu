@@ -6,22 +6,25 @@ use std::{
 use base64::Engine;
 use lettre::Message;
 
+use super::net_error::{handshake_error, or_classified, Endpoint, Stage};
 use crate::user_error::UserError;
 
 const SMTPS_PORT: u16 = 465;
 const SMTP_TIMEOUT: Duration = Duration::from_secs(30);
 
 pub(super) fn deliver(host: &str, port: u16, email: &str, secret: &str, message: &Message) -> Result<(), UserError> {
-    let stream = crate::system::proxy::connect_tcp(host, port, SMTP_TIMEOUT)
-        .map_err(|error| UserError::new("mail.sendFailed", "Sending failed; check the network and try again.").detail(error))?;
+    let connected = crate::system::proxy::connect_tcp_traced(host, port, SMTP_TIMEOUT).map_err(|error| {
+        let fallback = UserError::new("mail.sendFailed", "Sending failed; check the network and try again.");
+        or_classified(Stage::Connect, &error, &Endpoint { host, port, proxy: None }, fallback)
+    })?;
+    let endpoint = Endpoint { host, port, proxy: connected.proxy.as_deref() };
+    let stream = connected.stream;
     let _ = stream.set_read_timeout(Some(SMTP_TIMEOUT));
     let _ = stream.set_write_timeout(Some(SMTP_TIMEOUT));
     let connector = native_tls::TlsConnector::new()
         .map_err(|error| UserError::new("mail.tls", "Could not set up an encrypted connection.").detail(error))?;
     if port == SMTPS_PORT {
-        let mut tls_stream = connector
-            .connect(host, stream)
-            .map_err(|error| UserError::new("mail.tls", "Could not set up an encrypted connection.").detail(error))?;
+        let mut tls_stream = connector.connect(host, stream).map_err(|error| handshake_error(error, &endpoint))?;
         send_over_stream(&mut tls_stream, email, secret, message)
     } else {
         let mut plain = stream;
@@ -31,9 +34,7 @@ pub(super) fn deliver(host: &str, port: u16, email: &str, secret: &str, message:
         expect_code(&ehlo, 250)?;
         let starttls = send_command(&mut plain, "STARTTLS")?;
         expect_code(&starttls, 220)?;
-        let mut tls_stream = connector
-            .connect(host, plain)
-            .map_err(|error| UserError::new("mail.tls", "Could not set up an encrypted connection.").detail(error))?;
+        let mut tls_stream = connector.connect(host, plain).map_err(|error| handshake_error(error, &endpoint))?;
         send_after_tls(&mut tls_stream, email, secret, message)
     }
 }

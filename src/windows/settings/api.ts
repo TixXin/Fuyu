@@ -128,6 +128,8 @@ export type NetworkProxyView = {
   hasPassword: boolean;
   bypass: string;
   systemProxy: string | null;
+  systemPac: string | null;
+  systemWpad: boolean;
 };
 
 export type SaveNetworkProxyInput = {

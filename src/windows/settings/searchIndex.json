@@ -1226,7 +1226,7 @@
         "title": "Name",
         "description": "What this page is called on its tab, in the side docks and in the More menu. Up to 16 characters; leave it empty for the default \"Home\""
       },
-      "since": "next"
+      "since": "0.3.15-beta.1"
     },
     {
       "page": "islandDisplay",
@@ -1601,7 +1601,7 @@
         "title": "Remember last panel page",
         "description": "Reopen the page you were on before closing the panel or quitting, instead of returning to the Home page each time"
       },
-      "since": "next"
+      "since": "0.3.15-beta.1"
     },
     {
       "page": "behavior",

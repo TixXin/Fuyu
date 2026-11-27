@@ -131,6 +131,7 @@ export type ErrorCode =
   | "home.notAbsolute"
   | "home.inUse"
   | "home.copy"
+  | "home.portable"
   | "calendar.linkExpired"
   | "calendar.notIcs"
   | "calendar.corrupt"
@@ -155,6 +156,7 @@ export type ErrorCode =
   | "pluginsV3.builtinConfigSave"
   | "pluginsV3.invalidDismissTarget"
   | "pluginsV3.migrationSave"
+  | "pluginsV3.openFolder"
   | "translation.urlQuery"
   | "translation.modelLong"
   | "translation.noModel"
@@ -235,6 +237,19 @@ export type ErrorCode =
   | "mail.subject"
   | "mail.sync"
   | "mail.tls"
+  | "mail.dns"
+  | "mail.offline"
+  | "mail.portBlocked"
+  | "mail.proxyAuth"
+  | "mail.proxyAuthDomain"
+  | "mail.proxyBadReply"
+  | "mail.proxyClosed"
+  | "mail.proxyPortBlocked"
+  | "mail.proxyUnreachable"
+  | "mail.proxyUpstream"
+  | "mail.resetDirect"
+  | "mail.timeout"
+  | "mail.tlsCert"
   | "mail.tooMany"
   | "mail.tooManyNames"
   | "mail.tooManyRecipients"
@@ -538,6 +553,7 @@ export const zhCN: ErrorsText = {
     "home.notAbsolute": "请填一个完整的文件夹路径，例如 D:\\Fuyu。",
     "home.inUse": ({ computer }) => `这个文件夹正在被电脑「${computer}」上的浮屿使用，先在那台电脑上退出浮屿。`,
     "home.copy": ({ path }) => `没能把数据复制到 ${path}。`,
+    "home.portable": ({ home }) => `这是便携版，数据固定放在程序旁边的 ${home}，在这里改不了；要换位置，把整个程序文件夹搬过去。`,
     "calendar.linkExpired": "订阅链接已失效，或没有权限。",
     "calendar.notIcs": "这个链接不是日历（iCalendar）。",
     "calendar.corrupt": "日历内容损坏。",
@@ -562,6 +578,7 @@ export const zhCN: ErrorsText = {
     "pluginsV3.builtinConfigSave": ({ id }) => `没能保存 ${id} 的设置。`,
     "pluginsV3.invalidDismissTarget": "未知的插件迁移提示目标。",
     "pluginsV3.migrationSave": "没能保存旧版插件迁移状态。",
+    "pluginsV3.openFolder": "无法打开插件文件夹。",
     "translation.urlQuery": "接口地址不能带查询参数。",
     "translation.modelLong": "模型名称过长。",
     "translation.noModel": ({ service }) => `请先在翻译设置中填写${service}的模型名称。`,
@@ -642,6 +659,19 @@ export const zhCN: ErrorsText = {
     "mail.subject": "主题太长或包含换行。",
     "mail.sync": "无法同步邮箱，请检查网络或稍后重试。",
     "mail.tls": "无法建立加密连接。",
+    "mail.dns": ({ host }) => `找不到邮箱服务器 ${host}，请检查服务器地址或网络的 DNS。`,
+    "mail.offline": "网络不可用，请确认这台电脑已联网。",
+    "mail.portBlocked": ({ host, port }) => `连不上 ${host}:${port}，这个端口可能被防火墙拦截。如果你的网络要走代理，请在「设置 → 网络代理」里配置。`,
+    "mail.proxyAuth": "代理要求用户名和密码，请在「设置 → 网络代理」选手动代理并填写。",
+    "mail.proxyAuthDomain": "代理要求 Windows 域账号登录（NTLM / Kerberos），浮屿暂不支持。请让 IT 放行邮箱端口，或用本机代理软件转发后在网络代理里手动填写。",
+    "mail.proxyBadReply": "代理的回复无法识别，请确认它是 HTTP 还是 SOCKS5 代理，并选对代理协议。",
+    "mail.proxyClosed": ({ port }) => `代理放行连接后，在加密握手时又把它断开了，通常是公司代理只允许网页流量。请让 IT 放行 ${port} 端口，或换一个代理。`,
+    "mail.proxyPortBlocked": ({ port }) => `代理不允许连接 ${port} 端口，公司代理通常只放行网页端口 443。请让 IT 放行邮箱端口（IMAP 993、SMTP 465），或换一个代理。`,
+    "mail.proxyUnreachable": ({ proxy }) => `连不上代理 ${proxy}，请确认代理软件在运行、地址和端口正确。`,
+    "mail.proxyUpstream": ({ host, port }) => `代理连不上 ${host}:${port}，请检查服务器地址，或代理那边的网络。`,
+    "mail.resetDirect": ({ host, port }) => `连接 ${host}:${port} 时在加密握手阶段被断开，常见于公司防火墙拦截邮箱端口。如果公司网络用代理或自动配置脚本（PAC），请到「设置 → 网络代理」确认浮屿检测到的代理。`,
+    "mail.timeout": "邮箱服务器长时间没有响应，请检查网络或稍后重试。",
+    "mail.tlsCert": "邮箱服务器的证书不受信任，可能是公司网络的安全设备在检查加密流量。请安装公司的根证书，或让 IT 放行邮箱服务器。",
     "mail.tooMany": ({ max }) => `最多同时连接 ${max} 个邮箱，请先断开一个。`,
     "mail.tooManyNames": "下载文件夹里同名文件太多，请清理后重试。",
     "mail.tooManyRecipients": ({ max }) => `一封邮件最多 ${max} 个收件人。`,
@@ -942,6 +972,7 @@ export const en: ErrorsText = {
     "home.notAbsolute": "Enter a full folder path, such as D:\\Fuyu.",
     "home.inUse": ({ computer }) => `Fuyu on "${computer}" is using this folder. Quit Fuyu there first.`,
     "home.copy": ({ path }) => `Could not copy the data to ${path}.`,
+    "home.portable": ({ home }) => `This is the portable copy: its data always stays next to the program in ${home} and cannot be changed here. Move the whole program folder instead.`,
     "calendar.linkExpired": "The subscription link has expired, or does not allow access.",
     "calendar.notIcs": "This link is not a calendar (iCalendar).",
     "calendar.corrupt": "The calendar is damaged.",
@@ -966,6 +997,7 @@ export const en: ErrorsText = {
     "pluginsV3.builtinConfigSave": ({ id }) => `Could not save the settings of ${id}.`,
     "pluginsV3.invalidDismissTarget": "Unknown plugin migration notice target.",
     "pluginsV3.migrationSave": "Could not save the legacy plugin migration state.",
+    "pluginsV3.openFolder": "Could not open the plugins folder.",
     "translation.urlQuery": "The service address cannot have query parameters.",
     "translation.modelLong": "The model name is too long.",
     "translation.noModel": ({ service }) => `Fill in the model name for ${service} in the translation settings first.`,
@@ -1046,6 +1078,19 @@ export const en: ErrorsText = {
     "mail.subject": "The subject is too long or has a line break.",
     "mail.sync": "Could not sync the mailbox; check the network or try again later.",
     "mail.tls": "Could not set up an encrypted connection.",
+    "mail.dns": ({ host }) => `Could not find the mail server ${host}; check the server address or the network's DNS.`,
+    "mail.offline": "The network is unreachable; check that this computer is online.",
+    "mail.portBlocked": ({ host, port }) => `Could not connect to ${host}:${port}; a firewall may block this port. If your network needs a proxy, set it under Settings > Network proxy.`,
+    "mail.proxyAuth": "The proxy wants a user name and password; choose a manual proxy under Settings > Network proxy and fill them in.",
+    "mail.proxyAuthDomain": "The proxy wants a Windows domain sign-in (NTLM / Kerberos), which Fuyu can't do yet. Ask IT to allow the mail ports, or forward through a local proxy app and enter it as a manual proxy.",
+    "mail.proxyBadReply": "The proxy answered in an unexpected way; check whether it is an HTTP or SOCKS5 proxy and pick the matching type.",
+    "mail.proxyClosed": ({ port }) => `The proxy let the connection through, then cut it during the encrypted handshake; it probably only allows web traffic. Ask IT to allow port ${port}, or use another proxy.`,
+    "mail.proxyPortBlocked": ({ port }) => `The proxy does not allow port ${port}; company proxies often only allow the web port 443. Ask IT to allow the mail ports (IMAP 993, SMTP 465), or use another proxy.`,
+    "mail.proxyUnreachable": ({ proxy }) => `Could not reach the proxy ${proxy}; check that the proxy app is running and the address and port are right.`,
+    "mail.proxyUpstream": ({ host, port }) => `The proxy could not reach ${host}:${port}; check the server address or the proxy's network.`,
+    "mail.resetDirect": ({ host, port }) => `The connection to ${host}:${port} was cut during the encrypted handshake, usually by a company firewall that blocks mail ports. If your network uses a proxy or an auto-config (PAC) script, check what Settings > Network proxy detects.`,
+    "mail.timeout": "The mail server did not answer in time; check the network or try again later.",
+    "mail.tlsCert": "The mail server's certificate is not trusted; a company security device may be inspecting encrypted traffic. Install the company root certificate or ask IT to exempt the mail server.",
     "mail.tooMany": ({ max }) => `At most ${max} mailboxes at once; disconnect one first.`,
     "mail.tooManyNames": "Too many files with this name in Downloads; clear some and try again.",
     "mail.tooManyRecipients": ({ max }) => `At most ${max} recipients in one mail.`,

@@ -1,4 +1,5 @@
-use super::config::{parse_bypass_list, ProxyTarget};
+use super::config::{parse_bypass_list, AutoProxy, ProxyTarget, ResolvedProxy};
+use super::pac::PacSource;
 
 #[cfg(windows)]
 use windows::Win32::System::Registry::HKEY_CURRENT_USER;
@@ -63,56 +64,123 @@ pub(crate) fn detect_env_proxy() -> Option<ProxyTarget> {
     None
 }
 
-pub(crate) fn detect_system_or_env_proxy() -> Option<ProxyTarget> {
-    detect_env_proxy().or_else(detect_os_proxy)
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct OsProxyConfig {
+    pub(crate) auto_detect: bool,
+    pub(crate) script_url: Option<String>,
+    pub(crate) manual: Option<ProxyTarget>,
+}
+
+impl OsProxyConfig {
+    pub(crate) fn resolved(self) -> ResolvedProxy {
+        if let Some(script) = self.script_url.map(|url| url.trim().to_string()).filter(|url| !url.is_empty()) {
+            return ResolvedProxy::Auto(AutoProxy {
+                pac: PacSource::Script(script),
+                fallback: self.manual,
+            });
+        }
+        if let Some(manual) = self.manual {
+            return ResolvedProxy::Proxy(manual);
+        }
+        if self.auto_detect {
+            return ResolvedProxy::Auto(AutoProxy {
+                pac: PacSource::Discover,
+                fallback: None,
+            });
+        }
+        ResolvedProxy::Direct
+    }
+}
+
+pub(crate) fn detect_system() -> ResolvedProxy {
+    match detect_env_proxy() {
+        Some(target) => ResolvedProxy::Proxy(target),
+        None => detect_os_config().resolved(),
+    }
 }
 
 #[cfg(windows)]
-pub(crate) fn detect_os_proxy() -> Option<ProxyTarget> {
-    if crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyEnable")? == 0 {
-        return None;
+pub(crate) fn detect_os_config() -> OsProxyConfig {
+    match crate::win32::winhttp_proxy::ie_proxy_config() {
+        Some(config) => OsProxyConfig {
+            auto_detect: config.auto_detect,
+            script_url: config.script_url,
+            manual: config.proxy.map(|server| ProxyTarget {
+                url: normalize_proxy_entry(&server),
+                bypass: config.bypass.map(|raw| parse_bypass_list(&raw)).unwrap_or_default(),
+            }),
+        },
+        None => registry_config(),
     }
-    let server = crate::win32::registry::read_string(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyServer")?;
-    if server.trim().is_empty() {
-        return None;
+}
+
+#[cfg(windows)]
+fn registry_config() -> OsProxyConfig {
+    let read_string = |name: &str| {
+        crate::win32::registry::read_string(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, name)
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+    };
+    let enabled = crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyEnable").is_some_and(|value| value != 0);
+    let manual = enabled
+        .then(|| read_string("ProxyServer"))
+        .flatten()
+        .map(|server| ProxyTarget {
+            url: normalize_proxy_entry(&server),
+            bypass: read_string("ProxyOverride").map(|raw| parse_bypass_list(&raw)).unwrap_or_default(),
+        });
+    OsProxyConfig {
+        auto_detect: false,
+        script_url: read_string("AutoConfigURL"),
+        manual,
     }
-    let bypass = crate::win32::registry::read_string(HKEY_CURRENT_USER, INTERNET_SETTINGS_SUBKEY, "ProxyOverride")
-        .map(|raw| parse_bypass_list(&raw))
-        .unwrap_or_default();
-    Some(ProxyTarget {
-        url: normalize_proxy_entry(&server),
-        bypass,
-    })
 }
 
 #[cfg(target_os = "macos")]
-pub(crate) fn detect_os_proxy() -> Option<ProxyTarget> {
-    let output = std::process::Command::new("/usr/sbin/scutil")
+pub(crate) fn detect_os_config() -> OsProxyConfig {
+    let Ok(output) = std::process::Command::new("/usr/sbin/scutil")
         .arg("--proxy")
         .stdin(std::process::Stdio::null())
         .output()
-        .ok()?;
+    else {
+        return OsProxyConfig::default();
+    };
     if !output.status.success() {
-        return None;
+        return OsProxyConfig::default();
     }
-    parse_scutil_proxy(&String::from_utf8_lossy(&output.stdout))
+    parse_scutil_config(&String::from_utf8_lossy(&output.stdout))
 }
 
 #[cfg(not(any(windows, target_os = "macos")))]
-pub(crate) fn detect_os_proxy() -> Option<ProxyTarget> {
-    None
+pub(crate) fn detect_os_config() -> OsProxyConfig {
+    OsProxyConfig::default()
+}
+
+#[cfg(any(target_os = "macos", test))]
+pub(crate) fn parse_scutil_config(text: &str) -> OsProxyConfig {
+    let enabled = |key: &str| scutil_field(text, key).as_deref() == Some("1");
+    OsProxyConfig {
+        auto_detect: enabled("ProxyAutoDiscoveryEnable"),
+        script_url: enabled("ProxyAutoConfigEnable")
+            .then(|| scutil_field(text, "ProxyAutoConfigURLString"))
+            .flatten(),
+        manual: parse_scutil_proxy(text),
+    }
+}
+
+#[cfg(any(target_os = "macos", test))]
+fn scutil_field(text: &str, key: &str) -> Option<String> {
+    text.lines().find_map(|line| {
+        let (name, value) = line.split_once(':')?;
+        (name.trim() == key)
+            .then(|| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+    })
 }
 
 #[cfg(any(target_os = "macos", test))]
 pub(crate) fn parse_scutil_proxy(text: &str) -> Option<ProxyTarget> {
-    let field = |key: &str| {
-        text.lines().find_map(|line| {
-            let (name, value) = line.split_once(':')?;
-            (name.trim() == key)
-                .then(|| value.trim().to_string())
-                .filter(|value| !value.is_empty())
-        })
-    };
+    let field = |key: &str| scutil_field(text, key);
     let entry = |prefix: &str, scheme: &str| {
         if field(&format!("{prefix}Enable"))?.as_str() != "1" {
             return None;

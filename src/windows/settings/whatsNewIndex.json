@@ -99,7 +99,7 @@
     },
     {
       "page": "islandPanel",
-      "since": "next",
+      "since": "0.3.15-beta.1",
       "zh-CN": {
         "group": "页签名称与图标 · 首页",
         "title": "名称"
@@ -147,7 +147,7 @@
     },
     {
       "page": "behavior",
-      "since": "next",
+      "since": "0.3.15-beta.1",
       "zh-CN": {
         "group": "展开",
         "title": "记住上次退出时的面板页面"

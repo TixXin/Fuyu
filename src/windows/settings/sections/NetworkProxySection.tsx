@@ -184,16 +184,37 @@ export function NetworkProxySection() {
     }
   };
 
+  const autoDetected = saved && (saved.systemPac || saved.systemWpad) ? (
+    <span className="network-proxy__detected">
+      {saved.systemPac ? (
+        <>
+          <span>{text.systemPacPrefix}</span>
+          <code className="network-proxy__code">{saved.systemPac}</code>
+        </>
+      ) : (
+        <span>{text.systemWpad}</span>
+      )}
+      {saved.systemProxy ? (
+        <>
+          <span>{text.systemAutoVia}</span>
+          <code className="network-proxy__code">{saved.systemProxy}</code>
+        </>
+      ) : (
+        <span>{text.systemAutoDirect}</span>
+      )}
+    </span>
+  ) : null;
+
   const modeDescription =
     draft.mode === "system" ? (
-      saved?.systemProxy ? (
+      autoDetected ?? (saved?.systemProxy ? (
         <span className="network-proxy__detected">
           <span>{text.systemDetectedPrefix}</span>
           <code className="network-proxy__code">{saved.systemProxy}</code>
         </span>
       ) : (
         text.systemNone
-      )
+      ))
     ) : draft.mode === "direct" ? (
       text.directHint
     ) : undefined;

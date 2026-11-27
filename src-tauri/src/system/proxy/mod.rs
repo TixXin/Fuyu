@@ -1,12 +1,14 @@
 pub(crate) mod config;
+pub(crate) mod pac;
 pub(crate) mod system_detect;
 pub(crate) mod tunnel;
+#[cfg(test)]
+mod pac_tests;
 #[cfg(test)]
 mod tests;
 
 use std::{
     io,
-    net::TcpStream,
     path::PathBuf,
     sync::{Mutex, OnceLock, PoisonError},
     time::{Duration, Instant},
@@ -18,7 +20,9 @@ use tauri::{AppHandle, Manager, Url};
 use crate::user_error::UserError;
 
 pub use config::{NetworkProxyTestResult, NetworkProxyView, ProxyMode, ProxySettings, SaveNetworkProxyInput};
+use pac::Wait;
 use config::{build_proxy_url, delete_password, invalid_proxy_input, load_file, parse_bypass_list, read_password, redact_url, save_file, save_password, validate_settings, ProxyTarget, ResolvedProxy};
+pub(crate) use tunnel::{connect_fault, ConnectError, ConnectFault, Connected};
 
 const TEST_TARGETS: [&str; 4] = [
     "https://cp.cloudflare.com/generate_204",
@@ -27,6 +31,8 @@ const TEST_TARGETS: [&str; 4] = [
     "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.v3.json",
 ];
 const TEST_TIMEOUT: Duration = Duration::from_secs(6);
+const SAMPLE_HOSTS: [&str; 3] = ["github.com", "www.google.com", "api.anthropic.com"];
+const NETWORK_CHANGE_DEBOUNCE: Duration = Duration::from_secs(2);
 
 struct ProxyState {
     file_path: Option<PathBuf>,
@@ -53,6 +59,30 @@ pub(crate) fn init(app: &AppHandle) {
     let mut guard = state().lock().unwrap_or_else(PoisonError::into_inner);
     guard.file_path = Some(path);
     guard.settings = loaded;
+    drop(guard);
+    let _ = std::thread::Builder::new().name("proxy-watch".into()).spawn(|| {
+        pac::watch_network_changes(on_network_change);
+        warm_samples();
+    });
+}
+
+fn warm_samples() {
+    if let Ok(resolved) = resolve_current() {
+        let _ = sample_proxy(&resolved, Wait::Block);
+    }
+}
+
+fn on_network_change() {
+    static LAST: Mutex<Option<Instant>> = Mutex::new(None);
+    {
+        let mut last = LAST.lock().unwrap_or_else(PoisonError::into_inner);
+        if last.is_some_and(|at| at.elapsed() < NETWORK_CHANGE_DEBOUNCE) {
+            return;
+        }
+        *last = Some(Instant::now());
+    }
+    pac::clear_cache();
+    let _ = std::thread::Builder::new().name("proxy-warm".into()).spawn(warm_samples);
 }
 
 fn current_settings() -> ProxySettings {
@@ -72,10 +102,7 @@ pub(crate) fn resolve_current() -> Result<ResolvedProxy, UserError> {
 fn resolve_for(settings: &ProxySettings, password: Option<&str>) -> Result<ResolvedProxy, UserError> {
     match settings.mode {
         ProxyMode::Direct => Ok(ResolvedProxy::Direct),
-        ProxyMode::System => Ok(match system_detect::detect_system_or_env_proxy() {
-            Some(target) => ResolvedProxy::Proxy(target),
-            None => ResolvedProxy::Direct,
-        }),
+        ProxyMode::System => Ok(system_detect::detect_system()),
         ProxyMode::Manual => {
             let Some(port) = settings.port.filter(|port| *port > 0) else {
                 return Ok(ResolvedProxy::Direct);
@@ -92,20 +119,24 @@ fn resolve_for(settings: &ProxySettings, password: Option<&str>) -> Result<Resol
     }
 }
 
-pub(crate) fn effective_proxy_url() -> Option<String> {
-    match resolve_current().ok()? {
+pub(crate) fn sample_proxy(resolved: &ResolvedProxy, wait: Wait) -> Option<String> {
+    match resolved {
         ResolvedProxy::Direct => None,
-        ResolvedProxy::Proxy(target) => Some(target.url),
+        ResolvedProxy::Proxy(target) => Some(target.url.clone()),
+        ResolvedProxy::Auto(_) => SAMPLE_HOSTS
+            .iter()
+            .find_map(|host| resolved.first_proxy_for("https", host, 443, wait)),
     }
 }
 
+pub(crate) fn effective_proxy_url() -> Option<String> {
+    sample_proxy(&resolve_current().ok()?, Wait::here())
+}
+
 pub(crate) fn proxy_url() -> Result<Option<Url>, UserError> {
-    match resolve_current()? {
-        ResolvedProxy::Direct => Ok(None),
-        ResolvedProxy::Proxy(target) => Url::parse(&target.url)
-            .map(Some)
-            .map_err(|error| invalid_proxy_input().detail(error)),
-    }
+    sample_proxy(&resolve_current()?, Wait::here())
+        .map(|url| Url::parse(&url).map_err(|error| invalid_proxy_input().detail(error)))
+        .transpose()
 }
 
 pub(crate) fn reqwest_proxy() -> Result<Option<reqwest::Proxy>, UserError> {
@@ -121,6 +152,14 @@ fn reqwest_proxy_from(resolved: &ResolvedProxy) -> Result<Option<reqwest::Proxy>
                 .map_err(|error| invalid_proxy_input().detail(error.without_url()))?
                 .no_proxy(no_proxy);
             Ok(Some(proxy))
+        }
+        ResolvedProxy::Auto(_) => {
+            let resolved = resolved.clone();
+            Ok(Some(reqwest::Proxy::custom(move |url| {
+                let (scheme, host, port) = pac::url_parts(url)?;
+                let proxy = resolved.first_proxy_for(scheme, host, port, Wait::here())?;
+                reqwest::Url::parse(&proxy).ok()
+            })))
         }
     }
 }
@@ -140,16 +179,13 @@ fn apply_reqwest_resolved(
     }
 }
 
-pub(crate) fn should_use_proxy_for(host: &str) -> bool {
-    match resolve_current() {
-        Ok(ResolvedProxy::Proxy(target)) => !target.should_bypass(host),
-        _ => false,
-    }
+pub(crate) fn should_use_proxy_for(host: &str, port: u16) -> bool {
+    resolve_current().is_ok_and(|resolved| resolved.first_proxy_for("https", host, port, Wait::here()).is_some())
 }
 
-pub(crate) fn connect_tcp(host: &str, port: u16, timeout: Duration) -> io::Result<TcpStream> {
+pub(crate) fn connect_tcp_traced(host: &str, port: u16, timeout: Duration) -> io::Result<Connected> {
     let resolved = resolve_current().map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error.to_string()))?;
-    tunnel::connect_tcp_resolved(&resolved, host, port, timeout)
+    tunnel::connect_hops(&resolved.hops_for(host, port), host, port, timeout)
 }
 
 pub(crate) fn host_payload() -> Value {
@@ -158,13 +194,22 @@ pub(crate) fn host_payload() -> Value {
             "url": target.url,
             "bypass": target.bypass,
         }),
+        Ok(resolved @ ResolvedProxy::Auto(_)) => match sample_proxy(&resolved, Wait::here()) {
+            Some(url) => json!({ "url": url, "bypass": [] }),
+            None => Value::Null,
+        },
         _ => Value::Null,
     }
 }
 
 fn build_view(settings: &ProxySettings) -> NetworkProxyView {
     let has_password = read_password().ok().flatten().is_some();
-    let system_proxy = system_detect::detect_system_or_env_proxy().map(|target| redact_url(&target.url));
+    let system = system_detect::detect_system();
+    let system_proxy = sample_proxy(&system, Wait::Block).map(|url| redact_url(&url));
+    let (system_pac, system_wpad) = match &system {
+        ResolvedProxy::Auto(auto) => (auto.pac.script_label(), auto.pac == pac::PacSource::Discover),
+        _ => (None, false),
+    };
     NetworkProxyView {
         mode: settings.mode,
         scheme: settings.scheme,
@@ -174,6 +219,8 @@ fn build_view(settings: &ProxySettings) -> NetworkProxyView {
         has_password,
         bypass: settings.bypass.clone(),
         system_proxy,
+        system_pac,
+        system_wpad,
     }
 }
 
@@ -209,6 +256,7 @@ pub async fn save_network_proxy(app: AppHandle, input: SaveNetworkProxyInput) ->
             guard.file_path = Some(path);
             guard.settings = validated.clone();
         }
+        pac::clear_cache();
         Ok(build_view(&validated))
     })
     .await
@@ -230,10 +278,12 @@ pub async fn test_network_proxy(input: SaveNetworkProxyInput) -> Result<NetworkP
             .flatten(),
     };
     let resolved = resolve_for(&validated, password.as_deref())?;
-    let via = match &resolved {
-        ResolvedProxy::Direct => None,
-        ResolvedProxy::Proxy(target) => Some(redact_url(&target.url)),
-    };
+    let (resolved, via) = tauri::async_runtime::spawn_blocking(move || {
+        let via = sample_proxy(&resolved, Wait::Block).map(|url| redact_url(&url));
+        (resolved, via)
+    })
+    .await
+    .map_err(|error| UserError::new("internal", "Could not read proxy settings.").detail(error))?;
     let builder = reqwest::Client::builder()
         .timeout(TEST_TIMEOUT)
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")));

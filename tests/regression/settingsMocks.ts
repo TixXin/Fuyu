@@ -262,7 +262,7 @@ mockIPC((command, payload) => {
     case "dismiss_v2_plugin_migration":
       return { official: [], other: [], islandPending: false, settingsPending: false };
     case "get_network_proxy":
-      return { mode: "system", scheme: "http", host: "", port: null, username: "", hasPassword: false, bypass: "", systemProxy: "http://127.0.0.1:7890" };
+      return { mode: "system", scheme: "http", host: "", port: null, username: "", hasPassword: false, bypass: "", systemProxy: "http://127.0.0.1:7890", systemPac: null, systemWpad: false };
     case "save_network_proxy": {
       const input = (args.input ?? {}) as Record<string, unknown>;
       return {
@@ -274,6 +274,8 @@ mockIPC((command, payload) => {
         hasPassword: Boolean(input.password),
         bypass: String(input.bypass ?? ""),
         systemProxy: "http://127.0.0.1:7890",
+        systemPac: null,
+        systemWpad: false,
       };
     }
     case "test_network_proxy":

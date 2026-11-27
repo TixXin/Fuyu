@@ -617,6 +617,17 @@ pub(crate) fn get_plugin_host_memory() -> Option<HostMemory> {
     memory_of(host_pid(supervisor_slot()), crate::platform::private_memory::private_bytes)
 }
 
+#[tauri::command]
+pub(crate) async fn open_plugins_folder(app: AppHandle) -> Result<(), crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let dir = plugins_dir(&app)?;
+        tauri_plugin_opener::open_path(&dir, None::<&str>)
+            .map_err(|error| crate::user_error::UserError::new("pluginsV3.openFolder", "Could not open the plugins folder.").detail(error))
+    })
+    .await
+    .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
 pub(crate) fn respond(request: &tauri::http::Request<Vec<u8>>) -> tauri::http::Response<Vec<u8>> {
     protocol::respond(PLUGINS_DIR.get().map(PathBuf::as_path), request)
 }
@@ -626,6 +637,7 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::plugin_kernel::get_plugin_host_connection,
             crate::plugin_kernel::get_plugin_host_memory,
+            crate::plugin_kernel::open_plugins_folder,
             crate::plugin_kernel::exit_plugin_safe_mode,
             crate::plugin_kernel::retry_plugin_host_node,
             crate::plugin_kernel::builtins::get_builtin_plugins,

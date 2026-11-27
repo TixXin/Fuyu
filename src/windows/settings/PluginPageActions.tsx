@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from "react";
-import { Activity, ExternalLink, FileUp, RefreshCw, Store, Upload } from "lucide-react";
+import { Activity, ExternalLink, FileUp, FolderOpen, RefreshCw, Store, Upload } from "lucide-react";
+import { openPluginsFolder } from "../../features/plugin-kernel/api";
 import { useTranslation } from "../../i18n";
 import type { SettingsCategory } from "./categories";
 import { PluginMenu } from "./PluginMenu";
@@ -52,6 +53,7 @@ export function PluginPageActions({ onOpenPage }: { onOpenPage: (page: SettingsC
           { key: "install-file", label: text.menu.installFromFile, icon: <Upload size={14} strokeWidth={2} />, onSelect: file.pick },
           { key: "allow-files", label: text.menu.allowFiles, icon: <FileUp size={14} strokeWidth={2} />, checked: manualAllowed ?? false, disabled: manualAllowed === null, hint: text.menu.allowFilesHint, onSelect: toggleManual },
           { key: "check-updates", label: checking ? text.menu.checkingUpdates : text.menu.checkUpdates, icon: <RefreshCw size={14} strokeWidth={2} />, disabled: checking, separatorBefore: true, onSelect: checkUpdates },
+          { key: "open-folder", label: text.menu.openFolder, icon: <FolderOpen size={14} strokeWidth={2} />, onSelect: () => void openPluginsFolder().catch(() => undefined) },
           { key: "diagnostics", label: text.menu.diagnostics, icon: <Activity size={14} strokeWidth={2} />, onSelect: () => onOpenPage("pluginDiagnostics") },
           { key: "dev-docs", label: text.menu.devDocs, icon: <ExternalLink size={14} strokeWidth={2} />, onSelect: openPluginDocs },
         ]}

@@ -28,9 +28,9 @@ export function onSettingsSyncApplied(handler: (applied: SettingsSyncApplied) =>
   return listen<SettingsSyncApplied>(SETTINGS_SYNC_APPLIED_EVENT, (event) => handler(event.payload));
 }
 
-export type DataHomeSource = "env" | "pointer" | "default" | "appData";
+export type DataHomeSource = "env" | "portable" | "pointer" | "default" | "appData";
 
-export type DataHome = { home: string; defaultHome: string; source: DataHomeSource };
+export type DataHome = { home: string; defaultHome: string; source: DataHomeSource; portableBlocked?: string | null };
 
 export function getDataHome() {
   return invoke<DataHome>("get_data_home");

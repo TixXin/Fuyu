@@ -15,6 +15,7 @@ pub struct DataHome {
     home: String,
     default_home: String,
     source: Source,
+    portable_blocked: Option<String>,
     crash_log: Option<String>,
 }
 
@@ -34,6 +35,7 @@ pub fn get_data_home(app: AppHandle) -> Result<DataHome, UserError> {
         home: home.display().to_string(),
         default_home: super::default_home().unwrap_or_default().display().to_string(),
         source: super::source(),
+        portable_blocked: super::portable_blocked().map(|path| path.display().to_string()),
         crash_log,
     })
 }
@@ -51,6 +53,9 @@ pub async fn set_data_home(app: AppHandle, path: Option<String>) -> Result<Strin
     crate::dev_lane::refuse_in_preview("move its data").map_err(|message| UserError::new("plain", message))?;
     if super::source() == Source::Env {
         return Err(UserError::new("home.envSet", "The home folder is set by FUYU_HOME.").arg("home", current(&app)?.display().to_string()));
+    }
+    if super::source() == Source::Portable {
+        return Err(UserError::new("home.portable", "This portable copy keeps its data next to the program.").arg("home", current(&app)?.display().to_string()));
     }
     let target = match path.as_deref().map(str::trim).filter(|value| !value.is_empty()) {
         Some(value) => PathBuf::from(value),
