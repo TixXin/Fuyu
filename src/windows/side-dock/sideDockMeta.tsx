@@ -7,7 +7,7 @@ import { PluginIcon } from "../../features/plugin-kernel/PluginIcon";
 import type { IslandPageMeta, SlotEntry } from "../../features/plugin-kernel/slots";
 import type { IslandText } from "../../i18n/sections/island";
 import { FUYU_PAGE_ID } from "../../lib/settings/customPanels";
-import type { IslandPagesLayout } from "../../lib/settings/islandPages";
+import { customPageName, type IslandPagesLayout } from "../../lib/settings/islandPages";
 import type { IslandFeatures } from "../island/features";
 import type { IslandPageProps } from "../island/IslandPages";
 import type { BuiltinPage } from "../island/types";
@@ -26,9 +26,12 @@ export function sideDockPageLabel(
   entry: SideDockPageEntry,
   baseLabel: (item: PageLabelItem) => string,
   islandText: IslandText,
+  pageLayout?: IslandPagesLayout,
 ): string {
+  const custom = customPageName(pageLayout, entry.id);
+  if (custom) return custom;
   if (!entry.external) {
-    if (entry.id === FUYU_PAGE_ID) return islandText.appName;
+    if (entry.id === FUYU_PAGE_ID) return islandText.homePage;
     if (entry.id === "agents") return islandText.sideDock.pageNames.agents;
     if (entry.id === "qq") return islandText.sideDock.pageNames.qq;
     if (entry.id === "translation") return islandText.sideDock.pageNames.translation;

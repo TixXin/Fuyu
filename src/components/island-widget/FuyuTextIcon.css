@@ -4,5 +4,8 @@
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.01em;
+  max-width: 7em;
+  overflow-x: clip;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }

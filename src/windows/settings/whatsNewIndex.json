@@ -98,6 +98,18 @@
       }
     },
     {
+      "page": "islandPanel",
+      "since": "next",
+      "zh-CN": {
+        "group": "页签名称与图标 · 首页",
+        "title": "名称"
+      },
+      "en": {
+        "group": "Tab name and icon · Home",
+        "title": "Name"
+      }
+    },
+    {
       "page": "sideDocks",
       "since": "0.3.14-beta.2",
       "zh-CN": {

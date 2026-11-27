@@ -53,7 +53,7 @@ export async function checkIslandPages(check: (condition: unknown, message: stri
   await openTab("islandPanel");
   const before = pageIds();
   check(before[0] === "panel:fuyu" && before[1] === "agents" && before[2] === "todo" && before.includes("timer") && before.includes("qq") && previewTabs()[0] === "panel:fuyu"
-    && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] .panel-text-icon")?.textContent === "Fuyu" && !document.querySelector(".layout-chip--create") && !document.querySelector(".collapsed-lanes"),
+    && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] svg.lucide-house") && !document.querySelector(".layout-chip--create") && !document.querySelector(".collapsed-lanes"),
     "The expanded panel tab draws its preview and lists the Fuyu page first, then the built-in pages in today's order, with no way to make more panels");
   check(headButtons() === "qq" && !document.querySelector(".expanded-preview__tab--page[data-page='qq']") && headActions() === "layout,settings" && islandBox()?.width === "800px" && islandBox()?.height === "320px",
     "The preview header is the island's: page tabs, then messages as a bell button, layout and settings on the right, at the page's real size");
@@ -68,6 +68,13 @@ export async function checkIslandPages(check: (condition: unknown, message: stri
 }
 
 const iconOption = (icon: string) => document.querySelector<HTMLButtonElement>(`.page-icon-picker [data-icon='${icon}']`);
+const savedNames = () => (savedPages() as { names?: Record<string, string> } | null)?.names;
+const chipName = (page: string) => pageRow(page)?.querySelector(".layout-chip__name")?.textContent;
+const typeName = (value: string) => {
+  const input = document.querySelector<HTMLInputElement>(".page-name-row__input")!;
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+};
 const savedIcons = () => (savedPages() as { icons?: Record<string, string> } | null)?.icons;
 
 async function checkPageIcons(check: (condition: unknown, message: string) => void) {
@@ -78,11 +85,20 @@ async function checkPageIcons(check: (condition: unknown, message: string) => vo
     && document.querySelector(".expanded-preview__tab[data-page='calendar'] svg.lucide-star") && pageRow("calendar")?.querySelector("svg.lucide-star"),
     "Picking an icon saves it in fuyu-island-pages and the preview tab and page chip follow");
   await act(async () => { pageRow("panel:fuyu")!.click(); });
-  check(iconOption("text")?.getAttribute("aria-checked") === "true" && iconOption("jellyfish") && !iconOption("default"), "The Fuyu page offers the word and the jellyfish, with the word chosen by default");
+  check(iconOption("house")?.getAttribute("aria-checked") === "true" && iconOption("text") && iconOption("jellyfish") && !iconOption("default"), "The Fuyu page offers the home icon, the word and the jellyfish, with the home icon chosen by default");
+  check(chipName("panel:fuyu") === "首页" && document.querySelector<HTMLInputElement>(".page-name-row__input")?.placeholder === "首页", "The Fuyu page is listed as 首页 and its name box shows 首页 as the default");
+  await act(async () => { typeName("  我的工作台超长的名字要被截断到十六个字  "); });
+  check(savedNames()?.["panel:fuyu"] === "我的工作台超长的名字要被截断到十" && chipName("panel:fuyu") === savedNames()?.["panel:fuyu"]
+    && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu']")?.getAttribute("aria-label") === savedNames()?.["panel:fuyu"],
+    "Typing a name trims it, cuts it to 16 characters, saves it in fuyu-island-pages and the page chip and preview tab follow");
+  await act(async () => { typeName("   "); });
+  check(savedNames() === undefined && chipName("panel:fuyu") === "首页", "Emptying the name goes back to the default 首页");
   await act(async () => { iconOption("jellyfish")!.click(); });
   check(savedIcons()?.["panel:fuyu"] === "jellyfish" && document.querySelector(".expanded-preview__tab[data-page='panel:fuyu'] .center-jelly"), "Choosing the jellyfish for the Fuyu tab is saved and previewed");
   await act(async () => { iconOption("text")!.click(); });
-  check(savedIcons()?.["panel:fuyu"] === undefined, "Going back to the word drops the Fuyu entry");
+  check(savedIcons()?.["panel:fuyu"] === "text", "Choosing the word for the Fuyu tab is saved because the default is now the home icon");
+  await act(async () => { iconOption("house")!.click(); });
+  check(savedIcons()?.["panel:fuyu"] === undefined, "Going back to the home icon drops the Fuyu entry");
   await act(async () => { document.querySelector<HTMLButtonElement>(".layout-chips__reset")!.click(); });
   check(savedPages()?.order.length === 0 && savedPages()?.hidden.length === 0 && savedIcons()?.calendar === "star" && pageIds()[0] === "panel:fuyu" && pageIds()[1] === "agents",
     "Restoring the default order keeps the chosen icons");
@@ -132,7 +148,7 @@ async function checkPreviewPages(check: (condition: unknown, message: string) =>
 export async function checkCustomPanels(check: (condition: unknown, message: string) => void) {
   localStorage.removeItem("fuyu-custom-panels");
   await act(async () => { pageRow("panel:fuyu")!.click(); });
-  check(savedPanels() === null && pageRow("panel:fuyu")?.getAttribute("aria-selected") === "true" && pageRow("panel:fuyu")?.textContent?.includes("Fuyu")
+  check(savedPanels() === null && pageRow("panel:fuyu")?.getAttribute("aria-selected") === "true" && pageRow("panel:fuyu")?.textContent?.includes("首页")
     && document.querySelector(".panel-head__modes") && !document.querySelector(".panel-head__name") && !document.querySelector(".panel-head__remove")
     && !document.querySelector(".expanded-preview__empty") && document.querySelectorAll(".expanded-preview__cell").length > 0,
     "The Fuyu page is there before anything is saved, shows the default widgets and offers only the layout switch, no name or delete");

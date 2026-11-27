@@ -899,12 +899,12 @@
       "zh-CN": {
         "group": "展开面板",
         "title": "面板宽度",
-        "description": "所有页面默认都用这个宽度和高度，切换页面时面板大小不变。Fuyu 页也跟着变：组件固定两行，面板更宽时多显示几列，窄到放不下 6 列时组件整体缩小。在岛上改过尺寸的页面记着自己的尺寸，不跟这两项，见下面。"
+        "description": "所有页面默认都用这个宽度和高度，切换页面时面板大小不变。首页也跟着变：组件固定两行，面板更宽时多显示几列，窄到放不下 6 列时组件整体缩小。在岛上改过尺寸的页面记着自己的尺寸，不跟这两项，见下面。"
       },
       "en": {
         "group": "Open panel",
         "title": "Panel width",
-        "description": "Every page uses this width and height by default, so the panel keeps its size when you switch pages. The Fuyu page follows too: two rows of widgets, more columns when the panel is wider, and smaller widgets when it is too narrow for 6 columns. Pages resized on the island keep their own size instead, listed below."
+        "description": "Every page uses this width and height by default, so the panel keeps its size when you switch pages. The Home page follows too: two rows of widgets, more columns when the panel is wider, and smaller widgets when it is too narrow for 6 columns. Pages resized on the island keep their own size instead, listed below."
       }
     },
     {
@@ -1023,12 +1023,12 @@
       "zh-CN": {
         "group": "",
         "title": "水母画风",
-        "description": "水母出现的地方一起换：收起条、中心图案、Fuyu 页签、Agent 空页面和今日小组件。像素画风一格一格地动，并按屏幕像素对齐，系统缩放是 125%、175% 时会比矢量的小一圈。鼠标停在卡片上可以看各个状态的样子。Mac 菜单栏上的图标也跟着换成像素的；应用图标和 Windows 托盘图标不变。"
+        "description": "水母出现的地方一起换：收起条、中心图案、首页页签、Agent 空页面和今日小组件。像素画风一格一格地动，并按屏幕像素对齐，系统缩放是 125%、175% 时会比矢量的小一圈。鼠标停在卡片上可以看各个状态的样子。Mac 菜单栏上的图标也跟着换成像素的；应用图标和 Windows 托盘图标不变。"
       },
       "en": {
         "group": "",
         "title": "Jellyfish look",
-        "description": "Changes the jellyfish everywhere it appears: the collapsed bar, the centre pattern, the Fuyu tab, the empty Agent page and the Today widget. The pixel looks move one square at a time and line up with screen pixels, so at 125% or 175% display scaling they come out a little smaller than the smooth one. Rest the pointer on a card to see each state. On a Mac the menu bar icon turns into pixels too; the app icon and the Windows tray icon stay the same."
+        "description": "Changes the jellyfish everywhere it appears: the collapsed bar, the centre pattern, the Home tab, the empty Agent page and the Today widget. The pixel looks move one square at a time and line up with screen pixels, so at 125% or 175% display scaling they come out a little smaller than the smooth one. Rest the pointer on a card to see each state. On a Mac the menu bar icon turns into pixels too; the app icon and the Windows tray icon stay the same."
       }
     },
     {
@@ -1213,6 +1213,20 @@
         "title": "Show the count",
         "description": "The number in the segmented ring and before the state bar. Off, only the colours' shares show; the pixel grid and signal bars have no number anyway."
       }
+    },
+    {
+      "page": "islandPanel",
+      "zh-CN": {
+        "group": "页签名称与图标 · 首页",
+        "title": "名称",
+        "description": "这一页在页签、侧边翼和「更多」菜单里叫什么，最多 16 个字；留空用默认的「首页」"
+      },
+      "en": {
+        "group": "Tab name and icon · Home",
+        "title": "Name",
+        "description": "What this page is called on its tab, in the side docks and in the More menu. Up to 16 characters; leave it empty for the default \"Home\""
+      },
+      "since": "next"
     },
     {
       "page": "islandDisplay",
@@ -1580,12 +1594,12 @@
       "zh-CN": {
         "group": "展开",
         "title": "记住上次退出时的面板页面",
-        "description": "下次展开面板时回到上次收起或退出前停留的页面，而不是每次都回到 Fuyu 首页"
+        "description": "下次展开面板时回到上次收起或退出前停留的页面，而不是每次都回到首页"
       },
       "en": {
         "group": "Opening",
         "title": "Remember last panel page",
-        "description": "Reopen the page you were on before closing the panel or quitting, instead of returning to the Fuyu page each time"
+        "description": "Reopen the page you were on before closing the panel or quitting, instead of returning to the Home page each time"
       },
       "since": "next"
     },
@@ -1643,12 +1657,12 @@
       "zh-CN": {
         "group": "开合动画",
         "title": "小组件出场动效",
-        "description": "面板展开时 Fuyu 页的小组件怎么出现；轮播每次换一种，下次展开时生效"
+        "description": "面板展开时首页的小组件怎么出现；轮播每次换一种，下次展开时生效"
       },
       "en": {
         "group": "Open and close",
         "title": "Widget entrance",
-        "description": "How the widgets on the Fuyu page appear when the panel opens; Shuffle picks a new one each time. Applies the next time it opens"
+        "description": "How the widgets on the Home page appear when the panel opens; Shuffle picks a new one each time. Applies the next time it opens"
       }
     },
     {
@@ -2056,12 +2070,12 @@
       "zh-CN": {
         "group": "页面切换",
         "title": "触控板左右滑动翻页",
-        "description": "在面板上两指往左滑是下一页、往右滑是上一页，一次滑动只翻一页；能左右滚动的地方（比如 Fuyu 页的多页组件）照常滚动"
+        "description": "在面板上两指往左滑是下一页、往右滑是上一页，一次滑动只翻一页；能左右滚动的地方（比如首页的多页组件）照常滚动"
       },
       "en": {
         "group": "Page switching",
         "title": "Swipe sideways to turn pages",
-        "description": "On the panel, swipe two fingers left for the next page and right for the previous one, one page per swipe. Areas that scroll sideways (such as a multi-page Fuyu panel) scroll as before"
+        "description": "On the panel, swipe two fingers left for the next page and right for the previous one, one page per swipe. Areas that scroll sideways (such as a multi-page widget on the Home page) scroll as before"
       }
     },
     {

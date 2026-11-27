@@ -27,7 +27,7 @@ function FuyuPage({ settings }: IslandPageProps) {
 }
 
 export function useCustomPanelPages() {
-  const name = useTranslation().island.appName;
+  const name = useTranslation().island.homePage;
   useEffect(
     () =>
       pageSlot.add({

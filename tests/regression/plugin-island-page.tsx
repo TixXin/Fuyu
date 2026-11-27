@@ -9,13 +9,14 @@ import { useCustomPanelPages } from "../../src/windows/island/custom-panels/useC
 import { useCollapsedGauges } from "../../src/windows/island/useCollapsedGauges";
 import { useCollapsedWidth } from "../../src/windows/island/useCollapsedWidth";
 import { pageForAltDigit, withPageLayout, type IslandFeatures } from "../../src/windows/island/features";
-import type { IslandPagesLayout } from "../../src/lib/settings/islandPages";
+import { ISLAND_PAGES_KEY, saveIslandPages, type IslandPagesLayout } from "../../src/lib/settings/islandPages";
 import type { IslandPage } from "../../src/windows/island/types";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import { updatePluginNames } from "../../src/features/plugin-kernel/pluginNames";
 import { islandSpotlight, SPOTLIGHT_ANIMATION } from "../../src/features/plugin-kernel/islandSpotlight";
 import { normalizeSettings } from "../../src/lib/settings/settings";
 import { useFixtureLines } from "./islandLines";
+import { checkHeaderMoreMenu, checkHeaderTabFit } from "./headerTabChecks";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 mockIPC(() => undefined, { shouldMockEvents: true });
@@ -176,7 +177,7 @@ async function checkPanelEditing() {
 async function checkCustomPanel() {
   const dotOf = () => expandedRoot.querySelector<HTMLButtonElement>('.dot-button[data-page="panel:fuyu"]');
   const first = () => expandedRoot.querySelector<HTMLElement>(".island__header-start button");
-  check(dotOf() && first() === dotOf() && dotOf()?.querySelector(".panel-text-icon")?.textContent === "Fuyu", "没有 fuyu-custom-panels 时页头最左边（Agent 按钮前面）也是 Fuyu 页面，按钮是文字 Fuyu");
+  check(dotOf() && first() === dotOf() && dotOf()?.querySelector("svg.lucide-house") && !dotOf()?.querySelector(".panel-text-icon"), "没有 fuyu-custom-panels 时页头最左边（Agent 按钮前面）也是 Fuyu 页面，默认是 Home 图标");
   await setPanels({ version: 1, panels: [{ id: "desk", name: "工作台", icon: "star", mode: "grid", items: [
     { widget: "todos", size: "l", x: 0, y: 0, w: 31, h: 31 },
     { widget: "next-meeting", size: "m", x: 32, y: 0, w: 31, h: 15 },
@@ -185,7 +186,7 @@ async function checkCustomPanel() {
   const dot = dotOf();
   const allDots = [...expandedRoot.querySelectorAll<HTMLElement>(".island__header-start .dot-button")];
   const firstPlugin = allDots.findIndex((button) => button.classList.contains("dot-button--plugin"));
-  check(dot && /^Fuyu/.test(dot.getAttribute("aria-label") ?? "") && allDots.indexOf(dot) === 0 && allDots.indexOf(dot) < firstPlugin, `Fuyu 页面排在页头第一个，名字是 Fuyu（${dot?.getAttribute("aria-label")}）`);
+  check(dot && /^首页/.test(dot.getAttribute("aria-label") ?? "") && allDots.indexOf(dot) === 0 && allDots.indexOf(dot) < firstPlugin, `Fuyu 页面排在页头第一个，名字是「首页」（${dot?.getAttribute("aria-label")}）`);
   await act(async () => dot!.click());
   await frame();
   const cells = [...expandedRoot.querySelectorAll<HTMLElement>(".custom-panel__cell")];
@@ -207,15 +208,30 @@ async function checkPageIcons() {
   await act(async () => setHeaderIcons({ layout: null, legacy: true }));
   check(dot("panel:fuyu")?.querySelector(".center-jelly") && !dot("panel:fuyu")?.querySelector(".panel-text-icon"), "旧设置 fuyuTabIcon 开着、没选过图标时，Fuyu 页照旧显示水母");
   await act(async () => setHeaderIcons({ layout: { ...plain, icons: { "panel:fuyu": "text" } }, legacy: true }));
-  check(dot("panel:fuyu")?.querySelector(".panel-text-icon")?.textContent === "Fuyu", "在岛屿布局里选了「文字」就显示文字，不管旧开关");
+  check(dot("panel:fuyu")?.querySelector(".panel-text-icon")?.textContent === "首页", "在岛屿布局里选了「文字」就显示文字，不管旧开关");
   await act(async () => setHeaderIcons({ layout: { ...plain, icons: { "panel:fuyu": "rocket", todo: "star", agents: "cat", "world-clock": "globe" } }, legacy: false }));
   check(dot("panel:fuyu")?.querySelector("svg.lucide-rocket") && dot("todo")?.querySelector("svg.lucide-star") && agents()?.classList.contains("lucide-cat")
     && agents()?.classList.contains("island__agent-status-icon") && dot("world-clock")?.querySelector("svg.lucide-globe") && !dot("world-clock")?.querySelector(".test-globe"),
     "fuyu-island-pages 的 icons 换掉页头对应页面的图标：Fuyu、内置页、Agent 按钮（保留状态颜色）和插件页");
   await act(async () => setHeaderIcons({ layout: { ...plain, icons: { todo: "no-such-icon" } }, legacy: false }));
-  check(await settle(() => dot("todo")?.querySelector("svg.lucide-list-todo") && !dot("todo")?.querySelector("svg.lucide-star") && dot("panel:fuyu")?.querySelector(".panel-text-icon")), "不认识的图标名等图标目录加载完后按默认图标画");
+  check(await settle(() => dot("todo")?.querySelector("svg.lucide-list-todo") && !dot("todo")?.querySelector("svg.lucide-star") && dot("panel:fuyu")?.querySelector("svg.lucide-house")), "不认识的图标名等图标目录加载完后按默认图标画");
+  await act(async () => setHeaderIcons({ layout: { ...plain, icons: { "panel:fuyu": "text" } }, legacy: false }));
+  await act(async () => storePageLayout({ ...plain, names: { "panel:fuyu": "工作台", todo: "清单" } }));
+  check(dot("panel:fuyu")?.querySelector(".panel-text-icon")?.textContent === "工作台" && /^清单/.test(dot("todo")?.getAttribute("aria-label") ?? ""),
+    "fuyu-island-pages 的 names 改掉页签名：首页的文字图标显示自定义名，内置页的名字跟着换");
+  await act(async () => storePageLayout(plain));
   await act(async () => setHeaderIcons({ layout: null, legacy: false }));
 }
+
+function storePageLayout(layout: IslandPagesLayout) {
+  saveIslandPages(layout);
+  window.dispatchEvent(new StorageEvent("storage", { key: ISLAND_PAGES_KEY }));
+}
+
+const headerHelpers = (header: HTMLElement) => ({
+  root: expandedRoot, header, check, settle, frame,
+  textTab: (on: boolean) => act(async () => setHeaderIcons({ layout: on ? { order: [], hidden: [], icons: { "panel:fuyu": "text" } } : null, legacy: false })),
+});
 
 async function runChecks() {
   const dots = () => [...expandedRoot.querySelectorAll<HTMLButtonElement>(".editor-dots .dot-button")];
@@ -256,15 +272,12 @@ async function runChecks() {
     registry.add("island.page/v1", { id: `more-${index}`, component: ClockPage, title: `More ${index}` }, `@test/more-${index}`, external)));
   await act(async () => goTo("more-9"));
   await frame();
-  const row = expandedRoot.querySelector<HTMLElement>(".editor-dots")!;
-  const [rowBox, actionsBox] = [row.getBoundingClientRect(), expandedRoot.querySelector<HTMLElement>(".window-actions")!.getBoundingClientRect()];
-  check(dots().length >= 14 && rowBox.right <= actionsBox.left + 0.5 && header.scrollWidth <= header.clientWidth + 0.5, `装了很多插件（${dots().length} 个页面按钮）时页头也不溢出，不压住右边的操作按钮`);
-  const last = expandedRoot.querySelector<HTMLElement>('.dot-button[data-page="more-9"]')!.getBoundingClientRect();
-  check(row.scrollWidth > row.clientWidth && last.left >= rowBox.left - 0.5 && last.right <= rowBox.right + 0.5, "放不下的按钮在一行里横向滚动，打开的那页的按钮滚到看得见的地方");
+  await checkHeaderMoreMenu(headerHelpers(header));
   await act(async () => {
     for (const remove of extra) remove();
     goTo("todo");
   });
+  await checkHeaderTabFit(headerHelpers(header));
 
   const bar = () => collapsedRoot.querySelector<HTMLElement>(".island__collapsed")!;
   const fits = (selector: string) => {

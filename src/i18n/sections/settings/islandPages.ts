@@ -89,6 +89,8 @@ export type SettingsIslandPagesText = {
   };
   icons: {
     title: (name: string) => string;
+    nameTitle: string;
+    nameHint: (fallback: string) => string;
     hint: string;
     fuyuHint: string;
     useDefault: string;
@@ -255,11 +257,13 @@ export const zhCN: SettingsIslandPagesText = {
     oneSize: "这个组件只有一种大小。",
   },
   icons: {
-    title: (name) => `页头图标 · ${name}`,
+    title: (name) => `页签名称与图标 · ${name}`,
+    nameTitle: "名称",
+    nameHint: (fallback) => `这一页在页签、侧边翼和「更多」菜单里叫什么，最多 16 个字；留空用默认的「${fallback}」`,
     hint: "展开后顶部这一页用哪个图标。可以挑图标、emoji、写字或用自己的图片，选「默认」换回原来的。",
-    fuyuHint: "Fuyu 页默认显示文字，也可以换成水母或其他图标。",
+    fuyuHint: "首页默认把页面名当文字显示，也可以换成水母或其他图标。",
     useDefault: "默认",
-    text: "文字 Fuyu",
+    text: "页面名文字",
     jellyfish: "水母",
     names: {
       star: "星星", heart: "爱心", sparkles: "闪光", zap: "闪电", flame: "火焰", sun: "太阳", moon: "月亮", cloud: "云",
@@ -501,11 +505,13 @@ export const en: SettingsIslandPagesText = {
     oneSize: "This widget comes in one size only.",
   },
   icons: {
-    title: (name) => `Tab icon · ${name}`,
+    title: (name) => `Tab name and icon · ${name}`,
+    nameTitle: "Name",
+    nameHint: (fallback) => `What this page is called on its tab, in the side docks and in the More menu. Up to 16 characters; leave it empty for the default "${fallback}"`,
     hint: "Which icon this page uses at the top of the open island: an icon, an emoji, text or your own image. Pick Default to go back.",
-    fuyuHint: "The Fuyu page shows the word Fuyu by default; it can use the jellyfish or another icon instead.",
+    fuyuHint: "The Home page shows its name as text by default; it can use the jellyfish or another icon instead.",
     useDefault: "Default",
-    text: "Word Fuyu",
+    text: "Name as text",
     jellyfish: "Jellyfish",
     names: {
       star: "Star", heart: "Heart", sparkles: "Sparkles", zap: "Lightning", flame: "Flame", sun: "Sun", moon: "Moon", cloud: "Cloud",
