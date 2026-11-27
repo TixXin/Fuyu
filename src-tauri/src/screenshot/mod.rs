@@ -105,6 +105,10 @@ pub(crate) fn is_capturing() -> bool {
     session::id().is_some()
 }
 
+pub(crate) fn keeps_island_open() -> bool {
+    session::keeps_island_open()
+}
+
 pub(super) fn is_capturable_own_window(label: &str) -> bool {
     matches!(
         label,

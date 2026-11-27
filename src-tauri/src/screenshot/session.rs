@@ -72,6 +72,7 @@ static SESSION: Mutex<Option<Session>> = Mutex::new(None);
 static CAPTURED: Condvar = Condvar::new();
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 static STARTING: AtomicBool = AtomicBool::new(false);
+static ISLAND_KEPT_OPEN: AtomicBool = AtomicBool::new(false);
 
 fn session() -> std::sync::MutexGuard<'static, Option<Session>> {
     SESSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -86,6 +87,7 @@ pub(crate) fn start(app: &AppHandle, mode: Mode) {
         if let Err(error) = open(&app, mode) {
             eprintln!("screenshot failed: {error}");
             crate::clipboard_history::refocus_popup(&app);
+            release_island(&app);
         }
         STARTING.store(false, Ordering::SeqCst);
     });
@@ -98,8 +100,9 @@ fn label(index: usize) -> String {
 fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
     super::source::remember();
     super::capture::ensure_access()?;
+    let island_shown = hold_island(app);
     let hints_hidden = crate::island::hide_transient_hints(app);
-    if crate::clipboard_history::show_popup_in_screenshot(app) || hints_hidden {
+    if crate::clipboard_history::show_popup_in_screenshot(app) || hints_hidden || island_shown {
         thread::sleep(CAPTURE_SETTLE);
     }
     let monitors = app.available_monitors().map_err(|error| error.to_string())?;
@@ -472,5 +475,32 @@ pub(crate) fn end(app: &AppHandle) {
     }
     if ended {
         crate::clipboard_history::refocus_popup(app);
+    }
+    release_island(app);
+}
+
+pub(crate) fn keeps_island_open() -> bool {
+    ISLAND_KEPT_OPEN.load(Ordering::SeqCst)
+}
+
+fn hold_island(app: &AppHandle) -> bool {
+    let in_front = crate::island::focus::island_is_foreground(app.clone()).unwrap_or(false);
+    ISLAND_KEPT_OPEN.store(in_front, Ordering::SeqCst);
+    crate::island::glass::show_in_screenshots(true)
+}
+
+fn release_island(app: &AppHandle) {
+    crate::island::glass::show_in_screenshots(false);
+    if !ISLAND_KEPT_OPEN.swap(false, Ordering::SeqCst) {
+        return;
+    }
+    let other_focused = app.webview_windows().into_iter().any(|(label, window)| {
+        label != crate::island::WINDOW_LABEL && !label.starts_with(WINDOW_PREFIX) && window.is_focused().unwrap_or(false)
+    });
+    if other_focused {
+        return;
+    }
+    if let Ok(window) = crate::island::main_window(app) {
+        crate::island::focus::focus_island_for_shortcut(&window);
     }
 }
