@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,7 +10,8 @@ const DEFAULT_ROOT = "C:/fuyu-runner";
 const DEFAULT_WORKTREES = 3;
 const LOCAL_ONLY = new Set(["FUYU_HEAVY", REMOTE_ENV, "FUYU_HEAVY_DIR", "FUYU_HEAVY_REMOTE_CONFIG"]);
 const HOST = /^[A-Za-z0-9][A-Za-z0-9_.@-]*$/;
-const SSH = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=6", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4"];
+const PATIENCE_MS = 30 * 60_000;
+export const SSH = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=6", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4"];
 
 export function configFile(env = process.env) {
   return env.FUYU_HEAVY_REMOTE_CONFIG || path.join(os.homedir(), ".config", "fuyu-heavy", "remote.json");
@@ -81,6 +82,45 @@ function ssh(config, script, stdio) {
   return spawnSync("ssh", ["-n", ...SSH, config.host, encodedCommand(script)], { stdio, encoding: stdio === "inherit" ? undefined : "utf8" });
 }
 
+export async function followJob({ follow, status, cancel, stopped = () => false, wait, now = Date.now, log = console.log, host = "remote", where = "", patience = PATIENCE_MS }) {
+  let offset = 0;
+  let lostAt = null;
+  let delay = 2000;
+  for (;;) {
+    if (stopped()) {
+      await cancel();
+      log(`[heavy:remote] 已取消，${host} 上的任务一并结束。`);
+      return 130;
+    }
+    const streamed = await follow(offset);
+    offset += streamed.bytes;
+    if (stopped()) continue;
+    const state = await status();
+    if (!state) {
+      lostAt ??= now();
+      if (now() - lostAt > patience) {
+        log(`[heavy:remote] 连不上 ${host} 已超过 ${Math.round(patience / 60_000)} 分钟，不再等。任务还在那边跑，日志在 ${where}`);
+        return 1;
+      }
+      if (delay === 2000) log(`[heavy:remote] 和 ${host} 的连接断了，任务在那边接着跑，等网络恢复后接着输出…`);
+      await wait(delay);
+      delay = Math.min(delay * 2, 30_000);
+      continue;
+    }
+    if (lostAt !== null) {
+      log(`[heavy:remote] 重新连上 ${host}（断了 ${Math.round((now() - lostAt) / 1000)} 秒），从断开处接着输出。`);
+      lostAt = null;
+    }
+    delay = 2000;
+    if (state.done && streamed.code === 0) return state.code ?? 1;
+    if (!state.done && state.started && !state.alive) {
+      log(`[heavy:remote] ${host} 上的任务没写退出码就停了，日志在 ${where}`);
+      return 1;
+    }
+    if (streamed.code !== 0) await wait(1000);
+  }
+}
+
 function bringBack(cwd, config, id, log) {
   const dir = mkdtempSync(path.join(os.tmpdir(), "fuyu-heavy-out-"));
   const patch = path.join(dir, `${id}.patch`);
@@ -131,8 +171,28 @@ export function runRemote(argv, config, { cwd = process.cwd(), env = process.env
   log(`[heavy:remote] 转到 ${config.host} 跑（${snapshot.sha.slice(0, 9)}${snapshot.dirty ? "，含没提交的改动" : ""}）；本机不编译。FUYU_HEAVY_REMOTE=off 可改回本机。`);
   const started = Date.now();
   const params = { step: "run", id, sha: snapshot.sha, argv, root: config.root, origin, worktrees: config.worktrees, subdir, env: forwardedEnv(env) };
-  const result = ssh(config, jobScript(params, body), "inherit");
-  bringBack(cwd, config, id, log);
-  log(`[heavy:remote] ${config.host} 上跑完，退出码 ${result.status ?? "?"}，用时 ${Math.round((Date.now() - started) / 1000)} 秒`);
-  return result.status ?? 1;
+  const local = mkdtempSync(path.join(os.tmpdir(), "fuyu-heavy-job-"));
+  const script = path.join(local, `${id}.ps1`);
+  writeFileSync(script, jobScript(params, body), "utf8");
+  const uploaded = spawnSync("scp", ["-q", ...SSH, script, `${config.host}:${config.root}/out/${id}.ps1`], { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8" });
+  rmSync(local, { recursive: true, force: true });
+  const launched = uploaded.status === 0 ? ssh(config, jobScript({ step: "start", root: config.root, id }, body), ["ignore", "pipe", "pipe"]) : uploaded;
+  if (launched.status !== 0) {
+    log(`[heavy:remote] ${config.host} 上启动不了任务，改在本机跑：${(launched.stderr || launched.stdout || "").trim().split("\n").slice(-2).join(" ")}`);
+    return null;
+  }
+  const onSignal = () => {};
+  process.on("SIGINT", onSignal);
+  process.on("SIGTERM", onSignal);
+  let followed;
+  try {
+    followed = spawnSync(process.execPath, [path.join(HERE, "remote-follow.mjs"), JSON.stringify({ host: config.host, root: config.root, id })], { stdio: "inherit" });
+  } finally {
+    process.off("SIGINT", onSignal);
+    process.off("SIGTERM", onSignal);
+  }
+  const code = followed.status ?? 1;
+  if (code !== 130) bringBack(cwd, config, id, log);
+  log(`[heavy:remote] ${config.host} 上跑完，退出码 ${code}，用时 ${Math.round((Date.now() - started) / 1000)} 秒`);
+  return code;
 }
