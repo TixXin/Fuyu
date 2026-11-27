@@ -18,10 +18,16 @@ pub(crate) struct State {
     pub at: u64,
     pub hooks: bool,
     pub todos: bool,
+    pub hooks_home: Option<String>,
 }
 
 fn now_ms() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as u64).unwrap_or(0)
+}
+
+pub(crate) fn hooks_point_elsewhere(state: &State, home: &Path, default_home: Option<&Path>) -> bool {
+    let recorded = state.hooks_home.as_deref().map(PathBuf::from).or_else(|| default_home.map(Path::to_path_buf));
+    recorded.as_deref() != Some(home)
 }
 
 pub(crate) fn has_island_data(dir: &Path) -> bool {
@@ -125,7 +131,15 @@ pub(crate) fn after_start(app: tauri::AppHandle) {
     let Some(mut state) = fs::read_to_string(&path).ok().and_then(|text| serde_json::from_str::<State>(&text).ok()) else {
         return;
     };
+    let here = home.display().to_string();
+    if state.hooks && hooks_point_elsewhere(&state, &home, super::default_home().as_deref()) {
+        state.hooks = false;
+    }
     if state.hooks && state.todos {
+        if state.hooks_home.as_deref() != Some(here.as_str()) {
+            state.hooks_home = Some(here);
+            let _ = write_state(&home, &state);
+        }
         return;
     }
     let _ = std::thread::Builder::new().name("home-migration".into()).spawn(move || {
@@ -141,13 +155,16 @@ pub(crate) fn after_start(app: tauri::AppHandle) {
                 _ => state.todos = true,
             }
         }
+        if state.hooks {
+            state.hooks_home = Some(here);
+        }
         let _ = write_state(&home, &state);
     });
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{before_start, copy_markdown, State, STATE_FILE};
+    use super::{before_start, copy_markdown, hooks_point_elsewhere, State, STATE_FILE};
     use std::fs;
 
     fn temp(name: &str) -> std::path::PathBuf {
@@ -214,6 +231,23 @@ mod tests {
         let fresh = state(&home);
         assert!(fresh.hooks && fresh.todos);
         let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn hooks_are_reinstalled_when_the_home_is_not_where_they_were_installed() {
+        let root = std::env::temp_dir();
+        let default = root.join("me").join(".fuyu");
+        let portable = root.join("usb").join("data");
+        let copied: State = serde_json::from_str(r#"{ "at": 1, "hooks": true, "todos": true }"#).unwrap();
+        assert!(copied.hooks_home.is_none());
+        assert!(!hooks_point_elsewhere(&copied, &default, Some(&default)));
+        assert!(hooks_point_elsewhere(&copied, &portable, Some(&default)));
+        assert!(hooks_point_elsewhere(&copied, &portable, None));
+        let recorded = State { hooks_home: Some(portable.display().to_string()), ..copied };
+        assert!(!hooks_point_elsewhere(&recorded, &portable, Some(&default)));
+        assert!(hooks_point_elsewhere(&recorded, &root.join("other-drive").join("data"), Some(&default)));
+        assert!(hooks_point_elsewhere(&recorded, &default, Some(&default)));
+        assert!(serde_json::to_string(&recorded).unwrap().contains("\"hooksHome\""));
     }
 
     #[test]
