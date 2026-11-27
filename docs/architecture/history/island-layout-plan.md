@@ -5,7 +5,7 @@
 - 「收起条上的内容，DIY 设置入口太多了：插件里可以设置，外观收起条项目里也可以设置。」
 - 「岛屿面板没有 DIY 面板：用户可以新建一个空白面板，自己选择展示什么功能、自己排版。」
 
-状态：**已定，拆成任务 [C156](/docs/tasks/0-archive/C/C156.md)**（#1131，子任务 C156.1–C156.4 / #1132–#1135）。用户 2026-11-20 对四个问题都答「都要」（见「已定」）。预览页：[island-layout-preview.html](island-layout-preview.html)。前一轮的收起条方案见 [island-items-plan.md](island-items-plan.md)（C139），本方案在它上面接着做，不推翻已经做好的清单、右键菜单和「+N」。
+状态：**已定，拆成任务 [C156](/docs/tasks/0-archive/C/C156.md)**（#1131，子任务 C156.1–C156.4 / #1132–#1135）。用户 2026-11-20 对四个问题都答「都要」（见「已定」）。预览页：[island-layout-preview.html](../../investigations/island-layout-preview.html)。前一轮的收起条方案见 [island-items-plan.md](island-items-plan.md)（C139），本方案在它上面接着做，不推翻已经做好的清单、右键菜单和「+N」。
 
 ## 已定（用户 2026-11-20）
 
@@ -23,7 +23,7 @@
 | 收起条的位置、隐藏、放进小面板在 外观 → 收起条上的项目 | `src/windows/settings/sections/CollapsedItemsSection.tsx`，存 `fuyu-collapsed-items` |
 | 右键收起的岛弹勾选清单，和上面是同一份设置 | C139.1 |
 | 插件详情有「显示在岛上」开关，也是同一个值 | C139.1 |
-| 收起条项目的样式散在各功能页：状态灯样式、会话环样式在 AI Agent 页，「剩余 N 个待办」在待办页，歌词 / Agent 标题二选一在音乐页，中心图案、用量环选哪些 Agent 在插件设置 | [design/collapsed-bar.md](../design/collapsed-bar.md) |
+| 收起条项目的样式散在各功能页：状态灯样式、会话环样式在 AI Agent 页，「剩余 N 个待办」在待办页，歌词 / Agent 标题二选一在音乐页，中心图案、用量环选哪些 Agent 在插件设置 | [design/collapsed-bar.md](../../design/collapsed-bar.md) |
 | 「+N」开关、刘海两侧最宽在 外观 → 收起条 | C139.2 |
 | 展开的岛是一组固定页面：内置页面在前，插件页面（`island.page/v1`）在后，顺序不能调，只能靠关功能隐藏 | `packages/plugin-base/src/index.d.mts` |
 | 收起条项目是插槽 `island.collapsed/v1`，没有「面板组件」这种插槽 | 同上 |
@@ -69,7 +69,7 @@
 
 ## 二、自定义面板
 
-> 2026-11-20 C156.3 合入后改：用户嫌设置太复杂，设置页改成「收起条 / 展开」切换加标签（预览 [island-widgets-settings-preview.html](island-widgets-settings-preview.html)，决定记在 [collapsed-bar.md](../design/collapsed-bar.md)「收起条 / 展开切换和自定义面板」）。下面第 3–6 节按新做法改过，原来的画布、组件库搜索、拖到收起条预览上的做法不再用。
+> 2026-11-20 C156.3 合入后改：用户嫌设置太复杂，设置页改成「收起条 / 展开」切换加标签（预览 [island-widgets-settings-preview.html](../../investigations/island-widgets-settings-preview.html)，决定记在 [collapsed-bar.md](../../design/collapsed-bar.md)「收起条 / 展开切换和自定义面板」）。下面第 3–6 节按新做法改过，原来的画布、组件库搜索、拖到收起条预览上的做法不再用。
 
 ### 1. 概念
 

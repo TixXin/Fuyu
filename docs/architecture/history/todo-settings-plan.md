@@ -2,7 +2,7 @@
 
 起因（用户，2026-11-19）：「待办的设置项需要更完善，增加功能。」
 
-状态：**已定**（用户 2026-11-19：「按建议定」），分四步做，任务 C140。预览页：[todo-settings-preview.html](todo-settings-preview.html)（能切两种排法、只看新增项，下面有岛上的样子）。
+状态：**已定**（用户 2026-11-19：「按建议定」），分四步做，任务 C140。预览页：[todo-settings-preview.html](../../investigations/todo-settings-preview.html)（能切两种排法、只看新增项，下面有岛上的样子）。
 
 ## 定下来的
 
@@ -18,7 +18,7 @@
 
 ## 结论
 
-- 「设置 → 待办」现在有 7 组 22 项，[todos-and-calendar-expansion.md](../research/todos-and-calendar-expansion.md) 里的设置蓝图已基本做完。缺的不是开关，是三块功能本身：**提醒太粗、没有截止日、做完没有回顾**。
+- 「设置 → 待办」现在有 7 组 22 项，[todos-and-calendar-expansion.md](todos-and-calendar-expansion.md) 里的设置蓝图已基本做完。缺的不是开关，是三块功能本身：**提醒太粗、没有截止日、做完没有回顾**。
 - 建议分四步做：新增 11 项设置，1 项的选项变多，2 项换位置。所有新设置的默认值都等于现在的行为，升级后用户不会感觉到变化，除非自己去改。
 - 设置页建议分成三个标签：任务、提醒、归档与保存（预览里的排法 A）。
 
@@ -116,7 +116,7 @@
 
 **排法 B：一页到底**，和现在一样，只是重新分组、按上面的顺序排。好处是搜索和滚动都不用换页，坏处是加完以后连缩进行一页有 33 行，项目和保存位置被压到很下面。
 
-2026-11-13 定过「侧栏合并、页内分标签」（[design/settings.md](../design/settings.md)），当时选它的理由就是嫌页面太长，所以建议 A。
+2026-11-13 定过「侧栏合并、页内分标签」（[design/settings.md](../../design/settings.md)），当时选它的理由就是嫌页面太长，所以建议 A。
 
 ## 和官方插件的分工
 
@@ -144,4 +144,4 @@
 | C140.3 截止日和顺延天数 | `src/features/todos/`、`src-tauri/src/todos/`、`packages/plugin-services/`、`docs/architecture/contracts.md` | `pnpm check`、`cargo test`、`pnpm build:exe`、双机同步的用例 |
 | C140.4 本周小结 | `src/features/todos/island/` | `pnpm check`、`pnpm build`、`pnpm test:regression` |
 
-每步做完都要 `pnpm settings:index` 重写设置搜索索引，并把定下来的界面约定写进 [design/todos.md](../design/todos.md)。
+每步做完都要 `pnpm settings:index` 重写设置搜索索引，并把定下来的界面约定写进 [design/todos.md](../../design/todos.md)。

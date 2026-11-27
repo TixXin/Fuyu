@@ -32,7 +32,7 @@
 
 ## 提醒（C140.1，2026-11-19，用户确认方案）
 
-方案和预览：[todo-settings-plan.md](../investigations/todo-settings-plan.md)、[todo-settings-preview.html](../investigations/todo-settings-preview.html)。三种提醒都走岛上共用的提醒卡片（`reminders/v1`），按钮是卡片自带的「推迟」和关闭，没有单独的「看一下」。
+方案和预览：[todo-settings-plan.md](../architecture/history/todo-settings-plan.md)、[todo-settings-preview.html](../investigations/todo-settings-preview.html)。三种提醒都走岛上共用的提醒卡片（`reminders/v1`），按钮是卡片自带的「推迟」和关闭，没有单独的「看一下」。
 
 - **带时刻的待办**（标题以 `15:00` 这样的时刻开头）：可以提前 5 / 10 / 15 / 30 分钟提醒，默认准点。提前时卡片第二行写还有多久（「10 分钟后」），准点或过了点才看到的不写。一条待办一天只提醒一次：从提前量那一刻到过点 5 分钟之间，第一次查到时提醒。（用户确认）
 - **已安排的待办到期**：到了那天、并进今天的列表时提醒，范围可选：不提醒、只高优先级（默认，原来写死的行为）、高和中优先级、全部。高优先级的卡片标题是「高优先级待办今天到期」，其余是「已安排的待办今天到期」。（用户确认；两句标题为 Agent 推断）

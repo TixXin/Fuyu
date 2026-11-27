@@ -2,7 +2,7 @@
 
 > 日期：2026-11-25。目标：在完整保留第 3 版「万物皆插件」生态与现有前端资产的前提下，系统压低 Windows 与 macOS 双端常驻闲置内存与 GPU 显存/共享内存占用，并消除长期运行的慢性膨胀。
 >
-> 关联实测与前序文档：[内存占用与性能优化调研](../research/memory-and-performance.md) · [Mac 上的内存占用](../investigations/macos-memory.md) · [第二轮性能审计](../investigations/fuyu-performance-audit-v2.md) · [插件平台第 3 版方案](plugins/v3-everything-plugin.md)
+> 关联实测与前序文档：[内存占用与性能优化调研](../../research/memory-and-performance.md) · [Mac 上的内存占用](../../investigations/macos-memory.md) · [第二轮性能审计](../../investigations/fuyu-performance-audit-v2.md) · [插件平台第 3 版方案](../plugins/v3-everything-plugin.md)
 
 ## 一、现状与内存账单基线
 
@@ -90,7 +90,7 @@ flowchart TD
 
 | 编号 | 职责 | 主要文件范围 |
 |---|---|---|
-| `D124` | 父任务：浮屿深水区内存瘦身专项 | `docs/architecture/memory-optimization-plan.md` |
+| `D124` | 父任务：浮屿深水区内存瘦身专项 | `docs/architecture/history/memory-optimization-plan.md` |
 | `D124.1` | Node 插件宿主 V8 内存参数收敛与防 `.ts` 导入门禁 | `src-tauri/src/plugin_kernel/`, `scripts/plugins-v3/`, `tests/unit/` |
 | `D124.2` | 副窗口空闲销毁收紧与多屏截图选区窗口空闲回收 | `src-tauri/src/translation/`, `src-tauri/src/clipboard_history/`, `src-tauri/src/tray_menu/`, `src-tauri/src/screenshot/` |
 | `D124.3` | 主岛展开页按需懒加载拆分（解除 `pluginFiles.ts` 全量 `eager`） | `src/windows/island/`, `src/features/*/plugin/` |
