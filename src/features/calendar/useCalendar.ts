@@ -1,4 +1,5 @@
 import { calendarV1, type CalendarEvents } from "@fuyu/plugin-services";
+import { isNativeError, type NativeError } from "../../i18n/nativeError";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { windowServices } from "../plugin-kernel/services";
@@ -32,8 +33,28 @@ function toSnapshot(value: CalendarEvents | null | undefined): CalendarSnapshot 
   };
 }
 
+async function namedProblems(snapshot: CalendarSnapshot): Promise<CalendarSnapshot> {
+  if (snapshot.problems.length === 0) return snapshot;
+  const listed = await calendar.sources().catch(() => null);
+  const names = new Map((listed?.sources ?? []).map((source) => [source.id, source.name]));
+  return { ...snapshot, problems: snapshot.problems.map((problem) => ({ ...problem, name: names.get(problem.sourceId) })) };
+}
+
+type ServiceErrorData = { reason?: unknown; args?: NativeError["args"]; detail?: unknown };
+
+function failureOf(error: unknown): NativeError | string {
+  const data = error && typeof error === "object" ? (error as { data?: ServiceErrorData }).data : undefined;
+  const message = isNativeError(error) ? error.message : error instanceof Error ? error.message : String(error);
+  if (typeof data?.reason === "string" && data.reason.includes(".")) {
+    return { code: data.reason, message, args: data.args, detail: typeof data.detail === "string" ? data.detail : undefined };
+  }
+  if (isNativeError(error) && error.code.includes(".")) return error;
+  return message;
+}
+
 export type CalendarState = {
   snapshot: CalendarSnapshot;
+  failure: NativeError | string | null;
   upcoming: UpcomingMeeting | null;
   now: number;
   refresh: () => void;
@@ -52,20 +73,24 @@ export function useCalendar(
     return { ...read, events: prepareCalendarEvents(merged, prefs) };
   }, [enabled, extra, prefs, read]);
   const [now, setNow] = useState(() => Date.now());
+  const [failure, setFailure] = useState<NativeError | string | null>(null);
 
   const load = useCallback(async (refresh: boolean) => {
     try {
-      const next = await calendar.events({ refresh });
-      setSnapshot(toSnapshot(next));
+      const next = await namedProblems(toSnapshot(await calendar.events({ refresh })));
+      setSnapshot(next);
+      setFailure(null);
       setNow(Date.now());
     } catch (error) {
       console.error("Failed to read the calendars", error);
+      setFailure(failureOf(error));
     }
   }, []);
 
   useEffect(() => {
     if (!enabled) {
       setSnapshot(EMPTY_CALENDAR);
+      setFailure(null);
       return;
     }
     void load(false);
@@ -98,5 +123,5 @@ export function useCalendar(
     [now, prefs, remindMinutes, snapshot.events],
   );
   const refresh = useCallback(() => void load(true), [load]);
-  return useMemo(() => ({ snapshot, upcoming, now, refresh }), [now, refresh, snapshot, upcoming]);
+  return useMemo(() => ({ snapshot, failure, upcoming, now, refresh }), [failure, now, refresh, snapshot, upcoming]);
 }

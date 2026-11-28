@@ -43,11 +43,18 @@ pub struct CalendarSource {
     pub(super) calendars: Vec<SubCalendar>,
 }
 
-pub(super) fn read(app_dir: &Path) -> Vec<CalendarSource> {
-    fs::read_to_string(app_dir.join(FILE_NAME))
-        .ok()
-        .and_then(|text| serde_json::from_str(&text).ok())
-        .unwrap_or_default()
+pub(super) fn read(app_dir: &Path) -> Result<Vec<CalendarSource>, UserError> {
+    let unreadable = || UserError::new("calendar.sourcesUnreadable", "Could not read the saved calendars; they are kept as they are.");
+    let text = match fs::read_to_string(app_dir.join(FILE_NAME)) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(unreadable().detail(error)),
+    };
+    let text = text.trim_start_matches('\u{feff}').trim();
+    if text.is_empty() {
+        return Ok(Vec::new());
+    }
+    serde_json::from_str(text).map_err(|error| unreadable().detail(error))
 }
 
 pub(super) fn write(app_dir: &Path, sources: &[CalendarSource]) -> Result<(), UserError> {
@@ -155,7 +162,7 @@ mod tests {
     #[test]
     fn sources_are_saved_without_secrets() {
         let dir = std::env::temp_dir().join(format!("fuyu-calendar-{}", std::process::id()));
-        assert!(read(&dir).is_empty());
+        assert!(read(&dir).unwrap().is_empty());
         let source = CalendarSource {
             id: "c1".into(),
             kind: SourceKind::Caldav,
@@ -166,9 +173,15 @@ mod tests {
             calendars: Vec::new(),
         };
         write(&dir, std::slice::from_ref(&source)).unwrap();
-        assert_eq!(read(&dir), [source]);
+        assert_eq!(read(&dir).unwrap(), [source.clone()]);
         let saved = fs::read_to_string(dir.join(FILE_NAME)).unwrap();
         assert!(saved.contains("\"kind\": \"caldav\"") && !saved.contains("password"));
+        fs::write(dir.join(FILE_NAME), format!("\u{feff}{saved}")).unwrap();
+        assert_eq!(read(&dir).unwrap(), [source]);
+        fs::write(dir.join(FILE_NAME), "[{\"id\": ").unwrap();
+        assert_eq!(read(&dir).unwrap_err().code(), "calendar.sourcesUnreadable");
+        fs::write(dir.join(FILE_NAME), "").unwrap();
+        assert!(read(&dir).unwrap().is_empty());
         fs::remove_dir_all(&dir).unwrap();
     }
 }

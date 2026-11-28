@@ -6,11 +6,12 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { useFlash } from "../../components/settings/useFlash";
-import { addCalendarSource, getCalendarEvents, listCalendarSources, removeCalendarSource, type CalendarSource } from "./api";
+import { addCalendarSource, getCalendarEvents, listCalendarSources, removeCalendarSource, type CalendarSnapshot, type CalendarSource } from "./api";
 import { addChinaHolidays, addHolidayRegion, hasChinaHolidays, hasHolidayRegion, HOLIDAY_REGIONS, type HolidayRegionId } from "./holidays";
 import { CALENDAR_PRESETS, guessKind, needsServer, presetOf, type CalendarService } from "./presets";
 import { notifyCalendarRefresh } from "./storage";
 import { SubCalendarList } from "./SubCalendarList";
+import { refreshMinutes, sourceSync, syncTime } from "./syncStatus";
 import { useCalendarPrefs } from "./useCalendarPrefs";
 import "./CalendarSourcesSection.css";
 
@@ -29,31 +30,55 @@ export function CalendarSourcesSection() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshed, flashRefreshed] = useFlash<boolean>();
   const [state, setState] = useState<{ busy: boolean; error: string }>({ busy: false, error: "" });
+  const [sync, setSync] = useState<CalendarSnapshot | null>(null);
+  const [listError, setListError] = useState("");
 
   const reload = useCallback(async () => {
     try {
       const listed = await listCalendarSources();
       setSources(Array.isArray(listed) ? listed : []);
+      setListError("");
     } catch (error) {
       console.error("Failed to list calendars", error);
+      setListError(errorText(error));
     }
-  }, []);
+  }, [errorText]);
   useEffect(() => {
     void reload();
   }, [reload]);
 
+  const readSync = useCallback(async (refresh: boolean) => {
+    try {
+      const read = await getCalendarEvents(refresh);
+      setSync(read && Array.isArray(read.problems) ? read : null);
+      return true;
+    } catch (error) {
+      console.error("Failed to read the calendar sync state", error);
+      setListError(errorText(error));
+      return false;
+    }
+  }, [errorText]);
+  useEffect(() => {
+    if (sources.length > 0) void readSync(false);
+  }, [readSync, sources.length]);
+
   const refreshSources = async () => {
     setRefreshing(true);
     try {
-      await getCalendarEvents(true);
+      const read = await readSync(true);
       await reload();
       notifyCalendarRefresh();
-      flashRefreshed(true);
-    } catch (error) {
-      console.error("Failed to refresh calendars", error);
+      if (read) flashRefreshed(true);
     } finally {
       setRefreshing(false);
     }
+  };
+  const syncLine = (id: string) => {
+    const status = sourceSync(sync, id);
+    const now = Date.now();
+    if (status.state === "synced") return { text: text.syncedAt(syncTime(status.syncedAt, now)), failed: false };
+    if (status.state === "failed") return { text: text.syncFailed(errorText(status.problem.message), status.syncedAt ? syncTime(status.syncedAt, now) : null), failed: true };
+    return { text: status.state === "syncing" ? text.syncing : text.notSynced, failed: false };
   };
 
   const preset = presetOf(service);
@@ -151,7 +176,12 @@ export function CalendarSourcesSection() {
               <SettingsRow
                 searchable={false}
                 title={source.name}
-                description={source.kind === "ics" ? text.icsFrom(source.host) : `${source.username} · ${source.host}`}
+                description={
+                  <>
+                    {source.kind === "ics" ? text.icsFrom(source.host) : `${source.username} · ${source.host}`}
+                    <span className={`calendar-source__sync${syncLine(source.id).failed ? " calendar-source__sync--failed" : ""}`}>{syncLine(source.id).text}</span>
+                  </>
+                }
                 control={
                   <span className="calendar-source__row-controls">
                     {hasSubs && (
@@ -177,6 +207,10 @@ export function CalendarSourcesSection() {
             </div>
           );
         })}
+        {listError && (
+          <SettingsRow searchable={false} title={<span className="calendar-source__sync calendar-source__sync--failed" role="alert">{text.sourcesFailed}</span>} description={listError} />
+        )}
+        {sources.length > 0 && <SettingsRow searchable={false} title="" description={text.autoSync(refreshMinutes(sync))} />}
         {!showForm && (
           <SettingsRow
             searchable={false}

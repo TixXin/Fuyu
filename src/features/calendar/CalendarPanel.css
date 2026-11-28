@@ -253,6 +253,48 @@
   font-size: 12px;
 }
 
+.calendar-empty--failed .calendar-empty__icon {
+  color: var(--error-text, #ff8a8a);
+}
+
+.calendar-empty--failed .calendar-empty__error {
+  max-width: 340px;
+  overflow-wrap: anywhere;
+}
+
+.calendar-problems {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 12px;
+  list-style: none;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.calendar-problems__item {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  color: var(--error-text, #ff8a8a);
+}
+
+.calendar-problems__item strong {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-problems__item span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .calendar-event--todo .calendar-event__time {
   color: var(--color-accent, rgba(var(--calendar-ink), 0.68));
 }

@@ -20,14 +20,18 @@ export type CalendarEvent = {
   free?: boolean;
 };
 
+export type CalendarProblem = { sourceId: string; message: NativeError | string; name?: string };
+
 export type CalendarSnapshot = {
   events: CalendarEvent[];
-  problems: { sourceId: string; message: NativeError | string }[];
+  problems: CalendarProblem[];
   fetchedAt: number;
   fromMs: number;
   toMs: number;
   sourceCount: number;
   calendarColors?: Record<string, string>;
+  synced?: Record<string, number>;
+  refreshEveryMs?: number;
 };
 
 export type CalendarSourceKind = "ics" | "caldav";

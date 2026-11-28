@@ -3,7 +3,9 @@ import { ListTodo, RefreshCcw, Settings, Video } from "lucide-react";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { getLocalDateString } from "../../utils/date";
 import type { CalendarEvent, CalendarSnapshot } from "./api";
+import type { NativeError } from "../../i18n/nativeError";
 import { CalendarEmpty } from "./CalendarEmpty";
+import { CalendarProblems } from "./CalendarProblems";
 import { CalendarMonth } from "./CalendarMonth";
 import { CalendarTodoInput } from "./CalendarTodoInput";
 import { prepareCalendarEvents, resolveCalendarColor } from "./calendarPrefs";
@@ -15,10 +17,12 @@ import { internationalFestival } from "./worldFestivals.ts";
 import { SCHEDULED_TODO_UID, scheduledTodoEvents } from "./todoEvents";
 import { clockTime } from "./upcoming";
 import { useCalendarPrefs } from "./useCalendarPrefs";
+import { failedProblems, onlySyncing } from "./syncStatus";
 import "./CalendarPanel.css";
 
 export function CalendarPanel({
   snapshot,
+  failure = null,
   now,
   onRefresh,
   onOpenSettings,
@@ -26,6 +30,7 @@ export function CalendarPanel({
   initialDay = null,
 }: {
   snapshot: CalendarSnapshot;
+  failure?: NativeError | string | null;
   now: number;
   onRefresh: () => void;
   onOpenSettings: () => void;
@@ -57,7 +62,10 @@ export function CalendarPanel({
     onRefresh();
   }, [onRefresh]);
 
-  const noSources = snapshot.sourceCount === 0 && snapshot.events.length === 0;
+  const noSources = !failure && snapshot.sourceCount === 0 && snapshot.events.length === 0;
+  const syncing = !failure && onlySyncing(snapshot);
+  const failed = failedProblems(snapshot);
+  const status = failure ? "" : syncing ? text.syncing : failed.length > 0 ? text.problems(failed.length) : snapshot.fetchedAt ? text.updatedAt(clockTime(snapshot.fetchedAt)) : "";
 
   const select = (day: number) => {
     setPicked(day === today ? null : day);
@@ -136,9 +144,9 @@ export function CalendarPanel({
         <div className="calendar-panel__head">
           <span
             className="calendar-panel__status"
-            title={snapshot.problems.length > 0 ? snapshot.problems.map((problem) => errorText(problem.message)).join("\n") : undefined}
+            title={failed.length > 0 ? failed.map((problem) => `${problem.name || text.unknownCalendar}: ${errorText(problem.message)}`).join("\n") : undefined}
           >
-            {snapshot.problems.length > 0 ? text.problems(snapshot.problems.length) : snapshot.fetchedAt ? text.updatedAt(clockTime(snapshot.fetchedAt)) : ""}
+            {status}
           </span>
           <button
             className={`calendar-panel__range${sevenDays ? " calendar-panel__range--active" : ""}`}
@@ -156,6 +164,7 @@ export function CalendarPanel({
             <Settings size={14} strokeWidth={2.2} aria-hidden="true" />
           </button>
         </div>
+        <CalendarProblems snapshot={snapshot} failure={failure} onRefresh={onRefresh} onOpenSettings={onOpenSettings} />
         {noSources && <CalendarEmpty onAdded={onRefresh} onOpenSettings={onOpenSettings} />}
         <div className="calendar-panel__days">
           {days.map(({ day, label }) => {
@@ -192,8 +201,8 @@ export function CalendarPanel({
                       dayEvents.map(row)
                     )}
                   </ul>
-                ) : noSources ? null : (
-                  <p className="calendar-day__empty">{read ? text.nothing : text.notRead}</p>
+                ) : noSources || failure ? null : (
+                  <p className="calendar-day__empty">{syncing ? text.syncingDay : read ? text.nothing : text.notRead}</p>
                 )}
                 {showTodoInput && <CalendarTodoInput label={label} onAdd={(title) => todos!.onAdd(title, getLocalDateString(new Date(day)))} />}
               </div>

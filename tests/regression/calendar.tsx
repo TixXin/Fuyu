@@ -38,6 +38,9 @@ mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   calls.push({ command, payload: args });
   if (command === "list_calendar_sources") return sources;
+  if (command === "get_calendar_events") {
+    return { ...SNAPSHOT, events: [], sourceCount: sources.length, problems: [{ sourceId: "cal-1", message: { code: "calendar.status", message: "The calendar answered 400.", args: { status: 400 } } }], synced: { "cal-1": now - 3_600_000, "cal-ok": now }, refreshEveryMs: 900_000 };
+  }
   if (command === "remove_calendar_source") {
     sources = sources.filter((source) => source.id !== args.id);
     return null;
@@ -95,6 +98,7 @@ try {
   check(calls.some((call) => call.command === "plugin:opener|open_url" && JSON.stringify(call.payload).includes("vc.feishu.cn/j/123")), "点加入打开会议链接");
   check(refreshed >= 1, "打开日历页时重新读取日历");
   check(document.querySelector(".calendar-panel__status")?.textContent === "1 个日历没读到，到设置里看看", "有日历读不到时在顶部提示");
+  check(document.querySelector(".calendar-problems__item")?.textContent === "日历账号或密码不对", "读不到的日历直接列出名字和原因");
   const cells = () => [...document.querySelectorAll<HTMLButtonElement>(".calendar-month__day")];
   const todayCell = () => document.querySelector<HTMLButtonElement>(".calendar-month__day--today")!;
   check(cells().length === 42 && todayCell()?.getAttribute("aria-current") === "date" && todayCell().getAttribute("aria-label")?.includes("3 个日程"), "月历六周，今天高亮，读屏写出日程数");
@@ -140,8 +144,26 @@ try {
   check(document.querySelectorAll(".calendar-day").length === 1 && todoInputs().length === 0, "过去的日子没有添加待办");
   await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-month__today")!.click(); });
 
-  let added = 0;
   const empty = { ...SNAPSHOT, events: [], problems: [], sourceCount: 0 };
+  let retried = 0;
+  const failure = { code: "calendar.sourcesUnreadable", message: "Could not read the saved calendars." };
+  await act(async () => {
+    panel.render(<StrictMode><I18nProvider><CalendarPanel snapshot={empty} failure={failure} now={now} onRefresh={() => (retried += 1)} onOpenSettings={() => {}} /></I18nProvider></StrictMode>);
+  });
+  const failedBox = document.querySelector<HTMLElement>(".calendar-empty--failed");
+  check(failedBox?.getAttribute("role") === "alert" && failedBox.querySelector("strong")?.textContent === "这次没读到日历" && failedBox.textContent?.includes("calendar-sources.json")
+    && !document.body.textContent?.includes("还没有日历") && !document.querySelector(".calendar-day__empty"), "整次读取失败时说明原因，不显示成「还没有日历」");
+  const beforeRetry = retried;
+  await act(async () => { failedBox!.querySelector<HTMLButtonElement>(".calendar-empty__primary")!.click(); });
+  check(retried > beforeRetry, "读取失败时可以点重试");
+  const slow = { ...empty, sourceCount: 1, problems: [{ sourceId: "cal-1", message: { code: "calendar.syncing", message: "Still syncing." }, name: "钉钉" }] };
+  await act(async () => {
+    panel.render(<StrictMode><I18nProvider><CalendarPanel snapshot={slow} now={now} onRefresh={() => {}} onOpenSettings={() => {}} /></I18nProvider></StrictMode>);
+  });
+  check(document.querySelector(".calendar-panel__status")?.textContent === "正在同步…" && !document.querySelector(".calendar-empty") && !document.querySelector(".calendar-problems")
+    && document.querySelector(".calendar-day__empty")?.textContent === "正在同步日历，读完会自动显示", "日历响应慢时写「正在同步」，不当成没有日历");
+
+  let added = 0;
   await act(async () => {
     panel.render(<StrictMode><I18nProvider><CalendarPanel snapshot={empty} now={now} onRefresh={() => (added += 1)} onOpenSettings={() => (settingsOpened += 1)} /></I18nProvider></StrictMode>);
   });
@@ -170,6 +192,12 @@ try {
   await act(async () => { settings.render(<I18nProvider><CalendarSourcesSection /></I18nProvider>); });
   await until(() => document.querySelector(".settings-row__title")?.textContent === "飞书");
   check(document.querySelector(".settings-row__title")?.textContent === "飞书" && document.body.textContent?.includes("u_abc · caldav.feishu.cn"), "列出已添加的日历，只显示账号和网站");
+  await until(() => Boolean(document.querySelector(".calendar-source__sync--failed")));
+  const lastOk = new Date(now - 3_600_000);
+  const lastOkText = `${String(lastOk.getHours()).padStart(2, "0")}:${String(lastOk.getMinutes()).padStart(2, "0")}`;
+  check(document.querySelector(".calendar-source__sync--failed")?.textContent?.startsWith("同步失败：日历返回 400。") && document.querySelector(".calendar-source__sync--failed")?.textContent?.includes(lastOkText),
+    "设置里每个日历写出同步失败的原因和上次成功的时间");
+  check(document.body.textContent?.includes("后台每 15 分钟自动同步一次"), "设置里写出自动同步的间隔");
   check(!document.querySelector(".calendar-form"), "已经有日历时，添加表单先收着");
   const openForm = async () => {
     if (!document.querySelector(".calendar-form")) await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "添加日历")!.click(); });

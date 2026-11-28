@@ -5,6 +5,7 @@ mod ics;
 mod meeting_link;
 mod shortcut;
 mod sources;
+mod sync;
 
 #[cfg(windows)]
 pub(crate) use shortcut::coexist_refresh;
@@ -17,11 +18,7 @@ pub(crate) fn get_calendar_shortcut_problem() -> Option<&'static str> {
 
 use crate::user_error::UserError;
 use plugin_base::host_service;
-use std::{
-    collections::BTreeMap,
-    sync::{Mutex, PoisonError},
-    time::{Duration, Instant},
-};
+use std::{collections::BTreeMap, time::Duration};
 
 use chrono::{DateTime, Datelike, Local, Months, NaiveDate, TimeZone, Utc};
 use serde::Serialize;
@@ -51,6 +48,9 @@ pub struct CalendarSnapshot {
     source_count: usize,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     calendar_colors: BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    synced: BTreeMap<String, i64>,
+    refresh_every_ms: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -101,14 +101,6 @@ fn reason_of(error: &UserError) -> String {
         .and_then(|value| value.get("code").and_then(serde_json::Value::as_str).map(str::to_owned))
         .unwrap_or_else(|| "failed".to_owned())
 }
-
-struct Cached {
-    snapshot: CalendarSnapshot,
-    at: Instant,
-    sources: Vec<CalendarSource>,
-}
-
-static CACHE: Mutex<Option<Cached>> = Mutex::new(None);
 
 fn window(now: DateTime<Local>) -> (DateTime<Utc>, DateTime<Utc>) {
     let midnight = |date: NaiveDate| date.and_hms_opt(0, 0, 0).and_then(|naive| Local.from_local_datetime(&naive).earliest()).unwrap_or(now);
@@ -270,86 +262,19 @@ async fn read_source(
     Ok((events_from_feeds(source, &feeds, from, to), calendars))
 }
 
-async fn secret_of(id: &str, retry: bool) -> Result<Option<String>, UserError> {
-    let id = id.to_string();
-    tauri::async_runtime::spawn_blocking(move || sources::read_secret(&id, retry))
-        .await
-        .unwrap_or_else(|error| Err(UserError::new("internal", "Something went wrong inside the island.").detail(error)))
-}
-
-async fn read_all(sources: &mut [CalendarSource], retry: bool) -> (CalendarSnapshot, bool) {
-    let now = Local::now();
-    let (from, to) = window(now);
-    let mut snapshot = CalendarSnapshot {
-        fetched_at: Utc::now().timestamp_millis(),
-        from_ms: from.timestamp_millis(),
-        to_ms: to.timestamp_millis(),
-        source_count: sources.len(),
-        ..CalendarSnapshot::default()
-    };
-    let mut changed = false;
-    for source in sources.iter_mut() {
-        let result = match secret_of(&source.id, retry).await {
-            Ok(Some(secret)) => {
-                let (source_from, source_to) = window_for(source, now);
-                read_source(source, &secret, source_from, source_to).await
-            }
-            Ok(None) => Err(UserError::new("calendar.secretMissing", "The saved password or link is missing; remove this calendar and add it again.")),
-            Err(error) => Err(error),
-        };
-        match result {
-            Ok((events, calendars)) => {
-                if source.kind == SourceKind::Caldav && !calendars.is_empty() && source.calendars != calendars {
-                    source.calendars = calendars;
-                    changed = true;
-                }
-                for sub in &source.calendars {
-                    if let Some(color) = &sub.color {
-                        snapshot.calendar_colors.entry(sub.name.clone()).or_insert_with(|| color.clone());
-                    }
-                }
-                snapshot.events.extend(events);
-            }
-            Err(message) => snapshot.problems.push(SourceProblem { source_id: source.id.clone(), message }),
-        }
-    }
-    snapshot.events.sort_by(|a, b| (a.start_ms, &a.uid).cmp(&(b.start_ms, &b.uid)));
-    snapshot.events.dedup_by(|a, b| a.uid == b.uid && a.start_ms == b.start_ms);
-    (snapshot, changed)
-}
-
 #[tauri::command]
 pub async fn get_calendar_events(app: AppHandle, refresh: bool) -> Result<CalendarSnapshot, UserError> {
-    read_events(&app_dir(&app)?, refresh).await
+    sync::read_events(&app_dir(&app)?, refresh).await
 }
 
 #[host_service("calendar.events", timeout_ms = 60_000)]
 async fn events_for_host(refresh: Option<bool>) -> Result<CalendarEvents, UserError> {
-    read_events(&home_for_host()?, refresh.unwrap_or(false)).await.map(CalendarEvents::from)
-}
-
-async fn read_events(dir: &std::path::Path, refresh: bool) -> Result<CalendarSnapshot, UserError> {
-    let mut sources = sources::read(dir);
-    if sources.is_empty() {
-        return Ok(CalendarSnapshot::default());
-    }
-    {
-        let cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
-        if let Some(cached) = cache.as_ref().filter(|cached| !refresh && cached.sources == sources && cached.at.elapsed() < REFRESH_AFTER) {
-            return Ok(cached.snapshot.clone());
-        }
-    }
-    let (snapshot, changed) = read_all(&mut sources, refresh).await;
-    if changed {
-        let _ = sources::write(dir, &sources);
-    }
-    *CACHE.lock().unwrap_or_else(PoisonError::into_inner) = Some(Cached { snapshot: snapshot.clone(), at: Instant::now(), sources });
-    Ok(snapshot)
+    sync::read_events(&home_for_host()?, refresh.unwrap_or(false)).await.map(CalendarEvents::from)
 }
 
 #[tauri::command]
 pub fn list_calendar_sources(app: AppHandle) -> Result<Vec<CalendarSource>, UserError> {
-    Ok(sources::read(&app_dir(&app)?))
+    sources::read(&app_dir(&app)?)
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -387,7 +312,7 @@ impl From<Vec<CalendarSource>> for CalendarSources {
 
 #[host_service("calendar.sources")]
 fn sources_for_host() -> Result<CalendarSources, UserError> {
-    Ok(sources::read(&home_for_host()?).into())
+    Ok(sources::read(&home_for_host()?)?.into())
 }
 
 #[tauri::command]
@@ -400,7 +325,7 @@ pub async fn add_calendar_source(
     secret: String,
 ) -> Result<CalendarSource, UserError> {
     let dir = app_dir(&app)?;
-    let mut saved = sources::read(&dir);
+    let mut saved = sources::read(&dir)?;
     if saved.len() >= MAX_SOURCES {
         return Err(UserError::new("calendar.tooMany", format!("At most {MAX_SOURCES} calendars.")).arg("max", MAX_SOURCES));
     }
@@ -443,7 +368,7 @@ pub async fn add_calendar_source(
 #[tauri::command]
 pub fn remove_calendar_source(app: AppHandle, id: String) -> Result<(), UserError> {
     let dir = app_dir(&app)?;
-    let mut saved = sources::read(&dir);
+    let mut saved = sources::read(&dir)?;
     saved.retain(|source| source.id != id);
     sources::write(&dir, &saved)?;
     sources::delete_secret(&id)

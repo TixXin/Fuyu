@@ -28,6 +28,7 @@ function CalendarPage({ onOpenSettings }: CalendarPageProps) {
       key={request?.at ?? 0}
       initialDay={request?.day ?? null}
       snapshot={calendar.snapshot}
+      failure={calendar.failure}
       now={calendar.now}
       onRefresh={calendar.refresh}
       onOpenSettings={() => onOpenSettings("calendar")}

@@ -140,6 +140,8 @@ export type ErrorCode =
   | "calendar.needLink"
   | "calendar.needPassword"
   | "calendar.needAccount"
+  | "calendar.sourcesUnreadable"
+  | "calendar.syncing"
   | "translation.provider"
   | "translation.noAddress"
   | "translation.url"
@@ -558,6 +560,8 @@ export const zhCN: ErrorsText = {
     "calendar.notIcs": "这个链接不是日历（iCalendar）。",
     "calendar.corrupt": "日历内容损坏。",
     "calendar.secretMissing": "找不到保存的密码或订阅链接，请删掉这个日历再加一次。",
+    "calendar.sourcesUnreadable": "读不出已保存的日历设置（数据目录里的 calendar-sources.json），原文件没有改动，请反馈给我们。",
+    "calendar.syncing": "还在同步，这个日历响应很慢，读完会自动更新。",
     "calendar.tooMany": ({ max }) => `最多添加 ${max} 个日历。`,
     "calendar.needLink": "请填写订阅链接。",
     "calendar.needPassword": "请填写密码。",
@@ -977,6 +981,8 @@ export const en: ErrorsText = {
     "calendar.notIcs": "This link is not a calendar (iCalendar).",
     "calendar.corrupt": "The calendar is damaged.",
     "calendar.secretMissing": "The saved password or link is missing; remove this calendar and add it again.",
+    "calendar.sourcesUnreadable": "Could not read the saved calendar settings (calendar-sources.json in the data folder); the file is left untouched. Please let us know.",
+    "calendar.syncing": "Still syncing; this calendar is slow to answer and will update on its own.",
     "calendar.tooMany": ({ max }) => `At most ${max} calendars.`,
     "calendar.needLink": "Fill in the subscription link.",
     "calendar.needPassword": "Fill in the password.",

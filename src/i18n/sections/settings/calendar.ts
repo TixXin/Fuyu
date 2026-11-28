@@ -67,6 +67,12 @@ export type SettingsCalendarText = {
   refreshNow: string;
   refreshing: string;
   refreshed: string;
+  autoSync: (minutes: number) => string;
+  syncedAt: (time: string) => string;
+  syncFailed: (error: string, lastOk: string | null) => string;
+  syncing: string;
+  notSynced: string;
+  sourcesFailed: string;
   noSources: string;
   icsFrom: (host: string) => string;
   remove: (name: string) => string;
@@ -170,6 +176,12 @@ export const zhCN: SettingsCalendarText = {
   refreshNow: "立即刷新",
   refreshing: "刷新中…",
   refreshed: "已刷新",
+  autoSync: (minutes) => `后台每 ${minutes} 分钟自动同步一次；打开日历页或点「立即刷新」时马上同步。`,
+  syncedAt: (time) => `上次同步 ${time}`,
+  syncFailed: (error, lastOk) => (lastOk ? `同步失败：${error}（上次成功 ${lastOk}）` : `同步失败：${error}`),
+  syncing: "正在同步…",
+  notSynced: "还没同步",
+  sourcesFailed: "读不出已添加的日历",
   noSources: "还没有日历。可以先订阅中国节假日，不用账号；工作日历在下面添加。",
   icsFrom: (host) => `订阅 · ${host}`,
   remove: (name) => `删除日历「${name}」`,
@@ -295,6 +307,12 @@ export const en: SettingsCalendarText = {
   refreshNow: "Refresh now",
   refreshing: "Refreshing…",
   refreshed: "Refreshed",
+  autoSync: (minutes) => `Synced in the background every ${minutes} minutes, and right away when you open the calendar page or click Refresh now.`,
+  syncedAt: (time) => `Last synced ${time}`,
+  syncFailed: (error, lastOk) => (lastOk ? `Sync failed: ${error} (last synced ${lastOk})` : `Sync failed: ${error}`),
+  syncing: "Syncing…",
+  notSynced: "Not synced yet",
+  sourcesFailed: "Could not read your calendars",
   noSources: "No calendar yet. Subscribe to China's holidays without an account, or add a work calendar below.",
   icsFrom: (host) => `Subscription · ${host}`,
   remove: (name) => `Delete the calendar "${name}"`,
