@@ -276,6 +276,18 @@
         "group": "Timer",
         "title": "Timer layout"
       }
+    },
+    {
+      "page": "behaviorAlerts",
+      "since": "next",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "外设电量放到 Fuyu 面板"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Device batteries on the Fuyu panel"
+      }
     }
   ]
 }
