@@ -183,11 +183,14 @@ export async function untilRunning(host, total, { timeoutMs = 15000, everyMs = 5
   }
 }
 
+export function sampleCount(minutes, everyS) {
+  return Math.floor((minutes * 60) / everyS + 1e-9) + 1;
+}
+
 export async function soak({ count, busy = 0, minutes, everyS, out, churnS, node, log = () => {} }) {
   const space = makeWorkspace(count, busy);
   space.writeConfig();
   let begun = 0;
-  let deadline = 0;
   let restarts = 0;
   let host = launch(space.dir, { node, watch: churnS > 0 });
   let churn = null;
@@ -198,14 +201,16 @@ export async function soak({ count, busy = 0, minutes, everyS, out, churnS, node
     await host.ready;
     await untilRunning(host, count + busy);
     begun = Date.now();
-    deadline = begun + minutes * 60000;
+    const last = sampleCount(minutes, everyS) - 1;
     if (churnS > 0 && count > 0) {
       churn = setInterval(() => {
         toggled = !toggled;
         space.writeConfig(toggled ? new Set([0]) : new Set());
       }, churnS * 1000);
     }
-    for (let at = Date.now(); at <= deadline; at = Date.now()) {
+    for (let index = 0; index <= last; index += 1) {
+      await sleep(Math.max(0, begun + index * everyS * 1000 - Date.now()));
+      const at = Date.now();
       if (host.child.exitCode !== null || host.child.signalCode !== null) {
         restarts += 1;
         host = launch(space.dir, { node, watch: churnS > 0 });
@@ -224,7 +229,6 @@ export async function soak({ count, busy = 0, minutes, everyS, out, churnS, node
       const row = { at, elapsedS: (at - begun) / 1000, bytes, pingMs, pid: host.child.pid, restarts };
       appendFileSync(out, csvRow(row));
       log(csvRow(row).trim());
-      await sleep(Math.max(0, at + everyS * 1000 - Date.now()));
     }
     busyTicks = space.busyTicks();
   } finally {

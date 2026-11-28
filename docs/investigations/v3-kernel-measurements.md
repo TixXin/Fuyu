@@ -40,7 +40,7 @@ E36.1（#291）第 9 步的测量：宿主进程本身的内存、启动时间�
 - **内存**：macOS 读宿主那一个进程的 `phys_footprint`（`/usr/bin/footprint -f bytes --noCategories -p <pid>`，和第 0 阶段用 `proc_pid_rusage` 读的是同一个数，也是活动监视器「内存」一栏的数）。Windows 读私有内存（PowerShell 的 `(Get-Process -Id <pid>).PrivateMemorySize64`）。宿主没有子进程，所以只读它一个。
 - **启动**（`startup`）：从 `spawn` 到收到 `ready` 通知的时间。`ready` 在内核和配置里的插件都加载完、窗口的 WebSocket 开好之后才发，脚本还核对 `ready` 里 N 个插件都是 `running`。`ready` 之后等 6 秒（和第 0 阶段「启动 6 秒后读」一样），每秒读一次内存、读 5 次取中位数，然后关掉标准输入让宿主退出。N = 0、10、50 各来 5 轮，表里是 5 轮的中位数。
 - **重启**（`restart`）：宿主就绪后 0.5 秒，用 `SIGKILL` 杀掉（Windows 上 Node 的 `kill` 是 `TerminateProcess`），模拟 Rust 看管：发现退出后立刻拉起新宿主（Rust 第一次重启不等待），量从杀掉到新宿主 `ready`。「发现」有两种：`--poll 0` 是一退出就发现；`--poll 1000` 照 Rust 现在的做法每 1 秒查一次，10 轮的检查时刻在 1 秒里均匀错开（第 i 轮在杀掉后 (i + 0.5) × 100 ms 第一次查），所以中位数约等于平均情况。10 个空插件，10 轮。
-- **长跑**（`soak`）：拉起带 N 个插件的宿主，每隔 `--every` 秒先发一次 `ping`（记下往返时间），再读一次内存，写一行 CSV：`at,elapsed_s,memory_mb,ping_ms,host_pid,restarts`。`--churn S` 时宿主带 `--watch` 启动，脚本每 S 秒改写 `plugins.yml`，把第一个插件停用或启用，模拟一直有插件在装卸。宿主中途退出时脚本重新拉起并把 `restarts` 加 1（正常情况下一直是 0）。
+- **长跑**（`soak`）：拉起带 N 个插件的宿主，在第 0、`--every`、2×`--every`……秒直到 `--minutes` 结束各采一次（共 `⌊minutes×60/every⌋+1` 行，单次采样慢了只是推后下一次，不会少采、也不丢最后一行），每次先发一次 `ping`（记下往返时间），再读一次内存，写一行 CSV：`at,elapsed_s,memory_mb,ping_ms,host_pid,restarts`。`--churn S` 时宿主带 `--watch` 启动，脚本每 S 秒改写 `plugins.yml`，把第一个插件停用或启用，模拟一直有插件在装卸。宿主中途退出时脚本重新拉起并把 `restarts` 加 1（正常情况下一直是 0）。
 
 ## 结果（macOS）
 

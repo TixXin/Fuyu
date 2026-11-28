@@ -176,7 +176,7 @@ pub(super) const ACTIVITY_ARG: &str = "activity";
 
 const QUESTION_ARG: &str = "question";
 
-#[cfg(windows)]
+#[cfg(any(windows, test))]
 fn quoted_script(path: &Path) -> String {
     let text = path.to_string_lossy().replace('\\', "/");
     if text.contains('$') || text.contains('`') {
@@ -186,19 +186,48 @@ fn quoted_script(path: &Path) -> String {
     }
 }
 
+#[cfg(any(windows, test))]
+fn powershell_quoted(text: &str) -> String {
+    if !text.is_empty() && text.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.')) {
+        text.to_string()
+    } else {
+        format!("'{}'", text.replace('\'', "''"))
+    }
+}
+
+#[cfg(any(windows, test))]
+fn guarded_powershell_command(script_path: &Path, rest: &[&str]) -> String {
+    let text = script_path.to_string_lossy().replace('\\', "/");
+    if text.contains('$') || text.contains('`') || rest.iter().any(|arg| arg.contains('$') || arg.contains('`') || arg.contains('"')) {
+        let mut command = format!("powershell.exe -NoProfile -ExecutionPolicy Bypass -File {}", quoted_script(script_path));
+        for arg in rest {
+            command.push(' ');
+            command.push_str(arg);
+        }
+        return command;
+    }
+    let script = powershell_quoted(&text);
+    let args: String = rest.iter().map(|arg| format!(" {}", powershell_quoted(arg))).collect();
+    format!("powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"if (Test-Path -LiteralPath {script}) {{ & {script}{args} }}\"")
+}
+
 #[cfg(windows)]
 pub(super) fn claude_code_running_command(script_path: &Path, rest: &[&str]) -> String {
-    std::iter::once(quoted_script(script_path)).chain(rest.iter().map(|arg| (*arg).to_string())).collect::<Vec<_>>().join(" ")
+    guarded_powershell_command(script_path, rest)
 }
 
 #[cfg(windows)]
 pub(super) fn claude_code_powershell_command(script_path: &Path, rest: &[&str]) -> String {
-    let mut command = format!("powershell.exe -NoProfile -ExecutionPolicy Bypass -File {}", quoted_script(script_path));
-    for arg in rest {
-        command.push(' ');
-        command.push_str(arg);
-    }
-    command
+    guarded_powershell_command(script_path, rest)
+}
+
+pub(super) fn has_unguarded_windows_hooks(hooks: &Value) -> bool {
+    hooks.as_object().is_some_and(|events| {
+        events.values().filter_map(Value::as_array).flatten().filter_map(|entry| entry["hooks"].as_array()).flatten().any(|hook| {
+            let command = hook["command"].as_str().unwrap_or_default();
+            command.contains("fuyu-agent-") && hook.get("args").is_none() && !command.contains("Test-Path") && !command.contains("[ -f ")
+        })
+    })
 }
 
 #[cfg(not(windows))]

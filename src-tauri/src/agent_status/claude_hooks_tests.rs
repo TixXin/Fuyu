@@ -30,7 +30,8 @@ fn hooks_pass_the_waiting_notifications_and_phases() {
     let mut hooks = Map::new();
     install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(running, status));
     let command = |event: &str| hooks[event][0]["hooks"][0]["command"].as_str().unwrap().replace('\'', "");
-    assert!(command("UserPromptSubmit").ends_with("claudeCode") || command("UserPromptSubmit").ends_with("claudeCode || exit 0"));
+    let running = command("UserPromptSubmit");
+    assert!(running.contains("fuyu-agent-running") && running.contains("claudeCode") && !running.contains("notification"), "{running}");
     for event in ["Notification", "PermissionRequest", "PreCompact", "PostCompact"] {
         assert!(command(event).contains("claudeCode notification"), "{event}");
     }
@@ -44,18 +45,61 @@ fn hooks_pass_the_waiting_notifications_and_phases() {
     assert!(hooks["PermissionRequest"][0].get("matcher").is_none());
 }
 
+#[test]
+fn windows_commands_run_through_powershell_only_when_the_script_exists() {
+    let guarded = |script: &str, rest: &[&str]| guarded_powershell_command(Path::new(script), rest);
+    assert_eq!(
+        guarded(r"C:\Users\a b\fuyu-agent-running.cmd", &["claudeCode"]),
+        r#"powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "if (Test-Path -LiteralPath 'C:/Users/a b/fuyu-agent-running.cmd') { & 'C:/Users/a b/fuyu-agent-running.cmd' claudeCode }""#
+    );
+    assert_eq!(
+        guarded(r"C:\Users\O'Neil\fuyu-agent-status.ps1", &["claudeCode", "completed"]),
+        r#"powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "if (Test-Path -LiteralPath 'C:/Users/O''Neil/fuyu-agent-status.ps1') { & 'C:/Users/O''Neil/fuyu-agent-status.ps1' claudeCode completed }""#
+    );
+    assert_eq!(guarded(r"C:\a$b\r.cmd", &["claudeCode"]), "powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:/a$b/r.cmd' claudeCode");
+}
+
+#[test]
+fn unguarded_windows_hooks_from_older_versions_are_found() {
+    let old = json!({ "Stop": [{ "hooks": [{ "type": "command", "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:/u/fuyu-agent-status.ps1\" claudeCode completed" }] }] });
+    let running = json!({ "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "\"C:/u/fuyu-agent-running.cmd\" claudeCode" }] }] });
+    let guarded = json!({ "Stop": [{ "hooks": [{ "type": "command", "command": guarded_powershell_command(Path::new("C:/u/fuyu-agent-status.ps1"), &["claudeCode", "completed"]) }] }] });
+    let mac = json!({ "Stop": [{ "hooks": [{ "type": "command", "command": "[ -f '/u/fuyu-agent-status.sh' ] && exec /bin/sh '/u/fuyu-agent-status.sh' claudeCode completed || exit 0" }] }] });
+    let user = json!({ "Stop": [{ "hooks": [{ "type": "command", "command": "my-own-hook" }] }] });
+    assert!(has_unguarded_windows_hooks(&old) && has_unguarded_windows_hooks(&running));
+    assert!(!has_unguarded_windows_hooks(&guarded) && !has_unguarded_windows_hooks(&mac) && !has_unguarded_windows_hooks(&user));
+    assert!(value_contains_island_hook_signature(&old) && value_contains_island_hook_signature(&guarded));
+}
+
 #[cfg(windows)]
 #[test]
-fn windows_hooks_start_with_the_quoted_script_or_powershell() {
+fn windows_hooks_are_guarded_and_fail_open_when_the_script_is_missing() {
+    use std::io::Write;
+    use std::os::windows::process::CommandExt;
+    use std::process::{Command, Stdio};
+
     let (running, status) = paths();
     let entries = claude_code_installed_entries(running, status, Some(&ApprovalHook));
-    let command = |event: &str| entries.iter().find(|(name, _)| *name == event).unwrap().1["hooks"][0]["command"].as_str().unwrap().to_string();
-    assert_eq!(command("UserPromptSubmit"), r#""C:/Users/a b/fuyu-agent-running.cmd" claudeCode"#);
-    assert_eq!(command("Stop"), r#"powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:/Users/a b/fuyu-agent-status.ps1" claudeCode completed"#);
-    let activity = entries.iter().rev().find(|(name, _)| *name == "Stop").unwrap().1["hooks"][0].clone();
-    assert_eq!(activity["command"], json!(r#"powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:/Users/a b/fuyu-agent-approval.ps1" claudeCode activity"#));
-    assert_eq!(activity["async"], json!(true));
-    assert_eq!(claude_code_running_command(Path::new(r"C:\a$b\r.cmd"), &["claudeCode"]), "'C:/a$b/r.cmd' claudeCode");
+    for (event, entry) in &entries {
+        let command = entry["hooks"][0]["command"].as_str().unwrap();
+        assert!(command.starts_with("powershell.exe ") && command.contains("Test-Path -LiteralPath"), "{event}: {command}");
+    }
+    let dir = std::env::temp_dir().join(format!("fuyu-claude-guard-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&dir);
+    fs::create_dir_all(&dir).unwrap();
+    let script = dir.join("fuyu-agent-running.cmd");
+    let command = claude_code_running_command(&script, &["claudeCode"]);
+    let run = || {
+        let mut child = Command::new("cmd.exe").raw_arg(format!("/d /s /c \"{command}\"")).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+        child.stdin.take().unwrap().write_all(b"{}\r\n").unwrap();
+        child.wait_with_output().unwrap()
+    };
+    let out = run();
+    assert!(out.status.success() && out.stdout.is_empty() && out.stderr.is_empty(), "{out:?}");
+    fs::write(&script, "@echo off\r\nset /p line=\r\necho %*^|%line%\r\n").unwrap();
+    let out = run();
+    assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "claudeCode|{}");
+    fs::remove_dir_all(&dir).unwrap();
 }
 
 #[test]

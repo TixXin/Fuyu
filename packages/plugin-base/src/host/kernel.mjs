@@ -39,14 +39,32 @@ async function watchConfig(ctx, id) {
   if (!include?.filename) throw new Error("the plugin configuration did not load, so it cannot be watched");
   const watcher = ctx.fs.watch(pathToFileURL(include.filename));
   let pending = [];
+  let idle = Promise.resolve();
+  let release = null;
+  let round = 0;
+  const done = () => {
+    release?.();
+    release = null;
+  };
   const reread = () => {
     pending.forEach(clearTimeout);
-    pending = REREAD_AFTER_MS.map((ms) => setTimeout(() => include.refresh(), ms));
+    if (!release) idle = new Promise((resolve) => (release = resolve));
+    const mine = ++round;
+    const last = REREAD_AFTER_MS.length - 1;
+    const finish = () => mine === round && done();
+    pending = REREAD_AFTER_MS.map((ms, index) => setTimeout(() => (index === last ? Promise.resolve(include.refresh()).finally(finish) : include.refresh()), ms));
   };
-  ctx.effect(() => () => pending.forEach(clearTimeout), "plugin configuration rereads");
+  ctx.effect(
+    () => () => {
+      pending.forEach(clearTimeout);
+      done();
+    },
+    "plugin configuration rereads",
+  );
   watcher.on("change", reread);
   await new Promise((resolve) => watcher.on("ready", resolve));
   await include.refresh();
+  return () => idle;
 }
 
 function sourcesOf(ctx) {
@@ -120,7 +138,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     watchBuiltins(ctx, catalog);
   }
   const id = await ctx.loader.create({ name: PLUGINS_FILE, config: { path: config, builtins: catalog?.plugins ?? [], dir, appVersion } });
-  if (watch) await watchConfig(ctx, id);
+  const rereads = watch ? await watchConfig(ctx, id) : () => null;
   if (rpc) void commands.syncIfChanged();
   const report = () => usage.report(ctx, timers.counts(), (plugin) => gate.report(plugin), rust.counts());
   const extras = {
@@ -163,7 +181,10 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     locale: hostLocale,
     services: () => services.list(),
     watchServices: (onChange) => services.watch(onChange),
-    settle: () => Promise.all(ctx.loader.getTasks()),
+    settle: async () => {
+      await rereads();
+      return Promise.all(ctx.loader.getTasks());
+    },
     stop: () => ctx.fiber.dispose(),
   };
 }

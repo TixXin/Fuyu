@@ -3,7 +3,7 @@ import { readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { measureRestart, measureStartup, nextTick, pluginsYml, soak } from "../../scripts/plugins-v3/measure-host.mjs";
+import { measureRestart, measureStartup, nextTick, pluginsYml, sampleCount, soak } from "../../scripts/plugins-v3/measure-host.mjs";
 import { fit, parseCsv, trend } from "../../scripts/plugins-v3/measure-trend.mjs";
 import { CSV_HEADER, csvRow, median, parseBytes, parseFootprint, parseLinuxStatus, toMB } from "../../scripts/plugins-v3/measure-memory.mjs";
 
@@ -56,6 +56,13 @@ test("a supervisor that polls notices an exit at its next tick, and at once with
   assert.equal(nextTick(0, 5, 0, 0.5), 5);
   assert.equal(nextTick(0, 5, 1000, 0.25), 250);
   assert.equal(nextTick(0, 300, 1000, 0.25), 1250);
+});
+
+test("a soak takes one sample at the start and one per interval up to and including its last minute", () => {
+  assert.equal(sampleCount(0.02, 0.5), 3);
+  assert.equal(sampleCount(0.05, 1), 4);
+  assert.equal(sampleCount(480, 60), 481);
+  assert.equal(sampleCount(0.7, 60), 1);
 });
 
 test("startup, restart and soak each run against the real host", async () => {

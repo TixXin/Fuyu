@@ -111,3 +111,29 @@ fn a_status_line_never_wrapped_counts_as_out_of_date_once() {
     uninstall(&settings_path, &dir).unwrap();
     assert!(never_installed(text().as_deref(), &dir));
 }
+
+#[cfg(windows)]
+#[test]
+fn the_script_finds_git_bash_from_any_git_exe_location() {
+    let script = super::SCRIPT;
+    let start = script.find("function Find-GitBash").unwrap();
+    let end = start + script[start..].find("\n}").unwrap() + 2;
+    let function = &script[start..end];
+    let dir = temp_dir("find-bash");
+    for (root, git) in [("a", r"cmd\git.exe"), ("b", r"ucrt64\bin\git.exe"), ("c", r"mingw64\bin\git.exe")] {
+        let git = dir.join(root).join(git);
+        let bash = dir.join(root).join(r"bin\bash.exe");
+        for file in [&git, &bash] {
+            fs::create_dir_all(file.parent().unwrap()).unwrap();
+            fs::write(file, "").unwrap();
+        }
+        let output = std::process::Command::new("powershell.exe")
+            .args(["-NoProfile", "-NonInteractive", "-Command", &format!("{function}\nFind-GitBash '{}'", git.display())])
+            .env_remove("CLAUDE_CODE_GIT_BASH_PATH")
+            .env_remove("EXEPATH")
+            .output()
+            .unwrap();
+        assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), bash.display().to_string(), "{git:?}");
+    }
+    fs::remove_dir_all(&dir).unwrap();
+}
