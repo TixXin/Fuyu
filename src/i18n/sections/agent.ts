@@ -136,6 +136,8 @@ export type AgentText = {
     resetsIn: (parts: { days: number; hours: number; minutes: number }) => string;
     resetShort: (parts: { days: number; hours: number; minutes: number }) => string;
     menu: string;
+    allHidden: string;
+    allHiddenMenu: string;
     models: string;
     tightest: string;
     reset: string;
@@ -339,6 +341,8 @@ export const zhCN: AgentText = {
       days > 0 ? `${days} 天 ${hours} 小时后重置` : hours > 0 ? `${hours} 小时 ${minutes} 分后重置` : `${minutes} 分后重置`,
     resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}天${hours}小时` : hours > 0 ? `${hours}小时${minutes}分` : `${minutes}分钟`),
     menu: "调整额度显示",
+    allHidden: "额度都被隐藏了",
+    allHiddenMenu: "额度都被隐藏了，点右边的按钮重新选",
     models: "其他额度",
     tightest: "只看最紧的一项",
     reset: "重置时间",
@@ -546,6 +550,8 @@ export const en: AgentText = {
     resetsIn: ({ days, hours, minutes }) => (days > 0 ? `resets in ${days}d${hours}h` : hours > 0 ? `resets in ${hours}h${minutes}m` : `resets in ${minutes}m`),
     resetShort: ({ days, hours, minutes }) => (days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`),
     menu: "Choose what usage to show",
+    allHidden: "All usage is hidden",
+    allHiddenMenu: "All usage is hidden. Use the button on the right to pick again",
     models: "Other limits",
     tightest: "Only the tightest",
     reset: "Reset time",

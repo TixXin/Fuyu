@@ -15,6 +15,7 @@ import { checkNotchPreview } from "./settings-notch-preview";
 import { checkCollapsedLanes } from "./settings-collapsed-lanes";
 import { checkCustomPanels, checkIslandLayout, checkIslandPages } from "./settings-island-layout";
 import { checkAgentNoticeSettings } from "./settings-agent-notice";
+import { checkUsageRingsRecovery } from "./settings-usage-rings";
 import { checkMessageNotice, checkMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
 import { commandsV1 } from "@fuyu/plugin-services";
@@ -199,6 +200,7 @@ if (!automated) {
     await click(".appearance-reset"); await click(".appearance-reset--danger");
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
     await openPage("themeStyle"); await checkIdleDimSettings(check); await checkGlassLooks(check); await checkNotchPreview(check);
+    await openPage("agentRings"); await checkUsageRingsRecovery(check);
     await openPage("agentAlerts"); await checkAgentNoticeSettings(check);
     await openPage("islandLayout"); await checkIslandLayout(check); await checkIslandPages(check); await checkCustomPanels(check);
     await checkCollapsedLanes(check);

@@ -14,7 +14,7 @@ import { AgentUsageLayoutArt } from "./AgentUsageLayoutArt";
 import { AGENTS } from "./agents";
 import { AGENT_USAGE_COLUMNS, AGENT_USAGE_LAYOUTS, AGENT_USAGE_RESETS, AGENT_USAGE_SOURCES, AGENT_USAGE_STYLES, type AgentUsageItem, type AgentUsageLayout, type AgentUsageReset, type AgentUsageStyle } from "./agentSettings";
 import { getAgentHooksState, type AgentHooksState, type SessionProvider } from "./api";
-import { availableLines, LAYOUT_CONTROLS, PLAN_SOURCES, USAGE_SOURCE_ICONS, USAGE_SOURCE_LABELS, type UsageView } from "./usage";
+import { LAYOUT_CONTROLS, PLAN_SOURCES, USAGE_SOURCE_ICONS, USAGE_SOURCE_LABELS, usageSources, type UsageView } from "./usage";
 import { useAgentUsages } from "./useAgentUsages";
 
 type Props = { settings: IslandSettings; onSettingsChange: (settings: IslandSettings) => void };
@@ -46,7 +46,7 @@ export function AgentUsagePageSettings({ settings, onSettingsChange }: Props) {
   const hooks = useHooksState();
   const view: UsageView = { hidden: settings.agentUsageHidden, tightest: settings.agentUsageTightest, reset: settings.agentUsageReset, style: settings.agentUsageStyle, layout: settings.agentUsageLayout, agentsOff };
   const controls = LAYOUT_CONTROLS[settings.agentUsageLayout];
-  const sources = availableLines(usages, agentsOff).map((line) => line.source);
+  const sources = usageSources(usages, agentsOff);
   const hidden = settings.agentUsageHidden;
   const shown = (item: AgentUsageItem) => !hidden.includes(item);
   const toggle = (item: AgentUsageItem) => {

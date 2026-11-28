@@ -135,6 +135,22 @@
   opacity: 1;
 }
 
+.agent-usage-box--hidden .agent-usage__menu {
+  opacity: 1;
+}
+
+.agent-usage__all-hidden {
+  margin: 0 6px 6px;
+  padding-right: 30px;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .agent-usage__menu-button {
   width: 24px;
   height: 24px;

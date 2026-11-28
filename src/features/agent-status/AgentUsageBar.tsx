@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useTranslation } from "../../i18n";
 import { AgentUsageChips } from "./AgentUsageChips";
 import { AgentUsageExpired } from "./AgentUsageExpired";
 import { AgentUsageLead } from "./AgentUsageLead";
@@ -7,7 +8,7 @@ import { AgentUsageStrip } from "./AgentUsageStrip";
 import { AgentUsageTable } from "./AgentUsageTable";
 import { AgentUsageTiles } from "./AgentUsageTiles";
 import type { UsageToggle } from "./UsageBits";
-import { availableLines, expiredLines, usageLines, DEFAULT_USAGE_VIEW, type AgentUsages, type UsageLine, type UsageView } from "./usage";
+import { expiredLines, usageLines, usageSources, DEFAULT_USAGE_VIEW, type AgentUsages, type UsageLine, type UsageView } from "./usage";
 import { useAgentUsages } from "./useAgentUsages";
 import { AgentUsageMenu, type UsageViewChange } from "./AgentUsageMenu";
 import "./AgentUsageBar.css";
@@ -33,14 +34,23 @@ function UsageLayout({ lines, now, view, onToggle }: LayoutProps) {
 }
 
 export function AgentUsageBar({ usages: given, view = DEFAULT_USAGE_VIEW, onViewChange, onToggle }: { usages?: AgentUsages; view?: UsageView; onViewChange?: UsageViewChange; onToggle?: UsageToggle }) {
+  const t = useTranslation();
   const own = useAgentUsages(given === undefined);
   const box = useRef<HTMLDivElement>(null);
   const usages = given ?? own;
   const lines = usageLines(usages, view);
   const expired = expiredLines(usages, view);
-  if (lines.length === 0 && expired.length === 0) return null;
+  const sources = usageSources(usages, view.agentsOff);
+  if (lines.length === 0 && expired.length === 0) {
+    if (sources.length === 0) return null;
+    return (
+      <div className="agent-usage-box agent-usage-box--hidden" data-layout="hidden">
+        <p className="agent-usage__all-hidden">{onViewChange ? t.agent.usage.allHiddenMenu : t.agent.usage.allHidden}</p>
+        {onViewChange && <AgentUsageMenu view={view} sources={sources} onChange={onViewChange} />}
+      </div>
+    );
+  }
   const layout = view.layout ?? "chips";
-  const sources = availableLines(usages, view.agentsOff).map((line) => line.source);
 
   return (
     <div

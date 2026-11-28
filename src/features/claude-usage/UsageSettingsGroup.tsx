@@ -13,7 +13,8 @@ import { switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
 import { OWNER } from "./plugin/owner.ts";
 import { isPlan, PlanKeyField } from "./PlanKeyFields";
 import { USAGE_INTERVAL } from "./usageConfig.ts";
-import { USAGE_PROVIDERS } from "./usageRing";
+import { HOVER_USAGE_PROVIDERS, USAGE_PROVIDERS } from "./usageRing";
+import { UsageStyleRows } from "./UsageStyleRows";
 import { useUsageConfig } from "./useUsageConfig";
 import "./UsageSettingsGroup.css";
 
@@ -44,6 +45,7 @@ export function UsageSettingsGroup() {
   const t = useTranslation();
   const text = t.claudeUsage.settings;
   const [config, update] = useUsageConfig();
+  const allOff = [...USAGE_PROVIDERS, ...HOVER_USAGE_PROVIDERS].every((provider) => !config.providers[provider.id]);
   return (
     <>
       <SettingsGroup
@@ -51,7 +53,14 @@ export function UsageSettingsGroup() {
         action={<SettingsSwitch id={switchId} ariaLabel={text.title} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch(() => undefined)} />}
         footer={<SettingsFootnote text={text.footer} />}
       >
-        <IslandPlacementRow item="usage:" />
+        {allOff ? (
+          <>
+            <SettingsRow searchable={false} title={text.allOff} description={text.allOffHint} />
+            <UsageStyleRows />
+          </>
+        ) : (
+          <IslandPlacementRow item="usage:" />
+        )}
         {USAGE_PROVIDERS.filter(isPlan).filter((provider) => config.providers[provider.id]).map((provider) => <PlanKeyField key={provider.id} provider={provider} />)}
       </SettingsGroup>
 

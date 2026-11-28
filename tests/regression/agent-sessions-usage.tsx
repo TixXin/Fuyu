@@ -6,6 +6,7 @@ import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
 import { DEFAULT_USAGE_VIEW, type UsageView } from "../../src/features/agent-status/usage";
 import { checkUsageLayouts } from "./agent-usage-layouts";
+import { checkUsageAllHidden } from "./agent-usage-hidden";
 import { SessionLightStyleContext } from "../../src/features/agent-status/SessionLightMark";
 import { JellyfishStyleContext } from "../../src/components/jellyfish/jellyfishStyleContext";
 
@@ -95,6 +96,7 @@ export async function checkUsage({ root, fixture, sessions, check, chromeHeight 
   });
   check([...document.querySelectorAll(".agent-usage")].map((line) => line.getAttribute("aria-label")).join() === "Claude Code 用量,Codex 用量", "在「接入哪些 Agent」里关掉的和在额度里隐藏的都不占行");
   await checkUsageLayouts({ root, sessions, usages: wide, check });
+  await checkUsageAllHidden({ root, sessions, usages, check });
 
   const host = document.createElement("div");
   fixture.after(host);
