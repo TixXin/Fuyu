@@ -60,7 +60,7 @@ export function usePageHoverSwitch(enabled: boolean, delayMs: number, page: Isla
     settlePageHover(gate, performance.now(), buttonSpots());
     const settled = window.setTimeout(() => blockSlidPage(gate, hoveredButton(), page), PAGE_SWITCH_SETTLE_MS);
     return () => window.clearTimeout(settled);
-  }, [page, cancel]);
+  }, [page, enabled, cancel]);
 
   return useCallback(
     (target: IslandPage): HoverHandlers | Record<string, never> => {
