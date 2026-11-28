@@ -173,7 +173,7 @@ mod tests {
             calendars: Vec::new(),
         };
         write(&dir, std::slice::from_ref(&source)).unwrap();
-        assert_eq!(read(&dir).unwrap(), [source.clone()]);
+        assert_eq!(read(&dir).unwrap(), std::slice::from_ref(&source));
         let saved = fs::read_to_string(dir.join(FILE_NAME)).unwrap();
         assert!(saved.contains("\"kind\": \"caldav\"") && !saved.contains("password"));
         fs::write(dir.join(FILE_NAME), format!("\u{feff}{saved}")).unwrap();
