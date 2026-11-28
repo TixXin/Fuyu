@@ -99,6 +99,22 @@ test("every built-in plugin, switched off, is disabled with no timers, listeners
   assert.deepEqual(residue, []);
 });
 
+test("settle returns only after the host has reread a changed configuration, so its reread timers are not counted as a plugin's", { timeout: 30_000 }, async () => {
+  const root = mkdtempSync(join(tmpdir(), "builtins-off-reread-"));
+  cleanup.push(() => rmSync(root, { recursive: true, force: true }));
+  const builtins = join(root, "builtins");
+  const dir = join(root, "data");
+  mkdirSync(join(builtins, "quiet", "host"), { recursive: true });
+  mkdirSync(dir);
+  writeFileSync(join(builtins, "builtins.json"), JSON.stringify({ format: 1, plugins: [{ id: "quiet", root: "quiet", host: "host/index.mjs" }] }));
+  writeFileSync(join(builtins, "quiet", "host", "index.mjs"), 'export const name = "quiet";\nexport function apply() {}\n');
+  const host = await hostOn(builtins, dir);
+  const before = (await quietHandles()).get("Timeout") ?? 0;
+  await switchTo(host, dir, ["quiet"]);
+  assert.equal(host.status().find((plugin) => plugin.id === "quiet")?.state, "disabled");
+  assert.equal((await quietHandles()).get("Timeout") ?? 0, before);
+});
+
 test("the check finds what a plugin leaves behind when it goes around ctx", { timeout: 30_000 }, async () => {
   const root = mkdtempSync(join(tmpdir(), "builtins-off-leaky-"));
   cleanup.push(() => rmSync(root, { recursive: true, force: true }));
