@@ -5,7 +5,7 @@ import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRo
 import { useTranslation } from "../../../i18n";
 import { isMacOS } from "../../../lib/platform";
 import { MessageSourceIcon } from "../MessageSourceIcon";
-import { WINDOWS_CUSTOM_POPUP_SOURCES, type ImSourceId } from "../im-sources/imSourcesState";
+import type { ImSourceId } from "../im-sources/imSourcesState";
 import type { ImSourcesController } from "../im-sources/useImSources";
 import type { QQNotificationsController } from "../qq-notifications/QQNotifications";
 import type { WeChatRemindersController } from "../wechat/WeChatReminders";
@@ -40,7 +40,7 @@ function ChatRow({ source, state, statusText, exposeUi = false, installed = fals
       tone={tone}
       status={state.error || (access && isMacOS ? labels.waitingForAccessMac : statusText)}
       capability={tone === "ok" || tone === "off" ? labels.capability[chatCapability(source, { mac: isMacOS, wechatExposeUi: exposeUi })] : undefined}
-      extra={tone === "ok" ? extra : undefined}
+      extra={tone === "ok" || tone === "off" ? extra : undefined}
       badge={installed && !state.enabled ? <span className="messages-settings__installed">{labels.installedBadge}</span> : undefined}
       action={access && !isMacOS && act ? <SettingsLinkButton disabled={busy} onClick={act}>{asks ? t.qq.grant : t.qq.settings}</SettingsLinkButton> : undefined}
       disabled={busy}
@@ -108,18 +108,19 @@ export function ImSourceRows({ source, imSources, onToggled }: { source: ImSourc
   const labels = t.settings.messageSources;
   const [explained, setExplained] = useState(false);
   const snapshot = imSources.snapshots[source];
-  const ownPopups = !isMacOS && WINDOWS_CUSTOM_POPUP_SOURCES.has(source);
-  const listening = snapshot.enabled && snapshot.status === "listening";
+  const state = { enabled: snapshot.enabled, status: snapshot.status, error: imSources.actionErrors[source] || snapshot.error };
+  const tone = chatTone(state, isMacOS);
+  const explains = !isMacOS;
 
   return (
     <>
       <ChatRow
         source={source}
-        state={{ enabled: snapshot.enabled, status: snapshot.status, error: imSources.actionErrors[source] || snapshot.error }}
+        state={state}
         statusText={t.qq.status[snapshot.status]}
         installed={snapshot.installed}
         busy={imSources.busySource === "all" || imSources.busySource === source}
-        extra={ownPopups ? (
+        extra={explains ? (
           <button className="source-row__more" type="button" aria-expanded={explained} onClick={() => setExplained(!explained)}>{labels.howToSeeContent}</button>
         ) : undefined}
         onToggle={(enabled) => {
@@ -129,8 +130,8 @@ export function ImSourceRows({ source, imSources, onToggled }: { source: ImSourc
         onGrant={() => void imSources.requestAccess(source)}
         onOpenSettings={() => void imSources.openSettings(source)}
       />
-      {ownPopups && listening && explained && (
-        <SettingsRow searchable={false} indent title={<span className="source-row__note">{labels.imSystemToastHint}</span>} />
+      {explains && explained && (tone === "ok" || tone === "off") && (
+        <SettingsRow searchable={false} indent title={<span className="source-row__note">{labels.imContentHint[source]}</span>} />
       )}
     </>
   );

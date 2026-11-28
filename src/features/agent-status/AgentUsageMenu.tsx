@@ -31,7 +31,7 @@ export function AgentUsageMenu({ view, sources, onChange }: { view: UsageView; s
   const controls = LAYOUT_CONTROLS[layout];
   const items: RowMenuItem[] = [
     ...AGENT_USAGE_LAYOUTS.map((value): RowMenuItem => ({ key: `layout-${value}`, label: text.layouts[value], icon: mark(layout === value), keepOpen: true, onSelect: () => onChange({ agentUsageLayout: value }) })),
-    ...(sources.length > 1 ? sources.map((item) => toggle(item, sources)) : []),
+    ...(sources.length > 1 || sources.some((item) => !shown(item)) ? sources.map((item) => toggle(item, sources)) : []),
     ...AGENT_USAGE_COLUMNS.map((item) => toggle(item, AGENT_USAGE_COLUMNS)),
     ...(controls.tightest ? [{ key: "tightest", label: text.tightest, icon: mark(view.tightest), keepOpen: true, onSelect: () => onChange({ agentUsageTightest: !view.tightest }) }] : []),
     ...(controls.reset ? [{ key: "reset", label: text.reset, icon: mark(view.reset !== "off"), keepOpen: true, onSelect: () => onChange({ agentUsageReset: view.reset === "off" ? "tightest" : "off" }) }] : []),

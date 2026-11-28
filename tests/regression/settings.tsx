@@ -15,6 +15,7 @@ import { checkNotchPreview } from "./settings-notch-preview";
 import { checkCollapsedLanes } from "./settings-collapsed-lanes";
 import { checkCustomPanels, checkIslandLayout, checkIslandPages } from "./settings-island-layout";
 import { checkAgentNoticeSettings } from "./settings-agent-notice";
+import { checkUsageRingsRecovery } from "./settings-usage-rings";
 import { checkMessageNotice, checkMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
 import { commandsV1 } from "@fuyu/plugin-services";
@@ -158,7 +159,11 @@ if (!automated) {
     await act(async () => { appleSwitch()!.click(); });
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
     await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|计时器页布局|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound, layout and break reminders");
-    await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && /^音量与亮度\|耳机与充电\|大写锁定(\|提示方式\|关掉大写时也提示\|点角标关掉大写(\|输密码时一直提醒\|数字锁定也提示)?)?\|摄像头和麦克风使用提示$/.test(texts(".settings-row__title")), "Volume, headphones, Caps Lock and camera alerts are one group on the System alerts tab, Caps Lock's options right under its switch");
+    await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && /^音量与亮度\|耳机与充电\|外设电量放到 Fuyu 面板\|外设电量显示在收起条上\|大写锁定(\|提示方式\|关掉大写时也提示\|点角标关掉大写(\|输密码时一直提醒\|数字锁定也提示)?)?\|摄像头和麦克风使用提示$/.test(texts(".settings-row__title")), "Volume, headphones, Caps Lock and camera alerts are one group on the System alerts tab, Caps Lock's options right under its switch");
+    const layoutKeys = ["fuyu-custom-panels", "fuyu-collapsed-items"].map((key) => [key, localStorage.getItem(key)] as const);
+    await act(async () => { for (const title of ["外设电量放到 Fuyu 面板", "外设电量显示在收起条上"]) settingRow(title)?.querySelector<HTMLInputElement>("input[type=checkbox]")?.click(); });
+    check(/"widget":"peripheral-battery"/.test(localStorage.getItem("fuyu-custom-panels") ?? "") && /"id":"peripheral-battery","zone":"right"}/.test(localStorage.getItem("fuyu-collapsed-items") ?? ""), "The device battery switches on System alerts put the widget on the Fuyu panel and the item on the collapsed bar");
+    for (const [key, value] of layoutKeys) if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value);
     await openPage("general"); check(texts(".settings-group__title") === "启动与语言|网络代理" && !texts(".settings-row__title").includes("最小化按钮") && !texts(".settings-tabs__tab").includes("本机接口"), "General opens on startup, language and network proxy, without a Local API tab");
     const proxyModeRow = settingRow("代理模式");
     const proxyManualButton = [...(proxyModeRow?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === "手动代理");
@@ -195,6 +200,7 @@ if (!automated) {
     await click(".appearance-reset"); await click(".appearance-reset--danger");
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
     await openPage("themeStyle"); await checkIdleDimSettings(check); await checkGlassLooks(check); await checkNotchPreview(check);
+    await openPage("agentRings"); await checkUsageRingsRecovery(check);
     await openPage("agentAlerts"); await checkAgentNoticeSettings(check);
     await openPage("islandLayout"); await checkIslandLayout(check); await checkIslandPages(check); await checkCustomPanels(check);
     await checkCollapsedLanes(check);

@@ -19,7 +19,17 @@
   - 共用单实例 `UserNotificationListener` 轮询（按通知 `Id` 缓存跨进程 `AppInfo`，避免重复 COM 调用）和 `RegisterShellHookWindow` 任务栏闪烁监听，所有相关来源关闭时线程立即退出。
   - 当客户端发出标准 Windows 系统通知（`kind: "toast"`）时，岛上展示品牌图标、发送人/群名与消息摘要，支持悬停复制消息文本及横幅/到达面板一键复制验证码。
   - 当客户端处于软件自绘弹窗模式（如 Telegram Windows 版默认设置，或部分版本的 TIM、飞书、钉钉、企业微信）仅触发 `HSHELL_FLASH` 而未发系统通知时，自动退化生成「有新提醒」条目（`kind: "flash"`）；若 2 秒内同一来源补发了真实系统 Toast，后端通过 `replacedId` 将闪烁条目原位升级为真实正文卡片，横幅与到达面板不重复计数、不留空白残影。
-  - **显示发送人与正文的客户端设置建议**：若只看到「有新提醒」，可在对应桌面客户端设置中打开系统通知（例如 Telegram Desktop：「Settings → Notifications and Sounds → Use Windows notifications」），并确保 Windows「系统 → 通知」允许该应用与浮屿访问通知。
+  - **各来源能不能看到发送人和内容**（C188，#1309）：浮屿对每个来源都一样处理，没有隐私模式；能不能看到内容只取决于客户端发不发 Windows 系统通知。设置页每个来源都标着能看到什么，并有一条「怎么看到内容」说明（文案在 `src/i18n/sections/settings/messageSources.ts` 的 `imContentHint`，能力表在 `src/features/messages/settings/sourceRows.ts`）：
+
+    | 来源 | 设置页标注 | 说明 |
+    |---|---|---|
+    | Discord、WhatsApp | 能看到发送人和内容 | 发系统通知；WhatsApp 要在客户端里开「显示预览」 |
+    | 飞书 | 能看到发送人和内容 | 发系统通知；Windows 和飞书两边都要允许通知、横幅里显示消息内容 |
+    | 钉钉 | 群里 @ 你的消息能看到内容 | 钉钉官方帮助：只对群里 @ 你的消息发系统通知，其他消息用自绘弹窗 |
+    | Telegram | 只提示有新消息 | 默认自绘弹窗；客户端里开「Use Windows notifications」后发系统通知，岛上照样显示内容 |
+    | TIM、企业微信 | 只提示有新消息 | 只用自绘弹窗，不发系统通知。企业微信的「通知显示消息详情」只管它自己的弹窗；微信那种读界面的办法（`wechat_reminders/gate.rs`）不适用于企业微信 |
+
+    标注是按客户端的默认行为写的静态表，实际发来系统通知的来源（例如开了 Windows 通知的 Telegram）岛上照样显示正文。
   - **企业微信与微信隔离**：企业微信（`WXWork.exe`）仅使用系统通知与任务栏闪烁，绝不触碰微信 4.x 专用的内存界面公开逻辑（`wechat_reminders/gate.rs`）。
 - **macOS（程序坞角标共享轮询）**：
   - 共用单线程每 3 秒遍历一次程序坞（`com.apple.dock`）的 `AXStatusLabel`，一次性匹配全部已开启来源的候选 Bundle ID（如 Telegram 同时覆盖官网/App Store 原生版 `ru.keepcoder.Telegram` 与跨平台版 `com.tdesktop.Telegram`，飞书覆盖 `com.electron.lark` 与 `com.larksuite.larkApp`）。

@@ -80,7 +80,7 @@ export function IslandHeader({
   const { builtinLabels, pageLabel } = usePageLabel();
   const { hints } = useIslandContributed();
   const editing = usePanelEditing() !== null;
-  const hoverSwitch = usePageHoverSwitch(hoverSwitchPage && !editing, hoverSwitchDelayMs, page, onPageChange);
+  const hoverSwitch = usePageHoverSwitch(hoverSwitchPage && !editing && isExpanded, hoverSwitchDelayMs, page, onPageChange);
   const wheelTrackerRef = useRef<ReturnType<typeof createWheelPageSwitchTracker> | null>(null);
   if (wheelTrackerRef.current === null) wheelTrackerRef.current = createWheelPageSwitchTracker();
   const spotlightOf = useHeaderSpotlight();

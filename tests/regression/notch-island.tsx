@@ -24,6 +24,7 @@ import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import { mirrorDiffers } from "./mirrorCheck";
 import { checkNotchText } from "./notchTextChecks";
 import { checkPillOverflow } from "./pillOverflowChecks";
+import { steady, until } from "./pollUntil";
 import { collapsedFit } from "../../src/windows/island/collapsedFitStore";
 import { islandSpotlight, SPOTLIGHT_ANIMATION } from "../../src/features/plugin-kernel/islandSpotlight";
 import type { CollapsedPlacement } from "../../src/lib/settings/collapsedItems";
@@ -124,9 +125,7 @@ const set = (next: Partial<State>) => act(async () => {
   if (next.notch !== undefined) applyIslandNotch(next.notch);
   change(next);
 });
-async function settleTransitions() {
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 900)); });
-}
+const settleTransitions = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 900)); });
 const results = document.getElementById("results")!;
 
 async function runChecks() {
@@ -327,8 +326,10 @@ async function runChecks() {
     await act(async () => { removeClocks(); });
     await settleTransitions();
     await act(async () => { removeClocks = addClocks(true); });
-    await settleTransitions();
-    check(clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]") && Boolean(chip()), "异步挂起加载的插件在刘海两翼迁移时稳定收进「+N」，不闪不挤扁");
+    const layoutNote = () => `${clocksShown().map((clock) => `${clock.textContent}${clock.closest(".island__notch-wing--left") ? "左" : "右"}${Math.round(box(clock.closest(".island__collapsed-fit")!).width * 10) / 10}${whole(clock) ? "" : "挤扁"}`).join(" ")}；被裁 ${bar().querySelectorAll(".island__collapsed-fit[data-clipped]").length} 格；「+N」${chip()?.textContent ?? "没有"}`;
+    const accounted = () => clocksShown().length >= 1 && clocksShown().length + Number(chip()?.textContent?.slice(1) ?? 0) === 5;
+    await until(steady(layoutNote, accounted));
+    check(accounted() && clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]") && Boolean(chip()), `异步挂起加载的插件在刘海两翼迁移时稳定收进「+N」，不闪不挤扁（${layoutNote()}）`);
     await act(async () => { removeClocks(); });
     await settleTransitions();
     check(!document.querySelector(".island__more-chip, .island__bar-unit") && Math.abs(box(island()).height - NOTCH.height) < 1, "项目少了以后「+N」消失，收起条回到原来的结构");

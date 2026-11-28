@@ -1,4 +1,5 @@
 import type { MonitorWallpaper, Wallpapers } from "../settings/api.ts";
+import { isLightIsland, relativeLuminance } from "../../utils/color.ts";
 
 export type ScreenRect = { x: number; y: number; width: number; height: number };
 export type ImageSize = { width: number; height: number };
@@ -65,7 +66,34 @@ export function sampleBox(target: ScreenRect, island: ScreenRect) {
   };
 }
 
-export function contrastBoost(luminance: number, lightIsland: boolean) {
-  const excess = lightIsland ? 0.55 - luminance : luminance - 0.3;
-  return Math.round(Math.min(0.3, Math.max(0, excess * 0.6)) * 100) / 100;
+export type BackdropLuminance = { dark: number; bright: number };
+
+const SPREAD_TAIL = 0.1;
+const READABLE_UNDER_INK = { light: 0.4, dark: 0.08 };
+const MAX_FROST = 0.95;
+const FROST_STEP = 20;
+
+export function luminanceSpread(values: number[]): BackdropLuminance | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const at = (share: number) => sorted[Math.min(sorted.length - 1, Math.floor(share * sorted.length))];
+  return { dark: at(SPREAD_TAIL), bright: at(1 - SPREAD_TAIL) };
+}
+
+const perceived = (luminance: number) => Math.max(0, luminance) ** (1 / 2.2);
+
+export function contrastFrost(backdrop: BackdropLuminance, islandBackground: string) {
+  const light = isLightIsland(islandBackground);
+  const target = perceived(light ? READABLE_UNDER_INK.light : READABLE_UNDER_INK.dark);
+  const under = perceived(light ? backdrop.dark : backdrop.bright);
+  const tint = perceived(relativeLuminance(islandBackground));
+  const short = light ? target - under : under - target;
+  if (short <= 0) return 0;
+  const reach = light ? tint - under : under - tint;
+  const needed = reach <= 0 ? MAX_FROST : Math.min(MAX_FROST, short / reach);
+  return Math.min(MAX_FROST, Math.ceil(needed * FROST_STEP - 1e-9) / FROST_STEP);
+}
+
+export function settleFrost(current: number, next: number) {
+  return next > current || Math.round((current - next) * FROST_STEP) >= 2 ? next : current;
 }

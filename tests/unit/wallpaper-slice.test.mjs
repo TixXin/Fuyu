@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { contrastBoost, monitorUnder, placeImage, sampleBox, wallpaperPlacement } from "../../src/lib/theme/wallpaperSlice.ts";
+import { contrastFrost, luminanceSpread, monitorUnder, placeImage, sampleBox, settleFrost, wallpaperPlacement } from "../../src/lib/theme/wallpaperSlice.ts";
+import { relativeLuminance } from "../../src/utils/color.ts";
 
 const left = { x: -1920, y: 0, width: 1920, height: 1080, image: "data:left" };
 const right = { x: 0, y: 0, width: 3840, height: 2160, image: "data:right" };
@@ -42,10 +43,57 @@ test("the sample box is the island's share of the image, clamped to it", () => {
   });
 });
 
-test("contrast boost thickens the tint only when the wallpaper fights the text", () => {
-  assert.equal(contrastBoost(0.2, false), 0);
-  assert.equal(contrastBoost(0.6, false), 0.18);
-  assert.equal(contrastBoost(0.95, false), 0.3);
-  assert.equal(contrastBoost(0.8, true), 0);
-  assert.equal(contrastBoost(0.05, true), 0.3);
+const channels = (hex) => [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16));
+const hexOf = (rgb) => `#${rgb.map((value) => Math.round(Math.min(255, Math.max(0, value))).toString(16).padStart(2, "0")).join("")}`;
+const over = (top, alpha, under) => hexOf(channels(top).map((value, index) => value * alpha + channels(under)[index] * (1 - alpha)));
+const contrast = (a, b) => {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+const inkOf = (island) => (relativeLuminance(island) > 0.18 ? "#18181e" : "#f8f6f0");
+const solid = (hex) => ({ dark: relativeLuminance(hex), bright: relativeLuminance(hex) });
+
+test("the frost under live glass is thick enough for secondary text over any desktop", () => {
+  const islands = ["#f2f2f5", "#f7f1e6", "#f4f8fd", "#000000", "#0a1320", "#1f1b17"];
+  const desktops = ["#000000", "#ffffff", "#202830", "#7a7a7a", "#c8d0e0", "#3050a0"];
+  for (const island of islands) {
+    for (const desktop of desktops) {
+      const frost = Math.max(0.25, contrastFrost(solid(desktop), island));
+      const glass = over(island, frost, desktop);
+      const secondary = over(inkOf(island), relativeLuminance(island) > 0.18 ? 0.7 : 0.68, glass);
+      const subtle = over(inkOf(island), relativeLuminance(island) > 0.18 ? 0.56 : 0.54, glass);
+      assert.ok(contrast(secondary, glass) >= 3, `${island} on ${desktop}: secondary text ${contrast(secondary, glass).toFixed(2)} at frost ${frost}`);
+      assert.ok(contrast(subtle, glass) >= 2.8, `${island} on ${desktop}: subtle text ${contrast(subtle, glass).toFixed(2)} at frost ${frost}`);
+    }
+  }
+});
+
+test("the frost stays at the user's strength when the desktop already suits the text", () => {
+  assert.equal(contrastFrost(solid("#ffffff"), "#f2f2f5"), 0);
+  assert.equal(contrastFrost(solid("#000000"), "#000000"), 0);
+  assert.ok(contrastFrost(solid("#000000"), "#f2f2f5") > 0.6);
+  assert.ok(contrastFrost(solid("#ffffff"), "#000000") > 0.6);
+});
+
+test("a light island is judged by the darkest part behind it, a dark island by the brightest", () => {
+  const split = { dark: 0, bright: 1 };
+  assert.ok(contrastFrost(split, "#f2f2f5") >= contrastFrost(solid("#000000"), "#f2f2f5"));
+  assert.ok(contrastFrost(split, "#000000") >= contrastFrost(solid("#ffffff"), "#000000"));
+});
+
+test("an island colour that can never carry its own text gets the thickest frost", () => {
+  assert.equal(contrastFrost(solid("#ffffff"), "#606060"), 0.95);
+});
+
+test("the backdrop spread ignores the darkest and brightest tenth", () => {
+  assert.equal(luminanceSpread([]), null);
+  const values = Array.from({ length: 100 }, (_, index) => index / 100);
+  assert.deepEqual(luminanceSpread(values), { dark: 0.1, bright: 0.9 });
+});
+
+test("the frost rises at once but only falls back after a clear drop, so it does not flicker", () => {
+  assert.equal(settleFrost(0.3, 0.45), 0.45);
+  assert.equal(settleFrost(0.45, 0.4), 0.45);
+  assert.equal(settleFrost(0.45, 0.35), 0.35);
+  assert.equal(settleFrost(0.45, 0), 0);
 });

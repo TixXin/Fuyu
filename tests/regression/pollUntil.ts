@@ -15,6 +15,16 @@ export async function until<T>(ready: () => T, timeoutMs = TIMEOUT_MS): Promise<
   return value;
 }
 
+export function steady(read: () => string, ready: () => unknown = () => true) {
+  let last: string | undefined;
+  return () => {
+    const now = read();
+    const same = now === last;
+    last = now;
+    return same && Boolean(ready());
+  };
+}
+
 export function animationsDone(target: Element | Document = document) {
   const running = target instanceof Document ? target.getAnimations() : target.getAnimations({ subtree: true });
   return running.every((animation) => animation.playState !== "running" || animation.effect?.getComputedTiming().endTime === Infinity);

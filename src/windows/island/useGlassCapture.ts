@@ -1,6 +1,6 @@
 import { Channel, isTauri } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { contrastBoost } from "../../lib/theme/wallpaperSlice";
+import { contrastFrost, settleFrost } from "../../lib/theme/wallpaperSlice";
 import { setGlassCaptureOptions, startGlassCapture, stopGlassCapture, type GlassCaptureStart } from "./api";
 import { createGlassCaptureHub, type GlassCaptureData } from "./glassCaptureHub";
 import { useDevicePixelRatio } from "./useDevicePixelRatio";
@@ -28,22 +28,24 @@ export function useGlassCapture({
   blur,
   saturation,
   contrastGuard,
-  lightIsland,
+  islandBackground,
 }: {
   target: RefObject<HTMLElement | null>;
   enabled: boolean;
   blur: number;
   saturation: number;
   contrastGuard: boolean;
-  lightIsland: boolean;
+  islandBackground: string;
 }): LiveBackdropState {
   const [live, setLive] = useState<LiveBackdropState>(STARTING);
-  const options = useRef({ blur, saturation, contrastGuard, lightIsland });
+  const options = useRef({ blur, saturation, contrastGuard, islandBackground });
+  const reshadeLatest = useRef(() => {});
   const devicePixelRatio = useDevicePixelRatio();
 
   useEffect(() => {
-    options.current = { blur, saturation, contrastGuard, lightIsland };
-  }, [blur, saturation, contrastGuard, lightIsland]);
+    options.current = { blur, saturation, contrastGuard, islandBackground };
+    reshadeLatest.current();
+  }, [blur, saturation, contrastGuard, islandBackground]);
 
   useEffect(() => {
     const layer = target.current;
@@ -56,6 +58,7 @@ export function useGlassCapture({
     let frame: GlassFrame | null = null;
     let tracking = 0;
     let trackStart = 0;
+    let frost = 0;
     const report = (next: LiveBackdropState) => setLive((current) => (sameState(current, next) ? current : next));
 
     const place = () => {
@@ -69,10 +72,11 @@ export function useGlassCapture({
     };
 
     const shade = (next: GlassFrame) => {
-      const { contrastGuard: guard, lightIsland: light } = options.current;
+      const { contrastGuard: guard, islandBackground: background } = options.current;
       const luminance = guard ? frameLuminance(next, window.devicePixelRatio, viewBox(island)) : null;
-      const boost = luminance === null ? 0 : Math.round(contrastBoost(luminance, light) * 20) / 20;
-      island.style.setProperty("--glass-live-boost", String(boost));
+      if (!guard) frost = 0;
+      else if (luminance) frost = settleFrost(frost, contrastFrost(luminance, background));
+      island.style.setProperty("--glass-live-frost", String(frost));
     };
 
     const onMessage = (data: GlassCaptureData) => {
@@ -103,13 +107,18 @@ export function useGlassCapture({
       trackStart = performance.now();
       if (!tracking) tracking = requestAnimationFrame(track);
     };
+    const reshade = () => {
+      place();
+      if (frame) shade(frame);
+    };
+    reshadeLatest.current = reshade;
     const stopTracking = (event: Event) => {
       if (event.target !== island) return;
       if (tracking) cancelAnimationFrame(tracking);
       tracking = 0;
-      place();
+      reshade();
     };
-    const observer = new ResizeObserver(place);
+    const observer = new ResizeObserver(reshade);
     observer.observe(island);
     window.addEventListener("resize", place);
     island.addEventListener("transitionrun", startTracking);
@@ -130,6 +139,7 @@ export function useGlassCapture({
 
     return () => {
       alive = false;
+      reshadeLatest.current = () => {};
       if (tracking) cancelAnimationFrame(tracking);
       observer.disconnect();
       window.removeEventListener("resize", place);
@@ -137,7 +147,7 @@ export function useGlassCapture({
       island.removeEventListener("transitionend", stopTracking);
       island.removeEventListener("transitioncancel", stopTracking);
       delete island.dataset.glassLive;
-      island.style.removeProperty("--glass-live-boost");
+      island.style.removeProperty("--glass-live-frost");
       setLive(STARTING);
       capture.leave();
     };

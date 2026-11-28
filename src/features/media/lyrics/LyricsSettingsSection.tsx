@@ -11,6 +11,9 @@ import { InflinkRow } from "./InflinkRow";
 import { AppleMusicLyricsRows } from "./AppleMusicLyricsRows";
 import type { LyricsIntro } from "./lyricsSettings";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { useCollapsedText } from "../../../lib/settings/collapsedText";
+import { isMacOS } from "../../../lib/platform";
+import { islandLyricsNote } from "./islandLyricsNote.ts";
 import "./LyricsSettingsSection.css";
 
 export function LyricsSettingsSection({
@@ -23,6 +26,7 @@ export function LyricsSettingsSection({
   onSettingsChange: (settings: IslandSettings) => void;
 }) {
   const text = useTranslation().settings.lyrics;
+  const collapsed = useCollapsedText();
   const [folder, setFolder] = useState(settings.lyricsFolder);
   useEffect(() => setFolder(settings.lyricsFolder), [settings.lyricsFolder]);
   const saveFolder = () => {
@@ -30,11 +34,12 @@ export function LyricsSettingsSection({
   };
 
   if (part === "island") {
+    const note = settings.lyricsOnIsland ? islandLyricsNote(settings, collapsed, isMacOS) : null;
     return (
       <SettingsGroup title={text.title}>
         <SettingsToggleRow
           title={text.onIsland}
-          description={settings.lyricsOnIsland && !settings.lyricsOnline && !settings.lyricsFolder ? text.onIslandNoSource : text.onIslandHint}
+          description={note === null ? text.onIslandHint : note === "noSource" ? text.onIslandNoSource : text.onIslandBlocked[note]}
           checked={settings.lyricsOnIsland}
           onChange={(lyricsOnIsland) => onSettingsChange({ ...settings, lyricsOnIsland })}
         />

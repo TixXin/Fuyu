@@ -221,3 +221,12 @@
 .calendar-sublist__vis:hover {
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.08);
 }
+
+.calendar-source__sync {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.calendar-source__sync--failed {
+  color: var(--error-text, #ff8a8a);
+}

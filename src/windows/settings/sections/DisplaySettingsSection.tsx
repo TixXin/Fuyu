@@ -21,6 +21,7 @@ export function DisplaySettingsSection({
   const t = useTranslation();
   const notchShown = useIslandNotchShown();
   const notchGroups = isMacOS || notchShown;
+  const lyricsOff = !settings.musicEnabled || !settings.lyricsOnIsland;
 
   return (
     <>
@@ -56,9 +57,9 @@ export function DisplaySettingsSection({
           />
         )}
       </SettingsGroup>
-      <TextOrderRows lyricsPriority={settings.lyricsIslandPriority} disabled={!settings.showCollapsedText} />
+      <TextOrderRows lyricsPriority={settings.lyricsIslandPriority} lyricsOff={lyricsOff} disabled={!settings.showCollapsedText} />
       {notchGroups && <NotchSettings settings={settings} onSettingsChange={onSettingsChange} />}
-      {notchGroups && <NotchTextRows disabled={!settings.showCollapsedText} />}
+      {notchGroups && <NotchTextRows lyricsOff={lyricsOff} disabled={!settings.showCollapsedText} />}
     </>
   );
 }

@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { glassClassNames, glassPalette, glassPaused, glassVariables, type GlassPalette } from "../../lib/theme/glassPalette";
-import { isLightIsland } from "../../utils/color";
 import type { IslandSettings } from "../../lib/settings/types";
 import { usePageHidden } from "../../lib/usePageHidden";
 import type { IslandMode, NativeGlassState } from "./types";
@@ -18,7 +17,7 @@ export type IslandGlassView = {
   blur: number;
   saturation: number;
   contrastGuard: boolean;
-  light: boolean;
+  background: string;
   onLayerState?: (state: GlassLayerState) => void;
   nativeState?: NativeGlassState;
 };
@@ -76,7 +75,7 @@ export function useIslandGlass({
     blur: glassBlur,
     saturation: glassSaturation,
     contrastGuard: settings.glassContrastGuard,
-    light: isLightIsland(background),
+    background,
     onLayerState,
   };
   return { glass, glassStyle, layerState };

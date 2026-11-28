@@ -8,6 +8,7 @@ import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugin
 import type { IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
+import { PeripheralBatteryRows } from "./PeripheralBatteryRows";
 
 export function SystemAlertsGroup({ settings }: { settings: IslandSettings; onSettingsChange?: (settings: IslandSettings) => void }) {
   const text = useTranslation().settings;
@@ -31,6 +32,7 @@ export function SystemAlertsGroup({ settings }: { settings: IslandSettings; onSe
         checked={isBuiltinEnabled(plugins, "device-events", settings.deviceAlerts)}
         onChange={(on) => toggle("device-events", on)}
       />
+      <PeripheralBatteryRows />
       <CapsLockSettings />
       <SettingsToggleRow
         title={<SettingsIconTitle icon={<Camera {...icon} />}>{text.deviceUse.indicator}</SettingsIconTitle>}

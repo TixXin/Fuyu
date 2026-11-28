@@ -100,6 +100,12 @@ export function expiredLines(usages: AgentUsages, view: Pick<UsageView, "hidden"
   });
 }
 
+export function usageSources(usages: AgentUsages, agentsOff: readonly string[] = []): AgentUsageSource[] {
+  const live = availableLines(usages, agentsOff).map((line) => line.source);
+  const expired = expiredLines(usages, { hidden: [], agentsOff }).map((line) => line.source);
+  return AGENT_USAGE_SOURCES.filter((source) => live.includes(source) || expired.includes(source));
+}
+
 export function hasUsageNumbers(usage: AgentUsage | null): boolean {
   return Boolean(usage && (usage.fiveHour || usage.sevenDay || usage.models.length > 0));
 }

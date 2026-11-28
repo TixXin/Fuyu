@@ -7,7 +7,7 @@ import { saveCollapsedText, textOrder, useCollapsedText, type NotchTextKind } fr
 import type { LyricsIslandPriority } from "../../../lib/settings/lyricsSettings";
 import "./TextOrderRows.css";
 
-export function TextOrderRows({ lyricsPriority, disabled }: { lyricsPriority: LyricsIslandPriority; disabled: boolean }) {
+export function TextOrderRows({ lyricsPriority, lyricsOff, disabled }: { lyricsPriority: LyricsIslandPriority; lyricsOff: boolean; disabled: boolean }) {
   const text = useTranslation().settings.layout;
   const { order: saved, hidden } = useCollapsedText();
   const order = textOrder(saved, lyricsPriority);
@@ -25,6 +25,7 @@ export function TextOrderRows({ lyricsPriority, disabled }: { lyricsPriority: Ly
           <SettingsRow
             key={kind}
             title={name}
+            description={kind === "lyrics" && lyricsOff ? text.lyricsNeedIsland : undefined}
             className="text-order__row"
             control={(
               <span className="text-order__controls" data-text-order={kind}>

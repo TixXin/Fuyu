@@ -1,3 +1,5 @@
+import { luminanceSpread } from "../../lib/theme/wallpaperSlice";
+
 const SAMPLE_WIDTH = 64;
 
 export type Frosted = { source: string; url: string; width: number; height: number; pixels: Uint8ClampedArray | null };
@@ -70,14 +72,12 @@ export function regionLuminance(frosted: Frosted, box: { left: number; top: numb
   const x1 = Math.min(frosted.width, Math.max(x0 + 1, Math.ceil(box.right * frosted.width)));
   const y0 = Math.floor(box.top * frosted.height);
   const y1 = Math.min(frosted.height, Math.max(y0 + 1, Math.ceil(box.bottom * frosted.height)));
-  let total = 0;
-  let count = 0;
+  const values: number[] = [];
   for (let y = y0; y < y1; y += 1) {
     for (let x = x0; x < x1; x += 1) {
       const index = (y * frosted.width + x) * 4;
-      total += 0.2126 * linear(frosted.pixels[index]) + 0.7152 * linear(frosted.pixels[index + 1]) + 0.0722 * linear(frosted.pixels[index + 2]);
-      count += 1;
+      values.push(0.2126 * linear(frosted.pixels[index]) + 0.7152 * linear(frosted.pixels[index + 1]) + 0.0722 * linear(frosted.pixels[index + 2]));
     }
   }
-  return count ? total / count : null;
+  return luminanceSpread(values);
 }

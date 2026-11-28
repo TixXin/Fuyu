@@ -51,6 +51,12 @@ export type CalendarText = {
   notRead: string;
   openPage: string;
   openDay: (title: string) => string;
+  loadFailed: string;
+  loadFailedHint: string;
+  retry: string;
+  syncing: string;
+  syncingDay: string;
+  unknownCalendar: string;
 };
 
 const ZH_WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
@@ -109,6 +115,12 @@ export const zhCN: CalendarText = {
   notRead: "只读取上个月到下个月的日程，这一天的看不到",
   openPage: "打开日历",
   openDay: (title) => `${title}，再点一次打开日历`,
+  loadFailed: "这次没读到日历",
+  loadFailedHint: "已添加的日历还在，只是这次同步失败了。可以重试，或到设置里看每个日历的同步情况。",
+  retry: "重试",
+  syncing: "正在同步…",
+  syncingDay: "正在同步日历，读完会自动显示",
+  unknownCalendar: "日历",
 };
 
 export const en: CalendarText = {
@@ -164,4 +176,10 @@ export const en: CalendarText = {
   notRead: "Only last month to next month are read; this day's events are not shown",
   openPage: "Open calendar",
   openDay: (title) => `${title}, click again to open the calendar`,
+  loadFailed: "Could not read the calendars this time",
+  loadFailedHint: "Your calendars are still added; only this sync failed. Try again, or see how each calendar is syncing in Settings.",
+  retry: "Try again",
+  syncing: "Syncing…",
+  syncingDay: "Syncing the calendars; events show up when done",
+  unknownCalendar: "Calendar",
 };
