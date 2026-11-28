@@ -37,8 +37,13 @@ export async function checkMessageSources(check: Check, openPage: OpenPage) {
   check(shown().every((row) => row.querySelector(".messages-settings__installed")?.textContent === "已安装" && !toggleOf(row).checked),
     "An installed app that is still off carries the Installed badge");
   const says = (name: string, text: string) => sourceRow(name).querySelector(".settings-row__description")?.textContent?.includes(text);
-  check(says("QQ", "能看到发送人和内容") && says("微信", "只提示有新消息") && says("Telegram", "只提示有新消息") && says("Discord", "能看到发送人和内容"),
+  check(says("QQ", "能看到发送人和内容") && says("微信", "只提示有新消息") && says("Telegram", "只提示有新消息") && says("Discord", "能看到发送人和内容")
+    && says("飞书", "能看到发送人和内容") && says("钉钉", "群里 @ 你的消息能看到内容") && says("企业微信", "只提示有新消息"),
     "Each source says what it can read, before it is switched on too");
+  await act(async () => { sourceRow("企业微信").querySelector<HTMLButtonElement>(".source-row__more")!.click(); });
+  check(sourceRow("企业微信").nextElementSibling?.textContent?.includes("不发 Windows 系统通知"),
+    "A source that is still off explains why its content cannot be read");
+  await act(async () => { sourceRow("企业微信").querySelector<HTMLButtonElement>(".source-row__more")!.click(); });
   const summary = () => document.querySelector(".source-summary__text strong")?.textContent;
   check(summary() === "已开 3 个来源" && document.querySelector(".source-summary__pill")?.textContent === "1 个要处理",
     "The summary counts the sources that are on and the mailbox that needs a new code");
@@ -50,11 +55,13 @@ export async function checkMessageSources(check: Check, openPage: OpenPage) {
     "Turning Telegram on saves messages.config.telegram and counts it");
   check(!document.querySelector(".editor-panel")!.textContent!.includes("看过后从岛上去掉"), "A source no longer has its own remove-once-seen switch");
   await act(async () => { sourceRow("Telegram").querySelector<HTMLButtonElement>(".source-row__more")!.click(); });
-  check(sourceRow("Telegram").nextElementSibling?.classList.contains("settings-row--indent") && sourceRow("Telegram").nextElementSibling?.textContent?.includes("开启系统通知"),
-    "How to see the content opens the note about the app's system notifications");
+  check(sourceRow("Telegram").nextElementSibling?.classList.contains("settings-row--indent") && sourceRow("Telegram").nextElementSibling?.textContent?.includes("Use Windows notifications"),
+    "How to see the content opens the note about the app's own setting for system notifications");
   await act(async () => { toggleOf(sourceRow("Telegram")).click(); });
   await pause(40);
-  check(!toggleOf(sourceRow("Telegram")).checked && shown().length === 2 && summary() === "已开 3 个来源", "Turning Telegram back off closes its note");
+  check(!toggleOf(sourceRow("Telegram")).checked && shown().length === 2 && summary() === "已开 3 个来源"
+    && sourceRow("Telegram").nextElementSibling?.textContent?.includes("Use Windows notifications"),
+    "Turning Telegram back off takes it out of the count and keeps its note open");
 
   await act(async () => { fold().querySelector("summary")!.click(); });
   await pause(20);

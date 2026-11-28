@@ -8,7 +8,9 @@ test("on Windows a source says whether it can read who wrote and what", () => {
   assert.equal(chatCapability("qq", windows), "full");
   assert.equal(chatCapability("discord", windows), "full");
   assert.equal(chatCapability("whatsapp", windows), "full");
-  for (const source of ["telegram", "tim", "feishu", "dingtalk", "wecom"]) assert.equal(chatCapability(source, windows), "remind");
+  assert.equal(chatCapability("feishu", windows), "full");
+  assert.equal(chatCapability("dingtalk", windows), "mentions");
+  for (const source of ["telegram", "tim", "wecom"]) assert.equal(chatCapability(source, windows), "remind");
 });
 
 test("WeChat only reads the contact and message once that option is on", () => {

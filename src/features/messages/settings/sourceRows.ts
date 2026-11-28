@@ -1,8 +1,18 @@
-import { WINDOWS_CUSTOM_POPUP_SOURCES, type ImSourceId } from "../im-sources/imSourcesState.ts";
+import type { ImSourceId } from "../im-sources/imSourcesState.ts";
 
 export type ChatSource = "qq" | "wechat" | ImSourceId;
 
-export type SourceCapability = "full" | "remind" | "count";
+export type SourceCapability = "full" | "mentions" | "remind" | "count";
+
+const WINDOWS_IM_CAPABILITY: Record<ImSourceId, SourceCapability> = {
+  telegram: "remind",
+  discord: "full",
+  whatsapp: "full",
+  tim: "remind",
+  feishu: "full",
+  dingtalk: "mentions",
+  wecom: "remind",
+};
 
 export type SourceTone = "off" | "ok" | "busy" | "warn" | "problem";
 
@@ -12,7 +22,7 @@ export function chatCapability(source: ChatSource, options: { mac: boolean; wech
   if (options.mac) return "count";
   if (source === "wechat") return options.wechatExposeUi ? "full" : "remind";
   if (source === "qq") return "full";
-  return WINDOWS_CUSTOM_POPUP_SOURCES.has(source) ? "remind" : "full";
+  return WINDOWS_IM_CAPABILITY[source];
 }
 
 export function needsAccess({ enabled, status }: ChatSourceState): boolean {

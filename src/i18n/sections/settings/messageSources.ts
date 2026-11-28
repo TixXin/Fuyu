@@ -23,7 +23,7 @@ export type SettingsMessageSourcesText = {
   allReceiving: string;
   connecting: (count: number) => string;
   needsAttention: (count: number) => string;
-  capability: { full: string; remind: string; count: string; mail: string };
+  capability: { full: string; mentions: string; remind: string; count: string; mail: string };
   waitingForAccessMac: string;
   accessTitleMac: string;
   accessBodyMac: string;
@@ -65,7 +65,7 @@ export type SettingsMessageSourcesText = {
   installedBadge: string;
   imOthersHint: string;
   imOthersHintMac: string;
-  imSystemToastHint: string;
+  imContentHint: Record<"telegram" | "discord" | "whatsapp" | "tim" | "feishu" | "dingtalk" | "wecom", string>;
 };
 
 export const zhCN: SettingsMessageSourcesText = {
@@ -95,6 +95,7 @@ export const zhCN: SettingsMessageSourcesText = {
   needsAttention: (count) => `${count} 个要处理`,
   capability: {
     full: "能看到发送人和内容",
+    mentions: "群里 @ 你的消息能看到内容",
     remind: "只提示有新消息",
     count: "只知道未读数变多了",
     mail: "发件人和主题，正文在岛上读",
@@ -140,7 +141,15 @@ export const zhCN: SettingsMessageSourcesText = {
   installedBadge: "已安装",
   imOthersHint: "读取系统通知中的发送人和摘要，客户端未发系统通知但闪烁任务栏时兜底显示「有新提醒」，只保留在本次运行的内存中。",
   imOthersHintMac: "看程序坞图标上的未读数，数字变多时提醒；需要对应应用开着，并在「系统设置 → 隐私与安全性 → 辅助功能」里允许浮屿。",
-  imSystemToastHint: "默认自绘弹窗时只提示「有新提醒」；在软件设置内开启系统通知即可显示发送人和消息内容。",
+  imContentHint: {
+    telegram: "Telegram 默认用自己的弹窗，浮屿只看得到任务栏闪烁，所以只提示「有新提醒」。在 Telegram「Settings → Notifications and Sounds」里打开「Use Windows notifications」，就能显示发送人和内容。",
+    discord: "Discord 发 Windows 系统通知，浮屿从通知里读发送人和内容。看不到时，在 Windows「设置 → 系统 → 通知」里允许 Discord，并在 Discord「用户设置 → 通知」里打开桌面通知。",
+    whatsapp: "WhatsApp 发 Windows 系统通知，浮屿从通知里读发送人和内容。看不到内容时，在 WhatsApp「设置 → 通知」里打开「显示预览」，并在 Windows「设置 → 系统 → 通知」里允许 WhatsApp。",
+    tim: "TIM 只用自己的弹窗，不发 Windows 系统通知，浮屿只看得到任务栏闪烁，所以只提示「有新提醒」，TIM 里也没有能改的设置。",
+    feishu: "飞书发 Windows 系统通知，浮屿从通知里读发送人和内容。只提示「有新提醒」时，在 Windows「设置 → 系统 → 通知」里允许飞书，并在飞书「设置 → 通知」里打开横幅通知和消息内容。",
+    dingtalk: "钉钉只给群里 @ 你的消息发 Windows 系统通知，这类消息能看到发送人和内容；其他消息钉钉用自己的弹窗，浮屿只看得到任务栏闪烁，只提示「有新提醒」。",
+    wecom: "企业微信只用自己的弹窗，不发 Windows 系统通知，浮屿只看得到任务栏闪烁，所以只提示「有新提醒」。企业微信里的「通知显示消息详情」只管它自己的弹窗，浮屿读不到；微信那种读界面的办法对企业微信用不上。",
+  },
 };
 
 export const en: SettingsMessageSourcesText = {
@@ -170,6 +179,7 @@ export const en: SettingsMessageSourcesText = {
   needsAttention: (count) => `${count} to fix`,
   capability: {
     full: "Shows the sender and message",
+    mentions: "Shows the message when you're @-mentioned in a group",
     remind: "Only says something new came",
     count: "Only knows the unread count went up",
     mail: "Sender and subject; read the body on the island",
@@ -215,5 +225,13 @@ export const en: SettingsMessageSourcesText = {
   installedBadge: "Installed",
   imOthersHint: "Reads the sender and preview from system notifications, falls back to a taskbar-flash reminder when an app uses its own popups, and keeps items in memory for this run only.",
   imOthersHintMac: "Watches the unread count on each app's Dock icon and tells you when it goes up; the app must be running and Fuyu allowed under System Settings > Privacy & Security > Accessibility.",
-  imSystemToastHint: "Shows 'New reminder' while the app uses its own popups; turn on system notifications in the app's settings to display the sender and message.",
+  imContentHint: {
+    telegram: "Telegram uses its own popups by default, so Fuyu only sees the taskbar flash and shows 'New reminder'. Turn on Settings > Notifications and Sounds > Use Windows notifications in Telegram to show the sender and message.",
+    discord: "Discord sends Windows notifications, and Fuyu reads the sender and message from them. If nothing shows, allow Discord under Windows Settings > System > Notifications and turn on desktop notifications in Discord's User Settings > Notifications.",
+    whatsapp: "WhatsApp sends Windows notifications, and Fuyu reads the sender and message from them. If the message is missing, turn on Show previews under Settings > Notifications in WhatsApp and allow WhatsApp under Windows Settings > System > Notifications.",
+    tim: "TIM only uses its own popups and sends no Windows notifications, so Fuyu only sees the taskbar flash and shows 'New reminder'; TIM has no setting that changes this.",
+    feishu: "Feishu sends Windows notifications, and Fuyu reads the sender and message from them. If you only see 'New reminder', allow Feishu under Windows Settings > System > Notifications and turn on banners with message content under Settings > Notifications in Feishu.",
+    dingtalk: "DingTalk sends Windows notifications only for group messages that @-mention you, which show the sender and message; for everything else it uses its own popups, so Fuyu only sees the taskbar flash and shows 'New reminder'.",
+    wecom: "WeCom only uses its own popups and sends no Windows notifications, so Fuyu only sees the taskbar flash and shows 'New reminder'. WeCom's 'Show message details in notifications' only affects its own popups, which Fuyu cannot read; the way Fuyu reads WeChat does not work for WeCom.",
+  },
 };

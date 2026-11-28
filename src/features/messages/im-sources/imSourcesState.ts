@@ -42,14 +42,6 @@ export type ImPreviewWindow = {
 
 const IM_SOURCE_SET: ReadonlySet<string> = new Set(IM_SOURCE_IDS);
 
-export const WINDOWS_CUSTOM_POPUP_SOURCES: ReadonlySet<ImSourceId> = new Set([
-  "telegram",
-  "tim",
-  "feishu",
-  "dingtalk",
-  "wecom",
-]);
-
 export function isImSource(value: string): value is ImSourceId {
   return IM_SOURCE_SET.has(value);
 }
