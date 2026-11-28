@@ -28,12 +28,16 @@ const whiteWallpaper = (() => {
 })();
 let demoWallpaper: string | null = null;
 let captureStart: { started: boolean; reason: string | null } = { started: true, reason: null };
-mockIPC((command) => {
+let captureChannel: { onmessage: (data: ArrayBuffer) => void } | null = null;
+mockIPC((command, payload) => {
   if (command === "list_plugin_views") return { views: [], status: [] };
   if (command === "get_wallpapers") return { fit: "fill", color: "#000000", monitors: [{ x: 0, y: 0, width: demoWallpaper ? innerWidth * devicePixelRatio : 3840, height: demoWallpaper ? innerHeight * devicePixelRatio : 2160, image: demoWallpaper ?? whiteWallpaper }] };
   if (command === "plugin:window|inner_position") return { x: 0, y: 0 };
   if (command === "get_qq_mail_state") return [];
-  if (command === "start_glass_capture") return captureStart;
+  if (command === "start_glass_capture") {
+    captureChannel = (payload as { onFrame: { onmessage: (data: ArrayBuffer) => void } }).onFrame;
+    return captureStart;
+  }
 }, { shouldMockEvents: true });
 mockWindows("main");
 
@@ -98,6 +102,34 @@ const luminance = (value: string) => {
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   });
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const alphaOf = (value: string) => {
+  const parts = value.match(/[\d.]+/g)!.map(Number);
+  return parts.length > 3 ? parts[3] : 1;
+};
+const over = (top: string, under: number[]) => {
+  const alpha = alphaOf(top);
+  return rgb(top).map((channel, index) => channel * alpha + under[index] * (1 - alpha));
+};
+const contrastOn = (ink: string, under: number[]) => {
+  const [a, b] = [luminance(`rgb(${over(ink, under).join(",")})`), luminance(`rgb(${under.join(",")})`)].sort((x, y) => y - x);
+  return (a + 0.05) / (b + 0.05);
+};
+function sendFrame(pixel: [number, number, number]) {
+  const [width, height] = [16, 9];
+  const bytes = new Uint8Array(24 + width * height * 4);
+  const view = new DataView(bytes.buffer);
+  [0, 0, Math.ceil(innerWidth * devicePixelRatio), Math.ceil(document.documentElement.scrollHeight * devicePixelRatio)].forEach((value, index) => view.setInt32(index * 4, value, true));
+  view.setUint32(16, width, true);
+  view.setUint32(20, height, true);
+  for (let at = 24; at < bytes.length; at += 4) bytes.set([...pixel, 255], at);
+  captureChannel!.onmessage(bytes.buffer);
+}
+const liveGlass = (island: HTMLElement, desktop: number[]) => over(getComputedStyle(island.querySelector(".island__glass-live")!, "::after").backgroundColor, desktop);
+const liveReadable = (island: HTMLElement, desktop: number[]) => {
+  const glass = liveGlass(island, desktop);
+  const style = getComputedStyle(island);
+  return contrastOn(style.getPropertyValue("--text-1").trim(), glass) >= 4.5 && contrastOn(style.getPropertyValue("--text-2").trim(), glass) >= 3;
 };
 const results = document.getElementById("results")!;
 
@@ -178,8 +210,12 @@ async function runChecks() {
       check(getComputedStyle(island).backgroundImage.includes("blob:"), `${tone}：岛本体（含贴顶圆角继承的背景）画出壁纸`);
       check(island.querySelector(".island__glass-noise"), `${tone}：加了噪点层`);
       check(getComputedStyle(island, "::before").backgroundImage.includes("blob:") && getComputedStyle(island).backgroundAttachment.includes("fixed") && getComputedStyle(island, "::before").backgroundAttachment === getComputedStyle(island).backgroundAttachment, `${tone}：贴顶圆角继承同一块磨砂壁纸，按窗口定位不随岛的尺寸重算`);
-      const boost = Number(island.style.getPropertyValue("--glass-backdrop-boost"));
-      check(tone === "dark" ? boost > 0 : boost === 0, `${tone}：白壁纸上${tone === "dark" ? "加深" : "不加深"}底色（${boost}）`);
+      const frost = Number(island.style.getPropertyValue("--glass-backdrop-frost"));
+      check(tone === "dark" ? frost > 0 : frost === 0, `${tone}：白壁纸上${tone === "dark" ? "加深" : "不加深"}底色（${frost}）`);
+      const background = island.closest<HTMLElement>(".stage")!.style.getPropertyValue("--island-background-color");
+      const glass = over(`rgba(${[1, 3, 5].map((at) => Number.parseInt(background.slice(at, at + 2), 16)).join(",")}, ${Math.max(0.25, frost)})`, [255, 255, 255]);
+      const secondary = contrastOn(getComputedStyle(island).getPropertyValue("--text-2").trim(), glass);
+      check(secondary >= 3, `${tone}：白壁纸上次要文字对比度 ${secondary.toFixed(2)} 过 3:1`);
     }
     await set({ expanded: false, nativeGlassState: "active", settings: { glassStyle: "static", glassBackdrop: "native", glassIntensity: 25 } });
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 450)); });
@@ -200,6 +236,22 @@ async function runChecks() {
 
     if (!isMacOS) {
       check(islands().every((island) => island.querySelector(".island__glass-live canvas") && !("glassLive" in island.dataset)), "透出窗口在第一帧到之前画布不显示");
+      await set({ expanded: true, nativeGlassState: "css-fallback" });
+      for (const [desktop, name] of [[[0, 0, 0], "黑色桌面"], [[255, 255, 255], "白色窗口"]] as const) {
+        sendFrame([...desktop] as [number, number, number]);
+        await settle(() => islands().every((island) => "glassLive" in island.dataset && liveReadable(island, [...desktop])));
+        for (const island of islands()) {
+          const tone = island.closest<HTMLElement>(".stage")!.dataset.tone;
+          const glass = liveGlass(island, [...desktop]).map(Math.round);
+          const style = getComputedStyle(island);
+          check(liveReadable(island, [...desktop]), `${tone}：透出${name}时玻璃底是 rgb(${glass.join(", ")})，主文字 ${contrastOn(style.getPropertyValue("--text-1").trim(), glass).toFixed(2)}、次要文字 ${contrastOn(style.getPropertyValue("--text-2").trim(), glass).toFixed(2)} 都看得清`);
+        }
+      }
+      await set({ expanded: false });
+      document.documentElement.dataset.islandNotch = "on";
+      await settle(() => islands().every((island) => getComputedStyle(island.querySelector(".island__glass-live")!, "::after").backgroundColor === "rgb(0, 0, 0)"), 3000);
+      check(islands().every((island) => getComputedStyle(island.querySelector(".island__glass-live")!, "::after").backgroundColor === "rgb(0, 0, 0)"), "刘海折叠时透出层仍盖纯黑");
+      delete document.documentElement.dataset.islandNotch;
       captureStart = { started: false, reason: "no-d3d" };
       await set({ expanded: true, nativeGlassState: "css-fallback", settings: { glassBackdrop: "wallpaper" } });
       await set({ settings: { glassBackdrop: "native" } });

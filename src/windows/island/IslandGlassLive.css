@@ -1,5 +1,11 @@
+@property --glass-live-frost {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 .stage .island.island--appearance-liquidGlass[data-glass-live] {
-  --glass-frost-alpha: min(0.95, calc(var(--glass-intensity, 0.25) + var(--glass-live-boost, 0)));
+  --glass-frost-alpha: min(0.95, max(var(--glass-intensity, 0.25), var(--glass-live-frost)));
   --island-shell-fill: color-mix(in srgb, var(--island-background-color) calc(var(--glass-frost-alpha) * 100%), transparent);
   background: var(--island-shell-fill);
   backdrop-filter: none;
@@ -36,7 +42,12 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--island-shell-fill);
+  background: color-mix(in srgb, var(--island-background-color) calc(min(0.95, max(var(--glass-intensity, 0.25), var(--glass-live-frost))) * 100%), transparent);
+  transition: --glass-live-frost var(--motion-slow) var(--motion-ease);
+}
+
+:root[data-island-notch] .island--collapsed .island__glass-live::after {
+  background: var(--color-black, #000);
 }
 
 @media (prefers-reduced-transparency: reduce) {

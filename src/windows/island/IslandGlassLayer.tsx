@@ -29,7 +29,7 @@ export function IslandGlassLayer({ glass }: { glass?: IslandGlassView }) {
     blur: glass?.blur ?? 0,
     saturation: glass?.saturation ?? 100,
     contrastGuard: glass?.contrastGuard !== false,
-    lightIsland: glass?.light === true,
+    islandBackground: glass?.background ?? "#000000",
   });
   const live = isMacOS ? (glass?.nativeState === "css-fallback" ? MAC_FAILED : MAC_LIVE) : captured;
   const wallpaperWanted = choice === "wallpaper" || (choice === "native" && live.state === "failed");
@@ -39,7 +39,7 @@ export function IslandGlassLayer({ glass }: { glass?: IslandGlassView }) {
     blur: glass?.blur ?? 0,
     saturation: glass?.saturation ?? 100,
     contrastGuard: glass?.contrastGuard !== false,
-    lightIsland: glass?.light === true,
+    islandBackground: glass?.background ?? "#000000",
   });
 
   const wallpaperKey = wallpaper ? JSON.stringify(wallpaper) : "";

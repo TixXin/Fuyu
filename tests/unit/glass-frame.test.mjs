@@ -46,9 +46,16 @@ test("the brightness behind the island is read from the part of the frame under 
   const bytes = frameBytes([0, 0, 200, 100], 20, 10, [0, 0, 0, 255]);
   for (let y = 0; y < 10; y += 1) for (let x = 10; x < 20; x += 1) bytes.set([255, 255, 255, 255], 24 + (y * 20 + x) * 4);
   const frame = parseGlassMessage(bytes.buffer).frame;
-  assert.equal(frameLuminance(frame, 1, { left: 0, top: 0, width: 100, height: 100 }), 0);
-  assert.equal(frameLuminance(frame, 1, { left: 100, top: 0, width: 100, height: 100 }), 1);
-  assert.equal(frameLuminance(frame, 2, { left: 50, top: 0, width: 50, height: 50 }), 1);
+  assert.deepEqual(frameLuminance(frame, 1, { left: 0, top: 0, width: 100, height: 100 }), { dark: 0, bright: 0 });
+  assert.deepEqual(frameLuminance(frame, 1, { left: 100, top: 0, width: 100, height: 100 }), { dark: 1, bright: 1 });
+  assert.deepEqual(frameLuminance(frame, 2, { left: 50, top: 0, width: 50, height: 50 }), { dark: 1, bright: 1 });
+});
+
+test("an island over half a bright window and half a dark desktop keeps both ends, not their average", () => {
+  const bytes = frameBytes([0, 0, 200, 100], 20, 10, [0, 0, 0, 255]);
+  for (let y = 0; y < 10; y += 1) for (let x = 10; x < 20; x += 1) bytes.set([255, 255, 255, 255], 24 + (y * 20 + x) * 4);
+  const frame = parseGlassMessage(bytes.buffer).frame;
+  assert.deepEqual(frameLuminance(frame, 1, { left: 0, top: 0, width: 200, height: 100 }), { dark: 0, bright: 1 });
 });
 
 const base = { enabled: true, choice: "native", transparencyOff: false, live: { state: "live" }, wallpaper: "ready" };

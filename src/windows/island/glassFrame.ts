@@ -1,3 +1,4 @@
+import { luminanceSpread, type BackdropLuminance } from "../../lib/theme/wallpaperSlice.ts";
 import type { GlassFallbackReason } from "./glassStatus";
 
 const HEADER = 24;
@@ -64,7 +65,7 @@ export function glassFramePlacement(frame: GlassFrame, scale: number, island: Vi
 
 const linear = (channel: number) => (channel / 255) ** 2.2;
 
-export function frameLuminance(frame: GlassFrame, scale: number, island: ViewBox): number | null {
+export function frameLuminance(frame: GlassFrame, scale: number, island: ViewBox): BackdropLuminance | null {
   const ratio = ratioOf(scale);
   const spanX = frame.right - frame.left;
   const spanY = frame.bottom - frame.top;
@@ -74,14 +75,12 @@ export function frameLuminance(frame: GlassFrame, scale: number, island: ViewBox
   const [x0, x1] = [column(island.left), column(island.left + island.width)];
   const [y0, y1] = [row(island.top), row(island.top + island.height)];
   const step = Math.max(1, Math.floor(Math.sqrt(((x1 - x0) * (y1 - y0)) / 400)));
-  let total = 0;
-  let count = 0;
+  const values: number[] = [];
   for (let y = y0; y < y1; y += step) {
     for (let x = x0; x < x1; x += step) {
       const index = (y * frame.width + x) * 4;
-      total += 0.2126 * linear(frame.pixels[index]) + 0.7152 * linear(frame.pixels[index + 1]) + 0.0722 * linear(frame.pixels[index + 2]);
-      count += 1;
+      values.push(0.2126 * linear(frame.pixels[index]) + 0.7152 * linear(frame.pixels[index + 1]) + 0.0722 * linear(frame.pixels[index + 2]));
     }
   }
-  return count ? total / count : null;
+  return luminanceSpread(values);
 }

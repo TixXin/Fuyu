@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getWallpapers, listenWallpaperChanged, type Wallpapers } from "../../lib/settings/api";
-import { contrastBoost, sampleBox, wallpaperPlacement, type ScreenRect } from "../../lib/theme/wallpaperSlice";
+import { contrastFrost, sampleBox, wallpaperPlacement, type ScreenRect } from "../../lib/theme/wallpaperSlice";
 import { frostImage, loadImage, regionLuminance, type Frosted } from "./wallpaperFrost";
 
 type Island = ScreenRect & { scale: number; originX: number; originY: number };
@@ -27,14 +27,14 @@ export function useWallpaperBackdrop({
   blur,
   saturation,
   contrastGuard,
-  lightIsland,
+  islandBackground,
 }: {
   target: RefObject<HTMLElement | null>;
   enabled: boolean;
   blur: number;
   saturation: number;
   contrastGuard: boolean;
-  lightIsland: boolean;
+  islandBackground: string;
 }): WallpaperBackdropResult {
   const [wallpapers, setWallpapers] = useState<Wallpapers | null | undefined>(undefined);
   const [island, setIsland] = useState<Island | null>(null);
@@ -181,7 +181,8 @@ export function useWallpaperBackdrop({
   if (!placement || !island) return { variables: null, unavailable };
   const ready = placement.image ? frosted?.source === placement.image ? frosted : null : null;
   if (placement.image && !ready) return { variables: null, unavailable };
-  const luminance = ready ? regionLuminance(ready, sampleBox(placement.target, island)) : colorLuminance(placement.color);
+  const solid = colorLuminance(placement.color);
+  const luminance = ready ? regionLuminance(ready, sampleBox(placement.target, island)) : { dark: solid, bright: solid };
   const local = (value: number) => `${(value / island.scale).toFixed(1)}px`;
   const variables = {
     "--glass-wallpaper": ready ? `url("${ready.url}")` : "none",
@@ -189,7 +190,7 @@ export function useWallpaperBackdrop({
     "--glass-wallpaper-size": `${local(placement.target.width)} ${local(placement.target.height)}`,
     "--glass-wallpaper-x": local(placement.target.x - island.originX),
     "--glass-wallpaper-y": local(placement.target.y - island.originY),
-    "--glass-backdrop-boost": String(contrastGuard && luminance !== null ? contrastBoost(luminance, lightIsland) : 0),
+    "--glass-backdrop-frost": String(contrastGuard && luminance !== null ? contrastFrost(luminance, islandBackground) : 0),
   };
   return { variables, unavailable: false };
 }
