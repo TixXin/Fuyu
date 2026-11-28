@@ -11,6 +11,7 @@ export type SettingsLayoutText = {
   notchTextKinds: Record<"todos" | "lyrics" | "agent" | "meeting", string>;
   notchTextModes: Record<"panel" | "row" | "flash" | "off", string>;
   textOrderTitle: string;
+  lyricsNeedIsland: string;
   textOrderHint: string;
   textOrderShow: (name: string) => string;
   textOrderUp: (name: string) => string;
@@ -94,6 +95,7 @@ export const zhCN: SettingsLayoutText = {
   notchTextKinds: { todos: "待办", lyrics: "歌词", agent: "Agent 标题", meeting: "会议" },
   notchTextModes: { panel: "收进「+N」小面板", row: "刘海下常驻一行", flash: "有变化时出现 4 秒", off: "不显示" },
   textOrderTitle: "文字的先后",
+  lyricsNeedIsland: "「音乐 → 岛上显示」里还没开「在收起的岛上显示当前歌词」，这里开着也不会显示。",
   textOrderHint: "收起条中间同时有几样文字时，显示排在前面的那一样。消息、翻译、截图识字这类临时提示总在最前。Agent 跑完一轮、出错或等你回答时临时排到第二位。歌词排在 Agent 前面时，没找到歌词的歌显示「歌名 - 歌手」。",
   textOrderShow: (name) => `在收起条上显示${name}`,
   textOrderUp: (name) => `把${name}往前移`,
@@ -181,6 +183,7 @@ export const en: SettingsLayoutText = {
   notchTextKinds: { todos: "To-do", lyrics: "Lyrics", agent: "Agent title", meeting: "Meeting" },
   notchTextModes: { panel: "In the +N panel", row: "Always, under the notch", flash: "4 seconds when it changes", off: "Hidden" },
   textOrderTitle: "Text order",
+  lyricsNeedIsland: "Show the current line on the collapsed island is off under Music → On the island, so lyrics will not show even with this on.",
   textOrderHint: "When several kinds of text want the middle of the bar, the one higher in this list shows. Messages, translation and screenshot text always come first. An agent that finishes a turn, fails or waits for you moves up to second place for a while. With lyrics above the agent, a song without lyrics shows “title - artist”.",
   textOrderShow: (name) => `Show ${name} on the bar`,
   textOrderUp: (name) => `Move ${name} up`,

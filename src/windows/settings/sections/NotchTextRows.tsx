@@ -4,7 +4,7 @@ import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { useTranslation } from "../../../i18n";
 import { NOTCH_TEXT_KINDS, NOTCH_TEXT_MODES, saveNotchText, useNotchTextModes } from "../../../lib/settings/collapsedText";
 
-export function NotchTextRows({ disabled }: { disabled: boolean }) {
+export function NotchTextRows({ lyricsOff, disabled }: { lyricsOff: boolean; disabled: boolean }) {
   const text = useTranslation().settings.layout;
   const modes = useNotchTextModes();
   const options = NOTCH_TEXT_MODES.map((mode) => ({ value: mode, label: text.notchTextModes[mode] }));
@@ -14,6 +14,7 @@ export function NotchTextRows({ disabled }: { disabled: boolean }) {
         <SettingsRow
           key={kind}
           title={text.notchTextKinds[kind]}
+          description={kind === "lyrics" && lyricsOff ? text.lyricsNeedIsland : undefined}
           control={(
             <span data-notch-text={kind}>
               <SettingsSelect
